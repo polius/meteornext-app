@@ -16,7 +16,7 @@
 
       <v-container fluid>
         <v-layout row wrap>
-          <v-content style="padding-top:0px;">
+          <v-content style="padding-top:0px; padding-bottom:0px;">
             <v-slide-y-transition mode="out-in">
               <router-view/>
             </v-slide-y-transition>

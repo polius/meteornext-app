@@ -23,17 +23,17 @@
           </td>
 
           <td>{{ props.item.environment }}</td>
-          <td class="text-xs-center"><v-chip label :color="getModeColor(props.item.mode)" dark>{{ props.item.mode }}</v-chip></td>
-          <td class="text-xs-center"><v-chip label :color="getStatusColor(props.item.status)" dark>{{ props.item.status }}</v-chip></td>
+          <td class="error--text"><b>{{ props.item.mode }}</b></td>
+          <td class="success--text"><b>{{ props.item.status }}</b></td>
           <td>{{ props.item.started }}</td>
           <td>{{ props.item.ended }}</td>
           <td>{{ props.item.time }}</td>
           <td>
             <router-link class="nav-link" :to="{ name: 'deployments.info', params: { deploymentID: props.item.id } }">
-              <v-icon small style="padding:10px;">fas fa-info</v-icon>
+              <v-btn icon style="margin-left:-15px;"><v-icon small>fas fa-info</v-icon></v-btn>
             </router-link>
             <a :href="props.item.logs" target="_blank">
-              <v-icon small @click="logs(props.item)" style="padding:10px;">fas fa-meteor</v-icon>
+              <v-btn icon @click="logs(props.item)" style="margin-left:-10px;"><v-icon small>fas fa-meteor</v-icon></v-btn>
             </a>
           </td>
         </template>
@@ -59,24 +59,24 @@ export default {
   data: () => ({
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
-      { text: 'Environment', value: 'environment' },
-      { text: 'Mode', align: 'center', value: 'mode' },
-      { text: 'Status', align:'center', value: 'status' },
+      { text: 'Environment', align: 'left', value: 'environment' },
+      { text: 'Mode', align: 'left', value: 'mode' },
+      { text: 'Status', align:'left', value: 'status' },
       { text: 'Started', align: 'left', value: 'started' },
       { text: 'Ended', align: 'left', value: 'ended' },
-      { text: 'Overall Time', value: 'time' },
-      { text: 'Actions', value: 'actions' }
+      { text: 'Overall Time', align: 'left', value: 'time' },
+      { text: 'Actions', align: 'left', value: 'actions' }
     ],
     data: [
       {
         id: 1,
-        name: 'Release 3.33.0',
+        name: 'Release 3.35.0',
         environment: 'Production',
         mode: 'DEPLOYMENT',
         status: 'SUCCESS',
         started: '2019-07-07 08:00:00',
         ended: '2019-07-07 08:12:15',
-        time: '12m 15s',
+        time: '2m 15s',
         logs: 'https://dba.inbenta.me/meteor/?uri=24a5bd97-4fae-4868-b960-2b30b3b184f4'
       }
     ],

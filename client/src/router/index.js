@@ -88,6 +88,11 @@ const routes = [
         component: () => import('../components/monitoring/Monitoring')
       },
       {
+        path: 'processlist',
+        name: 'monitoring.processlist',
+        component: () => import('../components/monitoring/views/Processlist')
+      },
+      {
         path: 'queries',
         name: 'monitoring.queries',
         component: () => import('../components/monitoring/views/Queries')
