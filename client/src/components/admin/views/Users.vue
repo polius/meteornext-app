@@ -21,8 +21,8 @@
           <td>{{ props.item.group }}</td>
           <td>{{ props.item.mail }}</td>
           <td>{{ props.item.password }}</td>
-          <td v-if="props.item.admin"><v-icon color="success">fa fa-user-shield</v-icon></td>
-          <td v-else><v-icon color="error">fas fa-user</v-icon></td>
+          <td v-if="props.item.admin"><v-icon small color="success" style="margin-left:8px;">fa fa-user-shield</v-icon></td>
+          <td v-else><v-icon small color="error" style="margin-left:8px;">fas fa-user</v-icon></td>
         </template>
         <template v-slot:no-results>
           <v-alert :value="true" color="error" icon="warning">

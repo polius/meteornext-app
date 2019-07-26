@@ -4,8 +4,7 @@ import imp
 
 class Deployments:
     def __init__(self):
-        print("HEY")
-        # self._mysql = mysql()
+        pass
 
     def initDeployments(self):
         pass

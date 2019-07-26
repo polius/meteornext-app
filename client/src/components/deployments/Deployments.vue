@@ -29,10 +29,10 @@
           <td>{{ props.item.ended }}</td>
           <td>{{ props.item.time }}</td>
           <td>
-            <router-link class="nav-link" :to="{ name: 'deployments.info', params: { deploymentID: props.item.id } }">
+            <router-link title="Information" class="nav-link" :to="{ name: 'deployments.info', params: { deploymentID: props.item.id } }">
               <v-btn icon style="margin-left:-15px;"><v-icon small>fas fa-info</v-icon></v-btn>
             </router-link>
-            <a :href="props.item.logs" target="_blank">
+            <a :href="props.item.logs" target="_blank" title="Results">
               <v-btn icon @click="logs(props.item)" style="margin-left:-10px;"><v-icon small>fas fa-meteor</v-icon></v-btn>
             </a>
           </td>

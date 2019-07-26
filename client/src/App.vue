@@ -43,11 +43,11 @@
       </router-link>
 
       <!-- LOGOUT -->
-      <router-link title="Logout" class="nav-link" to="/login">
-        <v-btn icon>
-          <v-icon>fas fa-sign-out-alt</v-icon>
-        </v-btn>
-      </router-link>
+      <!-- <router-link title="Logout" class="nav-link" to="/login"> -->
+      <v-btn icon title="Logout" @click="logout()">
+        <v-icon>fas fa-sign-out-alt</v-icon>
+      </v-btn>
+      <!-- </router-link> -->
     </v-toolbar>
 
     <router-view/>
@@ -94,6 +94,17 @@ import axios from 'axios';
 export default {
   data: () => ({
     rightDrawer: false
-  })
+  }),
+  computed : {
+    isLoggedIn : function(){ return this.$store.getters.isLoggedIn }
+  },
+  methods: {
+    logout() {
+      this.$store.dispatch('logout')
+      .then(() => {
+        this.$router.push('/login')
+      })
+    }
+  }
 }
 </script>

@@ -22,8 +22,8 @@
           <td>{{ props.item.cross_region }}</td>
           <td>{{ props.item.hostname }}</td>
           <td>{{ props.item.username }}</td>
-          <td>{{ props.item.password }}</td>
-          <td>{{ props.item.key }}</td>
+          <td><v-icon small color="error" style="margin-left:18px;">fas fa-times</v-icon></td>
+          <td><v-icon small color="success" style="margin-left:20px;">fas fa-check</v-icon></td>
         </template>
         <template v-slot:no-results>
           <v-alert :value="true" color="error" icon="warning">
@@ -53,7 +53,7 @@
                   <v-text-field v-model="item.hostname" label="Hostname"></v-text-field>
                   <v-text-field v-model="item.username" label="Username" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.password" label="Password" style="padding-top:0px;"></v-text-field>
-                  <v-textarea v-model="item.key" label="Private Key" style="padding-top:0px;"></v-textarea>
+                  <v-textarea v-model="item.key" label="Private Key" rows="1" auto-grow style="padding-top:0px;"></v-textarea>
                 </div>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">

@@ -29,8 +29,8 @@
               <td>{{ props.item.ended }}</td>
               <td>{{ props.item.time }}</td>
               <td>
-                <a :href="props.item.logs" target="_blank">
-                  <v-btn icon @click="logs(props.item)" style="margin-left:-5px;"><v-icon small>fas fa-meteor</v-icon></v-btn>
+                <a :href="props.item.results" target="_blank">
+                  <v-btn icon @click="results(props.item)" style="margin-left:-5px;"><v-icon small>fas fa-meteor</v-icon></v-btn>
                 </a>
               </td>
             </template>
@@ -43,10 +43,10 @@
         <v-card dark style="margin-top:15px;">
           <v-data-table :headers="validation_headers" :items="validation_data" hide-actions>
             <template v-slot:items="props">
-              <td class="success--text"><b>{{ props.item.r1 }}</b></td>
-              <td class="warning--text"><b>{{ props.item.r2 }}</b></td>
-              <td class="warning--text"><b>{{ props.item.r3 }}</b></td>
-              <td class="error--text"><b>{{ props.item.r4 }}</b></td>
+              <td class="success--text"><v-icon small color="success" style="margin-right:10px;">fas fa-check</v-icon><b>{{props.item.r1}}</b></td>
+              <td class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{props.item.r2}}</b></td>
+              <td class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{props.item.r3}}</b></td>
+              <td class="error--text"><v-icon small color="error" style="margin-right:10px;">fas fa-times</v-icon><b>{{props.item.r4}}</b></td>
             </template>
           </v-data-table>
         </v-card>
@@ -56,15 +56,15 @@
         <v-card dark style="margin-top:15px;">
           <v-data-table :headers="execution_headers" :items="execution_data" hide-actions>
             <template v-slot:items="props">
-              <td v-if="props.index == 0" style="padding-left:20px;"><v-chip label color="warning" dark><b>{{ props.item.r1 }}</b></v-chip></td>
-              <td v-if="props.index == 0" style="padding-left:20px;"><v-chip label color="warning" dark><b>{{ props.item.r2 }}</b></v-chip></td>
-              <td v-if="props.index == 0" style="padding-left:20px;"><v-chip label color="warning" dark><b>{{ props.item.r3 }}</b></v-chip></td>
-              <td v-if="props.index == 0" style="padding-left:20px;"><v-chip label color="success" dark><b>{{ props.item.r4 }}</b></v-chip></td>
+              <td v-if="props.index == 0" :style="`background-color:` + regionColor(props.item.r1)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r1) }}</v-icon><b>{{ props.item.r1 }}</b></td>
+              <td v-if="props.index == 0" :style="`background-color:` + regionColor(props.item.r2)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r2) }}</v-icon><b>{{ props.item.r2 }}</b></td>
+              <td v-if="props.index == 0" :style="`background-color:` + regionColor(props.item.r3)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r3) }}</v-icon><b>{{ props.item.r3 }}</b></td>
+              <td v-if="props.index == 0" :style="`background-color:` + regionColor(props.item.r4)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r4) }}</v-icon><b>{{ props.item.r4 }}</b></td>
 
-              <td v-if="props.index != 0" class="warning--text" style="padding-left:20px;">{{ props.item.r1 }}</td>
-              <td v-if="props.index != 0" class="warning--text" style="padding-left:20px;">{{ props.item.r2 }}</td>
-              <td v-if="props.index != 0" class="warning--text" style="padding-left:20px;">{{ props.item.r3 }}</td>
-              <td v-if="props.index != 0" class="success--text" style="padding-left:20px;">{{ props.item.r4 }}</td>
+              <td v-if="props.index != 0" :class="serverColor(props.item.r1.progress)" style="padding-left:20px;">{{ props.item.r1.server }}. {{ props.item.r1.progress }}</td>
+              <td v-if="props.index != 0" :class="serverColor(props.item.r2.progress)" style="padding-left:20px;">{{ props.item.r2.server }}. {{ props.item.r2.progress }}</td>
+              <td v-if="props.index != 0" :class="serverColor(props.item.r3.progress)" style="padding-left:20px;">{{ props.item.r3.server }}. {{ props.item.r3.progress }}</td>
+              <td v-if="props.index != 0" :class="serverColor(props.item.r4.progress)" style="padding-left:20px;">{{ props.item.r4.server }}. {{ props.item.r4.progress }}</td>
             </template>
           </v-data-table>
         </v-card>
@@ -106,9 +106,9 @@
             <v-card dark>
               <v-data-table :headers="summary_headers" :items="summary_data" hide-actions>
                 <template v-slot:items="props">
-                  <td>{{ props.item.total }}</td>
-                  <td>{{ props.item.succeeded }}</td>
-                  <td>{{ props.item.failed }}</td>
+                  <td><b>{{ props.item.total }}</b></td>
+                  <td><b>{{ props.item.succeeded }}</b></td>
+                  <td><b>{{ props.item.failed }}</b></td>
                 </template>
               </v-data-table>
             </v-card>
@@ -140,7 +140,7 @@
         { text: 'Started', align: 'left', value: 'started', sortable: false },
         { text: 'Ended', align: 'left', value: 'ended', sortable: false },
         { text: 'Overall Time', value: 'time', sortable: false },
-        { text: 'Logs', value: 'logs', sortable: false }
+        { text: 'Results', value: 'results', sortable: false }
       ],
       status_data: [
         {
@@ -151,7 +151,7 @@
           started: '2019-07-07 08:00:00',
           ended: '2019-07-07 08:12:15',
           time: '12m 15s',
-          logs: 'https://dba.inbenta.me/meteor/?uri=24a5bd97-4fae-4868-b960-2b30b3b184f4'
+          results: 'https://dba.inbenta.me/meteor/?uri=24a5bd97-4fae-4868-b960-2b30b3b184f4'
         }
       ],
       validation_headers: [
@@ -162,10 +162,10 @@
       ],
       validation_data: [
         { 
-          r1: "Succeeded",
-          r2: "Validating",
-          r3: "Validating",
-          r4: "Failed"
+          r1: "SUCCEEDED",
+          r2: "VALIDATING",
+          r3: "VALIDATING",
+          r4: "FAILED"
         }
       ],
       execution_headers: [
@@ -175,9 +175,9 @@
         { text: 'AWS-JP', align:'left', value: 'r4', sortable: false }
       ],
       execution_data: [
-        { r1: "0% (0/120 DBs)", r2: "56% (756/1362 DBs)", r3: "82% (1467/1739 DBs)", r4: "100% (253/253 DBs)" },
-        { r1: "awseu-sql01. 100% (21/21 DBs)", r2: "aws-sql01. 52% (12/21 DBs)", r3: "awsbr-sql01. 52% (12/21 DBs)", r4: "awsjp-sql01. 100% (153/153 DBs)" },
-        { r1: "awseu-sql02. 100% (122/122 DBs)", r2: "aws-sql02. 43% (108/211 DBs)", r3: "awsbr-sql02. 8% (2/12 DBs)", r4: "awsjp-sql02. 100% (100/100 DBs)" }
+        { r1: "100% (143/143 DBs)", r2: "56% (756/1362 DBs)", r3: "82% (1467/1739 DBs)", r4: "100% (253/253 DBs)" },
+        { r1: { server: "awseu-sql01", progress: "100% (21/21 DBs)" }, r2: { server: "aws-sql01", progress: "52% (12/21 DBs)" }, r3: { server: "awsbr-sql01", progress: "52% (12/21 DBs)" }, r4: { server: "awsjp-sql01", progress: "100% (153/153 DBs)" }},
+        { r1: { server: "awseu-sql02", progress: "100% (122/122 DBs)" }, r2: { server: "aws-sql02", progress: "43% (108/211 DBs)" }, r3: { server: "awsbr-sql02", progress: "8% (2/12 DBs)" }, r4: { server: "awsjp-sql02", progress: "100% (100/100 DBs)" }}
       ],
       logs_headers: [
         { text: 'LOGS', align:'left', value: 'status', sortable: false }
@@ -221,15 +221,17 @@
     }),
     props: ['deploymentID'],
     methods: {
-      getModeColor (mode) {
-        if (mode == 'DEPLOYMENT') return 'red'
-        else if (mode == 'TEST') return 'orange'
-        else if (mode == 'VALIDATION') return 'green'
+      regionColor (progress) {
+        if (progress.startsWith('100%')) return '#4caf50'
+        else return '#fb8c00'
       },
-      getStatusColor (status) {
-        if (status == 'FAILED') return 'red'
-        else if (status == 'WARNINGS') return 'orange'
-        else if (status == 'SUCCESS') return 'green'
+      regionIcon (progress) {
+        if (progress.startsWith('100%')) return 'fas fa-check'
+        else return 'fas fa-spinner'
+      },
+      serverColor (progress) {
+        if (progress.startsWith('100%')) return 'success--text'
+        else return 'warning--text'
       },
       stop() {
         this.notification('Stopping the execution. Please wait...', 'primary')
