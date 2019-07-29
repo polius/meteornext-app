@@ -14,7 +14,7 @@
       <v-card-title style="padding-top:0px;">
         <v-text-field v-model="search" append-icon="search" label="Search" single-line hide-details></v-text-field>
       </v-card-title>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" item-key="name" select-all class="elevation-1">
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" select-all class="elevation-1">
         <template v-slot:items="props">
           <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
           <td>{{ props.item.name }}</td>
@@ -346,18 +346,10 @@ export default {
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Description', align: 'left', value: 'description' }
     ],
-    items: [
-      {
-        name: 'Administrator',
-        description: 'Full access'
-      },
-      {
-        name: 'SysAdmin',
-        description: 'Limited to SELECT deployments'
-      }
-    ],
+    items: [],
     selected: [],
     search: '',
+    loading: true,
     // Item
     item: { name: '', description: '' },
     regions_items: [],
@@ -467,10 +459,11 @@ export default {
     // | GROUPS |
     // +--------+
     getItems() {
-      const path = 'http://34.242.255.177:5000/admin/groups/'
+      const path = this.$store.getters.url + '/admin/groups'
       axios.get(path)
         .then((res) => {
-          this.items = res.data.items
+          //this.loading = false
+          //this.items = res.data.data
         })
         .catch((error) => {
           // eslint-disable-next-line
@@ -833,6 +826,9 @@ export default {
         if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
       })
     }
+  },
+  created() {
+    this.getItems()
   }
 }
 </script> 

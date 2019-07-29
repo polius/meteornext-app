@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <v-content :style="{ backgroundImage: 'url(' + require('@/assets/bg.jpg') + ')', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }">
+  <div style="height:100%">
+    <v-content style="height:100%" :style="{ backgroundImage: 'url(' + require('@/assets/bg.jpg') + ')', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }">
       <v-container grid-list-xl text-xs-center style="padding-top:0px;">
         <v-layout row wrap>
           <v-flex xs6 offset-xs3>
@@ -10,7 +10,7 @@
                   <v-avatar :size="150" style="margin-top:10px;"><img :src="require('../assets/logo.png')" /></v-avatar>
                   <div class="display-2" style="margin-top:10px; margin-bottom:30px;"><b>Meteor</b> Next</div>
                   <v-text-field box v-model="username" name="username" label="Username" required append-icon="person"></v-text-field>
-                  <v-text-field box v-model="password" name="password" label="Password" required append-icon="lock" type="password"></v-text-field>
+                  <v-text-field box v-model="password" name="password" label="Password" required append-icon="lock" type="password" v-on:keyup.enter="login()"></v-text-field>
                   <v-btn type="submit" color="info" :loading="loading" large block style="margin-top:0px;" @click="login()">Login</v-btn>
                 </v-card-text>
               </v-card>
@@ -53,8 +53,9 @@
         this.$store.dispatch('login', { username, password })
         .then(() => this.$router.push('/'))
         .catch((err) => {
+          console.log(err)
           this.loading = false
-          this.notification(err.response.data.message, 'error')
+          // this.notification(err.response.data.message, 'error')
         })
       },
       notification(message, color) {

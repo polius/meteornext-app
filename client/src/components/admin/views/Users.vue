@@ -21,8 +21,8 @@
           <td>{{ props.item.group }}</td>
           <td>{{ props.item.mail }}</td>
           <td>{{ props.item.password }}</td>
-          <td v-if="props.item.admin"><v-icon small color="success" style="margin-left:8px;">fa fa-user-shield</v-icon></td>
-          <td v-else><v-icon small color="error" style="margin-left:8px;">fas fa-user</v-icon></td>
+          <td v-if="props.item.admin"><v-icon small color="success" style="margin-left:8px;">fas fa-check</v-icon></td>
+          <td v-else><v-icon small color="error" style="margin-left:8px;">fas fa-times</v-icon></td>
         </template>
         <template v-slot:no-results>
           <v-alert :value="true" color="error" icon="warning">
@@ -44,9 +44,9 @@
             <v-layout wrap>
               <v-flex xs12 v-if="mode!='delete'">
                 <v-text-field ref="field" v-model="item.username" label="Username" required append-icon="person" style="padding-top:0px; margin-top:0px;"></v-text-field>
-                <v-select v-model="item.group" :items="groups_items" label="Group" required style="padding-top:0px; margin-top:0px;"></v-select>
                 <v-text-field v-model="item.email" label="Email" type="email" required append-icon="email" style="padding-top:0px; margin-top:0px;"></v-text-field>
                 <v-text-field v-model="item.password" label="Password" type="password" required append-icon="lock" style="padding-top:0px; margin-top:0px;"></v-text-field>
+                <v-select v-model="item.group" :items="groups_items" label="Group" required style="padding-top:0px; margin-top:0px;"></v-select>
                 <v-switch v-model="item.admin" hint="yes" label="Admin Privileges" style="margin-top:0px; padding-top:0px;"></v-switch>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">

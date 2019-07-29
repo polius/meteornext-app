@@ -13,7 +13,7 @@ export default new Vuex.Store({
   },
   mutations: {
     init(state, data) {
-      state.url = data.settings.host + ':' + data.settings.port
+      state.url = 'http://' + data.settings.host + ':' + data.settings.port
     },
     auth_request(state) {
       state.status = 'loading'
@@ -38,13 +38,13 @@ export default new Vuex.Store({
     login({ commit }, user) {
       return new Promise((resolve, reject) => {
         commit('auth_request')
-        axios({ url: this.getters.url, data: user, method: 'POST' })
+        axios({ url: this.getters.url + '/login', data: user, method: 'POST' })
           .then(resp => {
             const token = resp.data.data.access_token
             const user = resp.data.data.user
             localStorage.setItem('token', token)
             // Add the following line:
-            axios.defaults.headers.common['Authorization'] = token
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
             commit('auth_success', token, user)
             resolve(resp)
           })
@@ -67,6 +67,7 @@ export default new Vuex.Store({
   getters: {
     isLoggedIn: state => !!state.token,
     authStatus: state => state.status,
-    config: state => state.config
+    url: state => state.url,
+    
   }
 })
