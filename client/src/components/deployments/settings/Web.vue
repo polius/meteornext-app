@@ -1,15 +1,14 @@
 <template>
   <div>
-    <v-toolbar color="primary" dark>
-      <v-toolbar-title>WEB</v-toolbar-title>
-    </v-toolbar>
-
     <v-card>
+      <v-toolbar flat color="primary">
+        <v-toolbar-title>WEB</v-toolbar-title>
+      </v-toolbar>
       <v-container fluid grid-list-lg>
         <v-layout row wrap>
           <v-flex xs12>
-            <v-text-field v-model="public_url" label="Public Web URL" required dark style="padding-top:0px;"></v-text-field>
-            <v-btn color="primary" @click="save()" dark style="margin-left:0px;">Save</v-btn>    
+            <v-text-field v-model="public_url" label="Public Web URL" required></v-text-field>
+            <v-btn color="primary" @click="save()" style="margin-left:0px;">Save</v-btn>    
           </v-flex>
         </v-layout>
       </v-container>
@@ -17,13 +16,13 @@
 
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
       {{ snackbarText }}
-      <v-btn color="white" flat @click="snackbar = false">Close</v-btn>
+      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
     </v-snackbar>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
+// import axios from 'axios';
 
 export default {
   data: () => ({

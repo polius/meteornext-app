@@ -1,6 +1,6 @@
 <template>
   <v-app dark>
-    <v-toolbar clipped-left app absolute v-show="$router.history.current.path != '/login'">
+    <v-app-bar clipped-left app absolute v-show="$router.history.current.path != '/login'">
       <router-link class="nav-link white--text" to="/" style="text-decoration:none;">
         <v-toolbar-title>Meteor Next</v-toolbar-title>
       </router-link>
@@ -11,11 +11,11 @@
         <v-btn color="success"><v-icon small style="padding-right:10px">fas fa-meteor</v-icon>Deployments</v-btn>
       </router-link>
       <!-- VALIDATION -->
-      <router-link class="nav-link" to="/validation">
-        <v-btn color="orange"><v-icon small style="padding-right:10px">fas fa-check</v-icon>SQL Validation</v-btn>
+      <router-link class="nav-link" to="/validation" style="margin-left:10px;">
+        <v-btn color="orange"><v-icon small style="padding-right:10px">fas fa-check</v-icon>Validation</v-btn>
       </router-link>
       <!-- MONITORING -->
-      <router-link class="nav-link" to="/monitoring">
+      <router-link class="nav-link" to="/monitoring" style="margin-left:10px;">
         <v-btn color="red"><v-icon small style="padding-right:10px">fas fa-desktop</v-icon>Monitoring</v-btn>
       </router-link>
 
@@ -23,12 +23,14 @@
 
       <!-- NOTIFICATIONSS -->
       <v-tooltip bottom>
-        <v-btn icon @click.stop="rightDrawer = !rightDrawer" slot="activator">
-          <v-badge color="red" overlap>
-            <span slot="badge">2</span>
-            <v-icon>fas fa-bell</v-icon>
-          </v-badge>
-        </v-btn>
+        <template v-slot:activator="{ on }">
+          <v-btn icon @click.stop="rightDrawer = !rightDrawer" slot="activator">
+            <v-badge color="red" overlap>
+              <span slot="badge">2</span>
+              <v-icon>fas fa-bell</v-icon>
+            </v-badge>
+          </v-btn>
+        </template>
         <span>2 unread notifications</span>
       </v-tooltip>
 
@@ -48,12 +50,12 @@
         <v-icon>fas fa-sign-out-alt</v-icon>
       </v-btn>
       <!-- </router-link> -->
-    </v-toolbar>
+    </v-app-bar>
 
     <router-view/>
 
     <v-navigation-drawer temporary right v-model="rightDrawer" fixed app>
-      <v-toolbar flat prominent dark class="primary">
+      <v-toolbar flat class="primary">
         <v-toolbar-title>Notifications</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon @click.stop="rightDrawer = false">
@@ -62,35 +64,33 @@
       </v-toolbar>
       <v-list subheader dense>
         <v-subheader>All notifications</v-subheader>
-        <v-list-tile @click="">
-          <v-list-tile-action>
+        <v-list-item>
+          <v-list-item-action>
             <v-icon>person_add</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-title>
+          </v-list-item-action>
+          <v-list-item-title>
             12 new users registered
-          </v-list-tile-title>
-        </v-list-tile>
+          </v-list-item-title>
+        </v-list-item>
         <v-divider></v-divider>
-        <v-list-tile @click="">
-          <v-list-tile-action>
+        <v-list-item>
+          <v-list-item-action>
             <v-icon>data_usage</v-icon>
-          </v-list-tile-action>
-          <v-list-tile-title>
+          </v-list-item-action>
+          <v-list-item-title>
             DB overloaded 80%
-          </v-list-tile-title>
-        </v-list-tile>
+          </v-list-item-title>
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
-    <v-footer app v-show="$router.history.current.path != '/login'">
+    <v-footer app v-show="$router.history.current.path != '/login'" style="height:30px;">
       <span class="px-3"></span>
     </v-footer>
   </v-app>
 </template>
 
 <script>
-import axios from 'axios';
-
 export default {
   data: () => ({
     rightDrawer: false

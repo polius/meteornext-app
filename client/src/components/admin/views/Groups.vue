@@ -1,27 +1,24 @@
 <template>
   <div>
-    <v-toolbar dark color="primary">
-      <v-toolbar-title class="white--text">GROUPS</v-toolbar-title>
-      <v-divider class="mx-3" inset vertical></v-divider>
-      <v-toolbar-items class="hidden-sm-and-down">
-        <v-btn flat @click="newItem()"><v-icon style="padding-right:10px">fas fa-plus-circle</v-icon>NEW</v-btn>
-        <v-btn v-if="selected.length == 1" flat @click="editItem()"><v-icon style="padding-right:10px">fas fa-dot-circle</v-icon>EDIT</v-btn>
-        <v-btn v-if="selected.length > 0" flat @click="deleteItem()"><v-icon style="padding-right:10px">fas fa-minus-circle</v-icon>DELETE</v-btn>
-      </v-toolbar-items>
-    </v-toolbar>
-
     <v-card>
-      <v-card-title style="padding-top:0px;">
-        <v-text-field v-model="search" append-icon="search" label="Search" single-line hide-details></v-text-field>
-      </v-card-title>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" select-all class="elevation-1">
+      <v-toolbar flat color="primary">
+        <v-toolbar-title class="white--text">GROUPS</v-toolbar-title>
+        <v-divider class="mx-3" inset vertical></v-divider>
+        <v-toolbar-items class="hidden-sm-and-down">
+          <v-btn text @click="newItem()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="editItem()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn v-if="selected.length > 0" text @click="deleteItem()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+        </v-toolbar-items>
+        <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
+      </v-toolbar>
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1">
         <template v-slot:items="props">
           <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
           <td>{{ props.item.name }}</td>
           <td>{{ props.item.description }}</td>
         </template>
         <template v-slot:no-results>
-          <v-alert :value="true" color="error" icon="warning">
+          <v-alert :value="true" color="error" icon="warning" style="margin-top:15px;">
             Your search for "{{ search }}" found no results.
           </v-alert>
         </template>
@@ -29,18 +26,18 @@
     </v-card>
 
     <v-dialog v-model="itemDialog" persistent max-width="1280px">
-      <v-toolbar dark color="primary">
-        <v-toolbar-title class="white--text">{{ itemDialogTitle }}</v-toolbar-title>
-         <v-spacer></v-spacer>
-        <v-btn icon @click="itemDialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
-      </v-toolbar>
       <v-card>
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">{{ itemDialogTitle }}</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="itemDialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
         <v-card-text>
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 v-if="mode!='delete'" style="margin-bottom:10px;">
                 <!-- METADATA -->
-                <div class="title font-weight-regular" style="padding-top:10px;">Metadata</div>
+                <div class="title font-weight-regular">Metadata</div>
                 <v-text-field v-model="item.name" label="Name" required></v-text-field>
                 <v-text-field v-model="item.description" label="Description" required style="padding-top:0px; margin-top:0px;"></v-text-field>
 
@@ -48,17 +45,18 @@
                 <div class="title font-weight-regular" style="margin-top:5px;">Deployments</div>
 
                 <!-- environments -->
-                <v-toolbar dense dark style="margin-top:20px;">
-                  <v-toolbar-title class="white--text subheading">Environments</v-toolbar-title>
-                  <v-divider class="mx-3" inset vertical></v-divider>
-                  <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                    <v-btn flat @click='new_environment()'><v-icon small style="padding-right:10px">fas fa-plus-circle</v-icon>NEW</v-btn>
-                    <v-btn v-if="environment_selected.length == 1" @click="edit_environment()"><v-icon small style="padding-right:10px">fas fa-dot-circle</v-icon>EDIT</v-btn>
-                    <v-btn v-if="environment_selected.length > 0" @click='delete_environment()'><v-icon small style="padding-right:10px">fas fa-minus-circle</v-icon>DELETE</v-btn>
-                  </v-toolbar-items>
-                </v-toolbar>
                 <v-card style="margin-bottom:10px;">
-                  <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" item-key="name" :hide-headers="environment_items.length == 0" hide-actions select-all class="elevation-1">
+                  <v-toolbar flat dense style="margin-top:20px;">
+                    <v-toolbar-title class="white--text">Environments</v-toolbar-title>
+                    <v-divider class="mx-3" inset vertical></v-divider>
+                    <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
+                      <v-btn text @click='new_environment()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                      <v-btn v-if="environment_selected.length == 1" text @click="edit_environment()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                      <v-btn v-if="environment_selected.length > 0" text @click='delete_environment()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                    </v-toolbar-items>
+                  </v-toolbar>
+                  <v-divider></v-divider>
+                  <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" item-key="name" :hide-default-header="environment_items.length == 0" hide-default-footer show-select class="elevation-1">
                     <template v-slot:items="props">
                       <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
                       <td>{{ props.item.name }}</td>
@@ -67,17 +65,18 @@
                 </v-card>
 
                 <!-- regions -->
-                <v-toolbar dense dark style="margin-top:10px;">
-                  <v-toolbar-title class="white--text subheading">Regions</v-toolbar-title>
-                  <v-divider class="mx-3" inset vertical></v-divider>
-                  <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                    <v-btn flat @click='new_region()'><v-icon small style="padding-right:10px">fas fa-plus-circle</v-icon>NEW</v-btn>
-                    <v-btn v-if="region_selected.length == 1" @click="edit_region()"><v-icon small style="padding-right:10px">fas fa-dot-circle</v-icon>EDIT</v-btn>
-                    <v-btn v-if="region_selected.length > 0" @click='delete_region()'><v-icon small style="padding-right:10px">fas fa-minus-circle</v-icon>DELETE</v-btn>
-                  </v-toolbar-items>
-                </v-toolbar>
                 <v-card style="margin-bottom:10px;">
-                  <v-data-table v-model="region_selected" :headers="region_headers" :items="region_items" item-key="name" :hide-headers="region_items.length == 0" hide-actions select-all class="elevation-1">
+                  <v-toolbar flat dense style="margin-top:10px;">
+                    <v-toolbar-title class="white--text">Regions</v-toolbar-title>
+                    <v-divider class="mx-3" inset vertical></v-divider>
+                    <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
+                      <v-btn text @click='new_region()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                      <v-btn v-if="region_selected.length == 1" text @click="edit_region()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                      <v-btn v-if="region_selected.length > 0" text @click='delete_region()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                    </v-toolbar-items>
+                  </v-toolbar>
+                  <v-divider></v-divider>
+                  <v-data-table v-model="region_selected" :headers="region_headers" :items="region_items" item-key="name" :hide-default-header="region_items.length == 0" hide-default-footer show-select class="elevation-1">
                     <template v-slot:items="props">
                       <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
                       <td>{{ props.item.name }}</td>
@@ -91,17 +90,18 @@
                 </v-card>
 
                 <!-- servers -->
-                <v-toolbar dense dark style="margin-top:10px;">
-                  <v-toolbar-title class="white--text subheading">Servers</v-toolbar-title>
-                  <v-divider class="mx-3" inset vertical></v-divider>
-                  <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                    <v-btn flat @click='new_server()'><v-icon small style="padding-right:10px">fas fa-plus-circle</v-icon>NEW</v-btn>
-                    <v-btn v-if="server_selected.length == 1" @click="edit_server()"><v-icon small style="padding-right:10px">fas fa-dot-circle</v-icon>EDIT</v-btn>
-                    <v-btn v-if="server_selected.length > 0" @click='delete_server()'><v-icon small style="padding-right:10px">fas fa-minus-circle</v-icon>DELETE</v-btn>
-                  </v-toolbar-items>
-                </v-toolbar>
                 <v-card style="margin-bottom:10px;">
-                  <v-data-table v-model="server_selected" :headers="server_headers" :items="server_items" item-key="name" :hide-headers="server_items.length == 0" hide-actions select-all class="elevation-1">
+                  <v-toolbar flat dense style="margin-top:10px;">
+                    <v-toolbar-title class="white--text">Servers</v-toolbar-title>
+                    <v-divider class="mx-3" inset vertical></v-divider>
+                    <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
+                      <v-btn text @click='new_server()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                      <v-btn v-if="server_selected.length == 1" text @click="edit_server()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                      <v-btn v-if="server_selected.length > 0" text @click='delete_server()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                    </v-toolbar-items>
+                  </v-toolbar>
+                  <v-divider></v-divider>
+                  <v-data-table v-model="server_selected" :headers="server_headers" :items="server_items" item-key="name" :hide-default-header="server_items.length == 0" hide-default-footer show-select class="elevation-1">
                     <template v-slot:items="props">
                       <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
                       <td>{{ props.item.name }}</td>
@@ -115,17 +115,18 @@
                 </v-card>
 
                 <!-- auxiliary connections -->
-                <v-toolbar dense dark style="margin-top:10px;">
-                  <v-toolbar-title class="white--text subheading">Auxiliary Connections</v-toolbar-title>
-                  <v-divider class="mx-3" inset vertical></v-divider>
-                  <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                    <v-btn flat @click='new_auxiliary()'><v-icon small style="padding-right:10px">fas fa-plus-circle</v-icon>NEW</v-btn>
-                    <v-btn v-if="auxiliary_selected.length == 1" @click="edit_auxiliary()"><v-icon small style="padding-right:10px">fas fa-dot-circle</v-icon>EDIT</v-btn>
-                    <v-btn v-if="auxiliary_selected.length > 0" @click='delete_auxiliary()'><v-icon small style="padding-right:10px">fas fa-minus-circle</v-icon>DELETE</v-btn>
-                  </v-toolbar-items>
-                </v-toolbar>
                 <v-card style="margin-bottom:10px;">
-                  <v-data-table v-model="auxiliary_selected" :headers="auxiliary_headers" :items="auxiliary_items" item-key="name" :hide-headers="auxiliary_items.length == 0" hide-actions select-all class="elevation-1">
+                  <v-toolbar flat dense style="margin-top:10px;">
+                    <v-toolbar-title class="white--text">Auxiliary Connections</v-toolbar-title>
+                    <v-divider class="mx-3" inset vertical></v-divider>
+                    <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
+                      <v-btn text @click='new_auxiliary()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                      <v-btn v-if="auxiliary_selected.length == 1" text @click="edit_auxiliary()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                      <v-btn v-if="auxiliary_selected.length > 0" text @click='delete_auxiliary()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                    </v-toolbar-items>
+                  </v-toolbar>
+                  <v-divider></v-divider>
+                  <v-data-table v-model="auxiliary_selected" :headers="auxiliary_headers" :items="auxiliary_items" item-key="name" :hide-default-header="auxiliary_items.length == 0" hide-default-footer show-select class="elevation-1">
                     <template v-slot:items="props">
                       <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
                       <td>{{ props.item.name }}</td>
@@ -137,60 +138,49 @@
                 </v-card>
 
                 <!-- slack -->
-                <v-toolbar dense dark style="margin-top:10px;">
-                  <v-toolbar-title class="white--text subheading">Slack</v-toolbar-title>
-                </v-toolbar>
                 <v-card>
+                  <v-toolbar flat dense style="margin-top:10px;">
+                    <v-toolbar-title class="white--text">Slack</v-toolbar-title>
+                  </v-toolbar>
+                  <v-divider></v-divider>
                   <v-card-text style="padding-bottom:0px;">
-                    <v-text-field v-model="slack_webhook" label="Webhook URL" required dark style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="slack_webhook" label="Webhook URL" required style="padding-top:0px;"></v-text-field>
                     <v-switch v-model="slack_enabled" label="Enable Notifications" style="margin-top:0px;"></v-switch>
                   </v-card-text>
                 </v-card>
 
                 <!-- amazon s3 -->
-                <v-toolbar dense dark style="margin-top:10px;">
-                  <v-toolbar-title class="white--text subheading">Amazon S3</v-toolbar-title>
-                </v-toolbar>
                 <v-card>
+                  <v-toolbar flat dense style="margin-top:10px;">
+                    <v-toolbar-title class="white--text">Amazon S3</v-toolbar-title>
+                  </v-toolbar>
+                  <v-divider></v-divider>
                   <v-card-text style="padding-bottom:0px;">
-                    <v-text-field v-model="s3_aws_access_key" label="AWS Access Key" dark style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="s3_aws_secret_access_key" label="AWS Secret Access Key" dark style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="s3_region_name" label="Region Name" hint="Example: eu-west-1" dark style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="s3_bucket_name" label="Bucket Name" dark style="padding-top:0px;"></v-text-field>
-                    <v-switch v-model="s3_enabled" label="Enable Uploading Logs" style="margin-top:0px;"></v-switch>
-                  </v-card-text>
-                </v-card>
-
-                <!-- amazon s3 -->
-                <v-toolbar dense dark style="margin-top:10px;">
-                  <v-toolbar-title class="white--text subheading">Amazon S3</v-toolbar-title>
-                </v-toolbar>
-                <v-card>
-                  <v-card-text style="padding-bottom:0px;">
-                    <v-text-field v-model="s3_aws_access_key" label="AWS Access Key" dark style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="s3_aws_secret_access_key" label="AWS Secret Access Key" dark style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="s3_region_name" label="Region Name" hint="Example: eu-west-1" dark style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="s3_bucket_name" label="Bucket Name" dark style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="s3_aws_access_key" label="AWS Access Key" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="s3_aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="s3_region_name" label="Region Name" hint="Example: eu-west-1" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="s3_bucket_name" label="Bucket Name" style="padding-top:0px;"></v-text-field>
                     <v-switch v-model="s3_enabled" label="Enable Uploading Logs" style="margin-top:0px;"></v-switch>
                   </v-card-text>
                 </v-card>
 
                 <!-- web -->
-                <v-toolbar dense dark style="margin-top:10px;">
-                  <v-toolbar-title class="white--text subheading">Web</v-toolbar-title>
-                </v-toolbar>
                 <v-card>
+                  <v-toolbar flat dense style="margin-top:10px;">
+                    <v-toolbar-title class="white--text">Web</v-toolbar-title>
+                  </v-toolbar>
+                  <v-divider></v-divider>
                   <v-card-text style="padding-bottom:0px;">
-                    <v-text-field v-model="web_public_url" label="Public Web URL" required dark style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="web_public_url" label="Public Web URL" required style="padding-top:0px;"></v-text-field>
                   </v-card-text>
                 </v-card>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">
-                <div class="subheading">Are you sure you want to delete the selected groups?</div>
+                <div class="subtitle-1">Are you sure you want to delete the selected groups?</div>
               </v-flex>
 
-              <v-btn color="success" @click="actionConfirm()" dark style="margin-left:0px">Confirm</v-btn>
-              <v-btn color="error" @click="itemDialog=false" dark style="margin-left:0px">Cancel</v-btn>
+              <v-btn color="success" @click="actionConfirm()">Confirm</v-btn>
+              <v-btn color="error" @click="itemDialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -202,7 +192,7 @@
     +--------------+
     -->
     <v-dialog v-model="environment_dialog" persistent max-width="768px">
-      <v-toolbar dark color="primary">
+      <v-toolbar color="primary">
         <v-toolbar-title class="white--text">{{ environment_dialog_title }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
@@ -213,10 +203,10 @@
                 <v-text-field ref="field" v-on:keyup.enter="confirm_environment()" v-model="environment_item.name" label="Environment Name" required></v-text-field>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="environment_mode=='delete'">
-                <div class="subheading">Are you sure you want to delete the selected environments?</div>
+                <div class="subtitle-1">Are you sure you want to delete the selected environments?</div>
               </v-flex>
-              <v-btn color="success" @click="confirm_environment()" dark style="margin-left:0px">Confirm</v-btn>
-              <v-btn color="error" @click="environment_dialog=false" dark style="margin-left:0px">Cancel</v-btn>
+              <v-btn color="success" @click="confirm_environment()">Confirm</v-btn>
+              <v-btn color="error" @click="environment_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -228,7 +218,7 @@
     +---------+
     -->
     <v-dialog v-model="region_dialog" persistent max-width="768px">
-      <v-toolbar dark color="primary">
+      <v-toolbar color="primary">
         <v-toolbar-title class="white--text">{{ region_dialog_title }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
@@ -237,7 +227,7 @@
             <v-layout wrap>
               <v-flex xs12 v-if="region_mode!='delete'">
                 <!-- METADATA -->
-                <div class="title font-weight-regular" style="padding-top:10px;">Metadata</div>
+                <div class="title font-weight-regular">Metadata</div>
                 <v-text-field ref="field" v-model="region_item.name" label="Name" required></v-text-field>
                 <v-select v-model="region_item.environment" :items="environments_list" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
                 <!-- SSH -->
@@ -251,10 +241,10 @@
                 </div>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="region_mode=='delete'">
-                <div class="subheading">Are you sure you want to delete the selected regions?</div>
+                <div class="subtitle-1">Are you sure you want to delete the selected regions?</div>
               </v-flex>
-              <v-btn color="success" @click="confirm_region()" dark style="margin-left:0px">Confirm</v-btn>
-              <v-btn color="error" @click="region_dialog=false" dark style="margin-left:0px">Cancel</v-btn>
+              <v-btn color="success" @click="confirm_region()">Confirm</v-btn>
+              <v-btn color="error" @click="region_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -266,7 +256,7 @@
     +---------+
     -->
     <v-dialog v-model="server_dialog" persistent max-width="768px">
-      <v-toolbar dark color="primary">
+      <v-toolbar color="primary">
         <v-toolbar-title class="white--text">{{ server_dialog_title }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
@@ -275,7 +265,7 @@
             <v-layout wrap>
               <v-flex xs12 v-if="server_mode!='delete'">
                 <!-- METADATA -->
-                <div class="title font-weight-regular" style="padding-top:10px;">Metadata</div>
+                <div class="title font-weight-regular">Metadata</div>
                 <v-text-field ref="field" v-model="server_item.name" label="Name" required></v-text-field>
                 <v-select v-model="server_item.environment" :items="environments_list" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
                 <v-select v-model="server_item.region" :items="regions_list" label="Region" required style="margin-top:0px; padding-top:0px;"></v-select>
@@ -286,10 +276,10 @@
                 <v-text-field v-model="server_item.password" label="Password" style="padding-top:0px;"></v-text-field>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="server_mode=='delete'">
-                <div class="subheading">Are you sure you want to delete the selected servers?</div>
+                <div class="subtitle-1">Are you sure you want to delete the selected servers?</div>
               </v-flex>
-              <v-btn color="success" @click="confirm_server()" dark style="margin-left:0px">Confirm</v-btn>
-              <v-btn color="error" @click="server_dialog=false" dark style="margin-left:0px">Cancel</v-btn>
+              <v-btn color="success" @click="confirm_server()">Confirm</v-btn>
+              <v-btn color="error" @click="server_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -301,7 +291,7 @@
     +-----------------------+
     -->
     <v-dialog v-model="auxiliary_dialog" persistent max-width="768px">
-      <v-toolbar dark color="primary">
+      <v-toolbar color="primary">
         <v-toolbar-title class="white--text">{{ auxiliary_dialog_title }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
@@ -310,7 +300,7 @@
             <v-layout wrap>
               <v-flex xs12 v-if="auxiliary_mode!='delete'">
                 <!-- METADATA -->
-                <div class="title font-weight-regular" style="padding-top:10px;">Metadata</div>
+                <div class="title font-weight-regular">Metadata</div>
                 <v-text-field ref="field" v-model="auxiliary_item.name" label="Name" required></v-text-field>
                 <!-- SQL -->
                 <div class="title font-weight-regular" style="padding-top:10px;">SQL</div>
@@ -319,10 +309,10 @@
                 <v-text-field v-model="auxiliary_item.password" label="Password" style="padding-top:0px;"></v-text-field>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="auxiliary_mode=='delete'">
-                <div class="subheading">Are you sure you want to delete the selected auxiliary connections?</div>
+                <div class="subtitle-1">Are you sure you want to delete the selected auxiliary connections?</div>
               </v-flex>
-              <v-btn color="success" @click="confirm_auxiliary()" dark style="margin-left:0px">Confirm</v-btn>
-              <v-btn color="error" @click="auxiliary_dialog=false" dark style="margin-left:0px">Cancel</v-btn>
+              <v-btn color="success" @click="confirm_auxiliary()">Confirm</v-btn>
+              <v-btn color="error" @click="auxiliary_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -331,7 +321,7 @@
 
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
       {{ snackbarText }}
-      <v-btn color="white" flat @click="snackbar = false">Close</v-btn>
+      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
     </v-snackbar>
   </div>
 </template>

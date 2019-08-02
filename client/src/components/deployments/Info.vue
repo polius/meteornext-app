@@ -1,38 +1,40 @@
 <template>
   <div>
-    <v-toolbar dark color="primary">
-      <v-toolbar-title class="white--text">INFO</v-toolbar-title>
-      <v-divider class="mx-3" inset vertical></v-divider>
-      <v-toolbar-title class="white--text">Release 3.35.0</v-toolbar-title>
-      <!-- <v-btn :disabled="stopExecution" flat style="margin-left:30px;" @click="stop()"><v-icon style="padding-right:10px">fas fa-stop-circle</v-icon>STOP EXECUTION</v-btn>
-      <v-progress-circular v-show="stopExecution" :size="25" indeterminate color="white"></v-progress-circular> -->
-      <v-chip label color="success" style="margin-left:30px;">Execution Finished Successfully</v-chip>
-      <v-spacer></v-spacer>
-      <div class="subheading font-weight-regular" style="padding-right:20px;">Updated on <b>2019-07-25 12:10:08</b></div>
-      <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
-    </v-toolbar>
-
-    <v-progress-linear :indeterminate="false" height="5" color="info" style="margin:0px;" value="100"></v-progress-linear>
-
     <v-card>
+      <v-toolbar flat color="primary">
+        <v-toolbar-title class="white--text">INFORMATION</v-toolbar-title>
+        <v-divider class="mx-3" inset vertical></v-divider>
+        <v-toolbar-title class="white--text">Release 3.35.0</v-toolbar-title>
+        <!-- <v-btn :disabled="stopExecution" text style="margin-left:30px;" @click="stop()"><v-icon style="padding-right:10px">fas fa-stop-circle</v-icon>STOP EXECUTION</v-btn>
+        <v-progress-circular v-show="stopExecution" :size="25" indeterminate color="white"></v-progress-circular> -->
+        <v-chip label color="success" style="margin-left:30px;">Execution Finished Successfully</v-chip>
+        <v-spacer></v-spacer>
+        <div class="subheading font-weight-regular" style="padding-right:20px;">Updated on <b>2019-07-25 12:10:08</b></div>
+        <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
+      </v-toolbar>
+
+      <v-progress-linear :indeterminate="false" height="5" color="info" style="margin:0px;" value="100"></v-progress-linear>
+
       <v-card-text>
         <!-- <p>DeploymentID {{ deploymentID }}</p> -->
 
         <!-- STATUS -->
         <v-card>
-          <v-data-table :headers="status_headers" :items="status_data" hide-actions>
-            <template v-slot:items="props">
-              <td>{{ props.item.name }}</td>
-              <td>{{ props.item.environment }}</td>
-              <td class="error--text"><b>{{ props.item.mode }}</b></td>
-              <td>{{ props.item.started }}</td>
-              <td>{{ props.item.ended }}</td>
-              <td>{{ props.item.time }}</td>
-              <td>
-                <a :href="props.item.results" target="_blank">
-                  <v-btn icon @click="results(props.item)" style="margin-left:-5px;"><v-icon small>fas fa-meteor</v-icon></v-btn>
-                </a>
-              </td>
+          <v-data-table :headers="status_headers" :items="status_data" hide-default-footer class="elevation-1">
+            <template v-slot:item="props">
+              <tr>
+                <td>{{ props.item.name }}</td>
+                <td>{{ props.item.environment }}</td>
+                <td class="error--text"><b>{{ props.item.mode }}</b></td>
+                <td>{{ props.item.started }}</td>
+                <td>{{ props.item.ended }}</td>
+                <td>{{ props.item.time }}</td>
+                <td>
+                  <a :href="props.item.results" target="_blank">
+                    <v-btn icon small @click="results(props.item)"><v-icon small>fas fa-meteor</v-icon></v-btn>
+                  </a>
+                </td>
+              </tr>
             </template>
           </v-data-table>
         </v-card>
@@ -40,51 +42,55 @@
         <!-- VALIDATION -->
         <div class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">VALIDATION</div>
         <!-- validation -->
-        <v-card dark style="margin-top:15px;">
-          <v-data-table :headers="validation_headers" :items="validation_data" hide-actions>
-            <template v-slot:items="props">
-              <td class="success--text"><v-icon small color="success" style="margin-right:10px;">fas fa-check</v-icon><b>{{props.item.r1}}</b></td>
-              <td class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{props.item.r2}}</b></td>
-              <td class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{props.item.r3}}</b></td>
-              <td class="error--text"><v-icon small color="error" style="margin-right:10px;">fas fa-times</v-icon><b>{{props.item.r4}}</b></td>
+        <v-card style="margin-top:15px;">
+          <v-data-table :headers="validation_headers" :items="validation_data" hide-default-footer>
+            <template v-slot:item="props">
+              <tr>
+                <td class="success--text"><v-icon small color="success" style="margin-right:10px;">fas fa-check</v-icon><b>{{props.item.r1}}</b></td>
+                <td class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{props.item.r2}}</b></td>
+                <td class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{props.item.r3}}</b></td>
+                <td class="error--text"><v-icon small color="error" style="margin-right:10px;">fas fa-times</v-icon><b>{{props.item.r4}}</b></td>
+              </tr>
             </template>
           </v-data-table>
         </v-card>
 
         <!-- EXECUTION -->
         <div class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">EXECUTION</div>
-        <v-card dark style="margin-top:15px;">
-          <v-data-table :headers="execution_headers" :items="execution_data" hide-actions>
-            <template v-slot:items="props">
-              <td v-if="props.index == 0" :style="`background-color:` + regionColor(props.item.r1)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r1) }}</v-icon><b>{{ props.item.r1 }}</b></td>
-              <td v-if="props.index == 0" :style="`background-color:` + regionColor(props.item.r2)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r2) }}</v-icon><b>{{ props.item.r2 }}</b></td>
-              <td v-if="props.index == 0" :style="`background-color:` + regionColor(props.item.r3)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r3) }}</v-icon><b>{{ props.item.r3 }}</b></td>
-              <td v-if="props.index == 0" :style="`background-color:` + regionColor(props.item.r4)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r4) }}</v-icon><b>{{ props.item.r4 }}</b></td>
+        <v-card style="margin-top:15px;">
+          <v-data-table :headers="execution_headers" :items="index(execution_data)" hide-default-footer>
+            <template v-slot:item="props">
+              <tr>
+                <td v-if="props.item.index == 0" :style="`background-color:` + regionColor(props.item.r1)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r1) }}</v-icon><b>{{ props.item.r1 }}</b></td>
+                <td v-if="props.item.index == 0" :style="`background-color:` + regionColor(props.item.r2)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r2) }}</v-icon><b>{{ props.item.r2 }}</b></td>
+                <td v-if="props.item.index == 0" :style="`background-color:` + regionColor(props.item.r3)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r3) }}</v-icon><b>{{ props.item.r3 }}</b></td>
+                <td v-if="props.item.index == 0" :style="`background-color:` + regionColor(props.item.r4)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r4) }}</v-icon><b>{{ props.item.r4 }}</b></td>
 
-              <td v-if="props.index != 0" :class="serverColor(props.item.r1.progress)" style="padding-left:20px;">{{ props.item.r1.server }}. {{ props.item.r1.progress }}</td>
-              <td v-if="props.index != 0" :class="serverColor(props.item.r2.progress)" style="padding-left:20px;">{{ props.item.r2.server }}. {{ props.item.r2.progress }}</td>
-              <td v-if="props.index != 0" :class="serverColor(props.item.r3.progress)" style="padding-left:20px;">{{ props.item.r3.server }}. {{ props.item.r3.progress }}</td>
-              <td v-if="props.index != 0" :class="serverColor(props.item.r4.progress)" style="padding-left:20px;">{{ props.item.r4.server }}. {{ props.item.r4.progress }}</td>
+                <td v-if="props.item.index != 0" :class="serverColor(props.item.r1.progress)" style="padding-left:20px;">{{ props.item.r1.server }}. {{ props.item.r1.progress }}</td>
+                <td v-if="props.item.index != 0" :class="serverColor(props.item.r2.progress)" style="padding-left:20px;">{{ props.item.r2.server }}. {{ props.item.r2.progress }}</td>
+                <td v-if="props.item.index != 0" :class="serverColor(props.item.r3.progress)" style="padding-left:20px;">{{ props.item.r3.server }}. {{ props.item.r3.progress }}</td>
+                <td v-if="props.item.index != 0" :class="serverColor(props.item.r4.progress)" style="padding-left:20px;">{{ props.item.r4.server }}. {{ props.item.r4.progress }}</td>
+              </tr>
             </template>
           </v-data-table>
         </v-card>
 
         <!-- After Execution Headers -->
-        <v-layout row wrap style="margin-top:15px;">
-          <v-flex xs6>
+        <v-layout row wrap style="margin-top:15px; margin-left:0px; margin-right:0px;">
+          <v-flex xs8>
             <div class="title font-weight-regular" style="padding-top:20px; padding-left:1px;">POST EXECUTION</div>
           </v-flex>
-          <v-flex xs6>
+          <v-flex xs4>
             <div class="title font-weight-regular" style="padding-top:20px; padding-left:7px;">QUERIES</div>
           </v-flex>
         </v-layout>
 
         <!-- POST EXECUTION -->
-        <v-layout row wrap style="margin-top:15px;">
+        <v-layout row wrap style="margin-top:15px; margin-left:0px; margin-right:0px;">
           <!-- logs -->
-          <v-flex xs3 style="padding-right:5px;">
-            <v-card dark>
-              <v-data-table :headers="logs_headers" :items="logs_data" hide-actions>
+          <v-flex xs4 style="padding-right:5px;">
+            <v-card>
+              <v-data-table :headers="logs_headers" :items="logs_data" hide-default-footer>
                 <template v-slot:items="props">
                   <td>{{ props.item.status }}</td>
                 </template>
@@ -92,9 +98,9 @@
             </v-card>
           </v-flex>
           <!-- remaining-tasks -->
-          <v-flex xs3 style="padding-left:5px; padding-right:5px;">
-            <v-card dark>
-              <v-data-table :headers="post_headers" :items="post_data" hide-actions>
+          <v-flex xs4 style="padding-left:5px; padding-right:5px;">
+            <v-card>
+              <v-data-table :headers="post_headers" :items="post_data" hide-default-footer>
                 <template v-slot:items="props">
                   <td>{{ props.item.status }}</td>
                 </template>
@@ -102,9 +108,9 @@
             </v-card>
           </v-flex>
           <!-- queries -->
-          <v-flex xs6 style="padding-left:5px;">
-            <v-card dark>
-              <v-data-table :headers="summary_headers" :items="summary_data" hide-actions>
+          <v-flex xs4 style="padding-left:5px;">
+            <v-card>
+              <v-data-table :headers="summary_headers" :items="summary_data" hide-default-footer>
                 <template v-slot:items="props">
                   <td><b>{{ props.item.total }}</b></td>
                   <td><b>{{ props.item.succeeded }}</b></td>
@@ -124,7 +130,7 @@
 
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
       {{ snackbarText }}
-      <v-btn color="white" flat @click="snackbar = false">Close</v-btn>
+      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
     </v-snackbar>
   </div>
 </template>
@@ -241,6 +247,12 @@
         this.snackbarText = message
         this.snackbarColor = color 
         this.snackbar = true
+      },
+      index (data) {
+        return data.map((item, index) => ({
+          index: index,
+          ...item
+        }))
       }
     }
   }

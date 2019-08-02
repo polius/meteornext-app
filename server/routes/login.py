@@ -12,18 +12,17 @@ def construct_blueprint(credentials):
         username = request.json.get('username', None)
         password = request.json.get('password', None)
 
-        if username != 'test' and password != 'test':
-            return jsonify({'status': False, "message": "Bad username or password."}), 401
+        if username == 'test' and password == 'test':
         # if username == '' and flask_bcrypt.check_password_hash(password) == '':
-        #     return jsonify({'ok': False, "message": "Bad username or password"}), 401
-
-        ret = {
-            'access_token': create_access_token(identity=username),
-            'refresh_token': create_refresh_token(identity=username),
-            'is_admin': 1
-        }
-        print(username)
-        return jsonify({'status': True, 'data': ret}), 200
+            ret = {
+                'access_token': create_access_token(identity=username),
+                'refresh_token': create_refresh_token(identity=username),
+                'is_admin': 1
+            }
+            print(username)
+            return jsonify({'status': True, 'data': ret}), 200
+        else:
+            return jsonify({'status': False, "message": "Invalid username and password."}), 401
 
     # @login.route('/register', methods=['POST'])
     # def register():
