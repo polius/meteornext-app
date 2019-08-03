@@ -17,7 +17,7 @@ class mysql:
     def __connect(self):
         self._connection = pymysql.connect(host=self._credentials['hostname'], user=self._credentials['username'], password=self._credentials['password'], db=self._credentials['database'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
 
-    def execute(self, query):
+    def execute(self, query, args=None):
         try:
             try:
                 # Establish the Connection
@@ -28,7 +28,7 @@ class mysql:
                     # Execute the SQL query ignoring warnings
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore")
-                        cursor.execute(query)
+                        cursor.execute(query, args)
 
                     # Get the query results
                     query_result = cursor.fetchall()

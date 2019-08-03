@@ -1,72 +1,70 @@
 <template>
   <div>
-    <v-card>
-      <v-container fluid grid-list-lg style="padding-top:10px;">
-        <v-layout row wrap>
-          <v-flex xs12>
-            <v-form>
-              <!-- METADATA -->
-              <div class="title font-weight-regular" style="padding-top:10px;">Metadata</div>
-              <v-text-field v-model="name" label="Name" hint="Example: Release v1.0.0" required dark></v-text-field>
+    <v-container fluid grid-list-lg>
+      <v-layout row wrap>
+        <v-flex xs12>
+          <v-form style="padding:10px;">
+            <!-- METADATA -->
+            <div class="title font-weight-regular">Metadata</div>
+            <v-text-field v-model="name" label="Name" hint="Example: Release v1.0.0" required></v-text-field>
 
-              <!-- EXECUTION -->
-              <div class="title font-weight-regular" style="margin-top:10px;margin-bottom:20px;">Execution</div>
-              <codemirror v-model="code" :options="cmOptions"></codemirror>
+            <!-- EXECUTION -->
+            <div class="title font-weight-regular" style="margin-bottom:20px;">Execution</div>
+            <codemirror v-model="code" :options="cmOptions"></codemirror>
 
-              <!-- PARAMETERS -->
-              <div class="title font-weight-regular" style="margin-top:20px;">Parameters</div>
-              <v-select v-model="environment" :items="environment_items" label="Environment" required></v-select>
-              <v-radio-group v-model="execution_mode" style="margin-top:0px;">
+            <!-- PARAMETERS -->
+            <div class="title font-weight-regular" style="margin-top:20px;">Parameters</div>
+            <v-select v-model="environment" :items="environment_items" label="Environment" required></v-select>
+            <v-radio-group v-model="execution_mode" style="margin-top:0px;">
+              <template v-slot:label>
+                <div>Select the <strong>Execution Mode</strong>:</div>
+              </template>
+              <v-radio value="validation" color="success">
                 <template v-slot:label>
-                  <div>Select the <strong>Execution Mode</strong>:</div>
+                  <div class="success--text">Validation</div>
                 </template>
-                <v-radio value="validation" color="success">
-                  <template v-slot:label>
-                    <div class="success--text">Validation</div>
-                  </template>
-                </v-radio>
-                <v-radio value="test" color="orange">
-                  <template v-slot:label>
-                    <div class="orange--text">Test Execution</div>
-                  </template>
-                </v-radio>
-                <v-radio value="deploy" color="red">
-                  <template v-slot:label>
-                    <div class="red--text">Deployment</div>
-                  </template>
-                </v-radio>
-              </v-radio-group>
-
-              <v-radio-group v-model="execution_method" style="margin-top:0px; padding-top:0px;">
+              </v-radio>
+              <v-radio value="test" color="orange">
                 <template v-slot:label>
-                  <div>Select the <strong>Execution Method</strong>:</div>
+                  <div class="orange--text">Test Execution</div>
                 </template>
-                <v-radio value="parallel">
-                  <template v-slot:label>
-                    <div>Parallel</div>
-                  </template>
-                </v-radio>
-                <v-radio value="sequential">
-                  <template v-slot:label>
-                    <div>Sequential</div>
-                  </template>
-                </v-radio>
-              </v-radio-group>
+              </v-radio>
+              <v-radio value="deploy" color="red">
+                <template v-slot:label>
+                  <div class="red--text">Deployment</div>
+                </template>
+              </v-radio>
+            </v-radio-group>
 
-              <v-text-field v-if="execution_method=='parallel'" v-model="threads" label="Threads" dark style="margin-top:0px; padding-top:0px; margin-bottom:5px;"></v-text-field>
+            <v-radio-group v-model="execution_method" style="margin-top:0px; padding-top:0px;">
+              <template v-slot:label>
+                <div>Select the <strong>Execution Method</strong>:</div>
+              </template>
+              <v-radio value="parallel">
+                <template v-slot:label>
+                  <div>Parallel</div>
+                </template>
+              </v-radio>
+              <v-radio value="sequential">
+                <template v-slot:label>
+                  <div>Sequential</div>
+                </template>
+              </v-radio>
+            </v-radio-group>
 
-              <v-btn color="success" dark style="margin-left:0px;">Deploy</v-btn>
-              <router-link to="/deployments"><v-btn color="error" dark style="margin-left:0px;">Cancel</v-btn></router-link>
+            <v-text-field v-if="execution_method=='parallel'" v-model="threads" label="Threads" style="margin-top:0px; padding-top:0px; margin-bottom:5px;"></v-text-field>
 
-            </v-form>
-          </v-flex>
-        </v-layout>
-      </v-container>
-    </v-card>
+            <v-btn color="success">Deploy</v-btn>
+            <router-link to="/deployments"><v-btn color="error" style="margin-left:10px;">Cancel</v-btn></router-link>
+
+          </v-form>
+        </v-flex>
+      </v-layout>
+    </v-container>
 
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
       {{ snackbarText }}
-      <v-btn color="white" flat @click="snackbar = false">Close</v-btn>
+      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
     </v-snackbar>
   </div>
 </template>

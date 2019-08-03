@@ -5,13 +5,13 @@
         <v-toolbar-title class="white--text">GROUPS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text @click="newItem()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editItem()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn v-if="selected.length > 0" text @click="deleteItem()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn text @click="newGroup()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="editGroup()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn v-if="selected.length > 0" text @click="deleteGroup()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1">
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:items="props">
           <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
           <td>{{ props.item.name }}</td>
@@ -25,12 +25,12 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="itemDialog" persistent max-width="1280px">
+    <v-dialog v-model="dialog" persistent max-width="1280px">
       <v-card>
         <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ itemDialogTitle }}</v-toolbar-title>
+          <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="itemDialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text>
           <v-container style="padding:0px 10px 0px 10px">
@@ -56,7 +56,7 @@
                     </v-toolbar-items>
                   </v-toolbar>
                   <v-divider></v-divider>
-                  <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" item-key="name" :hide-default-header="environment_items.length == 0" hide-default-footer show-select class="elevation-1">
+                  <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" item-key="name" hide-default-header hide-default-footer show-select class="elevation-1">
                     <template v-slot:items="props">
                       <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
                       <td>{{ props.item.name }}</td>
@@ -179,8 +179,8 @@
                 <div class="subtitle-1">Are you sure you want to delete the selected groups?</div>
               </v-flex>
 
-              <v-btn color="success" @click="actionConfirm()">Confirm</v-btn>
-              <v-btn color="error" @click="itemDialog=false" style="margin-left:10px">Cancel</v-btn>
+              <v-btn color="success" @click="submitGroup()">Confirm</v-btn>
+              <v-btn color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -331,7 +331,9 @@ import axios from 'axios';
 
 export default {
   data: () => ({
-    // Data Table
+    // +--------+
+    // | GROUPS |
+    // +--------+
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Description', align: 'left', value: 'description' }
@@ -339,15 +341,11 @@ export default {
     items: [],
     selected: [],
     search: '',
-    loading: true,
-    // Item
     item: { name: '', description: '' },
-    regions_items: [],
-    // Action Mode (new, edit, delete)
     mode: '',
-    // Dialog: Item
-    itemDialog: false,
-    itemDialogTitle: '',
+    loading: true,
+    dialog: false,
+    dialog_title: '',
 
     // +--------------+
     // | ENVIRONMENTS |
@@ -444,45 +442,53 @@ export default {
     snackbarText: '',
     snackbarColor: ''
   }),
+  created() {
+    this.getGroups()
+  },
   methods: {
     // +--------+
     // | GROUPS |
     // +--------+
-    getItems() {
+    getGroups() {
       const path = this.$store.getters.url + '/admin/groups'
       axios.get(path)
         .then((res) => {
-          //this.loading = false
-          //this.items = res.data.data
+          this.loading = false
+          this.items = res.data.data
         })
         .catch((error) => {
           // eslint-disable-next-line
           console.error(error)
         })
     },
-    newItem() {
+    newGroup() {
       this.mode = 'new'
-      this.item = { username: '', group: '', mail: '', password: '' }
-      this.itemDialogTitle = 'New Group'
-      this.itemDialog = true
+      this.item = { name: '', description: '' },
+      this.dialog_title = 'New Group'
+      this.dialog = true
     },
-    editItem() {
+    editGroup() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.itemDialogTitle = 'Edit Group'
-      this.itemDialog = true
+      this.dialog_title = 'Edit Group'
+      this.dialog = true
     },
-    deleteItem() {
+    deleteGroup() {
       this.mode = 'delete'
-      this.itemDialogTitle = 'Delete Group'
-      this.itemDialog = true
+      this.dialog_title = 'Delete Group'
+      this.dialog = true
     },
-    actionConfirm() {
-      if (this.mode == 'new') this.newItemConfirm()
-      else if (this.mode == 'edit') this.editItemConfirm()
-      else if (this.mode == 'delete') this.deleteItemConfirm()
+    submitGroup() {
+      if (this.mode == 'new') this.newGroupSubmit()
+      else if (this.mode == 'edit') this.editGroupSubmit()
+      else if (this.mode == 'delete') this.deleteGroupSubmit()
     },
-    newItemConfirm() {
+    newGroupSubmit() {
+      // Ensure that fields are filled
+      if (this.item.name.length == 0 || this.item.name.length == 0) {
+        this.notification('Name and Description cannot be empty', 'error')
+        return
+      }
       // Check if new item already exists
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['name'] == this.item.name) {
@@ -490,12 +496,24 @@ export default {
           return
         }
       }
-      // Add item in the data table
-      this.items.push(this.item)
-      this.itemDialog = false
-      this.notification('Group added successfully', 'success')
+      // Add item to the DB
+      const path = this.$store.getters.url + '/admin/groups'
+      const payload = JSON.stringify(this.item);
+      axios.post(path, payload)
+        .then((res) => {
+          this.notification(res.data.message, res.data.status)
+          if (res.data.status == 'success') {
+            // Add item in the data table
+            this.items.push(this.item)
+            this.dialog = false
+          }
+        })
+        .catch((error) => {
+          // eslint-disable-next-line
+          console.error(error)
+        })
     },
-    editItemConfirm() {
+    editGroupSubmit() {
       // Get Item Position
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['name'] == this.selected[0]['name']) break
@@ -503,28 +521,58 @@ export default {
       // Check if edited item already exists
       for (var j = 0; j < this.items.length; ++j) {
         if (this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
-          this.notification('Group currently exists', 'error')
+          this.notification('This group currently exists', 'error')
           return
         }
       }
-      // Edit item in the data table
-      this.items.splice(i, 1, this.item)
-      this.itemDialog = false
-      this.notification('Group edited successfully', 'success')
-    },
-    deleteItemConfirm() {
-      while(this.selected.length > 0) {
-        var s = this.selected.pop()
-        for (var i = 0; i < this.items.length; ++i) {
-          if (this.items[i]['name'] == s['name']) {
-            // Delete Item
-            this.items.splice(i, 1)
-            break
+      // Add item to the DB
+      const path = this.$store.getters.url + '/admin/groups'
+      const payload = { current_name: this.selected[0]['name'], name: this.item.name, description: this.item.description }
+      axios.put(path, payload)
+        .then((res) => {
+          this.notification(res.data.message, res.data.status)
+          if (res.data.status == 'success') {
+            // Edit item in the data table
+            this.items.splice(i, 1, this.item)
+            this.dialog = false
           }
-        }
+        })
+        .catch((error) => {
+          // eslint-disable-next-line
+          console.error(error)
+        })
+    },
+    deleteGroupSubmit() {
+      // Get Selected Items
+      var payload = []
+      for (var i = 0; i < this.selected.length; ++i) {
+        payload.push(this.selected[i]['name'])
       }
-      this.notification('Selected groups removed successfully', 'success')
-      this.itemDialog = false
+      // Delete items to the DB
+      const path = this.$store.getters.url + '/admin/groups'
+      console.log(payload)
+      axios.delete(path, { data: payload })
+        .then((res) => {
+          this.notification(res.data.message, res.data.status)
+          if (res.data.status == 'success') {
+            // Delete items from the data table
+            while(this.selected.length > 0) {
+              var s = this.selected.pop()
+              for (var i = 0; i < this.items.length; ++i) {
+                if (this.items[i]['name'] == s['name']) {
+                  // Delete Item
+                  this.items.splice(i, 1)
+                  break
+                }
+              }
+            }
+            this.dialog = false
+          }
+        })
+        .catch((error) => {
+          // eslint-disable-next-line
+          console.error(error)
+        })      
     },
     // +--------------+
     // | ENVIRONMENTS |
@@ -807,7 +855,7 @@ export default {
       this.snackbarText = message
       this.snackbarColor = color 
       this.snackbar = true
-    }
+    },
   },
   watch: {
     environment_dialog (val) {
@@ -816,9 +864,6 @@ export default {
         if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
       })
     }
-  },
-  created() {
-    this.getItems()
   }
 }
 </script> 

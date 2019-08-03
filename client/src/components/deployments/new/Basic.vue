@@ -1,91 +1,89 @@
 <template>
   <div>
-    <v-card>
-      <v-container fluid grid-list-lg style="padding-top:10px;">
-        <v-layout row wrap>
-          <v-flex xs12>
-            <v-form>
-              <!-- METADATA -->
-              <div class="title font-weight-regular" style="padding-top:10px;">Metadata</div>
-              <v-text-field v-model="name" label="Name" hint="Example: Release v1.0.0" required dark></v-text-field>
+    <v-container fluid grid-list-lg>
+      <v-layout row wrap>
+        <v-flex xs12>
+          <v-form style="padding:10px;">
+            <!-- METADATA -->
+            <div class="title font-weight-regular">Metadata</div>
+            <v-text-field v-model="name" label="Name" hint="Example: Release v1.0.0" required></v-text-field>
 
-              <!-- EXECUTION -->
-              <div class="title font-weight-regular" style="margin-top:10px;">Execution</div>
-              <v-text-field v-model="databases" label="Databases" required dark></v-text-field>
+            <!-- EXECUTION -->
+            <div class="title font-weight-regular">Execution</div>
+            <v-text-field v-model="databases" label="Databases" required></v-text-field>
 
-              <v-toolbar dense dark style="margin-top:5px;">
-                <v-toolbar-title class="white--text subheading">Queries</v-toolbar-title>
+            <v-card style="margin-bottom:10px;">
+              <v-toolbar flat dense style="margin-top:5px;">
+                <v-toolbar-title class="white--text">Queries</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                  <v-btn flat @click='newQuery()'><v-icon small style="padding-right:10px">fas fa-plus-circle</v-icon>NEW</v-btn>
-                  <v-btn v-if="query_selected.length == 1" @click="editQuery()"><v-icon small style="padding-right:10px">fas fa-dot-circle</v-icon>EDIT</v-btn>
-                  <v-btn v-if="query_selected.length > 0" @click='deleteQuery()'><v-icon small style="padding-right:10px">fas fa-minus-circle</v-icon>DELETE</v-btn>
+                  <v-btn text @click='newQuery()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                  <v-btn v-if="query_selected.length == 1" text @click="editQuery()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                  <v-btn v-if="query_selected.length > 0" text @click='deleteQuery()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                 </v-toolbar-items>
               </v-toolbar>
-
-              <v-card style="margin-bottom:10px;">
-                <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="query" hide-headers hide-actions select-all class="elevation-1">
-                  <template v-slot:items="props">
-                    <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
-                    <td>{{ props.item.query }}</td>
-                  </template>
-                </v-data-table>
-              </v-card>
-
-              <!-- PARAMETERS -->
-              <div class="title font-weight-regular" style="margin-top:20px;">Parameters</div>
-
-              <v-select v-model="environment" :items="environment_items" label="Environment" required></v-select>
-              <v-radio-group v-model="execution_mode" style="margin-top:0px;">
-                <template v-slot:label>
-                  <div>Select the <strong>Execution Mode</strong>:</div>
+              <v-divider></v-divider>
+              <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="query" hide-default-header hide-default-footer show-select class="elevation-1">
+                <template v-slot:items="props">
+                  <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
+                  <td>{{ props.item.query }}</td>
                 </template>
-                <v-radio value="validation" color="success">
-                  <template v-slot:label>
-                    <div class="success--text">Validation</div>
-                  </template>
-                </v-radio>
-                <v-radio value="test" color="orange">
-                  <template v-slot:label>
-                    <div class="orange--text">Test Execution</div>
-                  </template>
-                </v-radio>
-                <v-radio value="deploy" color="red">
-                  <template v-slot:label>
-                    <div class="red--text">Deployment</div>
-                  </template>
-                </v-radio>
-              </v-radio-group>
+              </v-data-table>
+            </v-card>
 
-              <v-radio-group v-model="execution_method" style="margin-top:0px; padding-top:0px;">
+            <!-- PARAMETERS -->
+            <div class="title font-weight-regular" style="margin-top:20px;">Parameters</div>
+
+            <v-select v-model="environment" :items="environment_items" label="Environment" required></v-select>
+            <v-radio-group v-model="execution_mode" style="margin-top:0px;">
+              <template v-slot:label>
+                <div>Select the <strong>Execution Mode</strong>:</div>
+              </template>
+              <v-radio value="validation" color="success">
                 <template v-slot:label>
-                  <div>Select the <strong>Execution Method</strong>:</div>
+                  <div class="success--text">Validation</div>
                 </template>
-                <v-radio value="parallel">
-                  <template v-slot:label>
-                    <div>Parallel</div>
-                  </template>
-                </v-radio>
-                <v-radio value="sequential">
-                  <template v-slot:label>
-                    <div>Sequential</div>
-                  </template>
-                </v-radio>
-              </v-radio-group>
+              </v-radio>
+              <v-radio value="test" color="orange">
+                <template v-slot:label>
+                  <div class="orange--text">Test Execution</div>
+                </template>
+              </v-radio>
+              <v-radio value="deploy" color="red">
+                <template v-slot:label>
+                  <div class="red--text">Deployment</div>
+                </template>
+              </v-radio>
+            </v-radio-group>
 
-              <v-text-field v-if="execution_method=='parallel'" v-model="threads" label="Threads" dark style="margin-top:0px; padding-top:5px; margin-bottom:5px;"></v-text-field>
+            <v-radio-group v-model="execution_method" style="margin-top:0px; padding-top:0px;">
+              <template v-slot:label>
+                <div>Select the <strong>Execution Method</strong>:</div>
+              </template>
+              <v-radio value="parallel">
+                <template v-slot:label>
+                  <div>Parallel</div>
+                </template>
+              </v-radio>
+              <v-radio value="sequential">
+                <template v-slot:label>
+                  <div>Sequential</div>
+                </template>
+              </v-radio>
+            </v-radio-group>
 
-              <v-btn color="success" dark style="margin-left:0px;">Deploy</v-btn>
-              <router-link to="/deployments"><v-btn color="error" dark style="margin-left:0px;">Cancel</v-btn></router-link>
+            <v-text-field v-if="execution_method=='parallel'" v-model="threads" label="Threads" style="margin-top:0px; padding-top:5px; margin-bottom:5px;"></v-text-field>
 
-            </v-form>
-          </v-flex>
-        </v-layout>
-      </v-container>
-    </v-card>
+            <v-btn color="success">Deploy</v-btn>
+            <router-link to="/deployments"><v-btn color="error" style="margin-left:10px;">Cancel</v-btn></router-link>
+
+          </v-form>
+        </v-flex>
+      </v-layout>
+    </v-container>
 
     <v-dialog v-model="queryDialog" persistent max-width="600px">
-      <v-toolbar dark color="primary">
+      <v-toolbar color="primary">
         <v-toolbar-title class="white--text">{{ queryDialogTitle }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
@@ -93,13 +91,13 @@
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 v-if="query_mode!='delete'">
-                <v-textarea ref="field" rows="1" box auto-grow v-model="query_item.query" label="Query" required></v-textarea>
+                <v-textarea ref="field" rows="1" filled auto-grow v-model="query_item.query" label="Query" required></v-textarea>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="query_mode=='delete'">
-                <div class="subheading">Are you sure you want to delete the selected queries?</div>
+                <div class="subtitle-1">Are you sure you want to delete the selected queries?</div>
               </v-flex>
-              <v-btn color="success" @click="actionConfirm()" dark style="margin-left:0px">Confirm</v-btn>
-              <v-btn color="error" @click="queryDialog=false" dark style="margin-left:0px">Cancel</v-btn>
+              <v-btn color="success" @click="actionConfirm()">Confirm</v-btn>
+              <v-btn color="error" @click="queryDialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -108,7 +106,7 @@
 
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
       {{ snackbarText }}
-      <v-btn color="white" flat @click="snackbar = false">Close</v-btn>
+      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
     </v-snackbar>
   </div>
 </template>
