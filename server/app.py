@@ -6,9 +6,9 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 import routes.login
-import routes.deployments
 import routes.admin.groups
 import routes.admin.users
+import routes.deployments.environments
 
 # configuration
 DEBUG = True
@@ -28,15 +28,16 @@ with open('credentials.json') as file_open:
 
 # Init all blueprints
 login = routes.login.construct_blueprint(credentials)
-deployments = routes.deployments.construct_blueprint(credentials)
 groups = routes.admin.groups.construct_blueprint(credentials)
 users = routes.admin.users.construct_blueprint(credentials)
+environments = routes.deployments.environments.construct_blueprint(credentials)
 
 # instantiate all routes
 app.register_blueprint(login)
-app.register_blueprint(deployments)
 app.register_blueprint(groups)
 app.register_blueprint(users)
+app.register_blueprint(environments)
+
 
 # enable CORS
 CORS(app, resources={r'/*': {'origins': '*'}})

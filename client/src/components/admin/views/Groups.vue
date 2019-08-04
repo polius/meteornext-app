@@ -457,7 +457,7 @@ export default {
           this.items = response.data.data
         })
         .catch((error) => {
-          this.notification(error.response.data.msg, 'error')
+          this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
@@ -502,13 +502,13 @@ export default {
       const payload = JSON.stringify(this.item);
       axios.post(path, payload)
         .then((response) => {
-          this.notification(response.data.msg, 'success')
+          this.notification(response.data.message, 'success')
           // Add item in the data table
           this.items.push(this.item)
           this.dialog = false
         })
         .catch((error) => {
-          this.notification(error.response.data.msg, 'error')
+          this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
@@ -530,14 +530,14 @@ export default {
       const payload = { current_name: this.selected[0]['name'], name: this.item.name, description: this.item.description }
       axios.put(path, payload)
         .then((response) => {
-          this.notification(response.data.msg, 'success')
+          this.notification(response.data.message, 'success')
           // Edit item in the data table
           this.items.splice(i, 1, this.item)
+          this.selected[0] = this.item
           this.dialog = false
-          }
         })
         .catch((error) => {
-          this.notification(error.response.data.msg, 'error')
+          this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(err)
         })
@@ -552,7 +552,7 @@ export default {
       const path = this.$store.getters.url + '/admin/groups'
       axios.delete(path, { data: payload })
         .then((response) => {
-          this.notification(response.data.msg, 'success')
+          this.notification(response.data.message, 'success')
           // Delete items from the data table
           while(this.selected.length > 0) {
             var s = this.selected.pop()
@@ -567,7 +567,7 @@ export default {
           }
         })
         .catch((error) => {
-          this.notification(error.response.data.msg, 'error')
+          this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })

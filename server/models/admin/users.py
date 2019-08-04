@@ -16,11 +16,12 @@ class Users:
         self._mysql.execute("INSERT INTO users (username, password, email, group_id, admin) SELECT %s, %s, %s, id, %s FROM groups WHERE name = %s", (data['username'], data['password'], data['email'], data['admin'], data['group']))
 
     def put(self, data):
-        self._mysql.execute("UPDATE users SET username = %s, password = %s, email = %s, group_id = %s, admin = %s WHERE username = %s", (data['username'], data['password'], data['email'], data['group_id'], data['admin'], data['username']))
+        print(data)
+        self._mysql.execute("UPDATE users SET username = %s, password = %s, email = %s, admin = %s, group_id = (SELECT id FROM groups WHERE `name` = %s) WHERE username = %s", (data['username'], data['password'], data['email'], data['admin'], data['group'], data['current_username']))
 
     def delete(self, data):
         for user in data:
-            self._mysql.execute("DELETE FROM userns WHERE username = %s", (user))
+            self._mysql.execute("DELETE FROM users WHERE username = %s", (user))
 
     def exist(self, username):
         return self._mysql.execute("SELECT EXISTS ( SELECT * FROM users WHERE username = %s) AS exist", (username))[0]['exist'] == 1

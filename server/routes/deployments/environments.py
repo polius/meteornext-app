@@ -5,15 +5,14 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 def construct_blueprint(credentials):
     # Init blueprint
-    users_blueprint = Blueprint('users', __name__, template_folder='users')
+    environments_blueprint = Blueprint('environments', __name__, template_folder='environments')
 
     # Init models
-    groups = imp.load_source('groups', '{}/models/admin/groups.py'.format(credentials['path'])).Groups(credentials)
     users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
 
-    @users_blueprint.route('/admin/users', methods=['GET','POST','PUT','DELETE'])
+    @environments_blueprint.route('/deployments/environments', methods=['GET','POST','PUT','DELETE'])
     @jwt_required
-    def users_method():
+    def environments_method():
         # Check user privileges
         is_admin = users.is_admin(get_jwt_identity())
         if not is_admin:
@@ -50,4 +49,4 @@ def construct_blueprint(credentials):
             users.delete(data)
             return jsonify({'message': 'Selected users deleted successfully'}), 200
 
-    return users_blueprint
+    return environments_blueprint

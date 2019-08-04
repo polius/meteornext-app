@@ -8,7 +8,7 @@ def construct_blueprint(credentials):
     login = Blueprint('login', __name__, template_folder='login')
 
     # Init models
-    users = imp.load_source('users', '{}/models/users.py'.format(credentials['path'])).Users(credentials)
+    users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
 
     @login.route('/login', methods=['POST'])
     def login_user():
@@ -26,6 +26,7 @@ def construct_blueprint(credentials):
             ret = {
                 'access_token': create_access_token(identity=user[0]['username']),
                 'refresh_token': create_refresh_token(identity=user[0]['username']),
+                'username': user[0]['username'],
                 'admin': user[0]['admin']
             }
             return jsonify({'data': ret}), 200

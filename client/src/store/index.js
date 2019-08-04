@@ -7,28 +7,23 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     url: '',
-    status: '',
+    username: '',
     token: localStorage.getItem('token') || '',
-    user: {}
+    admin: false
   },
   mutations: {
     init(state, data) {
       state.url = 'http://' + data.settings.host + ':' + data.settings.port
     },
-    auth_request(state) {
-      state.status = 'loading'
-    },
-    auth_success(state, token, user) {
-      state.status = 'success'
-      state.token = token
-      state.user = user
-    },
-    auth_error(state) {
-      state.status = 'error'
+    auth(state, data) {
+      state.username = data.username
+      state.token = data.token
+      state.admin = data.admin
     },
     logout(state) {
-      state.status = ''
+      state.username = ''
       state.token = ''
+      state.admin = false
     }
   },
   actions: {
@@ -37,21 +32,22 @@ export default new Vuex.Store({
     },
     login({ commit }, user) {
       return new Promise((resolve, reject) => {
-        commit('auth_request')
         axios({ url: this.getters.url + '/login', data: user, method: 'POST' })
-          .then(resp => {
-            const token = resp.data.data.access_token
-            const user = resp.data.data.user
-            localStorage.setItem('token', token)
-            // Add the following line:
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-            commit('auth_success', token, user)
-            resolve(resp)
+          .then(response => {
+            var data = { 
+              username: response.data.data.username,
+              token: response.data.data.access_token,
+              admin: response.data.data.admin
+            }
+            localStorage.setItem('token', data['token'])
+            axios.defaults.headers.common['Authorization'] = `Bearer ${data['token']}`
+            commit('auth', data)
+            resolve(response)
           })
-          .catch(err => {
-            commit('auth_error')
+          .catch(error => {
+            commit('logout')
             localStorage.removeItem('token')
-            reject(err)
+            reject(error)
           })
       })
     },
@@ -66,8 +62,8 @@ export default new Vuex.Store({
   },
   getters: {
     isLoggedIn: state => !!state.token,
-    authStatus: state => state.status,
     url: state => state.url,
-    
+    username: state => state.username,
+    admin: state => state.admin
   }
 })

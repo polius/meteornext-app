@@ -142,11 +142,11 @@ export default {
       this.dialog = true
     },
     submitUser() {
-      if (this.mode == 'new') this.newGroupSubmit()
-      else if (this.mode == 'edit') this.editGroupSubmit()
-      else if (this.mode == 'delete') this.deleteGroupSubmit()
+      if (this.mode == 'new') this.newUserSubmit()
+      else if (this.mode == 'edit') this.editUserSubmit()
+      else if (this.mode == 'delete') this.deleteUserSubmit()
     },
-    newGroupSubmit() {
+    newUserSubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
@@ -178,7 +178,7 @@ export default {
           console.error(error)
         })
     },
-    editGroupSubmit() {
+    editUserSubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
@@ -210,6 +210,7 @@ export default {
           this.notification(response.data.message, 'success')
           // Edit item in the data table
           this.items.splice(i, 1, this.item)
+          this.selected[0] = this.item
           this.dialog = false
         })
         .catch((error) => {
@@ -219,11 +220,11 @@ export default {
           console.error(error)
         })
     },
-    deleteGroupSubmit() {
+    deleteUserSubmit() {
       // Get Selected Items
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) {
-        payload.push(this.selected[i]['id'])
+        payload.push(this.selected[i]['username'])
       }
       // Delete items to the DB
       const path = this.$store.getters.url + '/admin/users'
@@ -234,7 +235,7 @@ export default {
           while(this.selected.length > 0) {
             var s = this.selected.pop()
             for (var i = 0; i < this.items.length; ++i) {
-              if (this.items[i]['id'] == s['id']) {
+              if (this.items[i]['username'] == s['username']) {
                 // Delete Item
                 this.items.splice(i, 1)
                 break

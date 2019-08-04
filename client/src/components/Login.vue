@@ -51,10 +51,12 @@
         let username = this.username 
         let password = this.password
         this.$store.dispatch('login', { username, password })
-        .then(() => this.$router.push('/'))
-        .catch((err) => {
+        .then(() => {
+          this.$router.push('/')
+        })
+        .catch((error) => {
           this.loading = false
-          this.notification(err.response.data.msg, 'error')
+          this.notification(error.response.data.message, 'error')
         })
       },
       notification(message, color) {

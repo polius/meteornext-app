@@ -7,8 +7,8 @@ def construct_blueprint(credentials):
     groups_blueprint = Blueprint('groups', __name__, template_folder='groups')
 
     # Init models
-    groups = imp.load_source('groups', '{}/models/groups.py'.format(credentials['path'])).Groups(credentials)
-    users = imp.load_source('users', '{}/models/users.py'.format(credentials['path'])).Users(credentials)
+    groups = imp.load_source('groups', '{}/models/admin/groups.py'.format(credentials['path'])).Groups(credentials)
+    users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
 
     @groups_blueprint.route('/admin/groups', methods=['GET','POST','PUT','DELETE'])
     @jwt_required

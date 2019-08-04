@@ -24,10 +24,10 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="itemDialog" persistent max-width="768px">
+    <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ itemDialogTitle }}</v-toolbar-title>
+          <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
         </v-toolbar>
         <v-card-text>
           <v-container style="padding:0px 10px 0px 10px">
@@ -39,7 +39,7 @@
                 <div class="subtitle-1">Are you sure you want to delete the selected environments?</div>
               </v-flex>
               <v-btn color="success" @click="actionConfirm()">Confirm</v-btn>
-              <v-btn color="error" @click="itemDialog=false" style="margin-left:10px;">Cancel</v-btn>
+              <v-btn color="error" @click="dialog=false" style="margin-left:10px;">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -60,30 +60,33 @@ export default {
   data: () => ({
     // Data Table
     headers: [{ text: 'Name', align: 'left', value: 'name' }],
-    items: [{ name: 'PRODUCTION' }],
+    items: [],
     selected: [],
     search: '',
-    // Item
     item: { name: '' },
-    // Action Mode (new, edit, delete)
     mode: '',
-    // Dialog: Item
-    itemDialog: false,
-    itemDialogTitle: '',
+    dialog: false,
+    dialog_title: '',
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
     snackbarText: '',
     snackbarColor: ''
   }),
+  created() {
+    this.getEnvironments()
+  },
   methods: {
-    getItems() {
-      const path = 'http://34.242.255.177:5000/environments'
+    getEnvironments() {
+      const path = this.$store.getters.url + '/admin/users'
       axios.get(path)
-        .then((res) => {
-          this.items = res.data.items
+        .then((response) => {
+          this.loading = false
+          this.items = response.data.data
         })
         .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout')
+          this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
@@ -191,9 +194,6 @@ export default {
       this.snackbarColor = color 
       this.snackbar = true
     }
-  },
-  created() {
-    this.getItems()
   },
   watch: {
     itemDialog (val) {
