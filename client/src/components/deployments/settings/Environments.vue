@@ -78,7 +78,7 @@ export default {
   },
   methods: {
     getEnvironments() {
-      const path = this.$store.getters.url + '/admin/users'
+      const path = this.$store.getters.url + '/deployments/environments'
       axios.get(path)
         .then((response) => {
           this.loading = false

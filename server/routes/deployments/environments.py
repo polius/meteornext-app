@@ -8,7 +8,7 @@ def construct_blueprint(credentials):
     environments_blueprint = Blueprint('environments', __name__, template_folder='environments')
 
     # Init models
-    users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
+    environments = imp.load_source('environments', '{}/models/deployments/environments.py'.format(credentials['path'])).Environments(credentials)
 
     @environments_blueprint.route('/deployments/environments', methods=['GET','POST','PUT','DELETE'])
     @jwt_required
