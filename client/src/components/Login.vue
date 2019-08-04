@@ -54,7 +54,7 @@
         .then(() => this.$router.push('/'))
         .catch((err) => {
           this.loading = false
-          this.notification(err.response.data.message, 'error')
+          this.notification(err.response.data.msg, 'error')
         })
       },
       notification(message, color) {

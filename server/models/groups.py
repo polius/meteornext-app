@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import imp
-import json
 
 class Groups:
     def __init__(self, credentials):

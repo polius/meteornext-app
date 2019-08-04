@@ -1,28 +1,35 @@
+import imp
+import bcrypt
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity)
 
 def construct_blueprint(credentials):
+    # Init blueprint
     login = Blueprint('login', __name__, template_folder='login')
+
+    # Init models
+    users = imp.load_source('users', '{}/models/users.py'.format(credentials['path'])).Users(credentials)
 
     @login.route('/login', methods=['POST'])
     def login_user():
         if not request.is_json:
-            return jsonify({"msg": "Missing JSON in request"}), 400
+            return jsonify({"message": "Missing JSON in request"}), 400
 
-        username = request.json.get('username', None)
-        password = request.json.get('password', None)
-
-        if username == 'test' and password == 'test':
-        # if username == '' and flask_bcrypt.check_password_hash(password) == '':
-            ret = {
-                'access_token': create_access_token(identity=username),
-                'refresh_token': create_refresh_token(identity=username),
-                'is_admin': 1
-            }
-            print(username)
-            return jsonify({'status': True, 'data': ret}), 200
+        data = request.get_json()
+        
+        # Get User from Database
+        user = users.get(data['username'])
+        print(data['password'].encode('utf8'))
+        print(user[0]['password'])
+        if len(user) == 0 or not bcrypt.checkpw(data['password'].encode('utf8'), user[0]['password'].encode('utf8')):
+            return jsonify({"msg": "Invalid username and password."}), 401
         else:
-            return jsonify({'status': False, "message": "Invalid username and password."}), 401
+            ret = {
+                'access_token': create_access_token(identity=user[0]['username']),
+                'refresh_token': create_refresh_token(identity=user[0]['username']),
+                'admin': user[0]['admin']
+            }
+            return jsonify({'data': ret}), 200
 
     # @login.route('/register', methods=['POST'])
     # def register():

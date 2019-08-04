@@ -452,11 +452,12 @@ export default {
     getGroups() {
       const path = this.$store.getters.url + '/admin/groups'
       axios.get(path)
-        .then((res) => {
+        .then((response) => {
           this.loading = false
-          this.items = res.data.data
+          this.items = response.data.data
         })
         .catch((error) => {
+          this.notification(error.response.data.msg, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
@@ -500,15 +501,14 @@ export default {
       const path = this.$store.getters.url + '/admin/groups'
       const payload = JSON.stringify(this.item);
       axios.post(path, payload)
-        .then((res) => {
-          this.notification(res.data.message, res.data.status)
-          if (res.data.status == 'success') {
-            // Add item in the data table
-            this.items.push(this.item)
-            this.dialog = false
-          }
+        .then((response) => {
+          this.notification(response.data.msg, 'success')
+          // Add item in the data table
+          this.items.push(this.item)
+          this.dialog = false
         })
         .catch((error) => {
+          this.notification(error.response.data.msg, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
@@ -529,17 +529,17 @@ export default {
       const path = this.$store.getters.url + '/admin/groups'
       const payload = { current_name: this.selected[0]['name'], name: this.item.name, description: this.item.description }
       axios.put(path, payload)
-        .then((res) => {
-          this.notification(res.data.message, res.data.status)
-          if (res.data.status == 'success') {
-            // Edit item in the data table
-            this.items.splice(i, 1, this.item)
-            this.dialog = false
+        .then((response) => {
+          this.notification(response.data.msg, 'success')
+          // Edit item in the data table
+          this.items.splice(i, 1, this.item)
+          this.dialog = false
           }
         })
         .catch((error) => {
+          this.notification(error.response.data.msg, 'error')
           // eslint-disable-next-line
-          console.error(error)
+          console.error(err)
         })
     },
     deleteGroupSubmit() {
@@ -550,29 +550,27 @@ export default {
       }
       // Delete items to the DB
       const path = this.$store.getters.url + '/admin/groups'
-      console.log(payload)
       axios.delete(path, { data: payload })
-        .then((res) => {
-          this.notification(res.data.message, res.data.status)
-          if (res.data.status == 'success') {
-            // Delete items from the data table
-            while(this.selected.length > 0) {
-              var s = this.selected.pop()
-              for (var i = 0; i < this.items.length; ++i) {
-                if (this.items[i]['name'] == s['name']) {
-                  // Delete Item
-                  this.items.splice(i, 1)
-                  break
-                }
+        .then((response) => {
+          this.notification(response.data.msg, 'success')
+          // Delete items from the data table
+          while(this.selected.length > 0) {
+            var s = this.selected.pop()
+            for (var i = 0; i < this.items.length; ++i) {
+              if (this.items[i]['name'] == s['name']) {
+                // Delete Item
+                this.items.splice(i, 1)
+                break
               }
             }
             this.dialog = false
           }
         })
         .catch((error) => {
+          this.notification(error.response.data.msg, 'error')
           // eslint-disable-next-line
           console.error(error)
-        })      
+        })
     },
     // +--------------+
     // | ENVIRONMENTS |

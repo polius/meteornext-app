@@ -5,21 +5,16 @@
         <v-toolbar-title class="white--text">USERS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text @click="newItem()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editItem()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn v-if="selected.length > 0" text @click="deleteItem()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn text @click="newUser()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="editUser()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn v-if="selected.length > 0" text @click="deleteUser()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
-        <template v-slot:items="props">
-          <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
-          <td>{{ props.item.username }}</td>
-          <td>{{ props.item.group }}</td>
-          <td>{{ props.item.mail }}</td>
-          <td>{{ props.item.password }}</td>
-          <td v-if="props.item.admin"><v-icon small color="success" style="margin-left:8px;">fas fa-check</v-icon></td>
-          <td v-else><v-icon small color="error" style="margin-left:8px;">fas fa-times</v-icon></td>
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
+        <template v-slot:item.admin="props">
+          <v-icon v-if="props.item.admin" small color="success" style="margin-left:8px;">fas fa-check</v-icon>
+          <v-icon v-else small color="error" style="margin-left:8px;">fas fa-times</v-icon>
         </template>
         <template v-slot:no-results>
           <v-alert :value="true" color="error" icon="warning" style="margin-top:15px;">
@@ -29,12 +24,12 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="itemDialog" persistent max-width="768px">
+    <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ itemDialogTitle }}</v-toolbar-title>
+          <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="itemDialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text>
           <v-container style="padding:0px 10px 0px 10px">
@@ -43,14 +38,14 @@
                 <v-text-field ref="field" v-model="item.username" label="Username" required append-icon="person" style="padding-top:0px;"></v-text-field>
                 <v-text-field v-model="item.email" label="Email" type="email" required append-icon="email" style="padding-top:0px; margin-top:0px;"></v-text-field>
                 <v-text-field v-model="item.password" label="Password" type="password" required append-icon="lock" style="padding-top:0px; margin-top:0px;"></v-text-field>
-                <v-select v-model="item.group" :items="groups_items" label="Group" required style="padding-top:0px; margin-top:0px;"></v-select>
+                <v-select v-model="item.group" :items="groups" label="Group" required style="padding-top:0px; margin-top:0px;"></v-select>
                 <v-switch v-model="item.admin" hint="yes" label="Admin Privileges" style="margin-top:0px; padding-top:0px;"></v-switch>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">
                 <div class="subtitle-1">Are you sure you want to delete the selected users?</div>
               </v-flex>
-              <v-btn color="success" @click="actionConfirm()">Confirm</v-btn>
-              <v-btn color="error" @click="itemDialog=false" style="margin-left:10px">Cancel</v-btn>
+              <v-btn color="success" @click="submitUser()">Confirm</v-btn>
+              <v-btn color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -77,67 +72,81 @@ export default {
       { text: 'Password', align: 'left', value: 'password'},
       { text: 'Admin', align: 'left', value: 'admin'},
     ],
-    items: [
-      {
-        id: 1,
-        username: 'palzina',
-        group: 'Administrator',
-        email: 'palzina@inbenta.com',
-        password: '12345',
-        admin: true
-      }
-    ],
+    items: [],
     selected: [],
     search: '',
-    // Item
-    item: { username: '', group: '', email: '', password: '', admin: ''},
-    groups_items: [],
-    // Action Mode (new, edit, delete)
+    item: { username: '', email: '', password: '', group: '', admin: '' },
     mode: '',
-    // Dialog: Item
-    itemDialog: false,
-    itemDialogTitle: '',
+    loading: true,
+    dialog: false,
+    dialog_title: '',
+    // User Groups
+    groups: [],
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
     snackbarText: '',
     snackbarColor: ''
   }),
+  created() {
+    this.getUsers()
+    this.getGroups()
+  },
   methods: {
-    getItems() {
-      const path = 'http://34.242.255.177:5000/admin/users/'
+    getUsers() {
+      const path = this.$store.getters.url + '/admin/users'
       axios.get(path)
-        .then((res) => {
-          this.items = res.data.items
+        .then((response) => {
+          this.loading = false
+          this.items = response.data.data
         })
         .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout')
+          this.notification(error.response.data.msg, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
     },
-    newItem() {
-      this.mode = 'new'
-      this.item= { username: '', group: '', email: '', password: '', admin: '' }
-      this.itemDialogTitle = 'New User'
-      this.itemDialog = true
+    getGroups() {
+      const path = this.$store.getters.url + '/admin/groups'
+      axios.get(path)
+        .then((response) => {
+          for (var i = 0; i < response.data.data.length; ++i) this.groups.push(response.data.data[i]['name'])
+        })
+        .catch((error) => {
+          this.notification(error.response.data.msg, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
     },
-    editItem() {
+    newUser() {
+      this.mode = 'new'
+      this.item = { username: '', email: '', password: '', group: '', admin: '' }
+      this.dialog_title = 'New User'
+      this.dialog = true
+    },
+    editUser() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.itemDialogTitle = 'Edit User'
-      this.itemDialog = true
+      this.dialog_title = 'Edit User'
+      this.dialog = true
     },
-    deleteItem() {
+    deleteUser() {
       this.mode = 'delete'
-      this.itemDialogTitle = 'Delete User'
-      this.itemDialog = true
+      this.dialog_title = 'Delete User'
+      this.dialog = true
     },
-    actionConfirm() {
-      if (this.mode == 'new') this.newItemConfirm()
-      else if (this.mode == 'edit') this.editItemConfirm()
-      else if (this.mode == 'delete') this.deleteItemConfirm()
+    submitUser() {
+      if (this.mode == 'new') this.newGroupSubmit()
+      else if (this.mode == 'edit') this.editGroupSubmit()
+      else if (this.mode == 'delete') this.deleteGroupSubmit()
     },
-    newItemConfirm() {
+    newGroupSubmit() {
+      // Ensure that fields are filled
+      if (this.item.username.length == 0 || this.item.password.length == 0 || this.item.password.length == 0 || this.item.group.length == 0) {
+        this.notification('Please fill all fields', 'error')
+        return
+      }
       // Check if new item already exists
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['username'] == this.item.username) {
@@ -145,12 +154,23 @@ export default {
           return
         }
       }
-      // Add item in the data table
-      this.items.push(this.item)
-      this.itemDialog = false
-      this.notification('User added successfully', 'success')
+      // Add item to the DB
+      const path = this.$store.getters.url + '/admin/users'
+      const payload = JSON.stringify(this.item);
+      axios.post(path, payload)
+        .then((response) => {
+          this.notification(response.data.msg, 'success')
+          // Add item in the data table
+          this.items.push(this.item)
+          this.dialog = false
+        })
+        .catch((error) => {
+          this.notification(error.response.data.msg, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
     },
-    editItemConfirm() {
+    editGroupSubmit() {
       // Get Item Position
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['username'] == this.selected[0]['username']) break
@@ -162,24 +182,51 @@ export default {
           return
         }
       }
-      // Edit item in the data table
-      this.items.splice(i, 1, this.item)
-      this.itemDialog = false
-      this.notification('User edited successfully', 'success')
+      // Add item to the DB
+      const path = this.$store.getters.url + '/admin/users'
+      const payload = { current_name: this.selected[0]['name'], name: this.item.name, description: this.item.description }
+      axios.put(path, payload)
+        .then((response) => {
+          this.notification(response.data.msg, 'success')
+          // Edit item in the data table
+          this.items.splice(i, 1, this.item)
+          this.dialog = false
+        })
+        .catch((error) => {
+          this.notification(errorerr.response.data.msg, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
     },
-    deleteItemConfirm() {
-      while(this.selected.length > 0) {
-        var s = this.selected.pop()
-        for (var i = 0; i < this.items.length; ++i) {
-          if (this.items[i]['id'] == s['id']) {
-            // Delete Item
-            this.items.splice(i, 1)
-            break
-          }
-        }
+    deleteGroupSubmit() {
+      // Get Selected Items
+      var payload = []
+      for (var i = 0; i < this.selected.length; ++i) {
+        payload.push(this.selected[i]['id'])
       }
-      this.notification('Selected users removed successfully', 'success')
-      this.itemDialog = false
+      // Delete items to the DB
+      const path = this.$store.getters.url + '/admin/users'
+      axios.delete(path, { data: payload })
+        .then((response) => {
+          this.notification(response.data.msg, 'success')
+          // Delete items from the data table
+          while(this.selected.length > 0) {
+            var s = this.selected.pop()
+            for (var i = 0; i < this.items.length; ++i) {
+              if (this.items[i]['id'] == s['id']) {
+                // Delete Item
+                this.items.splice(i, 1)
+                break
+              }
+            }
+            this.dialog = false
+          }
+        })
+        .catch((error) => {
+          this.notification(error.response.data.msg, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
     },
     notification(message, color) {
       this.snackbarText = message
@@ -188,7 +235,7 @@ export default {
     }
   },
   watch: {
-    itemDialog (val) {
+    dialog (val) {
       if (!val) return
       requestAnimationFrame(() => {
         if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
