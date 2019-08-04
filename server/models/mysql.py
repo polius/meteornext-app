@@ -48,8 +48,10 @@ class mysql:
                 print("--> Rollback Initiated...")
                 self._connection.rollback()
                 print("--> Rollback successfully performed.")
+                raise
             except Exception as e2:
                 print("--> Rollback not performed. Error: {}".format(e2))
+                raise
 
         except KeyboardInterrupt:
             try:

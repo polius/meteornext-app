@@ -22,21 +22,38 @@ def construct_blueprint(credentials):
         if request.method == 'GET':
             return jsonify({'data': users.get()}), 200
 
+        # Get Request Json
         data = request.get_json()
 
+        # Get User from Database
+        user = users.get(data['username'])
+
         # Encrypt password using bcrypt
-        data['password'] = bcrypt.hashpw(data['password'].encode('utf8'))
+        encrypted_password = bcrypt.hashpw(data['password'].encode('utf8'), bcrypt.gensalt())
 
         if request.method == 'POST':
-            users.post(data)
-            return jsonify({'message': 'User added'}), 200
-        elif request.method == 'PUT':
-            if users.exist(data):
+            if len(user) > 0:
                 return jsonify({'message': 'This user currently exists'}), 400
+            else:
+                data['password'] = encrypted_password
+                users.post(data)
+                return jsonify({'message': 'User added successfully'}), 200
+
+        elif request.method == 'PUT':
+            if len(user) == 0:
+                return jsonify({'message': 'This user does not exist'}), 400
+            elif data['current_username'] != data['username'] and users.exist(data['username']):
+                return jsonify({'message': 'This user currently exists'}), 400
+            elif data['password'] != user['password']:
+                data['password'] = encrypted_password
             users.put(data)
-            return jsonify({'message': 'User edited'}), 200
+            return jsonify({'message': 'User edited successfully'}), 200
+
         elif request.method == 'DELETE':
-            users.delete(data)
-            return jsonify({'message': 'Selected users deleted'}), 200
+            if len(user) == 0:
+                return jsonify({'message': 'This user does not exist'}), 400
+            else:
+                users.delete(data)
+                return jsonify({'message': 'Selected users deleted successfully'}), 200
 
     return users_blueprint

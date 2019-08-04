@@ -19,8 +19,7 @@ def construct_blueprint(credentials):
         
         # Get User from Database
         user = users.get(data['username'])
-        print(data['password'].encode('utf8'))
-        print(user[0]['password'])
+
         if len(user) == 0 or not bcrypt.checkpw(data['password'].encode('utf8'), user[0]['password'].encode('utf8')):
             return jsonify({"msg": "Invalid username and password."}), 401
         else:
