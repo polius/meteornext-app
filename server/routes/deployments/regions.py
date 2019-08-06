@@ -49,4 +49,21 @@ def construct_blueprint(credentials):
             regions.delete(user[0]['group_id'], region)
             return jsonify({'message': 'Selected regions deleted successfully'}), 200
 
+    @regions_blueprint.route('/deployments/regions/list', methods=['POST'])
+    @jwt_required
+    def regions_list_method():
+        # Check user privileges
+        is_admin = users.is_admin(get_jwt_identity())
+        if not is_admin:
+            return jsonify({'message': 'Insufficient Privileges'}), 401
+
+        # Get User
+        user = users.get(get_jwt_identity())
+
+        # Get Request Json
+        data = request.get_json()
+
+        # Return Regions By User Environment
+        return jsonify({'data': regions.get_by_environment(user[0]['group_id'], data['environment'])}), 200
+
     return regions_blueprint

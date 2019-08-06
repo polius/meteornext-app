@@ -106,7 +106,7 @@ export default {
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          this.notification(error.response.data.message, 'error')
+          else this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
@@ -160,7 +160,7 @@ export default {
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          this.notification(error.response.data.message, 'error')
+          else this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
@@ -202,7 +202,7 @@ export default {
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          this.notification(error.response.data.message, 'error')
+          else this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
@@ -233,7 +233,7 @@ export default {
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          this.notification(error.response.data.message, 'error')
+          else this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })

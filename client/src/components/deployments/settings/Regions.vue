@@ -121,7 +121,7 @@ export default {
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          this.notification(error.response.data.message, 'error')
+          else this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
@@ -161,7 +161,7 @@ export default {
           return
         }
       }
-       // Add item in the DB
+      // Add item in the DB
       const path = this.$store.getters.url + '/deployments/regions'
       const payload = JSON.stringify(this.item);
       axios.post(path, payload)
@@ -173,7 +173,7 @@ export default {
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          this.notification(error.response.data.message, 'error')
+          else this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
@@ -186,11 +186,11 @@ export default {
       }
       // Get Item Position
       for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['name'] == this.selected[0]['name']) break
+        if (this.items[i]['environment'] == this.selected[0]['environment'] && this.items[i]['name'] == this.selected[0]['name']) break
       }
       // Check if edited item already exists
       for (var j = 0; j < this.items.length; ++j) {
-        if (this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
+        if (this.items[j]['environment'] == this.item.environment && this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
           this.notification('Region currently exists', 'error')
           return
         }
@@ -221,13 +221,13 @@ export default {
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          this.notification(error.response.data.message, 'error')
+          else this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
     },
     deleteRegionSubmit() {
-       // Get Selected Items
+      // Get Selected Items
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) {
         payload.push({ environment: this.selected[i]['environment'], name: this.selected[i]['name'] })
@@ -252,7 +252,7 @@ export default {
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          this.notification(error.response.data.message, 'error')
+          else this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })

@@ -58,3 +58,11 @@ class Regions:
             ) AS exist
         """
         return self._mysql.execute(query, (group_id, region['environment'], region['name']))[0]['exist'] == 1
+
+    def get_by_environment(self, group_id, environment):
+        query = """
+            SELECT r.name
+            FROM regions r 
+            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
+        """
+        return self._mysql.execute(query, (group_id, environment))
