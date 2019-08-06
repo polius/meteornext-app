@@ -30,7 +30,7 @@
             <v-layout wrap>
               <v-flex xs12 v-if="mode!='delete'">
                 <v-form ref="form" v-model="dialog_valid">
-                  <v-text-field ref="field" v-on:keyup.enter="submitEnvironment()" v-model="item.name" label="Environment Name" required></v-text-field>
+                  <v-text-field ref="field" v-on:keyup.enter="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Environment Name" required></v-text-field>
                 </v-form>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">

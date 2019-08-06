@@ -9,6 +9,7 @@ import routes.login
 import routes.admin.groups
 import routes.admin.users
 import routes.deployments.environments
+import routes.deployments.regions
 
 # configuration
 DEBUG = True
@@ -31,13 +32,14 @@ login = routes.login.construct_blueprint(credentials)
 groups = routes.admin.groups.construct_blueprint(credentials)
 users = routes.admin.users.construct_blueprint(credentials)
 environments = routes.deployments.environments.construct_blueprint(credentials)
+regions = routes.deployments.regions.construct_blueprint(credentials)
 
 # instantiate all routes
 app.register_blueprint(login)
 app.register_blueprint(groups)
 app.register_blueprint(users)
 app.register_blueprint(environments)
-
+app.register_blueprint(regions)
 
 # enable CORS
 CORS(app, resources={r'/*': {'origins': '*'}})

@@ -5,22 +5,24 @@
         <v-toolbar-title class="white--text">REGIONS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text @click="newItem()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editItem()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn v-if="selected.length > 0" text @click="deleteItem()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn text @click="newRegion()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="editRegion()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn v-if="selected.length > 0" text @click="deleteRegion()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
-        <template v-slot:items="props">
-          <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
-          <td>{{ props.item.name }}</td>
-          <td>{{ props.item.environment }}</td>
-          <td>{{ props.item.cross_region }}</td>
-          <td>{{ props.item.hostname }}</td>
-          <td>{{ props.item.username }}</td>
-          <td><v-icon small color="error" style="margin-left:18px;">fas fa-times</v-icon></td>
-          <td><v-icon small color="success" style="margin-left:20px;">fas fa-check</v-icon></td>
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
+        <template v-slot:item.cross_region="props">
+          <v-icon v-if="props.item.cross_region" small color="success" style="margin-left:28px">fas fa-check</v-icon>
+          <v-icon v-else small color="error" style="margin-left:28px">fas fa-times</v-icon>
+        </template>
+        <template v-slot:item.password="props">
+          <v-icon v-if="props.item.cross_region && (props.item.password || '').length != 0" small color="success" style="margin-left:20px">fas fa-check</v-icon>
+          <v-icon v-else-if="props.item.cross_region" small color="error" style="margin-left:20px">fas fa-times</v-icon>
+        </template>
+        <template v-slot:item.key="props">
+          <v-icon v-if="props.item.cross_region && (props.item.key || '').length != 0" small color="success" style="margin-left:20px">fas fa-check</v-icon>
+          <v-icon v-else-if="props.item.cross_region" small color="error" style="margin-left:20px">fas fa-times</v-icon>
         </template>
         <template v-slot:no-results>
           <v-alert :value="true" color="error" icon="warning" style="margin-top:15px;">
@@ -30,34 +32,36 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="itemDialog" persistent max-width="768px">
+    <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ itemDialogTitle }}</v-toolbar-title>
+          <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
         </v-toolbar>
         <v-card-text>
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 v-if="mode!='delete'">
-                <!-- METADATA -->
-                <div class="title font-weight-regular">Metadata</div>
-                <v-text-field ref="field" v-model="item.name" label="Name" required></v-text-field>
-                <v-select v-model="item.environment" :items="environments_items" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
-                <!-- SSH -->
-                <v-switch v-model="item.cross_region" label="Cross Region" style="margin-top:0px;"></v-switch>
-                <div v-if="item.cross_region">
-                  <div class="title font-weight-regular">SSH</div>
-                  <v-text-field v-model="item.hostname" label="Hostname"></v-text-field>
-                  <v-text-field v-model="item.username" label="Username" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="item.password" label="Password" style="padding-top:0px;"></v-text-field>
-                  <v-textarea v-model="item.key" label="Private Key" rows="1" auto-grow style="padding-top:0px;"></v-textarea>
-                </div>
+                <v-form ref="form" v-model="dialog_valid">
+                  <!-- METADATA -->
+                  <div class="title font-weight-regular">Metadata</div>
+                  <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  <v-select v-model="item.environment" :rules="[v => !!v || '']" :items="environments" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
+                  <!-- SSH -->
+                  <v-switch v-model="item.cross_region" label="Cross Region" style="margin-top:0px;"></v-switch>
+                  <div v-if="item.cross_region">
+                    <div class="title font-weight-regular">SSH</div>
+                    <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
+                    <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="item.password" label="Password" style="padding-top:0px;"></v-text-field>
+                    <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;"></v-textarea>
+                  </div>
+                </v-form>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">
                 <div class="subtitle-1">Are you sure you want to delete the selected regions?</div>
               </v-flex>
-              <v-btn color="success" @click="actionConfirm()">Confirm</v-btn>
-              <v-btn color="error" @click="itemDialog=false" style="margin-left:10px">Cancel</v-btn>
+              <v-btn color="success" @click="submitRegion()">Confirm</v-btn>
+              <v-btn color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -86,81 +90,100 @@ export default {
       { text: 'Password', align: 'left', value: 'password'},
       { text: 'Private Key', align: 'left', value: 'key'},
     ],
-    items: [
-      {
-        name: 'AWS-EU',
-        environment: 'PRODUCTION',
-        cross_region: true,
-        hostname: 'eu-orch02.inbenta.com',
-        username: 'meteor',
-        password: '12345',
-        key: ''
-      }
-    ],
+    items: [],
     selected: [],
     search: '',
-    // Item
     item: { name: '', environment: '', cross_region: false, hostname: '', username: '', password: '', key: '' },
-    environments_items: [],
-    // Action Mode (new, edit, delete)
     mode: '',
-    // Dialog: Item
-    itemDialog: false,
-    itemDialogTitle: '',
+    loading: true,
+    dialog: false,
+    dialog_title: '',
+    dialog_valid: false,
+    // Environments
+    environments: [],
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
     snackbarText: '',
     snackbarColor: ''
   }),
+  created() {
+    this.getRegions()
+  },
   methods: {
-    getItems() {
-      const path = 'http://34.242.255.177:5000/regions'
+    getRegions() {
+      const path = this.$store.getters.url + '/deployments/regions'
       axios.get(path)
-        .then((res) => {
-          this.items = res.data.items
+        .then((response) => {
+          this.items = response.data.data.regions
+          for (var i = 0; i < response.data.data.environments.length; ++i) this.environments.push(response.data.data.environments[i]['name'])
+          this.loading = false
         })
         .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
     },
-    newItem() {
+    newRegion() {
       this.mode = 'new'
       this.item = { name: '', environment: '', cross_region: false, hostname: '', username: '', password: '', key: '' }
-      this.itemDialogTitle = 'New Region'
-      this.itemDialog = true
+      this.dialog_title = 'New Region'
+      this.dialog = true
     },
-    editItem() {
+    editRegion() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.itemDialogTitle = 'Edit Region'
-      this.itemDialog = true
+      this.dialog_title = 'Edit Region'
+      this.dialog = true
     },
-    deleteItem() {
+    deleteRegion() {
       this.mode = 'delete'
-      this.itemDialogTitle = 'Delete Region'
-      this.itemDialog = true
+      this.dialog_title = 'Delete Region'
+      this.dialog = true
     },
-    actionConfirm() {
-      if (this.mode == 'new') this.newItemConfirm()
-      else if (this.mode == 'edit') this.editItemConfirm()
-      else if (this.mode == 'delete') this.deleteItemConfirm()
+    submitRegion() {
+      if (this.mode == 'new') this.newRegionSubmit()
+      else if (this.mode == 'edit') this.editRegionSubmit()
+      else if (this.mode == 'delete') this.deleteRegionSubmit()
     },
-    newItemConfirm() {
+    newRegionSubmit() {
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
       // Check if new item already exists
       for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['name'] == this.item.name) {
+        if (this.items[i]['environment'] == this.item.environment && this.items[i]['name'] == this.item.name) {
           this.notification('Region currently exists', 'error')
           return
         }
       }
-      // Add item in the data table
-      this.items.push(this.item)
-      this.itemDialog = false
-      this.notification('Region added successfully', 'success')
+       // Add item in the DB
+      const path = this.$store.getters.url + '/deployments/regions'
+      const payload = JSON.stringify(this.item);
+      axios.post(path, payload)
+        .then((response) => {
+          this.notification(response.data.message, 'success')
+          // Add item in the data table
+          this.items.push(this.item)
+          this.dialog = false
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          this.notification(error.response.data.message, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
     },
-    editItemConfirm() {
+    editRegionSubmit() {
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
       // Get Item Position
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['name'] == this.selected[0]['name']) break
@@ -172,24 +195,67 @@ export default {
           return
         }
       }
-      // Edit item in the data table
-      this.items.splice(i, 1, this.item)
-      this.itemDialog = false
-      this.notification('Region edited successfully', 'success')
-    },
-    deleteItemConfirm() {
-      while(this.selected.length > 0) {
-        var s = this.selected.pop()
-        for (var i = 0; i < this.items.length; ++i) {
-          if (this.items[i]['name'] == s['name']) {
-            // Delete Item
-            this.items.splice(i, 1)
-            break
-          }
-        }
+      // Check the cross_region value
+      if (!this.item.cross_region) {
+        this.item.hostname = this.item.username = this.item.password = this.item.key = ''
       }
-      this.notification('Selected regions removed successfully', 'success')
-      this.itemDialog = false
+      // Edit item in the DB
+      const path = this.$store.getters.url + '/deployments/regions'
+      const payload = { 
+        current_name: this.selected[0]['name'], 
+        name: this.item.name,
+        environment: this.item.environment,
+        cross_region: this.item.cross_region,
+        hostname: this.item.hostname,
+        username: this.item.username,
+        password: this.item.password,
+        key: this.item.key
+      }
+      axios.put(path, payload)
+        .then((response) => {
+          this.notification(response.data.message, 'success')
+          // Edit item in the data table
+          this.items.splice(i, 1, this.item)
+          this.selected[0] = this.item
+          this.dialog = false
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          this.notification(error.response.data.message, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
+    },
+    deleteRegionSubmit() {
+       // Get Selected Items
+      var payload = []
+      for (var i = 0; i < this.selected.length; ++i) {
+        payload.push({ environment: this.selected[i]['environment'], name: this.selected[i]['name'] })
+      }
+      // Delete items to the DB
+      const path = this.$store.getters.url + '/deployments/regions'
+      axios.delete(path, { data: payload })
+        .then((response) => {
+          this.notification(response.data.message, 'success')
+          // Delete items from the data table
+          while(this.selected.length > 0) {
+            var s = this.selected.pop()
+            for (var i = 0; i < this.items.length; ++i) {
+              if (this.items[i]['name'] == s['name']) {
+                // Delete Item
+                this.items.splice(i, 1)
+                break
+              }
+            }
+            this.dialog = false
+          }
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          this.notification(error.response.data.message, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
     },
     notification(message, color) {
       this.snackbarText = message
@@ -198,9 +264,10 @@ export default {
     }
   },
   watch: {
-    itemDialog (val) {
+    dialog (val) {
       if (!val) return
       requestAnimationFrame(() => {
+        if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
       })
     }
