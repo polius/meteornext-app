@@ -23,7 +23,7 @@ def construct_blueprint(credentials):
         data = request.get_json()
 
         if request.method == 'GET':
-            return jsonify({'data': users.get()}), 200
+            return jsonify({'data': {'users': users.get(), 'groups': groups.get()}}), 200
 
         elif request.method == 'POST':
             user = users.get(data['username'])

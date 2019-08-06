@@ -2,8 +2,8 @@
   <div style="height:100%">
     <v-content style="height:100%" :style="{ backgroundImage: 'url(' + require('@/assets/bg.jpg') + ')', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }">
       <v-container grid-list-xl text-center style="padding-top:0px;">
-        <v-layout row wrap>
-          <v-flex xs6 offset-xs3>
+        <v-layout row wrap align-center style="max-width:500px; margin: 0 auto;">
+          <v-flex>
             <v-slide-y-transition mode="out-in">
               <v-card style="border-radius:5px;">
                 <v-card-text>

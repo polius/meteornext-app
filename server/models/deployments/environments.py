@@ -6,25 +6,18 @@ class Environments:
     def __init__(self, credentials):
         self._mysql = imp.load_source('mysql', '{}/models/mysql.py'.format(credentials['path'])).mysql(credentials)
 
-    def get(self, username=None):
-        if username is None:
-            return self._mysql.execute("SELECT u.id, u.username, u.email, u.password, g.name AS `group`, u.admin FROM users u JOIN groups g ON g.id = u.group_id")
-        else:
-            return self._mysql.execute("SELECT u.id, u.username, u.email, u.password, g.name AS `group`, u.admin FROM users u JOIN groups g ON g.id = u.group_id WHERE username = %s", (username))
-    
-    def post(self, data):
-        self._mysql.execute("INSERT INTO users (username, password, email, group_id, admin) SELECT %s, %s, %s, id, %s FROM groups WHERE name = %s", (data['username'], data['password'], data['email'], data['admin'], data['group']))
+    def get(self, group_id):
+        return self._mysql.execute("SELECT name FROM environments WHERE group_id = %s", (group_id))
 
-    def put(self, data):
-        print(data)
-        self._mysql.execute("UPDATE users SET username = %s, password = %s, email = %s, admin = %s, group_id = (SELECT id FROM groups WHERE `name` = %s) WHERE username = %s", (data['username'], data['password'], data['email'], data['admin'], data['group'], data['current_username']))
+    def post(self, name, group_id):
+        self._mysql.execute("INSERT INTO environments (name, group_id) VALUES (%s, %s)", (name, group_id))
 
-    def delete(self, data):
-        for user in data:
-            self._mysql.execute("DELETE FROM users WHERE username = %s", (user))
+    def put(self, current_name, name, group_id):
+        self._mysql.execute("UPDATE environments SET name = %s WHERE name = %s AND group_id = %s", (name, current_name, group_id))
 
-    def exist(self, username):
-        return self._mysql.execute("SELECT EXISTS ( SELECT * FROM users WHERE username = %s) AS exist", (username))[0]['exist'] == 1
+    def delete(self, data, group_id):
+        for environment in data:
+            self._mysql.execute("DELETE FROM environments WHERE name = %s AND group_id = %s", (environment, group_id))
 
-    def is_admin(self, username):
-        return len(self._mysql.execute("SELECT admin FROM users WHERE username = '{}' AND admin = 1".format(username))) > 0
+    def exist(self, name, group_id):
+        return self._mysql.execute("SELECT EXISTS ( SELECT * FROM environments WHERE name = %s AND group_id = %s) AS exist", (name, group_id))[0]['exist'] == 1

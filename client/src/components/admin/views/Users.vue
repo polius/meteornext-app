@@ -11,7 +11,7 @@
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="username" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:item.admin="props">
           <v-icon v-if="props.item.admin" small color="success" style="margin-left:8px;">fas fa-check</v-icon>
           <v-icon v-else small color="error" style="margin-left:8px;">fas fa-times</v-icon>
@@ -40,7 +40,7 @@
                     <v-text-field v-model="item.email" :rules="[v => !!v || '', v => /.+@.+\..+/.test(v) || '']" label="Email" type="email" required append-icon="email" style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" type="password" required append-icon="lock" style="padding-top:0px;"></v-text-field>
                     <v-select v-model="item.group" :items="groups" :rules="[v => !!v || '']" label="Group" required style="padding-top:0px;"></v-select>
-                    <v-switch v-model="item.admin" hint="yes" label="Admin Privileges" style="padding-top:0px;"></v-switch>
+                    <v-switch v-model="item.admin" hint="yes" label="Administrator" style="padding-top:0px;"></v-switch>
                   </v-form>
                 </v-flex>
                 <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">
@@ -94,31 +94,18 @@ export default {
   }),
   created() {
     this.getUsers()
-    this.getGroups()
   },
   methods: {
     getUsers() {
       const path = this.$store.getters.url + '/admin/users'
       axios.get(path)
         .then((response) => {
+          this.items = response.data.data.users
+          for (var i = 0; i < response.data.data.groups.length; ++i) this.groups.push(response.data.data.groups[i]['name'])
           this.loading = false
-          this.items = response.data.data
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout')
-          this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
-        })
-    },
-    getGroups() {
-      const path = this.$store.getters.url + '/admin/groups'
-      axios.get(path)
-        .then((response) => {
-          for (var i = 0; i < response.data.data.length; ++i) this.groups.push(response.data.data[i]['name'])
-        })
-        .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout')
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
@@ -172,7 +159,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout')
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
@@ -214,7 +201,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout')
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
@@ -245,7 +232,7 @@ export default {
           }
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout')
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
@@ -261,6 +248,7 @@ export default {
     dialog (val) {
       if (!val) return
       requestAnimationFrame(() => {
+        if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
       })
     }

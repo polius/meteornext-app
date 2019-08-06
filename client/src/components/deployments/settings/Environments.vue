@@ -5,17 +5,13 @@
         <v-toolbar-title class="white--text">ENVIRONMENTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text @click="newItem()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editItem()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn v-if="selected.length > 0" text @click="deleteItem()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn text @click="newEnvironment()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="editEnvironment()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn v-if="selected.length > 0" text @click="deleteEnvironment()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
-        <template v-slot:items="props">
-          <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
-          <td>{{ props.item.name }}</td>
-        </template>
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:no-results>
           <v-alert :value="true" color="error" icon="warning" style="margin-top:15px;">
             Your search for "{{ search }}" found no results.
@@ -33,12 +29,14 @@
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 v-if="mode!='delete'">
-                <v-text-field ref="field" v-on:keyup.enter="actionConfirm()" v-model="item.name" label="Environment Name" required></v-text-field>
+                <v-form ref="form" v-model="dialog_valid">
+                  <v-text-field ref="field" v-on:keyup.enter="submitEnvironment()" v-model="item.name" label="Environment Name" required></v-text-field>
+                </v-form>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">
                 <div class="subtitle-1">Are you sure you want to delete the selected environments?</div>
               </v-flex>
-              <v-btn color="success" @click="actionConfirm()">Confirm</v-btn>
+              <v-btn color="success" @click="submitEnvironment()">Confirm</v-btn>
               <v-btn color="error" @click="dialog=false" style="margin-left:10px;">Cancel</v-btn>
             </v-layout>
           </v-container>
@@ -65,8 +63,10 @@ export default {
     search: '',
     item: { name: '' },
     mode: '',
+    loading: true,
     dialog: false,
     dialog_title: '',
+    dialog_valid: false,
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -81,39 +81,44 @@ export default {
       const path = this.$store.getters.url + '/deployments/environments'
       axios.get(path)
         .then((response) => {
-          this.loading = false
           this.items = response.data.data
+          this.loading = false
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout')
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
         })
     },
-    newItem() {
+    newEnvironment() {
       this.mode = 'new'
       this.item = { name: '' }
-      this.itemDialogTitle = 'New Environment'
-      this.itemDialog = true
+      this.dialog_title = 'New Environment'
+      this.dialog = true
     },
-    editItem() {
+    editEnvironment() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.itemDialogTitle = 'Edit Environment'
-      this.itemDialog = true
+      this.dialog_title = 'Edit Environment'
+      this.dialog = true
     },
-    deleteItem() {
+    deleteEnvironment() {
       this.mode = 'delete'
-      this.itemDialogTitle = 'Delete Environment'
-      this.itemDialog = true
+      this.dialog_title = 'Delete Environment'
+      this.dialog = true
     },
-    actionConfirm() {
-      if (this.mode == 'new') this.newItemConfirm()
-      else if (this.mode == 'edit') this.editItemConfirm()
-      else if (this.mode == 'delete') this.deleteItemConfirm()
+    submitEnvironment() {
+      if (this.mode == 'new') this.newEnvironmentSubmit()
+      else if (this.mode == 'edit') this.editEnvironmentSubmit()
+      else if (this.mode == 'delete') this.deleteEnvironmentSubmit()
     },
-    newItemConfirm() {
+    newEnvironmentSubmit() {
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
       // Check if new item already exists
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['name'] == this.item.name) {
@@ -122,22 +127,28 @@ export default {
         }
       }
       // Add item in the DB
-      const path = 'http://34.242.255.177:5000/environments'
-      const payload = this.item
+      const path = this.$store.getters.url + '/deployments/environments'
+      const payload = JSON.stringify(this.item);
       axios.post(path, payload)
-        .then(() => {
+        .then((response) => {
+          this.notification(response.data.message, 'success')
           // Add item in the data table
           this.items.push(this.item)
-          this.itemDialog = false
-          this.notification('Environment added successfully', 'success')
+          this.dialog = false
         })
         .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
-          this.notification('Cannot add the environment. ' + error, 'error')
         })
     },
-    editItemConfirm() {
+    editEnvironmentSubmit() {
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
       // Get Item Position
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['name'] == this.selected[0]['name']) break
@@ -150,44 +161,56 @@ export default {
         }
       }
       // Edit item in the DB
-      //const path = `http://34.242.255.177:5000/books/${itemID}`;
-      const path = ''
-      const payload = this.item
+      const path = this.$store.getters.url + '/deployments/environments'
+      const payload = { 
+        current_name: this.selected[0]['name'], 
+        name: this.item.name
+      }
       axios.put(path, payload)
-        .then(() => {
+        .then((response) => {
+          this.notification(response.data.message, 'success')
           // Edit item in the data table
           this.items.splice(i, 1, this.item)
-          this.itemDialog = false
-          this.notification('Environment edited successfully', 'success')
+          this.selected[0] = this.item
+          this.dialog = false
         })
         .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          this.notification(error.response.data.message, 'error')
           // eslint-disable-next-line
           console.error(error)
-          this.notification('Cannot edit the environment. ' + error, 'error')
         })
     },
-    deleteItemConfirm() {
-      while(this.selected.length > 0) {
-        var s = this.selected.pop()
-        for (var i = 0; i < this.items.length; ++i) {
-          if (this.items[i]['name'] == s['name']) {
-            // Delete Item
-            this.items.splice(i, 1)
-            break
-          }
-        }
+    deleteEnvironmentSubmit() {
+      // Get Selected Items
+      var payload = []
+      for (var i = 0; i < this.selected.length; ++i) {
+        payload.push(this.selected[i]['name'])
       }
-      // Delete item in the DB
-      // const path = `http://34.242.255.177:5000/books/${environmentID}`;
-      // axios.delete(path)
-      //   .then(() => {
-      //     this.notification('Environments deleted successfully', 'success')
-      //     this.confirmationDialog = false
-      //   })
-      //   .catch((error) => {
-      //     // eslint-disable-next-line
-      //     console.error(error);
-      //   });
+      // Delete items to the DB
+      const path = this.$store.getters.url + '/deployments/environments'
+      axios.delete(path, { data: payload })
+        .then((response) => {
+          this.notification(response.data.message, 'success')
+          // Delete items from the data table
+          while(this.selected.length > 0) {
+            var s = this.selected.pop()
+            for (var i = 0; i < this.items.length; ++i) {
+              if (this.items[i]['name'] == s['name']) {
+                // Delete Item
+                this.items.splice(i, 1)
+                break
+              }
+            }
+            this.dialog = false
+          }
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          this.notification(error.response.data.message, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
     },
     notification(message, color) {
       this.snackbarText = message
@@ -196,10 +219,11 @@ export default {
     }
   },
   watch: {
-    itemDialog (val) {
+    dialog (val) {
       if (!val) return
       requestAnimationFrame(() => {
-        this.$refs.field.focus()
+        if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
+        if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
       })
     }
   }
