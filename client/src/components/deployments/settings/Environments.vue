@@ -122,7 +122,7 @@ export default {
       // Check if new item already exists
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['name'] == this.item.name) {
-          this.notification('Environment currently exists', 'error')
+          this.notification('This environment currently exists', 'error')
           return
         }
       }
@@ -156,7 +156,7 @@ export default {
       // Check if edited item already exists
       for (var j = 0; j < this.items.length; ++j) {
         if (this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
-          this.notification('Environment currently exists', 'error')
+          this.notification('This environment currently exists', 'error')
           return
         }
       }

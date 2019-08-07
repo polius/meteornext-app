@@ -158,7 +158,7 @@ export default {
       // Check if new item already exists
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['environment'] == this.item.environment && this.items[i]['region'] == this.item.region && this.items[i]['name'] == this.item.name) {
-          this.notification('Server currently exists', 'error')
+          this.notification('This server currently exists', 'error')
           return
         }
       }
@@ -192,7 +192,7 @@ export default {
       // Check if edited item already exists
       for (var j = 0; j < this.items.length; ++j) {
         if (this.items[j]['environment'] == this.item.environment && this.items[j]['region'] == this.item.region && this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
-          this.notification('Server currently exists', 'error')
+          this.notification('This server currently exists', 'error')
           return
         }
       }

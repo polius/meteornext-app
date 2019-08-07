@@ -11,6 +11,10 @@ import routes.admin.users
 import routes.deployments.environments
 import routes.deployments.regions
 import routes.deployments.servers
+import routes.deployments.auxiliary
+import routes.deployments.slack
+import routes.deployments.s3
+import routes.deployments.web
 
 # configuration
 DEBUG = True
@@ -35,6 +39,10 @@ users = routes.admin.users.construct_blueprint(credentials)
 environments = routes.deployments.environments.construct_blueprint(credentials)
 regions = routes.deployments.regions.construct_blueprint(credentials)
 servers = routes.deployments.servers.construct_blueprint(credentials)
+auxiliary = routes.deployments.auxiliary.construct_blueprint(credentials)
+slack = routes.deployments.slack.construct_blueprint(credentials)
+s3 = routes.deployments.s3.construct_blueprint(credentials)
+web = routes.deployments.web.construct_blueprint(credentials)
 
 # instantiate all routes
 app.register_blueprint(login)
@@ -43,6 +51,10 @@ app.register_blueprint(users)
 app.register_blueprint(environments)
 app.register_blueprint(regions)
 app.register_blueprint(servers)
+app.register_blueprint(auxiliary)
+app.register_blueprint(slack)
+app.register_blueprint(s3)
+app.register_blueprint(web)
 
 # enable CORS
 CORS(app, resources={r'/*': {'origins': '*'}})
