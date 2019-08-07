@@ -36,144 +36,146 @@
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 v-if="mode!='delete'" style="margin-bottom:10px;">
-                <!-- METADATA -->
-                <div class="title font-weight-regular">Metadata</div>
-                <v-text-field v-model="item.name" label="Name" required></v-text-field>
-                <v-text-field v-model="item.description" label="Description" required style="padding-top:0px; margin-top:0px;"></v-text-field>
+                <v-form ref="form" v-model="dialog_valid">
+                  <!-- METADATA -->
+                  <div class="title font-weight-regular">Metadata</div>
+                  <v-text-field v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  <v-text-field v-model="item.description" :rules="[v => !!v || '']" label="Description" required style="padding-top:0px; margin-top:0px;"></v-text-field>
 
-                <!-- DEPLOYMENTS -->
-                <div class="title font-weight-regular" style="margin-top:5px;">Deployments</div>
+                  <!-- DEPLOYMENTS -->
+                  <div class="title font-weight-regular" style="margin-top:5px;">Deployments</div>
 
-                <!-- environments -->
-                <v-card style="margin-bottom:10px;">
-                  <v-toolbar flat dense style="margin-top:20px;">
-                    <v-toolbar-title class="white--text">Environments</v-toolbar-title>
-                    <v-divider class="mx-3" inset vertical></v-divider>
-                    <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                      <v-btn text @click='new_environment()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                      <v-btn v-if="environment_selected.length == 1" text @click="edit_environment()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-                      <v-btn v-if="environment_selected.length > 0" text @click='delete_environment()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
-                    </v-toolbar-items>
-                  </v-toolbar>
-                  <v-divider></v-divider>
-                  <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" item-key="name" hide-default-header hide-default-footer show-select class="elevation-1">
-                    <template v-slot:items="props">
-                      <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
-                      <td>{{ props.item.name }}</td>
-                    </template>
-                  </v-data-table>
-                </v-card>
+                  <!-- environments -->
+                  <v-card style="margin-bottom:10px;">
+                    <v-toolbar flat dense style="margin-top:20px;">
+                      <v-toolbar-title class="white--text">Environments</v-toolbar-title>
+                      <v-divider class="mx-3" inset vertical></v-divider>
+                      <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
+                        <v-btn text @click='new_environment()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                        <v-btn v-if="environment_selected.length == 1" text @click="edit_environment()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                        <v-btn v-if="environment_selected.length > 0" text @click='delete_environment()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                      </v-toolbar-items>
+                    </v-toolbar>
+                    <v-divider></v-divider>
+                    <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" item-key="name" hide-default-header hide-default-footer show-select class="elevation-1">
+                      <template v-slot:items="props">
+                        <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
+                        <td>{{ props.item.name }}</td>
+                      </template>
+                    </v-data-table>
+                  </v-card>
 
-                <!-- regions -->
-                <v-card style="margin-bottom:10px;">
-                  <v-toolbar flat dense style="margin-top:10px;">
-                    <v-toolbar-title class="white--text">Regions</v-toolbar-title>
-                    <v-divider class="mx-3" inset vertical></v-divider>
-                    <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                      <v-btn text @click='new_region()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                      <v-btn v-if="region_selected.length == 1" text @click="edit_region()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-                      <v-btn v-if="region_selected.length > 0" text @click='delete_region()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
-                    </v-toolbar-items>
-                  </v-toolbar>
-                  <v-divider></v-divider>
-                  <v-data-table v-model="region_selected" :headers="region_headers" :items="region_items" item-key="name" :hide-default-header="region_items.length == 0" hide-default-footer show-select class="elevation-1">
-                    <template v-slot:items="props">
-                      <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
-                      <td>{{ props.item.name }}</td>
-                      <td>{{ props.item.environment }}</td>
-                      <td>{{ props.item.cross_region }}</td>
-                      <td>{{ props.item.hostname }}</td>
-                      <td>{{ props.item.username }}</td>
-                      <td>{{ props.item.password }}</td>
-                    </template>
-                  </v-data-table>
-                </v-card>
+                  <!-- regions -->
+                  <v-card style="margin-bottom:10px;">
+                    <v-toolbar flat dense style="margin-top:10px;">
+                      <v-toolbar-title class="white--text">Regions</v-toolbar-title>
+                      <v-divider class="mx-3" inset vertical></v-divider>
+                      <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
+                        <v-btn text @click='new_region()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                        <v-btn v-if="region_selected.length == 1" text @click="edit_region()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                        <v-btn v-if="region_selected.length > 0" text @click='delete_region()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                      </v-toolbar-items>
+                    </v-toolbar>
+                    <v-divider></v-divider>
+                    <v-data-table v-model="region_selected" :headers="region_headers" :items="region_items" item-key="name" :hide-default-header="region_items.length == 0" hide-default-footer show-select class="elevation-1">
+                      <template v-slot:items="props">
+                        <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
+                        <td>{{ props.item.name }}</td>
+                        <td>{{ props.item.environment }}</td>
+                        <td>{{ props.item.cross_region }}</td>
+                        <td>{{ props.item.hostname }}</td>
+                        <td>{{ props.item.username }}</td>
+                        <td>{{ props.item.password }}</td>
+                      </template>
+                    </v-data-table>
+                  </v-card>
 
-                <!-- servers -->
-                <v-card style="margin-bottom:10px;">
-                  <v-toolbar flat dense style="margin-top:10px;">
-                    <v-toolbar-title class="white--text">Servers</v-toolbar-title>
-                    <v-divider class="mx-3" inset vertical></v-divider>
-                    <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                      <v-btn text @click='new_server()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                      <v-btn v-if="server_selected.length == 1" text @click="edit_server()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-                      <v-btn v-if="server_selected.length > 0" text @click='delete_server()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
-                    </v-toolbar-items>
-                  </v-toolbar>
-                  <v-divider></v-divider>
-                  <v-data-table v-model="server_selected" :headers="server_headers" :items="server_items" item-key="name" :hide-default-header="server_items.length == 0" hide-default-footer show-select class="elevation-1">
-                    <template v-slot:items="props">
-                      <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
-                      <td>{{ props.item.name }}</td>
-                      <td>{{ props.item.environment }}</td>
-                      <td>{{ props.item.region }}</td>
-                      <td>{{ props.item.hostname }}</td>
-                      <td>{{ props.item.username }}</td>
-                      <td>{{ props.item.password }}</td>
-                    </template>
-                  </v-data-table>
-                </v-card>
+                  <!-- servers -->
+                  <v-card style="margin-bottom:10px;">
+                    <v-toolbar flat dense style="margin-top:10px;">
+                      <v-toolbar-title class="white--text">Servers</v-toolbar-title>
+                      <v-divider class="mx-3" inset vertical></v-divider>
+                      <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
+                        <v-btn text @click='new_server()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                        <v-btn v-if="server_selected.length == 1" text @click="edit_server()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                        <v-btn v-if="server_selected.length > 0" text @click='delete_server()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                      </v-toolbar-items>
+                    </v-toolbar>
+                    <v-divider></v-divider>
+                    <v-data-table v-model="server_selected" :headers="server_headers" :items="server_items" item-key="name" :hide-default-header="server_items.length == 0" hide-default-footer show-select class="elevation-1">
+                      <template v-slot:items="props">
+                        <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
+                        <td>{{ props.item.name }}</td>
+                        <td>{{ props.item.environment }}</td>
+                        <td>{{ props.item.region }}</td>
+                        <td>{{ props.item.hostname }}</td>
+                        <td>{{ props.item.username }}</td>
+                        <td>{{ props.item.password }}</td>
+                      </template>
+                    </v-data-table>
+                  </v-card>
 
-                <!-- auxiliary connections -->
-                <v-card style="margin-bottom:10px;">
-                  <v-toolbar flat dense style="margin-top:10px;">
-                    <v-toolbar-title class="white--text">Auxiliary Connections</v-toolbar-title>
-                    <v-divider class="mx-3" inset vertical></v-divider>
-                    <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                      <v-btn text @click='new_auxiliary()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                      <v-btn v-if="auxiliary_selected.length == 1" text @click="edit_auxiliary()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-                      <v-btn v-if="auxiliary_selected.length > 0" text @click='delete_auxiliary()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
-                    </v-toolbar-items>
-                  </v-toolbar>
-                  <v-divider></v-divider>
-                  <v-data-table v-model="auxiliary_selected" :headers="auxiliary_headers" :items="auxiliary_items" item-key="name" :hide-default-header="auxiliary_items.length == 0" hide-default-footer show-select class="elevation-1">
-                    <template v-slot:items="props">
-                      <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
-                      <td>{{ props.item.name }}</td>
-                      <td>{{ props.item.hostname }}</td>
-                      <td>{{ props.item.username }}</td>
-                      <td>{{ props.item.password }}</td>
-                    </template>
-                  </v-data-table>
-                </v-card>
+                  <!-- auxiliary connections -->
+                  <v-card style="margin-bottom:10px;">
+                    <v-toolbar flat dense style="margin-top:10px;">
+                      <v-toolbar-title class="white--text">Auxiliary Connections</v-toolbar-title>
+                      <v-divider class="mx-3" inset vertical></v-divider>
+                      <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
+                        <v-btn text @click='new_auxiliary()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                        <v-btn v-if="auxiliary_selected.length == 1" text @click="edit_auxiliary()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                        <v-btn v-if="auxiliary_selected.length > 0" text @click='delete_auxiliary()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                      </v-toolbar-items>
+                    </v-toolbar>
+                    <v-divider></v-divider>
+                    <v-data-table v-model="auxiliary_selected" :headers="auxiliary_headers" :items="auxiliary_items" item-key="name" :hide-default-header="auxiliary_items.length == 0" hide-default-footer show-select class="elevation-1">
+                      <template v-slot:items="props">
+                        <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
+                        <td>{{ props.item.name }}</td>
+                        <td>{{ props.item.hostname }}</td>
+                        <td>{{ props.item.username }}</td>
+                        <td>{{ props.item.password }}</td>
+                      </template>
+                    </v-data-table>
+                  </v-card>
 
-                <!-- slack -->
-                <v-card>
-                  <v-toolbar flat dense style="margin-top:10px;">
-                    <v-toolbar-title class="white--text">Slack</v-toolbar-title>
-                  </v-toolbar>
-                  <v-divider></v-divider>
-                  <v-card-text style="padding-bottom:0px;">
-                    <v-text-field v-model="slack_webhook" label="Webhook URL" required style="padding-top:0px;"></v-text-field>
-                    <v-switch v-model="slack_enabled" label="Enable Notifications" style="margin-top:0px;"></v-switch>
-                  </v-card-text>
-                </v-card>
+                  <!-- slack -->
+                  <v-card>
+                    <v-toolbar flat dense style="margin-top:10px;">
+                      <v-toolbar-title class="white--text">Slack</v-toolbar-title>
+                    </v-toolbar>
+                    <v-divider></v-divider>
+                    <v-card-text style="padding-bottom:0px;">
+                      <v-text-field v-model="slack_webhook" label="Webhook URL" required style="padding-top:0px;"></v-text-field>
+                      <v-switch v-model="slack_enabled" label="Enable Notifications" style="margin-top:0px;"></v-switch>
+                    </v-card-text>
+                  </v-card>
 
-                <!-- amazon s3 -->
-                <v-card>
-                  <v-toolbar flat dense style="margin-top:10px;">
-                    <v-toolbar-title class="white--text">Amazon S3</v-toolbar-title>
-                  </v-toolbar>
-                  <v-divider></v-divider>
-                  <v-card-text style="padding-bottom:0px;">
-                    <v-text-field v-model="s3_aws_access_key" label="AWS Access Key" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="s3_aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="s3_region_name" label="Region Name" hint="Example: eu-west-1" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="s3_bucket_name" label="Bucket Name" style="padding-top:0px;"></v-text-field>
-                    <v-switch v-model="s3_enabled" label="Enable Uploading Logs" style="margin-top:0px;"></v-switch>
-                  </v-card-text>
-                </v-card>
+                  <!-- amazon s3 -->
+                  <v-card>
+                    <v-toolbar flat dense style="margin-top:10px;">
+                      <v-toolbar-title class="white--text">Amazon S3</v-toolbar-title>
+                    </v-toolbar>
+                    <v-divider></v-divider>
+                    <v-card-text style="padding-bottom:0px;">
+                      <v-text-field v-model="s3_aws_access_key" label="AWS Access Key" style="padding-top:0px;"></v-text-field>
+                      <v-text-field v-model="s3_aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;"></v-text-field>
+                      <v-text-field v-model="s3_region_name" label="Region Name" hint="Example: eu-west-1" style="padding-top:0px;"></v-text-field>
+                      <v-text-field v-model="s3_bucket_name" label="Bucket Name" style="padding-top:0px;"></v-text-field>
+                      <v-switch v-model="s3_enabled" label="Enable Uploading Logs" style="margin-top:0px;"></v-switch>
+                    </v-card-text>
+                  </v-card>
 
-                <!-- web -->
-                <v-card>
-                  <v-toolbar flat dense style="margin-top:10px;">
-                    <v-toolbar-title class="white--text">Web</v-toolbar-title>
-                  </v-toolbar>
-                  <v-divider></v-divider>
-                  <v-card-text style="padding-bottom:0px;">
-                    <v-text-field v-model="web_public_url" label="Public Web URL" required style="padding-top:0px;"></v-text-field>
-                  </v-card-text>
-                </v-card>
+                  <!-- web -->
+                  <v-card>
+                    <v-toolbar flat dense style="margin-top:10px;">
+                      <v-toolbar-title class="white--text">Web</v-toolbar-title>
+                    </v-toolbar>
+                    <v-divider></v-divider>
+                    <v-card-text style="padding-bottom:0px;">
+                      <v-text-field v-model="web_public_url" label="Public Web URL" required style="padding-top:0px;"></v-text-field>
+                    </v-card-text>
+                  </v-card>
+                </v-form>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">
                 <div class="subtitle-1">Are you sure you want to delete the selected groups?</div>
@@ -243,8 +245,8 @@
               <v-flex xs12 style="padding-bottom:10px" v-if="region_mode=='delete'">
                 <div class="subtitle-1">Are you sure you want to delete the selected regions?</div>
               </v-flex>
-              <v-btn color="success" @click="confirm_region()">Confirm</v-btn>
-              <v-btn color="error" @click="region_dialog=false" style="margin-left:10px">Cancel</v-btn>
+              <v-btn :loading="loading" color="success" @click="confirm_region()">Confirm</v-btn>
+              <v-btn :disabled="loading" color="error" @click="region_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -346,6 +348,7 @@ export default {
     loading: true,
     dialog: false,
     dialog_title: '',
+    dialog_valid: false,
 
     // +--------------+
     // | ENVIRONMENTS |
@@ -480,6 +483,7 @@ export default {
       this.dialog = true
     },
     submitGroup() {
+      this.loading = true
       if (this.mode == 'new') this.newGroupSubmit()
       else if (this.mode == 'edit') this.editGroupSubmit()
       else if (this.mode == 'delete') this.deleteGroupSubmit()
@@ -506,9 +510,11 @@ export default {
           // Add item in the data table
           this.items.push(this.item)
           this.dialog = false
+          this.loading = false
         })
         .catch((error) => {
           this.notification(error.response.data.message, 'error')
+          this.loading = false
           // eslint-disable-next-line
           console.error(error)
         })
@@ -535,9 +541,11 @@ export default {
           this.items.splice(i, 1, this.item)
           this.selected[0] = this.item
           this.dialog = false
+          this.loading = false
         })
         .catch((error) => {
           this.notification(error.response.data.message, 'error')
+          this.loading = false
           // eslint-disable-next-line
           console.error(err)
         })
@@ -564,10 +572,12 @@ export default {
               }
             }
             this.dialog = false
+            this.loading = false
           }
         })
         .catch((error) => {
           this.notification(error.response.data.message, 'error')
+          this.loading = false
           // eslint-disable-next-line
           console.error(error)
         })
@@ -859,6 +869,7 @@ export default {
     environment_dialog (val) {
       if (!val) return
       requestAnimationFrame(() => {
+        if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
       })
     }

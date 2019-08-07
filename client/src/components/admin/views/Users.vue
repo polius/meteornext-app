@@ -46,8 +46,8 @@
                 <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">
                   <div class="subtitle-1">Are you sure you want to delete the selected users?</div>
                 </v-flex>
-                <v-btn color="success" @click="submitUser()">Confirm</v-btn>
-                <v-btn color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
+                <v-btn :loading="loading" color="success" @click="submitUser()">Confirm</v-btn>
+                <v-btn :disabled="disabled" color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
               </v-layout>
             </v-container>
          
@@ -129,6 +129,7 @@ export default {
       this.dialog = true
     },
     submitUser() {
+      this.loading = true
       if (this.mode == 'new') this.newUserSubmit()
       else if (this.mode == 'edit') this.editUserSubmit()
       else if (this.mode == 'delete') this.deleteUserSubmit()
@@ -154,13 +155,13 @@ export default {
           this.notification(response.data.message, 'success')
           // Retrieve again the users list
           this.getUsers()
-          this.$refs.form.reset()
-          this.dialog_valid = true
           this.dialog = false
+          this.loading = false
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
+          this.loading = false
           // eslint-disable-next-line
           console.error(error)
         })
@@ -199,10 +200,12 @@ export default {
           this.items.splice(i, 1, this.item)
           this.selected[0] = this.item
           this.dialog = false
+          this.loading = false
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
+          this.loading = false
           // eslint-disable-next-line
           console.error(error)
         })
@@ -229,11 +232,13 @@ export default {
               }
             }
             this.dialog = false
+            this.loading = false
           }
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
+          this.loading = false
           // eslint-disable-next-line
           console.error(error)
         })
