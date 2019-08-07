@@ -9,15 +9,15 @@ class Groups:
     def get(self):
         return self._mysql.execute("SELECT * FROM groups")
 
-    def post(self, data):
-        self._mysql.execute("INSERT INTO groups (name, description) VALUES (%s, %s)", (data['name'], data['description']))
+    def post(self, group):
+        self._mysql.execute("INSERT INTO groups (name, description) VALUES (%s, %s)", (group['name'], group['description']))
 
-    def put(self, data):
-        self._mysql.execute("UPDATE groups SET name = %s, description = %s WHERE name = %s", (data['name'], data['description'], data['current_name']))
+    def put(self, group):
+        self._mysql.execute("UPDATE groups SET name = %s, description = %s WHERE name = %s", (group['name'], group['description'], group['current_name']))
 
-    def delete(self, data):
-        for group in data:
+    def delete(self, groups):
+        for group in groups:
             self._mysql.execute("DELETE FROM groups WHERE name = %s", (group))
     
-    def exist(self, data):
-        return self._mysql.execute("SELECT EXISTS ( SELECT * FROM groups WHERE name = %s) AS exist", (data['name']))[0]['exist'] == 1
+    def exist(self, group):
+        return self._mysql.execute("SELECT EXISTS ( SELECT * FROM groups WHERE name = %s) AS exist", (group['name']))[0]['exist'] == 1

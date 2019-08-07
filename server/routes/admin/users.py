@@ -20,34 +20,34 @@ def construct_blueprint(credentials):
             return jsonify({'message': 'Insufficient Privileges'}), 401
 
         # Get Request Json
-        data = request.get_json()
+        user_json = request.get_json()
 
         if request.method == 'GET':
             return jsonify({'data': {'users': users.get(), 'groups': groups.get()}}), 200
 
         elif request.method == 'POST':
-            user = users.get(data['username'])
+            user = users.get(user_json['username'])
             if len(user) > 0:
                 return jsonify({'message': 'This user currently exists'}), 400
             else:
-                data['password'] = bcrypt.hashpw(data['password'].encode('utf8'), bcrypt.gensalt())
-                users.post(data)
+                user_json['password'] = bcrypt.hashpw(user_json['password'].encode('utf8'), bcrypt.gensalt())
+                users.post(user_json)
                 return jsonify({'message': 'User added successfully'}), 200
 
         elif request.method == 'PUT':
-            user = users.get(data['current_username'])
+            user = users.get(user_json['current_username'])
             if len(user) == 0:
                 return jsonify({'message': 'This user does not exist'}), 400
 
-            elif data['current_username'] != data['username'] and users.exist(data['username']):
+            elif user_json['current_username'] != user_json['username'] and users.exist(user_json['username']):
                 return jsonify({'message': 'This user currently exists'}), 400
-            elif data['password'] != user[0]['password']:
-                data['password'] = bcrypt.hashpw(data['password'].encode('utf8'), bcrypt.gensalt())
-            users.put(data)
+            elif user_json['password'] != user_json[0]['password']:
+                user_json['password'] = bcrypt.hashpw(user_json['password'].encode('utf8'), bcrypt.gensalt())
+            users.put(user_json)
             return jsonify({'message': 'User edited successfully'}), 200
 
         elif request.method == 'DELETE':
-            users.delete(data)
+            users.delete(user_json)
             return jsonify({'message': 'Selected users deleted successfully'}), 200
 
     return users_blueprint

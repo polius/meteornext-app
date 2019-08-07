@@ -23,29 +23,29 @@ def construct_blueprint(credentials):
         user = users.get(get_jwt_identity())
 
         # Get Request Json
-        data = request.get_json()
+        environment_json = request.get_json()
 
         if request.method == 'GET':
             return jsonify({'data': environments.get(user[0]['group_id'])}), 200
 
         elif request.method == 'POST':
-            if environments.exist(data['name'], user[0]['group_id']):
+            if environments.exist(user[0]['group_id'], environment_json):
                 return jsonify({'message': 'This environment currently exists'}), 400
             else:
-                environments.post(data['name'], user[0]['group_id'])
+                environments.post(user[0]['group_id'], environment_json)
                 return jsonify({'message': 'Environment added successfully'}), 200
 
         elif request.method == 'PUT':
-            if not environments.exist(data['current_name'], user[0]['group_id']):
+            if not environments.exist(user[0]['group_id'], environment_json):
                 return jsonify({'message': 'This environment does not exist'}), 400
-            elif data['current_name'] != data['name'] and environments.exist(data['name'], user[0]['group_id']):
+            elif data['current_name'] != data['name'] and environments.exist(user[0]['group_id'], environment_json):
                 return jsonify({'message': 'This new environment name currently exists'}), 400
             else:
-                environments.put(data['current_name'], data['name'], user[0]['group_id'])
+                environments.put(user[0]['group_id'], environment_json)
                 return jsonify({'message': 'Environment edited successfully'}), 200
 
         elif request.method == 'DELETE':
-            environments.delete(data, user[0]['group_id'])
+            environments.delete(user[0]['group_id'], environment_json)
             return jsonify({'message': 'Selected environments deleted successfully'}), 200
 
     return environments_blueprint

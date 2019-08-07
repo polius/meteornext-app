@@ -21,18 +21,18 @@ def construct_blueprint(credentials):
         if request.method == 'GET':
             return jsonify({'data': groups.get()}), 200
 
-        data = request.get_json()
+        group_json = request.get_json()
 
         if request.method == 'POST':
-            groups.post(data)
+            groups.post(group_json)
             return jsonify({'message': 'Group added'}), 200
         elif request.method == 'PUT':
-            if groups.exist(data):
+            if groups.exist(group_json):
                 return jsonify({'message': 'This group currently exists'}), 400
-            groups.put(data)
+            groups.put(group_json)
             return jsonify({'message': 'Group edited'}), 200
         elif request.method == 'DELETE':
-            groups.delete(data)
+            groups.delete(group_json)
             return jsonify({'message': 'Selected groups deleted'}), 200
 
     return groups_blueprint

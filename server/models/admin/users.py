@@ -12,14 +12,14 @@ class Users:
         else:
             return self._mysql.execute("SELECT u.id, u.username, u.email, u.password, u.group_id, g.name AS `group`, u.admin FROM users u JOIN groups g ON g.id = u.group_id WHERE username = %s", (username))
     
-    def post(self, data):
-        self._mysql.execute("INSERT INTO users (username, password, email, group_id, admin) SELECT %s, %s, %s, id, %s FROM groups WHERE name = %s", (data['username'], data['password'], data['email'], data['admin'], data['group']))
+    def post(self, user):
+        self._mysql.execute("INSERT INTO users (username, password, email, group_id, admin) SELECT %s, %s, %s, id, %s FROM groups WHERE name = %s", (user['username'], user['password'], user['email'], user['admin'], user['group']))
 
-    def put(self, data):
-        self._mysql.execute("UPDATE users SET username = %s, password = %s, email = %s, admin = %s, group_id = (SELECT id FROM groups WHERE `name` = %s) WHERE username = %s", (data['username'], data['password'], data['email'], data['admin'], data['group'], data['current_username']))
+    def put(self, user):
+        self._mysql.execute("UPDATE users SET username = %s, password = %s, email = %s, admin = %s, group_id = (SELECT id FROM groups WHERE `name` = %s) WHERE username = %s", (user['username'], user['password'], user['email'], user['admin'], user['group'], user['current_username']))
 
-    def delete(self, data):
-        for user in data:
+    def delete(self, users):
+        for user in users:
             self._mysql.execute("DELETE FROM users WHERE username = %s", (user))
 
     def exist(self, username):
