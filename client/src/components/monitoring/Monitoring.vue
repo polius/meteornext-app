@@ -10,10 +10,9 @@
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text>
-              <p class="subheading">MySQL Host: </p>
+              <p class="subheading">Hostname: </p>
               <p class="subheading">Uptime: </p>
               <p class="subheading">Connections: </p>
-              <p class="subheading">Max Execution Time: </p>
             </v-card-text>
           </v-card>
         </v-hover>

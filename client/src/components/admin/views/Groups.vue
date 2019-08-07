@@ -38,12 +38,12 @@
               <v-flex xs12 v-if="mode!='delete'" style="margin-bottom:10px;">
                 <v-form ref="form" v-model="dialog_valid">
                   <!-- METADATA -->
-                  <div class="title font-weight-regular">Metadata</div>
-                  <v-text-field v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  <div class="title font-weight-regular">METADATA</div>
+                  <v-text-field ref="focus" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-text-field v-model="item.description" :rules="[v => !!v || '']" label="Description" required style="padding-top:0px; margin-top:0px;"></v-text-field>
 
                   <!-- DEPLOYMENTS -->
-                  <div class="title font-weight-regular" style="margin-top:5px;">Deployments</div>
+                  <div class="title font-weight-regular" style="margin-top:5px;">DEPLOYMENTS</div>
 
                   <!-- environments -->
                   <v-card style="margin-bottom:10px;">
@@ -51,9 +51,9 @@
                       <v-toolbar-title class="white--text">Environments</v-toolbar-title>
                       <v-divider class="mx-3" inset vertical></v-divider>
                       <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                        <v-btn text @click='new_environment()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                        <v-btn v-if="environment_selected.length == 1" text @click="edit_environment()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-                        <v-btn v-if="environment_selected.length > 0" text @click='delete_environment()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                        <v-btn text @click='newEnvironment()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                        <v-btn v-if="environment_selected.length == 1" text @click="editEnvironment()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                        <v-btn v-if="environment_selected.length > 0" text @click='deleteEnvironment()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                       </v-toolbar-items>
                     </v-toolbar>
                     <v-divider></v-divider>
@@ -71,9 +71,9 @@
                       <v-toolbar-title class="white--text">Regions</v-toolbar-title>
                       <v-divider class="mx-3" inset vertical></v-divider>
                       <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                        <v-btn text @click='new_region()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                        <v-btn v-if="region_selected.length == 1" text @click="edit_region()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-                        <v-btn v-if="region_selected.length > 0" text @click='delete_region()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                        <v-btn text @click='newRegion()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                        <v-btn v-if="region_selected.length == 1" text @click="editRegion()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                        <v-btn v-if="region_selected.length > 0" text @click='deleteRegion()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                       </v-toolbar-items>
                     </v-toolbar>
                     <v-divider></v-divider>
@@ -96,9 +96,9 @@
                       <v-toolbar-title class="white--text">Servers</v-toolbar-title>
                       <v-divider class="mx-3" inset vertical></v-divider>
                       <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                        <v-btn text @click='new_server()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                        <v-btn v-if="server_selected.length == 1" text @click="edit_server()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-                        <v-btn v-if="server_selected.length > 0" text @click='delete_server()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                        <v-btn text @click='newServer()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                        <v-btn v-if="server_selected.length == 1" text @click="editServer()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                        <v-btn v-if="server_selected.length > 0" text @click='deleteServer()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                       </v-toolbar-items>
                     </v-toolbar>
                     <v-divider></v-divider>
@@ -121,9 +121,9 @@
                       <v-toolbar-title class="white--text">Auxiliary Connections</v-toolbar-title>
                       <v-divider class="mx-3" inset vertical></v-divider>
                       <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                        <v-btn text @click='new_auxiliary()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                        <v-btn v-if="auxiliary_selected.length == 1" text @click="edit_auxiliary()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-                        <v-btn v-if="auxiliary_selected.length > 0" text @click='delete_auxiliary()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                        <v-btn text @click='newAuxiliary()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                        <v-btn v-if="auxiliary_selected.length == 1" text @click="editAuxiliary()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                        <v-btn v-if="auxiliary_selected.length > 0" text @click='deleteAuxiliary()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                       </v-toolbar-items>
                     </v-toolbar>
                     <v-divider></v-divider>
@@ -172,7 +172,7 @@
                     </v-toolbar>
                     <v-divider></v-divider>
                     <v-card-text style="padding-bottom:0px;">
-                      <v-text-field v-model="web_public_url" label="Public Web URL" required style="padding-top:0px;"></v-text-field>
+                      <v-text-field v-model="web_url" label="Public Web URL" required style="padding-top:0px;"></v-text-field>
                     </v-card-text>
                   </v-card>
                 </v-form>
@@ -202,13 +202,15 @@
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 v-if="environment_mode!='delete'">
-                <v-text-field ref="field" v-on:keyup.enter="confirm_environment()" v-model="environment_item.name" label="Environment Name" required></v-text-field>
+                <v-form ref="environment_form" v-model="environment_dialog_valid">
+                  <v-text-field ref="environment_focus" v-on:keyup.enter="submitEnvironment()" v-model="environment_item.name" :rules="[v => !!v || '']" label="Environment Name" required></v-text-field>
+                </v-form>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="environment_mode=='delete'">
                 <div class="subtitle-1">Are you sure you want to delete the selected environments?</div>
               </v-flex>
-              <v-btn color="success" @click="confirm_environment()">Confirm</v-btn>
-              <v-btn color="error" @click="environment_dialog=false" style="margin-left:10px">Cancel</v-btn>
+              <v-btn :loading="dialog_loading" color="success" @click="submitEnvironment()">Confirm</v-btn>
+              <v-btn :disabled="dialog_loading" color="error" @click="environment_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -228,25 +230,27 @@
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 v-if="region_mode!='delete'">
-                <!-- METADATA -->
-                <div class="title font-weight-regular">Metadata</div>
-                <v-text-field ref="field" v-model="region_item.name" label="Name" required></v-text-field>
-                <v-select v-model="region_item.environment" :items="environments_list" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
-                <!-- SSH -->
-                <v-switch v-model="region_item.cross_region" label="Cross Region" style="margin-top:0px;"></v-switch>
-                <div v-if="region_item.cross_region">
-                  <div class="title font-weight-regular">SSH</div>
-                  <v-text-field v-model="region_item.hostname" label="Hostname"></v-text-field>
-                  <v-text-field v-model="region_item.username" label="Username" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="region_item.password" label="Password" style="padding-top:0px;"></v-text-field>
-                  <v-textarea v-model="region_item.key" label="Private Key" style="padding-top:0px;"></v-textarea>
-                </div>
+                <v-form ref="region_form" v-model="region_dialog_valid">
+                  <!-- METADATA -->
+                  <div class="title font-weight-regular">Metadata</div>
+                  <v-text-field ref="region_focus" v-model="region_item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  <v-select v-model="region_item.environment" :items="environments" :rules="[v => !!v || '']" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
+                  <!-- SSH -->
+                  <v-switch v-model="region_item.cross_region" label="Cross Region" style="margin-top:0px;"></v-switch>
+                  <div v-if="region_item.cross_region">
+                    <div class="title font-weight-regular">SSH</div>
+                    <v-text-field v-model="region_item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
+                    <v-text-field v-model="region_item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="region_item.password" label="Password" style="padding-top:0px;"></v-text-field>
+                    <v-textarea v-model="region_item.key" label="Private Key" style="padding-top:0px;"></v-textarea>
+                  </div>
+                </v-form>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="region_mode=='delete'">
                 <div class="subtitle-1">Are you sure you want to delete the selected regions?</div>
               </v-flex>
-              <v-btn :loading="loading" color="success" @click="confirm_region()">Confirm</v-btn>
-              <v-btn :disabled="loading" color="error" @click="region_dialog=false" style="margin-left:10px">Cancel</v-btn>
+              <v-btn :loading="dialog_loading" color="success" @click="submitRegion()">Confirm</v-btn>
+              <v-btn :disabled="dialog_loading" color="error" @click="region_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -266,22 +270,24 @@
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 v-if="server_mode!='delete'">
-                <!-- METADATA -->
-                <div class="title font-weight-regular">Metadata</div>
-                <v-text-field ref="field" v-model="server_item.name" label="Name" required></v-text-field>
-                <v-select v-model="server_item.environment" :items="environments_list" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
-                <v-select v-model="server_item.region" :items="regions_list" label="Region" required style="margin-top:0px; padding-top:0px;"></v-select>
-                <!-- SQL -->
-                <div class="title font-weight-regular" style="padding-top:10px;">SQL</div>
-                <v-text-field v-model="server_item.hostname" label="Hostname"></v-text-field>
-                <v-text-field v-model="server_item.username" label="Username" style="padding-top:0px;"></v-text-field>
-                <v-text-field v-model="server_item.password" label="Password" style="padding-top:0px;"></v-text-field>
+                <v-form ref="server_form" v-model="server_dialog_valid">
+                  <!-- METADATA -->
+                  <div class="title font-weight-regular">Metadata</div>
+                  <v-text-field ref="server_focus" v-model="server_item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  <v-select v-model="server_item.environment" :items="environments" :rules="[v => !!v || '']" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
+                  <v-select v-model="server_item.region" :items="regions" :rules="[v => !!v || '']" label="Region" required style="margin-top:0px; padding-top:0px;"></v-select>
+                  <!-- SQL -->
+                  <div class="title font-weight-regular" style="padding-top:10px;">SQL</div>
+                  <v-text-field v-model="server_item.hostname" :rules="[v => !!v || '']" label="Hostname" required></v-text-field>
+                  <v-text-field v-model="server_item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" required></v-text-field>
+                  <v-text-field v-model="server_item.password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" required></v-text-field>
+                </v-form>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="server_mode=='delete'">
                 <div class="subtitle-1">Are you sure you want to delete the selected servers?</div>
               </v-flex>
-              <v-btn color="success" @click="confirm_server()">Confirm</v-btn>
-              <v-btn color="error" @click="server_dialog=false" style="margin-left:10px">Cancel</v-btn>
+              <v-btn :loading="dialog_loading" color="success" @click="submitServer()">Confirm</v-btn>
+              <v-btn :disabled="dialog_loading" color="error" @click="server_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -301,20 +307,22 @@
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 v-if="auxiliary_mode!='delete'">
-                <!-- METADATA -->
-                <div class="title font-weight-regular">Metadata</div>
-                <v-text-field ref="field" v-model="auxiliary_item.name" label="Name" required></v-text-field>
-                <!-- SQL -->
-                <div class="title font-weight-regular" style="padding-top:10px;">SQL</div>
-                <v-text-field v-model="auxiliary_item.hostname" label="Hostname"></v-text-field>
-                <v-text-field v-model="auxiliary_item.username" label="Username" style="padding-top:0px;"></v-text-field>
-                <v-text-field v-model="auxiliary_item.password" label="Password" style="padding-top:0px;"></v-text-field>
+                <v-form ref="auxiliary_form" v-model="auxiliary_dialog_valid">
+                  <!-- METADATA -->
+                  <div class="title font-weight-regular">Metadata</div>
+                  <v-text-field ref="auxiliary_focus" v-model="auxiliary_item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  <!-- SQL -->
+                  <div class="title font-weight-regular" style="padding-top:10px;">SQL</div>
+                  <v-text-field v-model="auxiliary_item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
+                  <v-text-field v-model="auxiliary_item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="auxiliary_item.password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;"></v-text-field>
+                </v-form>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="auxiliary_mode=='delete'">
                 <div class="subtitle-1">Are you sure you want to delete the selected auxiliary connections?</div>
               </v-flex>
-              <v-btn color="success" @click="confirm_auxiliary()">Confirm</v-btn>
-              <v-btn color="error" @click="auxiliary_dialog=false" style="margin-left:10px">Cancel</v-btn>
+              <v-btn :loading="dialog_loading" color="success" @click="submitAuxiliary()">Confirm</v-btn>
+              <v-btn :disabled="dialog_loading" color="error" @click="auxiliary_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -349,6 +357,7 @@ export default {
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
+    dialog_loading: false,
 
     // +--------------+
     // | ENVIRONMENTS |
@@ -361,7 +370,8 @@ export default {
     environment_mode: '',
     environment_dialog: false,
     environment_dialog_title: '',
-    environments_list: [],
+    environment_dialog_valid: false,
+    environments: [],
 
     // +---------+
     // | REGIONS |
@@ -381,7 +391,8 @@ export default {
     region_mode: '',
     region_dialog: false,
     region_dialog_title: '',
-    regions_list: [],
+    region_dialog_valid: false,
+    regions: [],
 
     // +---------+
     // | SERVERS |
@@ -401,6 +412,8 @@ export default {
     server_mode: '',
     server_dialog: false,
     server_dialog_title: '',
+    server_dialog_valid: false,
+    server_dialog_loading: false,
 
     // +-----------------------+
     // | AUXILIARY CONNECTIONS |
@@ -418,6 +431,7 @@ export default {
     auxiliary_mode: '',
     auxiliary_dialog: false,
     auxiliary_dialog_title: '',
+    auxiliary_dialog_valid: false,
 
     // +-------+
     // | SLACK |
@@ -437,7 +451,7 @@ export default {
     // +-----+
     // | WEB |
     // +-----+
-    web_public_url: '',
+    web_url: '',
 
     // Snackbar
     snackbar: false,
@@ -460,7 +474,7 @@ export default {
           this.items = response.data.data
         })
         .catch((error) => {
-          this.notification(error.response.data.message, 'error')
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           // eslint-disable-next-line
           console.error(error)
         })
@@ -585,42 +599,46 @@ export default {
     // +--------------+
     // | ENVIRONMENTS |
     // +--------------+
-    new_environment() {
+    newEnvironment() {
       this.environment_mode = 'new'
       this.environment_item = { name: '' }
+      this.dialog_loading = false
       this.environment_dialog_title = 'New Environment'
       this.environment_dialog = true
     },
-    edit_environment() {
+    editEnvironment() {
       this.environment_mode = 'edit'
       this.environment_item = JSON.parse(JSON.stringify(this.environment_selected[0]))
+      this.dialog_loading = false
       this.environment_dialog_title = 'Edit Environment'
       this.environment_dialog = true
     },
-    delete_environment() {
+    deleteEnvironment() {
       this.environment_mode = 'delete'
+      this.dialog_loading = false
       this.environment_dialog_title = 'Delete Environment'
       this.environment_dialog = true
     },
-    confirm_environment() {
-      if (this.environment_mode == 'new') this.new_environment_confirm()
-      else if (this.environment_mode == 'edit') this.edit_environment_confirm()
-      else if (this.environment_mode == 'delete') this.delete_environment_confirm()
+    submitEnvironment() {
+      this.dialog_loading = true
+      if (this.environment_mode == 'new') this.newEnvironmentSubmit()
+      else if (this.environment_mode == 'edit') this.editEnvironmentSubmit()
+      else if (this.environment_mode == 'delete') this.deleteEnvironmentSubmit()
     },
-    new_environment_confirm() {
+    newEnvironmentSubmit() {
       // Check if new item already exists
       for (var i = 0; i < this.environment_items.length; ++i) {
         if (this.environment_items[i]['name'] == this.item.name) {
-          this.notification('Environment currently exists', 'error')
+          this.notification('This environment currently exists', 'error')
           return
         }
       }
       // Add item in the data table
       this.environment_items.push(this.environment_item)
-      this.environment_dialog = false
       this.notification('Environment added successfully', 'success')
+      this.environment_dialog = false
     },
-    edit_environment_confirm() {
+    editEnvironmentSubmit() {
       // Get Item Position
       for (var i = 0; i < this.environment_items.length; ++i) {
         if (this.environment_items[i]['name'] == this.environment_selected[0]['name']) break
@@ -628,16 +646,16 @@ export default {
       // Check if edited item already exists
       for (var j = 0; j < this.environment_items.length; ++j) {
         if (this.environment_items[j]['name'] == this.environment_item.name && this.environment_item.name != this.environment_selected[0]['name']) {
-          this.notification('Environment currently exists', 'error')
+          this.notification('This environment currently exists', 'error')
           return
         }
       }
       // Edit item in the data table
       this.environment_items.splice(i, 1, this.environment_item)
-      this.environment_dialog = false
       this.notification('Environment edited successfully', 'success')
+      this.environment_dialog = false
     },
-    delete_environment_confirm() {
+    deleteEnvironmentSubmit() {
       while(this.environment_selected.length > 0) {
         var s = this.environment_selected.pop()
         for (var i = 0; i < this.environment_items.length; ++i) {
@@ -654,42 +672,46 @@ export default {
     // +---------+
     // | REGIONS |
     // +---------+
-    new_region() {
+    newRegion() {
       this.region_mode = 'new'
       this.region_item = { name: '', environment: '', cross_region: '', hostname: '', username: '', password: '' }
+      this.dialog_loading = false
       this.region_dialog_title = 'New Region'
       this.region_dialog = true
     },
-    edit_region() {
+    editRegion() {
       this.region_mode = 'edit'
       this.region_item = JSON.parse(JSON.stringify(this.region_selected[0]))
+      this.dialog_loading = false
       this.region_dialog_title = 'Edit Region'
       this.region_dialog = true
     },
-    delete_region() {
+    deleteRegion() {
       this.region_mode = 'delete'
+      this.dialog_loading = false
       this.region_dialog_title = 'Delete Region'
       this.region_dialog = true
     },
-    confirm_region() {
-      if (this.region_mode == 'new') this.new_region_confirm()
-      else if (this.region_mode == 'edit') this.edit_region_confirm()
-      else if (this.region_mode == 'delete') this.delete_region_confirm()
+    submitRegion() {
+      this.dialog_loading = true
+      if (this.region_mode == 'new') this.newRegionSubmit()
+      else if (this.region_mode == 'edit') this.editRegionSubmit()
+      else if (this.region_mode == 'delete') this.deleteRegionSubmit()
     },
-    new_region_confirm() {
+    newRegionSubmit() {
       // Check if new item already exists
       for (var i = 0; i < this.region_items.length; ++i) {
         if (this.region_items[i]['name'] == this.item.name) {
-          this.notification('Region currently exists', 'error')
+          this.notification('This region currently exists', 'error')
           return
         }
       }
       // Add item in the data table
       this.region_items.push(this.region_item)
-      this.region_dialog = false
       this.notification('Region added successfully', 'success')
+      this.region_dialog = false
     },
-    edit_region_confirm() {
+    editRegionSubmit() {
       // Get Item Position
         for (var i = 0; i < this.region_items.length; ++i) {
         if (this.region_items[i]['name'] == this.region_selected[0]['name']) break
@@ -697,16 +719,16 @@ export default {
       // Check if edited item already exists
       for (var j = 0; j < this.region_items.length; ++j) {
         if (this.region_items[j]['name'] == this.region_item.name && this.region_item.name != this.region_selected[0]['name']) {
-          this.notification('Region currently exists', 'error')
+          this.notification('This region currently exists', 'error')
           return
         }
       }
       // Edit item in the data table
       this.region_items.splice(i, 1, this.region_item)
-      this.region_dialog = false
       this.notification('Region edited successfully', 'success')
+      this.region_dialog = false
     },
-    delete_region_confirm() {
+    deleteRegionSubmit() {
       while(this.region_selected.length > 0) {
         var s = this.region_selected.pop()
         for (var i = 0; i < this.region_items.length; ++i) {
@@ -723,42 +745,46 @@ export default {
     // +---------+
     // | SERVERS |
     // +---------+
-    new_server() {
+    newServer() {
       this.server_mode = 'new'
       this.server_item = { name: '', environment: '', region: '', hostname: '', username: '', password: '' }
+      this.dialog_loading = false
       this.server_dialog_title = 'New Server'
       this.server_dialog = true
     },
-    edit_server() {
+    editServer() {
       this.server_mode = 'edit'
       this.server_item = JSON.parse(JSON.stringify(this.server_selected[0]))
+      this.dialog_loading = false
       this.server_dialog_title = 'Edit Server'
       this.server_dialog = true
     },
-    delete_server() {
+    deleteServer() {
       this.server_mode = 'delete'
+      this.dialog_loading = false
       this.server_dialog_title = 'Delete Server'
       this.server_dialog = true
     },
-    confirm_server() {
-      if (this.server_mode == 'new') this.new_server_confirm()
-      else if (this.server_mode == 'edit') this.edit_server_confirm()
-      else if (this.server_mode == 'delete') this.delete_server_confirm()
+    submitServer() {
+      this.dialog_loading = true
+      if (this.server_mode == 'new') this.newServerSubmit()
+      else if (this.server_mode == 'edit') this.editServerSubmit()
+      else if (this.server_mode == 'delete') this.deleteServerSubmit()
     },
-    new_server_confirm() {
+    newServerSubmit() {
       // Check if new item already exists
       for (var i = 0; i < this.server_items.length; ++i) {
         if (this.server_items[i]['name'] == this.item.name) {
-          this.notification('Server currently exists', 'error')
+          this.notification('This server currently exists', 'error')
           return
         }
       }
       // Add item in the data table
       this.server_items.push(this.server_item)
-      this.server_dialog = false
       this.notification('Server added successfully', 'success')
+      this.server_dialog = false
     },
-    edit_server_confirm() {
+    editServerSubmit() {
       // Get Item Position
         for (var i = 0; i < this.server_items.length; ++i) {
         if (this.server_items[i]['name'] == this.server_selected[0]['name']) break
@@ -766,16 +792,16 @@ export default {
       // Check if edited item already exists
       for (var j = 0; j < this.server_items.length; ++j) {
         if (this.server_items[j]['name'] == this.server_item.name && this.server_item.name != this.server_selected[0]['name']) {
-          this.notification('Server currently exists', 'error')
+          this.notification('This server currently exists', 'error')
           return
         }
       }
       // Edit item in the data table
       this.server_items.splice(i, 1, this.server_item)
-      this.server_dialog = false
       this.notification('Server edited successfully', 'success')
+      this.server_dialog = false
     },
-    delete_server_confirm() {
+    deleteServerSubmit() {
       while(this.server_selected.length > 0) {
         var s = this.server_selected.pop()
         for (var i = 0; i < this.server_items.length; ++i) {
@@ -792,42 +818,46 @@ export default {
     // +-----------------------+
     // | AUXILIARY CONNECTIONS |
     // +-----------------------+
-    new_auxiliary() {
+    newAuxiliary() {
       this.auxiliary_mode = 'new'
       this.auxiliary_item = { name: '', hostname: '', username: '', password: '' }
+      this.dialog_loading = false
       this.auxiliary_dialog_title = 'New Auxiliary Connection'
       this.auxiliary_dialog = true
     },
-    edit_auxiliary() {
+    editAuxiliary() {
       this.auxiliary_mode = 'edit'
       this.auxiliary_item = JSON.parse(JSON.stringify(this.auxiliary_selected[0]))
+      this.dialog_loading = false
       this.auxiliary_dialog_title = 'Edit Auxiliary Connection'
       this.auxiliary_dialog = true
     },
-    delete_auxiliary() {
+    deleteAuxiliary() {
       this.auxiliary_mode = 'delete'
+      this.dialog_loading = false
       this.auxiliary_dialog_title = 'Delete Auxiliary Connection'
       this.auxiliary_dialog = true
     },
-    confirm_auxiliary() {
-      if (this.auxiliary_mode == 'new') this.new_auxiliary_confirm()
-      else if (this.auxiliary_mode == 'edit') this.edit_auxiliary_confirm()
-      else if (this.auxiliary_mode == 'delete') this.delete_auxiliary_confirm()
+    submitAuxiliary() {
+      this.dialog_loading = true
+      if (this.auxiliary_mode == 'new') this.newAuxiliarySubmit()
+      else if (this.auxiliary_mode == 'edit') this.editAuxiliarySubmit()
+      else if (this.auxiliary_mode == 'delete') this.deleteAuxiliarySubmit()
     },
-    new_auxiliary_confirm() {
+    newAuxiliarySubmit() {
       // Check if new item already exists
       for (var i = 0; i < this.auxiliary_items.length; ++i) {
         if (this.auxiliary_items[i]['name'] == this.item.name) {
-          this.notification('Auxiliary Connection currently exists', 'error')
+          this.notification('This auxiliary Connection currently exists', 'error')
           return
         }
       }
       // Add item in the data table
       this.auxiliary_items.push(this.auxiliary_item)
-      this.auxiliary_dialog = false
       this.notification('Auxiliary Connection added successfully', 'success')
+      this.auxiliary_dialog = false
     },
-    edit_auxiliary_confirm() {
+    editAuxiliarySubmit() {
       // Get Item Position
         for (var i = 0; i < this.auxiliary_items.length; ++i) {
         if (this.auxiliary_items[i]['name'] == this.auxiliary_selected[0]['name']) break
@@ -835,16 +865,16 @@ export default {
       // Check if edited item already exists
       for (var j = 0; j < this.auxiliary_items.length; ++j) {
         if (this.auxiliary_items[j]['name'] == this.auxiliary_item.name && this.auxiliary_item.name != this.auxiliary_selected[0]['name']) {
-          this.notification('Auxiliary Connection currently exists', 'error')
+          this.notification('This auxiliary Connection currently exists', 'error')
           return
         }
       }
       // Edit item in the data table
       this.auxiliary_items.splice(i, 1, this.auxiliary_item)
-      this.auxiliary_dialog = false
       this.notification('Auxiliary Connection edited successfully', 'success')
+      this.auxiliary_dialog = false
     },
-    delete_auxiliary_confirm() {
+    deleteAuxiliarySubmit() {
       while(this.auxiliary_selected.length > 0) {
         var s = this.auxiliary_selected.pop()
         for (var i = 0; i < this.auxiliary_items.length; ++i) {
@@ -866,11 +896,39 @@ export default {
     },
   },
   watch: {
-    environment_dialog (val) {
+    dialog (val) {
       if (!val) return
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
-        if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
+        if (typeof this.$refs.focus !== 'undefined') this.$refs.focus.focus()
+      })
+    },
+    environment_dialog (val) {
+      if (!val) return
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.environment_form !== 'undefined') this.$refs.environment_form.resetValidation()
+        if (typeof this.$refs.environment_focus !== 'undefined') this.$refs.environment_focus.focus()
+      })
+    },
+    region_dialog (val) {
+      if (!val) return
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.region_form !== 'undefined') this.$refs.region_form.resetValidation()
+        if (typeof this.$refs.region_focus !== 'undefined') this.$refs.region_focus.focus()
+      })
+    },
+    server_dialog (val) {
+      if (!val) return
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.server_form !== 'undefined') this.$refs.server_form.resetValidation()
+        if (typeof this.$refs.server_focus !== 'undefined') this.$refs.server_focus.focus()
+      })
+    },
+    auxiliary_dialog (val) {
+      if (!val) return
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.auxiliary_form !== 'undefined') this.$refs.auxiliary_form.resetValidation()
+        if (typeof this.$refs.auxiliary_focus !== 'undefined') this.$refs.auxiliary_focus.focus()
       })
     }
   }
