@@ -50,6 +50,15 @@ class Servers:
             """
             self._mysql.execute(query, (server['region'], group_id, server['environment'], server['name']))
 
+    def remove(self, group_id):
+        query = """
+            DELETE s
+            FROM servers s
+            JOIN regions r ON r.id = s.region_id
+            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
+        """
+        self._mysql.execute(query, (group_id))
+
     def exist(self, group_id, server):
         query = """
             SELECT EXISTS ( 

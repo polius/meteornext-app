@@ -29,6 +29,9 @@ class Web:
         """
         self._mysql.execute(query, (web['url'], group_id))
 
+    def delete(self, group_id):
+        self._mysql.execute("DELETE FROM web WHERE group_id = %s", (group_id))
+
     def exist(self, group_id):
         query = """
             SELECT EXISTS ( 

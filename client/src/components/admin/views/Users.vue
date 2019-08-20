@@ -47,7 +47,7 @@
                   <div class="subtitle-1">Are you sure you want to delete the selected users?</div>
                 </v-flex>
                 <v-btn :loading="loading" color="success" @click="submitUser()">Confirm</v-btn>
-                <v-btn :disabled="disabled" color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
+                <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
               </v-layout>
             </v-container>
          

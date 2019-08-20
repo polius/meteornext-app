@@ -6,6 +6,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 import routes.login
+import routes.profile
 import routes.admin.groups
 import routes.admin.users
 import routes.deployments.environments
@@ -33,19 +34,21 @@ with open('credentials.json') as file_open:
     credentials['path'] = os.path.dirname(os.path.abspath(__file__))
 
 # Init all blueprints
-login = routes.login.construct_blueprint(credentials)
-groups = routes.admin.groups.construct_blueprint(credentials)
-users = routes.admin.users.construct_blueprint(credentials)
-environments = routes.deployments.environments.construct_blueprint(credentials)
-regions = routes.deployments.regions.construct_blueprint(credentials)
-servers = routes.deployments.servers.construct_blueprint(credentials)
-auxiliary = routes.deployments.auxiliary.construct_blueprint(credentials)
-slack = routes.deployments.slack.construct_blueprint(credentials)
-s3 = routes.deployments.s3.construct_blueprint(credentials)
-web = routes.deployments.web.construct_blueprint(credentials)
+login = routes.login.Login(credentials).blueprint()
+profile = routes.profile.Profile(credentials).blueprint()
+groups = routes.admin.groups.Groups(credentials).blueprint()
+users = routes.admin.users.Users(credentials).blueprint()
+environments = routes.deployments.environments.Environments(credentials).blueprint()
+regions = routes.deployments.regions.Regions(credentials).blueprint()
+servers = routes.deployments.servers.Servers(credentials).blueprint()
+auxiliary = routes.deployments.auxiliary.Auxiliary(credentials).blueprint()
+slack = routes.deployments.slack.Slack(credentials).blueprint()
+s3 = routes.deployments.s3.S3(credentials).blueprint()
+web = routes.deployments.web.Web(credentials).blueprint()
 
 # instantiate all routes
 app.register_blueprint(login)
+app.register_blueprint(profile)
 app.register_blueprint(groups)
 app.register_blueprint(users)
 app.register_blueprint(environments)

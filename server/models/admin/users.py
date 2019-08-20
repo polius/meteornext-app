@@ -18,6 +18,9 @@ class Users:
     def put(self, user):
         self._mysql.execute("UPDATE users SET username = %s, password = %s, email = %s, admin = %s, group_id = (SELECT id FROM groups WHERE `name` = %s) WHERE username = %s", (user['username'], user['password'], user['email'], user['admin'], user['group'], user['current_username']))
 
+    def put_profile(self, user):
+        self._mysql.execute("UPDATE users SET password = %s, email = %s WHERE username = %s", (user['password'], user['email'], user['username']))
+
     def delete(self, users):
         for user in users:
             self._mysql.execute("DELETE FROM users WHERE username = %s", (user))

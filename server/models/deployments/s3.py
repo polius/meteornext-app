@@ -9,21 +9,21 @@ class S3:
     def get(self, group_id):
         query = """
             SELECT aws_access_key, aws_secret_access_key, region_name, bucket_name, enabled
-            FROM amazon_s3
+            FROM s3
             WHERE group_id = %s
         """
         return self._mysql.execute(query, (group_id))
 
     def post(self, group_id, s3):
         query = """
-            INSERT INTO amazon_s3 (aws_access_key, aws_secret_access_key, region_name, bucket_name, enabled, group_id)             
+            INSERT INTO s3 (aws_access_key, aws_secret_access_key, region_name, bucket_name, enabled, group_id)             
             VALUES (%s, %s, %s, %s, %s, %s)
         """
         self._mysql.execute(query, (s3['aws_access_key'], s3['aws_secret_access_key'], s3['region_name'], s3['bucket_name'], s3['enabled'], group_id))
 
     def put(self, group_id, s3):
         query = """
-            UPDATE amazon_s3
+            UPDATE s3
             SET aws_access_key = %s,
                 aws_secret_access_key = %s,
                 region_name = %s,
@@ -33,11 +33,14 @@ class S3:
         """
         self._mysql.execute(query, (s3['aws_access_key'], s3['aws_secret_access_key'], s3['region_name'], s3['bucket_name'], s3['enabled'], group_id))
 
+    def delete(self, group_id):
+       self._mysql.execute("DELETE FROM s3 WHERE group_id = %s", (group_id))
+
     def exist(self, group_id):
         query = """
             SELECT EXISTS ( 
                 SELECT * 
-                FROM amazon_s3
+                FROM s3
                 WHERE group_id = %s
             ) AS exist
         """

@@ -118,12 +118,14 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
         return
       }
       // Check if new item already exists
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['name'] == this.item.name) {
           this.notification('This environment currently exists', 'error')
+          this.loading = false
           return
         }
       }
@@ -150,6 +152,7 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
         return
       }
       // Get Item Position
@@ -160,6 +163,7 @@ export default {
       for (var j = 0; j < this.items.length; ++j) {
         if (this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
           this.notification('This environment currently exists', 'error')
+          this.loading = false
           return
         }
       }

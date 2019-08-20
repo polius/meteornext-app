@@ -48,6 +48,14 @@ class Regions:
             """
             self._mysql.execute(query, (group_id, region['environment'], region['name']))
 
+    def remove(self, group_id):
+        query = """
+            DELETE r
+            FROM regions r
+            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
+        """
+        self._mysql.execute(query, (group_id))
+
     def exist(self, group_id, region):
         query = """
             SELECT EXISTS ( 

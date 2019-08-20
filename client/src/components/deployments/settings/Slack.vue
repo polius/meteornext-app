@@ -7,7 +7,7 @@
       <v-container fluid grid-list-lg>
         <v-layout row wrap>
           <v-flex xs12>
-            <v-text-field :disabled="loading" v-model="webhook_url" label="Webhook URL" required></v-text-field>
+            <v-text-field :disabled="loading" v-model="webhook" label="Webhook URL" required></v-text-field>
             <v-switch :disabled="loading" v-model="enabled" label="Enable Notifications" style="margin-top:0px;"></v-switch>
             <v-btn :loading="loading" color="primary" style="margin-left:0px;" @click="saveSlack()">Save</v-btn>
           </v-flex>
@@ -28,7 +28,7 @@ import axios from 'axios';
 
 export default {
   data: () => ({
-    webhook_url: '',
+    webhook: '',
     enabled: false,
     loading: true,
 
@@ -47,7 +47,7 @@ export default {
       axios.get(path)
         .then((response) => {
           if (response.data.data.length > 0) {
-            this.webhook_url = response.data.data[0]['webhook_url']
+            this.webhook = response.data.data[0]['webhook']
             this.enabled = response.data.data[0]['enabled']
           }
           this.loading = false
@@ -65,7 +65,7 @@ export default {
       // Edit item in the DB
       const path = this.$store.getters.url + '/deployments/slack'
       const payload = { 
-        webhook_url: this.webhook_url,
+        webhook: this.webhook,
         enabled: this.enabled
       }
       axios.put(path, payload)
