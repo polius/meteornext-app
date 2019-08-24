@@ -27,9 +27,9 @@ class Slack:
             slack_json = request.get_json()
 
             if request.method == 'GET':
-                return get(group_id)
+                return self.get(group_id)
             elif request.method == 'PUT':
-                return put(group_id, slack_json)
+                return self.put(group_id, slack_json)
 
         return slack_blueprint
 

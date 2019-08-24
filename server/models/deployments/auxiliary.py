@@ -8,7 +8,7 @@ class Auxiliary:
 
     def get(self, group_id):
         query = """
-            SELECT name, hostname, username, password
+            SELECT *
             FROM auxiliary
             WHERE group_id = %s
         """
@@ -33,14 +33,13 @@ class Auxiliary:
         """
         self._mysql.execute(query, (auxiliary['name'], auxiliary['hostname'], auxiliary['username'], auxiliary['password'], auxiliary['current_name'], group_id))
 
-    def delete(self, group_id, auxiliary_connections):
-        for auxiliary_connection in auxiliary_connections:
-            query = """
-                DELETE FROM auxiliary
-                WHERE name = %s
-                AND group_id = %s
-            """
-            self._mysql.execute(query, (auxiliary_connection['name'], group_id))
+    def delete(self, group_id, auxiliary_connection):
+        query = """
+            DELETE FROM auxiliary
+            WHERE name = %s
+            AND group_id = %s
+        """
+        self._mysql.execute(query, (auxiliary_connection['name'], group_id))
 
     def remove(self, group_id):
         query = """

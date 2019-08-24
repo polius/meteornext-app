@@ -28,13 +28,13 @@ class Servers:
             server_json = request.get_json()
 
             if request.method == 'GET':
-                return get(group_id)
+                return self.get(group_id)
             elif request.method == 'POST':
-                return post(group_id, server_json)
+                return self.post(group_id, server_json)
             elif request.method == 'PUT':
-                return put(group_id, server_json)
+                return self.put(group_id, server_json)
             elif request.method == 'DELETE':
-                return delete(group_id, server_json)
+                return self.delete(group_id, server_json)
 
         return servers_blueprint
 
@@ -56,7 +56,8 @@ class Servers:
             return jsonify({'message': 'Server edited successfully'}), 200
 
     def delete(self, group_id, data):
-        self._servers.delete(group_id, data)
+        for server in data:
+            self._servers.delete(group_id, server)
         return jsonify({'message': 'Selected servers deleted successfully'}), 200
 
     def remove(self, group_id):

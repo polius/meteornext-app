@@ -27,9 +27,9 @@ class S3:
             s3_json = request.get_json()
 
             if request.method == 'GET':
-                return get(group_id)
+                return self.get(group_id)
             elif request.method == 'PUT':
-                return put(group_id, s3_json)
+                return self.put(group_id, s3_json)
 
         return s3_blueprint
 

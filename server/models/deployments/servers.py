@@ -39,16 +39,15 @@ class Servers:
         """
         self._mysql.execute(query, (server['region'], group_id, server['environment'], server['name'], server['hostname'], server['username'], server['password'], server['current_name']))
 
-    def delete(self, group_id, servers):
-        for server in servers:
-            query = """
-                DELETE s
-                FROM servers s
-                JOIN regions r ON r.id = s.region_id AND r.name = %s
-                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
-                WHERE s.name = %s
-            """
-            self._mysql.execute(query, (server['region'], group_id, server['environment'], server['name']))
+    def delete(self, group_id, server):
+        query = """
+            DELETE s
+            FROM servers s
+            JOIN regions r ON r.id = s.region_id AND r.name = %s
+            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
+            WHERE s.name = %s
+        """
+        self._mysql.execute(query, (server['region'], group_id, server['environment'], server['name']))
 
     def remove(self, group_id):
         query = """

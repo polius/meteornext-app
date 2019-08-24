@@ -38,15 +38,14 @@ class Regions:
         """
         self._mysql.execute(query, (group_id, region['environment'], region['name'], region['cross_region'], region['hostname'], region['hostname'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['current_name']))
 
-    def delete(self, group_id, regions):
-        for region in regions:
-            query = """
-                DELETE r
-                FROM regions r
-                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
-                WHERE r.name = %s
-            """
-            self._mysql.execute(query, (group_id, region['environment'], region['name']))
+    def delete(self, group_id, region):
+        query = """
+            DELETE r
+            FROM regions r
+            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
+            WHERE r.name = %s
+        """
+        self._mysql.execute(query, (group_id, region['environment'], region['name']))
 
     def remove(self, group_id):
         query = """
@@ -66,6 +65,16 @@ class Regions:
             ) AS exist
         """
         return self._mysql.execute(query, (group_id, region['environment'], region['name']))[0]['exist'] == 1
+
+    def exist_by_environment(self, group_id, environment_name):
+        query = """
+            SELECT EXISTS ( 
+                SELECT * 
+                FROM regions r
+                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
+            ) AS exist
+        """
+        return self._mysql.execute(query, (group_id, environment_name))[0]['exist'] == 1
 
     def get_by_environment(self, group_id, environment_name):
         query = """

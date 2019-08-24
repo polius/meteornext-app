@@ -27,13 +27,13 @@ class Auxiliary:
             auxiliary_json = request.get_json()
 
             if request.method == 'GET':
-                return get(group_id)
+                return self.get(group_id)
             elif request.method == 'POST':
-                return post(group_id, auxiliary_json)
+                return self.post(group_id, auxiliary_json)
             elif request.method == 'PUT':
-                return put(group_id, auxiliary_json)
+                return self.put(group_id, auxiliary_json)
             elif request.method == 'DELETE':
-                return delete(group_id, auxiliary_json)
+                return self.delete(group_id, auxiliary_json)
 
         return auxiliary_blueprint
 
@@ -55,7 +55,8 @@ class Auxiliary:
             return jsonify({'message': 'Auxiliary connection edited successfully'}), 200
 
     def delete(self, group_id, data):
-        self._auxiliary.delete(group_id, data)
+        for auxiliary in data:
+            self._auxiliary.delete(group_id, auxiliary)
         return jsonify({'message': 'Selected auxiliary connections deleted successfully'}), 200
 
     def remove(self, group_id):

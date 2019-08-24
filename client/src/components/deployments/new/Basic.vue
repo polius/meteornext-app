@@ -4,16 +4,11 @@
       <v-layout row wrap>
         <v-flex xs12>
           <v-form style="padding:10px;">
-            <!-- METADATA -->
-            <div class="title font-weight-regular">Metadata</div>
-            <v-text-field v-model="name" label="Name" hint="Example: Release v1.0.0" required></v-text-field>
-
-            <!-- EXECUTION -->
-            <div class="title font-weight-regular">Execution</div>
-            <v-text-field v-model="databases" label="Databases" required></v-text-field>
+            <v-text-field v-model="name" label="Name" required style="padding-top:0px;"></v-text-field>
+            <v-text-field v-model="databases" label="Databases" hint="Separated by commas. Wildcards: %, _" required style="padding-top:0px;"></v-text-field>
 
             <v-card style="margin-bottom:10px;">
-              <v-toolbar flat dense style="margin-top:5px;">
+              <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
                 <v-toolbar-title class="white--text">Queries</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
@@ -32,9 +27,9 @@
             </v-card>
 
             <!-- PARAMETERS -->
-            <div class="title font-weight-regular" style="margin-top:20px;">Parameters</div>
+            <div class="title font-weight-regular" style="margin-top:20px;">PARAMETERS</div>
 
-            <v-select v-model="environment" :items="environment_items" label="Environment" required></v-select>
+            <v-select :loading="loading" v-model="environment" :items="environment_items" label="Environment" required></v-select>
             <v-radio-group v-model="execution_mode" style="margin-top:0px;">
               <template v-slot:label>
                 <div>Select the <strong>Execution Mode</strong>:</div>
@@ -112,14 +107,15 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   data() {
     return {
-      // Metadata
       name: '',
-
-      // Execution
       databases: '',
+
+      // Query
       query_headers: [{ text: 'Query', value: 'query' }],
       query_items: [],
       query_item: { query: '' },
@@ -129,13 +125,16 @@ export default {
       // Parameters
       environment: '',
       environment_items: [],
-      execution_mode: '',
+      execution_mode: 'validation',
       execution_method: 'parallel',
       threads: '10',
 
       // Query Dialog
       queryDialog: false,
       queryDialogTitle: '',
+
+      // Loading Fields
+      loading: true,
       
       // Snackbar
       snackbar: false,
@@ -144,7 +143,24 @@ export default {
       snackbarText: ''
     }
   },
+  created() {
+    this.getEnvironments()
+  },
   methods: {
+    getEnvironments() {
+      const path = this.$store.getters.url + '/deployments/environments'
+      axios.get(path)
+        .then((response) => {
+          for (var i = 0; i < response.data.data.length; ++i) this.environment_items.push(response.data.data[i]['name'])
+          this.loading = false
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
+    },
     newQuery() {
       this.query_mode = 'new'
       this.query_item = { query: '' }

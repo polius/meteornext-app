@@ -15,9 +15,9 @@ class Environments:
     def put(self, group_id, environment):
         self._mysql.execute("UPDATE environments SET name = %s WHERE name = %s AND group_id = %s", (environment['name'], environment['current_name'], group_id))
 
-    def delete(self, group_id, environments):
-        for environment in environments:
-            self._mysql.execute("DELETE FROM environments WHERE name = %s AND group_id = %s", (environment, group_id))
+    def delete(self, group_id, environment):
+        print(group_id)
+        self._mysql.execute("DELETE FROM environments WHERE name = %s AND group_id = %s", (environment['name'], group_id))
 
     def remove(self, group_id):
         self._mysql.execute("DELETE FROM environments WHERE group_id = %s", (group_id))

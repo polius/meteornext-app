@@ -9,7 +9,7 @@
           <v-container fluid grid-list-lg>
             <v-layout row wrap>
               <v-flex xs12>
-                <div class="headline font-weight-regular">Hello <b>{{ this.username }}</b> <v-chip color="primary" text-color="white" style="margin-left:10px;">{{ this.group.toUpperCase() }}</v-chip></div>
+                <div class="headline font-weight-regular">Hello <b>{{ this.username }}</b> <v-chip color="teal" text-color="white" style="margin-left:10px; letter-spacing: 1px;">{{ this.group.toUpperCase() }}</v-chip></div>
                 <v-text-field v-model="email" :disabled="loading" label="Email" type="email" append-icon="email" style="margin-top:10px;"></v-text-field>
                 <v-text-field v-model="password" :disabled="loading" label="Password" type="password" append-icon="lock" style="padding-top:0px;"></v-text-field>
                 <v-btn color="primary" :loading="loading" @click="saveProfile()" style="margin-left:0px;">Save</v-btn>    

@@ -102,7 +102,7 @@ export default {
       this.$router.push({ name: 'admin.groups.view', params: { groupID: '' } })
     },
     editGroup() {
-      this.$router.push({ name: 'admin.groups.view', params: { groupID: this.selected[0]['name'] } })
+      this.$router.push({ name: 'admin.groups.view', params: { groupID: this.selected[0]['id'] } })
     },
     deleteGroup() {
       this.dialog = true
@@ -111,7 +111,7 @@ export default {
       // Get Selected Items
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) {
-        payload.push(this.selected[i]['name'])
+        payload.push(this.selected[i]['id'])
       }
       // Delete items to the DB
       const path = this.$store.getters.url + '/admin/groups'
@@ -122,7 +122,7 @@ export default {
           while(this.selected.length > 0) {
             var s = this.selected.pop()
             for (var i = 0; i < this.items.length; ++i) {
-              if (this.items[i]['name'] == s['name']) {
+              if (this.items[i]['id'] == s['id']) {
                 // Delete Item
                 this.items.splice(i, 1)
                 break

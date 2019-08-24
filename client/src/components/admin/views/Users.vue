@@ -40,7 +40,7 @@
                     <v-text-field v-model="item.email" :rules="[v => !!v || '', v => /.+@.+\..+/.test(v) || '']" label="Email" type="email" required append-icon="email" style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" type="password" required append-icon="lock" style="padding-top:0px;"></v-text-field>
                     <v-select v-model="item.group" :items="groups" :rules="[v => !!v || '']" label="Group" required style="padding-top:0px;"></v-select>
-                    <v-switch v-model="item.admin" hint="yes" label="Administrator" style="padding-top:0px;"></v-switch>
+                    <v-switch v-model="item.admin" hint="yes" label="Administrator" style="margin-top:0px;"></v-switch>
                   </v-form>
                 </v-flex>
                 <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">

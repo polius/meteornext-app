@@ -6,17 +6,19 @@ class Groups:
     def __init__(self, credentials):
         self._mysql = imp.load_source('mysql', '{}/models/mysql.py'.format(credentials['path'])).mysql(credentials)
 
-    def get(self, group=None):
-        if group is None:
-            return self._mysql.execute("SELECT * FROM groups")
+    def get(self, group_id=None, group_name=None):
+        if group_id is not None:
+            return self._mysql.execute("SELECT * FROM groups WHERE id = %s", (group_id))
+        elif group_name is not None:
+            return self._mysql.execute("SELECT * FROM groups WHERE name = %s", (group_name))
         else:
-            return self._mysql.execute("SELECT * FROM groups WHERE name = %s", (group['name']))
+            return self._mysql.execute("SELECT * FROM groups")
 
     def post(self, group):
         self._mysql.execute("INSERT INTO groups (name, description) VALUES (%s, %s)", (group['name'], group['description']))
 
     def put(self, group):
-        self._mysql.execute("UPDATE groups SET name = %s, description = %s WHERE name = %s", (group['name'], group['description'], group['current_name']))
+        self._mysql.execute("UPDATE groups SET name = %s, description = %s WHERE id = %s", (group['name'], group['description'], group['id']))
 
     def delete(self, group):
         self._mysql.execute("DELETE FROM groups WHERE name = %s", (group))

@@ -28,13 +28,13 @@ class Environments:
             environment_json = request.get_json()
 
             if request.method == 'GET':
-                return get(group_id)
+                return self.get(group_id)
             elif request.method == 'POST':
-                return post(group_id, environment_json)
+                return self.post(group_id, environment_json)
             elif request.method == 'PUT':
-                return put(group_id, environment_json)
+                return self.put(group_id, environment_json)
             elif request.method == 'DELETE':
-                return delete(group_id, environment_json)
+                return self.delete(group_id, environment_json)
 
         return environments_blueprint
 
@@ -56,7 +56,8 @@ class Environments:
             return jsonify({'message': 'Environment edited successfully'}), 200
 
     def delete(self, group_id, data):
-        self._environments.delete(group_id, data)
+        for environment in data:
+            self._environments.delete(group_id, environment)
         return jsonify({'message': 'Selected environments deleted successfully'}), 200
     
     def remove(self, group_id):

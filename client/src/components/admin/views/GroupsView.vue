@@ -14,9 +14,35 @@
           
             <v-divider></v-divider>
 
+            <!-- DEPLOYMENTS -->
+            <div>
+              <v-tabs background-color="#674172" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
+                <v-tabs-slider></v-tabs-slider>
+                <v-tab><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-meteor</v-icon>DEPLOYMENTS</span></v-tab>
+                <v-divider class="mx-3" inset vertical></v-divider>
+                <v-tab><span class="pl-2 pr-2">Environments</span></v-tab>
+                <v-tab><span class="pl-2 pr-2">Regions</span></v-tab>
+                <v-tab><span class="pl-2 pr-2">Servers</span></v-tab>
+                <v-tab><span class="pl-2 pr-2">Auxiliary Connections</span></v-tab>
+                <v-tab><span class="pl-2 pr-2">Slack</span></v-tab>
+                <v-tab><span class="pl-2 pr-2">Amazon S3</span></v-tab>
+                <v-tab><span class="pl-2 pr-2">Web</span></v-tab>
+              </v-tabs>
+            </div>
+
+            <v-card v-if="tabs==0" style="margin-bottom:10px;">
+              <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
+                <v-toolbar-title class="white--text">DEPLOYMENTS</v-toolbar-title>
+              </v-toolbar>
+              <v-card-text style="padding-bottom:0px;">
+                <v-switch v-model="deployments.enable" label="Enable Deployments" style="margin-top:0px;"></v-switch>
+                <v-switch v-model="deployments.edit" label="Enable Editing Settings" style="margin-top:0px;"></v-switch>
+              </v-card-text>
+            </v-card>
+
             <!-- environments -->
-            <v-card style="margin-bottom:10px;">
-              <v-toolbar flat dense color="#2e3131" style="margin-top:20px;">
+            <v-card v-if="tabs==1" style="margin-bottom:10px;">
+              <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">Environments</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
@@ -24,6 +50,7 @@
                 <v-btn v-if="environment_selected.length == 1" text @click="editEnvironment()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
                 <v-btn v-if="environment_selected.length > 0" text @click='deleteEnvironment()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                 </v-toolbar-items>
+                <v-text-field v-model="environment_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
               </v-toolbar>
               <v-divider></v-divider>
               <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" item-key="name" hide-default-header hide-default-footer show-select class="elevation-1">
@@ -31,7 +58,7 @@
             </v-card>
 
             <!-- regions -->
-            <v-card style="margin-bottom:10px;">
+            <v-card v-if="tabs==2" style="margin-bottom:10px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">Regions</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
@@ -40,9 +67,10 @@
                 <v-btn v-if="region_selected.length == 1" text @click="editRegion()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
                 <v-btn v-if="region_selected.length > 0" text @click='deleteRegion()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                 </v-toolbar-items>
+                <v-text-field v-model="region_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="region_selected" :headers="region_headers" :items="region_items" item-key="name" :hide-default-header="region_items.length == 0" hide-default-footer show-select class="elevation-1">
+              <v-data-table v-model="region_selected" :headers="region_headers" :items="region_items" :search="region_search" item-key="name" :hide-default-header="region_items.length == 0" hide-default-footer show-select class="elevation-1">
                 <template v-slot:item.cross_region="props">
                   <v-icon v-if="props.item.cross_region" small color="success" style="margin-left:28px">fas fa-check</v-icon>
                   <v-icon v-else small color="error" style="margin-left:28px">fas fa-times</v-icon>
@@ -64,7 +92,7 @@
             </v-card>
 
             <!-- servers -->
-            <v-card style="margin-bottom:10px;">
+            <v-card v-if="tabs==3" style="margin-bottom:10px;">
             <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
               <v-toolbar-title class="white--text">Servers</v-toolbar-title>
               <v-divider class="mx-3" inset vertical></v-divider>
@@ -73,14 +101,15 @@
                 <v-btn v-if="server_selected.length == 1" text @click="editServer()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
                 <v-btn v-if="server_selected.length > 0" text @click='deleteServer()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
               </v-toolbar-items>
+              <v-text-field v-model="server_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
             </v-toolbar>
             <v-divider></v-divider>
-            <v-data-table v-model="server_selected" :headers="server_headers" :items="server_items" item-key="name" :hide-default-header="server_items.length == 0" hide-default-footer show-select class="elevation-1">
+            <v-data-table v-model="server_selected" :headers="server_headers" :items="server_items" :search="server_search" item-key="name" :hide-default-header="server_items.length == 0" hide-default-footer show-select class="elevation-1">
             </v-data-table>
             </v-card>
 
             <!-- auxiliary connections -->
-            <v-card style="margin-bottom:10px;">
+            <v-card v-if="tabs==4" style="margin-bottom:10px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">Auxiliary Connections</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
@@ -89,14 +118,15 @@
                   <v-btn v-if="auxiliary_selected.length == 1" text @click="editAuxiliary()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
                   <v-btn v-if="auxiliary_selected.length > 0" text @click='deleteAuxiliary()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                 </v-toolbar-items>
+                <v-text-field v-model="auxiliary_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="auxiliary_selected" :headers="auxiliary_headers" :items="auxiliary_items" item-key="name" :hide-default-header="auxiliary_items.length == 0" hide-default-footer show-select class="elevation-1">
+              <v-data-table v-model="auxiliary_selected" :headers="auxiliary_headers" :items="auxiliary_items" :search="auxiliary_search" item-key="name" :hide-default-header="auxiliary_items.length == 0" hide-default-footer show-select class="elevation-1">
               </v-data-table>
             </v-card>
 
             <!-- slack -->
-            <v-card>
+            <v-card v-if="tabs==5">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">Slack</v-toolbar-title>
               </v-toolbar>
@@ -108,7 +138,7 @@
             </v-card>
 
             <!-- amazon s3 -->
-            <v-card>
+            <v-card v-if="tabs==6">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">Amazon S3</v-toolbar-title>
               </v-toolbar>
@@ -123,13 +153,13 @@
             </v-card>
 
             <!-- web -->
-            <v-card>
+            <v-card v-if="tabs==7">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">Web</v-toolbar-title>
               </v-toolbar>
               <v-divider></v-divider>
               <v-card-text style="padding-bottom:0px;">
-                <v-text-field v-model="web.url" label="Public Web URL" required style="padding-top:0px;"></v-text-field>
+                <v-text-field v-model="web.url" label="Public URL" required style="padding-top:0px;"></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -292,6 +322,7 @@
 </template>
 
 <script>
+/* eslint-disable */
 import axios from 'axios';
 
 export default {
@@ -303,6 +334,19 @@ export default {
     toolbar_title: '',
     form_valid: false,
     loading: false,
+
+    // +------+
+    // | TABS |
+    // +------+
+    tabs: null,
+
+    // +-------------+
+    // | DEPLOYMENTS |
+    // +-------------+
+    deployments: {
+      enable: true,
+      edit: false
+    },
 
     // +--------------+
     // | ENVIRONMENTS |
@@ -333,7 +377,7 @@ export default {
     region_items: [],
     region_selected: [],
     region_search: '',
-    region_item: { name: '', environment: '', cross_region: '', hostname: '', username: '', password: '', key: '' },
+    region_item: { name: '', environment: '', cross_region: false, hostname: '', username: '', password: '', key: '' },
     region_mode: '',
     region_dialog: false,
     region_dialog_title: '',
@@ -412,9 +456,12 @@ export default {
   }),
   props: ['groupID'],
   created() {
-    // Init Bar Title
-    this.toolbar_title = (typeof this.groupID === "undefined") ? 'NEW GROUP' : 'EDIT GROUP'
-    this.getGroup()
+    if (typeof this.groupID === "undefined") this.$router.push({ name: 'admin.groups' })
+    else if (this.groupID.length == 0) this.toolbar_title = 'NEW GROUP'
+    else {
+      this.toolbar_title = 'EDIT GROUP'
+      this.getGroup()
+    }
   },
   methods: {
     // +--------+
@@ -425,7 +472,15 @@ export default {
       axios.get(path, { params: { groupID: this.groupID } })
         .then((response) => {
           this.loading = false
-          this.items = response.data.data
+          this.group = response.data.group[0]
+          this.environment_items = response.data.environments.data
+          this.region_items = response.data.regions.data.regions
+          this.server_items = response.data.servers.data.servers
+          this.auxiliary_items = response.data.auxiliary.data
+          if (response.data.slack.data.length > 0) this.slack = response.data.slack.data[0]
+          if (response.data.s3.data.length > 0) this.s3 = response.data.s3.data[0]
+          if (response.data.web.data.length > 0) this.web = response.data.web.data[0]
+          this.refreshEnvironments()
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -435,7 +490,7 @@ export default {
     },
     submitGroup() {
       this.loading = true
-      if (typeof this.groupID === "undefined") this.newGroupSubmit()
+      if (this.groupID.length == 0) this.newGroupSubmit()
       else this.editGroupSubmit()
     },
     newGroupSubmit() {
@@ -461,9 +516,6 @@ export default {
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Add item in the data table
-          this.items.push(this.item)
-          this.dialog = false
-          this.loading = false
           this.$router.push({ name: 'admin.groups' })
         })
         .catch((error) => {
@@ -480,34 +532,29 @@ export default {
         this.loading = false
         return
       }
-      // Get Item Position
-      for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['name'] == this.selected[0]['name']) break
-      }
-      // Check if edited item already exists
-      for (var j = 0; j < this.items.length; ++j) {
-        if (this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
-          this.notification('This group currently exists', 'error')
-          return
-        }
-      }
-      // Add item to the DB
+      // Edit group to the DB
       const path = this.$store.getters.url + '/admin/groups'
-      const payload = { current_name: this.selected[0]['name'], name: this.item.name, description: this.item.description }
+      const payload = {
+        group: JSON.stringify(this.group),
+        environments: this.environment_items,
+        regions: this.region_items,
+        servers: this.server_items,
+        auxiliary: this.auxiliary_items,
+        slack: JSON.stringify(this.slack),
+        s3: JSON.stringify(this.s3),
+        web: JSON.stringify(this.web)
+      }
       axios.put(path, payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
-          // Edit item in the data table
-          this.items.splice(i, 1, this.item)
-          this.selected[0] = this.item
-          this.dialog = false
-          this.loading = false
+          // Add item in the data table
+          this.$router.push({ name: 'admin.groups' })
         })
         .catch((error) => {
           this.notification(error.response.data.message, 'error')
           this.loading = false
           // eslint-disable-next-line
-          console.error(err)
+          console.error(error)
         })
     },
     // +--------------+
@@ -557,7 +604,6 @@ export default {
       }
       // Add item in the data table
       this.environment_items.push(this.environment_item)
-      this.notification('Environment added successfully', 'success')
       this.environment_dialog = false
     },
     editEnvironmentSubmit() {
@@ -575,26 +621,37 @@ export default {
       for (var j = 0; j < this.environment_items.length; ++j) {
         if (this.environment_items[j]['name'] == this.environment_item.name && this.environment_item.name != this.environment_selected[0]['name']) {
           this.notification('This environment currently exists', 'error')
+          this.loading = false
           return
         }
       }
       // Edit item in the data table
       this.environment_items.splice(i, 1, this.environment_item)
-      this.notification('Environment edited successfully', 'success')
+      this.environment_selected = []
       this.environment_dialog = false
     },
     deleteEnvironmentSubmit() {
+      // Check inconsistencies
+      for (var i = 0; i < this.environment_selected.length; ++i) {
+        for (var j = 0; j < this.region_items.length; ++j) {
+          if (this.environment_selected[i]['name'] == this.region_items[j]['environment']) {
+            this.notification("The environment '" + this.environment_selected[i]['name'] + "' has attached regions", 'error')
+            this.environment_dialog = false
+            return
+          }
+        }
+      }
+
       while(this.environment_selected.length > 0) {
-        var s = this.environment_selected.pop()
+        var e = this.environment_selected.pop()
         for (var i = 0; i < this.environment_items.length; ++i) {
-          if (this.environment_items[i]['name'] == s['name']) {
+          if (this.environment_items[i]['name'] == e['name']) {
             // Delete Item
             this.environment_items.splice(i, 1)
             break
           }
         }
       }
-      this.notification('Selected environments removed successfully', 'success')
       this.environment_dialog = false
     },
     refreshEnvironments() {
@@ -606,7 +663,7 @@ export default {
     // +---------+
     newRegion() {
       this.region_mode = 'new'
-      this.region_item = { name: '', environment: '', cross_region: '', hostname: '', username: '', password: '', key: '' }
+      this.region_item = { name: '', environment: '', cross_region: false, hostname: '', username: '', password: '', key: '' }
       this.loading = false
       this.region_dialog_title = 'New Region'
       this.region_dialog = true
@@ -641,12 +698,12 @@ export default {
       for (var i = 0; i < this.region_items.length; ++i) {
         if (this.region_items[i]['name'] == this.region_item.name) {
           this.notification('This region currently exists', 'error')
+          this.loading = false
           return
         }
       }
       // Add item in the data table
       this.region_items.push(this.region_item)
-      this.notification('Region added successfully', 'success')
       this.region_dialog = false
     },
     editRegionSubmit() {
@@ -664,15 +721,27 @@ export default {
       for (var j = 0; j < this.region_items.length; ++j) {
         if (this.region_items[j]['name'] == this.region_item.name && this.region_item.name != this.region_selected[0]['name']) {
           this.notification('This region currently exists', 'error')
+          this.loading = false
           return
         }
       }
       // Edit item in the data table
       this.region_items.splice(i, 1, this.region_item)
-      this.notification('Region edited successfully', 'success')
+      this.region_selected = []
       this.region_dialog = false
     },
     deleteRegionSubmit() {
+      // Check inconsistencies
+      for (var i = 0; i < this.region_selected.length; ++i) {
+        for (var j = 0; j < this.server_items.length; ++j) {
+          if (this.region_selected[i]['name'] == this.server_items[j]['region']) {
+            this.notification("The region '" + this.region_selected[i]['name'] + "' has attached servers", 'error')
+            this.region_dialog = false
+            return
+          }
+        }
+      }
+
       while(this.region_selected.length > 0) {
         var s = this.region_selected.pop()
         for (var i = 0; i < this.region_items.length; ++i) {
@@ -683,7 +752,6 @@ export default {
           }
         }
       }
-      this.notification('Selected regions removed successfully', 'success')
       this.region_dialog = false
     },
     refreshRegions() {
@@ -734,12 +802,12 @@ export default {
       for (var i = 0; i < this.server_items.length; ++i) {
         if (this.server_items[i]['name'] == this.server_item.name) {
           this.notification('This server currently exists', 'error')
+          this.loading = false
           return
         }
       }
       // Add item in the data table
       this.server_items.push(this.server_item)
-      this.notification('Server added successfully', 'success')
       this.server_dialog = false
     },
     editServerSubmit() {
@@ -757,12 +825,13 @@ export default {
       for (var j = 0; j < this.server_items.length; ++j) {
         if (this.server_items[j]['name'] == this.server_item.name && this.server_item.name != this.server_selected[0]['name']) {
           this.notification('This server currently exists', 'error')
+          this.loading = false
           return
         }
       }
       // Edit item in the data table
       this.server_items.splice(i, 1, this.server_item)
-      this.notification('Server edited successfully', 'success')
+      this.server_selected = []
       this.server_dialog = false
     },
     deleteServerSubmit() {
@@ -776,7 +845,6 @@ export default {
           }
         }
       }
-      this.notification('Selected servers removed successfully', 'success')
       this.server_dialog = false
     },
     // +-----------------------+
@@ -819,12 +887,12 @@ export default {
       for (var i = 0; i < this.auxiliary_items.length; ++i) {
         if (this.auxiliary_items[i]['name'] == this.auxiliary_item.name) {
           this.notification('This auxiliary Connection currently exists', 'error')
+          this.loading = false
           return
         }
       }
       // Add item in the data table
       this.auxiliary_items.push(this.auxiliary_item)
-      this.notification('Auxiliary Connection added successfully', 'success')
       this.auxiliary_dialog = false
     },
     editAuxiliarySubmit() {
@@ -842,12 +910,13 @@ export default {
       for (var j = 0; j < this.auxiliary_items.length; ++j) {
         if (this.auxiliary_items[j]['name'] == this.auxiliary_item.name && this.auxiliary_item.name != this.auxiliary_selected[0]['name']) {
           this.notification('This auxiliary Connection currently exists', 'error')
+          this.loading = false
           return
         }
       }
       // Edit item in the data table
       this.auxiliary_items.splice(i, 1, this.auxiliary_item)
-      this.notification('Auxiliary Connection edited successfully', 'success')
+      this.auxiliary_selected = []
       this.auxiliary_dialog = false
     },
     deleteAuxiliarySubmit() {
@@ -861,7 +930,7 @@ export default {
           }
         }
       }
-      this.notification('Selected auxiliary connections removed successfully', 'success')
+      this.auxiliary_selected = []
       this.auxiliary_dialog = false
     },
     // SNACKBAR

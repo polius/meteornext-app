@@ -29,13 +29,13 @@ class Regions:
             region_json = request.get_json()
 
             if request.method == 'GET':
-                return get(group_id)
+                return self.get(group_id)
             elif request.method == 'POST':
-                return post(group_id, region_json)
+                return self.post(group_id, region_json)
             elif request.method == 'PUT':
-                return put(group_id, region_json)
+                return self.put(group_id, region_json)
             elif request.method == 'DELETE':
-                return delete(group_id, region_json)
+                return self.delete(group_id, region_json)
 
         @regions_blueprint.route('/deployments/regions/list', methods=['POST'])
         @jwt_required
@@ -74,8 +74,12 @@ class Regions:
             return jsonify({'message': 'Region edited successfully'}), 200
 
     def delete(self, group_id, data):
-        self._regions.delete(group_id, data)
+        for region in data:
+            self._regions.delete(group_id, region)
         return jsonify({'message': 'Selected regions deleted successfully'}), 200
 
     def remove(self, group_id):
         self._regions.remove(group_id)
+
+    def exists(self, group_id, environment_name):
+        return self._regions.exist_by_environment(group_id, environment_name)
