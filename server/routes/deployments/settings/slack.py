@@ -6,7 +6,7 @@ class Slack:
     def __init__(self, credentials):
         # Init models
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
-        self._slack = imp.load_source('slack', '{}/models/deployments/slack.py'.format(credentials['path'])).Slack(credentials)
+        self._slack = imp.load_source('slack', '{}/models/deployments/settings/slack.py'.format(credentials['path'])).Slack(credentials)
 
     def blueprint(self):
         # Init blueprint

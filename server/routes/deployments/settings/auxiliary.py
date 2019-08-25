@@ -6,7 +6,7 @@ class Auxiliary:
     def __init__(self, credentials):
         # Init models
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
-        self._auxiliary = imp.load_source('auxiliary', '{}/models/deployments/auxiliary.py'.format(credentials['path'])).Auxiliary(credentials)
+        self._auxiliary = imp.load_source('auxiliary', '{}/models/deployments/settings/auxiliary.py'.format(credentials['path'])).Auxiliary(credentials)
 
     def blueprint(self):
         # Init blueprint

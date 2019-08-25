@@ -3,18 +3,13 @@
     <v-container fluid grid-list-lg>
       <v-layout row wrap>
         <v-flex xs12>
-          <v-form style="padding:10px;">
-            <!-- METADATA -->
-            <div class="title font-weight-regular">Metadata</div>
-            <v-text-field v-model="name" label="Name" hint="Example: Release v1.0.0" required></v-text-field>
-
-            <!-- EXECUTION -->
-            <div class="title font-weight-regular">Execution</div>
-            <v-select v-model="product" :items="product_items" label="Product" required></v-select>
-            <v-text-field v-model="databases" label="Databases" hint="Optional" required style="padding-top:0px;"></v-text-field>
+          <v-form ref="form" style="padding:10px;">
+            <div class="title font-weight-regular" style="margin-bottom:20px;">INBENTA</div>
+            <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+            <v-text-field v-model="databases" label="Databases" hint="Separated by commas. Wildcards: %, _" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
 
             <v-card style="margin-bottom:10px;">
-              <v-toolbar flat dense style="margin-top:5px;">
+              <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
                 <v-toolbar-title class="white--text">Queries</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
@@ -25,17 +20,11 @@
               </v-toolbar>
               <v-divider></v-divider>
               <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="query" hide-default-header hide-default-footer show-select class="elevation-1">
-                <template v-slot:items="props">
-                  <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
-                  <td>{{ props.item.query }}</td>
-                </template>
               </v-data-table>
             </v-card>
 
             <!-- PARAMETERS -->
-            <div class="title font-weight-regular" style="margin-top:20px;">Parameters</div>
-
-            <v-select v-model="environment" :items="environment_items" label="Environment" required></v-select>
+            <v-select :loading="loading" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required></v-select>
             <v-radio-group v-model="execution_mode" style="margin-top:0px;">
               <template v-slot:label>
                 <div>Select the <strong>Execution Mode</strong>:</div>
@@ -61,21 +50,21 @@
               <template v-slot:label>
                 <div>Select the <strong>Execution Method</strong>:</div>
               </template>
-              <v-radio value="parallel">
+              <v-radio color="primary" value="parallel">
                 <template v-slot:label>
                   <div>Parallel</div>
                 </template>
               </v-radio>
-              <v-radio value="sequential">
+              <v-radio color="primary" value="sequential">
                 <template v-slot:label>
                   <div>Sequential</div>
                 </template>
               </v-radio>
             </v-radio-group>
 
-            <v-text-field v-if="execution_method=='parallel'" v-model="threads" label="Threads" style="margin-top:0px; padding-top:5px; margin-bottom:5px;"></v-text-field>
+            <v-text-field v-if="execution_method=='parallel'" v-model="threads" label="Threads" :rules="[v => !!v || '']" required style="margin-top:0px; padding-top:5px; margin-bottom:5px;"></v-text-field>
 
-            <v-btn color="success">Deploy</v-btn>
+            <v-btn color="success" @click="deploy()">Deploy</v-btn>
             <router-link to="/deployments"><v-btn color="error" style="margin-left:10px;">Cancel</v-btn></router-link>
 
           </v-form>
@@ -92,7 +81,9 @@
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 v-if="query_mode!='delete'">
-                <v-textarea ref="field" rows="1" filled auto-grow v-model="query_item.query" label="Query" required></v-textarea>
+                <v-form ref="query_form">
+                  <v-textarea ref="field" rows="1" filled auto-grow v-model="query_item.query" label="Query" :rules="[v => !!v || '']" required></v-textarea>
+                </v-form>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="query_mode=='delete'">
                 <div class="subtitle-1">Are you sure you want to delete the selected queries?</div>
@@ -113,16 +104,15 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   data() {
     return {
-      // Metadata
       name: '',
-
-      // Execution
-      product: '',
-      product_items: [],
       databases: '',
+
+      // Query
       query_headers: [{ text: 'Query', value: 'query' }],
       query_items: [],
       query_item: { query: '' },
@@ -132,13 +122,16 @@ export default {
       // Parameters
       environment: '',
       environment_items: [],
-      execution_mode: '',
+      execution_mode: 'validation',
       execution_method: 'parallel',
       threads: '10',
 
       // Query Dialog
       queryDialog: false,
       queryDialogTitle: '',
+
+      // Loading Fields
+      loading: true,
       
       // Snackbar
       snackbar: false,
@@ -147,7 +140,24 @@ export default {
       snackbarText: ''
     }
   },
+  created() {
+    this.getEnvironments()
+  },
   methods: {
+    getEnvironments() {
+      const path = this.$store.getters.url + '/deployments/environments'
+      axios.get(path)
+        .then((response) => {
+          for (var i = 0; i < response.data.data.length; ++i) this.environment_items.push(response.data.data[i]['name'])
+          this.loading = false
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
+    },
     newQuery() {
       this.query_mode = 'new'
       this.query_item = { query: '' }
@@ -172,6 +182,12 @@ export default {
       else if (this.query_mode == 'delete') this.deleteQueryConfirm()
     },
     newQueryConfirm() {
+      // Check if all fields are filled
+      if (!this.$refs.query_form.validate()) {
+        this.notification('Please fill the required fields', 'error')
+        this.loading = false
+        return
+      }
       // Check if new item already exists
       for (var i = 0; i < this.query_items.length; ++i) {
         if (this.query_items[i]['query'] == this.query_item.query) {
@@ -215,6 +231,14 @@ export default {
       this.notification('Selected queries removed successfully', 'success')
       this.queryDialog = false
     },
+    deploy() {
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please fill the required fields', 'error')
+        this.loading = false
+        return
+      }
+    },
     notification(message, color) {
       this.snackbarText = message
       this.snackbarColor = color 
@@ -226,6 +250,7 @@ export default {
       if (!val) return
       requestAnimationFrame(() => {
         if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
+        if (typeof this.$refs.query_form !== 'undefined') this.$refs.query_form.resetValidation()
       })
     }
   }

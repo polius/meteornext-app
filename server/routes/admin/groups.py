@@ -10,13 +10,13 @@ class Groups:
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
 
         # Init routes
-        self._environments = imp.load_source('environments', '{}/routes/deployments/environments.py'.format(credentials['path'])).Environments(credentials)
-        self._regions = imp.load_source('regions', '{}/routes/deployments/regions.py'.format(credentials['path'])).Regions(credentials)
-        self._servers = imp.load_source('servers', '{}/routes/deployments/servers.py'.format(credentials['path'])).Servers(credentials)
-        self._auxiliary = imp.load_source('auxiliary', '{}/routes/deployments/auxiliary.py'.format(credentials['path'])).Auxiliary(credentials)
-        self._slack = imp.load_source('slack', '{}/routes/deployments/slack.py'.format(credentials['path'])).Slack(credentials)
-        self._s3 = imp.load_source('s3', '{}/routes/deployments/s3.py'.format(credentials['path'])).S3(credentials)
-        self._web = imp.load_source('web', '{}/routes/deployments/web.py'.format(credentials['path'])).Web(credentials)
+        self._environments = imp.load_source('environments', '{}/routes/deployments/settings/environments.py'.format(credentials['path'])).Environments(credentials)
+        self._regions = imp.load_source('regions', '{}/routes/deployments/settings/regions.py'.format(credentials['path'])).Regions(credentials)
+        self._servers = imp.load_source('servers', '{}/routes/deployments/settings/servers.py'.format(credentials['path'])).Servers(credentials)
+        self._auxiliary = imp.load_source('auxiliary', '{}/routes/deployments/settings/auxiliary.py'.format(credentials['path'])).Auxiliary(credentials)
+        self._slack = imp.load_source('slack', '{}/routes/deployments/settings/slack.py'.format(credentials['path'])).Slack(credentials)
+        self._s3 = imp.load_source('s3', '{}/routes/deployments/settings/s3.py'.format(credentials['path'])).S3(credentials)
+        self._web = imp.load_source('web', '{}/routes/deployments/settings/web.py'.format(credentials['path'])).Web(credentials)
 
     def blueprint(self):
         # Init blueprint

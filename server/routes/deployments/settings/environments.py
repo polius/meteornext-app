@@ -7,8 +7,8 @@ class Environments:
     def __init__(self, credentials):
         # Init models
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
-        self._environments = imp.load_source('environments', '{}/models/deployments/environments.py'.format(credentials['path'])).Environments(credentials)
-        self._regions = imp.load_source('regions', '{}/models/deployments/regions.py'.format(credentials['path'])).Regions(credentials)
+        self._environments = imp.load_source('environments', '{}/models/deployments/settings/environments.py'.format(credentials['path'])).Environments(credentials)
+        self._regions = imp.load_source('regions', '{}/models/deployments/settings/regions.py'.format(credentials['path'])).Regions(credentials)
 
     def blueprint(self):
         # Init blueprint

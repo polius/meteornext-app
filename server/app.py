@@ -9,13 +9,13 @@ import routes.login
 import routes.profile
 import routes.admin.groups
 import routes.admin.users
-import routes.deployments.environments
-import routes.deployments.regions
-import routes.deployments.servers
-import routes.deployments.auxiliary
-import routes.deployments.slack
-import routes.deployments.s3
-import routes.deployments.web
+import routes.deployments.settings.environments
+import routes.deployments.settings.regions
+import routes.deployments.settings.servers
+import routes.deployments.settings.auxiliary
+import routes.deployments.settings.slack
+import routes.deployments.settings.s3
+import routes.deployments.settings.web
 
 # configuration
 DEBUG = True
@@ -38,13 +38,13 @@ login = routes.login.Login(credentials).blueprint()
 profile = routes.profile.Profile(credentials).blueprint()
 groups = routes.admin.groups.Groups(credentials).blueprint()
 users = routes.admin.users.Users(credentials).blueprint()
-environments = routes.deployments.environments.Environments(credentials).blueprint()
-regions = routes.deployments.regions.Regions(credentials).blueprint()
-servers = routes.deployments.servers.Servers(credentials).blueprint()
-auxiliary = routes.deployments.auxiliary.Auxiliary(credentials).blueprint()
-slack = routes.deployments.slack.Slack(credentials).blueprint()
-s3 = routes.deployments.s3.S3(credentials).blueprint()
-web = routes.deployments.web.Web(credentials).blueprint()
+environments = routes.deployments.settings.environments.Environments(credentials).blueprint()
+regions = routes.deployments.settings.regions.Regions(credentials).blueprint()
+servers = routes.deployments.settings.servers.Servers(credentials).blueprint()
+auxiliary = routes.deployments.settings.auxiliary.Auxiliary(credentials).blueprint()
+slack = routes.deployments.settings.slack.Slack(credentials).blueprint()
+s3 = routes.deployments.settings.s3.S3(credentials).blueprint()
+web = routes.deployments.settings.web.Web(credentials).blueprint()
 
 # instantiate all routes
 app.register_blueprint(login)

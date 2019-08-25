@@ -24,7 +24,7 @@
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 v-if="mode!='delete'">
-                <v-form ref="form" v-model="dialog_valid">
+                <v-form ref="form">
                   <v-text-field ref="field" v-on:keyup.enter="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Environment Name" required></v-text-field>
                 </v-form>
               </v-flex>
@@ -61,7 +61,6 @@ export default {
     loading: true,
     dialog: false,
     dialog_title: '',
-    dialog_valid: false,
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
