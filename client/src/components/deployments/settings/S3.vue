@@ -7,10 +7,10 @@
       <v-container fluid grid-list-lg>
         <v-layout row wrap>
           <v-flex xs12>
-            <v-text-field :disabled="loading" v-model="aws_access_key" label="AWS Access Key"></v-text-field>
-            <v-text-field :disabled="loading" v-model="aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;"></v-text-field>
-            <v-text-field :disabled="loading" v-model="region_name" label="Region Name" hint="Example: eu-west-1" style="padding-top:0px;"></v-text-field>
-            <v-text-field :disabled="loading" v-model="bucket_name" label="Bucket Name" style="padding-top:0px;"></v-text-field>
+            <v-text-field :loading="loading" :disabled="loading" v-model="aws_access_key" label="AWS Access Key"></v-text-field>
+            <v-text-field :loading="loading" :disabled="loading" v-model="aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;"></v-text-field>
+            <v-text-field :loading="loading" :disabled="loading" v-model="region_name" label="Region Name" hint="Example: eu-west-1" style="padding-top:0px;"></v-text-field>
+            <v-text-field :loading="loading" :disabled="loading" v-model="bucket_name" label="Bucket Name" style="padding-top:0px;"></v-text-field>
             <v-switch :disabled="loading" v-model="enabled" label="Enable Uploading Logs" style="margin-top:0px;"></v-switch>
             <v-btn :loading="loading" color="primary" @click="saveS3()" style="margin-left:0px;">Save</v-btn>    
           </v-flex>

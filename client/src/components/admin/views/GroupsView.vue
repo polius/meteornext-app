@@ -50,10 +50,10 @@
                 <v-btn v-if="environment_selected.length == 1" text @click="editEnvironment()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
                 <v-btn v-if="environment_selected.length > 0" text @click='deleteEnvironment()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                 </v-toolbar-items>
-                <v-text-field v-model="environment_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
+                <v-text-field v-model="environment_search" append-icon="search"  label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" item-key="name" hide-default-header hide-default-footer show-select class="elevation-1">
+              <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" hide-default-header hide-default-footer show-select class="elevation-1">
               </v-data-table>
             </v-card>
 
@@ -70,7 +70,7 @@
                 <v-text-field v-model="region_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="region_selected" :headers="region_headers" :items="region_items" :search="region_search" item-key="name" :hide-default-header="region_items.length == 0" hide-default-footer show-select class="elevation-1">
+              <v-data-table v-model="region_selected" :headers="region_headers" :items="region_items" :search="region_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" :hide-default-header="region_items.length == 0" hide-default-footer show-select class="elevation-1">
                 <template v-slot:item.cross_region="props">
                   <v-icon v-if="props.item.cross_region" small color="success" style="margin-left:28px">fas fa-check</v-icon>
                   <v-icon v-else small color="error" style="margin-left:28px">fas fa-times</v-icon>
@@ -104,7 +104,7 @@
               <v-text-field v-model="server_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
             </v-toolbar>
             <v-divider></v-divider>
-            <v-data-table v-model="server_selected" :headers="server_headers" :items="server_items" :search="server_search" item-key="name" :hide-default-header="server_items.length == 0" hide-default-footer show-select class="elevation-1">
+            <v-data-table v-model="server_selected" :headers="server_headers" :items="server_items" :search="server_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" :hide-default-header="server_items.length == 0" hide-default-footer show-select class="elevation-1">
             </v-data-table>
             </v-card>
 
@@ -121,7 +121,7 @@
                 <v-text-field v-model="auxiliary_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="auxiliary_selected" :headers="auxiliary_headers" :items="auxiliary_items" :search="auxiliary_search" item-key="name" :hide-default-header="auxiliary_items.length == 0" hide-default-footer show-select class="elevation-1">
+              <v-data-table v-model="auxiliary_selected" :headers="auxiliary_headers" :items="auxiliary_items" :search="auxiliary_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" :hide-default-header="auxiliary_items.length == 0" hide-default-footer show-select class="elevation-1">
               </v-data-table>
             </v-card>
 
@@ -132,8 +132,8 @@
               </v-toolbar>
               <v-divider></v-divider>
               <v-card-text style="padding-bottom:0px;">
-                <v-text-field v-model="slack.webhook" label="Webhook URL" required style="padding-top:0px;"></v-text-field>
-                <v-switch v-model="slack.enabled" label="Enable Notifications" style="margin-top:0px;"></v-switch>
+                <v-text-field :loading="loading" :disabled="loading" v-model="slack.webhook" label="Webhook URL" required style="padding-top:0px;"></v-text-field>
+                <v-switch :disabled="loading" v-model="slack.enabled" label="Enable Notifications" style="margin-top:0px;"></v-switch>
               </v-card-text>
             </v-card>
 
@@ -144,11 +144,11 @@
               </v-toolbar>
               <v-divider></v-divider>
               <v-card-text style="padding-bottom:0px;">
-                <v-text-field v-model="s3.aws_access_key" label="AWS Access Key" style="padding-top:0px;"></v-text-field>
-                <v-text-field v-model="s3.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;"></v-text-field>
-                <v-text-field v-model="s3.region_name" label="Region Name" hint="Example: eu-west-1" style="padding-top:0px;"></v-text-field>
-                <v-text-field v-model="s3.bucket_name" label="Bucket Name" style="padding-top:0px;"></v-text-field>
-                <v-switch v-model="s3.enabled" label="Enable Uploading Logs" style="margin-top:0px;"></v-switch>
+                <v-text-field :loading="loading" :disabled="loading" v-model="s3.aws_access_key" label="AWS Access Key" style="padding-top:0px;"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="s3.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="s3.region_name" label="Region Name" hint="Example: eu-west-1" style="padding-top:0px;"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="s3.bucket_name" label="Bucket Name" style="padding-top:0px;"></v-text-field>
+                <v-switch :disabled="loading" v-model="s3.enabled" label="Enable Uploading Logs" style="margin-top:0px;"></v-switch>
               </v-card-text>
             </v-card>
 
@@ -159,7 +159,7 @@
               </v-toolbar>
               <v-divider></v-divider>
               <v-card-text style="padding-bottom:0px;">
-                <v-text-field v-model="web.url" label="Public URL" required style="padding-top:0px;"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="web.url" label="Public URL" required style="padding-top:0px;"></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -471,7 +471,6 @@ export default {
       const path = this.$store.getters.url + '/admin/groups'
       axios.get(path, { params: { groupID: this.groupID } })
         .then((response) => {
-          this.loading = false
           this.group = response.data.group[0]
           this.environment_items = response.data.environments.data
           this.region_items = response.data.regions.data.regions
@@ -481,6 +480,7 @@ export default {
           if (response.data.s3.data.length > 0) this.s3 = response.data.s3.data[0]
           if (response.data.web.data.length > 0) this.web = response.data.web.data[0]
           this.refreshEnvironments()
+          this.loading = false
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -519,6 +519,7 @@ export default {
           this.$router.push({ name: 'admin.groups' })
         })
         .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           this.notification(error.response.data.message, 'error')
           this.loading = false
           // eslint-disable-next-line
@@ -551,6 +552,7 @@ export default {
           this.$router.push({ name: 'admin.groups' })
         })
         .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           this.notification(error.response.data.message, 'error')
           this.loading = false
           // eslint-disable-next-line
@@ -563,25 +565,21 @@ export default {
     newEnvironment() {
       this.environment_mode = 'new'
       this.environment_item = { name: '' }
-      this.loading = false
       this.environment_dialog_title = 'New Environment'
       this.environment_dialog = true
     },
     editEnvironment() {
       this.environment_mode = 'edit'
       this.environment_item = JSON.parse(JSON.stringify(this.environment_selected[0]))
-      this.loading = false
       this.environment_dialog_title = 'Edit Environment'
       this.environment_dialog = true
     },
     deleteEnvironment() {
       this.environment_mode = 'delete'
-      this.loading = false
       this.environment_dialog_title = 'Delete Environment'
       this.environment_dialog = true
     },
     submitEnvironment() {
-      this.loading = true
       if (this.environment_mode == 'new') this.newEnvironmentSubmit()
       else if (this.environment_mode == 'edit') this.editEnvironmentSubmit()
       else if (this.environment_mode == 'delete') this.deleteEnvironmentSubmit()
@@ -592,7 +590,6 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.environment_form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
       // Check if new item already exists
@@ -610,7 +607,6 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.environment_form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
       // Get Item Position
@@ -621,7 +617,6 @@ export default {
       for (var j = 0; j < this.environment_items.length; ++j) {
         if (this.environment_items[j]['name'] == this.environment_item.name && this.environment_item.name != this.environment_selected[0]['name']) {
           this.notification('This environment currently exists', 'error')
-          this.loading = false
           return
         }
       }
@@ -641,7 +636,7 @@ export default {
           }
         }
       }
-
+      // Remove environment in the data table
       while(this.environment_selected.length > 0) {
         var e = this.environment_selected.pop()
         for (var i = 0; i < this.environment_items.length; ++i) {
@@ -664,25 +659,21 @@ export default {
     newRegion() {
       this.region_mode = 'new'
       this.region_item = { name: '', environment: '', cross_region: false, hostname: '', username: '', password: '', key: '' }
-      this.loading = false
       this.region_dialog_title = 'New Region'
       this.region_dialog = true
     },
     editRegion() {
       this.region_mode = 'edit'
       this.region_item = JSON.parse(JSON.stringify(this.region_selected[0]))
-      this.loading = false
       this.region_dialog_title = 'Edit Region'
       this.region_dialog = true
     },
     deleteRegion() {
       this.region_mode = 'delete'
-      this.loading = false
       this.region_dialog_title = 'Delete Region'
       this.region_dialog = true
     },
     submitRegion() {
-      this.loading = true
       if (this.region_mode == 'new') this.newRegionSubmit()
       else if (this.region_mode == 'edit') this.editRegionSubmit()
       else if (this.region_mode == 'delete') this.deleteRegionSubmit()
@@ -691,14 +682,12 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.region_form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
       // Check if new item already exists
       for (var i = 0; i < this.region_items.length; ++i) {
         if (this.region_items[i]['name'] == this.region_item.name) {
           this.notification('This region currently exists', 'error')
-          this.loading = false
           return
         }
       }
@@ -710,7 +699,6 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.region_form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
       // Get Item Position
@@ -721,7 +709,6 @@ export default {
       for (var j = 0; j < this.region_items.length; ++j) {
         if (this.region_items[j]['name'] == this.region_item.name && this.region_item.name != this.region_selected[0]['name']) {
           this.notification('This region currently exists', 'error')
-          this.loading = false
           return
         }
       }
@@ -741,7 +728,7 @@ export default {
           }
         }
       }
-
+      // Remove region in the data table
       while(this.region_selected.length > 0) {
         var s = this.region_selected.pop()
         for (var i = 0; i < this.region_items.length; ++i) {
@@ -768,25 +755,21 @@ export default {
     newServer() {
       this.server_mode = 'new'
       this.server_item = { name: '', environment: '', region: '', hostname: '', username: '', password: '' }
-      this.loading = false
       this.server_dialog_title = 'New Server'
       this.server_dialog = true
     },
     editServer() {
       this.server_mode = 'edit'
       this.server_item = JSON.parse(JSON.stringify(this.server_selected[0]))
-      this.loading = false
       this.server_dialog_title = 'Edit Server'
       this.server_dialog = true
     },
     deleteServer() {
       this.server_mode = 'delete'
-      this.loading = false
       this.server_dialog_title = 'Delete Server'
       this.server_dialog = true
     },
     submitServer() {
-      this.loading = true
       if (this.server_mode == 'new') this.newServerSubmit()
       else if (this.server_mode == 'edit') this.editServerSubmit()
       else if (this.server_mode == 'delete') this.deleteServerSubmit()
@@ -795,14 +778,12 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.server_form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
       // Check if new item already exists
       for (var i = 0; i < this.server_items.length; ++i) {
         if (this.server_items[i]['name'] == this.server_item.name) {
           this.notification('This server currently exists', 'error')
-          this.loading = false
           return
         }
       }
@@ -814,7 +795,6 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.server_form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
       // Get Item Position
@@ -825,7 +805,6 @@ export default {
       for (var j = 0; j < this.server_items.length; ++j) {
         if (this.server_items[j]['name'] == this.server_item.name && this.server_item.name != this.server_selected[0]['name']) {
           this.notification('This server currently exists', 'error')
-          this.loading = false
           return
         }
       }
@@ -853,25 +832,21 @@ export default {
     newAuxiliary() {
       this.auxiliary_mode = 'new'
       this.auxiliary_item = { name: '', hostname: '', username: '', password: '' }
-      this.loading = false
       this.auxiliary_dialog_title = 'New Auxiliary Connection'
       this.auxiliary_dialog = true
     },
     editAuxiliary() {
       this.auxiliary_mode = 'edit'
       this.auxiliary_item = JSON.parse(JSON.stringify(this.auxiliary_selected[0]))
-      this.loading = false
       this.auxiliary_dialog_title = 'Edit Auxiliary Connection'
       this.auxiliary_dialog = true
     },
     deleteAuxiliary() {
       this.auxiliary_mode = 'delete'
-      this.loading = false
       this.auxiliary_dialog_title = 'Delete Auxiliary Connection'
       this.auxiliary_dialog = true
     },
     submitAuxiliary() {
-      this.loading = true
       if (this.auxiliary_mode == 'new') this.newAuxiliarySubmit()
       else if (this.auxiliary_mode == 'edit') this.editAuxiliarySubmit()
       else if (this.auxiliary_mode == 'delete') this.deleteAuxiliarySubmit()
@@ -880,14 +855,12 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.auxiliary_form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
       // Check if new item already exists
       for (var i = 0; i < this.auxiliary_items.length; ++i) {
         if (this.auxiliary_items[i]['name'] == this.auxiliary_item.name) {
           this.notification('This auxiliary Connection currently exists', 'error')
-          this.loading = false
           return
         }
       }
@@ -899,7 +872,6 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.auxiliary_form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
       // Get Item Position
@@ -910,7 +882,6 @@ export default {
       for (var j = 0; j < this.auxiliary_items.length; ++j) {
         if (this.auxiliary_items[j]['name'] == this.auxiliary_item.name && this.auxiliary_item.name != this.auxiliary_selected[0]['name']) {
           this.notification('This auxiliary Connection currently exists', 'error')
-          this.loading = false
           return
         }
       }

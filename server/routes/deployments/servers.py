@@ -42,14 +42,14 @@ class Servers:
         return jsonify({'data': {'servers': self._servers.get(group_id), 'environments': self._environments.get(group_id)}}), 200
 
     def post(self, group_id, data):
-        if self._servers.exist(group_id, {'environment': data['environment'], 'region': data['region'], 'name': data['name']}):
+        if self._servers.exist(group_id, data):
             return jsonify({'message': 'This server currently exists'}), 400
         else:
             self._servers.post(group_id, data)
             return jsonify({'message': 'Server added successfully'}), 200
 
     def put(self, group_id, data):
-        if data['current_name'] != data['name'] and self._servers.exist(group_id, {'environment': data['environment'], 'region': data['region'], 'name': data['name']}):
+        if self._servers.exist(group_id, data):
             return jsonify({'message': 'This new server name currently exists'}), 400
         else:
             self._servers.put(group_id, data)

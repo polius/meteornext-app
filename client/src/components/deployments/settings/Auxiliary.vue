@@ -12,11 +12,6 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
-        <template v-slot:no-results>
-          <v-alert :value="true" color="error" icon="warning" style="margin-top:15px;">
-            Your search for "{{ search }}" found no results.
-          </v-alert>
-        </template>
       </v-data-table>
     </v-card>
 
@@ -146,17 +141,19 @@ export default {
       axios.post(path, payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
+          this.getAuxiliary()
           // Add item in the data table
-          this.items.push(this.item)
+          // this.items.push(this.item)
           this.dialog = false
-          this.loading = false
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           this.notification(error.response.data.message, 'error')
-          this.loading = false
           // eslint-disable-next-line
           console.error(error)
+        })
+        .finally(() => {
+          this.loading = false
         })
     },
     editAuxiliarySubmit() {
@@ -180,36 +177,29 @@ export default {
       }
       // Edit item in the DB
       const path = this.$store.getters.url + '/deployments/auxiliary'
-      const payload = { 
-        current_name: this.selected[0]['name'], 
-        name: this.item.name,
-        hostname: this.item.hostname,
-        username: this.item.username,
-        password: this.item.password
-      }
+      const payload = JSON.stringify(this.item)
       axios.put(path, payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Edit item in the data table
           this.items.splice(i, 1, this.item)
-          this.selected[0] = this.item
           this.dialog = false
-          this.loading = false
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          this.loading = false
           // eslint-disable-next-line
           console.error(error)
+        })
+        .finally(() => {
+          this.loading = false
+          this.selected = []
         })
     },
     deleteAuxiliarySubmit() {
       // Get Selected Items
       var payload = []
-      for (var i = 0; i < this.selected.length; ++i) {
-        payload.push({ environment: this.selected[i]['environment'], region: this.selected[i]['region'], name: this.selected[i]['name'] })
-      }
+      for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i])
       // Delete items to the DB
       const path = this.$store.getters.url + '/deployments/auxiliary'
       axios.delete(path, { data: payload })
@@ -225,16 +215,18 @@ export default {
                 break
               }
             }
-            this.dialog = false
-            this.loading = false
           }
+           this.selected = []
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          this.loading = false
           // eslint-disable-next-line
           console.error(error)
+        })
+        .finally(() => {
+          this.loading = false
+          this.dialog = false
         })
     },
     notification(message, color) {

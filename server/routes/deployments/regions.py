@@ -9,6 +9,7 @@ class Regions:
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
         self._environments = imp.load_source('environments', '{}/models/deployments/environments.py'.format(credentials['path'])).Environments(credentials)
         self._regions = imp.load_source('regions', '{}/models/deployments/regions.py'.format(credentials['path'])).Regions(credentials)
+        self._servers = imp.load_source('servers', '{}/models/deployments/servers.py'.format(credentials['path'])).Servers(credentials)
 
     def blueprint(self):
         # Init blueprint
@@ -52,7 +53,7 @@ class Regions:
             data = request.get_json()
 
             # Return Regions By User Environment
-            return jsonify({'data': self._regions.get_by_environment(user[0]['group_id'], data['environment'])}), 200
+            return jsonify({'data': self._regions.get_by_environment(user[0]['group_id'], data)}), 200
 
         return regions_blueprint
 
@@ -60,26 +61,28 @@ class Regions:
         return jsonify({'data': {'regions': self._regions.get(group_id), 'environments': self._environments.get(group_id)}}), 200
 
     def post(self, group_id, data):
-        if self._regions.exist(group_id, {'environment': data['environment'], 'name': data['name']}):
+        if self._regions.exist(group_id, data):
             return jsonify({'message': 'This region currently exists'}), 400
         else:
             self._regions.post(group_id, data)
             return jsonify({'message': 'Region added successfully'}), 200
 
     def put(self, group_id, data):
-        if data['current_name'] != data['name'] and self._regions.exist(user[0]['group_id'], {'environment': data['environment'], 'name': data['name']}):
+        if self._regions.exist(group_id, data):
             return jsonify({'message': 'This new region name currently exists'}), 400
         else:
             self._regions.put(group_id, data)
             return jsonify({'message': 'Region edited successfully'}), 200
 
     def delete(self, group_id, data):
+        # Check inconsistencies
+        for region in data:
+            if self._servers.exist_by_region(group_id, region):
+                return jsonify({'message': "The region '" + region['name'] + "' has attached servers"}), 400
+
         for region in data:
             self._regions.delete(group_id, region)
         return jsonify({'message': 'Selected regions deleted successfully'}), 200
 
     def remove(self, group_id):
         self._regions.remove(group_id)
-
-    def exists(self, group_id, environment_name):
-        return self._regions.exist_by_environment(group_id, environment_name)

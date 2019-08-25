@@ -16,11 +16,6 @@
           <v-icon v-if="props.item.admin" small color="success" style="margin-left:8px;">fas fa-check</v-icon>
           <v-icon v-else small color="error" style="margin-left:8px;">fas fa-times</v-icon>
         </template>
-        <template v-slot:no-results>
-          <v-alert :value="true" color="error" icon="warning" style="margin-top:15px;">
-            Your search for "{{ search }}" found no results.
-          </v-alert>
-        </template>
       </v-data-table>
     </v-card>
 
@@ -156,14 +151,15 @@ export default {
           // Retrieve again the users list
           this.getUsers()
           this.dialog = false
-          this.loading = false
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          this.loading = false
           // eslint-disable-next-line
           console.error(error)
+        })
+        .finally(() => {
+          this.loading = false
         })
     },
     editUserSubmit() {
@@ -200,14 +196,16 @@ export default {
           this.items.splice(i, 1, this.item)
           this.selected[0] = this.item
           this.dialog = false
-          this.loading = false
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          this.loading = false
           // eslint-disable-next-line
           console.error(error)
+        })
+        .finally(() => {
+          this.loading = false
+          this.selected = []
         })
     },
     deleteUserSubmit() {
@@ -231,16 +229,18 @@ export default {
                 break
               }
             }
-            this.dialog = false
-            this.loading = false
           }
+          this.selected = []
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          this.loading = false
           // eslint-disable-next-line
           console.error(error)
+        })
+        .finally(() => {
+          this.loading = false
+          this.dialog = false
         })
     },
     notification(message, color) {

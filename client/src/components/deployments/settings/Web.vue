@@ -7,7 +7,7 @@
       <v-container fluid grid-list-lg>
         <v-layout row wrap>
           <v-flex xs12>
-            <v-text-field :disabled="loading" v-model="url" label="Public Web URL" required></v-text-field>
+            <v-text-field :loading="loading" :disabled="loading" v-model="url" label="Public Web URL" required></v-text-field>
             <v-btn :loading="loading" color="primary" @click="saveWeb()" style="margin-left:0px;">Save</v-btn>    
           </v-flex>
         </v-layout>

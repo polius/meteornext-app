@@ -12,16 +12,6 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
-        <template v-slot:items="props">
-          <td style="width:5%"><v-checkbox v-model="props.selected" primary hide-details></v-checkbox></td>
-          <td>{{ props.item.name }}</td>
-          <td>{{ props.item.description }}</td>
-        </template>
-        <template v-slot:no-results>
-          <v-alert :value="true" color="error" icon="warning" style="margin-top:15px;">
-            Your search for "{{ search }}" found no results.
-          </v-alert>
-        </template>
       </v-data-table>
     </v-card>
 
@@ -128,15 +118,17 @@ export default {
                 break
               }
             }
-            this.dialog = false
-            this.loading = false
           }
+          this.selected = []
         })
         .catch((error) => {
           this.notification(error.response.data.message, 'error')
-          this.loading = false
           // eslint-disable-next-line
           console.error(error)
+        })
+        .finally(() => {
+          this.loading = false
+          this.dialog = false
         })
     },
     // SNACKBAR

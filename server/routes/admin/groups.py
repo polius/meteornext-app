@@ -177,14 +177,16 @@ class Groups:
     def __diff(self, dict_list1, dict_list2):
         diff = {'add': [], 'change': [], 'remove': []}
 
-        for i in dict_list1:
-            if i not in dict_list2:
-                diff['remove'].append(i)
-            else:
-                match = [j for j in dict_list2 if 'id' in j and j['id'] == i['id']]
-                if len(match) > 0 and match[0] != i:
-                    diff['change'].append(match[0])
         for i in dict_list2:
-            if i not in dict_list1 and i not in diff['change']:
+            if 'id' not in i:
                 diff['add'].append(i)
+            else:
+                match = [j for j in dict_list1 if i['id'] == j['id']]
+                if len(match) > 0 and match[0] != i:
+                    diff['change'].append(i)
+
+        for i in dict_list1:
+            match = any([1 for j in dict_list2 if 'id' in j and i['id'] == j['id']])
+            if not match and not any([1 for j in diff['change'] if i['id'] == j['id']]):
+                diff['remove'].append(i)
         return diff

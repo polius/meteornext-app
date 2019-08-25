@@ -28,10 +28,10 @@ class Auxiliary:
                 hostname = %s,
                 username = %s,
                 password = %s
-            WHERE name = %s
+            WHERE id = %s
             AND group_id = %s
         """
-        self._mysql.execute(query, (auxiliary['name'], auxiliary['hostname'], auxiliary['username'], auxiliary['password'], auxiliary['current_name'], group_id))
+        self._mysql.execute(query, (auxiliary['name'], auxiliary['hostname'], auxiliary['username'], auxiliary['password'], auxiliary['id'], group_id))
 
     def delete(self, group_id, auxiliary_connection):
         query = """
@@ -49,12 +49,24 @@ class Auxiliary:
         self._mysql.execute(query, (group_id))
 
     def exist(self, group_id, auxiliary):
-        query = """
-            SELECT EXISTS ( 
-                SELECT * 
-                FROM auxiliary
-                WHERE name = %s
-                AND group_id = %s
-            ) AS exist
-        """
-        return self._mysql.execute(query, (auxiliary['name'], group_id))[0]['exist'] == 1
+        if 'id' in auxiliary:
+            query = """
+                SELECT EXISTS ( 
+                    SELECT * 
+                    FROM auxiliary
+                    WHERE name = %s
+                    AND group_id = %s
+                    AND id != %s
+                ) AS exist
+            """
+            return self._mysql.execute(query, (auxiliary['name'], group_id, auxiliary['id']))[0]['exist'] == 1
+        else:
+            query = """
+                SELECT EXISTS ( 
+                    SELECT * 
+                    FROM auxiliary
+                    WHERE name = %s
+                    AND group_id = %s
+                ) AS exist
+            """
+            return self._mysql.execute(query, (auxiliary['name'], group_id))[0]['exist'] == 1

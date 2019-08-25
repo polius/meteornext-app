@@ -8,6 +8,7 @@ class Environments:
         # Init models
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
         self._environments = imp.load_source('environments', '{}/models/deployments/environments.py'.format(credentials['path'])).Environments(credentials)
+        self._regions = imp.load_source('regions', '{}/models/deployments/regions.py'.format(credentials['path'])).Regions(credentials)
 
     def blueprint(self):
         # Init blueprint
@@ -49,13 +50,18 @@ class Environments:
             return jsonify({'message': 'Environment added successfully'}), 200
 
     def put(self, group_id, data):
-        if data['current_name'] != data['name'] and self._environments.exist(group_id, data):
-            return jsonify({'message': 'This new environment name currently exists'}), 400
+        if self._environments.exist(group_id, data):
+            return jsonify({'message': 'This new environment currently exists'}), 400
         else:
             self._environments.put(group_id, data)
             return jsonify({'message': 'Environment edited successfully'}), 200
 
     def delete(self, group_id, data):
+        # Check inconsistencies
+        for environment in data:
+            if self._regions.exist_by_environment(group_id, environment):
+                return jsonify({'message': "The environment '" + environment['name'] + "' has attached regions"}), 400
+
         for environment in data:
             self._environments.delete(group_id, environment)
         return jsonify({'message': 'Selected environments deleted successfully'}), 200

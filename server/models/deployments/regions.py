@@ -34,18 +34,18 @@ class Regions:
                 username = IF(%s = '', NULL, %s),
                 password = IF(%s = '', NULL, %s),
                 `key` = IF(%s = '', NULL, %s)
-            WHERE regions.name = %s
+            WHERE regions.id = %s
         """
-        self._mysql.execute(query, (group_id, region['environment'], region['name'], region['cross_region'], region['hostname'], region['hostname'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['current_name']))
+        self._mysql.execute(query, (group_id, region['environment'], region['name'], region['cross_region'], region['hostname'], region['hostname'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['id']))
 
     def delete(self, group_id, region):
         query = """
             DELETE r
             FROM regions r
-            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
-            WHERE r.name = %s
+            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
+            WHERE r.id = %s
         """
-        self._mysql.execute(query, (group_id, region['environment'], region['name']))
+        self._mysql.execute(query, (group_id, region['id']))
 
     def remove(self, group_id):
         query = """
@@ -56,30 +56,43 @@ class Regions:
         self._mysql.execute(query, (group_id))
 
     def exist(self, group_id, region):
-        query = """
-            SELECT EXISTS ( 
-                SELECT * 
-                FROM regions r
-                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
-                WHERE r.name = %s
-            ) AS exist
-        """
-        return self._mysql.execute(query, (group_id, region['environment'], region['name']))[0]['exist'] == 1
+        if 'id' in region:
+            query = """
+                SELECT EXISTS ( 
+                    SELECT * 
+                    FROM regions r
+                    JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
+                    WHERE r.name = %s
+                    AND r.id = %s
+                ) AS exist
+            """
+            return self._mysql.execute(query, (group_id, region['environment'], region['name'], region['id']))[0]['exist'] == 1
+        else:
+            query = """
+                SELECT EXISTS ( 
+                    SELECT * 
+                    FROM regions r
+                    JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
+                    WHERE r.name = %s
+                ) AS exist
+            """
+            return self._mysql.execute(query, (group_id, region['environment'], region['name']))[0]['exist'] == 1
 
-    def exist_by_environment(self, group_id, environment_name):
-        query = """
-            SELECT EXISTS ( 
-                SELECT * 
-                FROM regions r
-                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
-            ) AS exist
-        """
-        return self._mysql.execute(query, (group_id, environment_name))[0]['exist'] == 1
 
-    def get_by_environment(self, group_id, environment_name):
+    def get_by_environment(self, group_id, environment):
         query = """
             SELECT r.name
             FROM regions r 
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
         """
-        return self._mysql.execute(query, (group_id, environment_name))
+        return self._mysql.execute(query, (group_id, environment['name']))
+
+    def exist_by_environment(self, group_id, environment):
+        query = """
+            SELECT EXISTS ( 
+                SELECT * 
+                FROM regions r
+                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
+            ) AS exist
+        """
+        return self._mysql.execute(query, (group_id, environment['name']))[0]['exist'] == 1

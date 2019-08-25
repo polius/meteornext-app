@@ -35,19 +35,19 @@ class Servers:
                 servers.hostname = %s,
                 servers.username = %s,
                 servers.password = %s
-            WHERE servers.name = %s
+            WHERE servers.id = %s
         """
-        self._mysql.execute(query, (server['region'], group_id, server['environment'], server['name'], server['hostname'], server['username'], server['password'], server['current_name']))
+        self._mysql.execute(query, (server['region'], group_id, server['environment'], server['name'], server['hostname'], server['username'], server['password'], server['id']))
 
     def delete(self, group_id, server):
         query = """
             DELETE s
             FROM servers s
-            JOIN regions r ON r.id = s.region_id AND r.name = %s
-            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
-            WHERE s.name = %s
+            JOIN regions r ON r.id = s.region_id
+            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
+            WHERE s.id = %s
         """
-        self._mysql.execute(query, (server['region'], group_id, server['environment'], server['name']))
+        self._mysql.execute(query, (group_id, server['id']))
 
     def remove(self, group_id):
         query = """
@@ -59,13 +59,36 @@ class Servers:
         self._mysql.execute(query, (group_id))
 
     def exist(self, group_id, server):
+        if 'id' in server:
+            query = """
+                SELECT EXISTS ( 
+                    SELECT * 
+                    FROM servers s
+                    JOIN regions r ON r.id = s.region_id AND r.name = %s
+                    JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
+                    WHERE s.name = %s AND s.id != %s
+                ) AS exist
+            """
+            return self._mysql.execute(query, (server['region'], group_id, server['environment'], server['name'], server['id']))[0]['exist'] == 1
+        else:
+            query = """
+                SELECT EXISTS ( 
+                    SELECT * 
+                    FROM servers s
+                    JOIN regions r ON r.id = s.region_id AND r.name = %s
+                    JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
+                    WHERE s.name = %s
+                ) AS exist
+            """
+            return self._mysql.execute(query, (server['region'], group_id, server['environment'], server['name']))[0]['exist'] == 1
+
+    def exist_by_region(self, group_id, region):
         query = """
             SELECT EXISTS ( 
                 SELECT * 
                 FROM servers s
                 JOIN regions r ON r.id = s.region_id AND r.name = %s
-                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
-                WHERE s.name = %s
+                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
             ) AS exist
         """
-        return self._mysql.execute(query, (server['region'], group_id, server['environment'], server['name']))[0]['exist'] == 1
+        return self._mysql.execute(query, (region['name'], group_id))[0]['exist'] == 1
