@@ -4,57 +4,55 @@
       <v-layout row wrap>
         <v-flex xs12>
           <v-form ref="form" style="padding:10px;">
-            <div class="title font-weight-regular" style="margin-bottom:20px;">PRO</div>
             <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+            <v-select :loading="loading" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
 
             <!-- EXECUTION -->
             <codemirror v-model="code" :options="cmOptions"></codemirror>
 
             <!-- PARAMETERS -->
-            <v-select :loading="loading" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="margin-top:10px;"></v-select>
-
-            <v-radio-group v-model="execution_mode" style="margin-top:0px;">
-              <template v-slot:label>
-                <div>Select the <strong>Execution Mode</strong>:</div>
-              </template>
+            <div class="subtitle-1 font-weight-regular" style="margin-top:20px;">MODE</div>
+            <v-radio-group v-model="execution_mode" style="margin-top:10px;">
               <v-radio value="validation" color="success">
                 <template v-slot:label>
-                  <div class="success--text">Validation</div>
+                  <div class="success--text">VALIDATE</div>
                 </template>
               </v-radio>
               <v-radio value="test" color="orange">
                 <template v-slot:label>
-                  <div class="orange--text">Test Execution</div>
+                  <div class="orange--text">TEST</div>
                 </template>
               </v-radio>
               <v-radio value="deploy" color="red">
                 <template v-slot:label>
-                  <div class="red--text">Deployment</div>
+                  <div class="red--text">DEPLOY</div>
                 </template>
               </v-radio>
             </v-radio-group>
 
-            <v-radio-group v-model="execution_method" style="margin-top:0px; padding-top:0px;">
-              <template v-slot:label>
-                <div>Select the <strong>Execution Method</strong>:</div>
-              </template>
-              <v-radio color="primary" value="parallel">
-                <template v-slot:label>
-                  <div>Parallel</div>
-                </template>
-              </v-radio>
+            <div class="subtitle-1 font-weight-regular" style="margin-top:-5px;">EXECUTION</div>
+            <v-radio-group v-model="execution_method" style="margin-top:10px;">
               <v-radio color="primary" value="sequential">
                 <template v-slot:label>
                   <div>Sequential</div>
                 </template>
               </v-radio>
+              <v-radio color="primary" value="parallel">
+                <template v-slot:label>
+                  <div>Parallel</div>
+                </template>
+              </v-radio>
             </v-radio-group>
 
-            <v-text-field v-if="execution_method=='parallel'" v-model="threads" label="Threads" :rules="[v => !!v || '']" required style="margin-top:0px; padding-top:0px; margin-bottom:5px;"></v-text-field>
+            <v-text-field v-if="execution_method=='parallel'" v-model="threads" label="Threads" :rules="[v => !!v || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+            <v-checkbox v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:-10px; margin-bottom:20px;"></v-checkbox>
 
-            <v-btn color="success" @click="deploy()">Deploy</v-btn>
-            <router-link to="/deployments"><v-btn color="error" style="margin-left:10px;">Cancel</v-btn></router-link>
+            <v-divider></v-divider>
 
+            <div style="margin-top:20px;">
+              <v-btn color="success" @click="deploy()">CREATE DEPLOY</v-btn>
+              <router-link to="/deployments"><v-btn color="error" style="margin-left:10px;">CANCEL</v-btn></router-link>
+            </div>
           </v-form>
         </v-flex>
       </v-layout>
@@ -124,8 +122,9 @@ export default {
 
       // Parameters
       execution_mode: 'validation',
-      execution_method: 'parallel',
+      execution_method: 'sequential',
       threads: '10',
+      start_execution: true,
 
       // Query Dialog
       queryDialog: false,

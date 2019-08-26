@@ -32,7 +32,8 @@
                   <v-select v-model="item.region" :disabled="item.environment == ''" :rules="[v => !!v || '']" :items="regions" label="Region" required style="margin-top:0px; padding-top:0px;"></v-select>
                   <!-- SQL -->
                   <div class="title font-weight-regular">SQL</div>
-                  <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" required></v-text-field>
+                  <v-select v-model="item.engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required></v-select>
+                  <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" required style="padding-top:0px;"></v-text-field>
                 </v-form>
@@ -64,6 +65,7 @@ export default {
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Environment', align: 'left', value: 'environment'},
       { text: 'Region', align: 'left', value: 'region'},
+      { text: 'Engine', align: 'left', value: 'engine' },
       { text: 'Hostname', align: 'left', value: 'hostname'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'Password', align: 'left', value: 'password'}
@@ -71,9 +73,10 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', environment: '', region: '', hostname: '', username: '', password: '' },
+    item: { name: '', environment: '', region: '', engine: '', hostname: '', username: '', password: '' },
     mode: '',
     loading: true,
+    engines_items: ['MySQL', 'PostgreSQL'],
     // Dialog: Item
     dialog: false,
     dialog_title: '',
@@ -123,7 +126,7 @@ export default {
     },
     newServer() {
       this.mode = 'new'
-      this.item = { name: '', environment: '', region: '', hostname: '', username: '', password: '' }
+      this.item = { name: '', environment: '', region: '', engine: '', hostname: '', username: '', password: '' }
       this.dialog_title = 'New Server'
       this.dialog = true
     },

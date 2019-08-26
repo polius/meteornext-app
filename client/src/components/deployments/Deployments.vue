@@ -9,7 +9,7 @@
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table :headers="headers" :items="data" :search="search" class="elevation-1" style="padding-top:5px;">
+      <v-data-table :headers="headers" :items="data" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" class="elevation-1" style="padding-top:5px;">
         <template v-slot:item="props">
           <td>
             <v-edit-dialog :return-value.sync="props.item.name" lazy @save="save"> 
