@@ -37,6 +37,7 @@ CREATE TABLE `regions` (
   `username` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `password` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `key` text COLLATE utf8mb4_unicode_ci,
+  `deploy_path` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `environment_id` (`environment_id`,`name`),
   CONSTRAINT `regions_ibfk_1` FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
@@ -106,7 +107,7 @@ CREATE TABLE `deployments` (
   `environment_id` INT(10) UNSIGNED NOT NULL,
   `mode` ENUM('BASIC','PRO') NOT NULL,
   `method` ENUM('VALIDATE','TEST','DEPLOY') NOT NULL,
-  `status` ENUM('CREATED','IN PROGRESS','SUCCESS','FAILED') NOT NULL DEFAULT 'CREATED',
+  `status` ENUM('CREATED','QUEUED','IN PROGRESS','SUCCESS','FAILED','INTERRUPTED') NOT NULL DEFAULT 'CREATED',
   `started` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `ended` DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `results` VARCHAR(191) DEFAULT NULL,

@@ -6,9 +6,19 @@ class Deployments:
     def __init__(self, credentials):
         self._mysql = imp.load_source('mysql', '{}/models/mysql.py'.format(credentials['path'])).mysql(credentials)
 
-    def get(self, user_id=None):
+    def get(self, user_id=None, deployment_id=None):
         if user_id is None:
             return self._mysql.execute("SELECT * FROM deployments ORDER BY id DESC")
+        elif deployment_id is not None:
+            query = """
+                SELECT d.id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended, d.results, d.logs
+                FROM deployments d
+                JOIN environments e ON e.id = d.environment_id
+                WHERE d.user_id = %s
+                AND d.id = %s
+                ORDER BY d.id DESC
+            """
+            return self._mysql.execute(query, (user_id, deployment_id))    
         else:
             query = """
                 SELECT d.id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended, d.results, d.logs

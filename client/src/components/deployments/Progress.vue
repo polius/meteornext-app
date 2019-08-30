@@ -2,7 +2,7 @@
   <div>
     <v-card>
       <v-toolbar flat color="primary">
-        <v-toolbar-title class="white--text">INFORMATION</v-toolbar-title>
+        <v-toolbar-title class="white--text">PROGRESS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-title class="white--text">Release 3.35.0</v-toolbar-title>
         <!-- <v-btn :disabled="stopExecution" text style="margin-left:30px;" @click="stop()"><v-icon style="padding-right:10px">fas fa-stop-circle</v-icon>STOP EXECUTION</v-btn>
@@ -226,6 +226,9 @@
       snackbarColor: ''
     }),
     props: ['deploymentID'],
+    created() {
+      if (typeof this.deploymentID === "undefined") this.$router.push('/deployments')
+    },
     methods: {
       regionColor (progress) {
         if (progress.startsWith('100%')) return '#4caf50'

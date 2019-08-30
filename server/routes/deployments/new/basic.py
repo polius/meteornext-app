@@ -27,10 +27,16 @@ class Basic:
             # Get Request Json
             deployment_json = request.get_json()
 
-            if request.method == 'POST':
+            if request.method == 'GET':
+                return self.get(user_id)
+            elif request.method == 'POST':
                 return self.post(user_id, deployment_json)
 
         return deployments_basic_blueprint
+
+    def get(self, user_id):
+        deployment_id = request.args['deploymentID'] if 'deploymentID' in request.args else None
+        return jsonify({'data': self._deployments_basic.get(user_id, deployment_id)}), 200
 
     def post(self, user_id, data):
         # Check if 'execution_threads' is a digit between 2-10

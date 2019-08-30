@@ -49,6 +49,7 @@
                     <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="item.password" label="Password" style="padding-top:0px;"></v-text-field>
                     <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;"></v-textarea>
+                    <v-text-field v-model="item.deploy_path" :rules="[v => !!v || '']" label="Deploy Path" style="margin-top:-5px; padding-top:0px;"></v-text-field>
                   </div>
                 </v-form>
               </v-flex>
@@ -83,12 +84,13 @@ export default {
       { text: 'Hostname', align: 'left', value: 'hostname'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'Password', align: 'left', value: 'password'},
-      { text: 'Private Key', align: 'left', value: 'key'}
+      { text: 'Private Key', align: 'left', value: 'key'},
+      { text: 'Deploy Path', align: 'left', value: 'deploy_path'}
     ],
     items: [],
     selected: [],
     search: '',
-    item: { name: '', environment: '', cross_region: false, hostname: '', username: '', password: '', key: '' },
+    item: { name: '', environment: '', cross_region: false, hostname: '', username: '', password: '', key: '', deploy_path: '' },
     mode: '',
     loading: true,
     dialog: false,
@@ -123,7 +125,7 @@ export default {
     },
     newRegion() {
       this.mode = 'new'
-      this.item = { name: '', environment: '', cross_region: false, hostname: '', username: '', password: '', key: '' }
+      this.item = { name: '', environment: '', cross_region: false, hostname: '', username: '', password: '', key: '', deploy_path: '' }
       this.dialog_title = 'New Region'
       this.dialog = true
     },
@@ -198,10 +200,6 @@ export default {
           this.loading = false
           return
         }
-      }
-      // Check the cross_region value
-      if (!this.item.cross_region) {
-        this.item.hostname = this.item.username = this.item.password = this.item.key = ''
       }
       // Edit item in the DB
       const path = this.$store.getters.url + '/deployments/regions'

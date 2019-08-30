@@ -7,6 +7,7 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="selected.length == 0" text @click='newDeploy()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn v-if="selected.length == 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFO</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="progressDeploy()"><v-icon small style="padding-right:10px">fas fa-spinner</v-icon>PROGRESS</v-btn>
           <v-btn v-if="selected.length == 1" text :href="this.selected[0]['results']"><v-icon small style="padding-right:10px">fas fa-meteor</v-icon>LOGS</v-btn>
           <v-btn v-if="selected.length > 0" text @click="deleteDeploy()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
         </v-toolbar-items>
@@ -25,22 +26,10 @@
           <v-chip :color="getModeColor(props.item.mode)">{{ props.item.mode }}</v-chip>
         </template>
         <template v-slot:item.method="props">
-          <span :style="'color: ' + getMethodColor(props.item.method)"><b>{{ props.item.method }}</b></span>
+          <span :style="'color: ' + getMethodColor(props.item.method)" style="font-weight:500">{{ props.item.method }}</span>
         </template>
         <template v-slot:item.status="props">
-          <span :style="'color: ' + getStatusColor(props.item.status)">{{ props.item.status }}</span>
-        </template>
-        <template v-slot:item.actions="props">
-          <!-- <v-btn title="Starred" icon small><v-icon small>far fa-star</v-icon></v-btn> -->
-          <router-link title="Information" class="nav-link" :to="{ name: 'deployments.info', params: { deploymentID: props.item.id } }">
-            <v-btn icon small style="margin-left:-10px;"><v-icon small>fas fa-info</v-icon></v-btn>
-          </router-link>
-          <a :href="props.item.results" target="_blank" title="Results">
-            <v-btn icon small @click="results(props.item)"><v-icon small>fas fa-meteor</v-icon></v-btn>
-          </a>
-          <a :href="props.item.logs" target="_blank" title="Raw Logs">
-            <v-btn icon small @click="logs(props.item)"><v-icon small>fas fa-cloud-download-alt</v-icon></v-btn>
-          </a>
+          <span :style="'color: ' + getStatusColor(props.item.status)" style="font-weight:500">{{ props.item.status }}</span>
         </template>
       </v-data-table>
     </v-card>
@@ -159,11 +148,12 @@ export default {
       else if (method == 'VALIDATE') return '#4caf50'
     },
     getStatusColor (status) {
-      if (status == 'CREATED') return '#5c97bf'
-      else if (status == 'QUEUED') return '#52b3d9'
+      if (status == 'CREATED') return '#bdc3c7'
+      else if (status == 'QUEUED') return '#3498db'
       else if (status == 'IN PROGRESS') return '#ff9800'
       else if (status == 'SUCCESS') return '#4caf50'
       else if (status == 'FAILED') return '#f44336'
+      else if (status == 'INTERRUPTED') return '#bf55ec'
       else return '#fff'
     },
     newDeploy() {
@@ -171,6 +161,9 @@ export default {
     },
     infoDeploy() {
       this.$router.push({ name:'deployments.info', params: { deploymentID: this.selected[0]['id'] }})
+    },
+    progressDeploy() {
+      this.$router.push({ name:'deployments.progress', params: { deploymentID: this.selected[0]['id'] }})
     },
     deleteDeploy() {
       this.dialog = true
