@@ -33,10 +33,15 @@ class mysql:
                     # Get the query results
                     query_result = cursor.fetchall()
 
+                    # Get the last inserted id
+                    last_row_id = cursor.lastrowid
+
                 # Commit the changes in the database
                 self._connection.commit()
 
                 # Return query results
+                if query.lstrip().upper().startswith('INSERT'):
+                    return last_row_id
                 return query_result
 
             except (pymysql.err.OperationalError, pymysql.ProgrammingError, pymysql.InternalError, pymysql.IntegrityError, TypeError) as error:

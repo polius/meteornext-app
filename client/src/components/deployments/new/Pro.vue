@@ -5,15 +5,15 @@
         <v-flex xs12>
           <v-form ref="form" style="padding:10px;">
             <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-            <v-select :loading="loading" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+            <v-select :loading="loading_env" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
 
-            <!-- EXECUTION -->
+            <!-- CODE -->
             <codemirror v-model="code" :options="cmOptions"></codemirror>
 
             <!-- PARAMETERS -->
-            <div class="subtitle-1 font-weight-regular" style="margin-top:20px;">MODE</div>
-            <v-radio-group v-model="execution_mode" style="margin-top:10px;">
-              <v-radio value="validation" color="success">
+            <div class="subtitle-1 font-weight-regular" style="margin-top:20px;">METHOD</div>
+            <v-radio-group v-model="method" style="margin-top:10px;">
+              <v-radio value="validate" color="success">
                 <template v-slot:label>
                   <div class="success--text">VALIDATE</div>
                 </template>
@@ -31,7 +31,7 @@
             </v-radio-group>
 
             <div class="subtitle-1 font-weight-regular" style="margin-top:-5px;">EXECUTION</div>
-            <v-radio-group v-model="execution_method" style="margin-top:10px;">
+            <v-radio-group v-model="execution" style="margin-top:10px;">
               <v-radio color="primary" value="sequential">
                 <template v-slot:label>
                   <div>Sequential</div>
@@ -44,14 +44,14 @@
               </v-radio>
             </v-radio-group>
 
-            <v-text-field v-if="execution_method=='parallel'" v-model="threads" label="Threads" :rules="[v => !!v || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+            <v-text-field v-if="execution=='parallel'" v-model="threads" label="Threads" :rules="[v => !!v || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
             <v-checkbox v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:-10px; margin-bottom:20px;"></v-checkbox>
 
             <v-divider></v-divider>
 
             <div style="margin-top:20px;">
-              <v-btn color="success" @click="deploy()">CREATE DEPLOY</v-btn>
-              <router-link to="/deployments"><v-btn color="error" style="margin-left:10px;">CANCEL</v-btn></router-link>
+              <v-btn :loading="loading_env && loading_code" color="success" @click="deploy()">CREATE DEPLOY</v-btn>
+              <router-link to="/deployments"><v-btn :disabled="loading_env && loading_code" color="error" style="margin-left:10px;">CANCEL</v-btn></router-link>
             </div>
           </v-form>
         </v-flex>
@@ -67,7 +67,7 @@
 
 <style>
 .CodeMirror {
-  min-height:512px;
+  min-height:800px;
 }
 </style>
 
@@ -110,6 +110,7 @@ export default {
       code: '',
 
       cmOptions: {
+        readOnly: true,
         autoCloseBrackets: true,
         styleActiveLine: true,
         lineNumbers: true,
@@ -121,8 +122,8 @@ export default {
       },
 
       // Parameters
-      execution_mode: 'validation',
-      execution_method: 'sequential',
+      method: 'validate',
+      execution: 'sequential',
       threads: '10',
       start_execution: true,
 
@@ -131,7 +132,8 @@ export default {
       queryDialogTitle: '',
       
       // Loading Fields
-      loading: true,
+      loading_code: true,
+      loading_env: true,
 
       // Snackbar
       snackbar: false,
@@ -145,6 +147,7 @@ export default {
   },
   created() {
     this.getEnvironments()
+    this.getCode()
   },
   methods: {
     getEnvironments() {
@@ -152,7 +155,22 @@ export default {
       axios.get(path)
         .then((response) => {
           for (var i = 0; i < response.data.data.length; ++i) this.environment_items.push(response.data.data[i]['name'])
-          this.loading = false
+          this.loading_env = false
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
+    },
+    getCode() {
+      const path = this.$store.getters.url + '/deployments/pro/code'
+      axios.get(path)
+        .then((response) => {
+          this.code = response.data.data
+          this.cmOptions.readOnly = false
+          this.loading_code = false
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -165,9 +183,35 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please fill the required fields', 'error')
-        this.loading = false
         return
       }
+      this.loading_code = true
+      // Add deployment to the DB
+      const path = this.$store.getters.url + '/deployments/pro'
+      const payload = {
+        name: this.name,
+        environment: this.environment,
+        code: this.code,
+        mode: 'PRO',
+        method: this.method.toUpperCase(),
+        execution: this.execution.toUpperCase(),
+        execution_threads: this.threads,
+        start: this.start_execution
+      }
+      axios.post(path, payload)
+        .then((response) => {
+          this.notification(response.data.message, 'success')
+          this.$router.push('/deployments')
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
+        .finally(() => {
+          this.loading_code = false
+        })
     },
     notification(message, color) {
       this.snackbarText = message

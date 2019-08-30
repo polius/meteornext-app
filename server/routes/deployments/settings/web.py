@@ -6,7 +6,7 @@ class Web:
     def __init__(self, credentials):
         # Init models
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
-        self._web = imp.load_source('web', '{}/models/deployments/settings/web.py'.format(credentials['path'])).Web(credentials)
+        self._web = imp.load_source('web', '{}/models/deployments/web.py'.format(credentials['path'])).Web(credentials)
 
     def blueprint(self):
         # Init blueprint

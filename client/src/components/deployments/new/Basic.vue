@@ -24,9 +24,9 @@
             </v-card>
 
             <!-- PARAMETERS -->
-            <div class="subtitle-1 font-weight-regular">MODE</div>
-            <v-radio-group v-model="execution_mode" style="margin-top:10px;">
-              <v-radio value="validation" color="success">
+            <div class="subtitle-1 font-weight-regular">METHOD</div>
+            <v-radio-group v-model="method" style="margin-top:10px;">
+              <v-radio value="validate" color="success">
                 <template v-slot:label>
                   <div class="success--text">VALIDATE</div>
                 </template>
@@ -44,7 +44,7 @@
             </v-radio-group>
 
             <div class="subtitle-1 font-weight-regular" style="margin-top:-5px;">EXECUTION</div>
-            <v-radio-group v-model="execution_method" style="margin-top:10px;">
+            <v-radio-group v-model="execution" style="margin-top:10px;">
               <v-radio color="primary" value="sequential">
                 <template v-slot:label>
                   <div>Sequential</div>
@@ -57,14 +57,14 @@
               </v-radio>
             </v-radio-group>
 
-            <v-text-field v-if="execution_method=='parallel'" v-model="threads" label="Threads" :rules="[v => !!v || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+            <v-text-field v-if="execution=='parallel'" v-model="threads" label="Threads" :rules="[v => !!v || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
             <v-checkbox v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:-10px; margin-bottom:20px;"></v-checkbox>
 
             <v-divider></v-divider>
 
             <div style="margin-top:20px;">
-              <v-btn color="success" @click="deploy()">CREATE DEPLOY</v-btn>
-              <router-link to="/deployments"><v-btn color="error" style="margin-left:10px;">CANCEL</v-btn></router-link>
+              <v-btn :loading="loading" color="success" @click="deploy()">CREATE DEPLOY</v-btn>
+              <router-link to="/deployments"><v-btn :disabled="loading" color="error" style="margin-left:10px;">CANCEL</v-btn></router-link>
             </div>
           </v-form>
         </v-flex>
@@ -121,8 +121,8 @@ export default {
       // Parameters
       environment: '',
       environment_items: [],
-      execution_mode: 'validation',
-      execution_method: 'sequential',
+      method: 'validate',
+      execution: 'sequential',
       threads: '10',
       start_execution: true,
 
@@ -185,7 +185,6 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.query_form.validate()) {
         this.notification('Please fill the required fields', 'error')
-        this.loading = false
         return
       }
       // Check if new item already exists
@@ -235,9 +234,40 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please fill the required fields', 'error')
-        this.loading = false
         return
       }
+      if (this.query_items.length == 0) {
+        this.notification('Please enter a query to deploy', 'error')
+        return
+      }
+      this.loading = true
+      // Add deployment to the DB
+      const path = this.$store.getters.url + '/deployments/basic'
+      const payload = {
+        name: this.name,
+        environment: this.environment,
+        databases: this.databases,
+        queries: JSON.stringify(this.query_items),
+        mode: 'BASIC',
+        method: this.method.toUpperCase(),
+        execution: this.execution.toUpperCase(),
+        execution_threads: this.threads,
+        start: this.start_execution
+      }
+      axios.post(path, payload)
+        .then((response) => {
+          this.notification(response.data.message, 'success')
+          this.$router.push('/deployments')
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
+        .finally(() => {
+          this.loading = false
+        })
     },
     notification(message, color) {
       this.snackbarText = message

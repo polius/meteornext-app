@@ -16,6 +16,9 @@ import routes.deployments.settings.auxiliary
 import routes.deployments.settings.slack
 import routes.deployments.settings.s3
 import routes.deployments.settings.web
+import routes.deployments.deployments
+import routes.deployments.new.basic
+import routes.deployments.new.pro
 
 # configuration
 DEBUG = True
@@ -45,6 +48,9 @@ auxiliary = routes.deployments.settings.auxiliary.Auxiliary(credentials).bluepri
 slack = routes.deployments.settings.slack.Slack(credentials).blueprint()
 s3 = routes.deployments.settings.s3.S3(credentials).blueprint()
 web = routes.deployments.settings.web.Web(credentials).blueprint()
+deployments = routes.deployments.deployments.Deployments(credentials).blueprint()
+deployments_basic = routes.deployments.new.basic.Basic(credentials).blueprint()
+deployments_pro = routes.deployments.new.pro.Pro(credentials).blueprint()
 
 # instantiate all routes
 app.register_blueprint(login)
@@ -58,6 +64,9 @@ app.register_blueprint(auxiliary)
 app.register_blueprint(slack)
 app.register_blueprint(s3)
 app.register_blueprint(web)
+app.register_blueprint(deployments)
+app.register_blueprint(deployments_basic)
+app.register_blueprint(deployments_pro)
 
 # enable CORS
 CORS(app, resources={r'/*': {'origins': '*'}})

@@ -6,7 +6,7 @@ class S3:
     def __init__(self, credentials):
         # Init models
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
-        self._s3 = imp.load_source('s3', '{}/models/deployments/settings/s3.py'.format(credentials['path'])).S3(credentials)
+        self._s3 = imp.load_source('s3', '{}/models/deployments/s3.py'.format(credentials['path'])).S3(credentials)
 
     def blueprint(self):
         # Init blueprint
