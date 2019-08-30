@@ -100,20 +100,23 @@ CREATE TABLE `web` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `deployments` (
- `id` INT UNSIGNED AUTO_INCREMENT,
- `name` VARCHAR(191) NOT NULL,
- `user_id` INT UNSIGNED NOT NULL,
- `environment_id` INT UNSIGNED NOT NULL,
- `mode` ENUM('BASIC', 'PRO') NOT NULL,
- `method` ENUM('VALIDATE', 'TEST', 'DEPLOY') NOT NULL,
- `status` ENUM('CREATED', 'QUEUED', 'IN PROGRESS', 'SUCCESS', 'FAILED') NOT NULL DEFAULT 'CREATED',
- `started` DATETIME NULL,
- `ended` DATETIME NULL,
- `results` VARCHAR(191) NULL, 
- `logs` VARCHAR(191) NULL,
- PRIMARY KEY(id),
- FOREIGN KEY (user_id) REFERENCES users(id),
- FOREIGN KEY (environment_id) REFERENCES environments(id)
+  `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(191) NOT NULL,
+  `user_id` INT(10) UNSIGNED NOT NULL,
+  `environment_id` INT(10) UNSIGNED NOT NULL,
+  `mode` ENUM('BASIC','PRO') NOT NULL,
+  `method` ENUM('VALIDATE','TEST','DEPLOY') NOT NULL,
+  `status` ENUM('CREATED','IN PROGRESS','SUCCESS','FAILED') NOT NULL DEFAULT 'CREATED',
+  `started` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `ended` DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `results` VARCHAR(191) DEFAULT NULL,
+  `logs` VARCHAR(191) DEFAULT NULL,
+  `deleted` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `environment_id` (`environment_id`),
+  CONSTRAINT `deployments_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `deployments_ibfk_2` FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `deployments_basic` (

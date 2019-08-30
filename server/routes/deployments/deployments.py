@@ -54,6 +54,11 @@ class Deployments:
         else:
             self._deployments.put(user_id, data)
             return jsonify({'message': 'Deployment edited successfully'}), 200
+
+    def delete(self, user_id, data):
+        for deploy in data:
+            self._deployments.delete(user_id, data)
+        return jsonify({'message': 'Selected deployments deleted successfully'}), 200
     
     def remove(self, user_id):
         self._deployments.remove(user_id)

@@ -5,11 +5,14 @@
         <v-toolbar-title class="white--text">DEPLOYMENTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text @click='newDeploy()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 0" text @click='newDeploy()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFO</v-btn>
+          <v-btn v-if="selected.length == 1" text :href="this.selected[0]['results']"><v-icon small style="padding-right:10px">fas fa-meteor</v-icon>LOGS</v-btn>
+          <v-btn v-if="selected.length > 0" text @click="deleteDeploy()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" class="elevation-1" style="padding-top:5px;">
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
         <template v-slot:item.name="props">
           <v-edit-dialog :return-value.sync="props.item.name" lazy @open="open(props.item)" @save="save(props.item)"> 
             {{ props.item.name }}
@@ -42,6 +45,25 @@
       </v-data-table>
     </v-card>
 
+    <v-dialog v-model="dialog" persistent max-width="768px">
+      <v-card>
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">Delete Environments</v-toolbar-title>
+        </v-toolbar>
+        <v-card-text>
+          <v-container style="padding:0px 10px 0px 10px">
+            <v-layout wrap>
+              <v-flex xs12 style="padding-bottom:10px">
+                <div class="subtitle-1">Are you sure you want to delete the selected deployments?</div>
+              </v-flex>
+              <v-btn :loading="loading" color="success" @click="deleteDeploySubmit()">Confirm</v-btn>
+              <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:10px;">Cancel</v-btn>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
       {{ snackbarText }}
       <v-btn color="white" text @click="snackbar = false">Close</v-btn>
@@ -60,16 +82,20 @@ export default {
       { text: 'Mode', align: 'left', value: 'mode' },
       { text: 'Method', align: 'left', value: 'method' },
       { text: 'Status', align:'left', value: 'status' },
+      { text: 'Created', align: 'left', value: 'created' },
       { text: 'Started', align: 'left', value: 'started' },
-      { text: 'Ended', align: 'left', value: 'ended' },
-      { text: 'Actions', align: 'left', value: 'actions' }
+      { text: 'Ended', align: 'left', value: 'ended' }
     ],
     items: [],
+    selected: [],
     search: '',
     loading: true,
 
     // Inline Editing: Environment Name
     inline_editing: '',
+
+    // Dialog: Delete Environments
+    dialog: false,
 
     // Snackbar
     snackbar: false,
@@ -133,13 +159,45 @@ export default {
       else if (method == 'VALIDATE') return '#4caf50'
     },
     getStatusColor (status) {
-      if (status == 'FAILED') return '#f44336'
+      if (status == 'CREATED') return '#5c97bf'
+      else if (status == 'QUEUED') return '#52b3d9'
       else if (status == 'IN PROGRESS') return '#ff9800'
       else if (status == 'SUCCESS') return '#4caf50'
+      else if (status == 'FAILED') return '#f44336'
       else return '#fff'
     },
     newDeploy() {
       this.$router.push({name:'deployments.new'})
+    },
+    infoDeploy() {
+      this.$router.push({ name:'deployments.info', params: { deploymentID: this.selected[0]['id'] }})
+    },
+    deleteDeploy() {
+      this.dialog = true
+    },
+    deleteDeploySubmit() {
+      // Get Selected Items
+      var payload = []
+      for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
+      // Delete items to the DB
+      const path = this.$store.getters.url + '/deployments'
+      axios.delete(path, { data: payload })
+        .then((response) => {
+          this.notification(response.data.message, 'success')
+          // Reload Deployments Data
+          this.getDeployments()
+          this.selected = []
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
+        .finally(() => {
+          this.loading = false
+          this.dialog = false
+        })
     },
     notification(message, color) {
       this.snackbarText = message

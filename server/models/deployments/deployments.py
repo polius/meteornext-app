@@ -11,10 +11,11 @@ class Deployments:
             return self._mysql.execute("SELECT * FROM deployments ORDER BY id DESC")
         else:
             query = """
-                SELECT d.id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.started, d.ended, d.results, d.logs
+                SELECT d.id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended, d.results, d.logs
                 FROM deployments d
                 JOIN environments e ON e.id = d.environment_id
-                WHERE d.user_id = %s 
+                WHERE d.user_id = %s
+                AND d.deleted = 0 
                 ORDER BY d.id DESC
             """
             return self._mysql.execute(query, (user_id))        
@@ -51,8 +52,14 @@ class Deployments:
             """
             self._mysql.execute(query, (deployment['status'], deployment['ended'], deployment['results'], deployment['logs'], user_id, deployment['id']))
 
-    def delete(self, user_id, environment):
-        self._mysql.execute("DELETE FROM deployments WHERE id = %s AND user_id = %s", (deployment['id'], user_id))
+    def delete(self, user_id, deployment):
+        query = """
+            UPDATE deployments
+            SET deleted = 1
+            WHERE id = %s
+            AND user_id = %s 
+        """
+        self._mysql.execute(query, (deployment, user_id))
 
     def remove(self, user_id):
         self._mysql.execute("DELETE FROM deployments WHERE user_id = %s", (user_id))
