@@ -15,21 +15,20 @@ class Web:
         @web_blueprint.route('/deployments/web', methods=['GET','PUT'])
         @jwt_required
         def web_method():
-            # Check user privileges
-            is_admin = self._users.is_admin(get_jwt_identity())
-            if not is_admin:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
 
-            # Get User Group ID
-            group_id = self._users.get(get_jwt_identity())[0]['group_id']
+            # Check user privileges
+            if not user['admin'] or not user['deployments_edit']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
             web_json = request.get_json()
 
             if request.method == 'GET':
-                return self.get(group_id)
+                return self.get(user['group_id'])
             elif request.method == 'PUT':
-                return self.put(group_id, web_json)
+                return self.put(user['group_id'], web_json)
 
         return web_blueprint
 

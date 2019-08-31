@@ -15,10 +15,22 @@ class Groups:
             return self._mysql.execute("SELECT * FROM groups")
 
     def post(self, group):
-        self._mysql.execute("INSERT INTO groups (name, description) VALUES (%s, %s)", (group['name'], group['description']))
+        query = """
+            INSERT INTO groups (name, description, deployments_enable, deployments_edit) 
+            VALUES (%s, %s, %s, %s)
+        """
+        self._mysql.execute(query, (group['name'], group['description'], group['deployments_enable'], group['deployments_edit']))
 
     def put(self, group):
-        self._mysql.execute("UPDATE groups SET name = %s, description = %s WHERE id = %s", (group['name'], group['description'], group['id']))
+        query = """
+            UPDATE groups 
+            SET name = %s, 
+            description = %s,
+            deployments_enable = %s,
+            deployments_edit = %s
+            WHERE id = %s
+        """
+        self._mysql.execute(query, (group['name'], group['description'], group['deployments_enable'], group['deployments_edit'], group['id']))
 
     def delete(self, group):
         self._mysql.execute("DELETE FROM groups WHERE name = %s", (group))

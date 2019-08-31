@@ -7,7 +7,7 @@
 
       <!-- DEPLOYMENTS -->
       <v-divider class="mx-3" inset vertical></v-divider>
-      <router-link class="nav-link" to="/deployments">
+      <router-link v-if="deployments_enable" class="nav-link" to="/deployments">
         <v-btn color="success"><v-icon small style="padding-right:10px">fas fa-meteor</v-icon>Deployments</v-btn>
       </router-link>
       <!-- VALIDATION -->
@@ -40,7 +40,7 @@
       </router-link>
 
       <!-- ADMINISTRATION -->
-      <router-link title="Administration" class="nav-link" to="/admin">
+      <router-link v-if="admin" title="Administration" class="nav-link" to="/admin">
         <v-btn icon><v-icon>fas fa-ankh</v-icon></v-btn>
       </router-link>
 
@@ -100,7 +100,9 @@ export default {
     rightDrawer: false
   }),
   computed : {
-    isLoggedIn : function(){ return this.$store.getters.isLoggedIn }
+    isLoggedIn : function(){ return this.$store.getters.isLoggedIn },
+    admin : function(){ return this.$store.getters.admin },
+    deployments_enable : function(){ return this.$store.getters.deployments_enable },
   },
   methods: {
     logout() {

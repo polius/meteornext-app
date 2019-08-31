@@ -29,7 +29,9 @@ class Login:
                     'access_token': create_access_token(identity=user[0]['username']),
                     'refresh_token': create_refresh_token(identity=user[0]['username']),
                     'username': user[0]['username'],
-                    'admin': user[0]['admin']
+                    'admin': user[0]['admin'],
+                    'deployments_enable': user[0]['deployments_enable'],
+                    'deployments_edit': user[0]['deployments_edit']
                 }
                 return jsonify({'data': ret}), 200
 

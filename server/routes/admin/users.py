@@ -54,7 +54,7 @@ class Users:
 
         elif data['current_username'] != data['username'] and self._users.exist(data['username']):
             return jsonify({'message': 'This user currently exists'}), 400
-        elif data['password'] != data[0]['password']:
+        elif data['password'] != user[0]['password']:
             data['password'] = bcrypt.hashpw(data['password'].encode('utf8'), bcrypt.gensalt())
         self._users.put(data)
         return jsonify({'message': 'User edited successfully'}), 200

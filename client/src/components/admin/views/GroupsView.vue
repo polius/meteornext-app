@@ -35,8 +35,8 @@
                 <v-toolbar-title class="white--text">DEPLOYMENTS</v-toolbar-title>
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
-                <v-switch v-model="deployments.enable" label="Enable Deployments" style="margin-top:0px;"></v-switch>
-                <v-switch v-model="deployments.edit" label="Enable Editing Settings" style="margin-top:0px;"></v-switch>
+                <v-switch v-model="group.deployments_enable" label="Enable Deployments" style="margin-top:0px;"></v-switch>
+                <v-switch v-model="group.deployments_edit" label="Enable Editing Settings" style="margin-top:0px;"></v-switch>
               </v-card-text>
             </v-card>
 
@@ -339,14 +339,6 @@ export default {
     // | TABS |
     // +------+
     tabs: null,
-
-    // +-------------+
-    // | DEPLOYMENTS |
-    // +-------------+
-    deployments: {
-      enable: true,
-      edit: false
-    },
 
     // +--------------+
     // | ENVIRONMENTS |

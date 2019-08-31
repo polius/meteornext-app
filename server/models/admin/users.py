@@ -10,7 +10,13 @@ class Users:
         if username is None:
             return self._mysql.execute("SELECT u.id, u.username, u.email, u.password, u.group_id, g.name AS `group`, u.admin FROM users u JOIN groups g ON g.id = u.group_id")
         else:
-            return self._mysql.execute("SELECT u.id, u.username, u.email, u.password, u.group_id, g.name AS `group`, u.admin FROM users u JOIN groups g ON g.id = u.group_id WHERE username = %s", (username))
+            query = """
+                SELECT u.id, u.username, u.email, u.password, u.group_id, g.name AS `group`, u.admin, g.deployments_enable, g.deployments_edit
+                FROM users u 
+                JOIN groups g ON g.id = u.group_id 
+                WHERE u.username = %s
+            """
+            return self._mysql.execute(query, (username))
     
     def post(self, user):
         self._mysql.execute("INSERT INTO users (username, password, email, group_id, admin) SELECT %s, %s, %s, id, %s FROM groups WHERE name = %s", (user['username'], user['password'], user['email'], user['admin'], user['group']))

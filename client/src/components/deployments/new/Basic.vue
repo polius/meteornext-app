@@ -158,6 +158,7 @@ export default {
         .then((response) => {
           const data = response.data.data[0]
           this.name = data['name']
+          this.environment = data['environment']
           this.databases = data['databases']
           var queries = JSON.parse(data['queries'])
           for (var i in queries) this.query_items.push(queries[i])

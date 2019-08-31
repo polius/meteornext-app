@@ -1,5 +1,4 @@
 import imp
-import bcrypt
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -17,25 +16,24 @@ class Environments:
         @environments_blueprint.route('/deployments/environments', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
         def environments_method():
-            # Check user privileges
-            is_admin = self._users.is_admin(get_jwt_identity())
-            if not is_admin:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
 
-            # Get User Group ID
-            group_id = self._users.get(get_jwt_identity())[0]['group_id']
+            # Check user privileges
+            if not user['admin'] or not user['deployments_edit']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
             environment_json = request.get_json()
 
             if request.method == 'GET':
-                return self.get(group_id)
+                return self.get(user['group_id'])
             elif request.method == 'POST':
-                return self.post(group_id, environment_json)
+                return self.post(user['group_id'], environment_json)
             elif request.method == 'PUT':
-                return self.put(group_id, environment_json)
+                return self.put(user['group_id'], environment_json)
             elif request.method == 'DELETE':
-                return self.delete(group_id, environment_json)
+                return self.delete(user['group_id'], environment_json)
 
         return environments_blueprint
 

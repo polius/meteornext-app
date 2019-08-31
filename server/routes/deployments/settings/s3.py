@@ -15,21 +15,20 @@ class S3:
         @s3_blueprint.route('/deployments/s3', methods=['GET','PUT'])
         @jwt_required
         def s3_method():
-            # Check user privileges
-            is_admin = self._users.is_admin(get_jwt_identity())
-            if not is_admin:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
 
-            # Get User
-            group_id = self._users.get(get_jwt_identity())[0]['group_id']
+            # Check user privileges
+            if not user['admin'] or not user['deployments_edit']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
             s3_json = request.get_json()
 
             if request.method == 'GET':
-                return self.get(group_id)
+                return self.get(user['group_id'])
             elif request.method == 'PUT':
-                return self.put(group_id, s3_json)
+                return self.put(user['group_id'], s3_json)
 
         return s3_blueprint
 

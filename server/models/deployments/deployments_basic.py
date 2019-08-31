@@ -8,7 +8,7 @@ class Deployments_Basic:
 
     def get(self, user_id, deployment_id):
         query = """
-            SELECT d.id, d.name, e.name, b.databases, b.queries, d.method, b.execution, b.execution_threads
+            SELECT d.id, d.name, e.name AS 'environment', b.databases, b.queries, d.method, b.execution, b.execution_threads
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id AND d.user_id = %s
             JOIN environments e ON e.id = d.environment_id 

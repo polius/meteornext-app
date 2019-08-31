@@ -18,19 +18,18 @@ class Pro:
         @deployments_pro_blueprint.route('/deployments/pro', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
         def deployments_pro_method():
-            # Check user privileges
-            is_admin = self._users.is_admin(get_jwt_identity())
-            if not is_admin:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
 
-            # Get user ID
-            user_id = self._users.get(get_jwt_identity())[0]['id']
+            # Check user privileges
+            if not user['admin'] or not user['deployments_edit']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
             deployment_json = request.get_json()
 
             if request.method == 'POST':
-                return self.post(user_id, deployment_json)
+                return self.post(user['id'], deployment_json)
 
         @deployments_pro_blueprint.route('/deployments/pro/code', methods=['GET'])
         @jwt_required
