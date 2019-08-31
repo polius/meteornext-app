@@ -20,7 +20,7 @@ class Basic:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['admin'] or not user['deployments_edit']:
+            if not user['admin'] or not user['deployments_enable']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
