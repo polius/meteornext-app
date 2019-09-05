@@ -11,56 +11,71 @@ class Deployments:
             return self._mysql.execute("SELECT * FROM deployments ORDER BY id DESC")
         elif deployment_id is not None:
             query = """
-                SELECT d.id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended, d.results, d.logs
-                FROM deployments d
+                SELECT d.id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended
+                FROM
+                (
+                    SELECT d.id, d.name, db.environment_id, d.mode, db.method, db.status, db.created, db.started, db.ended
+                    FROM deployments_basic db
+                    JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s AND d.id = %s
+                    WHERE db.id IN (
+                        SELECT MAX(id)
+                        FROM deployments_basic
+                        GROUP BY deployment_id
+                    )
+                    UNION
+                    SELECT d.id, d.name, dp.environment_id, d.mode, dp.method, dp.status, dp.created, dp.started, dp.ended
+                    FROM deployments_pro dp
+                    JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s AND d.id = %s
+                    WHERE dp.id IN (
+                        SELECT MAX(id)
+                        FROM deployments_pro
+                        GROUP BY deployment_id
+                    )
+                    ORDER BY id DESC
+                ) d
                 JOIN environments e ON e.id = d.environment_id
-                WHERE d.user_id = %s
-                AND d.id = %s
-                ORDER BY d.id DESC
             """
-            return self._mysql.execute(query, (user_id, deployment_id))    
+            return self._mysql.execute(query, (user_id, deployment_id, user_id, deployment_id))    
         else:
             query = """
-                SELECT d.id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended, d.results, d.logs
-                FROM deployments d
+                SELECT d.id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended
+                FROM
+                (
+                    SELECT d.id, d.name, db.environment_id, d.mode, db.method, db.status, db.created, db.started, db.ended
+                    FROM deployments_basic db
+                    JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s
+                    WHERE db.id IN (
+                        SELECT MAX(id)
+                        FROM deployments_basic
+                        GROUP BY deployment_id
+                    )
+                    UNION
+                    SELECT d.id, d.name, dp.environment_id, d.mode, dp.method, dp.status, dp.created, dp.started, dp.ended
+                    FROM deployments_pro dp
+                    JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s
+                    WHERE dp.id IN (
+                        SELECT MAX(id)
+                        FROM deployments_pro
+                        GROUP BY deployment_id
+                    )
+                    ORDER BY id DESC
+                ) d
                 JOIN environments e ON e.id = d.environment_id
-                WHERE d.user_id = %s
-                AND d.deleted = 0 
-                ORDER BY d.id DESC
             """
-            return self._mysql.execute(query, (user_id))        
+            return self._mysql.execute(query, (user_id, user_id))        
 
     def post(self, user_id, deployment):
-        query = """
-            INSERT INTO deployments (name, user_id, environment_id, mode, method, status) 
-            SELECT %s, %s, e.id, %s, %s, %s
-            FROM environments e
-            JOIN groups g ON g.id = e.group_id
-            JOIN users u ON u.group_id = g.id AND u.id = %s
-            WHERE e.name = %s
-        """
-        return self._mysql.execute(query, (deployment['name'], user_id, deployment['mode'], deployment['method'], deployment['status'], user_id, deployment['environment']))
+        query = "INSERT INTO deployments (name, user_id, mode) VALUES(%s, %s, %s)"
+        return self._mysql.execute(query, (deployment['name'], user_id, deployment['mode']))
 
     def put(self, user_id, deployment):
-        if 'name' in deployment:
-            query = """
-                UPDATE deployments
-                SET name = %s
-                WHERE user_id = %s
-                AND id = %s
-            """
-            self._mysql.execute(query, (deployment['name'], user_id, deployment['id']))
-        else:
-            query = """
-                UPDATE deployments
-                status = %s, 
-                ended = %s,
-                results = %s,
-                logs = %s
-                WHERE user_id = %s
-                AND id = %s
-            """
-            self._mysql.execute(query, (deployment['status'], deployment['ended'], deployment['results'], deployment['logs'], user_id, deployment['id']))
+        query = """
+            UPDATE deployments
+            SET name = %s
+            WHERE user_id = %s
+            AND id = %s
+        """
+        self._mysql.execute(query, (deployment['name'], user_id, deployment['id']))
 
     def delete(self, user_id, deployment):
         query = """

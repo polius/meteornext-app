@@ -7,9 +7,14 @@
       <v-container fluid grid-list-lg>
         <v-layout row wrap>
           <v-flex xs12>
-            <v-text-field :loading="loading" :disabled="loading" v-model="webhook" label="Webhook URL" required></v-text-field>
-            <v-switch :disabled="loading" v-model="enabled" label="Enable Notifications" style="margin-top:0px;"></v-switch>
-            <v-btn :loading="loading" color="primary" style="margin-left:0px;" @click="saveSlack()">Save</v-btn>
+            <v-form style="padding:0px 10px 10px 10px;">
+              <v-text-field :loading="loading" :disabled="loading" v-model="webhook" label="Webhook URL" required></v-text-field>
+              <v-switch :disabled="loading" v-model="enabled" label="Enable Notifications" style="margin-top:0px;"></v-switch>
+              <v-divider style="margin-top:-5px;"></v-divider>
+              <div style="margin-top:20px;">
+                <v-btn :loading="loading" color="primary" style="margin-left:0px;" @click="saveSlack()">SAVE</v-btn>
+              </div>
+            </v-form>
           </v-flex>
         </v-layout>
       </v-container>

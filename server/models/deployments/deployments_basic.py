@@ -8,10 +8,10 @@ class Deployments_Basic:
 
     def get(self, user_id, deployment_id):
         query = """
-            SELECT d.id, d.name, e.name AS 'environment', b.databases, b.queries, d.method, b.execution, b.execution_threads
+            SELECT d.id, d.name, e.name AS 'environment', b.databases, b.queries, b.method, b.execution, b.execution_threads, b.start_execution
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id AND d.user_id = %s
-            JOIN environments e ON e.id = d.environment_id 
+            JOIN environments e ON e.id = b.environment_id 
             WHERE b.deployment_id = %s
         """
         return self._mysql.execute(query, (user_id, deployment_id))
@@ -19,16 +19,20 @@ class Deployments_Basic:
     def post(self, deployment):
         if deployment['execution'] == 'SEQUENTIAL':
             query = """
-                INSERT INTO deployments_basic (deployment_id, `databases`, queries, execution) 
-                VALUES(%s, %s, %s, %s)
+                INSERT INTO deployments_basic (deployment_id, environment_id, `databases`, queries, method, execution, start_execution)
+                SELECT %s, e.id, %s, %s, %s, %s, %s
+                FROM environments e
+                WHERE e.name = %s
             """
-            self._mysql.execute(query, (deployment['id'], deployment['databases'], deployment['queries'], deployment['execution']))
+            self._mysql.execute(query, (deployment['id'], deployment['databases'], deployment['queries'], deployment['method'], deployment['execution'], deployment['start_execution'], deployment['environment']))
         else:
             query = """
-                INSERT INTO deployments_basic (deployment_id, `databases`, queries, execution, execution_threads) 
-                VALUES(%s, %s, %s, %s, %s)
+                INSERT INTO deployments_basic (deployment_id, environment_id, `databases`, queries, method, execution, execution_threads, start_execution)
+                SELECT %s, e.id, %s, %s, %s, %s, %s, %s
+                FROM environments e
+                WHERE e.name = %s
             """
-            self._mysql.execute(query, (deployment['id'], deployment['databases'], deployment['queries'], deployment['execution'], deployment['execution_threads']))
+            self._mysql.execute(query, (deployment['id'], deployment['databases'], deployment['queries'], deployment['method'], deployment['execution'], deployment['execution_threads'], deployment['start_execution'], deployment['environment']))
 
     def delete(self, user_id, environment):
         query = """

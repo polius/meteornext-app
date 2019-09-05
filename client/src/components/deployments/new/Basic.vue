@@ -3,6 +3,7 @@
     <v-container fluid grid-list-lg>
       <v-layout row wrap>
         <v-flex xs12>
+          <div class="title font-weight-regular" style="margin-left:10px; margin-top:5px;">BASIC</div>
           <v-form ref="form" style="padding:10px;">
             <v-text-field :disabled="disabled" v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
             <v-select :disabled="disabled" :loading="loading" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
@@ -11,7 +12,7 @@
             <v-card style="margin-bottom:20px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
                 <v-toolbar-title class="white--text">Queries</v-toolbar-title>
-                <v-divider class="mx-3" inset vertical></v-divider>
+                <v-divider v-if="!disabled" class="mx-3" inset vertical></v-divider>
                 <v-toolbar-items v-if="!disabled" class="hidden-sm-and-down" style="padding-left:0px;">
                   <v-btn text @click='newQuery()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
                   <v-btn v-if="query_selected.length == 1" text @click="editQuery()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
@@ -19,7 +20,7 @@
                 </v-toolbar-items>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table :disabled="disabled" v-model="query_selected" :headers="query_headers" :items="query_items" item-key="query" hide-default-header hide-default-footer show-select class="elevation-1">
+              <v-data-table :disabled="disabled" v-model="query_selected" :headers="query_headers" :items="query_items" item-key="query" hide-default-header hide-default-footer :show-select="!disabled" class="elevation-1">
               </v-data-table>
             </v-card>
 
@@ -280,7 +281,7 @@ export default {
         method: this.method.toUpperCase(),
         execution: this.execution.toUpperCase(),
         execution_threads: this.threads,
-        start: this.start_execution
+        start_execution: this.start_execution
       }
       axios.post(path, payload)
         .then((response) => {

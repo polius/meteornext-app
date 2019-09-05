@@ -106,51 +106,68 @@ CREATE TABLE `deployments` (
   `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(191) NOT NULL,
   `user_id` INT(10) UNSIGNED NOT NULL,
-  `environment_id` INT(10) UNSIGNED NOT NULL,
   `mode` ENUM('BASIC','PRO') NOT NULL,
-  `method` ENUM('VALIDATE','TEST','DEPLOY') NOT NULL,
-  `status` ENUM('CREATED','QUEUED','IN PROGRESS','SUCCESS','FAILED','INTERRUPTED') NOT NULL DEFAULT 'CREATED',
-  `started` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `ended` DATETIME DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-  `results` VARCHAR(191) DEFAULT NULL,
-  `logs` VARCHAR(191) DEFAULT NULL,
   `deleted` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
-  KEY `environment_id` (`environment_id`),
-  CONSTRAINT `deployments_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `deployments_ibfk_2` FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `deployments_basic` (
+ `id` INT UNSIGNED AUTO_INCREMENT,
  `deployment_id` INT UNSIGNED,
+ `environment_id` INT(10) UNSIGNED NOT NULL,
  `databases` TEXT NOT NULL,
  `queries` TEXT NOT NULL,
+ `method` ENUM('VALIDATE','TEST','DEPLOY') NOT NULL,
  `execution` ENUM('SEQUENTIAL', 'PARALLEL') NOT NULL,
- `execution_value` TINYINT UNSIGNED  NULL,
-  PRIMARY KEY(deployment_id),
-  FOREIGN KEY(deployment_id) REFERENCES deployments(id)
+ `execution_threads` TINYINT UNSIGNED NULL,
+ `start_execution` TINYINT(1) NOT NULL,
+ `status` ENUM('CREATED','QUEUED','IN PROGRESS','SUCCESS','FAILED','INTERRUPTED') NOT NULL DEFAULT 'CREATED',
+ `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ `started` DATETIME NULL,
+ `ended` DATETIME NULL,
+ `results` VARCHAR(191) DEFAULT NULL,
+ `logs` VARCHAR(191) DEFAULT NULL,
+  PRIMARY KEY(id),
+  KEY `deployment_id` (`deployment_id`),
+  FOREIGN KEY(deployment_id) REFERENCES deployments(id),
+  FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `deployments_pro` (
+ `id` INT UNSIGNED AUTO_INCREMENT,
  `deployment_id` INT UNSIGNED,
+ `environment_id` INT(10) UNSIGNED NOT NULL,
  `code` MEDIUMTEXT NOT NULL,
+ `method` ENUM('VALIDATE','TEST','DEPLOY') NOT NULL,
  `execution` ENUM('SEQUENTIAL', 'PARALLEL') NOT NULL,
- `execution_value` TINYINT UNSIGNED  NULL,
-  PRIMARY KEY(deployment_id),
-  FOREIGN KEY(deployment_id) REFERENCES deployments(id)
+ `execution_threads` TINYINT UNSIGNED NULL,
+ `start_execution` TINYINT(1) NOT NULL,
+ `status` ENUM('CREATED','QUEUED','IN PROGRESS','SUCCESS','FAILED','INTERRUPTED') NOT NULL DEFAULT 'CREATED',
+ `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ `started` DATETIME NULL,
+ `ended` DATETIME NULL,
+ `results` VARCHAR(191) DEFAULT NULL,
+ `logs` VARCHAR(191) DEFAULT NULL,
+  PRIMARY KEY(id),
+  KEY `deployment_id` (`deployment_id`),
+  FOREIGN KEY(deployment_id) REFERENCES deployments(id),
+  FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE `deployments_progress` (
+CREATE TABLE `deployments_basic_progress` (
  `deployment_id` INT UNSIGNED,
  `progress` TEXT NOT NULL,
+ `error` TEXT NULL,
  PRIMARY KEY(deployment_id),
- FOREIGN KEY(deployment_id) REFERENCES deployments(id)
+ FOREIGN KEY(deployment_id) REFERENCES deployments_basic(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE `deployments_failed` (
+CREATE TABLE `deployments_pro_progress` (
  `deployment_id` INT UNSIGNED,
- `error` TEXT NOT NULL,
+ `progress` TEXT NOT NULL,
+ `error` TEXT NULL,
  PRIMARY KEY(deployment_id),
- FOREIGN KEY(deployment_id) REFERENCES deployments(id)
+ FOREIGN KEY(deployment_id) REFERENCES deployments_pro(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

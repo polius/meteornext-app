@@ -7,8 +7,13 @@
       <v-container fluid grid-list-lg>
         <v-layout row wrap>
           <v-flex xs12>
-            <v-text-field :loading="loading" :disabled="loading" v-model="url" label="Public Web URL" required></v-text-field>
-            <v-btn :loading="loading" color="primary" @click="saveWeb()" style="margin-left:0px;">Save</v-btn>    
+            <v-form style="padding:0px 10px 10px 10px;">
+              <v-text-field :loading="loading" :disabled="loading" v-model="url" label="Public Web URL" required></v-text-field>
+              <v-divider></v-divider>
+              <div style="margin-top:20px;">
+                <v-btn :loading="loading" color="primary" @click="saveWeb()" style="margin-left:0px;">SAVE</v-btn>   
+              </div>
+            </v-form>
           </v-flex>
         </v-layout>
       </v-container>

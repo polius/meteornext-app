@@ -3,6 +3,7 @@
     <v-container fluid grid-list-lg>
       <v-layout row wrap>
         <v-flex xs12>
+          <div class="title font-weight-regular" style="margin-left:10px; margin-top:5px;">PRO</div>
           <v-form ref="form" style="padding:10px;">
             <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
             <v-select :loading="loading_env" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
@@ -196,7 +197,7 @@ export default {
         method: this.method.toUpperCase(),
         execution: this.execution.toUpperCase(),
         execution_threads: this.threads,
-        start: this.start_execution
+        start_execution: this.start_execution
       }
       axios.post(path, payload)
         .then((response) => {

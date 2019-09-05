@@ -4,10 +4,24 @@
       <v-toolbar flat color="primary">
         <v-toolbar-title class="white--text">PROGRESS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <v-toolbar-title class="white--text">Release 3.35.0</v-toolbar-title>
-        <!-- <v-btn :disabled="stopExecution" text style="margin-left:30px;" @click="stop()"><v-icon style="padding-right:10px">fas fa-stop-circle</v-icon>STOP EXECUTION</v-btn>
-        <v-progress-circular v-show="stopExecution" :size="25" indeterminate color="white"></v-progress-circular> -->
-        <v-chip label color="success" style="margin-left:30px;">Execution Finished Successfully</v-chip>
+
+        <v-toolbar-items class="hidden-sm-and-down">
+          <v-btn text title="Show Parameters"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
+          <v-btn text title="Select Execution"><v-icon small style="padding-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
+          <v-btn text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
+        </v-toolbar-items>
+        <v-divider class="mx-3" inset vertical></v-divider>
+        
+        <div class="subtitle-1" style="margin-left:5px;">Stopping the execution...</div>
+        <v-progress-circular :size="22" indeterminate color="white" width="2" style="margin-left:15px;"></v-progress-circular>
+
+        <v-chip label color="success" style="margin-left:5px;">Execution Finished Successfully</v-chip>
+
+        <v-toolbar-items class="hidden-sm-and-down">
+          <v-btn text style="margin-left:15px;" title="Results"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
+          <v-btn text title="Logs"><v-icon small style="padding-right:10px;">fas fa-scroll</v-icon>LOGS</v-btn>
+        </v-toolbar-items>
+
         <v-spacer></v-spacer>
         <div class="subheading font-weight-regular" style="padding-right:20px;">Updated on <b>2019-07-25 12:10:08</b></div>
         <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
@@ -18,22 +32,24 @@
       <v-card-text>
         <!-- <p>DeploymentID {{ deploymentID }}</p> -->
 
-        <!-- STATUS -->
+        <!-- INFORMATION -->
         <v-card>
           <v-data-table :headers="status_headers" :items="status_data" hide-default-footer class="elevation-1">
             <template v-slot:item="props">
               <tr>
                 <td>{{ props.item.name }}</td>
                 <td>{{ props.item.environment }}</td>
-                <td class="error--text"><b>{{ props.item.mode }}</b></td>
+                <td>{{ props.item.mode }}</td>
+                <td class="error--text"><b>{{ props.item.method }}</b></td>
+                <td>{{ props.item.created }}</td>
                 <td>{{ props.item.started }}</td>
                 <td>{{ props.item.ended }}</td>
-                <td>{{ props.item.time }}</td>
-                <td>
+                <td>{{ props.item.overall }}</td>
+                <!-- <td>
                   <a :href="props.item.results" target="_blank">
                     <v-btn icon small @click="results(props.item)"><v-icon small>fas fa-meteor</v-icon></v-btn>
                   </a>
-                </td>
+                </td> -->
               </tr>
             </template>
           </v-data-table>
@@ -139,25 +155,28 @@
   export default  {
     data: () => ({
       stopExecution: false,
+      databases: "db1, db2, db3",
       status_headers: [
         { text: 'Name', align: 'left', value: 'name', sortable: false },
         { text: 'Environment', value: 'environment', sortable: false },
         { text: 'Mode', align: 'left', value: 'mode', sortable: false },
+        { text: 'Method', align: 'left', value: 'method', sortable: false },
+        { text: 'Created', align: 'left', value: 'created', sortable: false },
         { text: 'Started', align: 'left', value: 'started', sortable: false },
         { text: 'Ended', align: 'left', value: 'ended', sortable: false },
-        { text: 'Overall Time', value: 'time', sortable: false },
-        { text: 'Results', value: 'results', sortable: false }
+        { text: 'Overall', align: 'left', value: 'overall', sortable: false }
       ],
       status_data: [
         {
           id: 1,
           name: 'Release 3.33.0',
           environment: 'Production',
-          mode: 'DEPLOYMENT',
+          mode: "BASIC",
+          method: 'DEPLOYMENT',
+          created: '2019-07-07 07:00:00',
           started: '2019-07-07 08:00:00',
           ended: '2019-07-07 08:12:15',
-          time: '12m 15s',
-          results: 'https://dba.inbenta.me/meteor/?uri=24a5bd97-4fae-4868-b960-2b30b3b184f4'
+          overall: '00:12:10'
         }
       ],
       validation_headers: [
@@ -250,6 +269,10 @@
         this.snackbarText = message
         this.snackbarColor = color 
         this.snackbar = true
+      },
+      getModeColor (mode) {
+        if (mode == 'BASIC') return '#67809f'
+        else if (mode == 'PRO') return '#22313f'
       },
       index (data) {
         return data.map((item, index) => ({

@@ -23,8 +23,8 @@
         <v-card-text>
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
-              <v-flex xs12 v-if="mode!='delete'">
-                <v-form ref="form" v-model="dialog_valid">
+              <v-flex xs12>
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'">
                   <!-- METADATA -->
                   <div class="title font-weight-regular">Metadata</div>
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
@@ -37,12 +37,13 @@
                   <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" required style="padding-top:0px;"></v-text-field>
                 </v-form>
+                <div style="padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected servers?</div>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn :loading="loading" color="success" @click="submitServer()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:10px">CANCEL</v-btn>
+                </div>
               </v-flex>
-              <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">
-                <div class="subtitle-1">Are you sure you want to delete the selected servers?</div>
-              </v-flex>
-              <v-btn :loading="loading" color="success" @click="submitServer()">Confirm</v-btn>
-              <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>

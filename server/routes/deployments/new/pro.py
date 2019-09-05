@@ -51,7 +51,6 @@ class Pro:
             if not str(data['execution_threads']).isdigit() or int(data['execution_threads']) < 2 or int(data['execution_threads']) > 10:
                 return jsonify({'message': "The 'Threads' field should be an integer between 2-10"}), 400
 
-        data['status'] = 'QUEUED' if data['start'] else 'CREATED'
         data['id'] = self._deployments.post(user_id, data)
         self._deployments_pro.post(data)
         return jsonify({'message': 'Deployment created successfully'}), 200
