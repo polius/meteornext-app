@@ -127,6 +127,8 @@ CREATE TABLE `deployments_basic` (
  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
  `started` DATETIME NULL,
  `ended` DATETIME NULL,
+ `progress` TEXT NULL,
+ `error` TEXT NULL,
  `results` VARCHAR(191) DEFAULT NULL,
  `logs` VARCHAR(191) DEFAULT NULL,
   PRIMARY KEY(id),
@@ -148,26 +150,12 @@ CREATE TABLE `deployments_pro` (
  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
  `started` DATETIME NULL,
  `ended` DATETIME NULL,
+ `progress` TEXT NULL,
+ `error` TEXT NULL,
  `results` VARCHAR(191) DEFAULT NULL,
  `logs` VARCHAR(191) DEFAULT NULL,
   PRIMARY KEY(id),
   KEY `deployment_id` (`deployment_id`),
   FOREIGN KEY(deployment_id) REFERENCES deployments(id),
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
-
-CREATE TABLE `deployments_basic_progress` (
- `deployment_id` INT UNSIGNED,
- `progress` TEXT NOT NULL,
- `error` TEXT NULL,
- PRIMARY KEY(deployment_id),
- FOREIGN KEY(deployment_id) REFERENCES deployments_basic(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
-
-CREATE TABLE `deployments_pro_progress` (
- `deployment_id` INT UNSIGNED,
- `progress` TEXT NOT NULL,
- `error` TEXT NULL,
- PRIMARY KEY(deployment_id),
- FOREIGN KEY(deployment_id) REFERENCES deployments_pro(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

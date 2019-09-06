@@ -58,7 +58,7 @@ class Deployments:
                         FROM deployments_pro
                         GROUP BY deployment_id
                     )
-                    ORDER BY id DESC
+                    ORDER BY created DESC
                 ) d
                 JOIN environments e ON e.id = d.environment_id
             """

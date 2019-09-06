@@ -5,28 +5,28 @@
         <v-flex xs12>
           <div class="title font-weight-regular" style="margin-left:10px; margin-top:5px;">BASIC</div>
           <v-form ref="form" style="padding:10px;">
-            <v-text-field :disabled="disabled" v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-            <v-select :disabled="disabled" :loading="loading" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
-            <v-text-field :disabled="disabled" v-model="databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+            <v-text-field :disabled="id !== null" v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+            <v-select :loading="loading" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+            <v-text-field v-model="databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
 
             <v-card style="margin-bottom:20px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
                 <v-toolbar-title class="white--text">Queries</v-toolbar-title>
-                <v-divider v-if="!disabled" class="mx-3" inset vertical></v-divider>
-                <v-toolbar-items v-if="!disabled" class="hidden-sm-and-down" style="padding-left:0px;">
+                <v-divider class="mx-3" inset vertical></v-divider>
+                <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
                   <v-btn text @click='newQuery()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
                   <v-btn v-if="query_selected.length == 1" text @click="editQuery()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
                   <v-btn v-if="query_selected.length > 0" text @click='deleteQuery()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                 </v-toolbar-items>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table :disabled="disabled" v-model="query_selected" :headers="query_headers" :items="query_items" item-key="query" hide-default-header hide-default-footer :show-select="!disabled" class="elevation-1">
+              <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="query" hide-default-header hide-default-footer show-select class="elevation-1">
               </v-data-table>
             </v-card>
 
             <!-- PARAMETERS -->
             <div class="subtitle-1 font-weight-regular">METHOD</div>
-            <v-radio-group :disabled="disabled" v-model="method" style="margin-top:10px;">
+            <v-radio-group v-model="method" style="margin-top:10px;">
               <v-radio value="validate" color="success">
                 <template v-slot:label>
                   <div class="success--text">VALIDATE</div>
@@ -45,7 +45,7 @@
             </v-radio-group>
 
             <div class="subtitle-1 font-weight-regular" style="margin-top:-5px;">EXECUTION</div>
-            <v-radio-group :disabled="disabled" v-model="execution" style="margin-top:10px;">
+            <v-radio-group v-model="execution" style="margin-top:10px;">
               <v-radio color="primary" value="sequential">
                 <template v-slot:label>
                   <div>Sequential</div>
@@ -58,13 +58,13 @@
               </v-radio>
             </v-radio-group>
 
-            <v-text-field :disabled="disabled" v-if="execution=='parallel'" v-model="threads" label="Threads" :rules="[v => !!v || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
-            <v-checkbox v-if="!disabled" v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:-10px; margin-bottom:20px;"></v-checkbox>
+            <v-text-field v-if="execution=='parallel'" v-model="threads" label="Threads" :rules="[v => !!v || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+            <v-checkbox v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:-10px; margin-bottom:20px;"></v-checkbox>
 
-            <v-divider v-if="!disabled"></v-divider>
+            <v-divider></v-divider>
 
-            <div v-if="!disabled" style="margin-top:20px;">
-              <v-btn :loading="loading" color="success" @click="deploy()">CREATE DEPLOY</v-btn>
+            <div style="margin-top:20px;">
+              <v-btn :loading="loading" color="success" @click="submitDeploy()">CREATE DEPLOY</v-btn>
               <router-link to="/deployments"><v-btn :disabled="loading" color="error" style="margin-left:10px;">CANCEL</v-btn></router-link>
             </div>
           </v-form>
@@ -109,6 +109,7 @@ import axios from 'axios'
 export default {
   data() {
     return {
+      id: null,
       name: '',
       databases: '',
 
@@ -125,7 +126,7 @@ export default {
       method: 'validate',
       execution: 'sequential',
       threads: '10',
-      start_execution: true,
+      start_execution: false,
 
       // Query Dialog
       queryDialog: false,
@@ -133,9 +134,6 @@ export default {
 
       // Loading Fields
       loading: true,
-
-      // Disabled Fields
-      disabled: false,
       
       // Snackbar
       snackbar: false,
@@ -147,17 +145,19 @@ export default {
   props: ['deploymentID'],
   created() {
     this.getEnvironments()
-    if (this.$router.currentRoute.name == 'deployments.info') this.getDeployment()
+    if (this.$router.currentRoute.name == 'deployments.edit') this.getDeployment()
   },
   methods: {
     getDeployment() {
-      // Disable Components
-      this.disabled = true
+      // Enable Loading
+      this.loading = true
+
       // Get Deployment Data
       const path = this.$store.getters.url + '/deployments/basic'
       axios.get(path, { params: { deploymentID: this.deploymentID } })
         .then((response) => {
           const data = response.data.data[0]
+          this.id = data['id']
           this.name = data['name']
           this.environment = data['environment']
           this.databases = data['databases']
@@ -166,6 +166,10 @@ export default {
           this.method = data['method'].toLowerCase()
           this.execution = data['execution'].toLowerCase()
           this.threads = data['execution_threads']
+          this.start_execution = data['start_execution']
+
+          // Disable Loading
+          this.loading = false
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -259,7 +263,7 @@ export default {
       this.notification('Selected queries removed successfully', 'success')
       this.queryDialog = false
     },
-    deploy() {
+    submitDeploy() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please fill the required fields', 'error')
@@ -270,9 +274,10 @@ export default {
         return
       }
       this.loading = true
-      // Add deployment to the DB
+      // Build parameters
       const path = this.$store.getters.url + '/deployments/basic'
       const payload = {
+        id: this.id,
         name: this.name,
         environment: this.environment,
         databases: this.databases,
@@ -283,7 +288,29 @@ export default {
         execution_threads: this.threads,
         start_execution: this.start_execution
       }
+      if (this.id === null) this.newDeploySubmit(path, payload)
+      else this.editDeploySubmit(path, payload)
+    },
+    newDeploySubmit(path, payload) {
+      // Add deployment to the DB
       axios.post(path, payload)
+        .then((response) => {
+          this.notification(response.data.message, 'success')
+          this.$router.push('/deployments')
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    },
+    editDeploySubmit(path, payload) {
+      // Add deployment to the DB
+      axios.put(path, payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           this.$router.push('/deployments')

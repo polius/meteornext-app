@@ -40,21 +40,21 @@ let router = new VueRouter({
         {
           path: 'new',
           name: 'deployments.new',
-          component: () => import('../components/deployments/new/Navigation'),
+          component: () => import('../components/deployments/views/Navigation'),
           meta: { requiresAuth: true }
         },
         {
-          path: 'info',
-          name: 'deployments.info',
+          path: 'edit',
+          name: 'deployments.edit',
           props: true,
-          component: () => import('../components/deployments/new/Navigation'),
+          component: () => import('../components/deployments/views/Navigation'),
           meta: { requiresAuth: true }
         },
         {
-          path: 'progress',
-          name: 'deployments.progress',
+          path: 'information',
+          name: 'deployments.information',
           props: true,
-          component: () => import('../components/deployments/Progress'),
+          component: () => import('../components/deployments/Information'),
           meta: { requiresAuth: true }
         },
         {

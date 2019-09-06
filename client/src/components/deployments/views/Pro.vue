@@ -5,7 +5,7 @@
         <v-flex xs12>
           <div class="title font-weight-regular" style="margin-left:10px; margin-top:5px;">PRO</div>
           <v-form ref="form" style="padding:10px;">
-            <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+            <v-text-field :disabled="id !== null" v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
             <v-select :loading="loading_env" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
 
             <!-- CODE -->
@@ -51,8 +51,8 @@
             <v-divider></v-divider>
 
             <div style="margin-top:20px;">
-              <v-btn :loading="loading_env && loading_code" color="success" @click="deploy()">CREATE DEPLOY</v-btn>
-              <router-link to="/deployments"><v-btn :disabled="loading_env && loading_code" color="error" style="margin-left:10px;">CANCEL</v-btn></router-link>
+              <v-btn :loading="loading_env || loading_code" color="success" @click="submitDeploy()">CREATE DEPLOY</v-btn>
+              <router-link to="/deployments"><v-btn :disabled="loading_env || loading_code" color="error" style="margin-left:10px;">CANCEL</v-btn></router-link>
             </div>
           </v-form>
         </v-flex>
@@ -69,6 +69,7 @@
 <style>
 .CodeMirror {
   min-height:800px;
+  font-size: 14px;
 }
 </style>
 
@@ -101,6 +102,7 @@ export default {
   data() {
     return {
       // Metadata
+      id: null,
       name: '',
 
       // Execution
@@ -126,7 +128,7 @@ export default {
       method: 'validate',
       execution: 'sequential',
       threads: '10',
-      start_execution: true,
+      start_execution: false,
 
       // Query Dialog
       queryDialog: false,
@@ -146,11 +148,40 @@ export default {
   components: {
     codemirror
   },
+  props: ['deploymentID'],
   created() {
     this.getEnvironments()
     this.getCode()
+    if (this.$router.currentRoute.name == 'deployments.edit') this.getDeployment()
   },
   methods: {
+    getDeployment() {
+      // Enable Loading
+      this.loading_env = true
+
+      // Get Deployment Data
+      const path = this.$store.getters.url + '/deployments/pro'
+      axios.get(path, { params: { deploymentID: this.deploymentID } })
+        .then((response) => {
+          const data = response.data.data[0]
+          this.id = data['id']
+          this.name = data['name']
+          this.environment = data['environment']
+          this.code = data['code']
+          this.method = data['method'].toLowerCase()
+          this.execution = data['execution'].toLowerCase()
+          this.threads = data['execution_threads']
+          this.start_execution = data['start_execution']
+
+          // Disable Loading
+          this.loading_env = false
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // eslint-disable-next-line
+          console.error(error)
+        })
+    },
     getEnvironments() {
       const path = this.$store.getters.url + '/deployments/environments'
       axios.get(path)
@@ -180,16 +211,17 @@ export default {
           console.error(error)
         })
     },
-    deploy() {
+    submitDeploy() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please fill the required fields', 'error')
         return
       }
       this.loading_code = true
-      // Add deployment to the DB
+      // Build parameters
       const path = this.$store.getters.url + '/deployments/pro'
       const payload = {
+        id: this.id,
         name: this.name,
         environment: this.environment,
         code: this.code,
@@ -199,7 +231,29 @@ export default {
         execution_threads: this.threads,
         start_execution: this.start_execution
       }
+      if (this.id === null) this.newDeploySubmit(path, payload)
+      else this.editDeploySubmit(path, payload)
+    },
+    newDeploySubmit(path, payload) {
+      // Add deployment to the DB
       axios.post(path, payload)
+        .then((response) => {
+          this.notification(response.data.message, 'success')
+          this.$router.push('/deployments')
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
+        .finally(() => {
+          this.loading_code = false
+        })
+    },
+    editDeploySubmit(path, payload) {
+      // Add deployment to the DB
+      axios.put(path, payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           this.$router.push('/deployments')

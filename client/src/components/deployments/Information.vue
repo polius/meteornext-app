@@ -2,20 +2,23 @@
   <div>
     <v-card>
       <v-toolbar flat color="primary">
-        <v-toolbar-title class="white--text">PROGRESS</v-toolbar-title>
+        <v-toolbar-title class="white--text">INFORMATION</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
 
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text title="Show Parameters"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
           <v-btn text title="Select Execution"><v-icon small style="padding-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
+          <v-btn text title="Start Execution"><v-icon small style="padding-right:10px">fas fa-rocket</v-icon>START</v-btn>
           <v-btn text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         
-        <div class="subtitle-1" style="margin-left:5px;">Stopping the execution...</div>
-        <v-progress-circular :size="22" indeterminate color="white" width="2" style="margin-left:15px;"></v-progress-circular>
+        <!-- <div class="subtitle-1" style="margin-left:5px;">Stopping the execution...</div> -->
+        <!-- <v-progress-circular :size="22" indeterminate color="white" width="2" style="margin-left:15px;"></v-progress-circular> -->
 
         <v-chip label color="success" style="margin-left:5px;">Execution Finished Successfully</v-chip>
+        <!-- <v-chip label color="warning" style="margin-left:5px;">Execution Finished with errors</v-chip> -->
+        <!-- <v-chip label color="error" style="margin-left:5px;">Execution Failed</v-chip> -->
 
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text style="margin-left:15px;" title="Results"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
@@ -27,7 +30,7 @@
         <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
       </v-toolbar>
 
-      <v-progress-linear :indeterminate="false" height="5" color="info" style="margin:0px;" value="100"></v-progress-linear>
+      <!-- <v-progress-linear :indeterminate="true" height="5" color="info" style="margin:0px;" value="100"></v-progress-linear> -->
 
       <v-card-text>
         <!-- <p>DeploymentID {{ deploymentID }}</p> -->

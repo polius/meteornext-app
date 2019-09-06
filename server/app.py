@@ -17,8 +17,8 @@ import routes.deployments.settings.slack
 import routes.deployments.settings.s3
 import routes.deployments.settings.web
 import routes.deployments.deployments
-import routes.deployments.new.basic
-import routes.deployments.new.pro
+import routes.deployments.views.basic
+import routes.deployments.views.pro
 
 # configuration
 DEBUG = True
@@ -49,8 +49,8 @@ slack = routes.deployments.settings.slack.Slack(credentials).blueprint()
 s3 = routes.deployments.settings.s3.S3(credentials).blueprint()
 web = routes.deployments.settings.web.Web(credentials).blueprint()
 deployments = routes.deployments.deployments.Deployments(credentials).blueprint()
-deployments_basic = routes.deployments.new.basic.Basic(credentials).blueprint()
-deployments_pro = routes.deployments.new.pro.Pro(credentials).blueprint()
+deployments_basic = routes.deployments.views.basic.Basic(credentials).blueprint()
+deployments_pro = routes.deployments.views.pro.Pro(credentials).blueprint()
 
 # instantiate all routes
 app.register_blueprint(login)
