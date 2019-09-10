@@ -8,14 +8,14 @@ class Deployments_Basic:
 
     def get(self, user_id, deployment_id):
         query = """
-            SELECT d.id, d.name, e.name AS 'environment', b.databases, b.queries, b.method, b.execution, b.execution_threads, b.start_execution
+            SELECT d.id, d.mode, b.id AS 'execution_id', d.name, e.name AS 'environment', b.databases, b.queries, b.method, b.execution, b.execution_threads, b.start_execution, b.created, b.started, b.ended, b.status, b.results, b.logs
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id AND d.user_id = %s
             JOIN environments e ON e.id = b.environment_id 
             WHERE b.id = (SELECT MAX(id) FROM deployments_basic WHERE deployment_id = %s);
         """
         return self._mysql.execute(query, (user_id, deployment_id))
-
+            
     def post(self, deployment):
         if deployment['execution'] == 'SEQUENTIAL':
             query = """
@@ -76,3 +76,24 @@ class Deployments_Basic:
             JOIN deployments d ON d.id = b.deployment_id AND d.user_id = %s
         """
         self._mysql.execute(query, (user_id))
+
+    def getExecutions(self, user_id, deployment_id):
+        query = """
+            SELECT b.id, e.name AS 'environment', b.method, b.created, b.status, b.started, b.ended
+            FROM deployments_basic b
+            JOIN deployments d ON d.id = b.deployment_id AND d.user_id = %s
+            JOIN environments e ON e.id = b.environment_id
+            WHERE b.deployment_id = %s
+            ORDER BY b.created DESC;
+        """
+        return self._mysql.execute(query, (user_id, deployment_id))
+
+    def getExecution(self, user_id, deployment_id):
+        query = """
+            SELECT d.id, d.mode, b.id AS 'execution_id', d.name, e.name AS 'environment', b.databases, b.queries, b.method, b.execution, b.execution_threads, b.start_execution, b.created, b.started, b.ended, b.status, b.results, b.logs
+            FROM deployments_basic b
+            JOIN deployments d ON d.id = b.deployment_id AND d.user_id = %s
+            JOIN environments e ON e.id = b.environment_id 
+            WHERE b.id = %s
+        """
+        return self._mysql.execute(query, (user_id, deployment_id))

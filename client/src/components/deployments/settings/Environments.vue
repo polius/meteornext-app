@@ -25,7 +25,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form">
-                  <v-text-field  v-if="mode!='delete'" ref="field" v-on:keyup.enter="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Environment Name" required></v-text-field>
+                  <v-text-field v-if="mode!='delete'" ref="field" v-on:keyup.enter="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Environment Name" required></v-text-field>
                   <div style="padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected environments?</div>
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">

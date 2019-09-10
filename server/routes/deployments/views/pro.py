@@ -42,6 +42,33 @@ class Pro:
             with open('{}/../apps/Meteor/app/query_execution.py'.format(self._credentials['path'])) as file_open:
                 return jsonify({'data': file_open.read()}), 200
 
+        @deployments_pro_blueprint.route('/deployments/pro/executions', methods=['GET'])
+        @jwt_required
+        def deployments_pro_executions():
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['admin'] or not user['deployments_enable']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get deployment executions
+            executions = self._deployments_pro.getExecutions(user['id'], request.args['deploymentID'])
+            return jsonify({'data': executions }), 200
+
+        @deployments_pro_blueprint.route('/deployments/pro/execution', methods=['GET'])
+        @jwt_required
+        def deployments_pro_execution():
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['admin'] or not user['deployments_enable']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get deployment execution
+            return jsonify({'data': self._deployments_pro.getExecution(user['id'], request.args['executionID'])}), 200
+
         return deployments_pro_blueprint
 
     def get(self, user_id):

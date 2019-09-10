@@ -7,9 +7,6 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="selected.length == 0" text @click='newDeploy()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn v-if="selected.length == 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editDeploy()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <!-- <v-btn v-if="selected.length == 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px">fas fa-spinner</v-icon>PROGRESS</v-btn> -->
-          <!-- <v-btn v-if="selected.length == 1" text :href="this.selected[0]['results']"><v-icon small style="padding-right:10px">fas fa-meteor</v-icon>LOGS</v-btn> -->
           <v-btn v-if="selected.length > 0" text @click="deleteDeploy()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
@@ -165,11 +162,8 @@ export default {
     newDeploy() {
       this.$router.push({ name:'deployments.new' })
     },
-    editDeploy() {
-      this.$router.push({ name:'deployments.edit', params: { deploymentID: this.selected[0]['id'], deploymentMode: this.selected[0]['mode'] }})
-    },
     infoDeploy() {
-      this.$router.push({ name:'deployments.information', params: { deploymentID: this.selected[0]['id'] }})
+      this.$router.push({ name:'deployments.information', params: { deploymentID: this.selected[0]['id'], deploymentMode: this.selected[0]['mode'] }})
     },
     deleteDeploy() {
       this.dialog = true

@@ -33,6 +33,33 @@ class Basic:
             elif request.method == 'PUT':
                 return self.put(user['id'], deployment_json)
 
+        @deployments_basic_blueprint.route('/deployments/basic/executions', methods=['GET'])
+        @jwt_required
+        def deployments_basic_executions():
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['admin'] or not user['deployments_enable']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get deployment executions
+            executions = self._deployments_basic.getExecutions(user['id'], request.args['deploymentID'])
+            return jsonify({'data': executions }), 200
+
+        @deployments_basic_blueprint.route('/deployments/basic/execution', methods=['GET'])
+        @jwt_required
+        def deployments_basic_execution():
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['admin'] or not user['deployments_enable']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get deployment execution
+            return jsonify({'data': self._deployments_basic.getExecution(user['id'], request.args['executionID'])}), 200
+
         return deployments_basic_blueprint
 
     def get(self, user_id):
