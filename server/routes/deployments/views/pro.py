@@ -84,7 +84,7 @@ class Pro:
 
         data['id'] = self._deployments.post(user_id, data)
         self._deployments_pro.post(data)
-        return jsonify({'message': 'Deployment created successfully'}), 200
+        return jsonify({'message': 'Deployment created successfully', 'data': {'deploymentID': data['id'] }}), 200
 
     def put(self, user_id, data):
         # Check if 'execution_threads' is a digit between 2-10

@@ -16,7 +16,7 @@ class Deployments:
                 (
                     SELECT d.id, d.name, db.environment_id, d.mode, db.method, db.status, db.created, db.started, db.ended
                     FROM deployments_basic db
-                    JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s AND d.id = %s
+                    JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s AND d.id = %s AND d.deleted = 0
                     WHERE db.id IN (
                         SELECT MAX(id)
                         FROM deployments_basic
@@ -25,7 +25,7 @@ class Deployments:
                     UNION
                     SELECT d.id, d.name, dp.environment_id, d.mode, dp.method, dp.status, dp.created, dp.started, dp.ended
                     FROM deployments_pro dp
-                    JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s AND d.id = %s
+                    JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s AND d.id = %s AND d.deleted = 0
                     WHERE dp.id IN (
                         SELECT MAX(id)
                         FROM deployments_pro
@@ -43,7 +43,7 @@ class Deployments:
                 (
                     SELECT d.id, d.name, db.environment_id, d.mode, db.method, db.status, db.created, db.started, db.ended
                     FROM deployments_basic db
-                    JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s
+                    JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s AND d.deleted = 0
                     WHERE db.id IN (
                         SELECT MAX(id)
                         FROM deployments_basic
@@ -52,7 +52,7 @@ class Deployments:
                     UNION
                     SELECT d.id, d.name, dp.environment_id, d.mode, dp.method, dp.status, dp.created, dp.started, dp.ended
                     FROM deployments_pro dp
-                    JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s
+                    JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s AND d.deleted = 0
                     WHERE dp.id IN (
                         SELECT MAX(id)
                         FROM deployments_pro

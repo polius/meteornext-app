@@ -197,6 +197,7 @@ export default {
       }
       // Add item in the data table
       this.query_items.push(this.query_item)
+      this.query_selected = []
       this.queryDialog = false
       this.notification('Query added successfully', 'success')
     },
@@ -214,6 +215,7 @@ export default {
       }
       // Edit item in the data table
       this.query_items.splice(i, 1, this.query_item)
+      this.query_selected = []
       this.queryDialog = false
       this.notification('Query edited successfully', 'success')
     },
@@ -248,7 +250,7 @@ export default {
         name: this.name,
         environment: this.environment,
         databases: this.databases,
-        queries: JSON.stringify(this.query_items),
+        queries: this.query_items,
         mode: 'BASIC',
         method: this.method.toUpperCase(),
         execution: this.execution.toUpperCase(),
@@ -259,7 +261,9 @@ export default {
       axios.post(path, payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
-          this.$router.push('/deployments')
+          // Redirect page
+          if (!this.start_execution) this.$router.push('/deployments')
+          else this.$router.push({ name:'deployments.information', params: { deploymentID: response.data.data.deploymentID, deploymentMode: 'BASIC' }})
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))

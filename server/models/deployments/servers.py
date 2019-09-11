@@ -8,7 +8,7 @@ class Servers:
 
     def get(self, group_id):
         query = """
-            SELECT s.*, e.name AS 'environment', r.name AS 'region' 
+            SELECT s.*, e.id AS 'environment_id', e.name AS 'environment', r.id AS 'region_id', r.name AS 'region' 
             FROM servers s
             JOIN regions r ON r.id = s.region_id
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s

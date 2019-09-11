@@ -56,7 +56,7 @@ class Deployments:
 
     def delete(self, user_id, data):
         for deploy in data:
-            self._deployments.delete(user_id, data)
+            self._deployments.delete(user_id, deploy)
         return jsonify({'message': 'Selected deployments deleted successfully'}), 200
     
     def remove(self, user_id):
