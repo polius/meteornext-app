@@ -250,7 +250,7 @@ export default {
         name: this.name,
         environment: this.environment,
         databases: this.databases,
-        queries: this.query_items,
+        queries: JSON.stringify(this.query_items),
         mode: 'BASIC',
         method: this.method.toUpperCase(),
         execution: this.execution.toUpperCase(),

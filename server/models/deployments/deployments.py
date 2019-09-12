@@ -31,9 +31,9 @@ class Deployments:
                         FROM deployments_pro
                         GROUP BY deployment_id
                     )
-                    ORDER BY id DESC
                 ) d
                 JOIN environments e ON e.id = d.environment_id
+                ORDER BY id DESC
             """
             return self._mysql.execute(query, (user_id, deployment_id, user_id, deployment_id))    
         else:
@@ -58,9 +58,9 @@ class Deployments:
                         FROM deployments_pro
                         GROUP BY deployment_id
                     )
-                    ORDER BY created DESC
                 ) d
                 JOIN environments e ON e.id = d.environment_id
+                ORDER BY created DESC
             """
             return self._mysql.execute(query, (user_id, user_id))        
 

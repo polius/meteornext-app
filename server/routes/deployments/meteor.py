@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
 import imp
 import json
 
 class Meteor:
     def __init__(self, credentials):
+        self._path = credentials['path']
         self._mysql = imp.load_source('mysql', '{}/models/mysql.py'.format(credentials['path'])).mysql(credentials)
         # Init models
         self._environments = imp.load_source('environments', '{}/models/deployments/environments.py'.format(credentials['path'])).Environments(credentials)
@@ -20,8 +22,11 @@ class Meteor:
         self._credentials = {}
 
     def execute(self, deployment):
-        print(deployment)
-        # Compile Metadata
+        # Create Deployment Folder to store Meteor files
+        if not os.path.isdir('{}/data/deployments/{}.{}/keys'.format(self._path, deployment['id'], deployment['execution_id'])):
+            os.makedirs('{}/data/deployments/{}.{}/keys'.format(self._path, deployment['id'], deployment['execution_id']))
+
+        # Compile Meteor Files
         self.__compile_credentials(deployment)
         self.__compile_query_execution(deployment)
 
@@ -45,15 +50,23 @@ class Meteor:
             self._credentials['environments'][environment['name']] = {}
             for region in regions:
                 if region['environment_id'] == environment['id']:
+                    key_path = "{}/data/deployments/{}.{}/keys/{}".format(self._path, deployment['id'], deployment['execution_id'], region['id'])
                     self._credentials['environments'][environment['name']]['region'] = region['name']
                     self._credentials['environments'][environment['name']]['ssh'] = {
                         "enabled": "True" if region['cross_region'] == 1 else "False",
                         "hostname": region['hostname'],
                         "username": region['username'],
-                        "password": "" if region['password'] == None else region['password'],
-                        "key": "",
+                        "password": "" if region['password'] is None else region['password'],
+                        "key": "" if region['key'] is None else key_path,
                         "deploy_path": region['deploy_path']
                     }
+
+                    # Generate key files
+                    if region['key'] is not None:
+                        with open(key_path, 'w') as outfile:
+                            outfile.write(region['key'])
+                        os.chmod(key_path, 0o600)
+
                     for server in servers:
                         if server['environment_id'] == environment['id'] and server['region_id'] == region['id']:
                             self._credentials['environments'][environment['name']]['sql'] = {
@@ -115,11 +128,23 @@ class Meteor:
             "threads": str(deployment['execution_threads']) if deployment['execution'] == 'PARALLEL' else ''
         }
 
-        print(self._credentials)
+        # Store Credentials
+        with open("{}/data/deployments/{}.{}/credentials.json".format(self._path, deployment['id'], deployment['execution_id']), 'w') as outfile:
+            json.dump(self._credentials, outfile)
 
     def __compile_query_execution(self, deployment):
+        if deployment['mode'] == 'BASIC':
+            self.__compile_query_execution_basic(deployment)
+        elif deployment['mode'] == 'PRO':
+            self._query_execution = deployment['code']
+
+        # Store Query Execution
+        with open("{}/data/deployments/{}.{}/query_execution.py".format(self._path, deployment['id'], deployment['execution_id']), 'w') as outfile:
+            outfile.write(self._query_execution)
+
+    def __compile_query_execution_basic(self, deployment):
         queries = {}
-        for i, q in enumerate(deployment['queries']):
+        for i, q in enumerate(json.loads(deployment['queries'])):
             queries[str(i+1)] = q['query']
 
         self._query_execution = """#!/usr/bin/env python
@@ -146,8 +171,6 @@ class query_execution:
         return self._auxiliary_queries
     def set_query(self, query_instance):
         self._meteor = query_instance""".format(json.dumps(queries), deployment['databases'])
-
-        print(self._query_execution)
 
     def __execute(self):
         pass

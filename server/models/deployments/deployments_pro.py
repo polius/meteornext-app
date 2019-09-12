@@ -24,7 +24,7 @@ class Deployments_Pro:
                 FROM environments e
                 WHERE e.name = %s
             """
-            self._mysql.execute(query, (deployment['id'], deployment['code'], deployment['method'], deployment['execution'], deployment['start_execution'], deployment['environment']))
+            return self._mysql.execute(query, (deployment['id'], deployment['code'], deployment['method'], deployment['execution'], deployment['start_execution'], deployment['environment']))
         else:
             query = """
                 INSERT INTO deployments_pro (deployment_id, environment_id, code, method, execution, execution_threads, start_execution)
@@ -32,7 +32,7 @@ class Deployments_Pro:
                 FROM environments e
                 WHERE e.name = %s
             """
-            self._mysql.execute(query, (deployment['id'], deployment['code'], deployment['method'], deployment['execution'], deployment['execution_threads'], deployment['start_execution'], deployment['environment']))
+            return self._mysql.execute(query, (deployment['id'], deployment['code'], deployment['method'], deployment['execution'], deployment['execution_threads'], deployment['start_execution'], deployment['environment']))
 
     def put(self, deployment):
         if deployment['execution'] == 'SEQUENTIAL':

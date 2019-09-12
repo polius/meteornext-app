@@ -11,6 +11,9 @@ class Pro:
         self._deployments = imp.load_source('basic', '{}/models/deployments/deployments.py'.format(credentials['path'])).Deployments(credentials)
         self._deployments_pro = imp.load_source('pro', '{}/models/deployments/deployments_pro.py'.format(credentials['path'])).Deployments_Pro(credentials)
 
+        # Init meteor
+        self._meteor = imp.load_source('meteor', '{}/routes/deployments/meteor.py'.format(credentials['path'])).Meteor(credentials)
+
     def blueprint(self):
         # Init blueprint
         deployments_pro_blueprint = Blueprint('deployments_pro', __name__, template_folder='deployments_pro')
@@ -29,11 +32,11 @@ class Pro:
             deployment_json = request.get_json()
 
             if request.method == 'GET':
-                return self.get(user['id'])
+                return self.get(user)
             elif request.method == 'POST':
-                return self.post(user['id'], deployment_json)
+                return self.post(user, deployment_json)
             elif request.method == 'PUT':
-                return self.put(user['id'], deployment_json)
+                return self.put(user, deployment_json)
 
         @deployments_pro_blueprint.route('/deployments/pro/code', methods=['GET'])
         @jwt_required
@@ -71,29 +74,34 @@ class Pro:
 
         return deployments_pro_blueprint
 
-    def get(self, user_id):
+    def get(self, user):
         deployment_id = request.args['deploymentID'] if 'deploymentID' in request.args else None
         print(deployment_id)
-        return jsonify({'data': self._deployments_pro.get(user_id, deployment_id)}), 200
+        return jsonify({'data': self._deployments_pro.get(user['id'], deployment_id)}), 200
 
-    def post(self, user_id, data):
+    def post(self, user, data):
         # Check if 'execution_threads' is a digit between 2-10
         if data['execution'] == 'PARALLEL':
             if not str(data['execution_threads']).isdigit() or int(data['execution_threads']) < 2 or int(data['execution_threads']) > 10:
                 return jsonify({'message': "The 'Threads' field should be an integer between 2-10"}), 400
 
-        data['id'] = self._deployments.post(user_id, data)
-        self._deployments_pro.post(data)
+        # Create deployment to the DB
+        data['id'] = self._deployments.post(user['id'], data)
+        data['execution_id'] = self._deployments_pro.post(data)
+
+        # Start Meteor Execution
+        data['group_id'] = user['group_id']
+        self._meteor.execute(data)
         return jsonify({'message': 'Deployment created successfully', 'data': {'deploymentID': data['id'] }}), 200
 
-    def put(self, user_id, data):
+    def put(self, user, data):
         # Check if 'execution_threads' is a digit between 2-10
         if data['execution'] == 'PARALLEL':
             if not str(data['execution_threads']).isdigit() or int(data['execution_threads']) < 2 or int(data['execution_threads']) > 10:
                 return jsonify({'message': "The 'Threads' field should be an integer between 2-10"}), 400
 
         # Get current deployment
-        deployment = self._deployments_pro.get(user_id, data['id'])[0]
+        deployment = self._deployments_pro.get(user['id'], data['id'])[0]
 
         # Check if user has modified any value
         if deployment['environment'] == data['environment'] and \
