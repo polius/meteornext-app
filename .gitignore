@@ -3,5 +3,5 @@ node_modules/
 /dist/
 env/
 __pycache__
-/apps/
 /server/data/
+*.pyc

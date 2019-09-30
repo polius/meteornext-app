@@ -3,6 +3,9 @@
 import os
 import imp
 import json
+import subprocess
+from time import time
+from datetime import datetime
 
 class Meteor:
     def __init__(self, credentials):
@@ -31,7 +34,7 @@ class Meteor:
         self.__compile_query_execution(deployment)
 
         # Execute Meteor
-        self.__execute()
+        self.__execute(deployment)
 
     def __compile_credentials(self, deployment):
         # Get Data
@@ -47,34 +50,41 @@ class Meteor:
         self._credentials['environments'] = {}
 
         for environment in environments:
-            self._credentials['environments'][environment['name']] = {}
-            for region in regions:
-                if region['environment_id'] == environment['id']:
-                    key_path = "{}/data/deployments/{}.{}/keys/{}".format(self._path, deployment['id'], deployment['execution_id'], region['id'])
-                    self._credentials['environments'][environment['name']]['region'] = region['name']
-                    self._credentials['environments'][environment['name']]['ssh'] = {
-                        "enabled": "True" if region['cross_region'] == 1 else "False",
-                        "hostname": region['hostname'],
-                        "username": region['username'],
-                        "password": "" if region['password'] is None else region['password'],
-                        "key": "" if region['key'] is None else key_path,
-                        "deploy_path": region['deploy_path']
-                    }
+            if environment['name'] == deployment['environment']:
+                self._credentials['environments'][environment['name']] = []
+                for region in regions:
+                    if region['environment_id'] == environment['id']:
+                        key_path = "{}/data/deployments/{}.{}/keys/{}".format(self._path, deployment['id'], deployment['execution_id'], region['id'])
+                        region_data = {
+                            "region": region['name'],
+                            "ssh": {
+                                "enabled": "True" if region['cross_region'] == 1 else "False",
+                                "hostname": "" if region['hostname'] is None else region['hostname'],
+                                "username": "" if region['username'] is None else region['username'],
+                                "password": "" if region['password'] is None else region['password'],
+                                "key": "" if region['key'] is None else key_path,
+                                "deploy_path": "" if region['deploy_path'] is None else region['deploy_path']
+                            },
+                            "sql": []
+                        }
 
-                    # Generate key files
-                    if region['key'] is not None:
-                        with open(key_path, 'w') as outfile:
-                            outfile.write(region['key'])
-                        os.chmod(key_path, 0o600)
+                        # Generate key files
+                        if region['key'] is not None:
+                            with open(key_path, 'w') as outfile:
+                                outfile.write(region['key'])
+                            os.chmod(key_path, 0o600)
 
-                    for server in servers:
-                        if server['environment_id'] == environment['id'] and server['region_id'] == region['id']:
-                            self._credentials['environments'][environment['name']]['sql'] = {
-                                "name": server['name'],
-                                "hostname": server['hostname'],
-                                "username": server['username'],
-                                "password": server['password']
-                            }
+                        for server in servers:
+                            if server['environment_id'] == environment['id'] and server['region_id'] == region['id']:
+                                region_data['sql'].append({
+                                    "name": server['name'],
+                                    "hostname": server['hostname'],
+                                    "username": server['username'],
+                                    "password": server['password']
+                                })
+
+                        # Add region data to the credentials
+                        self._credentials['environments'][environment['name']].append(region_data)
 
         # Compile Auxiliary Connections
         self._credentials['auxiliary_connections'] = {}
@@ -128,6 +138,19 @@ class Meteor:
             "threads": str(deployment['execution_threads']) if deployment['execution'] == 'PARALLEL' else ''
         }
 
+        # Enable Meteor Next
+        with open("{}/credentials.json".format(self._path)) as outfile:
+            next_credentials = json.load(outfile)
+
+        self._credentials['meteor_next'] = {
+            "enabled": "True",
+            "hostname": next_credentials['hostname'],
+            "username": next_credentials['username'],
+            "password": next_credentials['password'],
+            "port": next_credentials['port'],
+            "database": next_credentials['database']
+        }
+
         # Store Credentials
         with open("{}/data/deployments/{}.{}/credentials.json".format(self._path, deployment['id'], deployment['execution_id']), 'w') as outfile:
             json.dump(self._credentials, outfile)
@@ -172,5 +195,20 @@ class query_execution:
     def set_query(self, query_instance):
         self._meteor = query_instance""".format(json.dumps(queries), deployment['databases'])
 
-    def __execute(self):
-        pass
+    def __execute(self, deployment):
+        # Build Meteor Parameters
+        base_path = "{}/../apps/Meteor/app/meteor.py".format(self._path)
+        environment = deployment['environment']
+        logs_path = "{}/data/deployments/{}.{}".format(self._path, deployment['id'], deployment['execution_id'])
+        query_execution_path = "{}/data/deployments/{}.{}/query_execution.py".format(self._path, deployment['id'], deployment['execution_id'])
+        credentials_path = "{}/data/deployments/{}.{}/credentials.json".format(self._path, deployment['id'], deployment['execution_id'])
+        
+        current_date = datetime.fromtimestamp(time()).strftime('%Y-%m-%d_%H.%M.%S.%f_UTC')
+        execution_name = "{}_{}|{}".format(deployment['id'], deployment['execution_id'], current_date)
+
+        # Build Meteor Command
+        command = 'nohup python {} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --execution_name "{}" --deployment_mode "{}" --deployment_id "{}" > /dev/null 2>&1 &'.format(base_path, environment, deployment['method'].lower(), logs_path, query_execution_path, credentials_path, execution_name, deployment['mode'].lower(), deployment['execution_id'])
+        print(command)
+
+        # Execute Meteor 
+        subprocess.call(command, shell=True)
