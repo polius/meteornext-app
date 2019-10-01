@@ -511,7 +511,9 @@ class deploy:
                             # Get Overall Environment Validation Status
                             for data in shared_array:
                                 # Track progress
-                                progress = {'success': data['success'], 'errors': data['progress']}
+                                progress = {'success': data['success']}
+                                if len(data['progress']) > 0:
+                                    progress['errors'] = data['progress']
                                 self._progress.track_validation(region=data['region'], value=progress)
                                 # Check if there are any validation errors
                                 if data['success'] is False:
@@ -867,7 +869,7 @@ class deploy:
         # 1. Compress Execution Logs
         status_msg = '- Compressing Logs From Remote Hosts...'
         print(status_msg)
-        self._progress.track_logs(value=status_msg)
+        self._progress.track_logs(value=status_msg[2:])
 
         ## Parallel Mode
         if self._credentials['execution_mode']['parallel'] == 'True':
@@ -905,7 +907,7 @@ class deploy:
         # 2. Get SSH Execution Logs
         status_msg = "- Downloading Logs From Remote Hosts..."
         print(status_msg)
-        self._progress.track_logs(value=status_msg)
+        self._progress.track_logs(value=status_msg[2:])
 
         ## Parallel Mode
         if self._credentials['execution_mode']['parallel'] == 'True':
@@ -941,7 +943,7 @@ class deploy:
                 if os.path.isdir(execution_logs_path + region_item):
                     status_msg = "- Merging '{}'...".format(region_item)
                     print(status_msg)
-                    self._progress.track_logs(value=status_msg)
+                    self._progress.track_logs(value=status_msg[2:])
 
                     server_items = os.listdir(execution_logs_path + region_item)
 
@@ -978,7 +980,7 @@ class deploy:
             environment_logs = []
             status_msg = "- Generating a Single Log File..."
             print(status_msg)
-            self._progress.track_logs(value=status_msg)
+            self._progress.track_logs(value=status_msg[2:])
 
             region_items = os.listdir(execution_logs_path)
             for region_item in region_items:
@@ -1013,7 +1015,7 @@ class deploy:
             try:
                 status_msg = "- Cleaning Remote Environments..."
                 print(status_msg)
-                self._progress.track_tasks(value=status_msg)
+                self._progress.track_tasks(value=status_msg[2:])
 
                 if self._ENV_DATA != {}:
                     if self._credentials['execution_mode']['parallel'] == "True":
@@ -1034,7 +1036,7 @@ class deploy:
         try:
             status_msg = "- Cleaning Local Environment..."
             print(status_msg)
-            self._progress.track_tasks(value=status_msg)
+            self._progress.track_tasks(value=status_msg[2:])
 
             env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME)
             env.clean_local()
@@ -1046,7 +1048,7 @@ class deploy:
         if self._credentials['execution_mode']['parallel'] == 'True' and not self._args.validate:
             status_msg = "- Cleaning Remaining Processes..."
             print(status_msg)
-            self._progress.track_tasks(value=status_msg)
+            self._progress.track_tasks(value=status_msg[2:])
 
             for env_data in self._ENV_DATA[self._ENV_NAME]:
                 env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, self._ENV_NAME, env_data, self._UUID)
@@ -1096,7 +1098,7 @@ class deploy:
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
         status_msg = "- Sending Slack Message to #meteor ..."
         self._logger.info(status_msg)
-        self._progress.track_tasks(value=status_msg)
+        self._progress.track_tasks(value=status_msg[2:])
 
         # Get Webhook Data
         webhook_url = self._credentials['slack']['webhook']
@@ -1237,7 +1239,7 @@ class deploy:
             response = "- Slack Webhook Response: {0} [{1}]".format(str(response.text).upper(), str(response.status_code))
         
         print(response)
-        self._progress.track_tasks(value=response)
+        self._progress.track_tasks(value=response[2:])
 
     def show_execution_time(self, only_validate=False):
         print(colored("+==================================================================+", "magenta", attrs=['bold']))

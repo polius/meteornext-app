@@ -11,6 +11,10 @@ class progress:
         self._sql = mysql(logger, args, credentials)
         self._sql.connect(credentials['meteor_next']['hostname'], credentials['meteor_next']['username'], credentials['meteor_next']['password'], credentials['meteor_next']['database'])
         self._progress = {"validation":{}, "execution":{}, "logs":[], "tasks":[], "queries":{}}
+        # Init Progress Data
+        for i in self._credentials['environments'][self._args.environment]:
+            self._progress['validation'][i['region']] = {}
+            self._progress['execution'][i['region']] = {}
 
     def start(self):
         if self.__enabled():

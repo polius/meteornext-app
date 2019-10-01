@@ -11,7 +11,7 @@ class Deployments:
             return self._mysql.execute("SELECT * FROM deployments ORDER BY id DESC")
         elif deployment_id is not None:
             query = """
-                SELECT d.id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended
+                SELECT d.id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
                 FROM
                 (
                     SELECT d.id, d.name, db.environment_id, d.mode, db.method, db.status, db.created, db.started, db.ended
@@ -38,7 +38,7 @@ class Deployments:
             return self._mysql.execute(query, (user_id, deployment_id, user_id, deployment_id))    
         else:
             query = """
-                SELECT d.id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended
+                SELECT d.id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
                 FROM
                 (
                     SELECT d.id, d.name, db.environment_id, d.mode, db.method, db.status, db.created, db.started, db.ended

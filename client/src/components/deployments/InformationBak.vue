@@ -9,7 +9,7 @@
           <v-btn text title="Show Parameters" @click="parameters()"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
           <v-btn text title="Re-Deploy with other parameters" @click="redeploy()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>RE-DEPLOY</v-btn>
           <v-btn text title="Select Execution" @click="select()"><v-icon small style="padding-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
-          <v-divider v-if="deployment['status'] in ['CREATED', 'IN PROGRESS']" class="mx-3" inset vertical></v-divider>
+          <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="start_execution" v-if="deployment['status'] == 'CREATED' && deployment['start_execution'] == 0" text title="Start Execution" @click="start()"><v-icon small style="padding-right:10px">fas fa-rocket</v-icon>START</v-btn>
           <v-btn :disabled="stop_execution" v-if="deployment['status'] == 'IN PROGRESS'" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
         </v-toolbar-items>
@@ -29,7 +29,7 @@
         </v-toolbar-items>
 
         <v-spacer></v-spacer>
-        <div class="subheading font-weight-regular" style="padding-right:20px;">Updated on <b>{{ last_updated }}</b></div>
+        <div class="subheading font-weight-regular" style="padding-right:20px;">Updated on <b>2019-07-25 12:10:08</b></div>
         <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
       </v-toolbar>
 
@@ -49,37 +49,48 @@
               <v-icon v-if="props.item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
               <v-icon v-else-if="props.item.status == 'QUEUED'" title="Queued" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
               <v-icon v-else-if="props.item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
-              <v-icon v-else-if="props.item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
+              <v-icon v-else-if="props.item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check-double</v-icon>
               <v-icon v-else-if="props.item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
               <v-icon v-else-if="props.item.status == 'INTERRUPTED'" title="Interrupted" small style="color: #f44336; margin-left:13px;">fas fa-exclamation</v-icon>
+            </template>
+            <template v-slot:item.overall="props">
+              <span></span>
             </template>
           </v-data-table>
         </v-card>
 
         <!-- VALIDATION -->
-        <div v-if="validation_data.length > 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">VALIDATION</div>
+        <div class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">VALIDATION</div>
         <!-- validation -->
-        <v-card v-if="validation_data.length > 0" style="margin-top:15px;">
+        <v-card style="margin-top:15px;">
           <v-data-table :headers="validation_headers" :items="validation_data" hide-default-footer>
             <template v-slot:item="props">
-              <tr v-for="item in Object.keys(validation_data[0])" :key="item">
-                <td v-if="validation_data[0][item] == 'VALIDATING'" class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{validation_data[0][item]}}</b></td>
-                <td v-else-if="validation_data[0][item] == 'SUCCEEDED'" class="success--text"><v-icon small color="success" style="margin-right:10px;">fas fa-check</v-icon><b>{{validation_data[0][item]}}</b></td>
-                <td v-else-if="validation_data[0][item] == 'FAILED'" class="error--text"><v-icon small color="error" style="margin-right:10px;">fas fa-times</v-icon><b>{{validation_data[0][item]}}</b></td>
+              <tr>
+                <td class="success--text"><v-icon small color="success" style="margin-right:10px;">fas fa-check</v-icon><b>{{props.item.r1}}</b></td>
+                <td class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{props.item.r2}}</b></td>
+                <td class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{props.item.r3}}</b></td>
+                <td class="error--text"><v-icon small color="error" style="margin-right:10px;">fas fa-times</v-icon><b>{{props.item.r4}}</b></td>
               </tr>
             </template>
           </v-data-table>
         </v-card>
 
         <!-- EXECUTION -->
-        <div v-if="execution_data.length > 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">EXECUTION</div>
-        <v-card v-if="execution_data.length > 0" style="margin-top:15px;">
+        <div class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">EXECUTION</div>
+        <v-card style="margin-top:15px;">
           <v-data-table :headers="execution_headers" :items="index(execution_data)" hide-default-footer>
             <template v-slot:item="props">
-              <tr v-for="i in Object.keys(execution_data[0])" :key="i['server']">
-                <td v-if="props.item.index == 0" :style="`background-color:` + regionColor(execution_data[props.item.index][i])"><v-icon small style="margin-right:10px;">{{ regionIcon(execution_data[props.item.index][i]) }}</v-icon><b>{{ execution_data[props.item.index][i] }}</b></td>
-                <td v-if="props.item.index != 0" :class="serverColor(execution_data[props.item.index][i]['progress'])" style="padding-left:20px;">{{ execution_data[props.item.index][i]['server'] }}. {{ execution_data[props.item.index][i]['progress'] }}</td>
-             </tr>
+              <tr>
+                <td v-if="props.item.index == 0" :style="`background-color:` + regionColor(props.item.r1)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r1) }}</v-icon><b>{{ props.item.r1 }}</b></td>
+                <td v-if="props.item.index == 0" :style="`background-color:` + regionColor(props.item.r2)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r2) }}</v-icon><b>{{ props.item.r2 }}</b></td>
+                <td v-if="props.item.index == 0" :style="`background-color:` + regionColor(props.item.r3)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r3) }}</v-icon><b>{{ props.item.r3 }}</b></td>
+                <td v-if="props.item.index == 0" :style="`background-color:` + regionColor(props.item.r4)"><v-icon small style="margin-right:10px;">{{ regionIcon(props.item.r4) }}</v-icon><b>{{ props.item.r4 }}</b></td>
+
+                <td v-if="props.item.index != 0" :class="serverColor(props.item.r1.progress)" style="padding-left:20px;">{{ props.item.r1.server }}. {{ props.item.r1.progress }}</td>
+                <td v-if="props.item.index != 0" :class="serverColor(props.item.r2.progress)" style="padding-left:20px;">{{ props.item.r2.server }}. {{ props.item.r2.progress }}</td>
+                <td v-if="props.item.index != 0" :class="serverColor(props.item.r3.progress)" style="padding-left:20px;">{{ props.item.r3.server }}. {{ props.item.r3.progress }}</td>
+                <td v-if="props.item.index != 0" :class="serverColor(props.item.r4.progress)" style="padding-left:20px;">{{ props.item.r4.server }}. {{ props.item.r4.progress }}</td>
+              </tr>
             </template>
           </v-data-table>
         </v-card>
@@ -87,33 +98,44 @@
         <!-- After Execution Headers -->
         <v-layout row wrap style="margin-top:15px; margin-left:0px; margin-right:0px;">
           <v-flex xs8>
-            <div v-if="logs_data.length > 0" class="title font-weight-regular" style="padding-top:20px; padding-left:1px;">POST EXECUTION</div>
+            <div class="title font-weight-regular" style="padding-top:20px; padding-left:1px;">POST EXECUTION</div>
           </v-flex>
           <v-flex xs4>
-            <div v-if="queries_data.length > 0" class="title font-weight-regular" style="padding-top:20px; padding-left:7px;">QUERIES</div>
+            <div class="title font-weight-regular" style="padding-top:20px; padding-left:7px;">QUERIES</div>
           </v-flex>
         </v-layout>
 
         <!-- POST EXECUTION -->
         <v-layout row wrap style="margin-top:15px; margin-left:0px; margin-right:0px;">
           <!-- logs -->
-          <v-flex v-if="logs_data.length > 0" xs4 style="padding-right:5px;">
+          <v-flex xs4 style="padding-right:5px;">
             <v-card>
               <v-data-table :headers="logs_headers" :items="logs_data" hide-default-footer>
+                <template v-slot:items="props">
+                  <td>{{ props.item.status }}</td>
+                </template>
               </v-data-table>
             </v-card>
           </v-flex>
           <!-- remaining-tasks -->
-          <v-flex v-if="tasks_data.length > 0" xs4 style="padding-left:5px; padding-right:5px;">
+          <v-flex xs4 style="padding-left:5px; padding-right:5px;">
             <v-card>
-              <v-data-table :headers="tasks_headers" :items="tasks_data" hide-default-footer>
+              <v-data-table :headers="post_headers" :items="post_data" hide-default-footer>
+                <template v-slot:items="props">
+                  <td>{{ props.item.status }}</td>
+                </template>
               </v-data-table>
             </v-card>
           </v-flex>
           <!-- queries -->
-          <v-flex v-if="queries_data.length > 0" xs4 style="padding-left:5px;">
+          <v-flex xs4 style="padding-left:5px;">
             <v-card>
-              <v-data-table :headers="queries_headers" :items="queries_data" hide-default-footer>
+              <v-data-table :headers="summary_headers" :items="summary_data" hide-default-footer>
+                <template v-slot:items="props">
+                  <td><b>{{ props.item.total }}</b></td>
+                  <td><b>{{ props.item.succeeded }}</b></td>
+                  <td><b>{{ props.item.failed }}</b></td>
+                </template>
               </v-data-table>
             </v-card>
           </v-flex>
@@ -348,9 +370,6 @@
       // Deployment Executions
       executions: {},
 
-      // Last Updated
-      last_updated: '...',
-
       // Information Data Table
       information_headers: [
         { text: 'Name', value: 'name', sortable: false },
@@ -414,21 +433,78 @@
         { text: 'Ended', align: 'left', value: 'ended', sortable: false },
         { text: 'Overall', align: 'left', value: 'overall', sortable: false }
       ],
-      status_data: [],
-      validation_headers: [],
-      validation_data: [],
-      execution_headers: [],
-      execution_data: [],
-      logs_headers: [{ text: 'LOGS', align:'left', value: 'status', sortable: false }],
-      logs_data: [],
-      tasks_headers: [{ text: 'REMAINING TASKS', align:'left', value: 'status', sortable: false }],
-      tasks_data: [],
-      queries_headers: [
+      status_data: [
+        {
+          id: 1,
+          name: 'Release 3.33.0',
+          environment: 'Production',
+          mode: "BASIC",
+          method: 'DEPLOYMENT',
+          created: '2019-07-07 07:00:00',
+          started: '2019-07-07 08:00:00',
+          ended: '2019-07-07 08:12:15',
+          overall: '00:12:10'
+        }
+      ],
+      validation_headers: [
+        { text: 'AWS-EU', align:'left', value: 'r1', sortable: false },
+        { text: 'AWS-US', align:'left', value: 'r2', sortable: false },
+        { text: 'AWS-BR', align:'left', value: 'r3', sortable: false },
+        { text: 'AWS-JP', align:'left', value: 'r4', sortable: false }
+      ],
+      validation_data: [
+        { 
+          r1: "SUCCEEDED",
+          r2: "VALIDATING",
+          r3: "VALIDATING",
+          r4: "FAILED"
+        }
+      ],
+      execution_headers: [
+        { text: 'AWS-EU', align:'left', value: 'r1', sortable: false },
+        { text: 'AWS-US', align:'left', value: 'r2', sortable: false },
+        { text: 'AWS-BR', align:'left', value: 'r3', sortable: false },
+        { text: 'AWS-JP', align:'left', value: 'r4', sortable: false }
+      ],
+      execution_data: [
+        { r1: "100% (143/143 DBs)", r2: "56% (756/1362 DBs)", r3: "82% (1467/1739 DBs)", r4: "100% (253/253 DBs)" },
+        { r1: { server: "awseu-sql01", progress: "100% (21/21 DBs)" }, r2: { server: "aws-sql01", progress: "52% (12/21 DBs)" }, r3: { server: "awsbr-sql01", progress: "52% (12/21 DBs)" }, r4: { server: "awsjp-sql01", progress: "100% (153/153 DBs)" }},
+        { r1: { server: "awseu-sql02", progress: "100% (122/122 DBs)" }, r2: { server: "aws-sql02", progress: "43% (108/211 DBs)" }, r3: { server: "awsbr-sql02", progress: "8% (2/12 DBs)" }, r4: { server: "awsjp-sql02", progress: "100% (100/100 DBs)" }}
+      ],
+      logs_headers: [
+        { text: 'LOGS', align:'left', value: 'status', sortable: false }
+      ],
+      logs_data: [
+        { status: "Compressing Logs From Remote Hosts..." },
+        { status: "Downloading Logs From Remote Hosts..." },
+        { status: "Merging 'AWS-EU'..." },
+        { status: "Merging 'AWS-JP'..." },
+        { status: "Merging 'AWS-US'..." },
+        { status: "Merging 'AWS-BR'..." },
+        { status: "Generating a Single Log File..." }
+      ],
+      post_headers: [
+        { text: 'REMAINING TASKS', align:'left', value: 'status', sortable: false }
+      ],
+      post_data: [
+        { status: "Uploading Logs to Amazon S3 Bucket 'meteor'..." },
+        { status: "Cleaning Remote Environments..." },
+        { status: "Cleaning Local Environments..." },
+        { status: "Cleaning Remaining Processes..." },
+        { status: "Sending Slack Message to #meteor..." }
+      ],
+      summary_headers: [
         { text: 'TOTAL', align:'left', value: 'total', sortable: false },
         { text: 'SUCCEEDED', align:'left', value: 'succeeded', sortable: false },
         { text: 'FAILED', align:'left', value: 'failed', sortable: false }
       ],
-      queries_data: [],
+      summary_data: [
+        { 
+          total: "2037",
+          succeeded: "2037 (100.0%)",
+          failed: "0 (0.0%)"
+        }
+      ],
       // Snackbar
       snackbar: false,
       snackbarTimeout: Number(3000),
@@ -439,21 +515,34 @@
     props: ['deploymentID', 'deploymentMode'],
     created() {
       if (typeof this.deploymentID === "undefined") this.$router.push('/deployments')
-      else this.getDeployment()
+      else if (this.deploymentMode == 'BASIC') this.getDeploymentBasic()
+      else if (this.deploymentMode == 'PRO') this.getDeploymentPro()
     },
     methods: {
       // -------------
       // BASE METHODS
       // -------------
-      getDeployment() {
-        console.log("GETTING...")
+      getDeploymentBasic() {
         // Get Deployment Data
-        const path = this.$store.getters.url + '/deployments/' + this.deploymentMode.toLowerCase()
+        const path = this.$store.getters.url + '/deployments/basic'
         axios.get(path, { params: { deploymentID: this.deploymentID } })
           .then((response) => {
             const data = response.data.data[0]
             this.parseRequest(data)
-            if (data['status'] == 'IN PROGRESS' || (data['status'] == 'CREATED' && data['start_execution'])) setTimeout(this.getDeployment(), 5000)
+          })
+          .catch((error) => {
+            if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            // eslint-disable-next-line
+            console.error(error)
+          })
+      },
+      getDeploymentPro() {
+        // Get Deployment Data
+        const path = this.$store.getters.url + '/deployments/pro'
+        axios.get(path, { params: { deploymentID: this.deploymentID } })
+          .then((response) => {
+            const data = response.data.data[0]
+            this.parseRequest(data)
           })
           .catch((error) => {
             if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -462,7 +551,6 @@
           })
       },
       parseRequest(data) {
-        // Parse Deployment Data
         this.deployment['id'] = data['id']
         this.deployment['execution_id'] = data['execution_id']
         this.deployment['mode'] = data['mode']
@@ -482,122 +570,19 @@
         this.deployment['execution'] = data['execution'].toLowerCase()
         this.deployment['threads'] = data['execution_threads']
         this.deployment['start_execution'] = data['start_execution']
-        this.deployment['status'] = data['status']
         this.deployment['created'] = data['created']
         this.deployment['started'] = data['started']
         this.deployment['ended'] = data['ended']
-        this.deployment['overall'] = data['overall']
-        this.deployment['error'] = data['error']
-        this.deployment['logs_path'] = data['logs_path']
-        this.deployment['logs_url'] = data['logs_url']
+        this.deployment['status'] = data['status']
+        this.deployment['results'] = data['results']
+        this.deployment['logs'] = data['logs']
 
         // Add Deployment to the information table
         this.information_items = []
         this.information_items.push(this.deployment)
 
-        // +---------------------+
-        // | PARSE PROGRESS DATA |
-        // +---------------------+
-        if (data['progress']) {
-          this.deployment['progress'] = JSON.parse(data['progress'])
-
-          // Parse Last Updated
-          this.last_updated = this.deployment['progress']['updated']
-
-          // Parse Validation
-          this.parseValidation()
-
-          // Parse Validation
-          this.parseExecution()
-
-          // Parse Logs
-          this.parseLogs()
-
-          // Parse Tasks
-          this.parseTasks()
-
-          // Parse Queries
-          this.parseQueries()
-        }
-
         // Get Executions
         this.getExecutions()
-      },
-      parseValidation() {
-        // Init variables
-        this.validation_headers = []
-        this.validation_data = [{}]
-        var i = 0
-
-        // Fill variables
-        for (let [key, value] of Object.entries(this.deployment['progress']['validation'])) {
-          this.validation_headers.push({ text: key, align: 'left', value: 'r' + i.toString(), sortable: false})
-          var status = 'VALIDATING' 
-          if ('success' in value) status = (value['success'] ? 'SUCCEEDED' : 'FAILED')
-          this.validation_data[0]['r' + i.toString()] = status
-          i += 1
-        }
-      },
-      parseExecution() {
-        // Init variables
-        this.execution_headers = []
-        this.execution_data = [{}]
-        var overall_progress = {}
-        var i = 0
-
-        // Fill variables
-        for (let[key] of Object.entries(this.deployment['progress']['execution'])) {
-          var k = 'r' + i.toString()
-          overall_progress[k] = {"d": 0, "t": 0}
-
-          this.execution_headers.push({ text: key, align: 'left', value: k, sortable: false})
-          var j = 0
-          for (let [key2, value2] of Object.entries(this.deployment['progress']['execution'][key])) {
-            overall_progress[k]['d'] += value2['d']
-            overall_progress[k]['t'] += value2['t']
-
-            var progress = value2['p'] + '% (' + value2['d'] + '/' + value2['t'] + ' DBs)' 
-            
-            if (j+1 <= this.execution_data.length) {
-              this.execution_data.push({['r' + j.toString()]: {"server": key2, "progress": progress}})
-              j += 1
-            }
-            else this.execution_data[i] = {['r' + j.toString()]: {"server": key2, "progress": progress}}
-          }
-
-          // Add overall
-          this.execution_data[0][k] = overall_progress[k]['d'] / overall_progress[k]['t'] * 100 + '% (' + overall_progress[k]['d'] + '/' + overall_progress[k]['t'] + ' DBs)'
-          i += 1
-        }
-      },
-      parseLogs() {
-        // Init variables
-        this.logs_data = []
-
-        // Fill variables
-        for (var i in this.deployment['progress']['logs']) {
-          this.logs_data.push({status: this.deployment['progress']['logs'][i]})
-        }
-      },
-      parseTasks() {
-        // Init variables
-        this.tasks_data = []
-
-        // Fill variables
-        for (var i in this.deployment['progress']['tasks']) {
-          this.tasks_data.push({status: this.deployment['progress']['tasks'][i]})
-        }
-      },
-      parseQueries() {
-        // Init variables
-        this.queries_data = []
-
-        // Fill variables
-        this.queries_data.push({
-          total: this.deployment['progress']['queries']['total'],
-          succeeded: this.deployment['progress']['queries']['succeeded']['t'] + ' (' + this.deployment['progress']['queries']['succeeded']['p'] + '%)',
-          failed: this.deployment['progress']['queries']['failed']['t'] + ' (' + this.deployment['progress']['queries']['failed']['p'] + '%)'
-        })
       },
       getExecutions() {
         // Get Deployment Executions

@@ -256,9 +256,9 @@ class deploy_environments:
 
     def clean_local(self):
         # Delete Uncompressed Deployment Folder
-        # if os.path.exists(self._LOGS_PATH + self._EXECUTION_NAME):
-        #     if os.path.isdir(self._LOGS_PATH + self._EXECUTION_NAME):
-        #         shutil.rmtree(self._LOGS_PATH + self._EXECUTION_NAME)
+        if os.path.exists(self._LOGS_PATH + self._EXECUTION_NAME):
+            if os.path.isdir(self._LOGS_PATH + self._EXECUTION_NAME):
+                shutil.rmtree(self._LOGS_PATH + self._EXECUTION_NAME)
 
         # Delete 'METEOR.tar.gz'
         self.__local('rm -rf {0}'.format(self._COMPRESSED_FILE_NAME), show_output=False)

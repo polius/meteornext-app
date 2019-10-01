@@ -8,7 +8,7 @@ class Deployments_Basic:
 
     def get(self, user_id, deployment_id):
         query = """
-            SELECT d.id, d.mode, b.id AS 'execution_id', d.name, e.name AS 'environment', b.databases, b.queries, b.method, b.execution, b.execution_threads, b.start_execution, b.created, b.started, b.ended, b.status, b.logs_path, b.logs_url
+            SELECT d.id, d.mode, b.id AS 'execution_id', d.name, e.name AS 'environment', b.databases, b.queries, b.method, b.execution, b.execution_threads, b.start_execution, b.status, b.created, b.started, b.ended, CONCAT(TIMEDIFF(b.ended, b.started)) AS 'overall', b.error, b.progress, b.logs_path, b.logs_url
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id AND d.user_id = %s
             JOIN environments e ON e.id = b.environment_id 
