@@ -23,12 +23,8 @@ class progress:
 
     def end(self, status, logs_path=None, logs_url=None):
         if self.__enabled():
-            if logs_url:
-                query = "UPDATE deployments_{} SET logs_path = '{}', logs_url = '{}', status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._args.deployment_mode, logs_path, logs_url, status, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
-            elif logs_path:
-                query = "UPDATE deployments_{} SET logs_path = '{}', status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._args.deployment_mode, logs_path, status, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
-            else:
-                query = "UPDATE deployments_{} SET status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._args.deployment_mode, status, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
+            results = logs_url if logs_url is not None else logs_path[:logs_path.rfind('/')+1]
+            query = "UPDATE deployments_{} SET results = '{}', status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._args.deployment_mode, results, status, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
 
     def error(self, error_msg):

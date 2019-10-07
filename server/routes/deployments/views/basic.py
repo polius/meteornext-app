@@ -70,26 +70,17 @@ class Basic:
         return jsonify({'data': self._deployments_basic.get(user['id'], deployment_id)}), 200
 
     def post(self, user, data):
-        # Check if 'execution_threads' is a digit between 2-10
-        if data['execution'] == 'PARALLEL':
-            if not str(data['execution_threads']).isdigit() or int(data['execution_threads']) < 2 or int(data['execution_threads']) > 10:
-                return jsonify({'message': "The 'Threads' field should be an integer between 2-10"}), 400
-
         # Create deployment to the DB
         data['id'] = self._deployments.post(user['id'], data)
         data['execution_id'] = self._deployments_basic.post(data)
 
         # Start Meteor Execution
         data['group_id'] = user['group_id']
-        self._meteor.execute(data)
+        if data['start_execution']:
+            self._meteor.execute(data)
         return jsonify({'message': 'Deployment created successfully', 'data': {'deploymentID': data['id'] }}), 200
 
     def put(self, user, data):
-        # Check if 'execution_threads' is a digit between 2-10
-        if data['execution'] == 'PARALLEL':
-            if not str(data['execution_threads']).isdigit() or int(data['execution_threads']) < 2 or int(data['execution_threads']) > 10:
-                return jsonify({'message': "The 'Threads' field should be an integer between 2-10"}), 400
-
         # Get current deployment
         deployment = self._deployments_basic.get(user['id'], data['id'])[0]
 
@@ -109,7 +100,12 @@ class Basic:
         if deployment['start_execution'] == 1:
             # Create a new deployment if the current one is already executed
             self._deployments_basic.post(data)
+
+            # Start Meteor Execution
+            deployment['group_id'] = user['group_id']
+            self._meteor.execute(data)
         else:
             # Edit the current deployment if it's not already executed
             self._deployments_basic.put(data)
+
         return jsonify({'message': 'Deployment edited successfully'}), 200

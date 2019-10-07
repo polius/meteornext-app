@@ -44,22 +44,7 @@
               </v-radio>
             </v-radio-group>
 
-            <div class="subtitle-1 font-weight-regular" style="margin-top:-5px;">EXECUTION</div>
-            <v-radio-group v-model="execution" style="margin-top:10px;">
-              <v-radio color="primary" value="sequential">
-                <template v-slot:label>
-                  <div>Sequential</div>
-                </template>
-              </v-radio>
-              <v-radio color="primary" value="parallel">
-                <template v-slot:label>
-                  <div>Parallel</div>
-                </template>
-              </v-radio>
-            </v-radio-group>
-
-            <v-text-field v-if="execution=='parallel'" v-model="threads" label="Threads" :rules="[v => !!v || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
-            <v-checkbox v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:-10px; margin-bottom:20px;"></v-checkbox>
+           <v-checkbox v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:-10px; margin-bottom:20px;"></v-checkbox>
 
             <v-divider></v-divider>
 
@@ -123,8 +108,6 @@ export default {
       environment: '',
       environment_items: [],
       method: 'validate',
-      execution: 'sequential',
-      threads: '10',
       start_execution: false,
 
       // Query Dialog
@@ -253,8 +236,6 @@ export default {
         queries: JSON.stringify(this.query_items),
         mode: 'BASIC',
         method: this.method.toUpperCase(),
-        execution: this.execution.toUpperCase(),
-        execution_threads: this.threads,
         start_execution: this.start_execution
       }
       // Add deployment to the DB

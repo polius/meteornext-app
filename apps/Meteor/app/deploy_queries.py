@@ -82,7 +82,7 @@ class deploy_queries:
             os.mkdir("{0}/{1}/execution/{2}/{3}/".format(self._script_path, self._execution_name, region, server['name']))
 
             # Deployment in Parallel
-            if self._credentials['execution_mode']['parallel'] == 'True' and int(self._credentials['execution_mode']['threads']) > 1:
+            if self._credentials['execution_mode']['parallel'] == 'True':
                 manager = SyncManager()
                 manager.start(self.__mgr_init)
                 thread_shared_array = manager.list()

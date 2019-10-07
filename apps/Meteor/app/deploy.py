@@ -1275,7 +1275,10 @@ class deploy:
         print(colored("‖  OUTPUT                                                          ‖", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
         # Show Logs Path
-        self._meteor_logs_path = "{}/logs/{}.tar.gz".format(self._SCRIPT_PATH, compressed_file_name)
+        if self._args.logs_path:
+            self._meteor_logs_path = "{}/{}.tar.gz".format(self._args.logs_path, compressed_file_name)
+        else:
+            self._meteor_logs_path = "{}/logs/{}.tar.gz".format(self._SCRIPT_PATH, compressed_file_name)
         print("- Logs Path: " + colored(self._meteor_logs_path, 'green'))
 
         if self._credentials['web']['public_url'] != '':

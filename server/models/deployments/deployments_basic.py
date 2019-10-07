@@ -8,7 +8,7 @@ class Deployments_Basic:
 
     def get(self, user_id, deployment_id):
         query = """
-            SELECT d.id, d.mode, b.id AS 'execution_id', d.name, e.name AS 'environment', b.databases, b.queries, b.method, b.execution, b.execution_threads, b.start_execution, b.status, b.created, b.started, b.ended, CONCAT(TIMEDIFF(b.ended, b.started)) AS 'overall', b.error, b.progress, b.logs_path, b.logs_url
+            SELECT d.id, d.mode, b.id AS 'execution_id', d.name, e.name AS 'environment', b.databases, b.queries, b.method, b.start_execution, b.status, b.created, b.started, b.ended, CONCAT(TIMEDIFF(b.ended, b.started)) AS 'overall', b.error, b.progress, b.results
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id AND d.user_id = %s
             JOIN environments e ON e.id = b.environment_id 
@@ -17,49 +17,25 @@ class Deployments_Basic:
         return self._mysql.execute(query, (user_id, deployment_id))
             
     def post(self, deployment):
-        if deployment['execution'] == 'SEQUENTIAL':
-            query = """
-                INSERT INTO deployments_basic (deployment_id, environment_id, `databases`, queries, method, execution, start_execution)
-                SELECT %s, e.id, %s, %s, %s, %s, %s
-                FROM environments e
-                WHERE e.name = %s
-            """
-            return self._mysql.execute(query, (deployment['id'], deployment['databases'], str(deployment['queries']), deployment['method'], deployment['execution'], '0', deployment['environment']))
-        else:
-            query = """
-                INSERT INTO deployments_basic (deployment_id, environment_id, `databases`, queries, method, execution, execution_threads, start_execution)
-                SELECT %s, e.id, %s, %s, %s, %s, %s, %s
-                FROM environments e
-                WHERE e.name = %s
-            """
-            return self._mysql.execute(query, (deployment['id'], deployment['databases'], str(deployment['queries']), deployment['method'], deployment['execution'], deployment['execution_threads'], deployment['start_execution'], deployment['environment']))
+        query = """
+            INSERT INTO deployments_basic (deployment_id, environment_id, `databases`, queries, method, start_execution)
+            SELECT %s, e.id, %s, %s, %s, %s
+            FROM environments e
+            WHERE e.name = %s
+        """
+        return self._mysql.execute(query, (deployment['id'], deployment['databases'], str(deployment['queries']), deployment['method'], '0', deployment['environment']))
 
     def put(self, deployment):
-        if deployment['execution'] == 'SEQUENTIAL':
-            query = """
-                UPDATE deployments_basic
-                SET `environment_id` = (SELECT id FROM environments WHERE name = %s),
-                    `databases` = %s,
-                    `queries` = %s,
-                    `method` = %s,
-                    `execution` = %s,
-                    `start_execution` = %s
-                WHERE id = (SELECT id FROM (SELECT MAX(id) AS 'id' FROM deployments_basic WHERE deployment_id = %s)t);
-            """
-            self._mysql.execute(query, (deployment['environment'], deployment['databases'], deployment['queries'], deployment['method'], deployment['execution'], deployment['start_execution'], deployment['id']))
-        else:
-            query = """
-                UPDATE deployments_basic
-                SET `environment_id` = (SELECT id FROM environments WHERE name = %s),
-                    `databases` = %s,
-                    `queries` = %s,
-                    `method` = %s,
-                    `execution` = %s,
-                    `execution_threads` = %s,
-                    `start_execution` = %s
-                WHERE id = (SELECT id FROM (SELECT MAX(id) AS 'id' FROM deployments_basic WHERE deployment_id = %s)t);
-            """
-            self._mysql.execute(query, (deployment['environment'], deployment['databases'], deployment['queries'], deployment['method'], deployment['execution'], deployment['execution_threads'], deployment['start_execution'], deployment['id']))
+        query = """
+            UPDATE deployments_basic
+            SET `environment_id` = (SELECT id FROM environments WHERE name = %s),
+                `databases` = %s,
+                `queries` = %s,
+                `method` = %s,
+                `start_execution` = %s
+            WHERE id = (SELECT id FROM (SELECT MAX(id) AS 'id' FROM deployments_basic WHERE deployment_id = %s)t);
+        """
+        self._mysql.execute(query, (deployment['environment'], deployment['databases'], deployment['queries'], deployment['method'], deployment['start_execution'], deployment['id']))
 
     def delete(self, user_id, environment):
         query = """
@@ -90,10 +66,19 @@ class Deployments_Basic:
 
     def getExecution(self, user_id, deployment_id):
         query = """
-            SELECT d.id, d.mode, b.id AS 'execution_id', d.name, e.name AS 'environment', b.databases, b.queries, b.method, b.execution, b.execution_threads, b.start_execution, b.created, b.started, b.ended, b.status, b.results, b.logs
+            SELECT d.id, d.mode, b.id AS 'execution_id', d.name, e.name AS 'environment', b.databases, b.queries, b.method, b.start_execution, b.created, b.started, b.ended, b.status, b.results
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id AND d.user_id = %s
             JOIN environments e ON e.id = b.environment_id 
+            WHERE b.id = %s
+        """
+        return self._mysql.execute(query, (user_id, deployment_id))
+    
+    def startExecution(self, user_id, deployment_id):
+        query = """
+            UPDATE deployments_basic b
+            JOIN deployments d ON d.id = b.deployment_id AND d.user_id = %s 
+            SET b.start_execution = 1
             WHERE b.id = %s
         """
         return self._mysql.execute(query, (user_id, deployment_id))

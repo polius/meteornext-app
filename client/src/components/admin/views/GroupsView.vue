@@ -37,6 +37,7 @@
               <v-card-text style="padding-bottom:0px;">
                 <v-switch v-model="group.deployments_enable" label="Enable Deployments" style="margin-top:0px;"></v-switch>
                 <v-switch v-model="group.deployments_edit" label="Enable Editing Settings" style="margin-top:0px;"></v-switch>
+                <v-text-field v-model="group.deployments_threads" label="Threads" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 && v < 100 || 'A number between: 1 - 99']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -50,7 +51,7 @@
                 <v-btn v-if="environment_selected.length == 1" text @click="editEnvironment()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
                 <v-btn v-if="environment_selected.length > 0" text @click='deleteEnvironment()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                 </v-toolbar-items>
-                <v-text-field v-model="environment_search" append-icon="search"  label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
+                <v-text-field v-model="environment_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
               </v-toolbar>
               <v-divider></v-divider>
               <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" hide-default-header hide-default-footer show-select class="elevation-1">

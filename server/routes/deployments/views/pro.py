@@ -80,11 +80,6 @@ class Pro:
         return jsonify({'data': self._deployments_pro.get(user['id'], deployment_id)}), 200
 
     def post(self, user, data):
-        # Check if 'execution_threads' is a digit between 2-10
-        if data['execution'] == 'PARALLEL':
-            if not str(data['execution_threads']).isdigit() or int(data['execution_threads']) < 2 or int(data['execution_threads']) > 10:
-                return jsonify({'message': "The 'Threads' field should be an integer between 2-10"}), 400
-
         # Create deployment to the DB
         data['id'] = self._deployments.post(user['id'], data)
         data['execution_id'] = self._deployments_pro.post(data)
@@ -95,11 +90,6 @@ class Pro:
         return jsonify({'message': 'Deployment created successfully', 'data': {'deploymentID': data['id'] }}), 200
 
     def put(self, user, data):
-        # Check if 'execution_threads' is a digit between 2-10
-        if data['execution'] == 'PARALLEL':
-            if not str(data['execution_threads']).isdigit() or int(data['execution_threads']) < 2 or int(data['execution_threads']) > 10:
-                return jsonify({'message': "The 'Threads' field should be an integer between 2-10"}), 400
-
         # Get current deployment
         deployment = self._deployments_pro.get(user['id'], data['id'])[0]
 

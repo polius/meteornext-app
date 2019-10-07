@@ -19,7 +19,7 @@ class Groups:
             INSERT INTO groups (name, description, deployments_enable, deployments_edit) 
             VALUES (%s, %s, %s, %s)
         """
-        self._mysql.execute(query, (group['name'], group['description'], group['deployments_enable'], group['deployments_edit']))
+        self._mysql.execute(query, (group['name'], group['description'], group['deployments_enable'], group['deployments_edit'], group['deployments_threads']))
 
     def put(self, group):
         query = """
@@ -27,10 +27,11 @@ class Groups:
             SET name = %s, 
             description = %s,
             deployments_enable = %s,
-            deployments_edit = %s
+            deployments_edit = %s,
+            deployments_threads = %s
             WHERE id = %s
         """
-        self._mysql.execute(query, (group['name'], group['description'], group['deployments_enable'], group['deployments_edit'], group['id']))
+        self._mysql.execute(query, (group['name'], group['description'], group['deployments_enable'], group['deployments_edit'], group['deployments_threads'], group['id']))
 
     def delete(self, group):
         self._mysql.execute("DELETE FROM groups WHERE name = %s", (group))
