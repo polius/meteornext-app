@@ -9,22 +9,23 @@
           <v-btn v-if="'status' in deployment" text title="Show Parameters" @click="parameters()"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
           <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="padding-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
           <v-btn :disabled="deployment['status'] == 'IN PROGRESS'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED') ? 'Edit execution' : 'Re-Deploy with other parameters'" @click="edit()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>{{(deployment['status'] == 'CREATED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
-          <v-divider v-if="deployment['status'] == 'CREATED' || deployment['status'] == 'IN PROGRESS'" class="mx-3" inset vertical></v-divider>
-          <v-btn v-if="deployment['status'] == 'CREATED' && !start_execution" text title="Start Execution" @click="start()"><v-icon small style="padding-right:10px">fas fa-play</v-icon>START</v-btn>
-          <v-btn :disabled="stop_execution && deployment['status'] != 'IN PROGRESS'" v-if="deployment['status'] == 'IN PROGRESS' || start_execution" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
+          <v-divider v-if="start_execution || deployment['status'] == 'STARTING' || deployment['status'] == 'CREATED' || deployment['status'] == 'IN PROGRESS'" class="mx-3" inset vertical></v-divider>
+          <v-btn :disabled="start_execution" v-if="deployment['status'] == 'CREATED'" text title="Start Execution" @click="start()"><v-icon small style="padding-right:10px">fas fa-play</v-icon>START</v-btn>
+          <v-btn :disabled="stop_execution || deployment['status'] == 'STARTING'" v-if="deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS'" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
         </v-toolbar-items>
         <v-divider v-if="'status' in deployment" class="mx-3" inset vertical></v-divider>
         
         <div v-if="stop_execution" class="subtitle-1" style="margin-left:5px;">Stopping the execution...</div>
-        <div v-else-if="deployment['status'] == 'IN PROGRESS' || start_execution" class="subtitle-1" style="margin-left:5px;">Execution in progress...</div>
-        <v-progress-circular v-if="start_execution || stop_execution || deployment['status'] == 'IN PROGRESS'" :size="22" indeterminate color="white" width="2" style="margin-left:20px; margin-right:10px;"></v-progress-circular>
+        <div v-else-if="(start_execution && deployment['status'] == 'IN PROGRESS') || deployment['status'] == 'IN PROGRESS'" class="subtitle-1" style="margin-left:5px;">Execution in progress...</div>
+        <div v-else-if="start_execution || deployment['status'] == 'STARTING'" class="subtitle-1" style="margin-left:5px;">Starting the execution...</div>
+        <v-progress-circular v-if="start_execution || stop_execution || deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS'" :size="22" indeterminate color="white" width="2" style="margin-left:20px; margin-right:10px;"></v-progress-circular>
 
         <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="success" style="margin-left:5px; margin-right:15px;">Execution Finished Successfully</v-chip>
         <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="success" style="margin-left:5px; margin-right:15px;">Execution Finished with errors</v-chip>
         <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="error" style="margin-left:5px; margin-right:15px;">Execution Failed</v-chip>
 
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn v-if="deployment['results'] != null" text title="Execution Results" @clicks="getResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
+          <v-btn v-if="deployment['status'] == 'SUCCEEDED' || deployment['status'] == 'FAILED' || (deployment['status'] == 'INTERRUPTED' && deployment['results'] != null)" text title="Execution Results" @clicks="getResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
         </v-toolbar-items>
 
         <v-spacer></v-spacer>
@@ -45,6 +46,7 @@
             <template v-slot:item.status="props">
               <v-icon v-if="props.item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
               <v-icon v-else-if="props.item.status == 'QUEUED'" title="Queued" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
+              <v-icon v-else-if="props.item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
               <v-icon v-else-if="props.item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
               <v-icon v-else-if="props.item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
               <v-icon v-else-if="props.item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
@@ -157,7 +159,7 @@
                 <codemirror v-if="deploymentMode == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
 
                 <div class="subtitle-1 font-weight-regular">METHOD</div>
-                <v-radio-group :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" style="margin-top:10px;">
+                <v-radio-group :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" style="margin-top:10px; margin-bottom:-25px;">
                   <v-radio value="validate" color="success">
                     <template v-slot:label>
                       <div class="success--text">VALIDATE</div>
@@ -175,7 +177,7 @@
                   </v-radio>
                 </v-radio-group>
 
-                <v-checkbox v-if="information_dialog_mode == 'parameters' || deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details style="margin-top:-10px; margin-bottom:5px;"></v-checkbox>              
+                <v-checkbox v-if="information_dialog_mode == 'parameters' || deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
                 <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
 
                 <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
@@ -213,7 +215,7 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="select_dialog" max-width="80%">
+    <v-dialog v-model="select_dialog" max-width="90%">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">SELECT EXECUTION</v-toolbar-title>
@@ -238,6 +240,7 @@
                         <td>
                           <v-icon v-if="props.item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
                           <v-icon v-else-if="props.item.status == 'QUEUED'" title="Queued" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
+                          <v-icon v-else-if="props.item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
                           <v-icon v-else-if="props.item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
                           <v-icon v-else-if="props.item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
                           <v-icon v-else-if="props.item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
@@ -433,7 +436,7 @@
           .then((response) => {
             const data = response.data.data[0]
             this.parseRequest(data)
-            if (data['status'] == 'IN PROGRESS' || (data['status'] == 'CREATED' && data['start_execution'])) setTimeout(this.getDeployment, 2000)
+            if (data['status'] == 'STARTING' || data['status'] == 'IN PROGRESS') setTimeout(this.getDeployment, 2000)
             else this.start_execution = false
           })
           .catch((error) => {
@@ -441,6 +444,13 @@
             // eslint-disable-next-line
             console.error(error)
           })
+      },
+      clear() {
+        this.validation_data = []
+        this.execution_data = []
+        this.logs_data = []
+        this.tasks_data = []
+        this.queries_data = []
       },
       parseRequest(data) {
         // Parse Deployment Data
@@ -460,7 +470,6 @@
           this.deployment['code'] = data['code']
         }
         this.deployment['method'] = data['method'].toLowerCase()
-        this.deployment['start_execution'] = data['start_execution']
         this.deployment['status'] = data['status']
         this.deployment['created'] = data['created']
         this.deployment['started'] = data['started']
@@ -579,9 +588,6 @@
           failed: this.deployment['progress']['queries']['failed']['t'] + ' (' + this.deployment['progress']['queries']['failed']['p'] + '%)'
         })
       },
-      getLogs() {
-
-      },
       getResults() {
 
       },
@@ -650,12 +656,12 @@
         // Build parameters
         const path = this.$store.getters.url + '/deployments/start'
         const payload = {
-          deploymentID: this.deployment['id']
+          execution_id: this.deployment['execution_id']
         }
         axios.post(path, payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
-          this.getDeployment()          
+          this.getDeployment()
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -681,6 +687,7 @@
         axios.get(path, { params: { executionID: execution_id } })
           .then((response) => {
             const data = response.data.data[0]
+            this.clear()
             this.parseRequest(data)
             this.select_dialog = false
           })
@@ -697,12 +704,13 @@
         // Build parameters
         const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase()
         var payload = {
-          id: this.information_dialog_data.id,
+          id: this.deployment.id,
+          execution_id: this.deployment.execution_id,
           name: this.deployment.name,
           environment: this.information_dialog_data.environment,
           mode: this.deployment['mode'].toUpperCase(),
           method: this.information_dialog_data.method.toUpperCase(),
-          start_execution: this.information_dialog_data.start_execution
+          start_execution: (this.information_dialog_data.start_execution === undefined) ? false : this.information_dialog_data.start_execution
         }
         // Build different modes
         if (this.deployment['mode'] == 'BASIC') {
@@ -716,8 +724,11 @@
         axios.put(path, payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
+          // Clear current deployment
+          this.clear()
           // Refresh the deployment
-          this.getDeployment()
+          if (response.data.data.length > 0) this.parseRequest(response.data.data[0])
+          else this.getDeployment()
           // Hide the Information dialog
           this.information_dialog = false
         })

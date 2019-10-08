@@ -77,7 +77,7 @@ class Pro:
     def get(self, user):
         deployment_id = request.args['deploymentID'] if 'deploymentID' in request.args else None
         print(deployment_id)
-        return jsonify({'data': self._deployments_pro.get(user['id'], deployment_id)}), 200
+        return jsonify({'data': self._deployments_pro.get(user['id'], deployment_id=deployment_id)}), 200
 
     def post(self, user, data):
         # Create deployment to the DB

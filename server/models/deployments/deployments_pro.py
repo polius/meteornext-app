@@ -6,35 +6,44 @@ class Deployments_Pro:
     def __init__(self, credentials):
         self._mysql = imp.load_source('mysql', '{}/models/mysql.py'.format(credentials['path'])).mysql(credentials)
 
-    def get(self, user_id, deployment_id):
-        query = """
-            SELECT d.id, d.mode, p.id AS 'execution_id', d.name, e.name AS 'environment', p.code, p.method, p.start_execution, p.status, p.created, p.started, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.results
-            FROM deployments_pro p
-            JOIN deployments d ON d.id = p.deployment_id AND d.user_id = %s
-            JOIN environments e ON e.id = p.environment_id 
-            WHERE p.id = (SELECT MAX(id) FROM deployments_pro WHERE deployment_id = %s);
-        """
-        return self._mysql.execute(query, (user_id, deployment_id))
+    def get(self, user_id, deployment_id=None, execution_id=None):
+        if deployment_id is not None:
+            query = """
+                SELECT d.id, d.mode, p.id AS 'execution_id', d.name, e.name AS 'environment', p.code, p.method, p.status, p.created, p.started, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.results
+                FROM deployments_pro p
+                JOIN deployments d ON d.id = p.deployment_id AND d.user_id = %s
+                JOIN environments e ON e.id = p.environment_id 
+                WHERE p.id = (SELECT MAX(id) FROM deployments_pro WHERE deployment_id = %s);
+            """
+            return self._mysql.execute(query, (user_id, deployment_id))
+        elif execution_id is not None:
+            query = """
+                SELECT d.id, d.mode, p.id AS 'execution_id', d.name, e.name AS 'environment', p.code, p.method, p.status, p.created, p.started, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.results
+                FROM deployments_pro p
+                JOIN deployments d ON d.id = p.deployment_id AND d.user_id = %s
+                JOIN environments e ON e.id = p.environment_id 
+                WHERE p.id = %s
+            """
+            return self._mysql.execute(query, (user_id, execution_id))
 
     def post(self, deployment):
         query = """
-            INSERT INTO deployments_pro (deployment_id, environment_id, code, method, start_execution)
-            SELECT %s, e.id, %s, %s, %s, %s
+            INSERT INTO deployments_pro (deployment_id, environment_id, code, method)
+            SELECT %s, e.id, %s, %s, %s
             FROM environments e
             WHERE e.name = %s
         """
-        return self._mysql.execute(query, (deployment['id'], deployment['code'], deployment['method'], deployment['start_execution'], deployment['environment']))
+        return self._mysql.execute(query, (deployment['id'], deployment['code'], deployment['method'], deployment['environment']))
 
     def put(self, deployment):
         query = """
             UPDATE deployments_pro
             SET `environment_id` = (SELECT id FROM environments WHERE name = %s),
                 `code` = %s,
-                `method` = %s,
-                `start_execution` = %s
+                `method` = %s
             WHERE id = (SELECT id FROM (SELECT MAX(id) AS 'id' FROM deployments_pro WHERE deployment_id = %s)t);
         """
-        self._mysql.execute(query, (deployment['environment'], deployment['code'], deployment['method'], deployment['start_execution'], deployment['id']))
+        self._mysql.execute(query, (deployment['environment'], deployment['code'], deployment['method'], deployment['id']))
 
     def delete(self, user_id, environment):
         query = """
@@ -65,7 +74,7 @@ class Deployments_Pro:
 
     def getExecution(self, user_id, deployment_id):
         query = """
-            SELECT d.id, d.mode, p.id AS 'execution_id', d.name, e.name AS 'environment', p.code, p.method, p.start_execution, p.created, p.started, p.ended, p.status, p.results, p.logs
+            SELECT d.id, d.mode, p.id AS 'execution_id', d.name, e.name AS 'environment', p.code, p.method, p.status, p.created, p.started, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.results
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id AND d.user_id = %s
             JOIN environments e ON e.id = p.environment_id 
@@ -78,7 +87,7 @@ class Deployments_Pro:
             UPDATE p
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id AND d.user_id = %s 
-            SET p.start_execution = 1
+            SET p.status = 'STARTING'
             WHERE p.id = %s
         """
         return self._mysql.execute(query, (user_id, deployment_id))

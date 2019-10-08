@@ -29,6 +29,7 @@
         <template v-slot:item.status="props">
           <v-icon v-if="props.item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
           <v-icon v-else-if="props.item.status == 'QUEUED'" title="Queued" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
+          <v-icon v-else-if="props.item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
           <v-icon v-else-if="props.item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
           <v-icon v-else-if="props.item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
           <v-icon v-else-if="props.item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
@@ -149,15 +150,6 @@ export default {
       if (method == 'DEPLOY') return '#f44336'
       else if (method == 'TEST') return '#ff9800'
       else if (method == 'VALIDATE') return '#4caf50'
-    },
-    getStatusColor (status) {
-      if (status == 'CREATED') return '#bdc3c7'
-      else if (status == 'QUEUED') return '#3498db'
-      else if (status == 'IN PROGRESS') return '#ff9800'
-      else if (status == 'SUCCESS') return '#4caf50'
-      else if (status == 'FAILED') return '#f44336'
-      else if (status == 'INTERRUPTED') return '#bf55ec'
-      else return '#fff'
     },
     newDeploy() {
       this.$router.push({ name:'deployments.new' })

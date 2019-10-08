@@ -73,36 +73,44 @@ class Basic:
     def post(self, user, data):
         # Create deployment to the DB
         data['id'] = self._deployments.post(user['id'], data)
+        data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
         data['execution_id'] = self._deployments_basic.post(data)
 
         # Get Meteor Additional Parameters
         data['group_id'] = user['group_id']
         data['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
 
-        # Start Meteor Execution
         if data['start_execution']:
+            # Start Meteor Execution
             self._meteor.execute(data)
 
         return jsonify({'message': 'Deployment created successfully', 'data': {'deploymentID': data['id'] }}), 200
 
     def put(self, user, data):
+        # Return data
+        return_data = []
         # Get current deployment
-        deployment = self._deployments_basic.get(user['id'], data['id'])[0]
+        deployment = self._deployments_basic.getExecution(user['id'], data['execution_id'])[0]
 
-        # Check if user has modified any value
-        if deployment['environment'] != data['environment'] or \
-           deployment['databases'] != data['databases'] or \
-           deployment['queries'] != data['queries'] or \
-           deployment['method'] != data['method'] or \
-           deployment['start_execution'] != data['start_execution']:
-            self._deployments_basic.put(data)
+        if deployment['status'] == 'CREATED' and not data['start_execution']:
+            # Check if user has modified any value
+            if deployment['environment'] != data['environment'] or \
+            deployment['databases'] != data['databases'] or \
+            deployment['queries'] != data['queries'] or \
+            deployment['method'] != data['method']:
+                self._deployments_basic.put(data)
+                return_data = self._deployments_basic.getExecution(user['id'], deployment['execution_id'])
+        else:
+            # Create a new Basic Deployment
+            data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
+            data['execution_id'] = self._deployments_basic.post(data)
 
-        if data['start_execution']:
-            # Get Meteor Additional Parameters
-            deployment['group_id'] = user['group_id']
-            deployment['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
+            if data['start_execution']:
+                # Get Meteor Additional Parameters
+                data['group_id'] = user['group_id']
+                data['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
 
-            # Start Meteor Execution
-            self._meteor.execute(data)
+                # Start Meteor Execution
+                self._meteor.execute(data)
 
-        return jsonify({'message': 'Deployment edited successfully'}), 200
+        return jsonify({'message': 'Deployment edited successfully', 'data': return_data}), 200
