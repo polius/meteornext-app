@@ -8,7 +8,7 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="'status' in deployment" text title="Show Parameters" @click="parameters()"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
           <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="padding-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
-          <v-btn :disabled="deployment['status'] == 'IN PROGRESS'" text :title="(deployment['status'] == 'CREATED') ? 'Edit execution' : 'Re-Deploy with other parameters'" @click="edit()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>{{(deployment['status'] == 'CREATED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
+          <v-btn :disabled="deployment['status'] == 'IN PROGRESS'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED') ? 'Edit execution' : 'Re-Deploy with other parameters'" @click="edit()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>{{(deployment['status'] == 'CREATED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
           <v-divider v-if="deployment['status'] == 'CREATED' || deployment['status'] == 'IN PROGRESS'" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="deployment['status'] == 'CREATED' && !start_execution" text title="Start Execution" @click="start()"><v-icon small style="padding-right:10px">fas fa-play</v-icon>START</v-btn>
           <v-btn :disabled="stop_execution && deployment['status'] != 'IN PROGRESS'" v-if="deployment['status'] == 'IN PROGRESS' || start_execution" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
@@ -176,7 +176,7 @@
                 </v-radio-group>
 
                 <v-checkbox v-if="information_dialog_mode == 'parameters' || deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details style="margin-top:-10px; margin-bottom:5px;"></v-checkbox>              
-                <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:-10px;"></v-divider>
+                <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
 
                 <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
                   <v-btn color="success" @click="editSubmit()">CONFIRM</v-btn>
@@ -213,7 +213,7 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="select_dialog" max-width="70%">
+    <v-dialog v-model="select_dialog" max-width="80%">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">SELECT EXECUTION</v-toolbar-title>

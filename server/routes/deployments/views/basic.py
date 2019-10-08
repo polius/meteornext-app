@@ -6,6 +6,7 @@ class Basic:
     def __init__(self, credentials):
         # Init models
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
+        self._groups = imp.load_source('groups', '{}/models/admin/groups.py'.format(credentials['path'])).Groups(credentials)
         self._deployments = imp.load_source('basic', '{}/models/deployments/deployments.py'.format(credentials['path'])).Deployments(credentials)
         self._deployments_basic = imp.load_source('basic', '{}/models/deployments/deployments_basic.py'.format(credentials['path'])).Deployments_Basic(credentials)
 
@@ -74,10 +75,14 @@ class Basic:
         data['id'] = self._deployments.post(user['id'], data)
         data['execution_id'] = self._deployments_basic.post(data)
 
-        # Start Meteor Execution
+        # Get Meteor Additional Parameters
         data['group_id'] = user['group_id']
+        data['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
+
+        # Start Meteor Execution
         if data['start_execution']:
             self._meteor.execute(data)
+
         return jsonify({'message': 'Deployment created successfully', 'data': {'deploymentID': data['id'] }}), 200
 
     def put(self, user, data):
@@ -85,27 +90,19 @@ class Basic:
         deployment = self._deployments_basic.get(user['id'], data['id'])[0]
 
         # Check if user has modified any value
-        if deployment['environment'] == data['environment'] and \
-           deployment['databases'] == data['databases'] and \
-           deployment['queries'] == data['queries'] and \
-           deployment['method'] == data['method'] and \
-           deployment['execution'] == data['execution'] and \
-           deployment['start_execution'] == data['start_execution']:
-            if 'execution_threads' in data:
-                if deployment['execution_threads'] == data['execution_threads']:
-                    return jsonify({'message': 'Deployment edited successfully'}), 200
-            else:
-                return jsonify({'message': 'Deployment edited successfully'}), 200
+        if deployment['environment'] != data['environment'] or \
+           deployment['databases'] != data['databases'] or \
+           deployment['queries'] != data['queries'] or \
+           deployment['method'] != data['method'] or \
+           deployment['start_execution'] != data['start_execution']:
+            self._deployments_basic.put(data)
 
-        if deployment['start_execution'] == 1:
-            # Create a new deployment if the current one is already executed
-            self._deployments_basic.post(data)
+        if data['start_execution']:
+            # Get Meteor Additional Parameters
+            deployment['group_id'] = user['group_id']
+            deployment['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
 
             # Start Meteor Execution
-            deployment['group_id'] = user['group_id']
             self._meteor.execute(data)
-        else:
-            # Edit the current deployment if it's not already executed
-            self._deployments_basic.put(data)
 
         return jsonify({'message': 'Deployment edited successfully'}), 200

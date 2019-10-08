@@ -134,8 +134,8 @@ class Meteor:
         
         # Compile Execution Mode
         self._credentials['execution_mode'] = {
-            "parallel": "True" if deployment['execution'] == 'PARALLEL' else 'False',
-            "threads": str(deployment['execution_threads']) if deployment['execution'] == 'PARALLEL' else ''
+            "parallel": "True",
+            "threads": deployment['execution_threads']
         }
 
         # Enable Meteor Next

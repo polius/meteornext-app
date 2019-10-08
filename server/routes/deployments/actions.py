@@ -7,6 +7,7 @@ class Actions:
     def __init__(self, credentials):
         # Init models
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
+        self._groups = imp.load_source('groups', '{}/models/admin/groups.py'.format(credentials['path'])).Groups(credentials)
         self._deployments = imp.load_source('deployments', '{}/models/deployments/deployments.py'.format(credentials['path'])).Deployments(credentials)
         self._deployments_basic = imp.load_source('basic', '{}/models/deployments/deployments_basic.py'.format(credentials['path'])).Deployments_Basic(credentials)
         self._deployments_pro = imp.load_source('pro', '{}/models/deployments/deployments_pro.py'.format(credentials['path'])).Deployments_Pro(credentials)
@@ -51,8 +52,6 @@ class Actions:
 
     def __start(self, user, data):
         # Get Deployment
-        print(user)
-        print(data)
         deployment = self._deployments.getMode(user['id'], {'id': data['deploymentID']})
 
         # Check if deployment exists
@@ -69,8 +68,11 @@ class Actions:
             meteor_data = self._deployments_pro.get(user['id'], data['deploymentID'])[0]
             self._deployments_pro.startExecution(user['id'], meteor_data['execution_id'])
 
-        # Start Meteor Execution
+        # Get Meteor Additional Parameters
         meteor_data['group_id'] = user['group_id']
+        meteor_data['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
+
+        # Start Meteor Execution
         self._meteor.execute(meteor_data)
 
         # Return Successful Message
