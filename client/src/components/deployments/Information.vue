@@ -25,7 +25,8 @@
         <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="error" style="margin-left:5px; margin-right:15px;">Execution Failed</v-chip>
 
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn v-if="deployment['status'] == 'SUCCESS' || deployment['status'] == 'FAILED' || (deployment['status'] == 'INTERRUPTED' && deployment['results'] != null)" text title="Execution Results" @clicks="getResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
+          <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="padding-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
+          <v-btn v-else-if="deployment['status'] == 'SUCCESS' || deployment['status'] == 'FAILED' || (deployment['status'] == 'INTERRUPTED' && deployment['results'] != null)" text title="Show Execution Results" @click="getResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
         </v-toolbar-items>
 
         <v-spacer></v-spacer>
@@ -33,7 +34,11 @@
         <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
       </v-toolbar>
 
-      <v-card-text>
+      <v-card-text v-if="show_results" style="padding:0px; background-color:rgb(55, 53, 64);">
+        <iframe style="width:100%; height: calc(100vh - 237px);" frameborder="0" scrolling="no" src="https://dba.inbenta.me/meteor/?uri=0ad37b20-b4c2-430b-957a-2c5608418fb2"></iframe>
+      </v-card-text>
+
+      <v-card-text v-else>
         <!-- INFORMATION -->
         <v-card>
           <v-data-table :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1">
@@ -384,6 +389,7 @@
       // Executions Flag
       stop_execution: false,
       start_execution: false,
+      show_results: false,
 
       // ...
 
@@ -594,7 +600,7 @@
         })
       },
       getResults() {
-
+        this.show_results = true
       },
       getExecutions() {
         // Get Deployment Executions
