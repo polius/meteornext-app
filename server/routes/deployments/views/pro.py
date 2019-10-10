@@ -8,6 +8,7 @@ class Pro:
 
         # Init models
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
+        self._groups = imp.load_source('groups', '{}/models/admin/groups.py'.format(credentials['path'])).Groups(credentials)
         self._deployments = imp.load_source('basic', '{}/models/deployments/deployments.py'.format(credentials['path'])).Deployments(credentials)
         self._deployments_pro = imp.load_source('pro', '{}/models/deployments/deployments_pro.py'.format(credentials['path'])).Deployments_Pro(credentials)
 
@@ -18,7 +19,7 @@ class Pro:
         # Init blueprint
         deployments_pro_blueprint = Blueprint('deployments_pro', __name__, template_folder='deployments_pro')
 
-        @deployments_pro_blueprint.route('/deployments/pro', methods=['GET','POST','PUT','DELETE'])
+        @deployments_pro_blueprint.route('/deployments/pro', methods=['GET','POST','PUT'])
         @jwt_required
         def deployments_pro_method():
             # Get user data
@@ -32,11 +33,11 @@ class Pro:
             deployment_json = request.get_json()
 
             if request.method == 'GET':
-                return self.get(user)
+                return self.__get(user)
             elif request.method == 'POST':
-                return self.post(user, deployment_json)
+                return self.__post(user, deployment_json)
             elif request.method == 'PUT':
-                return self.put(user, deployment_json)
+                return self.__put(user, deployment_json)
 
         @deployments_pro_blueprint.route('/deployments/pro/code', methods=['GET'])
         @jwt_required
@@ -56,12 +57,12 @@ class Pro:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get deployment executions
-            executions = self._deployments_pro.getExecutions(user['id'], request.args['deploymentID'])
+            executions = self._deployments_pro.getExecutions(user['id'], request.args['deployment_id'])
             return jsonify({'data': executions }), 200
 
-        @deployments_pro_blueprint.route('/deployments/pro/execution', methods=['GET'])
+        @deployments_pro_blueprint.route('/deployments/pro/start', methods=['POST'])
         @jwt_required
-        def deployments_pro_execution():
+        def deployments_pro_start():
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -69,46 +70,98 @@ class Pro:
             if not user['admin'] or not user['deployments_enable']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get deployment execution
-            return jsonify({'data': self._deployments_pro.getExecution(user['id'], request.args['executionID'])}), 200
+            # Get Request Json
+            deployment_json = request.get_json()
+
+            # Call Auxiliary Method
+            return self.__start(user, deployment_json)
+
+        @deployments_pro_blueprint.route('/deployments/pro/stop', methods=['POST'])
+        @jwt_required
+        def deployments_pro_stop():
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['admin'] or not user['deployments_enable']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            deployment_json = request.get_json()
+
+            # Call Auxiliary Method
+            return self.__stop(user, deployment_json)
 
         return deployments_pro_blueprint
 
-    def get(self, user):
-        deployment_id = request.args['deploymentID'] if 'deploymentID' in request.args else None
-        print(deployment_id)
-        return jsonify({'data': self._deployments_pro.get(user['id'], deployment_id=deployment_id)}), 200
+    ####################
+    # Internal Methods #
+    ####################
+    def __get(self, user):
+        return jsonify({'data': self._deployments_pro.get(user['id'], request.args['execution_id'])}), 200
 
-    def post(self, user, data):
+    def __post(self, user, data):
         # Create deployment to the DB
         data['id'] = self._deployments.post(user['id'], data)
+        data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
         data['execution_id'] = self._deployments_pro.post(data)
 
-        # Start Meteor Execution
+        # Get Meteor Additional Parameters
         data['group_id'] = user['group_id']
-        self._meteor.execute(data)
-        return jsonify({'message': 'Deployment created successfully', 'data': {'deploymentID': data['id'] }}), 200
+        data['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
 
-    def put(self, user, data):
+        if data['start_execution']:
+            # Start Meteor Execution
+            self._meteor.execute(data)
+
+        return jsonify({'message': 'Deployment created successfully', 'data': data['execution_id']}), 200
+
+    def __put(self, user, data):
         # Get current deployment
-        deployment = self._deployments_pro.get(user['id'], data['id'])[0]
+        deployment = self._deployments_pro.get(user['id'], data['execution_id'])[0]
 
-        # Check if user has modified any value
-        if deployment['environment'] == data['environment'] and \
-           deployment['code'] == data['code'] and \
-           deployment['method'] == data['method'] and \
-           deployment['execution'] == data['execution'] and \
-           deployment['start_execution'] == data['start_execution']:
-            if 'execution_threads' in data:
-                if deployment['execution_threads'] == data['execution_threads']:
-                    return jsonify({'message': 'Deployment edited successfully'}), 200
-            else:
-                return jsonify({'message': 'Deployment edited successfully'}), 200
-
-        if deployment['start_execution'] == 1:
-            # Create a new deployment if the current one is already executed
-            self._deployments_pro.post(data)
+        if deployment['status'] == 'CREATED' and not data['start_execution']:
+            # Check if user has modified any value
+            if deployment['environment'] != data['environment'] or \
+            deployment['code'] != data['code'] or \
+            deployment['method'] != data['method']:
+                self._deployments_pro.put(data)
         else:
-            # Edit the current deployment if it's not already executed
-            self._deployments_pro.put(data)
-        return jsonify({'message': 'Deployment edited successfully'}), 200
+            # Create a new Pro Deployment
+            data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
+            data['execution_id'] = self._deployments_pro.post(data)
+            if data['start_execution']:
+                # Get Meteor Additional Parameters
+                data['group_id'] = user['group_id']
+                data['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
+
+                # Start Meteor Execution
+                self._meteor.execute(data)
+
+        return jsonify({'message': 'Deployment edited successfully', 'data': data['execution_id']}), 200
+
+    def __start(self, user, data):
+        # Get Deployment
+        deployment = self._deployments_pro.get(user['id'], data['execution_id'])
+
+        # Check if deployment exists
+        if len(deployment) == 0:
+            return jsonify({'message': 'This deployment does not exist.'}), 400
+        else:
+            deployment = deployment[0]
+    
+        # Update Flags
+        self._deployments_pro.startExecution(user['id'], deployment['execution_id'])
+
+        # Get Meteor Additional Parameters
+        deployment['group_id'] = user['group_id']
+        deployment['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
+
+        # Start Meteor Execution
+        self._meteor.execute(deployment)
+
+        # Return Successful Message
+        return jsonify({'message': 'Deployment started successfully'}), 200
+
+    def __stop(self, user, data):
+        pass

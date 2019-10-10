@@ -17,7 +17,7 @@ class Basic:
         # Init blueprint
         deployments_basic_blueprint = Blueprint('deployments_basic', __name__, template_folder='deployments_basic')
 
-        @deployments_basic_blueprint.route('/deployments/basic', methods=['GET','POST','PUT','DELETE'])
+        @deployments_basic_blueprint.route('/deployments/basic', methods=['GET','POST','PUT'])
         @jwt_required
         def deployments_basic_method():
             # Get user data
