@@ -71,6 +71,19 @@ CREATE TABLE `auxiliary` (
   CONSTRAINT `auxiliary_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE `logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `aws_access_key` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `aws_secret_access_key` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `region_name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `bucket_name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `url` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `group_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `group_id` (`group_id`),
+  CONSTRAINT `logs_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE `slack` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `webhook` text COLLATE utf8mb4_unicode_ci,
@@ -79,28 +92,6 @@ CREATE TABLE `slack` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_id` (`group_id`),
   CONSTRAINT `slack_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
-
-CREATE TABLE `s3` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `aws_access_key` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `aws_secret_access_key` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `region_name` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `bucket_name` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `enabled` tinyint(1) NOT NULL,
-  `group_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `group_id` (`group_id`),
-  CONSTRAINT `s3_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
-
-CREATE TABLE `web` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `url` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `group_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `group_id` (`group_id`),
-  CONSTRAINT `web_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `deployments` (

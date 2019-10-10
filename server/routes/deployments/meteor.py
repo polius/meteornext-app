@@ -16,9 +16,8 @@ class Meteor:
         self._regions = imp.load_source('regions', '{}/models/deployments/regions.py'.format(credentials['path'])).Regions(credentials)
         self._servers = imp.load_source('servers', '{}/models/deployments/servers.py'.format(credentials['path'])).Servers(credentials)
         self._auxiliary = imp.load_source('auxiliary', '{}/models/deployments/auxiliary.py'.format(credentials['path'])).Auxiliary(credentials)
+        self._logs = imp.load_source('logs', '{}/models/deployments/logs.py'.format(credentials['path'])).Logs(credentials)
         self._slack = imp.load_source('slack', '{}/models/deployments/slack.py'.format(credentials['path'])).Slack(credentials)
-        self._s3 = imp.load_source('s3', '{}/models/deployments/s3.py'.format(credentials['path'])).S3(credentials)
-        self._web = imp.load_source('web', '{}/models/deployments/web.py'.format(credentials['path'])).Web(credentials)
 
         # Init Meteor Files
         self._query_execution = ''
@@ -42,10 +41,9 @@ class Meteor:
         regions = self._regions.get(deployment['group_id'])
         servers = self._servers.get(deployment['group_id'])
         auxiliary = self._auxiliary.get(deployment['group_id'])
+        logs = self._logs.get(deployment['group_id'])
         slack = self._slack.get(deployment['group_id'])
-        s3 = self._s3.get(deployment['group_id'])
-        web = self._web.get(deployment['group_id'])
-
+    
         # Compile [Environments, Regions, Servers]
         self._credentials['environments'] = {}
 
@@ -94,6 +92,29 @@ class Meteor:
                 "username": aux['username'],
                 "password": aux['password']
             }
+        
+        # Compile Logs
+        self._credentials['s3'] = {
+            "enabled": "False",
+            "aws_access_key_id": "",
+            "aws_secret_access_key": "",
+            "region_name": "",
+            "bucket_name": ""
+        }
+        self._credentials['web'] = {
+            "public_url": ""
+        }
+        if len(logs) > 0:
+            self._credentials['s3'] = {
+                "enabled": "True" if logs[0]['enabled'] == 1 else "False",
+                "aws_access_key_id": logs[0]['aws_access_key'],
+                "aws_secret_access_key": logs[0]['aws_secret_access_key'],
+                "region_name": logs[0]['region_name'],
+                "bucket_name": logs[0]['bucket_name']
+            }
+            self._credentials['web'] = {
+                "public_url": logs[0]['url']
+            }
 
         # Compile Slack
         self._credentials['slack'] = {
@@ -104,34 +125,8 @@ class Meteor:
             self._credentials['slack'] = {
                 "enabled": "True" if slack[0]['enabled'] == 1 else 'False',
                 "webhook": slack[0]['webhook']
-            }
-        
-        # Compile Amazon S3
-        self._credentials['s3'] = {
-            "enabled": "False",
-            "aws_access_key_id": "",
-            "aws_secret_access_key": "",
-            "region_name": "",
-            "bucket_name": ""
-        }
-        if len(s3) > 0:
-            self._credentials['s3'] = {
-                "enabled": "True" if s3[0]['enabled'] == 1 else "False",
-                "aws_access_key_id": s3[0]['aws_access_key'],
-                "aws_secret_access_key": s3[0]['aws_secret_access_key'],
-                "region_name": s3[0]['region_name'],
-                "bucket_name": s3[0]['bucket_name']
-            }
-        
-        # Compile Web
-        self._credentials['web'] = {
-            "public_url": ""
-        }
-        if len(web) > 0:
-            self._credentials['web'] = {
-                "public_url": web[0]['url']
-            }
-        
+            }        
+
         # Compile Execution Mode
         self._credentials['execution_mode'] = {
             "parallel": "True",

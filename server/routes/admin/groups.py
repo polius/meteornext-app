@@ -14,9 +14,8 @@ class Groups:
         self._regions = imp.load_source('regions', '{}/routes/deployments/settings/regions.py'.format(credentials['path'])).Regions(credentials)
         self._servers = imp.load_source('servers', '{}/routes/deployments/settings/servers.py'.format(credentials['path'])).Servers(credentials)
         self._auxiliary = imp.load_source('auxiliary', '{}/routes/deployments/settings/auxiliary.py'.format(credentials['path'])).Auxiliary(credentials)
+        self._logs = imp.load_source('logs', '{}/routes/deployments/settings/logs.py'.format(credentials['path'])).Logs(credentials)
         self._slack = imp.load_source('slack', '{}/routes/deployments/settings/slack.py'.format(credentials['path'])).Slack(credentials)
-        self._s3 = imp.load_source('s3', '{}/routes/deployments/settings/s3.py'.format(credentials['path'])).S3(credentials)
-        self._web = imp.load_source('web', '{}/routes/deployments/settings/web.py'.format(credentials['path'])).Web(credentials)
 
     def blueprint(self):
         # Init blueprint
@@ -55,9 +54,8 @@ class Groups:
                 'regions': self._regions.get(groupID)[0].get_json(),
                 'servers': self._servers.get(groupID)[0].get_json(),
                 'auxiliary': self._auxiliary.get(groupID)[0].get_json(),
-                'slack': self._slack.get(groupID)[0].get_json(),
-                's3': self._s3.get(groupID)[0].get_json(),
-                'web': self._web.get(groupID)[0].get_json()
+                'logs': self._logs.get(groupID)[0].get_json(),
+                'slack': self._slack.get(groupID)[0].get_json()
             }
             return jsonify(data), 200
 
@@ -86,15 +84,13 @@ class Groups:
             for i in data['auxiliary']:
                 self._auxiliary.post(group_id, i)
 
-            self._slack.put(group_id, json.loads(data['slack']))
-            self._s3.put(group_id, json.loads(data['s3']))
-            self._web.put(group_id, json.loads(data['web']))
+            self._logs.put(group_id, json.loads(data['logs']))
+            self._slack.put(group_id, json.loads(data['slack']))        
             return jsonify({'message': 'Group added'}), 200
 
         except Exception:
             # Rollback
             self.delete([group['name']])
-            raise
             return jsonify({'message': 'An error ocurred adding a group'}), 400
 
     def put(self, data):
@@ -147,14 +143,11 @@ class Groups:
         for i in diff_auxiliary['change']:
             self._auxiliary.put(group['id'], i)
 
+        # - Logs -
+        self._logs.put(group['id'], json.loads(data['logs']))
+
         # - Slack -
         self._slack.put(group['id'], json.loads(data['slack']))
-
-        # - S3 -
-        self._s3.put(group['id'], json.loads(data['s3']))
-
-        # - Slack -
-        self._web.put(group['id'], json.loads(data['web']))
 
         return jsonify({'message': 'Group edited'}), 200
 
@@ -164,9 +157,8 @@ class Groups:
             group_id = self._groups.get(group_id=group)[0]['id']
 
             # Delete all group elements
-            self._web.delete(group_id)
-            self._s3.delete(group_id)
             self._slack.delete(group_id)
+            self._logs.delete(group_id)
             self._auxiliary.remove(group_id)
             self._servers.remove(group_id)
             self._regions.remove(group_id)

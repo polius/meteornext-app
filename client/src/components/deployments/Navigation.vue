@@ -9,9 +9,8 @@
         <v-tab to="/deployments/regions"><span class="pl-2 pr-2">Regions</span></v-tab>
         <v-tab to="/deployments/servers"><span class="pl-2 pr-2">Servers</span></v-tab>
         <v-tab to="/deployments/auxiliary"><span class="pl-2 pr-2">Auxiliary Connections</span></v-tab>
+        <v-tab to="/deployments/logs"><span class="pl-2 pr-2">Logs</span></v-tab>
         <v-tab to="/deployments/slack"><span class="pl-2 pr-2">Slack</span></v-tab>
-        <v-tab to="/deployments/s3"><span class="pl-2 pr-2">Amazon S3</span></v-tab>
-        <v-tab to="/deployments/web"><span class="pl-2 pr-2">Web</span></v-tab>
       </v-tabs>
     </div>
     <v-container fluid>

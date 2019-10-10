@@ -75,21 +75,15 @@ let router = new VueRouter({
           meta: { requiresAuth: true }
         },
         {
+          path: 'logs',
+          name: 'deployments.logs',
+          component: () => import('../components/deployments/settings/Logs'),
+          meta: { requiresAuth: true }
+        },
+        {
           path: 'slack',
           name: 'deployments.slack',
           component: () => import('../components/deployments/settings/Slack'),
-          meta: { requiresAuth: true }
-        },
-        {
-          path: 's3',
-          name: 'deployments.s3',
-          component: () => import('../components/deployments/settings/S3'),
-          meta: { requiresAuth: true }
-        },
-        {
-          path: 'web',
-          name: 'deployments.web',
-          component: () => import('../components/deployments/settings/Web'),
           meta: { requiresAuth: true }
         }
       ]

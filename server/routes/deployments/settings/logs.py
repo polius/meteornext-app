@@ -2,19 +2,19 @@ import imp
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
-class S3:
+class Logs:
     def __init__(self, credentials):
         # Init models
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
-        self._s3 = imp.load_source('s3', '{}/models/deployments/s3.py'.format(credentials['path'])).S3(credentials)
+        self._logs = imp.load_source('logs', '{}/models/deployments/logs.py'.format(credentials['path'])).Logs(credentials)
 
     def blueprint(self):
         # Init blueprint
-        s3_blueprint = Blueprint('s3', __name__, template_folder='s3')
+        logs_blueprint = Blueprint('logs', __name__, template_folder='logs')
 
-        @s3_blueprint.route('/deployments/s3', methods=['GET','PUT'])
+        @logs_blueprint.route('/deployments/logs', methods=['GET','PUT'])
         @jwt_required
-        def s3_method():
+        def logs_method():
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -23,24 +23,24 @@ class S3:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
-            s3_json = request.get_json()
+            logs_json = request.get_json()
 
             if request.method == 'GET':
                 return self.get(user['group_id'])
             elif request.method == 'PUT':
-                return self.put(user['group_id'], s3_json)
+                return self.put(user['group_id'], logs_json)
 
-        return s3_blueprint
+        return logs_blueprint
 
     def get(self, group_id):
-        return jsonify({'data': self._s3.get(group_id)}), 200
+        return jsonify({'data': self._logs.get(group_id)}), 200
 
     def put(self, group_id, data):
-        if not self._s3.exist(group_id):
-            self._s3.post(group_id, data)
+        if not self._logs.exist(group_id):
+            self._logs.post(group_id, data)
         else:
-            self._s3.put(group_id, data)
+            self._logs.put(group_id, data)
         return jsonify({'message': 'Changes saved successfully'}), 200
 
     def delete(self, group_id):
-        self._s3.delete(group_id)
+        self._logs.delete(group_id)

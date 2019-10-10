@@ -13,9 +13,8 @@ import routes.deployments.settings.environments
 import routes.deployments.settings.regions
 import routes.deployments.settings.servers
 import routes.deployments.settings.auxiliary
+import routes.deployments.settings.logs
 import routes.deployments.settings.slack
-import routes.deployments.settings.s3
-import routes.deployments.settings.web
 import routes.deployments.deployments
 import routes.deployments.views.basic
 import routes.deployments.views.pro
@@ -45,9 +44,8 @@ environments = routes.deployments.settings.environments.Environments(credentials
 regions = routes.deployments.settings.regions.Regions(credentials).blueprint()
 servers = routes.deployments.settings.servers.Servers(credentials).blueprint()
 auxiliary = routes.deployments.settings.auxiliary.Auxiliary(credentials).blueprint()
+logs = routes.deployments.settings.logs.Logs(credentials).blueprint()
 slack = routes.deployments.settings.slack.Slack(credentials).blueprint()
-s3 = routes.deployments.settings.s3.S3(credentials).blueprint()
-web = routes.deployments.settings.web.Web(credentials).blueprint()
 deployments = routes.deployments.deployments.Deployments(credentials).blueprint()
 deployments_basic = routes.deployments.views.basic.Basic(credentials).blueprint()
 deployments_pro = routes.deployments.views.pro.Pro(credentials).blueprint()
@@ -61,9 +59,8 @@ app.register_blueprint(environments)
 app.register_blueprint(regions)
 app.register_blueprint(servers)
 app.register_blueprint(auxiliary)
+app.register_blueprint(logs)
 app.register_blueprint(slack)
-app.register_blueprint(s3)
-app.register_blueprint(web)
 app.register_blueprint(deployments)
 app.register_blueprint(deployments_basic)
 app.register_blueprint(deployments_pro)

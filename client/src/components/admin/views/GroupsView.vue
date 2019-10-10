@@ -24,9 +24,8 @@
                 <v-tab><span class="pl-2 pr-2">Regions</span></v-tab>
                 <v-tab><span class="pl-2 pr-2">Servers</span></v-tab>
                 <v-tab><span class="pl-2 pr-2">Auxiliary Connections</span></v-tab>
-                <v-tab><span class="pl-2 pr-2">Slack</span></v-tab>
-                <v-tab><span class="pl-2 pr-2">Amazon S3</span></v-tab>
-                <v-tab><span class="pl-2 pr-2">Web</span></v-tab>
+                <v-tab><span class="pl-2 pr-2">Logs</span></v-tab>
+                <v-tab><span class="pl-2 pr-2">Slack</span></v-tab>                
               </v-tabs>
             </div>
 
@@ -126,8 +125,23 @@
               </v-data-table>
             </v-card>
 
-            <!-- slack -->
+            <!-- logs -->
             <v-card v-if="tabs==5">
+              <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
+                <v-toolbar-title class="white--text">Logs</v-toolbar-title>
+              </v-toolbar>
+              <v-divider></v-divider>
+              <v-card-text style="padding-bottom:0px;">
+                <v-text-field :loading="loading" :disabled="loading" v-model="logs.aws_access_key" label="AWS Access Key" style="padding-top:0px;"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="logs.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="logs.region_name" label="Region Name" hint="Example: eu-west-1" style="padding-top:0px;"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="logs.bucket_name" label="Bucket Name" style="padding-top:0px;"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="logs.url" label="Logs Url" style="padding-top:0px;"></v-text-field>
+              </v-card-text>
+            </v-card>
+
+            <!-- slack -->
+            <v-card v-if="tabs==6">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">Slack</v-toolbar-title>
               </v-toolbar>
@@ -135,32 +149,6 @@
               <v-card-text style="padding-bottom:0px;">
                 <v-text-field :loading="loading" :disabled="loading" v-model="slack.webhook" label="Webhook URL" required style="padding-top:0px;"></v-text-field>
                 <v-switch :disabled="loading" v-model="slack.enabled" label="Enable Notifications" style="margin-top:0px;"></v-switch>
-              </v-card-text>
-            </v-card>
-
-            <!-- amazon s3 -->
-            <v-card v-if="tabs==6">
-              <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
-                <v-toolbar-title class="white--text">Amazon S3</v-toolbar-title>
-              </v-toolbar>
-              <v-divider></v-divider>
-              <v-card-text style="padding-bottom:0px;">
-                <v-text-field :loading="loading" :disabled="loading" v-model="s3.aws_access_key" label="AWS Access Key" style="padding-top:0px;"></v-text-field>
-                <v-text-field :loading="loading" :disabled="loading" v-model="s3.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;"></v-text-field>
-                <v-text-field :loading="loading" :disabled="loading" v-model="s3.region_name" label="Region Name" hint="Example: eu-west-1" style="padding-top:0px;"></v-text-field>
-                <v-text-field :loading="loading" :disabled="loading" v-model="s3.bucket_name" label="Bucket Name" style="padding-top:0px;"></v-text-field>
-                <v-switch :disabled="loading" v-model="s3.enabled" label="Enable Uploading Logs" style="margin-top:0px;"></v-switch>
-              </v-card-text>
-            </v-card>
-
-            <!-- web -->
-            <v-card v-if="tabs==7">
-              <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
-                <v-toolbar-title class="white--text">Web</v-toolbar-title>
-              </v-toolbar>
-              <v-divider></v-divider>
-              <v-card-text style="padding-bottom:0px;">
-                <v-text-field :loading="loading" :disabled="loading" v-model="web.url" label="Public URL" required style="padding-top:0px;"></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -415,30 +403,23 @@ export default {
     auxiliary_dialog_title: '',
     auxiliary_dialog_valid: false,
 
+    // +------+
+    // | LOGS |
+    // +------+
+    logs: {
+      aws_access_key: '',
+      aws_secret_access_key: '',
+      region_name: '',
+      bucket_name: '',
+      url: ''
+    },
+
     // +-------+
     // | SLACK |
     // +-------+
     slack: {
       webhook: '',
       enabled: false
-    },
-    
-    // +-----------+
-    // | AMAZON S3 |
-    // +-----------+
-    s3: {
-      aws_access_key: '',
-      aws_secret_access_key: '',
-      region_name: '',
-      bucket_name: '',
-      enabled: false
-    },
-    
-    // +-----+
-    // | WEB |
-    // +-----+
-    web: {
-      url: ''
     },
 
     // Snackbar
@@ -469,9 +450,8 @@ export default {
           this.region_items = response.data.regions.data.regions
           this.server_items = response.data.servers.data.servers
           this.auxiliary_items = response.data.auxiliary.data
+          if (response.data.logs.data.length > 0) this.logs = response.data.logs.data[0]
           if (response.data.slack.data.length > 0) this.slack = response.data.slack.data[0]
-          if (response.data.s3.data.length > 0) this.s3 = response.data.s3.data[0]
-          if (response.data.web.data.length > 0) this.web = response.data.web.data[0]
           this.refreshEnvironments()
           this.loading = false
         })
@@ -501,9 +481,8 @@ export default {
         regions: this.region_items,
         servers: this.server_items,
         auxiliary: this.auxiliary_items,
-        slack: JSON.stringify(this.slack),
-        s3: JSON.stringify(this.s3),
-        web: JSON.stringify(this.web)
+        logs: JSON.stringify(this.logs),
+        slack: JSON.stringify(this.slack),        
       }
       axios.post(path, payload)
         .then((response) => {
@@ -534,9 +513,8 @@ export default {
         regions: this.region_items,
         servers: this.server_items,
         auxiliary: this.auxiliary_items,
-        slack: JSON.stringify(this.slack),
-        s3: JSON.stringify(this.s3),
-        web: JSON.stringify(this.web)
+        logs: JSON.stringify(this.logs),
+        slack: JSON.stringify(this.slack),        
       }
       axios.put(path, payload)
         .then((response) => {
