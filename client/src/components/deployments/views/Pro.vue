@@ -187,7 +187,7 @@ export default {
           this.notification(response.data.message, 'success')
           // Redirect page
           // if (!this.start_execution) this.$router.push('/deployments')
-          this.$router.push({ name:'deployments.information', params: { deploymentID: response.data.data.deploymentID, deploymentMode: 'PRO' }})
+          this.$router.push({ name:'deployments.information', params: { executionID: response.data.data, deploymentMode: 'PRO' }})
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))

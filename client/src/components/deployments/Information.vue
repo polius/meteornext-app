@@ -25,7 +25,7 @@
         <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="error" style="margin-left:5px; margin-right:15px;">Execution Failed</v-chip>
 
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn v-if="deployment['status'] == 'SUCCEEDED' || deployment['status'] == 'FAILED' || (deployment['status'] == 'INTERRUPTED' && deployment['results'] != null)" text title="Execution Results" @clicks="getResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
+          <v-btn v-if="deployment['status'] == 'SUCCESS' || deployment['status'] == 'FAILED' || (deployment['status'] == 'INTERRUPTED' && deployment['results'] != null)" text title="Execution Results" @clicks="getResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
         </v-toolbar-items>
 
         <v-spacer></v-spacer>
@@ -420,10 +420,15 @@
       snackbarColor: ''
     }),
     components: { codemirror },
-    props: ['deploymentID', 'deploymentMode'],
+    props: ['executionID', 'deploymentMode'],
     created() {
-      if (typeof this.deploymentID === "undefined") this.$router.push('/deployments')
-      else this.getDeployment()
+      if (typeof this.executionID === "undefined") this.$router.push('/deployments')
+      else {
+        // Init parameters and get deployment
+        this.deployment['execution_id'] = this.executionID
+        this.deployment['mode'] = this.deploymentMode
+        this.getDeployment()
+      }
     },
     methods: {
       // -------------
@@ -431,8 +436,8 @@
       // -------------
       getDeployment() {
         // Get Deployment Data
-        const path = this.$store.getters.url + '/deployments/' + this.deploymentMode.toLowerCase()
-        axios.get(path, { params: { deploymentID: this.deploymentID } })
+        const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase()
+        axios.get(path, { params: { execution_id: this.deployment['execution_id'] } })
           .then((response) => {
             const data = response.data.data[0]
             this.parseRequest(data)
@@ -455,7 +460,7 @@
       parseRequest(data) {
         // Parse Deployment Data
         this.deployment['id'] = data['id']
-        this.deployment['execution_id'] = data['execution_id']
+        this.deployment['deployment_id'] = data['deployment_id']
         this.deployment['mode'] = data['mode']
         this.deployment['name'] = data['name']
         this.deployment['environment'] = data['environment']
@@ -594,7 +599,7 @@
       getExecutions() {
         // Get Deployment Executions
         const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase() + '/executions'
-        axios.get(path, { params: { deploymentID: this.deploymentID } })
+        axios.get(path, { params: { deployment_id: this.deployment['id'] } })
           .then((response) => {
             this.executions['items'] = response.data.data
             this.executions['headers'] = [
@@ -654,7 +659,7 @@
         this.action_dialog = false
         
         // Build parameters
-        const path = this.$store.getters.url + '/deployments/start'
+        const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase() +  '/start'
         const payload = {
           execution_id: this.deployment['execution_id']
         }
@@ -682,20 +687,10 @@
       // SELECT EXECUTION DIALOG
       // ------------------------
       selectExecution(execution_id) {
-        // Get Execution
-        const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase() + '/execution'
-        axios.get(path, { params: { executionID: execution_id } })
-          .then((response) => {
-            const data = response.data.data[0]
-            this.clear()
-            this.parseRequest(data)
-            this.select_dialog = false
-          })
-          .catch((error) => {
-            if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-            // eslint-disable-next-line
-            console.error(error)
-          })
+        this.clear()
+        this.deployment['execution_id'] = execution_id
+        this.getDeployment()
+        this.select_dialog = false
       },
       // -------------------------------------
       // EDIT
@@ -727,8 +722,8 @@
           // Clear current deployment
           this.clear()
           // Refresh the deployment
-          if (response.data.data.length > 0) this.parseRequest(response.data.data[0])
-          else this.getDeployment()
+          this.deployment['execution_id'] = response.data.data
+          this.getDeployment()
           // Hide the Information dialog
           this.information_dialog = false
         })
@@ -837,7 +832,7 @@
       },
       regionIcon (progress) {
         if (progress.startsWith('100%')) return 'fas fa-check'
-        else return 'fas fa-spinner'
+        else return 'fas fa-spinner'  
       },
       serverColor (progress) {
         if (progress.startsWith('100%')) return 'success--text'

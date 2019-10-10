@@ -6,25 +6,15 @@ class Deployments_Pro:
     def __init__(self, credentials):
         self._mysql = imp.load_source('mysql', '{}/models/mysql.py'.format(credentials['path'])).mysql(credentials)
 
-    def get(self, user_id, deployment_id=None, execution_id=None):
-        if deployment_id is not None:
-            query = """
-                SELECT d.id, d.mode, p.id AS 'execution_id', d.name, e.name AS 'environment', p.code, p.method, p.status, p.created, p.started, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.results
-                FROM deployments_pro p
-                JOIN deployments d ON d.id = p.deployment_id AND d.user_id = %s
-                JOIN environments e ON e.id = p.environment_id 
-                WHERE p.id = (SELECT MAX(id) FROM deployments_pro WHERE deployment_id = %s);
-            """
-            return self._mysql.execute(query, (user_id, deployment_id))
-        elif execution_id is not None:
-            query = """
-                SELECT d.id, d.mode, p.id AS 'execution_id', d.name, e.name AS 'environment', p.code, p.method, p.status, p.created, p.started, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.results
-                FROM deployments_pro p
-                JOIN deployments d ON d.id = p.deployment_id AND d.user_id = %s
-                JOIN environments e ON e.id = p.environment_id 
-                WHERE p.id = %s
-            """
-            return self._mysql.execute(query, (user_id, execution_id))
+    def get(self, user_id, deployment_id):
+        query = """
+            SELECT d.id, d.mode, p.id AS 'execution_id', d.name, e.name AS 'environment', p.code, p.method, p.status, p.created, p.started, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.results
+            FROM deployments_pro p
+            JOIN deployments d ON d.id = p.deployment_id AND d.user_id = %s
+            JOIN environments e ON e.id = p.environment_id 
+            WHERE p.id = %s
+        """
+        return self._mysql.execute(query, (user_id, deployment_id))
 
     def post(self, deployment):
         query = """
@@ -67,7 +57,7 @@ class Deployments_Pro:
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id AND d.user_id = %s
             JOIN environments e ON e.id = p.environment_id
-            WHERE p.deployment_id = %s
+            WHERE p.id = %s
             ORDER BY p.created DESC;
         """
         return self._mysql.execute(query, (user_id, deployment_id))

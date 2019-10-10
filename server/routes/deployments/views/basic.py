@@ -31,11 +31,11 @@ class Basic:
             deployment_json = request.get_json()
 
             if request.method == 'GET':
-                return self.get(user)
+                return self.__get(user)
             elif request.method == 'POST':
-                return self.post(user, deployment_json)
+                return self.__post(user, deployment_json)
             elif request.method == 'PUT':
-                return self.put(user, deployment_json)
+                return self.__put(user, deployment_json)
 
         @deployments_basic_blueprint.route('/deployments/basic/executions', methods=['GET'])
         @jwt_required
@@ -48,12 +48,12 @@ class Basic:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get deployment executions
-            executions = self._deployments_basic.getExecutions(user['id'], request.args['deploymentID'])
+            executions = self._deployments_basic.getExecutions(user['id'], request.args['deployment_id'])
             return jsonify({'data': executions }), 200
 
-        @deployments_basic_blueprint.route('/deployments/basic/execution', methods=['GET'])
+        @deployments_basic_blueprint.route('/deployments/basic/start', methods=['POST'])
         @jwt_required
-        def deployments_basic_execution():
+        def deployments_basic_start():
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -61,16 +61,37 @@ class Basic:
             if not user['admin'] or not user['deployments_enable']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get deployment execution
-            return jsonify({'data': self._deployments_basic.getExecution(user['id'], request.args['executionID'])}), 200
+            # Get Request Json
+            deployment_json = request.get_json()
+
+            # Call Auxiliary Method
+            return self.__start(user, deployment_json)
+
+        @deployments_basic_blueprint.route('/deployments/basic/stop', methods=['POST'])
+        @jwt_required
+        def deployments_basic_stop():
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['admin'] or not user['deployments_enable']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            deployment_json = request.get_json()
+
+            # Call Auxiliary Method
+            return self.__stop(user, deployment_json)
 
         return deployments_basic_blueprint
 
-    def get(self, user):
-        deployment_id = request.args['deploymentID'] if 'deploymentID' in request.args else None
-        return jsonify({'data': self._deployments_basic.get(user['id'], deployment_id)}), 200
+    ####################
+    # Internal Methods #
+    ####################
+    def __get(self, user):
+        return jsonify({'data': self._deployments_basic.get(user['id'], request.args['execution_id'])}), 200
 
-    def post(self, user, data):
+    def __post(self, user, data):
         # Create deployment to the DB
         data['id'] = self._deployments.post(user['id'], data)
         data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
@@ -84,13 +105,11 @@ class Basic:
             # Start Meteor Execution
             self._meteor.execute(data)
 
-        return jsonify({'message': 'Deployment created successfully', 'data': {'deploymentID': data['id'] }}), 200
+        return jsonify({'message': 'Deployment created successfully', 'data': data['execution_id']}), 200
 
-    def put(self, user, data):
-        # Return data
-        return_data = []
+    def __put(self, user, data):
         # Get current deployment
-        deployment = self._deployments_basic.getExecution(user['id'], data['execution_id'])[0]
+        deployment = self._deployments_basic.get(user['id'], data['execution_id'])[0]
 
         if deployment['status'] == 'CREATED' and not data['start_execution']:
             # Check if user has modified any value
@@ -99,7 +118,6 @@ class Basic:
             deployment['queries'] != data['queries'] or \
             deployment['method'] != data['method']:
                 self._deployments_basic.put(data)
-                return_data = self._deployments_basic.getExecution(user['id'], deployment['execution_id'])
         else:
             # Create a new Basic Deployment
             data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
@@ -113,4 +131,30 @@ class Basic:
                 # Start Meteor Execution
                 self._meteor.execute(data)
 
-        return jsonify({'message': 'Deployment edited successfully', 'data': return_data}), 200
+        return jsonify({'message': 'Deployment edited successfully', 'data': data['execution_id']}), 200
+
+    def __start(self, user, data):
+        # Get Deployment
+        deployment = self._deployments_basic.get(user['id'], data['execution_id'])
+
+        # Check if deployment exists
+        if len(deployment) == 0:
+            return jsonify({'message': 'This deployment does not exist.'}), 400
+        else:
+            deployment = deployment[0]
+    
+        # Update Flags
+        self._deployments_basic.startExecution(user['id'], deployment['execution_id'])
+
+        # Get Meteor Additional Parameters
+        deployment['group_id'] = user['group_id']
+        deployment['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
+
+        # Start Meteor Execution
+        self._meteor.execute(deployment)
+
+        # Return Successful Message
+        return jsonify({'message': 'Deployment started successfully'}), 200
+
+    def __stop(self, user, data):
+        pass

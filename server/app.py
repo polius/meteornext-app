@@ -19,7 +19,6 @@ import routes.deployments.settings.web
 import routes.deployments.deployments
 import routes.deployments.views.basic
 import routes.deployments.views.pro
-import routes.deployments.actions
 
 # configuration
 DEBUG = True
@@ -52,7 +51,6 @@ web = routes.deployments.settings.web.Web(credentials).blueprint()
 deployments = routes.deployments.deployments.Deployments(credentials).blueprint()
 deployments_basic = routes.deployments.views.basic.Basic(credentials).blueprint()
 deployments_pro = routes.deployments.views.pro.Pro(credentials).blueprint()
-actions = routes.deployments.actions.Actions(credentials).blueprint()
 
 # instantiate all routes
 app.register_blueprint(login)
@@ -69,7 +67,6 @@ app.register_blueprint(web)
 app.register_blueprint(deployments)
 app.register_blueprint(deployments_basic)
 app.register_blueprint(deployments_pro)
-app.register_blueprint(actions)
 
 # enable CORS
 CORS(app, resources={r'/*': {'origins': '*'}})
