@@ -106,7 +106,7 @@ class Meteor:
         }
         if len(logs) > 0:
             self._credentials['s3'] = {
-                "enabled": "True" if logs[0]['enabled'] == 1 else "False",
+                "enabled": "False",
                 "aws_access_key_id": logs[0]['aws_access_key'],
                 "aws_secret_access_key": logs[0]['aws_secret_access_key'],
                 "region_name": logs[0]['region_name'],
