@@ -1,3 +1,11 @@
+CREATE TABLE `settings` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+	`data` TEXT NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE `users` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `username` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -69,16 +77,6 @@ CREATE TABLE `auxiliary` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_id` (`group_id`,`name`),
   CONSTRAINT `auxiliary_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
-
-CREATE TABLE `logs` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-	`mode` ENUM('local','amazon_s3') NOT NULL,
-	`data` TEXT NOT NULL,
-  `group_id` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `group_id` (`group_id`),
-  CONSTRAINT `logs_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `slack` (

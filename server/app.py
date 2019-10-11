@@ -7,13 +7,13 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 import routes.login
 import routes.profile
+import routes.admin.settings
 import routes.admin.groups
 import routes.admin.users
 import routes.deployments.settings.environments
 import routes.deployments.settings.regions
 import routes.deployments.settings.servers
 import routes.deployments.settings.auxiliary
-import routes.deployments.settings.logs
 import routes.deployments.settings.slack
 import routes.deployments.deployments
 import routes.deployments.views.basic
@@ -38,13 +38,13 @@ with open('credentials.json') as file_open:
 # Init all blueprints
 login = routes.login.Login(credentials).blueprint()
 profile = routes.profile.Profile(credentials).blueprint()
+settings = routes.admin.settings.Settings(credentials).blueprint()
 groups = routes.admin.groups.Groups(credentials).blueprint()
 users = routes.admin.users.Users(credentials).blueprint()
 environments = routes.deployments.settings.environments.Environments(credentials).blueprint()
 regions = routes.deployments.settings.regions.Regions(credentials).blueprint()
 servers = routes.deployments.settings.servers.Servers(credentials).blueprint()
 auxiliary = routes.deployments.settings.auxiliary.Auxiliary(credentials).blueprint()
-logs = routes.deployments.settings.logs.Logs(credentials).blueprint()
 slack = routes.deployments.settings.slack.Slack(credentials).blueprint()
 deployments = routes.deployments.deployments.Deployments(credentials).blueprint()
 deployments_basic = routes.deployments.views.basic.Basic(credentials).blueprint()
@@ -53,13 +53,13 @@ deployments_pro = routes.deployments.views.pro.Pro(credentials).blueprint()
 # instantiate all routes
 app.register_blueprint(login)
 app.register_blueprint(profile)
+app.register_blueprint(settings)
 app.register_blueprint(groups)
 app.register_blueprint(users)
 app.register_blueprint(environments)
 app.register_blueprint(regions)
 app.register_blueprint(servers)
 app.register_blueprint(auxiliary)
-app.register_blueprint(logs)
 app.register_blueprint(slack)
 app.register_blueprint(deployments)
 app.register_blueprint(deployments_basic)

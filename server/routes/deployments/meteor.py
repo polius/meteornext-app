@@ -9,24 +9,27 @@ from datetime import datetime
 
 class Meteor:
     def __init__(self, credentials):
-        self._path = credentials['path']
         self._mysql = imp.load_source('mysql', '{}/models/mysql.py'.format(credentials['path'])).mysql(credentials)
         # Init models
+        self._settings = imp.load_source('settings', '{}/models/admin/settings.py'.format(credentials['path'])).Settings(credentials)
         self._environments = imp.load_source('environments', '{}/models/deployments/environments.py'.format(credentials['path'])).Environments(credentials)
         self._regions = imp.load_source('regions', '{}/models/deployments/regions.py'.format(credentials['path'])).Regions(credentials)
         self._servers = imp.load_source('servers', '{}/models/deployments/servers.py'.format(credentials['path'])).Servers(credentials)
         self._auxiliary = imp.load_source('auxiliary', '{}/models/deployments/auxiliary.py'.format(credentials['path'])).Auxiliary(credentials)
-        self._logs = imp.load_source('logs', '{}/models/deployments/logs.py'.format(credentials['path'])).Logs(credentials)
         self._slack = imp.load_source('slack', '{}/models/deployments/slack.py'.format(credentials['path'])).Slack(credentials)
 
         # Init Meteor Files
         self._query_execution = ''
         self._credentials = {}
 
+        # Retrieve Meteor Logs Path
+        self._base_path = credentials['path']
+        self._logs_path = json.loads(self._settings.get(setting_name='logs')[0]['data'])['local']['absolute_path']
+
     def execute(self, deployment):
         # Create Deployment Folder to store Meteor files
-        if not os.path.isdir('{}/data/deployments/{}.{}/keys'.format(self._path, deployment['id'], deployment['execution_id'])):
-            os.makedirs('{}/data/deployments/{}.{}/keys'.format(self._path, deployment['id'], deployment['execution_id']))
+        if not os.path.isdir('{}{}.{}/keys'.format(self._logs_path, deployment['id'], deployment['execution_id'])):
+            os.makedirs('{}{}.{}/keys'.format(self._logs_path, deployment['id'], deployment['execution_id']))
 
         # Compile Meteor Files
         self.__compile_credentials(deployment)
@@ -41,7 +44,6 @@ class Meteor:
         regions = self._regions.get(deployment['group_id'])
         servers = self._servers.get(deployment['group_id'])
         auxiliary = self._auxiliary.get(deployment['group_id'])
-        logs = self._logs.get(deployment['group_id'])
         slack = self._slack.get(deployment['group_id'])
     
         # Compile [Environments, Regions, Servers]
@@ -52,7 +54,7 @@ class Meteor:
                 self._credentials['environments'][environment['name']] = []
                 for region in regions:
                     if region['environment_id'] == environment['id']:
-                        key_path = "{}/data/deployments/{}.{}/keys/{}".format(self._path, deployment['id'], deployment['execution_id'], region['id'])
+                        key_path = "{}{}.{}/keys/{}".format(self._logs_path, deployment['id'], deployment['execution_id'], region['id'])
                         region_data = {
                             "region": region['name'],
                             "ssh": {
@@ -104,17 +106,17 @@ class Meteor:
         self._credentials['web'] = {
             "public_url": ""
         }
-        if len(logs) > 0:
-            self._credentials['s3'] = {
-                "enabled": "False",
-                "aws_access_key_id": logs[0]['aws_access_key'],
-                "aws_secret_access_key": logs[0]['aws_secret_access_key'],
-                "region_name": logs[0]['region_name'],
-                "bucket_name": logs[0]['bucket_name']
-            }
-            self._credentials['web'] = {
-                "public_url": logs[0]['url']
-            }
+        # if len(logs) > 0:
+        #     self._credentials['s3'] = {
+        #         "enabled": "False",
+        #         "aws_access_key_id": logs[0]['aws_access_key'],
+        #         "aws_secret_access_key": logs[0]['aws_secret_access_key'],
+        #         "region_name": logs[0]['region_name'],
+        #         "bucket_name": logs[0]['bucket_name']
+        #     }
+        #     self._credentials['web'] = {
+        #         "public_url": logs[0]['url']
+        #     }
 
         # Compile Slack
         self._credentials['slack'] = {
@@ -134,7 +136,7 @@ class Meteor:
         }
 
         # Enable Meteor Next
-        with open("{}/credentials.json".format(self._path)) as outfile:
+        with open("{}/credentials.json".format(self._base_path)) as outfile:
             next_credentials = json.load(outfile)
 
         self._credentials['meteor_next'] = {
@@ -147,7 +149,7 @@ class Meteor:
         }
 
         # Store Credentials
-        with open("{}/data/deployments/{}.{}/credentials.json".format(self._path, deployment['id'], deployment['execution_id']), 'w') as outfile:
+        with open("{}{}.{}/credentials.json".format(self._logs_path, deployment['id'], deployment['execution_id']), 'w') as outfile:
             json.dump(self._credentials, outfile)
 
     def __compile_query_execution(self, deployment):
@@ -157,7 +159,7 @@ class Meteor:
             self._query_execution = deployment['code']
 
         # Store Query Execution
-        with open("{}/data/deployments/{}.{}/query_execution.py".format(self._path, deployment['id'], deployment['execution_id']), 'w') as outfile:
+        with open("{}{}.{}/query_execution.py".format(self._logs_path, deployment['id'], deployment['execution_id']), 'w') as outfile:
             outfile.write(self._query_execution)
 
     def __compile_query_execution_basic(self, deployment):
@@ -192,11 +194,11 @@ class query_execution:
 
     def __execute(self, deployment):
         # Build Meteor Parameters
-        base_path = "{}/../apps/Meteor/app/meteor.py".format(self._path)
+        base_path = "{}/apps/Meteor/app/meteor.py".format(self._base_path)
         environment = deployment['environment']
-        logs_path = "{}/data/deployments/{}.{}".format(self._path, deployment['id'], deployment['execution_id'])
-        query_execution_path = "{}/data/deployments/{}.{}/query_execution.py".format(self._path, deployment['id'], deployment['execution_id'])
-        credentials_path = "{}/data/deployments/{}.{}/credentials.json".format(self._path, deployment['id'], deployment['execution_id'])
+        logs_path = "{}{}.{}".format(self._logs_path, deployment['id'], deployment['execution_id'])
+        query_execution_path = "{}{}.{}/query_execution.py".format(self._logs_path, deployment['id'], deployment['execution_id'])
+        credentials_path = "{}{}.{}/credentials.json".format(self._logs_path, deployment['id'], deployment['execution_id'])
         
         current_date = datetime.fromtimestamp(time()).strftime('%Y-%m-%d_%H.%M.%S.%f_UTC')
         execution_name = "{}_{}|{}".format(deployment['id'], deployment['execution_id'], current_date)

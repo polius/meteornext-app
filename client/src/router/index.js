@@ -119,6 +119,12 @@ let router = new VueRouter({
           meta: { requiresAuth: true }
         },
         {
+          path: 'settings',
+          name: 'admin.settings',
+          component: () => import('../components/admin/views/Settings'),
+          meta: { requiresAuth: true }
+        },
+        {
           path: 'users',
           name: 'admin.users',
           component: () => import('../components/admin/views/Users'),

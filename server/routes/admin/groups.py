@@ -14,7 +14,6 @@ class Groups:
         self._regions = imp.load_source('regions', '{}/routes/deployments/settings/regions.py'.format(credentials['path'])).Regions(credentials)
         self._servers = imp.load_source('servers', '{}/routes/deployments/settings/servers.py'.format(credentials['path'])).Servers(credentials)
         self._auxiliary = imp.load_source('auxiliary', '{}/routes/deployments/settings/auxiliary.py'.format(credentials['path'])).Auxiliary(credentials)
-        self._logs = imp.load_source('logs', '{}/routes/deployments/settings/logs.py'.format(credentials['path'])).Logs(credentials)
         self._slack = imp.load_source('slack', '{}/routes/deployments/settings/slack.py'.format(credentials['path'])).Slack(credentials)
 
     def blueprint(self):
@@ -54,7 +53,6 @@ class Groups:
                 'regions': self._regions.get(groupID)[0].get_json(),
                 'servers': self._servers.get(groupID)[0].get_json(),
                 'auxiliary': self._auxiliary.get(groupID)[0].get_json(),
-                'logs': self._logs.get(groupID)[0].get_json(),
                 'slack': self._slack.get(groupID)[0].get_json()
             }
             return jsonify(data), 200
@@ -84,7 +82,6 @@ class Groups:
             for i in data['auxiliary']:
                 self._auxiliary.post(group_id, i)
 
-            self._logs.put(group_id, json.loads(data['logs']))
             self._slack.put(group_id, json.loads(data['slack']))        
             return jsonify({'message': 'Group added'}), 200
 
@@ -143,9 +140,6 @@ class Groups:
         for i in diff_auxiliary['change']:
             self._auxiliary.put(group['id'], i)
 
-        # - Logs -
-        self._logs.put(group['id'], json.loads(data['logs']))
-
         # - Slack -
         self._slack.put(group['id'], json.loads(data['slack']))
 
@@ -158,7 +152,6 @@ class Groups:
 
             # Delete all group elements
             self._slack.delete(group_id)
-            self._logs.delete(group_id)
             self._auxiliary.remove(group_id)
             self._servers.remove(group_id)
             self._regions.remove(group_id)
