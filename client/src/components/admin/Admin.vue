@@ -6,13 +6,13 @@
       </v-toolbar>
       <v-container fluid grid-list-lg>
         <v-layout row wrap>
-          <v-flex xs12>
-            <div class="title font-weight-regular" style="margin-left:10px; margin-top:5px;">LOGS</div>
+          <v-flex xs12 style="margin-top:5px; margin-bottom:5px;">
+            <div class="title font-weight-regular" style="margin-left:10px;">LOGS</div>
             <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px; margin-bottom:10px;">Choose the logs location:</div>
             <v-btn :loading="loading" color="secondary" style="margin-left:10px;" @click="logs_mode = (logs_mode == 'local') ? '' : 'local'">LOCAL</v-btn>
             <v-btn :loading="loading" color="secondary" style="margin-left:10px;" @click="logs_mode = (logs_mode == 'amazon_s3') ? '' : 'amazon_s3'">AMAZON S3</v-btn>
 
-            <v-card v-if="logs_mode == 'local'" style="margin-left:10px; margin-right:10px; margin-top:15px; margin-bottom:10px;">
+            <v-card v-if="logs_mode == 'local'" style="margin-left:10px; margin-right:10px; margin-top:15px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">LOCAL</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
@@ -28,7 +28,7 @@
               </v-card-text>
             </v-card>
 
-            <v-card v-else-if="logs_mode == 'amazon_s3'" style="margin-left:10px; margin-right:10px; margin-top:15px; margin-bottom:10px;">
+            <v-card v-else-if="logs_mode == 'amazon_s3'" style="margin-left:10px; margin-right:10px; margin-top:15px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">Amazon S3</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
