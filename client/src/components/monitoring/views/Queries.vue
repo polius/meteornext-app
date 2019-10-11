@@ -42,7 +42,7 @@
               <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">
                 <div class="subheading">Are you sure you want to delete the selected environments?</div>
               </v-flex>
-              <v-btn color="success" @click="" dark style="margin-left:0px">Confirm</v-btn>
+              <v-btn color="success" dark style="margin-left:0px">Confirm</v-btn>
               <v-btn color="error" @click="itemDialog=false" dark style="margin-left:0px">Cancel</v-btn>
             </v-layout>
           </v-container>
@@ -58,7 +58,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+// import axios from 'axios'
 
 export default {
   data: () => ({

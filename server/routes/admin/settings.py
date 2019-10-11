@@ -1,9 +1,12 @@
+import os
 import imp
+import json
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 class Settings:
     def __init__(self, credentials):
+        self._credentials = credentials
         # Init models
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
         self._settings = imp.load_source('settings', '{}/models/admin/settings.py'.format(credentials['path'])).Settings(credentials)
@@ -33,7 +36,23 @@ class Settings:
         return settings_blueprint
 
     def get(self):
-        return jsonify({'data': self._settings.get()}), 200
+        # Init Settings
+        settings = {}
+
+        # Get SQL Settings
+        settings['sql'] = self._credentials
+
+        # Get API Settings
+        api_path = os.path.normpath(self._credentials['path'] + '/../client/src/settings.json')
+        with open(api_path) as file_open:
+            settings['api'] = json.load(file_open)
+            settings['api']['path'] = api_path
+
+        # Get Logs Settings
+        settings['logs'] = json.loads(self._settings.get()[0]['data'])
+
+        # Return Settings
+        return jsonify({'data': settings}), 200
 
     def put(self, data):
         self._settings.post(data)
