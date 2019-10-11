@@ -16,7 +16,7 @@
 
             <!-- DEPLOYMENTS -->
             <div>
-              <v-tabs background-color="#674172" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
+              <v-tabs background-color="#263238" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
                 <v-tabs-slider></v-tabs-slider>
                 <v-tab><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-meteor</v-icon>DEPLOYMENTS</span></v-tab>
                 <v-divider class="mx-3" inset vertical></v-divider>
@@ -24,7 +24,6 @@
                 <v-tab><span class="pl-2 pr-2">Regions</span></v-tab>
                 <v-tab><span class="pl-2 pr-2">Servers</span></v-tab>
                 <v-tab><span class="pl-2 pr-2">Auxiliary Connections</span></v-tab>
-                <v-tab><span class="pl-2 pr-2">Logs</span></v-tab>
                 <v-tab><span class="pl-2 pr-2">Slack</span></v-tab>                
               </v-tabs>
             </div>
@@ -34,9 +33,9 @@
                 <v-toolbar-title class="white--text">DEPLOYMENTS</v-toolbar-title>
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
-                <v-switch v-model="group.deployments_enable" label="Enable Deployments" style="margin-top:0px;"></v-switch>
-                <v-switch v-model="group.deployments_edit" label="Enable Editing Settings" style="margin-top:0px;"></v-switch>
-                <v-text-field v-model="group.deployments_threads" label="Threads" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 && v < 100 || 'A number between: 1 - 99']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+                <v-switch v-model="group.deployments_enable" label="Show Deployments Tab" style="margin-top:0px;"></v-switch>
+                <v-switch v-model="group.deployments_edit" label="Show Deployment Settings Tab" style="margin-top:0px;"></v-switch>
+                <v-text-field v-model="group.deployments_threads" label="Execution Threads" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 && v < 100 || 'A number between: 1 - 99']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -125,23 +124,8 @@
               </v-data-table>
             </v-card>
 
-            <!-- logs -->
-            <v-card v-if="tabs==5">
-              <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
-                <v-toolbar-title class="white--text">Logs</v-toolbar-title>
-              </v-toolbar>
-              <v-divider></v-divider>
-              <v-card-text style="padding-bottom:0px;">
-                <v-text-field :loading="loading" :disabled="loading" v-model="logs.aws_access_key" label="AWS Access Key" style="padding-top:0px;"></v-text-field>
-                <v-text-field :loading="loading" :disabled="loading" v-model="logs.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;"></v-text-field>
-                <v-text-field :loading="loading" :disabled="loading" v-model="logs.region_name" label="Region Name" hint="Example: eu-west-1" style="padding-top:0px;"></v-text-field>
-                <v-text-field :loading="loading" :disabled="loading" v-model="logs.bucket_name" label="Bucket Name" style="padding-top:0px;"></v-text-field>
-                <v-text-field :loading="loading" :disabled="loading" v-model="logs.url" label="Logs Url" style="padding-top:0px;"></v-text-field>
-              </v-card-text>
-            </v-card>
-
             <!-- slack -->
-            <v-card v-if="tabs==6">
+            <v-card v-if="tabs==5">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">Slack</v-toolbar-title>
               </v-toolbar>
@@ -403,17 +387,6 @@ export default {
     auxiliary_dialog_title: '',
     auxiliary_dialog_valid: false,
 
-    // +------+
-    // | LOGS |
-    // +------+
-    logs: {
-      aws_access_key: '',
-      aws_secret_access_key: '',
-      region_name: '',
-      bucket_name: '',
-      url: ''
-    },
-
     // +-------+
     // | SLACK |
     // +-------+
@@ -450,7 +423,6 @@ export default {
           this.region_items = response.data.regions.data.regions
           this.server_items = response.data.servers.data.servers
           this.auxiliary_items = response.data.auxiliary.data
-          if (response.data.logs.data.length > 0) this.logs = response.data.logs.data[0]
           if (response.data.slack.data.length > 0) this.slack = response.data.slack.data[0]
           this.refreshEnvironments()
           this.loading = false
@@ -481,7 +453,6 @@ export default {
         regions: this.region_items,
         servers: this.server_items,
         auxiliary: this.auxiliary_items,
-        logs: JSON.stringify(this.logs),
         slack: JSON.stringify(this.slack),        
       }
       axios.post(path, payload)
@@ -513,7 +484,6 @@ export default {
         regions: this.region_items,
         servers: this.server_items,
         auxiliary: this.auxiliary_items,
-        logs: JSON.stringify(this.logs),
         slack: JSON.stringify(this.slack),        
       }
       axios.put(path, payload)

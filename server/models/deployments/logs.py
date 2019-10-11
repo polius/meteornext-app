@@ -8,7 +8,7 @@ class Logs:
 
     def get(self, group_id):
         query = """
-            SELECT aws_access_key, aws_secret_access_key, region_name, bucket_name, url
+            SELECT mode, data
             FROM logs
             WHERE group_id = %s
         """
@@ -16,22 +16,19 @@ class Logs:
 
     def post(self, group_id, logs):
         query = """
-            INSERT INTO logs (aws_access_key, aws_secret_access_key, region_name, bucket_name, url, group_id)             
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO logs (mode, data, group_id)             
+            VALUES (%s, %s, %s)
         """
-        self._mysql.execute(query, (logs['aws_access_key'], logs['aws_secret_access_key'], logs['region_name'], logs['bucket_name'], logs['url'], group_id))
+        self._mysql.execute(query, (logs['mode'], logs['data'], group_id))
 
     def put(self, group_id, logs):
         query = """
             UPDATE logs
-            SET aws_access_key = %s,
-                aws_secret_access_key = %s,
-                region_name = %s,
-                bucket_name = %s,
-                url = %s
+            SET mode = %s,
+                data = %s
             WHERE group_id = %s
         """
-        self._mysql.execute(query, (logs['aws_access_key'], logs['aws_secret_access_key'], logs['region_name'], logs['bucket_name'], logs['url'], group_id))
+        self._mysql.execute(query, (logs['mode'], logs['data'], group_id))
 
     def delete(self, group_id):
        self._mysql.execute("DELETE FROM logs WHERE group_id = %s", (group_id))

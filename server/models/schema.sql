@@ -73,11 +73,8 @@ CREATE TABLE `auxiliary` (
 
 CREATE TABLE `logs` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `aws_access_key` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `aws_secret_access_key` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `region_name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `bucket_name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `url` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+	`mode` ENUM('local','amazon_s3') NOT NULL,
+	`data` TEXT NOT NULL,
   `group_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_id` (`group_id`),
