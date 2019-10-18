@@ -24,7 +24,9 @@ class Meteor:
 
         # Retrieve Meteor Logs Path
         self._base_path = credentials['path']
-        self._logs_path = json.loads(self._settings.get(setting_name='logs')[0]['data'])['local']['absolute_path']
+        self._logs_path = self._settings.get(setting_name='LOGS')
+        if len(self._logs_path) > 0:
+            self._logs_path = json.loads(self._logs_path[0]['value'])['local']
 
     def execute(self, deployment):
         # Create Deployment Folder to store Meteor files
@@ -194,7 +196,7 @@ class query_execution:
 
     def __execute(self, deployment):
         # Build Meteor Parameters
-        base_path = "{}/apps/Meteor/app/meteor.py".format(self._base_path)
+        base_path = "{}/../apps/Meteor/app/meteor.py".format(self._base_path)
         environment = deployment['environment']
         logs_path = "{}{}.{}".format(self._logs_path, deployment['id'], deployment['execution_id'])
         query_execution_path = "{}{}.{}/query_execution.py".format(self._logs_path, deployment['id'], deployment['execution_id'])

@@ -1,6 +1,8 @@
+import os
 import imp
-import bcrypt
-from flask import Blueprint, jsonify, request
+import json
+import tarfile
+from flask import Blueprint, jsonify, request, send_from_directory
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 class Deployments:
@@ -8,6 +10,7 @@ class Deployments:
         # Init models
         self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
         self._deployments = imp.load_source('deployments', '{}/models/deployments/deployments.py'.format(credentials['path'])).Deployments(credentials)
+        self._settings = imp.load_source('settings', '{}/models/admin/settings.py'.format(credentials['path'])).Settings(credentials)
 
     def blueprint(self):
         # Init blueprint
@@ -34,6 +37,44 @@ class Deployments:
                 return self.put(user['id'], deployment_json)
             elif request.method == 'DELETE':
                 return self.delete(user['id'], deployment_json)
+
+        @deployments_blueprint.route('/deployments/results', methods=['GET'])
+        def deployments_results_method():
+            # Get Request Json URI
+            uri = request.args.get('uri')
+
+            # Get Execution Results Metadata
+            results = self._deployments.getResults(uri)
+
+            if len(results) == 0:
+                return jsonify({'message': 'This execution does not currently exist'}), 400
+            else:
+                results = results[0]
+
+            # Get Logs Settings
+            logs = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])
+            
+            # Get Execution Results File
+            if results['engine'] == 'local':
+                results_directory = '{}{}.{}'.format(logs['local'], results['deployment_id'], results['execution_id'])
+                results_name = '{}.js'.format(uri)
+                if not os.path.exists('{}/{}'.format(results_directory, results_name)):
+                    # Get compressed file name
+                    for f in os.listdir(results_directory):
+                        if f.endswith('.tar.gz'):
+                            break
+
+                    # Extract results file name
+                    tf = tarfile.open("{}/{}".format(results_directory, f), mode="r")
+                    tf.extract("./meteor.js", path=results_directory)
+
+                    # Rename results
+                    os.rename('{}/meteor.js'.format(results_directory), '{}/{}.js'.format(results_directory, uri))
+
+                return send_from_directory(results_directory, results_name)
+
+            elif results['engine'] == 'amazon_s3':
+                pass
 
         return deployments_blueprint
 

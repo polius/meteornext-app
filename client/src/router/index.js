@@ -27,6 +27,18 @@ let router = new VueRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/results',
+      name: 'results',
+      component: () => import('../components/deployments/Results'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/results/:uri',
+      name: 'results_uri',
+      component: () => import('../components/deployments/Results'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/deployments',
       component: () => import('../components/deployments/Navigation'),
       meta: { requiresAuth: true },

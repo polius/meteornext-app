@@ -1,6 +1,6 @@
 <template>
   <v-app dark>
-    <v-app-bar clipped-left app absolute v-show="$router.history.current.path != '/login'">
+    <v-app-bar clipped-left app absolute v-show="showTopNavbar()">
       <router-link class="nav-link white--text" to="/" style="text-decoration:none;">
         <v-toolbar-title>Meteor Next</v-toolbar-title>
       </router-link>
@@ -84,7 +84,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-footer app v-show="$router.history.current.path != '/login'" style="height:30px;">
+    <v-footer app v-if="showBottomNavbar()" style="height:30px;">
       <span class="px-3"></span>
     </v-footer>
   </v-app>
@@ -102,11 +102,22 @@ export default {
   computed : {
     isLoggedIn : function(){ return this.$store.getters.isLoggedIn },
     admin : function(){ return this.$store.getters.admin },
-    deployments_enable : function(){ return this.$store.getters.deployments_enable },
+    deployments_enable : function(){ return this.$store.getters.deployments_enable }
   },
   methods: {
     logout() {
       this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+    },
+    showTopNavbar() {
+      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/results')) return true
+      return false
+      // console.log(this.$router.history.current.path)
+      // console.log(window.location.pathname)
+    },
+    showBottomNavbar() {
+      console.log(window.location.pathname)
+      if (window.location.pathname != '/login' && !window.location.pathname.startsWith('/results') && window.location.pathname != '/deployments/information') return true
+      return false
     }
   }
 }

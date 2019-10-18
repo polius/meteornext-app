@@ -49,7 +49,7 @@
               <v-divider></v-divider>
               <v-card-text style="padding-top:5px; padding-bottom:0px;">
                 <v-form ref="form" style="padding:5px 5px 0px 5px;">
-                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.local.absolute_path" label="Absolute Path" required :rules="[v => !!v || '']"></v-text-field>
+                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.local" label="Absolute Path" required :rules="[v => !!v || '']"></v-text-field>
                 </v-form>
               </v-card-text>
             </v-card>
@@ -103,7 +103,7 @@ export default {
     api: {},
 
     // Logs
-    logs: { local: {}, amazon_s3: {} },
+    logs: { local: '', amazon_s3: {} },
     logs_mode: 'local',
 
     // Loading
@@ -152,12 +152,12 @@ export default {
       // Disable the fields while updating fields to the DB
       this.loading = true
       // Parse local absolute path
-      this.logs.local.absolute_path = (this.logs.local.absolute_path.endsWith('/')) ? this.logs.local.absolute_path : this.logs.local.absolute_path + '/'
+      this.logs.local = (this.logs.local.endsWith('/')) ? this.logs.local : this.logs.local + '/'
       // Construct path & payload
       const path = this.$store.getters.url + '/admin/settings'
       const payload = { 
         name: 'logs',
-        data: JSON.stringify(this.logs)
+        value: JSON.stringify(this.logs)
       }
       // Update Logs values to the DB
       axios.put(path, payload)

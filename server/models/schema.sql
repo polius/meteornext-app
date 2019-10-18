@@ -1,10 +1,12 @@
 CREATE TABLE `settings` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-	`data` TEXT NOT NULL,
+	`value` TEXT NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+INSERT INTO settings (`name`, `value`) VALUES ('LOGS', '{"local": "", "amazon_s3": {}}');
 
 CREATE TABLE `users` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -113,9 +115,11 @@ CREATE TABLE `deployments_basic` (
  `ended` DATETIME NULL,
  `error` TINYINT(1) NULL,
  `progress` TEXT NULL,
- `results` TEXT NULL,
+ `uri` VARCHAR(191) NULL,
+ `engine` VARCHAR(191) NULL,
   PRIMARY KEY(id),
   KEY `deployment_id` (`deployment_id`),
+  KEY `uri` (`uri`),
   FOREIGN KEY(deployment_id) REFERENCES deployments(id),
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
@@ -132,9 +136,11 @@ CREATE TABLE `deployments_pro` (
  `ended` DATETIME NULL,
  `error` TINYINT(1) NULL,
  `progress` TEXT NULL,
- `results` TEXT NULL,
+ `uri` VARCHAR(191) NULL,
+ `engine` VARCHAR(191) NULL,
   PRIMARY KEY(id),
   KEY `deployment_id` (`deployment_id`),
+  KEY `uri` (`uri`),
   FOREIGN KEY(deployment_id) REFERENCES deployments(id),
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

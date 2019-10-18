@@ -31,8 +31,11 @@ jwt = JWTManager(app)
 
 # load mysql credentials
 credentials = {}
+api = {}
 with open('credentials.json') as file_open:
     credentials = json.load(file_open)
+    api = credentials['api']
+    credentials = credentials['sql']
     credentials['path'] = os.path.dirname(os.path.abspath(__file__))
 
 # Init all blueprints
@@ -74,4 +77,4 @@ def ping_pong():
     return jsonify('pong!')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run(host=api['host'], port=api['port'])

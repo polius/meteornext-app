@@ -108,3 +108,15 @@ class Deployments:
             AND user_id = %s
         """
         return self._mysql.execute(query, (deployment['id'], user_id))
+
+    def getResults(self, uri):
+        query = """
+            SELECT deployment_id, id AS 'execution_id', 'basic' AS 'mode', engine
+            FROM deployments_basic
+            WHERE uri = %s
+            UNION
+            SELECT deployment_id, id AS 'execution_id', 'pro' AS 'mode', engine
+            FROM deployments_pro
+            WHERE uri = %s
+        """
+        return self._mysql.execute(query, (uri, uri))

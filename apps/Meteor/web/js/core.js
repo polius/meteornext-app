@@ -1909,3 +1909,33 @@ function setCookie(cname, cvalue, exdays) {
   var expires = "expires=" + d.toUTCString();
   document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
 }
+
+// ##############################################################################################
+// METEOR-NEXT
+// ##############################################################################################
+function initMeteorNext(data) {
+  try {
+    $("#loading").append("<p>- Retrieving Data ...</p>");
+    // Init variables
+    var error_title = "Invalid File Type";
+    var error_message = "Please use a <b>Meteor</b> file format. Example of a <b>meteor.js</b> file:<br><br>";
+    var error_code = `
+    var DATA = [{\"column_1\": \"value_1\", \"column_2\": \"value_2\"}];<br><br>
+    // Define column order<br>
+    var COLUMNS = ["column_1", "column_2"];
+    `;
+    // Execute a script in the global context
+    jQuery.globalEval(data);
+    // Check Errors
+    if (typeof DATA == 'undefined') show_error(error_title, error_message, error_code);
+    else if (DATA.length == 0) show_error(error_title, error_message, error_code);
+    else valid_file = true;
+  }
+  catch (err) {
+    show_error(error_title, error_message, error_code);
+  }
+  if (valid_file) {
+    // Init Meteor Core 
+    setTimeout(function () { init_meteor(); }, 100);
+  }
+}

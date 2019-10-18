@@ -5,9 +5,10 @@ from datetime import datetime
 from mysql import mysql
 
 class progress:
-    def __init__(self, logger, args, credentials):
+    def __init__(self, logger, args, credentials, uuid):
         self._args = args
         self._credentials = credentials
+        self._uuid = uuid
         self._sql = mysql(logger, args, credentials)
         self._sql.connect(credentials['meteor_next']['hostname'], credentials['meteor_next']['username'], credentials['meteor_next']['password'], credentials['meteor_next']['database'])
         self._progress = {"validation":{}, "execution":{}, "logs":[], "tasks":[], "queries":{}}
@@ -21,10 +22,10 @@ class progress:
             query = "UPDATE deployments_{} SET status = 'IN PROGRESS', started = '{}' WHERE id = {}".format(self._args.deployment_mode, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
 
-    def end(self, status, logs_path=None, logs_url=None):
+    def end(self, status):
         if self.__enabled():
-            results = logs_url if logs_url is not None else logs_path[:logs_path.rfind('/')+1]
-            query = "UPDATE deployments_{} SET results = '{}', status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._args.deployment_mode, results, status, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
+            engine = 'amazon_s3' if self._credentials['s3']['enabled'] == 'True' else 'local'
+            query = "UPDATE deployments_{} SET uri = '{}', engine = '{}', status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._args.deployment_mode, self._uuid, engine, status, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
 
     def error(self, error_msg):

@@ -26,16 +26,18 @@
 
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="padding-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
-          <v-btn v-else-if="deployment['status'] == 'SUCCESS' || deployment['status'] == 'FAILED' || (deployment['status'] == 'INTERRUPTED' && deployment['results'] != null)" text title="Show Execution Results" @click="getResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
+          <v-btn v-if="show_results" icon><v-icon small>fas fa-link</v-icon></v-btn>
+          <v-btn v-else-if="deployment['status'] == 'SUCCESS' || deployment['status'] == 'FAILED' || (deployment['status'] == 'INTERRUPTED' && deployment['uri'] != null)" text title="Show Execution Results" @click="showResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
         </v-toolbar-items>
 
         <v-spacer></v-spacer>
-        <div v-if="last_updated != ''" class="subheading font-weight-regular" style="padding-right:20px;">Updated on <b>{{ last_updated }}</b> UTC</div>
+        <div v-if="last_updated != ''" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ last_updated }}</b> UTC</div>
         <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
       </v-toolbar>
 
+      <!-- RESULTS -->
       <v-card-text v-if="show_results" style="padding:0px; background-color:rgb(55, 53, 64);">
-        <iframe style="width:100%; height: calc(100vh - 237px);" frameborder="0" scrolling="no" src="https://dba.inbenta.me/meteor/?uri=0ad37b20-b4c2-430b-957a-2c5608418fb2"></iframe>
+        <results :src="deployment['uri']" :height="`calc(100vh - 207px)`"></results>
       </v-card-text>
 
       <v-card-text v-else>
@@ -307,6 +309,7 @@
 <script>
   import axios from 'axios'
 
+  // CODE-MIRROR
   import { codemirror } from 'vue-codemirror'
   import 'codemirror/lib/codemirror.css'
 
@@ -328,6 +331,9 @@
   import 'codemirror/addon/search/searchcursor.js'
   import 'codemirror/addon/search/search.js'
   import 'codemirror/keymap/sublime.js'
+
+  // VIEWER
+  import Results from './Results'
 
   export default  {
     data: () => ({
@@ -425,7 +431,10 @@
       snackbarText: '',
       snackbarColor: ''
     }),
-    components: { codemirror },
+    components: { 
+      codemirror,
+      results: Results
+    },
     props: ['executionID', 'deploymentMode'],
     created() {
       if (typeof this.executionID === "undefined") this.$router.push('/deployments')
@@ -487,7 +496,8 @@
         this.deployment['ended'] = data['ended']
         this.deployment['overall'] = data['overall']
         this.deployment['error'] = data['error']
-        this.deployment['results'] = data['results']
+        this.deployment['uri'] = data['uri']
+        this.deployment['engine'] = data['engine']
 
         // Add Deployment to the information table
         this.information_items = []
@@ -599,7 +609,8 @@
           failed: this.deployment['progress']['queries']['failed']['t'] + ' (' + this.deployment['progress']['queries']['failed']['p'] + '%)'
         })
       },
-      getResults() {
+      showResults() {
+        // Show Results View
         this.show_results = true
       },
       getExecutions() {

@@ -81,7 +81,7 @@ class deploy:
         self._UUID = uuid.uuid4()
 
         # Init the Progress Class
-        self._progress = progress(self._logger, self._args, self._credentials)
+        self._progress = progress(self._logger, self._args, self._credentials, self._UUID)
 
         # Init the S3 Class
         self._s3 = S3(self._logger, self._args, self._credentials, self._progress)
@@ -193,13 +193,13 @@ class deploy:
                 # Post Test Execution Success
                 self.__post_execution(deploy=self._args.deploy, error=False)
                 # Register deployment end datetime
-                self._progress.end(status='SUCCESS', logs_path=self._meteor_logs_path, logs_url=self._meteor_logs_url)
+                self._progress.end(status='SUCCESS')
             except (Exception, KeyboardInterrupt) as e:
                 # Post Test Execution Failure
                 self.__post_execution(deploy=self._args.deploy, error=True, error_msg=e)
                 # Register deployment end datetime
                 status = 'FAILED' if e.__class__ == Exception else 'INTERRUPTED'
-                self._progress.end(status=status, logs_path=self._meteor_logs_path, logs_url=self._meteor_logs_url)
+                self._progress.end(status=status)
 
     def __post_execution(self, deploy, error, error_msg=None):
         # Supress CTRL+C events

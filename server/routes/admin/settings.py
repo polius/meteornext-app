@@ -49,7 +49,7 @@ class Settings:
             settings['api']['path'] = api_path
 
         # Get Logs Settings
-        settings['logs'] = json.loads(self._settings.get()[0]['data'])
+        settings['logs'] = json.loads(self._settings.get()[0]['value'])
 
         # Return Settings
         return jsonify({'data': settings}), 200

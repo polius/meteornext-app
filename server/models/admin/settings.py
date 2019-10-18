@@ -9,22 +9,22 @@ class Settings:
     def get(self, setting_name=None):
         if setting_name:
             query = """
-                SELECT name, data
+                SELECT name, value
                 FROM settings
                 WHERE name = %s
             """
             return self._mysql.execute(query, (setting_name))
         else:
             query = """
-                SELECT name, data
+                SELECT name, value
                 FROM settings
             """
             return self._mysql.execute(query)
 
     def post(self, settings):
         query = """
-            INSERT INTO settings (name, data)             
+            INSERT INTO settings (name, value)             
             VALUES (%s, %s)
-            ON DUPLICATE KEY UPDATE data = VALUES(data)
+            ON DUPLICATE KEY UPDATE value = VALUES(value)
         """
-        self._mysql.execute(query, (settings['name'], settings['data']))
+        self._mysql.execute(query, (settings['name'], settings['value']))
