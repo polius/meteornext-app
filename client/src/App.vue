@@ -115,7 +115,6 @@ export default {
       // console.log(window.location.pathname)
     },
     showBottomNavbar() {
-      console.log(window.location.pathname)
       if (window.location.pathname != '/login' && !window.location.pathname.startsWith('/results') && window.location.pathname != '/deployments/information') return true
       return false
     }

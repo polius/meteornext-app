@@ -21,6 +21,9 @@ export default  {
       required: false
     }
   },
+  computed : {
+    //url : function(){ return this.$store.getters.url }
+  },
   created() {
     this.parseProps()
   },

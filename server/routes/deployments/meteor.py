@@ -139,7 +139,7 @@ class Meteor:
 
         # Enable Meteor Next
         with open("{}/credentials.json".format(self._base_path)) as outfile:
-            next_credentials = json.load(outfile)
+            next_credentials = json.load(outfile)['sql']
 
         self._credentials['meteor_next'] = {
             "enabled": "True",

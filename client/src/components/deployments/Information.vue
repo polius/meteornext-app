@@ -26,7 +26,7 @@
 
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="padding-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
-          <v-btn v-if="show_results" icon><v-icon small>fas fa-link</v-icon></v-btn>
+          <v-btn v-if="show_results" icon title="Share Results" @click="shareResults_dialog = true"><v-icon small>fas fa-link</v-icon></v-btn>
           <v-btn v-else-if="deployment['status'] == 'SUCCESS' || deployment['status'] == 'FAILED' || (deployment['status'] == 'INTERRUPTED' && deployment['uri'] != null)" text title="Show Execution Results" @click="showResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
         </v-toolbar-items>
 
@@ -289,6 +289,26 @@
       </v-card>
     </v-dialog>
 
+    <v-dialog v-model="shareResults_dialog" max-width="768px">
+      <v-card>
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">SHARE RESULTS</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="shareResults_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text>
+          <v-container style="padding:0px 10px 0px 10px">
+            <v-layout wrap>
+              <v-flex xs12 style="padding-bottom:10px">
+                <v-btn block outlined color="success" href="http://www.google.es" target="_blank">CLICK</v-btn><v-btn icon title="Copy link to clipboard"><v-icon>far fa-clipboard</v-icon></v-btn>
+                <v-switch color="success" label="Administrator"></v-switch>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
       {{ snackbarText }}
       <v-btn color="white" text @click="snackbar = false">Close</v-btn>
@@ -378,6 +398,9 @@
       action_dialog_title: '',
       action_dialog_text: '',
       action_dialog_mode: '',
+
+      // Share Results Dialog
+      shareResults_dialog: false,
 
       // Init Code Parameters
       cmOptions: {
@@ -830,6 +853,15 @@
         this.notification('Selected queries removed successfully', 'success')
         this.query_dialog = false
       },
+      // -------------------------------------
+      // SHARE RESULTS
+      // -------------------------------------
+      shareResults() {
+        
+      },
+      // -------------------------------------
+      // AUXILIARY METHODS
+      // -------------------------------------
       selectRow(id) {
         if (id == this.deployment['execution_id']) return '#616161'
         else return '#424242'

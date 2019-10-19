@@ -35,12 +35,21 @@
       password: '',
       loading: false,
 
+      // Previous Route
+      prevRoute: '',
+
       // Snackbar
       snackbar: false,
       snackbarTimeout: Number(3000),
       snackbarColor: '',
       snackbarText: ''
     }),
+    beforeRouteEnter(to, from, next) {
+      next((vm) => {
+        vm.prevRoute = from['path']
+        vm.from = from
+      })
+    },
     methods: {
       login() {
         if (this.username == '' || this.password == '') this.notification('Please enter the username and password.', 'warning')
@@ -52,7 +61,7 @@
         let password = this.password
         this.$store.dispatch('login', { username, password })
         .then(() => {
-          this.$router.push('/')
+          this.$router.push(this.prevRoute)
         })
         .catch((error) => {
           this.loading = false
