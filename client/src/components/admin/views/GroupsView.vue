@@ -52,7 +52,7 @@
                 <v-text-field v-model="environment_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" hide-default-header hide-default-footer show-select class="elevation-1">
+              <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" hide-default-footer show-select class="elevation-1">
               </v-data-table>
             </v-card>
 
@@ -156,19 +156,20 @@
         <v-toolbar-title class="white--text">{{ environment_dialog_title }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding: 0px 20px 0px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
-              <v-flex xs12 v-if="environment_mode!='delete'">
-                <v-form ref="environment_form" v-model="environment_dialog_valid">
-                  <v-text-field ref="environment_focus" v-on:keydown.enter.prevent="submitEnvironment()" v-model="environment_item.name" :rules="[v => !!v || '']" label="Environment Name" required></v-text-field>
+              <v-flex xs12>
+                <v-form ref="environment_form" style="margin-top:15px; margin-bottom:20px;" v-model="environment_dialog_valid">
+                  <v-text-field ref="environment_focus" v-if="environment_mode!='delete'" v-on:keydown.enter.prevent="submitEnvironment()" v-model="environment_item.name" :rules="[v => !!v || '']" label="Environment Name" required></v-text-field>
+                  <div style="padding-bottom:10px" v-if="environment_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected environments?</div>
+                  <v-divider></v-divider>
+                  <div style="margin-top:20px;">
+                    <v-btn :loading="loading" color="success" @click="submitEnvironment()">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="environment_dialog=false" style="margin-left:10px">Cancel</v-btn>
+                  </div>
                 </v-form>
               </v-flex>
-              <v-flex xs12 style="padding-bottom:10px" v-if="environment_mode=='delete'">
-                <div class="subtitle-1">Are you sure you want to delete the selected environments?</div>
-              </v-flex>
-              <v-btn :loading="loading" color="success" @click="submitEnvironment()">Confirm</v-btn>
-              <v-btn :disabled="loading" color="error" @click="environment_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -184,17 +185,17 @@
         <v-toolbar-title class="white--text">{{ region_dialog_title }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding: 0px 20px 20px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
-              <v-flex xs12 v-if="region_mode!='delete'">
-                <v-form ref="region_form" v-model="region_dialog_valid">
+              <v-flex xs12>
+                <v-form ref="region_form" v-if="region_mode!='delete'" v-model="region_dialog_valid" style="margin-top:15px; margin-bottom:20px;">
                   <!-- METADATA -->
                   <div class="title font-weight-regular">Metadata</div>
                   <v-text-field ref="region_focus" v-model="region_item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-select v-model="region_item.environment" :items="environments" :rules="[v => !!v || '']" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
                   <!-- SSH -->
-                  <v-switch v-model="region_item.cross_region" label="Cross Region" style="margin-top:0px;"></v-switch>
+                  <v-switch v-model="region_item.cross_region" label="Cross Region" style="margin-top:0px;" hide-details></v-switch>
                   <div v-if="region_item.cross_region">
                     <div class="title font-weight-regular">SSH</div>
                     <v-text-field v-model="region_item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
@@ -203,12 +204,13 @@
                     <v-textarea v-model="region_item.key" label="Private Key" style="padding-top:0px;"></v-textarea>
                   </div>
                 </v-form>
+                <div style="padding-top:10px; padding-bottom:10px" v-if="region_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn :loading="loading" color="success" @click="submitRegion()">Confirm</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="region_dialog=false" style="margin-left:10px">Cancel</v-btn>
+                </div>
               </v-flex>
-              <v-flex xs12 style="padding-bottom:10px" v-if="region_mode=='delete'">
-                <div class="subtitle-1">Are you sure you want to delete the selected regions?</div>
-              </v-flex>
-              <v-btn :loading="loading" color="success" @click="submitRegion()">Confirm</v-btn>
-              <v-btn :disabled="loading" color="error" @click="region_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -224,11 +226,11 @@
         <v-toolbar-title class="white--text">{{ server_dialog_title }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding: 0px 20px 20px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
-              <v-flex xs12 v-if="server_mode!='delete'">
-                <v-form ref="server_form" v-model="server_dialog_valid">
+              <v-flex xs12>
+                <v-form ref="server_form" v-if="server_mode!='delete'" v-model="server_dialog_valid" style="margin-top:15px; margin-bottom:20px;">
                   <!-- METADATA -->
                   <div class="title font-weight-regular">Metadata</div>
                   <v-text-field ref="server_focus" v-model="server_item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
@@ -238,14 +240,15 @@
                   <div class="title font-weight-regular" style="padding-top:10px;">SQL</div>
                   <v-text-field v-model="server_item.hostname" :rules="[v => !!v || '']" label="Hostname" required></v-text-field>
                   <v-text-field v-model="server_item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" required></v-text-field>
-                  <v-text-field v-model="server_item.password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" required></v-text-field>
+                  <v-text-field v-model="server_item.password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" required hide-details></v-text-field>
                 </v-form>
+                <div style="padding-top:10px; padding-bottom:10px" v-if="server_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected servers?</div>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn :loading="loading" color="success" @click="submitServer()">Confirm</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="server_dialog=false" style="margin-left:10px">Cancel</v-btn>
+                </div>
               </v-flex>
-              <v-flex xs12 style="padding-bottom:10px" v-if="server_mode=='delete'">
-                <div class="subtitle-1">Are you sure you want to delete the selected servers?</div>
-              </v-flex>
-              <v-btn :loading="loading" color="success" @click="submitServer()">Confirm</v-btn>
-              <v-btn :disabled="loading" color="error" @click="server_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -261,11 +264,11 @@
         <v-toolbar-title class="white--text">{{ auxiliary_dialog_title }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding: 0px 20px 20px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
-              <v-flex xs12 v-if="auxiliary_mode!='delete'">
-                <v-form ref="auxiliary_form" v-model="auxiliary_dialog_valid">
+              <v-flex xs12>
+                <v-form ref="auxiliary_form" v-if="auxiliary_mode!='delete'" v-model="auxiliary_dialog_valid" style="margin-top:15px; margin-bottom:20px;">
                   <!-- METADATA -->
                   <div class="title font-weight-regular">Metadata</div>
                   <v-text-field ref="auxiliary_focus" v-model="auxiliary_item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
@@ -273,14 +276,15 @@
                   <div class="title font-weight-regular" style="padding-top:10px;">SQL</div>
                   <v-text-field v-model="auxiliary_item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
                   <v-text-field v-model="auxiliary_item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="auxiliary_item.password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="auxiliary_item.password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" hide-details></v-text-field>
                 </v-form>
+                <div style="padding-top:10px; padding-bottom:10px" v-if="auxiliary_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected auxiliary connections?</div>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn :loading="loading" color="success" @click="submitAuxiliary()">Confirm</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="auxiliary_dialog=false" style="margin-left:10px">Cancel</v-btn>
+                </div>
               </v-flex>
-              <v-flex xs12 style="padding-bottom:10px" v-if="auxiliary_mode=='delete'">
-                <div class="subtitle-1">Are you sure you want to delete the selected auxiliary connections?</div>
-              </v-flex>
-              <v-btn :loading="loading" color="success" @click="submitAuxiliary()">Confirm</v-btn>
-              <v-btn :disabled="loading" color="error" @click="auxiliary_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>

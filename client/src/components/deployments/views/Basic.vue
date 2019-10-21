@@ -20,7 +20,7 @@
                 </v-toolbar-items>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="query" hide-default-header hide-default-footer show-select class="elevation-1">
+              <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="query" show-select hide-default-footer class="elevation-1">
               </v-data-table>
             </v-card>
 
@@ -44,7 +44,7 @@
               </v-radio>
             </v-radio-group>
 
-           <v-checkbox v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:-10px; margin-bottom:20px;"></v-checkbox>
+            <v-checkbox v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:-10px; margin-bottom:20px;"></v-checkbox>
 
             <v-divider></v-divider>
 
@@ -62,19 +62,20 @@
         <v-toolbar-title class="white--text">{{ queryDialogTitle }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding: 0px 20px 20px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
-              <v-flex xs12 v-if="query_mode!='delete'">
-                <v-form ref="query_form">
-                  <v-textarea ref="field" rows="1" filled auto-grow v-model="query_item.query" label="Query" :rules="[v => !!v || '']" required></v-textarea>
+              <v-flex xs12>
+                <v-form ref="query_form" v-if="query_mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
+                  <v-textarea ref="field" rows="1" filled auto-grow hide-details v-model="query_item.query" label="Query" :rules="[v => !!v || '']" required></v-textarea>
                 </v-form>
+                <div style="padding-top:10px; padding-bottom:10px" v-if="query_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected queries?</div>
+                <v-divider v-if="query_mode=='delete'"></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn color="success" @click="actionConfirm()">Confirm</v-btn>
+                  <v-btn color="error" @click="queryDialog=false" style="margin-left:10px">Cancel</v-btn>
+                </div>
               </v-flex>
-              <v-flex xs12 style="padding-bottom:10px" v-if="query_mode=='delete'">
-                <div class="subtitle-1">Are you sure you want to delete the selected queries?</div>
-              </v-flex>
-              <v-btn color="success" @click="actionConfirm()">Confirm</v-btn>
-              <v-btn color="error" @click="queryDialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>

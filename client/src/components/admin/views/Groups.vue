@@ -22,14 +22,17 @@
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding: 0px 20px 20px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
-              <v-flex xs12 style="padding-bottom:10px">
-                <div class="subtitle-1">Are you sure you want to delete the selected groups?</div>
+              <v-flex xs12>
+                <div style="padding-top:10px; padding-bottom:10px" class="subtitle-1">Are you sure you want to delete the selected groups?</div>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn color="success" @click="deleteGroupSubmit()">Confirm</v-btn>
+                  <v-btn color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
+                </div>
               </v-flex>
-              <v-btn color="success" @click="deleteGroupSubmit()">Confirm</v-btn>
-              <v-btn color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>

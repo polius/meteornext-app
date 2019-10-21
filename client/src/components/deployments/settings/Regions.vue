@@ -32,17 +32,17 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
         </v-toolbar>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding: 0px 20px 20px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'">
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
                   <!-- METADATA -->
                   <div class="title font-weight-regular">Metadata</div>
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-select v-model="item.environment" :rules="[v => !!v || '']" :items="environments" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
                   <!-- SSH -->
-                  <v-switch v-model="item.cross_region" label="Cross Region" style="margin-top:0px;"></v-switch>
+                  <v-switch v-model="item.cross_region" label="Cross Region" hide-details style="margin-top:0px;"></v-switch>
                   <div v-if="item.cross_region">
                     <div class="title font-weight-regular">SSH</div>
                     <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
@@ -52,7 +52,7 @@
                     <v-text-field v-model="item.deploy_path" :rules="[v => !!v || '']" label="Deploy Path" style="margin-top:-5px; padding-top:0px;"></v-text-field>
                   </div>
                 </v-form>
-                <div style="padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>
+                <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="success" @click="submitRegion()">CONFIRM</v-btn>

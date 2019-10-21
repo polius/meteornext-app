@@ -6,16 +6,18 @@
           <v-toolbar flat color="primary">
             <v-toolbar-title>PROFILE</v-toolbar-title>
           </v-toolbar>
-          <v-container fluid grid-list-lg>
-            <v-layout row wrap>
-              <v-flex xs12>
-                <div class="headline font-weight-regular">Hello <b>{{ this.username }}</b> <v-chip color="teal" text-color="white" style="margin-left:10px; letter-spacing: 1px;">{{ this.group.toUpperCase() }}</v-chip></div>
-                <v-text-field v-model="email" :disabled="loading" label="Email" type="email" append-icon="email" style="margin-top:10px;"></v-text-field>
-                <v-text-field v-model="password" :disabled="loading" label="Password" type="password" append-icon="lock" style="padding-top:0px;"></v-text-field>
-                <v-btn color="primary" :loading="loading" @click="saveProfile()" style="margin-left:0px;">Save</v-btn>    
-              </v-flex>
-            </v-layout>
-          </v-container>
+          <v-card-text style="padding: 20px 20px 20px;">
+            <v-container fluid grid-list-lg style="padding:0px">
+              <v-layout row wrap>
+                <v-flex xs12>
+                  <div class="headline font-weight-regular">Hello <b>{{ this.username }}</b> <v-chip color="teal" text-color="white" style="margin-left:10px; letter-spacing: 1px;">{{ this.group.toUpperCase() }}</v-chip></div>
+                  <v-text-field v-model="email" :disabled="loading" label="Email" type="email" append-icon="email" style="margin-top:10px;"></v-text-field>
+                  <v-text-field v-model="password" :disabled="loading" label="Password" type="password" append-icon="lock" style="padding-top:0px;"></v-text-field>
+                  <v-btn color="primary" :loading="loading" @click="saveProfile()" style="margin-left:0px;">Save</v-btn>    
+                </v-flex>
+              </v-layout>
+            </v-container>
+          </v-card-text>
         </v-card>
 
         <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
@@ -33,7 +35,7 @@ import axios from 'axios';
 export default {
   data: () => ({
     username: '',
-    group: '',
+    group: '...',
     email: '',
     password: '',
     loading: true,

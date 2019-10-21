@@ -20,11 +20,11 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
         </v-toolbar>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding: 0px 20px 0px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form">
+                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
                   <v-text-field v-if="mode!='delete'" ref="field" v-on:keyup.enter="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Environment Name" required></v-text-field>
                   <div style="padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected environments?</div>
                   <v-divider></v-divider>
