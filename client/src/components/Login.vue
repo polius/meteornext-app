@@ -44,11 +44,15 @@
       snackbarColor: '',
       snackbarText: ''
     }),
+    props:['url'],
     beforeRouteEnter(to, from, next) {
       next((vm) => {
         vm.prevRoute = from['path']
         vm.from = from
       })
+    },
+    created() {
+      console.log(this.$route.query.url)
     },
     methods: {
       login() {
@@ -61,7 +65,8 @@
         let password = this.password
         this.$store.dispatch('login', { username, password })
         .then(() => {
-          this.$router.push(this.prevRoute)
+          if (!this.$route.query.url === undefined) this.$router.push(this.prevRoute)
+          else this.$router.push({ path: this.$route.query.url })
         })
         .catch((error) => {
           this.loading = false

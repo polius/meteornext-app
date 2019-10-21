@@ -51,8 +51,11 @@ export default  {
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          // eslint-disable-next-line
-          console.error(error)
+          else if (error.response.status == 400) this.$refs.frame.contentWindow.showError()
+          else {
+            // eslint-disable-next-line
+            console.error(error)
+          }
         })
     }
   }

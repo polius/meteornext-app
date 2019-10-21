@@ -17,6 +17,7 @@ let router = new VueRouter({
     {
       path: '/login',
       name: 'login',
+      props: true,
       component: () => import('../components/Login'),
       meta: { requiresAuth: false }
     },
@@ -164,7 +165,7 @@ router.beforeEach((to, from, next) => {
   if (to.path == '/login' && store.getters.isLoggedIn) next('/')
   else if (to.matched.some(record => record.meta.requiresAuth)) {
     if (store.getters.isLoggedIn) next()
-    else next('/login')
+    else next({path: '/login', query: { url: to.fullPath }})
   } 
   else next()
 })

@@ -83,6 +83,27 @@ class Basic:
             # Call Auxiliary Method
             return self.__stop(user, deployment_json)
 
+        @deployments_basic_blueprint.route('/deployments/basic/public', methods=['POST'])
+        @jwt_required
+        def deployments_basic_public():
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['admin'] or not user['deployments_enable']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            deployment_json = request.get_json()
+
+            # Change deployment public value
+            self._deployments_basic.setPublic(user['id'], deployment_json['execution_id'], deployment_json['public'])
+
+            if deployment_json['public']:
+                return jsonify({'message': 'Results changed to Public'}), 200
+            else:
+                return jsonify({'message': 'Results changed to Private'}), 200
+
         return deployments_basic_blueprint
 
     ####################

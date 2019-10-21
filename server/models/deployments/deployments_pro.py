@@ -70,3 +70,12 @@ class Deployments_Pro:
             WHERE p.id = %s
         """
         return self._mysql.execute(query, (user_id, execution_id))
+
+    def setPublic(self, user_id, execution_id, public):
+        query = """
+            UPDATE deployments_pro p
+            JOIN deployments d ON d.id = p.deployment_id AND d.user_id = %s 
+            SET p.public = %s
+            WHERE p.id = %s
+        """
+        return self._mysql.execute(query, (user_id, public, execution_id))

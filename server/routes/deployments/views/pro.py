@@ -92,6 +92,24 @@ class Pro:
             # Call Auxiliary Method
             return self.__stop(user, deployment_json)
 
+        @deployments_pro_blueprint.route('/deployments/pro/public', methods=['POST'])
+        @jwt_required
+        def deployments_pro_public():
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['admin'] or not user['deployments_enable']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            deployment_json = request.get_json()
+
+            # Change deployment public value
+            self._deployments_pro.setPublic(user['id'], deployment_json['execution_id'], deployment_json['public'])
+
+            return jsonify({'message': 'OK'}), 200
+
         return deployments_pro_blueprint
 
     ####################

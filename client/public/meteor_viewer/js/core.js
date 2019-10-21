@@ -81,7 +81,7 @@ $(document).ready(function () {
   $("#export-format").val('meteor');
 
   // Check Uri Parameter (Uniform Resource Identifier)
-  check_uri();
+  // check_uri();
 });
 
 function check_uri() {
@@ -1520,7 +1520,8 @@ function show_error(title, message, code) {
 // THEMES (LIGHT / DARK)
 // ##############################################################################################
 function init_theme() {
-  if (getCookie('theme') == 'dark') apply_dark_theme();
+  if (getCookie('theme') == 'light') apply_light_theme();
+  else apply_dark_theme();
 }
 
 $("#theme-button").click(function () {
@@ -1915,7 +1916,13 @@ function setCookie(cname, cvalue, exdays) {
 // ##############################################################################################
 function setLoadingText(text) {
   $("#loading").append("<p>" + text + "</p>");
-} 
+}
+function showError() {
+  $("#loading").html('');
+  var title_message = "Authorized Access Only";
+  var error_message = "The URL provided is private"
+  show_error(title_message, error_message, '');
+}
 function initMeteorNext(data) {
   try {
     // Init variables

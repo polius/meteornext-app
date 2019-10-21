@@ -20,13 +20,13 @@
         <div v-else-if="start_execution || deployment['status'] == 'STARTING'" class="subtitle-1" style="margin-left:5px;">Starting the execution...</div>
         <v-progress-circular v-if="start_execution || stop_execution || deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS'" :size="22" indeterminate color="white" width="2" style="margin-left:20px; margin-right:10px;"></v-progress-circular>
 
-        <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="success" style="margin-left:5px; margin-right:15px;">Execution Finished Successfully</v-chip>
+        <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="success" style="margin-left:5px; margin-right:15px;">SUCCESS</v-chip>
         <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="success" style="margin-left:5px; margin-right:15px;">Execution Finished with errors</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="error" style="margin-left:5px; margin-right:15px;">Execution Failed</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="error" style="margin-left:5px; margin-right:15px;">FAILED</v-chip>
 
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="padding-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
-          <v-btn v-if="show_results" icon title="Share Results" @click="shareResults_dialog = true"><v-icon small>fas fa-link</v-icon></v-btn>
+          <v-btn v-if="show_results" text title="Share Results" @click="shareResults_dialog = true"><v-icon small style="padding-right:10px;">fas fa-link</v-icon>SHARE</v-btn>
           <v-btn v-else-if="deployment['status'] == 'SUCCESS' || deployment['status'] == 'FAILED' || (deployment['status'] == 'INTERRUPTED' && deployment['uri'] != null)" text title="Show Execution Results" @click="showResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
         </v-toolbar-items>
 
@@ -289,10 +289,15 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="shareResults_dialog" max-width="768px">
+    <v-dialog v-model="shareResults_dialog" max-width="896px">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">SHARE RESULTS</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-toolbar-items class="hidden-sm-and-down">
+            <v-btn text :title="shareResults_dialog_title" @click="resultsShare()"><v-icon small style="padding-right:10px">{{ shareResults_dialog_icon }}</v-icon>{{ shareResults_dialog_text }}</v-btn>
+            <v-btn text title="Copy link to clipboard" @click="resultsClipboard()"><v-icon small style="padding-right:10px">fas fa-clipboard</v-icon>CLIPBOARD</v-btn>
+          </v-toolbar-items>
           <v-spacer></v-spacer>
           <v-btn icon @click="shareResults_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -300,8 +305,7 @@
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 style="padding-bottom:10px">
-                <v-btn block outlined color="success" href="http://www.google.es" target="_blank">CLICK</v-btn><v-btn icon title="Copy link to clipboard"><v-icon>far fa-clipboard</v-icon></v-btn>
-                <v-switch color="success" label="Administrator"></v-switch>
+                <v-btn ref="results_url" block text :href="`http://34.252.139.218:8080/results/` + deployment['uri']" target="_blank" class="text-lowercase title font-weight-light" style="margin-top:25px;">{{ `http://34.252.139.218:8080/results/` + deployment['uri'] }}</v-btn>
               </v-flex>
             </v-layout>
           </v-container>
@@ -401,6 +405,9 @@
 
       // Share Results Dialog
       shareResults_dialog: false,
+      shareResults_dialog_title: '',
+      shareResults_dialog_text: '',
+      shareResults_dialog_icon: '',
 
       // Init Code Parameters
       cmOptions: {
@@ -520,7 +527,14 @@
         this.deployment['overall'] = data['overall']
         this.deployment['error'] = data['error']
         this.deployment['uri'] = data['uri']
+        this.deployment['url'] = data['url']
         this.deployment['engine'] = data['engine']
+        this.deployment['public'] = data['public']
+
+        // Set Public Values
+        this.shareResults_dialog_title = (this.deployment['public']) ? 'The results are private' : 'The results are public'
+        this.shareResults_dialog_text = (this.deployment['public']) ? 'PUBLIC' : 'PRIVATE'
+        this.shareResults_dialog_icon = (this.deployment['public']) ? 'fas fa-unlock' : 'fas fa-lock'
 
         // Add Deployment to the information table
         this.information_items = []
@@ -856,8 +870,43 @@
       // -------------------------------------
       // SHARE RESULTS
       // -------------------------------------
-      shareResults() {
-        
+      resultsClipboard() {
+        const el = document.createElement('textarea')
+        el.value = "http://34.252.139.218:8080/results/" + this.deployment['uri']
+        el.setAttribute('readonly', '')
+        el.style.position = 'absolute'
+        el.style.left = '-9999px'
+        document.body.appendChild(el)
+        el.select()
+        document.execCommand('copy')
+        document.body.removeChild(el)
+
+        this.notification('Deployment URL added to the clipboard', 'info')
+      },
+      resultsShare() {
+        // Build parameters
+        const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase() +  '/public'
+        const payload = {
+          execution_id: this.deployment['execution_id'],
+          public: !this.deployment['public']
+        }
+        axios.post(path, payload)
+        .then(() => {
+          // Update new public value
+          this.deployment['public'] = !this.deployment['public']
+          this.shareResults_dialog_title = (this.deployment['public']) ? 'The results are public' : 'The results are private'
+          this.shareResults_dialog_text = (this.deployment['public']) ? 'PUBLIC' : 'PRIVATE'
+          this.shareResults_dialog_icon = (this.deployment['public']) ? 'fas fa-unlock' : 'fas fa-lock'
+
+          if (this.deployment['public']) this.notification('Results changed to public', 'info')
+          else this.notification('Results changed to private', 'info')
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+          // eslint-disable-next-line
+          console.error(error)
+        })
       },
       // -------------------------------------
       // AUXILIARY METHODS

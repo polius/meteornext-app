@@ -39,6 +39,7 @@ class Deployments:
                 return self.delete(user['id'], deployment_json)
 
         @deployments_blueprint.route('/deployments/results', methods=['GET'])
+        @jwt_required
         def deployments_results_method():
             # Get Request Json URI
             uri = request.args.get('uri')
@@ -50,6 +51,10 @@ class Deployments:
                 return jsonify({'message': 'This execution does not currently exist'}), 400
             else:
                 results = results[0]
+
+            # Check if Result is Public
+            if not results['public'] and int(results['user_id']) != get_jwt_identity():
+                return jsonify({'message': 'This results are private'}), 400
 
             # Get Logs Settings
             logs = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])

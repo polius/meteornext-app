@@ -111,12 +111,17 @@ class Deployments:
 
     def getResults(self, uri):
         query = """
-            SELECT deployment_id, id AS 'execution_id', 'basic' AS 'mode', engine
-            FROM deployments_basic
-            WHERE uri = %s
-            UNION
-            SELECT deployment_id, id AS 'execution_id', 'pro' AS 'mode', engine
-            FROM deployments_pro
-            WHERE uri = %s
+            SELECT d.user_id, r.*
+            FROM
+            (
+                SELECT deployment_id, id AS 'execution_id', 'basic' AS 'mode', engine, public
+                FROM deployments_basic
+                WHERE uri = %s
+                UNION
+                SELECT deployment_id, id AS 'execution_id', 'pro' AS 'mode', engine, public
+                FROM deployments_pro
+                WHERE uri = %s
+            ) r
+            JOIN deployments d ON d.id = r.deployment_id
         """
         return self._mysql.execute(query, (uri, uri))
