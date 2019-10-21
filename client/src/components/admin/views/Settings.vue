@@ -69,7 +69,6 @@
                   <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
                   <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.region_name" label="Region Name" style="padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
                   <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.bucket_name" label="Bucket Name" style="padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
-                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.url" label="Logs URL" placeholder="https://{bucket_name}.s3-{region_name}.amazonaws.com" style="padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
                   <v-switch :loading="loading" :disabled="loading" v-model="logs.amazon_s3.enabled" label="Upload Logs to Amazon S3" style="margin-top:0px;"></v-switch>
                 </v-form>
               </v-card-text>

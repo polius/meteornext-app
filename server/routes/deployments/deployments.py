@@ -1,6 +1,7 @@
 import os
 import imp
 import json
+import boto3
 import tarfile
 from flask import Blueprint, jsonify, request, send_from_directory
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
@@ -52,8 +53,11 @@ class Deployments:
             else:
                 results = results[0]
 
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
             # Check if Result is Public
-            if not results['public'] and int(results['user_id']) != get_jwt_identity():
+            if not results['public'] and int(results['user_id']) != user['id']:
                 return jsonify({'message': 'This results are private'}), 400
 
             # Get Logs Settings
@@ -79,7 +83,14 @@ class Deployments:
                 return send_from_directory(results_directory, results_name)
 
             elif results['engine'] == 'amazon_s3':
-                pass
+                session = boto3.Session(
+                    aws_access_key_id=logs['amazon_s3']['aws_access_key'],
+                    aws_secret_access_key=logs['amazon_s3']['aws_secret_access_key'],
+                    region_name=logs['amazon_s3']['region_name']
+                )
+                s3 = session.resource('s3')
+                obj = s3.meta.client.get_object(Bucket=logs['amazon_s3']['bucket_name'], Key='results/{}.js'.format(uri))
+                return jsonify(obj['Body'].read().decode('utf-8')), 200
 
         return deployments_blueprint
 

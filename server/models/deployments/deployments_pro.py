@@ -8,7 +8,7 @@ class Deployments_Pro:
 
     def get(self, user_id, execution_id):
         query = """
-            SELECT d.id, p.id AS 'execution_id', d.mode, d.name, e.name AS 'environment', p.code, p.method, p.status, p.created, p.started, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.uri, p.url, p.engine, p.public
+            SELECT d.id, p.id AS 'execution_id', d.mode, d.name, e.name AS 'environment', p.code, p.method, p.status, p.created, p.started, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.uri, p.engine, p.public
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id AND d.user_id = %s
             JOIN environments e ON e.id = p.environment_id 

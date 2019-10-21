@@ -99,10 +99,7 @@ class Basic:
             # Change deployment public value
             self._deployments_basic.setPublic(user['id'], deployment_json['execution_id'], deployment_json['public'])
 
-            if deployment_json['public']:
-                return jsonify({'message': 'Results changed to Public'}), 200
-            else:
-                return jsonify({'message': 'Results changed to Private'}), 200
+            return jsonify({'message': 'OK'}), 200
 
         return deployments_basic_blueprint
 

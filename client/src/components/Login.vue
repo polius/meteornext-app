@@ -51,9 +51,6 @@
         vm.from = from
       })
     },
-    created() {
-      console.log(this.$route.query.url)
-    },
     methods: {
       login() {
         if (this.username == '' || this.password == '') this.notification('Please enter the username and password.', 'warning')
