@@ -1,6 +1,6 @@
 <template>
   <v-app dark>
-    <v-app-bar clipped-left app absolute v-show="showTopNavbar()">
+    <v-app-bar clipped-left app absolute v-show="isLoggedIn && showTopNavbar()">
       <router-link class="nav-link white--text" to="/" style="text-decoration:none;">
         <v-toolbar-title>Meteor Next</v-toolbar-title>
       </router-link>
@@ -45,11 +45,9 @@
       </router-link>
 
       <!-- LOGOUT -->
-      <!-- <router-link title="Logout" class="nav-link" to="/login"> -->
       <v-btn icon title="Logout" @click="logout()">
         <v-icon>fas fa-sign-out-alt</v-icon>
       </v-btn>
-      <!-- </router-link> -->
     </v-app-bar>
 
     <router-view/>
@@ -84,7 +82,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-footer app v-if="showBottomNavbar()" style="height:30px;">
+    <v-footer app v-if="isLoggedIn && showBottomNavbar()" style="height:30px;">
       <span class="px-3"></span>
     </v-footer>
   </v-app>

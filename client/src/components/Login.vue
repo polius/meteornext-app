@@ -62,8 +62,9 @@
         let password = this.password
         this.$store.dispatch('login', { username, password })
         .then(() => {
-          if (!this.$route.query.url === undefined) this.$router.push(this.prevRoute)
-          else this.$router.push({ path: this.$route.query.url })
+          if (this.$route.query.url !== undefined) this.$router.push({ path: this.$route.query.url })
+          else if (this.prevRoute != '') this.$router.push(this.prevRoute)
+          else this.$router.push('/')
         })
         .catch((error) => {
           this.loading = false
