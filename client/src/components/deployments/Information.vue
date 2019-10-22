@@ -139,15 +139,15 @@
           <v-spacer></v-spacer>
           <v-btn icon @click="information_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding: 0px 20px 20px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <div class="title font-weight-regular" style="margin-bottom: 25px;">{{ this.deploymentMode }}</div>
+                <div class="title font-weight-regular" style="margin-top:10px; margin-bottom: 25px;">{{ this.deploymentMode }}</div>
                 <v-text-field readonly v-model="information_dialog_data.name" label="Name" style="padding-top:0px;"></v-text-field>
                 <v-select v-if="deploymentMode != 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="[information_dialog_data.environment]" label="Environment" style="padding-top:0px;"></v-select>
 
-                <v-text-field v-if="deploymentMode != 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" style="padding-top:0px;"></v-text-field>
+                <v-text-field v-if="deploymentMode != 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" style="padding-top:0px;"></v-text-field>
                 <v-card v-if="deploymentMode != 'PRO'" style="margin-bottom:20px;">
                   <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
                     <v-toolbar-title class="white--text">Queries</v-toolbar-title>
@@ -159,14 +159,14 @@
                     </v-toolbar-items>
                   </v-toolbar>
                   <v-divider></v-divider>
-                  <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="query" :show-select="information_dialog_mode != 'parameters'" hide-default-header hide-default-footer class="elevation-1">
+                  <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="query" :show-select="information_dialog_mode != 'parameters'" :hide-default-header="information_dialog_mode == 'parameters'" hide-default-footer class="elevation-1">
                   </v-data-table>
                 </v-card>
 
                 <codemirror v-if="deploymentMode == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
 
                 <div class="subtitle-1 font-weight-regular">METHOD</div>
-                <v-radio-group :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" style="margin-top:10px; margin-bottom:-25px;">
+                <v-radio-group :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" hide-details style="margin-top:10px;">
                   <v-radio value="validate" color="success">
                     <template v-slot:label>
                       <div class="success--text">VALIDATE</div>
@@ -222,15 +222,15 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="select_dialog" max-width="90%">
+    <v-dialog v-model="select_dialog" max-width="80%">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">SELECT EXECUTION</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="select_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding: 15px 20px 20px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
                 <v-card>
