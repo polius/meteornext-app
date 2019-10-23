@@ -63,6 +63,26 @@
           </v-data-table>
         </v-card>
 
+        <!-- QUERY SYNTAX - ERROR -->
+        <div v-if="deployment['progress'] !== undefined && 'syntax' in deployment['progress']" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">ERROR</div>
+        <v-card v-if="deployment['progress'] !== undefined && 'syntax' in deployment['progress']" style="margin-top:15px; margin-left:5px; margin-right:5px;">
+          <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
+            <v-toolbar-title class="subtitle-1 white--text">QUERIES NOT VALID</v-toolbar-title>
+          </v-toolbar>
+          <v-card-text style="padding:0px;">
+            <v-container style="padding:0px!important; margin:0px!important; max-width: 10000px;">
+              <v-layout wrap>
+                <v-flex xs12>
+                  <div v-for="(query, index) in deployment['progress']['syntax']" :key="query">
+                    <div style="padding:15px;" class="body-1 font-weight-regular">{{ query }}</div>
+                    <v-divider v-if="index != deployment['progress']['syntax'].length - 1"></v-divider>
+                  </div>
+                </v-flex>
+              </v-layout>
+            </v-container>
+          </v-card-text>
+        </v-card>
+
         <!-- VALIDATION -->
         <div v-if="validation_data.length > 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">VALIDATION</div>
         <!-- validation -->
@@ -79,17 +99,25 @@
         </v-card>
 
         <!-- VALIDATION - ERROR -->
-        <div v-if="deployment['error']" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">ERROR</div>
-        <v-card v-if="deployment['error']" style="margin-top:15px; margin-left:5px; margin-right:5px;">
+        <div v-if="validation_data.length > 0 && validation_error" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">ERROR</div>
+        <v-card v-if="validation_data.length > 0 && validation_error" style="margin-top:15px; margin-left:5px; margin-right:5px;">
           <v-card-text style="padding:10px 15px 10px 17px;">
             <v-container style="padding:0px!important; margin:0px!important;">
               <v-layout wrap>
                 <v-flex xs12>
-                  <div class="body-1 font-weight-regular">...</div>
+                  <div v-for="region in Object.keys(deployment['progress']['validation'])" :key="region">
+                    <div v-if="!deployment['progress']['validation'][region]['success']" >
+                      <div class="subtitle-1 font-weight-medium warning--text">{{ region }}</div>
+                      <div v-for="item in deployment['progress']['validation'][region]['errors']" :key="item['server']">
+                        <div class="body-1 font-weight-regular"><b>- {{ item['server'] }}.</b> {{ item['error'] }} </div>
+                      </div>
+                    </div>
+                  </div>
                 </v-flex>
               </v-layout>
             </v-container>
           </v-card-text>
+          
         </v-card>
 
         <!-- EXECUTION -->
@@ -104,6 +132,22 @@
             </template>
           </v-data-table>
         </v-card>
+
+        <!-- EXECUTION - ERROR -->
+        <div v-if="deployment['progress'] !== undefined && !('syntax' in deployment['progress']) && !validation_error && 'error' in deployment['progress']">
+          <div class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">ERROR</div>
+          <v-card style="margin-top:15px; margin-left:5px; margin-right:5px;">
+            <v-card-text style="padding:0px;">
+              <v-container style="padding:0px!important; margin:0px!important;">
+                <v-layout wrap>
+                  <v-flex xs12 style="padding-left:5px; padding-right:5px; padding-bottom:10px;">
+                    <v-textarea :value="deployment['progress']['error']" color="#c6c6c6" auto-grow solo flat readonly hide-details></v-textarea>
+                  </v-flex>
+                </v-layout>
+              </v-container>
+            </v-card-text>
+          </v-card>
+        </div>
 
         <!-- After Execution Headers -->
         <v-layout row wrap style="margin:0px;">
@@ -380,7 +424,7 @@
       // Last Updated
       last_updated: '',
 
-      // Information Data Table
+      // Information
       information_headers: [
         { text: 'Name', value: 'name', sortable: false },
         { text: 'Environment', value: 'environment', sortable: false },
@@ -394,6 +438,27 @@
       ],
       information_items: [],
 
+      // Validation
+      validation_headers: [],
+      validation_data: [],
+      validation_error: false,
+
+      // Execution
+      execution_headers: [],
+      execution_data: [],
+
+      // Post Execution
+      logs_headers: [{ text: 'LOGS', align:'left', value: 'status', sortable: false }],
+      logs_data: [],
+      tasks_headers: [{ text: 'REMAINING TASKS', align:'left', value: 'status', sortable: false }],
+      tasks_data: [],
+      queries_headers: [
+        { text: 'TOTAL', align:'left', value: 'total', sortable: false },
+        { text: 'SUCCEEDED', align:'left', value: 'succeeded', sortable: false },
+        { text: 'FAILED', align:'left', value: 'failed', sortable: false }
+      ],
+      queries_data: [],
+      
       // Dialogs
       // - Information -
       information_dialog: false,
@@ -419,6 +484,11 @@
       shareResults_dialog_text: '',
       shareResults_dialog_icon: '',
 
+      // Executions Flag
+      stop_execution: false,
+      start_execution: false,
+      show_results: false,
+
       // Init Code Parameters
       cmOptions: {
         readOnly: true,
@@ -432,39 +502,6 @@
         extraKeys: { "Tab": function(cm) { cm.replaceSelection("    " , "end"); }}
       },
 
-      // Executions Flag
-      stop_execution: false,
-      start_execution: false,
-      show_results: false,
-
-      // ...
-
-      databases: "db1, db2, db3",
-      status_headers: [
-        { text: 'Name', align: 'left', value: 'name', sortable: false },
-        { text: 'Environment', value: 'environment', sortable: false },
-        { text: 'Mode', align: 'left', value: 'mode', sortable: false },
-        { text: 'Method', align: 'left', value: 'method', sortable: false },
-        { text: 'Created', align: 'left', value: 'created', sortable: false },
-        { text: 'Started', align: 'left', value: 'started', sortable: false },
-        { text: 'Ended', align: 'left', value: 'ended', sortable: false },
-        { text: 'Overall', align: 'left', value: 'overall', sortable: false }
-      ],
-      status_data: [],
-      validation_headers: [],
-      validation_data: [],
-      execution_headers: [],
-      execution_data: [],
-      logs_headers: [{ text: 'LOGS', align:'left', value: 'status', sortable: false }],
-      logs_data: [],
-      tasks_headers: [{ text: 'REMAINING TASKS', align:'left', value: 'status', sortable: false }],
-      tasks_data: [],
-      queries_headers: [
-        { text: 'TOTAL', align:'left', value: 'total', sortable: false },
-        { text: 'SUCCEEDED', align:'left', value: 'succeeded', sortable: false },
-        { text: 'FAILED', align:'left', value: 'failed', sortable: false }
-      ],
-      queries_data: [],
       // Snackbar
       snackbar: false,
       snackbarTimeout: Number(3000),
@@ -578,6 +615,7 @@
         this.getExecutions()
       },
       parseValidation() {
+        if (!('validation' in this.deployment['progress'])) return
         // Init variables
         this.validation_headers = []
         this.validation_data = [{}]
@@ -587,13 +625,16 @@
         for (let [key, value] of Object.entries(this.deployment['progress']['validation'])) {
           this.validation_headers.push({ text: key, align: 'left', value: 'r' + i.toString(), sortable: false})
           var status = 'VALIDATING' 
-          if ('success' in value) status = (value['success'] ? 'SUCCEEDED' : 'FAILED')
+          if ('success' in value) {
+            status = (value['success'] ? 'SUCCEEDED' : 'FAILED')
+            this.validation_error = (value['success'] ? false : true)
+          }
           this.validation_data[0]['r' + i.toString()] = status
           i += 1
         }
       },
       parseExecution() {
-        if (Object.keys(this.deployment['progress']['execution']).length == 0) return
+        if (!('execution' in this.deployment['progress'])) return
         // Init variables
         this.execution_headers = []
         this.execution_data = [{}]
@@ -627,6 +668,7 @@
         }
       },
       parseLogs() {
+        if (!('logs' in this.deployment['progress'])) return
         // Init variables
         this.logs_data = []
 
@@ -636,6 +678,7 @@
         }
       },
       parseTasks() {
+        if (!('tasks' in this.deployment['progress'])) return
         // Init variables
         this.tasks_data = []
 
@@ -645,7 +688,7 @@
         }
       },
       parseQueries() {
-        if (Object.keys(this.deployment['progress']['queries']).length == 0) return
+        if (!('queries' in this.deployment['progress'])) return
         // Init variables
         this.queries_data = []
 

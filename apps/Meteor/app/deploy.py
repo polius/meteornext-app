@@ -192,14 +192,9 @@ class deploy:
                 execution_status = self.__start()
                 # Post Test Execution Success
                 self.__post_execution(deploy=self._args.deploy, error=False)
-                # Register deployment end datetime
-                self._progress.end(execution_status)
             except (Exception, KeyboardInterrupt) as e:
                 # Post Test Execution Failure
                 self.__post_execution(deploy=self._args.deploy, error=True, error_msg=e)
-                # Register deployment end datetime
-                status = 'FAILED' if e.__class__ == Exception else 'INTERRUPTED'
-                self._progress.end(status)
 
     def __post_execution(self, deploy, error, error_msg=None):
         # Supress CTRL+C events
@@ -226,6 +221,8 @@ class deploy:
                 self.show_execution_time()
                 # Show Logs Location
                 self.show_logs_location('[SUCCESS]_' + self._EXECUTION_NAME)
+                # Track Execution Status
+                self._progress.end(execution_status)
 
             else:
                 status_name = '[SUCCESS]_' if error_msg is None else '[FAILED]_'
@@ -261,6 +258,11 @@ class deploy:
                 self.show_execution_time()
                 # Show Logs Location
                 self.show_logs_location(status_name + self._EXECUTION_NAME)
+                # Track Execution Status
+                if error_msg.__class__ == KeyboardInterrupt:
+                    self._progress.end(execution_status=2)
+                else:
+                    self._progress.error(str(error_msg).rstrip())
 
         except Exception as e:
             print(str(e))
@@ -438,6 +440,7 @@ class deploy:
                     print(colored('[NOT DETECTED] ', 'red') + query_parsed)
                     queries_validated &= 0
                     invalid_queries.append(query_parsed)
+                    self._progress.track_syntax(q)
                 else:
                     print(colored('[{}] '.format(query_type.upper()), 'green') + query_parsed)
                     queries_validated &= 1
@@ -455,6 +458,7 @@ class deploy:
 
             # Determine if the queries are validated
             if not queries_validated:
+                self._progress.error("Queries not valid")
                 raise Exception(colored("- Validation Not Passed. Please review the above queries in the 'query_execution.py' file.", "red"))
             else:
                 print(colored("- Queries Validation Passed!", 'green', attrs=['bold', 'reverse']))
