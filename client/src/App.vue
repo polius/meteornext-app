@@ -82,9 +82,9 @@
       </v-list>
     </v-navigation-drawer>
 
-    <v-footer app v-if="isLoggedIn && showBottomNavbar()" style="height:30px;">
+    <!-- <v-footer app v-if="isLoggedIn && showBottomNavbar()" style="height:30px;">
       <span class="px-3"></span>
-    </v-footer>
+    </v-footer> -->
   </v-app>
 </template>
 

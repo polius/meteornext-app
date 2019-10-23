@@ -43,13 +43,13 @@
                   <v-select v-model="item.environment" :rules="[v => !!v || '']" :items="environments" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
                   <!-- SSH -->
                   <v-switch v-model="item.cross_region" label="Cross Region" hide-details style="margin-top:0px;"></v-switch>
-                  <div v-if="item.cross_region">
+                  <div v-if="item.cross_region" style="margin-top:15px;">
                     <div class="title font-weight-regular">SSH</div>
                     <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
                     <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="item.password" label="Password" style="padding-top:0px;"></v-text-field>
-                    <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;"></v-textarea>
-                    <v-text-field v-model="item.deploy_path" :rules="[v => !!v || '']" label="Deploy Path" style="margin-top:-5px; padding-top:0px;"></v-text-field>
+                    <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                    <v-text-field v-model="item.deploy_path" :rules="[v => !!v || '']" label="Deploy Path" style="margin-top:10px;" hide-details></v-text-field>
                   </div>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>

@@ -21,13 +21,13 @@
         <v-progress-circular v-if="start_execution || stop_execution || deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS'" :size="22" indeterminate color="white" width="2" style="margin-left:20px; margin-right:10px;"></v-progress-circular>
 
         <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="success" style="margin-left:5px; margin-right:15px;">SUCCESS</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="success" style="margin-left:5px; margin-right:15px;">Execution Finished with errors</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="warning" style="margin-left:5px; margin-right:15px;" title="Some queries failed">WARNING</v-chip>
         <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="error" style="margin-left:5px; margin-right:15px;">FAILED</v-chip>
 
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="padding-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
           <v-btn v-if="show_results" text title="Share Results" @click="shareResults_dialog = true"><v-icon small style="padding-right:10px;">fas fa-link</v-icon>SHARE</v-btn>
-          <v-btn v-else-if="deployment['status'] == 'SUCCESS' || deployment['status'] == 'FAILED' || (deployment['status'] == 'INTERRUPTED' && deployment['uri'] != null)" text title="Show Execution Results" @click="showResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
+          <v-btn v-else-if="deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && deployment['uri'] != null) || (deployment['status'] == 'INTERRUPTED' && deployment['uri'] != null)" text title="Show Execution Results" @click="showResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
         </v-toolbar-items>
 
         <v-spacer></v-spacer>
@@ -56,6 +56,7 @@
               <v-icon v-else-if="props.item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
               <v-icon v-else-if="props.item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
               <v-icon v-else-if="props.item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
+              <v-icon v-else-if="props.item.status == 'WARNING'" title="Some queries failed" small style="color: #ff9800; margin-left:9px;">fas fa-check</v-icon>
               <v-icon v-else-if="props.item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
               <v-icon v-else-if="props.item.status == 'INTERRUPTED'" title="Interrupted" small style="color: #f44336; margin-left:13px;">fas fa-exclamation</v-icon>
             </template>
@@ -77,6 +78,20 @@
           </v-data-table>
         </v-card>
 
+        <!-- VALIDATION - ERROR -->
+        <div v-if="deployment['error']" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">ERROR</div>
+        <v-card v-if="deployment['error']" style="margin-top:15px; margin-left:5px; margin-right:5px;">
+          <v-card-text style="padding:10px 15px 10px 17px;">
+            <v-container style="padding:0px!important; margin:0px!important;">
+              <v-layout wrap>
+                <v-flex xs12>
+                  <div class="body-1 font-weight-regular">...</div>
+                </v-flex>
+              </v-layout>
+            </v-container>
+          </v-card-text>
+        </v-card>
+
         <!-- EXECUTION -->
         <div v-if="execution_data.length > 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">EXECUTION</div>
         <v-card v-if="execution_data.length > 0" style="margin-top:15px;">
@@ -91,9 +106,9 @@
         </v-card>
 
         <!-- After Execution Headers -->
-        <v-layout row wrap style="margin-top:15px; margin-left:0px; margin-right:0px;">
+        <v-layout row wrap style="margin:0px;">
           <v-flex xs8>
-            <div v-if="logs_data.length > 0" class="title font-weight-regular" style="padding-top:20px; padding-left:1px;">POST EXECUTION</div>
+            <div v-if="logs_data.length > 0 || tasks_data.length > 0" class="title font-weight-regular" style="padding-top:20px; padding-left:1px;">POST EXECUTION</div>
           </v-flex>
           <v-flex xs4>
             <div v-if="queries_data.length > 0" class="title font-weight-regular" style="padding-top:20px; padding-left:7px;">QUERIES</div>
@@ -124,11 +139,6 @@
             </v-card>
           </v-flex>
         </v-layout>
-
-        <!-- ERROR -->
-        <!-- <div class="title font-weight-regular" style="padding-top:20px; padding-left:1px; padding-bottom:20px;">ERROR</div>
-        <v-card>
-        </v-card> -->
       </v-card-text>
     </v-card>
 
@@ -272,11 +282,11 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ action_dialog_title }}</v-toolbar-title>
         </v-toolbar>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding: 10px 20px 20px 20px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
-              <v-flex xs12 style="padding-bottom:10px">
-                <div class="subtitle-1" style="padding-bottom:10px">{{ action_dialog_text }}</div>
+              <v-flex xs12>
+                <div class="subtitle-1" style="margin-bottom:10px">{{ action_dialog_text }}</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn color="success" @click="actionSubmit()">Confirm</v-btn>
@@ -532,7 +542,7 @@
         this.deployment['public'] = data['public']
 
         // Set Public Values
-        this.shareResults_dialog_title = (this.deployment['public']) ? 'The results are private' : 'The results are public'
+        this.shareResults_dialog_title = (this.deployment['public']) ? 'The results are public' : 'The results are private'
         this.shareResults_dialog_text = (this.deployment['public']) ? 'PUBLIC' : 'PRIVATE'
         this.shareResults_dialog_icon = (this.deployment['public']) ? 'fas fa-unlock' : 'fas fa-lock'
 

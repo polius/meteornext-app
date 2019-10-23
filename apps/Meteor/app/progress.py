@@ -12,19 +12,16 @@ class progress:
         self._sql = mysql(logger, args, credentials)
         self._sql.connect(credentials['meteor_next']['hostname'], credentials['meteor_next']['username'], credentials['meteor_next']['password'], credentials['meteor_next']['database'])
         self._progress = {"validation":{}, "execution":{}, "logs":[], "tasks":[], "queries":{}}
-        # Init Progress Data
-        for i in self._credentials['environments'][self._args.environment]:
-            self._progress['validation'][i['region']] = {}
-            self._progress['execution'][i['region']] = {}
 
     def start(self):
         if self.__enabled():
             query = "UPDATE deployments_{} SET status = 'IN PROGRESS', started = '{}' WHERE id = {}".format(self._args.deployment_mode, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
 
-    def end(self, status):
+    def end(self, execution_status):
         if self.__enabled():
             engine = 'amazon_s3' if self._credentials['s3']['enabled'] == 'True' else 'local'
+            status = 'SUCCESS' if execution_status == 1 else 'WARNING'
             query = "UPDATE deployments_{} SET uri = '{}', engine = '{}', status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._args.deployment_mode, self._uuid, engine, status, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
 

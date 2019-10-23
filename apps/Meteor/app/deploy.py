@@ -189,17 +189,17 @@ class deploy:
                 # Start the Countdown
                 self.__start_countdown()
                 # Start the Test Execution
-                self.__start()
+                execution_status = self.__start()
                 # Post Test Execution Success
                 self.__post_execution(deploy=self._args.deploy, error=False)
                 # Register deployment end datetime
-                self._progress.end(status='SUCCESS')
+                self._progress.end(execution_status)
             except (Exception, KeyboardInterrupt) as e:
                 # Post Test Execution Failure
                 self.__post_execution(deploy=self._args.deploy, error=True, error_msg=e)
                 # Register deployment end datetime
                 status = 'FAILED' if e.__class__ == Exception else 'INTERRUPTED'
-                self._progress.end(status=status)
+                self._progress.end(status)
 
     def __post_execution(self, deploy, error, error_msg=None):
         # Supress CTRL+C events
@@ -539,7 +539,7 @@ class deploy:
                 self._logger.critical(str(e))
             error_msg = "- Regions Not Passed the Environment Validation."
             self._logger.critical(colored(error_msg, 'red', attrs=['reverse', 'bold']))
-            self._progress.error(error_msg)
+            self._progress.error(error_msg[2:])
             self.clean()
             sys.exit()
         
@@ -687,6 +687,9 @@ class deploy:
                         raise Exception('')
                     elif execution_status == 1:
                         print(colored("- {}Execution Finished Successfully.".format('Test ' if self._args.test else ''), "green", attrs=['bold', 'reverse']))
+
+                    # Return Execution Status
+                    return execution_status
 
                 except KeyboardInterrupt:
                     # Supress CTRL+C events
