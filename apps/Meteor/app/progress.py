@@ -13,15 +13,15 @@ class progress:
         self._sql.connect(credentials['meteor_next']['hostname'], credentials['meteor_next']['username'], credentials['meteor_next']['password'], credentials['meteor_next']['database'])
         self._progress = {}
 
-    def start(self):
+    def start(self, pid):
         if self.__enabled():
-            query = "UPDATE deployments_{} SET status = 'IN PROGRESS', started = '{}' WHERE id = {}".format(self._args.deployment_mode, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
+            query = "UPDATE deployments_{} SET status = 'IN PROGRESS', started = '{}', pid = '{}' WHERE id = {}".format(self._args.deployment_mode, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), pid, self._args.deployment_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
 
     def end(self, execution_status):
         if self.__enabled():
             engine = 'amazon_s3' if self._credentials['s3']['enabled'] == 'True' else 'local'
-            status = 'SUCCESS' if execution_status == 1 else 'WARNING' if execution_status == 0 else 'INTERRUPTED'
+            status = 'SUCCESS' if execution_status == 1 else 'WARNING' if execution_status == 0 else 'STOPPED'
             query = "UPDATE deployments_{} SET uri = '{}', engine = '{}', status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._args.deployment_mode, self._uuid, engine, status, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
 

@@ -5,8 +5,9 @@ import re
 import sys
 import imp
 import json
-import signal
 import time
+import shutil
+import signal
 import multiprocessing
 from multiprocessing.managers import SyncManager
 from query import query
@@ -78,8 +79,12 @@ class deploy_queries:
             # Get all Databases in current server
             databases = self._query.sql.get_all_databases()
 
-            # Create Execution Server Folder
-            os.mkdir("{0}/{1}/execution/{2}/{3}/".format(self._script_path, self._execution_name, region, server['name']))
+            # Create Execution Server Folder (if exists, then delete+create)
+            execution_server_folder = "{0}/{1}/execution/{2}/{3}/".format(self._script_path, self._execution_name, region, server['name'])
+            if os.path.exists(execution_server_folder):
+                shutil.rmtree(execution_server_folder)
+
+            os.mkdir(execution_server_folder)
 
             # Deployment in Parallel
             if self._credentials['execution_mode']['parallel'] == 'True':

@@ -1,4 +1,6 @@
+import os
 import imp
+import signal
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -124,11 +126,11 @@ class Pro:
         data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
         data['execution_id'] = self._deployments_pro.post(data)
 
-        # Get Meteor Additional Parameters
-        data['group_id'] = user['group_id']
-        data['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
-
         if data['start_execution']:
+            # Get Meteor Additional Parameters
+            data['group_id'] = user['group_id']
+            data['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
+
             # Start Meteor Execution
             self._meteor.execute(data)
 
@@ -148,6 +150,7 @@ class Pro:
             # Create a new Pro Deployment
             data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
             data['execution_id'] = self._deployments_pro.post(data)
+
             if data['start_execution']:
                 # Get Meteor Additional Parameters
                 data['group_id'] = user['group_id']
@@ -167,13 +170,13 @@ class Pro:
             return jsonify({'message': 'This deployment does not exist.'}), 400
         else:
             deployment = deployment[0]
-    
-        # Update Flags
-        self._deployments_pro.startExecution(user['id'], deployment['execution_id'])
 
         # Get Meteor Additional Parameters
         deployment['group_id'] = user['group_id']
         deployment['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
+
+        # Update Execution Status
+        self._deployments_pro.startExecution(user['id'], deployment['execution_id'])
 
         # Start Meteor Execution
         self._meteor.execute(deployment)
@@ -182,4 +185,21 @@ class Pro:
         return jsonify({'message': 'Deployment started successfully'}), 200
 
     def __stop(self, user, data):
-        pass
+        result = self._deployments_pro.getPid(user['id'], data['execution_id'])
+  
+        # Check if deployment exists
+        if len(result) == 0:
+            return jsonify({'message': 'This deployment does not exist.'}), 400
+        else:
+            pid = result[0]['pid']
+
+        # Update Execution Status
+        self._deployments_pro.stopExecution(user['id'], data['execution_id'])
+
+        # Stop the execution
+        try:
+            os.kill(pid, signal.SIGINT)
+        except OSError as e:
+            print(str(e))
+        finally:
+            return jsonify({'message': 'Stopping the execution...'}), 200

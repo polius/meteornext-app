@@ -47,19 +47,19 @@ class deploy_environments:
         try:
             if output:
                 environment_type = '[LOCAL]' if self._ENV_DATA['ssh']['enabled'] == 'False' else '[SSH]'
-                self._logger.info(colored('{} Region: {}'.format(environment_type, self._ENV_DATA['region']), attrs=['bold']))
+                print(colored('{} Region: {}'.format(environment_type, self._ENV_DATA['region']), attrs=['bold']))
             else:
                 environment_type = '[LOCAL]' if self._ENV_DATA['ssh']['enabled'] == 'False' else '[SSH]  '
-                self._logger.info(colored('--> {} Region \'{}\' Started...'.format(environment_type, self._ENV_DATA['region']), 'yellow'))
+                print(colored('--> {} Region \'{}\' Started...'.format(environment_type, self._ENV_DATA['region']), 'yellow'))
 
             if self._ENV_DATA['ssh']['enabled'] == "True":
                 same_version = self.check_version(output)
                 if same_version:
                     if output:
-                        self._logger.info(colored('- Region Updated.', 'green'))
+                        print(colored('- Region Updated.', 'green'))
                 else:
                     if output:
-                        self._logger.info(colored('- Region Outdated. Starting uploading the Meteor Engine...', 'red'))
+                        print(colored('- Region Outdated. Starting uploading the Meteor Engine...', 'red'))
                     # Install Meteor in all SSH Regions
                     self.prepare(output)
                 # Setup User Execution Environment ('credentials.json', 'query_execution.py')
@@ -69,9 +69,9 @@ class deploy_environments:
             connection = self.__check_sql_connection(output)
 
             if connection['success'] is True:
-                self._logger.info(colored('--> {} Region \'{}\' Finished.'.format(environment_type, self._ENV_DATA['region']), 'green'))
+                print(colored('--> {} Region \'{}\' Finished.'.format(environment_type, self._ENV_DATA['region']), 'green'))
             else:
-                self._logger.info(colored('--> {} Region \'{}\' Failed.'.format(environment_type, self._ENV_DATA['region']), 'red'))
+                print(colored('--> {} Region \'{}\' Failed.'.format(environment_type, self._ENV_DATA['region']), 'red'))
 
             if shared_array is not None:
                 shared_array.append(connection)
@@ -82,11 +82,11 @@ class deploy_environments:
             if self._ENV_DATA['ssh']['enabled'] == "True":
                 # Handle SSH Error
                 if self._credentials['execution_mode']['parallel'] == 'True':
-                    self._logger.info(colored("    [{}/SSH] {} ".format(self._ENV_DATA['region'], self._ENV_DATA['ssh']['hostname']), attrs=['bold']) + str(e))
+                    print(colored("    [{}/SSH] {} ".format(self._ENV_DATA['region'], self._ENV_DATA['ssh']['hostname']), attrs=['bold']) + str(e))
                 else:
-                    self._logger.info(colored("✘", 'red') + colored(" [{}] ".format(self._ENV_DATA['ssh']['hostname']), attrs=['bold']) + str(e))
+                    print(colored("✘", 'red') + colored(" [{}] ".format(self._ENV_DATA['ssh']['hostname']), attrs=['bold']) + str(e))
 
-                self._logger.info(colored('--> {} Region \'{}\' Failed.'.format(environment_type, self._ENV_DATA['region']), 'red'))
+                print(colored('--> {} Region \'{}\' Failed.'.format(environment_type, self._ENV_DATA['region']), 'red'))
             raise
         except KeyboardInterrupt:
             if self._credentials['execution_mode']['parallel'] != 'True':
@@ -122,28 +122,28 @@ class deploy_environments:
 
     def prepare(self, output=True):
         if output:
-            self._logger.info('- Preparing Deploy...')
+            print('- Preparing Deploy...')
         self.__ssh("mkdir -p {0} && chmod 700 {0} && rm -rf {0}*".format(self._DEPLOY_PATH))
 
         if output:
-            self._logger.info('- Creating Deploy...')
+            print('- Creating Deploy...')
         self.__local('rm -rf "{0}" && tar -czvf "{0}" . --exclude "logs" --exclude "*.git*" --exclude "*.pyc" --exclude "web" --exclude "credentials.json" --exclude "query_execution.py"'.format(self._COMPRESSED_FILE_NAME), show_output=False)
 
         if output:
-            self._logger.info('- Uploading Deploy...')
+            print('- Uploading Deploy...')
         self.__put(self._SCRIPT_PATH + '/' + self._COMPRESSED_FILE_NAME, self._DEPLOY_PATH + self._COMPRESSED_FILE_NAME)
 
         if output:
-            self._logger.info("- Uncompressing Deploy...")
+            print("- Uncompressing Deploy...")
         self.__ssh("tar -xvzf {0}{1} -C {0} && rm -rf {0}{1}".format(self._DEPLOY_PATH, self._COMPRESSED_FILE_NAME))
 
         if output:
-            self._logger.info("- Installing Requirements...")
+            print("- Installing Requirements...")
         self.__ssh('pip install -r {}meteor/requirements.txt --user'.format(self._ENV_DATA['ssh']['deploy_path']))
 
     def setup(self, output=True):
         if output:
-            self._logger.info("- Setting Up New Execution...")
+            print("- Setting Up New Execution...")
 
         logs_path = "{}logs/{}/".format(self._DEPLOY_PATH, self._EXECUTION_NAME)
         self.__ssh('mkdir -p {}'.format(logs_path))
@@ -276,7 +276,7 @@ class deploy_environments:
         connection_succeeded = True
 
         if output:
-            self._logger.info("- Checking SQL Connections...")
+            print("- Checking SQL Connections...")
 
         if self._credentials['execution_mode']['parallel'] == "True":
             # Init SyncManager
@@ -298,7 +298,7 @@ class deploy_environments:
                 for data in shared_array:
                     connection_succeeded &= data['success']
                     if data['success'] is False:
-                        self._logger.info(colored("    [{}/SQL] {} ".format(self._ENV_DATA['region'], data['sql']), attrs=['bold']) + data['error'])
+                        print(colored("    [{}/SQL] {} ".format(self._ENV_DATA['region'], data['sql']), attrs=['bold']) + data['error'])
                         connection_results['progress'].append({'server': data['sql'], 'error': data['error'].replace('"', '\\"')})
 
             except KeyboardInterrupt:
@@ -322,7 +322,7 @@ class deploy_environments:
             
             if len(result) == 0:
                 if output:
-                    self._logger.info(colored("✔", 'green') + colored(" [{}]".format(sql['name']), attrs=['bold']) + " Connection Succeeded")
+                    print(colored("✔", 'green') + colored(" [{}]".format(sql['name']), attrs=['bold']) + " Connection Succeeded")
                 if shared_array is not None:
                     shared_array.append({"region": self._ENV_DATA['region'], "success": True, "sql": sql['name']})
                 return True
@@ -358,7 +358,7 @@ class deploy_environments:
             command = "ps -U $USER -u $USER u | grep \"" + str(self._UUID) + "\" | grep -v grep | awk '{print $2}' | wc -l"
             
             if self._ENV_DATA['ssh']['enabled'] == 'False':
-                count = int(self.__local(command)['stdout'])
+                count = int(self.__local(command)['stdout'][0])
                 print("-- [Attempt {}/{}] Remaining Processes: {}".format(i+1, attempts, int(count)))
             else:
                 count = int(self.__ssh(command)['stdout'][0])

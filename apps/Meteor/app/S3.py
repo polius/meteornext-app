@@ -26,14 +26,14 @@ class S3:
     def upload_logs(self, deploy_name, deploy_prefix, uuid):
         # Upload Logs to S3
         if self._credentials['s3']['enabled'] == 'True':
-            self._logger.info(colored("+==================================================================+", "magenta", attrs=['bold']))
-            self._logger.info(colored("‖  AMAZON S3                                                       ‖", "magenta", attrs=['bold']))
-            self._logger.info(colored("+==================================================================+", "magenta", attrs=['bold']))
+            print(colored("+==================================================================+", "magenta", attrs=['bold']))
+            print(colored("‖  AMAZON S3                                                       ‖", "magenta", attrs=['bold']))
+            print(colored("+==================================================================+", "magenta", attrs=['bold']))
 
             try:
                 # Upload Logs to S3
                 status_msg = "- Uploading Logs to S3 Bucket '{}'...".format(self._credentials['s3']['bucket_name'])
-                self._logger.info(status_msg)
+                print(status_msg)
                 self._progress.track_logs("Uploading Logs to Amazon S3...")
 
                 # 1. Upload Compressed Logs Folder to '/logs'

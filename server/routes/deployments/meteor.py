@@ -207,8 +207,9 @@ class query_execution:
         execution_name = "{}_{}|{}".format(deployment['id'], deployment['execution_id'], current_date)
 
         # Build Meteor Command
-        command = 'nohup python {} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --execution_name "{}" --deployment_mode "{}" --deployment_id "{}" > /dev/null 2>&1 &'.format(base_path, environment, deployment['method'].lower(), logs_path, query_execution_path, credentials_path, execution_name, deployment['mode'].lower(), deployment['execution_id'])
+        command = 'python {} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --execution_name "{}" --deployment_mode "{}" --deployment_id "{}"'.format(base_path, environment, deployment['method'].lower(), logs_path, query_execution_path, credentials_path, execution_name, deployment['mode'].lower(), deployment['execution_id'])
         print(command)
 
-        # Execute Meteor 
-        subprocess.call(command, shell=True)
+        # Execute Meteor
+        p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)
+        print(p.pid)

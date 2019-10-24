@@ -27,7 +27,7 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="padding-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
           <v-btn v-if="show_results" text title="Share Results" @click="shareResults_dialog = true"><v-icon small style="padding-right:10px;">fas fa-link</v-icon>SHARE</v-btn>
-          <v-btn v-else-if="deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && deployment['uri'] != null) || (deployment['status'] == 'INTERRUPTED' && deployment['uri'] != null)" text title="Show Execution Results" @click="showResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
+          <v-btn v-else-if="deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && deployment['uri'] != null) || (deployment['status'] == 'STOPPED' && deployment['uri'] != null)" text title="Show Execution Results" @click="showResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
         </v-toolbar-items>
 
         <v-spacer></v-spacer>
@@ -58,7 +58,8 @@
               <v-icon v-else-if="props.item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
               <v-icon v-else-if="props.item.status == 'WARNING'" title="Some queries failed" small style="color: #ff9800; margin-left:9px;">fas fa-check</v-icon>
               <v-icon v-else-if="props.item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
-              <v-icon v-else-if="props.item.status == 'INTERRUPTED'" title="Interrupted" small style="color: #f44336; margin-left:13px;">fas fa-exclamation</v-icon>
+              <v-icon v-else-if="props.item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:13px;">fas fa-exclamation</v-icon>
+              <v-icon v-else-if="props.item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:13px;">fas fa-exclamation</v-icon>
             </template>
           </v-data-table>
         </v-card>
@@ -305,7 +306,8 @@
                           <v-icon v-else-if="props.item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
                           <v-icon v-else-if="props.item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
                           <v-icon v-else-if="props.item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
-                          <v-icon v-else-if="props.item.status == 'INTERRUPTED'" title="Interrupted" small style="color: #f44336; margin-left:13px;">fas fa-exclamation</v-icon>
+                          <v-icon v-else-if="props.item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:13px;">fas fa-exclamation</v-icon>
+                          <v-icon v-else-if="props.item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:13px;">fas fa-exclamation</v-icon>
                         </td>
                         <td>{{ props.item.started }}</td>
                         <td>{{ props.item.ended }}</td>
@@ -787,6 +789,21 @@
         else {
           this.notification('Stopping the execution. Please wait...', 'primary')
           this.stop_execution = true
+
+          // Build parameters
+          const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase() +  '/stop'
+          const payload = {
+            execution_id: this.deployment['execution_id']
+          }
+          axios.post(path, payload)
+          .then(() => {
+          })
+          .catch((error) => {
+            if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message, 'error')
+            // eslint-disable-next-line
+            console.error(error)
+          })
         }
         this.action_dialog = false
       },

@@ -71,6 +71,15 @@ class Deployments_Pro:
         """
         return self._mysql.execute(query, (user_id, execution_id))
 
+    def stopExecution(self, user_id, execution_id):
+        query = """
+            UPDATE deployments_pro p
+            JOIN deployments d ON d.id = p.deployment_id AND d.user_id = %s 
+            SET p.status = 'STOPPING'
+            WHERE p.id = %s
+        """
+        return self._mysql.execute(query, (user_id, execution_id))
+
     def setPublic(self, user_id, execution_id, public):
         query = """
             UPDATE deployments_pro p
@@ -79,3 +88,12 @@ class Deployments_Pro:
             WHERE p.id = %s
         """
         return self._mysql.execute(query, (user_id, public, execution_id))
+
+    def getPid(self, user_id, execution_id):
+        query = """
+            SELECT p.pid  
+            FROM deployments_pro p
+            JOIN deployments d ON d.id = p.deployment_id AND d.user_id = %s 
+            WHERE p.id = %s
+        """
+        return self._mysql.execute(query, (user_id, execution_id))

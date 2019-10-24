@@ -178,7 +178,7 @@ class deploy:
     
     def __init_core(self):
         # Register deployment start datetime
-        self._progress.start()
+        self._progress.start(os.getpid())
 
         # Perform the Validation
         self.__validate()
@@ -186,10 +186,11 @@ class deploy:
         # Perform the Deploy / Test Execution
         if self._args.deploy or self._args.test:
             try:
+                print(os.getpid())
                 # Start the Countdown
                 self.__start_countdown()
                 # Start the Test Execution
-                execution_status = self.__start()
+                self.__start()
                 # Post Test Execution Success
                 self.__post_execution(deploy=self._args.deploy, error=False)
             except (Exception, KeyboardInterrupt) as e:
@@ -222,7 +223,7 @@ class deploy:
                 # Show Logs Location
                 self.show_logs_location('[SUCCESS]_' + self._EXECUTION_NAME)
                 # Track Execution Status
-                self._progress.end(execution_status)
+                self._progress.end(execution_status=1)
 
             else:
                 status_name = '[SUCCESS]_' if error_msg is None else '[FAILED]_'
@@ -261,8 +262,10 @@ class deploy:
                 # Track Execution Status
                 if error_msg.__class__ == KeyboardInterrupt:
                     self._progress.end(execution_status=2)
-                else:
+                elif str(error_msg) != '':
                     self._progress.error(str(error_msg).rstrip())
+                else:
+                    self._progress.end(execution_status=0)
 
         except Exception as e:
             print(str(e))
@@ -691,9 +694,6 @@ class deploy:
                         raise Exception('')
                     elif execution_status == 1:
                         print(colored("- {}Execution Finished Successfully.".format('Test ' if self._args.test else ''), "green", attrs=['bold', 'reverse']))
-
-                    # Return Execution Status
-                    return execution_status
 
                 except KeyboardInterrupt:
                     # Supress CTRL+C events
