@@ -294,7 +294,7 @@
                     <v-toolbar-title class="white--text">Executions</v-toolbar-title>
                   </v-toolbar>
                   <v-divider></v-divider>
-                  <v-data-table :headers="executions.headers" :items="executions.items" item-key="id" hide-default-footer class="elevation-1">
+                  <v-data-table :headers="executions.headers" :items="executions.items" item-key="id" class="elevation-1">
                     <template v-slot:item="props">
                       <tr :style="`background-color:` + selectRow(props.item.id)">
                         <td>{{ props.item.environment }}</td>

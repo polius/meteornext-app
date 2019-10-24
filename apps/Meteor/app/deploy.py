@@ -314,6 +314,7 @@ class deploy:
             self._logs.compress('[FAILED]_' + self._EXECUTION_NAME)
             self.clean()
             self.show_execution_time(only_validate=True)
+            self._progress.end(execution_status=2)
             sys.exit()
         else:
             if self._args.validate:
