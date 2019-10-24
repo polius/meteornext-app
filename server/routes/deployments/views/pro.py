@@ -150,7 +150,6 @@ class Pro:
             # Create a new Pro Deployment
             data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
             data['execution_id'] = self._deployments_pro.post(data)
-
             if data['start_execution']:
                 # Get Meteor Additional Parameters
                 data['group_id'] = user['group_id']
@@ -200,6 +199,6 @@ class Pro:
         try:
             os.kill(pid, signal.SIGINT)
         except OSError as e:
-            print(str(e))
+            pass
         finally:
             return jsonify({'message': 'Stopping the execution...'}), 200

@@ -186,7 +186,6 @@ class deploy:
         # Perform the Deploy / Test Execution
         if self._args.deploy or self._args.test:
             try:
-                print(os.getpid())
                 # Start the Countdown
                 self.__start_countdown()
                 # Start the Test Execution

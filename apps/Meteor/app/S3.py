@@ -48,5 +48,6 @@ class S3:
                 self.__s3.meta.client.upload_file(file_path, bucket_name, s3_path)
 
             except Exception as e:
-                self._logger.error(colored("- Uploading Process Failed.", 'red', attrs=['bold', 'reverse']))
-                self._logger.error(e)
+                print(colored("- Uploading Process Failed.", 'red', attrs=['bold', 'reverse']))
+                print(e)
+                raise(e)

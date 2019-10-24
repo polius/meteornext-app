@@ -18,12 +18,12 @@ class Deployments_Pro:
 
     def post(self, deployment):
         query = """
-            INSERT INTO deployments_pro (deployment_id, environment_id, code, method)
-            SELECT %s, e.id, %s, %s
+            INSERT INTO deployments_pro (deployment_id, environment_id, code, method, `status`)
+            SELECT %s, e.id, %s, %s, %s
             FROM environments e
             WHERE e.name = %s
         """
-        return self._mysql.execute(query, (deployment['id'], deployment['code'], deployment['method'], deployment['environment']))
+        return self._mysql.execute(query, (deployment['id'], deployment['code'], deployment['method'], deployment['status'], deployment['environment']))
 
     def put(self, deployment):
         query = """
