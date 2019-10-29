@@ -21,7 +21,14 @@
 
       <v-spacer></v-spacer>
 
-      <!-- NOTIFICATIONSS -->
+      <!-- COINS -->
+      <v-chip @click="getCoins()" class="subtitle-1 font-weight-medium" style="margin-right:5px;">
+        {{ coins }} Coins
+        <v-divider class="mx-3" inset vertical></v-divider>
+        <v-icon small color="#ffcb05">fas fa-coins</v-icon>
+      </v-chip>
+
+      <!-- NOTIFICATIONS -->
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
           <v-btn icon @click.stop="rightDrawer = !rightDrawer" slot="activator">
@@ -100,6 +107,7 @@ export default {
   computed : {
     isLoggedIn : function(){ return this.$store.getters.isLoggedIn },
     admin : function(){ return this.$store.getters.admin },
+    coins : function(){ return this.$store.getters.coins },
     deployments_enable : function(){ return this.$store.getters.deployments_enable }
   },
   methods: {
@@ -115,6 +123,9 @@ export default {
     showBottomNavbar() {
       if (window.location.pathname != '/login' && !window.location.pathname.startsWith('/results') && window.location.pathname != '/deployments/information') return true
       return false
+    },
+    getCoins() {
+
     }
   }
 }

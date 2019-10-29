@@ -45,14 +45,19 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">Delete Environments</v-toolbar-title>
         </v-toolbar>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding: 0px 20px 0px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
-              <v-flex xs12 style="padding-bottom:10px">
-                <div class="subtitle-1">Are you sure you want to delete the selected deployments?</div>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
+                  <div class="subtitle-1" style="padding-bottom:10px">Are you sure you want to delete the selected deployments?</div>
+                  <v-divider></v-divider>
+                  <div style="margin-top:20px;">
+                    <v-btn :loading="loading" color="success" @click="deleteDeploySubmit()">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:10px;">Cancel</v-btn>
+                  </div>
+                </v-form>
               </v-flex>
-              <v-btn :loading="loading" color="success" @click="deleteDeploySubmit()">Confirm</v-btn>
-              <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:10px;">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>

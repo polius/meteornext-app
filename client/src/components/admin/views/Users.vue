@@ -34,6 +34,7 @@
                   <v-text-field ref="field" v-model="item.username" :rules="[v => !!v || '']" label="Username" required append-icon="person"></v-text-field>
                   <v-text-field v-model="item.email" :rules="[v => !!v || '', v => /.+@.+\..+/.test(v) || '']" label="Email" type="email" required append-icon="email" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" type="password" required append-icon="lock" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="item.coins" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v >= 0 || '']" label="Coins" required append-icon="monetization_on" style="padding-top:0px;"></v-text-field>
                   <v-select v-model="item.group" :items="groups" :rules="[v => !!v || '']" label="Group" required style="padding-top:0px;"></v-select>
                   <v-switch v-model="item.admin" hint="yes" label="Administrator" style="margin-top:0px;" hide-details></v-switch>
                 </v-form>
@@ -68,12 +69,13 @@ export default {
       { text: 'Group', align: 'left', value: 'group' },
       { text: 'Email', align: 'left', value: 'email'},
       { text: 'Password', align: 'left', value: 'password'},
+      { text: 'Coins', align: 'left', value: 'coins'},
       { text: 'Admin', align: 'left', value: 'admin'},
     ],
     items: [],
     selected: [],
     search: '',
-    item: { username: '', email: '', password: '', group: '', admin: false },
+    item: { username: '', email: '', password: '', coins: '', group: '', admin: false },
     mode: '',
     loading: true,
     dialog: false,
@@ -186,6 +188,7 @@ export default {
         username: this.item.username, 
         email: this.item.email, 
         password: this.item.password,
+        coins: this.item.coins,
         group: this.item.group, 
         admin: this.item.admin 
       }

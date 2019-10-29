@@ -29,6 +29,7 @@ class Login:
                     'access_token': create_access_token(identity=user[0]['username']),
                     'refresh_token': create_refresh_token(identity=user[0]['username']),
                     'username': user[0]['username'],
+                    'coins': user[0]['coins'],
                     'admin': user[0]['admin'],
                     'deployments_enable': user[0]['deployments_enable'],
                     'deployments_edit': user[0]['deployments_edit']

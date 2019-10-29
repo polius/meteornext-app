@@ -6,13 +6,14 @@ CREATE TABLE `settings` (
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-INSERT INTO settings (`name`, `value`) VALUES ('LOGS', '{"local": "", "amazon_s3": {}}');
+INSERT INTO settings (`name`, `value`) VALUES ('LOGS', '{"local": "","amazon_s3": {}}');
 
 CREATE TABLE `users` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `username` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `coins` INT UNSIGNED NOT NULL DEFAULT '0',
   `group_id` int(10) unsigned NOT NULL,
   `admin` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
@@ -28,6 +29,9 @@ CREATE TABLE `groups` (
   `deployments_enable` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_edit` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_threads` tinyint(255) UNSIGNED NOT NULL DEFAULT '10',
+  `coins_day` INT UNSIGNED NOT NULL DEFAULT '25',
+  `coins_max` INT UNSIGNED NOT NULL DEFAULT '100',
+  `coins_execution` INT UNSIGNED NOT NULL DEFAULT '10',
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

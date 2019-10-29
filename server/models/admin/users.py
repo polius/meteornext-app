@@ -8,10 +8,10 @@ class Users:
 
     def get(self, username=None):
         if username is None:
-            return self._mysql.execute("SELECT u.id, u.username, u.email, u.password, u.group_id, g.name AS `group`, u.admin FROM users u JOIN groups g ON g.id = u.group_id")
+            return self._mysql.execute("SELECT u.id, u.username, u.email, u.password, u.coins, u.group_id, g.name AS `group`, u.admin FROM users u JOIN groups g ON g.id = u.group_id")
         else:
             query = """
-                SELECT u.id, u.username, u.email, u.password, u.group_id, g.name AS `group`, u.admin, g.deployments_enable, g.deployments_edit
+                SELECT u.id, u.username, u.email, u.password, u.coins, u.group_id, g.name AS `group`, u.admin, g.deployments_enable, g.deployments_edit
                 FROM users u 
                 JOIN groups g ON g.id = u.group_id 
                 WHERE u.username = %s
@@ -19,10 +19,10 @@ class Users:
             return self._mysql.execute(query, (username))
     
     def post(self, user):
-        self._mysql.execute("INSERT INTO users (username, password, email, group_id, admin) SELECT %s, %s, %s, id, %s FROM groups WHERE name = %s", (user['username'], user['password'], user['email'], user['admin'], user['group']))
+        self._mysql.execute("INSERT INTO users (username, password, email, coins, group_id, admin) SELECT %s, %s, %s, id, %s FROM groups WHERE name = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['group']))
 
     def put(self, user):
-        self._mysql.execute("UPDATE users SET username = %s, password = %s, email = %s, admin = %s, group_id = (SELECT id FROM groups WHERE `name` = %s) WHERE username = %s", (user['username'], user['password'], user['email'], user['admin'], user['group'], user['current_username']))
+        self._mysql.execute("UPDATE users SET username = %s, password = %s, email = %s, coins = %s, admin = %s, group_id = (SELECT id FROM groups WHERE `name` = %s) WHERE username = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['group'], user['current_username']))
 
     def put_profile(self, user):
         self._mysql.execute("UPDATE users SET password = %s, email = %s WHERE username = %s", (user['password'], user['email'], user['username']))
@@ -36,3 +36,6 @@ class Users:
 
     def is_admin(self, username):
         return len(self._mysql.execute("SELECT admin FROM users WHERE username = '{}' AND admin = 1".format(username))) > 0
+    
+    def consume_coins(self, user, coins):
+        self._mysql.execute("UPDATE users SET coins = coins-%s WHERE username = %s", (coins, user['username']))

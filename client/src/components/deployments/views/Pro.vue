@@ -184,9 +184,11 @@ export default {
       // Add deployment to the DB
       axios.post(path, payload)
         .then((response) => {
+          const data = response.data.data
           this.notification(response.data.message, 'success')
+          // Refresh user coins
+          this.$store.dispatch('coins', data['coins'])
           // Redirect page
-          // if (!this.start_execution) this.$router.push('/deployments')
           this.$router.push({ name:'deployments.information', params: { executionID: response.data.data, deploymentMode: 'PRO' }})
         })
         .catch((error) => {

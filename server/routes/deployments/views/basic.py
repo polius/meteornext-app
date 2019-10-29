@@ -15,6 +15,9 @@ class Basic:
         # Init meteor
         self._meteor = imp.load_source('meteor', '{}/routes/deployments/meteor.py'.format(credentials['path'])).Meteor(credentials)
 
+        # Coins per execution
+        self._coins_execution = 10
+
     def blueprint(self):
         # Init blueprint
         deployments_basic_blueprint = Blueprint('deployments_basic', __name__, template_folder='deployments_basic')
@@ -112,20 +115,33 @@ class Basic:
         return jsonify({'data': self._deployments_basic.get(user['id'], request.args['execution_id'])}), 200
 
     def __post(self, user, data):
+        # Check Coins
+        group = self._groups.get(group_id=user['group_id'])[0]
+        if (user['coins'] - group['coins_execution']) < 0:
+            return jsonify({'message': 'Insufficient Coins'}), 400
+
         # Create deployment to the DB
         data['id'] = self._deployments.post(user['id'], data)
         data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
         data['execution_id'] = self._deployments_basic.post(data)
 
+        # Consume Coins
+        self._users.consume_coins(user, group['coins_execution'])
+
+        # Build Response Data
+        response = {'execution_id': data['execution_id'], 'coins': user['coins'] - group['coins_execution'] }
+
         if data['start_execution']:
             # Get Meteor Additional Parameters
             data['group_id'] = user['group_id']
-            data['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
+            data['execution_threads'] = group['deployments_threads']
 
             # Start Meteor Execution
             self._meteor.execute(data)
 
-        return jsonify({'message': 'Deployment created successfully', 'data': data['execution_id']}), 200
+            return jsonify({'message': 'Deployment Launched', 'data': response}), 200
+
+        return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
 
     def __put(self, user, data):
         # Get current deployment
@@ -138,20 +154,33 @@ class Basic:
             deployment['queries'] != data['queries'] or \
             deployment['method'] != data['method']:
                 self._deployments_basic.put(data)
+            return jsonify({'message': 'Deployment edited successfully', 'data': {'execution_id': data['execution_id']}}), 200
         else:
+            # Check Coins
+            group = self._groups.get(group_id=user['group_id'])[0]
+            if (user['coins'] - group['coins_execution']) < 0:
+                return jsonify({'message': 'Insufficient Coins'}), 400
+
             # Create a new Basic Deployment
             data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
             data['execution_id'] = self._deployments_basic.post(data)
 
+            # Consume Coins
+            self._users.consume_coins(user, group['coins_execution'])
+
+            # Build Response Data
+            response = {'execution_id': data['execution_id'], 'coins': user['coins'] - group['coins_execution'] }
+
             if data['start_execution']:
                 # Get Meteor Additional Parameters
                 data['group_id'] = user['group_id']
-                data['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
+                data['execution_threads'] = group['deployments_threads']
 
                 # Start Meteor Execution
                 self._meteor.execute(data)
 
-        return jsonify({'message': 'Deployment edited successfully', 'data': data['execution_id']}), 200
+            return jsonify({'message': 'Deployment created successfully', 'data': data['execution_id']}), 200
+
 
     def __start(self, user, data):
         # Get Deployment
@@ -173,8 +202,11 @@ class Basic:
         # Start Meteor Execution
         self._meteor.execute(deployment)
 
+        # Build Response Data
+        response = {'execution_id': data['execution_id']}
+
         # Return Successful Message
-        return jsonify({'message': 'Deployment started successfully'}), 200
+        return jsonify({'data': response, 'message': 'Deployment Launched'}), 200
 
     def __stop(self, user, data):
         result = self._deployments_basic.getPid(user['id'], data['execution_id'])

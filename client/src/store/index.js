@@ -9,6 +9,7 @@ export default new Vuex.Store({
     url: '',
     username: localStorage.getItem('username') || '',
     token: localStorage.getItem('token') || '',
+    coins: localStorage.getItem('coins') || 0,
     admin: localStorage.getItem('admin') == '1' ? true : false,
     deployments_enable: localStorage.getItem('deployments_enable') == '1' ? true : false,
     deployments_edit: localStorage.getItem('deployments_edit') == '1' ? true : false
@@ -21,6 +22,7 @@ export default new Vuex.Store({
     auth(state, data) {
       state.username = data.username
       state.token = data.token
+      state.coins = data.coins
       state.admin = data.admin == 1
       state.deployments_enable = data.deployments_enable == 1
       state.deployments_edit = data.deployments_edit == 1
@@ -28,7 +30,11 @@ export default new Vuex.Store({
     logout(state) {
       state.username = ''
       state.token = ''
+      state.coins = 0
       state.admin = false
+    },
+    coins(state, value) {
+      state.coins = value
     }
   },
   actions: {
@@ -42,6 +48,7 @@ export default new Vuex.Store({
             var data = { 
               username: response.data.data.username,
               token: response.data.data.access_token,
+              coins: response.data.data.coins,
               admin: response.data.data.admin,
               deployments_enable: response.data.data.deployments_enable,
               deployments_edit: response.data.data.deployments_edit
@@ -49,6 +56,7 @@ export default new Vuex.Store({
             // Store variables to the local storage
             localStorage.setItem('username', data['username'])
             localStorage.setItem('token', data['token'])
+            localStorage.setItem('coins', data['coins'])
             localStorage.setItem('admin', data['admin'])
             localStorage.setItem('deployments_enable', data['deployments_enable'])
             localStorage.setItem('deployments_edit', data['deployments_edit'])
@@ -65,11 +73,20 @@ export default new Vuex.Store({
             // Remove variables from the local storage
             localStorage.removeItem('username')
             localStorage.removeItem('token')
+            localStorage.removeItem('coins')
             localStorage.removeItem('admin')
             localStorage.removeItem('deployments_enable')
             localStorage.removeItem('deployments_edit')
             reject(error)
           })
+      })
+    },
+    coins({ commit }, value) {
+      return new Promise((resolve) => {
+        commit('coins', value)
+        // Remove variables from the local storage
+        localStorage.setItem('coins', value)
+        resolve()
       })
     },
     logout({ commit }) {
@@ -78,6 +95,7 @@ export default new Vuex.Store({
         // Remove variables from the local storage
         localStorage.removeItem('username')
         localStorage.removeItem('token')
+        localStorage.removeItem('coins')
         localStorage.removeItem('admin')
         localStorage.removeItem('deployments_enable')
         localStorage.removeItem('deployments_edit')
@@ -92,6 +110,7 @@ export default new Vuex.Store({
     isLoggedIn: state => !!state.token,
     url: state => state.url,
     username: state => state.username,
+    coins: state => state.coins,
     admin: state => state.admin,
     deployments_enable: state => state.deployments_enable,
     deployments_edit: state => state.deployments_edit

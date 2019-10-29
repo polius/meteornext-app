@@ -12,7 +12,11 @@
             <v-text-field ref="focus" v-model="group.name" :rules="[v => !!v || '']" label="Name" required style="padding-top:5px;"></v-text-field>
             <v-text-field v-model="group.description" :rules="[v => !!v || '']" label="Description" required style="padding-top:0px; margin-top:0px;"></v-text-field>
           
-            <v-divider></v-divider>
+            <!-- COINS -->
+            <div class="title font-weight-regular white--text" style="margin-bottom:5px;">COINS</div>
+            <v-text-field v-model="group.coins_day" label="Coins per day" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v >= 0 || '']" required></v-text-field>
+            <v-text-field v-model="group.coins_max" label="Maximum coins" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+            <v-text-field v-model="group.coins_execution" label="Coins per execution" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
 
             <!-- DEPLOYMENTS -->
             <div>

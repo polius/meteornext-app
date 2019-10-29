@@ -89,8 +89,11 @@ class Deployments:
                     region_name=logs['amazon_s3']['region_name']
                 )
                 s3 = session.resource('s3')
-                obj = s3.meta.client.get_object(Bucket=logs['amazon_s3']['bucket_name'], Key='results/{}.js'.format(uri))
-                return jsonify(obj['Body'].read().decode('utf-8')), 200
+                try:
+                    obj = s3.meta.client.get_object(Bucket=logs['amazon_s3']['bucket_name'], Key='results/{}.js'.format(uri))
+                    return jsonify(obj['Body'].read().decode('utf-8')), 200
+                except Exception:
+                    return jsonify({'message': 'This results no longer exists'}), 400
 
         return deployments_blueprint
 

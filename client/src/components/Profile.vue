@@ -12,7 +12,7 @@
                 <v-flex xs12>
                   <div class="headline font-weight-regular">Hello <b>{{ this.username }}</b> <v-chip color="teal" text-color="white" style="margin-left:10px; letter-spacing: 1px;">{{ this.group.toUpperCase() }}</v-chip></div>
                   <v-text-field v-model="email" :disabled="loading" label="Email" type="email" append-icon="email" style="margin-top:10px;"></v-text-field>
-                  <v-text-field v-model="password" :disabled="loading" label="Password" type="password" append-icon="lock" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="newPassword" :disabled="loading" label="Password" type="password" :placeholder="password" append-icon="lock" style="padding-top:0px;"></v-text-field>
                   <v-btn color="primary" :loading="loading" @click="saveProfile()" style="margin-left:0px;">Save</v-btn>    
                 </v-flex>
               </v-layout>
@@ -38,6 +38,7 @@ export default {
     group: '...',
     email: '',
     password: '',
+    newPassword: '',
     loading: true,
 
     // Snackbar
@@ -57,7 +58,9 @@ export default {
           this.username = response.data.data[0]['username']
           this.group = response.data.data[0]['group']
           this.email = response.data.data[0]['email']
-          this.password = response.data.data[0]['password']
+          var hiddenPassword = ''
+          for (var i = 0; i < response.data.data[0]['password'].length; ++i) hiddenPassword += '·'
+          this.password = hiddenPassword
           this.loading = false
         })
         .catch((error) => {
@@ -74,7 +77,7 @@ export default {
       const path = this.$store.getters.url + '/profile'
       const payload = { 
         email: this.email,
-        password: this.password
+        password: this.newPassword
       }
       axios.put(path, payload)
         .then((response) => {

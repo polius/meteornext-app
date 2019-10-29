@@ -29,11 +29,11 @@ class Profile:
                 return jsonify({'data': user}), 200
 
             elif request.method == 'PUT':
-                if user[0]['password'] != profile_json['password']:
-                    profile_json['password'] = bcrypt.hashpw(profile_json['password'].encode('utf8'), bcrypt.gensalt())
+                if len(profile_json['password']) < 4:
+                    return jsonify({'message': 'Password must have at least 4 characters'}), 400
                 else:
-                    profile_json['password'] = user[0]['password']
-                self._users.put_profile({'username': get_jwt_identity(), 'email': profile_json['email'], 'password': profile_json['password']})
-                return jsonify({'message': 'Changes saved successfully'}), 200
+                    profile_json['password'] = bcrypt.hashpw(profile_json['password'].encode('utf8'), bcrypt.gensalt())
+                    self._users.put_profile({'username': get_jwt_identity(), 'email': profile_json['email'], 'password': profile_json['password']})
+                    return jsonify({'message': 'Changes saved successfully'}), 200
 
         return profile_blueprint
