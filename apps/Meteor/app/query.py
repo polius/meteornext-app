@@ -103,10 +103,12 @@ class query:
         if self._credentials['execution_mode']['parallel'] != 'True':
             print(colored("Query: ", attrs=['bold']) + ' '.join(query_parsed.replace('\n','').split()))
 
+        # Get Query Syntax
+        query_syntax = self.get_query_type(query_parsed, show_output=False)
+
         # If Test Run --> Syntax Checks + Execution Checks
         if not self._args.env_start_deploy:
             # Syntax Checks
-            query_syntax = self.get_query_type(query_parsed, show_output=False)
             if query_syntax is False:
                 exception_message = "Query '{}' has not passed the Syntax Validation".format(query_parsed)
                 # Write Exception to the Log
@@ -137,10 +139,22 @@ class query:
         # Execute Query (if --deploy or --test with SELECT queries)
         if self._args.env_start_deploy or query_syntax == 'Select':
             try:
+                # Apply the execution plan factor
+                if self._args.execution_plan_factor and query_syntax == 'Select':
+                    epf = 0
+                    explain = conn.execute('EXPLAIN ' + query_parsed, database_name)['query_result']
+
+                    for i in explain:
+                        if i['rows'] > epf:
+                            epf = i['rows']
+  
+                    if epf > int(self._args.execution_plan_factor):
+                        raise Exception('[Execution Plan Factor] The total number of scanned items exceeds the maximum dataset size')
+
+                # Execute query
                 query_info = conn.execute(query_parsed, database_name)
                 # If the query is executed successfully, then write the query result to the Log
                 execution_row['meteor_output'] = query_info['query_result'] if str(query_info['query_result']) != '()' else '[]'
-                # execution_row['meteor_response'] = "Query successfully executed"
                 execution_row['meteor_response'] = ""
                 execution_row['meteor_execution_time'] = query_info['query_time']
                 self._execution_log['output'].append(execution_row)

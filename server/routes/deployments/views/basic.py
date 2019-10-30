@@ -135,10 +135,10 @@ class Basic:
             # Get Meteor Additional Parameters
             data['group_id'] = user['group_id']
             data['execution_threads'] = group['deployments_threads']
+            data['epf'] = group['deployments_epf']
 
             # Start Meteor Execution
             self._meteor.execute(data)
-
             return jsonify({'message': 'Deployment Launched', 'data': response}), 200
 
         return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
@@ -175,12 +175,13 @@ class Basic:
                 # Get Meteor Additional Parameters
                 data['group_id'] = user['group_id']
                 data['execution_threads'] = group['deployments_threads']
+                data['epf'] = group['deployments_epf']
 
                 # Start Meteor Execution
                 self._meteor.execute(data)
+                return jsonify({'message': 'Deployment Launched', 'data': response}), 200
 
-            return jsonify({'message': 'Deployment created successfully', 'data': data['execution_id']}), 200
-
+            return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
 
     def __start(self, user, data):
         # Get Deployment
@@ -193,8 +194,10 @@ class Basic:
             deployment = deployment[0]
 
         # Get Meteor Additional Parameters
+        group = self._groups.get(group_id=user['group_id'])[0]
         deployment['group_id'] = user['group_id']
-        deployment['execution_threads'] = self._groups.get(group_id=user['group_id'])[0]['deployments_threads']
+        deployment['execution_threads'] = group['deployments_threads']
+        deployment['epf'] = group['deployments_epf']
 
         # Update Execution Status
         self._deployments_basic.startExecution(user['id'], deployment['execution_id'])

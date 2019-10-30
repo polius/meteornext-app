@@ -202,12 +202,12 @@ class query_execution:
         logs_path = "{}{}.{}".format(self._logs['local'], deployment['id'], deployment['execution_id'])
         query_execution_path = "{}{}.{}/query_execution.py".format(self._logs['local'], deployment['id'], deployment['execution_id'])
         credentials_path = "{}{}.{}/credentials.json".format(self._logs['local'], deployment['id'], deployment['execution_id'])
-        
         current_date = datetime.fromtimestamp(time()).strftime('%Y-%m-%d_%H.%M.%S.%f_UTC')
         execution_name = "{}_{}|{}".format(deployment['id'], deployment['execution_id'], current_date)
+        execution_plan_factor = '--execution_plan_factor "{}"'.format(deployment['epf']) if deployment['epf'] > 0 else ''
 
         # Build Meteor Command
-        command = 'python {} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --execution_name "{}" --deployment_mode "{}" --deployment_id "{}"'.format(base_path, environment, deployment['method'].lower(), logs_path, query_execution_path, credentials_path, execution_name, deployment['mode'].lower(), deployment['execution_id'])
+        command = 'python {} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --execution_name "{}" --deployment_mode "{}" --deployment_id "{}" {}'.format(base_path, environment, deployment['method'].lower(), logs_path, query_execution_path, credentials_path, execution_name, deployment['mode'].lower(), deployment['execution_id'], execution_plan_factor)
         print(command)
 
         # Execute Meteor

@@ -29,6 +29,7 @@ CREATE TABLE `groups` (
   `deployments_enable` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_edit` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_threads` tinyint(255) UNSIGNED NOT NULL DEFAULT '10',
+  `deployments_epf` INT UNSIGNED NOT NULL DEFAULT '0',
   `coins_day` INT UNSIGNED NOT NULL DEFAULT '25',
   `coins_max` INT UNSIGNED NOT NULL DEFAULT '100',
   `coins_execution` INT UNSIGNED NOT NULL DEFAULT '10',

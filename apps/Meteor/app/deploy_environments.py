@@ -152,21 +152,24 @@ class deploy_environments:
 
     def start(self, shared_array=None, progress_array=None):
         try:
+            # Get Execution Plan Factor
+            execution_plan_factor = '--execution_plan_factor "{}"'.format(self._args.execution_plan_factor) if self._args.execution_plan_factor is not None else ''
+
             # Parallel Execution
             if self._credentials['execution_mode']['parallel'] == "True":
                 # SSH Execution
                 if self._ENV_DATA['ssh']['enabled'] == 'True':
                     # Start the Execution
                     if self._args.env_start_deploy:
-                        deploy = self.__ssh('cd "{0}" && python -u meteor.py --environment "{1}" {2} --env_id "{3}" --env_start_deploy --execution_name "{4}" --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._EXECUTION_NAME, self._UUID), show_output=True, progress_array=progress_array)
+                        deploy = self.__ssh('cd "{0}" && python -u meteor.py --environment "{1}" {2} --env_id "{3}" --env_start_deploy --execution_name "{4}" {5} --uuid "{6}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._EXECUTION_NAME, execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
                     else:
-                        deploy = self.__ssh('cd "{0}" && python -u meteor.py --environment "{1}" {2} --env_id "{3}" --execution_name "{4}" --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._EXECUTION_NAME, self._UUID), show_output=True, progress_array=progress_array)
+                        deploy = self.__ssh('cd "{0}" && python -u meteor.py --environment "{1}" {2} --env_id "{3}" --execution_name "{4}" {5} --uuid "{6}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._EXECUTION_NAME, execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
                 # Local Execution
                 else:
                     if self._args.env_start_deploy:
-                        deploy = self.__local('python -u {0}/meteor.py --environment "{1}" {2} --env_id "{3}" --env_start_deploy --execution_name "{4}" --logs_path "{5}" --uuid "{6}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._EXECUTION_NAME, self._args.logs_path, self._UUID), show_output=True, progress_array=progress_array)
+                        deploy = self.__local('python -u {0}/meteor.py --environment "{1}" {2} --env_id "{3}" --env_start_deploy --execution_name "{4}" --logs_path "{5}" {6} --uuid "{7}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._EXECUTION_NAME, self._args.logs_path, execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
                     else:
-                        deploy = self.__local('python -u {0}/meteor.py --environment "{1}" {2} --env_id "{3}" --execution_name "{4}" --logs_path "{5}" --uuid "{6}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._EXECUTION_NAME, self._args.logs_path, self._UUID), show_output=True, progress_array=progress_array)
+                        deploy = self.__local('python -u {0}/meteor.py --environment "{1}" {2} --env_id "{3}" --execution_name "{4}" --logs_path "{5}" {6} --uuid "{7}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._EXECUTION_NAME, self._args.logs_path, execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
 
                 # Check for Execution Error
                 if len(deploy['stderr']) > 0:

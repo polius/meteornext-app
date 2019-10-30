@@ -26,6 +26,7 @@ class mysql:
         self.__connect(database)
 
     def __connect(self, database=None):
+        # Establish the Connection
         if database is not None:
             self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], db=database, charset='utf8mb4', use_unicode=False, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
         else:
@@ -34,8 +35,10 @@ class mysql:
     def execute(self, query, database_name=None):
         try:
             try:
-                # Establish the Connection
-                self.__connect(database_name)
+                # Check the connection and select the database
+                self._connection.ping(reconnect=True)
+                if database_name:
+                    self._connection.select_db(database_name)
 
                 # Prepare the cursor
                 with self._connection.cursor(OrderedDictCursor) as cursor:            
@@ -71,6 +74,9 @@ class mysql:
                 except Exception as e2:
                     if show_output:
                         print(colored("--> Rollback not performed. Error: {}".format(e2), 'red'))
+                finally:
+                    if self._connection.open:
+                        self._connection.close()
             raise e
 
         except KeyboardInterrupt:
@@ -85,12 +91,10 @@ class mysql:
                 except Exception as e:
                     if show_output:
                         print(colored("--> Rollback not performed. Error: {}".format(e), 'red'))
+                finally:
+                    if self._connection.open:
+                        self._connection.close()
             raise KeyboardInterrupt("Program Interrupted by User. Rollback successfully performed.")
-
-        finally:
-            # Close PyMySQL Connection
-            if self._connection is not None and self._connection.open:
-                self._connection.close()
 
     def get_all_databases(self):
         query = "SHOW DATABASES"

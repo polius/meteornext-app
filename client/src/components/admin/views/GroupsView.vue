@@ -9,7 +9,9 @@
       <v-card-text>
         <v-flex>
           <v-form ref="form" v-model="form_valid">
-            <v-text-field ref="focus" v-model="group.name" :rules="[v => !!v || '']" label="Name" required style="padding-top:5px;"></v-text-field>
+            <!-- INFO -->
+            <div class="title font-weight-regular white--text" style="margin-bottom:5px;">INFO</div>
+            <v-text-field ref="focus" v-model="group.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
             <v-text-field v-model="group.description" :rules="[v => !!v || '']" label="Description" required style="padding-top:0px; margin-top:0px;"></v-text-field>
           
             <!-- COINS -->
@@ -37,8 +39,12 @@
                 <v-toolbar-title class="white--text">DEPLOYMENTS</v-toolbar-title>
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
-                <v-switch v-model="group.deployments_enable" label="Show Deployments Tab" style="margin-top:0px;"></v-switch>
-                <v-switch v-model="group.deployments_edit" label="Show Deployment Settings Tab" style="margin-top:0px;"></v-switch>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
+                <v-switch v-model="group.deployments_enable" label="Perform Deployments" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-model="group.deployments_edit" label="Change Deployment Settings" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">LIMITS</div>
+                <v-switch v-model="group_epf_switch" label="Limit Queries Execution" style="margin-top:0px; margin-bottom:25px;" hide-details></v-switch>
+                <v-text-field v-if="group_epf_switch" v-model="group.deployments_epf" label="Execution Plan Factor" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <v-text-field v-model="group.deployments_threads" label="Execution Threads" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 && v < 100 || 'A number between: 1 - 99']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
               </v-card-text>
             </v-card>
@@ -312,6 +318,7 @@ export default {
     // | GROUPS |
     // +--------+
     group: {},
+    group_epf_switch: false,
     toolbar_title: '',
     form_valid: false,
     loading: false,
@@ -427,6 +434,8 @@ export default {
       axios.get(path, { params: { groupID: this.groupID } })
         .then((response) => {
           this.group = response.data.group[0]
+          this.group_epf_switch = this.group['deployments_epf'] > 0
+          if (this.group.deployments_epf == 0) this.group.deployments_epf = 1000
           this.environment_items = response.data.environments.data
           this.region_items = response.data.regions.data.regions
           this.server_items = response.data.servers.data.servers
@@ -484,6 +493,10 @@ export default {
         this.loading = false
         return
       }
+
+      // Get the Execution Plan Factor
+      this.group['deployments_epf'] = (this.group_epf_switch) ? this.group['deployments_epf'] : 0
+
       // Edit group to the DB
       const path = this.$store.getters.url + '/admin/groups'
       const payload = {

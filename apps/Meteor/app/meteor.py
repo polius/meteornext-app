@@ -74,6 +74,7 @@ def init_parser():
         ## (Additional) Meteor Next Commands
         parser.add_argument('--deployment_id', required=False, action='store', dest='deployment_id', help='Set the Deployment ID to Log the Execution Progress')
         parser.add_argument('--deployment_mode', required=False, action='store', dest='deployment_mode', help='Set the Deployment Mode to Log the Execution Progress')
+        parser.add_argument('--execution_plan_factor', required=False, action='store', dest='execution_plan_factor', help='Set the Execution Plan Factor Condition to All Select Queries')
 
         # App Internal Commands
         parser.add_argument('--env_id', required=False, action='store', dest='env_id', help=argparse.SUPPRESS)
