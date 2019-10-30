@@ -5,8 +5,8 @@
         <v-toolbar-title>{{ this.title }}</v-toolbar-title>
         <v-divider v-if="route == 'new'" class="mx-3" inset vertical></v-divider>
         <div v-if="route == 'new'">
-          <v-btn :color="basicColor" @click="basic()">Basic</v-btn>
-          <v-btn :color="proColor" @click="pro()" style="margin-left:10px;">Pro</v-btn>
+          <v-btn v-if="deployments_basic" :color="basicColor" @click="basic()">Basic</v-btn>
+          <v-btn v-if="deployments_pro" :color="proColor" @click="pro()" style="margin-left:10px;">Pro</v-btn>
         </div>
         <v-spacer></v-spacer>
         <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
@@ -26,7 +26,7 @@ export default {
   data() {
     return {
       route: '',
-      mode: 'basic',
+      mode: '',
       title: '',
       basicColor: '',
       proColor: '',
@@ -50,6 +50,10 @@ export default {
     }
   },
   props: ['deploymentID', 'deploymentMode'],
+  computed : {
+    deployments_basic : function(){ return this.$store.getters.deployments_basic },
+    deployments_pro : function(){ return this.$store.getters.deployments_pro }
+  },
   created() {
     // Get Route
     this.route = (this.$router.currentRoute.name == 'deployments.new') ? 'new' : 'edit'
@@ -60,12 +64,9 @@ export default {
     // Set Title
     this.title = (this.route == 'new') ? 'NEW DEPLOY' : 'EDIT DEPLOY'
 
-    // Set Deployment Mode
-    if (this.route == 'edit' && this.deploymentMode !== "undefined") {
-      if (this.deploymentMode == 'BASIC') this.basic()
-      else if (this.deploymentMode == 'PRO') this.pro()
-    }
-    else this.basic()
+    // Choose the Deploment Template
+    if (this.deploymentMode == 'BASIC' || this.deployments_basic) this.basic()
+    else if (this.deploymentMode == 'PRO' || this.deployments_pro) this.pro()
   }
 }
 </script>

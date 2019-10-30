@@ -12,6 +12,8 @@ export default new Vuex.Store({
     coins: localStorage.getItem('coins') || 0,
     admin: localStorage.getItem('admin') == '1' ? true : false,
     deployments_enable: localStorage.getItem('deployments_enable') == '1' ? true : false,
+    deployments_basic: localStorage.getItem('deployments_basic') == '1' ? true : false,
+    deployments_pro: localStorage.getItem('deployments_pro') == '1' ? true : false,
     deployments_edit: localStorage.getItem('deployments_edit') == '1' ? true : false
   },
   mutations: {
@@ -25,6 +27,8 @@ export default new Vuex.Store({
       state.coins = data.coins
       state.admin = data.admin == 1
       state.deployments_enable = data.deployments_enable == 1
+      state.deployments_basic = data.deployments_basic == 1
+      state.deployments_pro = data.deployments_pro == 1
       state.deployments_edit = data.deployments_edit == 1
     },
     logout(state) {
@@ -32,6 +36,10 @@ export default new Vuex.Store({
       state.token = ''
       state.coins = 0
       state.admin = false
+      state.deployments_enable = 0
+      state.deployments_basic = 0
+      state.deployments_pro = 0
+      state.deployments_edit = 0
     },
     coins(state, value) {
       state.coins = value
@@ -51,6 +59,8 @@ export default new Vuex.Store({
               coins: response.data.data.coins,
               admin: response.data.data.admin,
               deployments_enable: response.data.data.deployments_enable,
+              deployments_basic: response.data.data.deployments_basic,
+              deployments_pro: response.data.data.deployments_pro,
               deployments_edit: response.data.data.deployments_edit
             }
             // Store variables to the local storage
@@ -59,6 +69,8 @@ export default new Vuex.Store({
             localStorage.setItem('coins', data['coins'])
             localStorage.setItem('admin', data['admin'])
             localStorage.setItem('deployments_enable', data['deployments_enable'])
+            localStorage.setItem('deployments_basic', data['deployments_basic'])
+            localStorage.setItem('deployments_pro', data['deployments_pro'])
             localStorage.setItem('deployments_edit', data['deployments_edit'])
 
             // Add the token to the axios lib
@@ -76,6 +88,8 @@ export default new Vuex.Store({
             localStorage.removeItem('coins')
             localStorage.removeItem('admin')
             localStorage.removeItem('deployments_enable')
+            localStorage.removeItem('deployments_basic')
+            localStorage.removeItem('deployments_pro')
             localStorage.removeItem('deployments_edit')
             reject(error)
           })
@@ -98,6 +112,8 @@ export default new Vuex.Store({
         localStorage.removeItem('coins')
         localStorage.removeItem('admin')
         localStorage.removeItem('deployments_enable')
+        localStorage.removeItem('deployments_basic')
+        localStorage.removeItem('deployments_pro')
         localStorage.removeItem('deployments_edit')
 
         // Remove token from axios header
@@ -113,6 +129,8 @@ export default new Vuex.Store({
     coins: state => state.coins,
     admin: state => state.admin,
     deployments_enable: state => state.deployments_enable,
+    deployments_basic: state => state.deployments_basic,
+    deployments_pro: state => state.deployments_pro,
     deployments_edit: state => state.deployments_edit
   }
 })

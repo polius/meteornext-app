@@ -17,6 +17,8 @@ class Deployments:
                     SELECT d.id, db.id AS 'execution_id', d.name, db.environment_id, d.mode, db.method, db.status, db.created, db.started, db.ended
                     FROM deployments_basic db
                     JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s AND d.id = %s AND d.deleted = 0
+                    JOIN users u ON u.id = d.user_id
+                    JOIN groups g ON g.id = u.group_id AND g.deployments_basic = 1  
                     WHERE db.id IN (
                         SELECT MAX(id)
                         FROM deployments_basic
@@ -26,6 +28,8 @@ class Deployments:
                     SELECT d.id, dp.id AS 'execution_id', d.name, dp.environment_id, d.mode, dp.method, dp.status, dp.created, dp.started, dp.ended
                     FROM deployments_pro dp
                     JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s AND d.id = %s AND d.deleted = 0
+                    JOIN users u ON u.id = d.user_id
+                    JOIN groups g ON g.id = u.group_id AND g.deployments_pro = 1  
                     WHERE dp.id IN (
                         SELECT MAX(id)
                         FROM deployments_pro
@@ -44,6 +48,8 @@ class Deployments:
                     SELECT d.id, db.id AS 'execution_id', d.name, db.environment_id, d.mode, db.method, db.status, db.created, db.started, db.ended
                     FROM deployments_basic db
                     JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s AND d.deleted = 0
+                    JOIN users u ON u.id = d.user_id
+                    JOIN groups g ON g.id = u.group_id AND g.deployments_basic = 1 
                     WHERE db.id IN (
                         SELECT MAX(id)
                         FROM deployments_basic
@@ -53,6 +59,8 @@ class Deployments:
                     SELECT d.id, dp.id AS 'execution_id', d.name, dp.environment_id, d.mode, dp.method, dp.status, dp.created, dp.started, dp.ended
                     FROM deployments_pro dp
                     JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s AND d.deleted = 0
+                    JOIN users u ON u.id = d.user_id
+                    JOIN groups g ON g.id = u.group_id AND g.deployments_pro = 1  
                     WHERE dp.id IN (
                         SELECT MAX(id)
                         FROM deployments_pro

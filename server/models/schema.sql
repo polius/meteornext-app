@@ -19,20 +19,22 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   KEY `group_id` (`group_id`),
-  CONSTRAINT `users_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
+  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `groups` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) NOT NULL,
   `description` text,
-  `deployments_enable` tinyint(1) NOT NULL DEFAULT '0',
-  `deployments_edit` tinyint(1) NOT NULL DEFAULT '0',
-  `deployments_threads` tinyint(255) UNSIGNED NOT NULL DEFAULT '10',
-  `deployments_epf` INT UNSIGNED NOT NULL DEFAULT '0',
   `coins_day` INT UNSIGNED NOT NULL DEFAULT '25',
   `coins_max` INT UNSIGNED NOT NULL DEFAULT '100',
   `coins_execution` INT UNSIGNED NOT NULL DEFAULT '10',
+  `deployments_enable` tinyint(1) NOT NULL DEFAULT '0',
+  `deployments_basic` tinyint(1) NOT NULL DEFAULT '0',
+  `deployments_pro` tinyint(1) NOT NULL DEFAULT '0',
+  `deployments_edit` tinyint(1) NOT NULL DEFAULT '0',
+  `deployments_execution_threads` tinyint(255) UNSIGNED NOT NULL DEFAULT '10',
+  `deployments_execution_plan_factor` INT UNSIGNED NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
@@ -43,7 +45,7 @@ CREATE TABLE `environments` (
   `group_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_id` (`group_id`,`name`),
-  CONSTRAINT `environments_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
+  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `regions` (
@@ -71,7 +73,7 @@ CREATE TABLE `servers` (
   `password` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `region_id` (`region_id`,`name`),
-  CONSTRAINT `servers_ibfk_1` FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`)
+  FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `auxiliary` (
@@ -83,7 +85,7 @@ CREATE TABLE `auxiliary` (
   `password` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_id` (`group_id`,`name`),
-  CONSTRAINT `auxiliary_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
+  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `slack` (
@@ -93,7 +95,7 @@ CREATE TABLE `slack` (
   `group_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_id` (`group_id`),
-  CONSTRAINT `slack_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
+  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `deployments` (

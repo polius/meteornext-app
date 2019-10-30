@@ -23,7 +23,7 @@ class Login:
             user = self._users.get(login_json['username'])
 
             if len(user) == 0 or not bcrypt.checkpw(login_json['password'].encode('utf8'), user[0]['password'].encode('utf8')):
-                return jsonify({"message": "Invalid username and password."}), 401
+                return jsonify({"message": "Invalid username or password"}), 401
             else:
                 ret = {
                     'access_token': create_access_token(identity=user[0]['username']),
@@ -32,6 +32,8 @@ class Login:
                     'coins': user[0]['coins'],
                     'admin': user[0]['admin'],
                     'deployments_enable': user[0]['deployments_enable'],
+                    'deployments_basic': user[0]['deployments_basic'],
+                    'deployments_pro': user[0]['deployments_pro'],
                     'deployments_edit': user[0]['deployments_edit']
                 }
                 return jsonify({'data': ret}), 200
