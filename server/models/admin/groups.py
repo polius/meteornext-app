@@ -16,10 +16,10 @@ class Groups:
 
     def post(self, group):
         query = """
-            INSERT INTO groups (name, description, coins_day, coins_max, coins_execution, deployments_enable, deployments_basic, deployments_pro, deployments_edit, deployments_execution_threads, deployments_execution_plan_factor) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO groups (name, description, coins_day, coins_max, coins_execution, deployments_enable, deployments_basic, deployments_pro, deployments_inbenta, deployments_edit, deployments_execution_threads, deployments_execution_plan_factor) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        self._mysql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['deployments_enable'], group['deployments_basic'], group['deployments_pro'], group['deployments_edit'], group['deployments_execution_threads'], group['deployments_execution_plan_factor']))
+        self._mysql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['deployments_enable'], group['deployments_basic'], group['deployments_pro'], group['deployments_inbenta'], group['deployments_edit'], group['deployments_execution_threads'], group['deployments_execution_plan_factor']))
 
     def put(self, group):
         query = """
@@ -32,12 +32,13 @@ class Groups:
             deployments_enable = %s,
             deployments_basic = %s,
             deployments_pro = %s,
+            deployments_inbenta = %s,
             deployments_edit = %s,
             deployments_execution_threads = %s,
             deployments_execution_plan_factor = %s
             WHERE id = %s
         """
-        self._mysql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['deployments_enable'], group['deployments_basic'], group['deployments_pro'], group['deployments_edit'], group['deployments_execution_threads'], group['deployments_execution_plan_factor'], group['id']))
+        self._mysql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['deployments_enable'], group['deployments_basic'], group['deployments_pro'], group['deployments_inbenta'], group['deployments_edit'], group['deployments_execution_threads'], group['deployments_execution_plan_factor'], group['id']))
 
     def delete(self, group):
         self._mysql.execute("DELETE FROM groups WHERE name = %s", (group))

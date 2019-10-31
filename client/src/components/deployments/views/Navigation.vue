@@ -7,6 +7,7 @@
         <div v-if="route == 'new'">
           <v-btn v-if="deployments_basic" :color="basicColor" @click="basic()">Basic</v-btn>
           <v-btn v-if="deployments_pro" :color="proColor" @click="pro()" style="margin-left:10px;">Pro</v-btn>
+          <v-btn v-if="deployments_inbenta" :color="inbentaColor" @click="inbenta()" style="margin-left:10px;">Inbenta</v-btn>
         </div>
         <v-spacer></v-spacer>
         <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
@@ -14,6 +15,7 @@
 
       <Basic v-if="mode=='basic'" :deploymentID="this.deploymentID"/>
       <Pro v-if="mode=='pro'" :deploymentID="this.deploymentID"/>
+      <Inbenta v-if="mode=='inbenta'" :deploymentID="this.deploymentID"/>
     </v-card>
   </div>
 </template>
@@ -21,6 +23,7 @@
 <script>
 import Basic from './Basic'
 import Pro from './Pro'
+import Inbenta from './Inbenta'
 
 export default {
   data() {
@@ -30,29 +33,39 @@ export default {
       title: '',
       basicColor: '',
       proColor: '',
-      deployment: ''
+      inbentaColor: ''
     }
   },
   components: {
     Basic,
-    Pro
+    Pro,
+    Inbenta
   },
   methods: {
     basic() {
       this.mode = 'basic'
       this.basicColor = 'primary'
       this.proColor = '#779ecb'
+      this.inbentaColor = '#779ecb'
     },
     pro() {
       this.mode = 'pro'
       this.basicColor = '#779ecb'
       this.proColor = 'primary'
+      this.inbentaColor = '#779ecb'
+    },
+    inbenta() {
+      this.mode = 'inbenta'
+      this.basicColor = '#779ecb'
+      this.proColor = '#779ecb'
+      this.inbentaColor = 'primary'
     }
   },
   props: ['deploymentID', 'deploymentMode'],
   computed : {
     deployments_basic : function(){ return this.$store.getters.deployments_basic },
-    deployments_pro : function(){ return this.$store.getters.deployments_pro }
+    deployments_pro : function(){ return this.$store.getters.deployments_pro },
+    deployments_inbenta : function(){ return this.$store.getters.deployments_inbenta }
   },
   created() {
     // Get Route
@@ -67,6 +80,7 @@ export default {
     // Choose the Deploment Template
     if (this.deploymentMode == 'BASIC' || this.deployments_basic) this.basic()
     else if (this.deploymentMode == 'PRO' || this.deployments_pro) this.pro()
+    else if (this.deploymentMode == 'INBENTA' || this.deployments_inbenta) this.inbenta()
   }
 }
 </script>

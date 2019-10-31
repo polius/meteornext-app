@@ -160,6 +160,8 @@ class Meteor:
             self.__compile_query_execution_basic(deployment)
         elif deployment['mode'] == 'PRO':
             self._query_execution = deployment['code']
+        # elif deployment['mode'] == 'INBENTA':
+        #     self.__compile_query_execution_inbenta(deployment)
 
         # Store Query Execution
         with open("{}{}.{}/query_execution.py".format(self._logs['local'], deployment['id'], deployment['execution_id']), 'w') as outfile:
@@ -199,6 +201,7 @@ class query_execution:
         # Build Meteor Parameters
         base_path = "{}/../apps/Meteor/app/meteor.py".format(self._base_path)
         environment = deployment['environment']
+        execution_method = 'validate all' if deployment['method'].lower() == 'validate' else deployment['method'].lower()
         logs_path = "{}{}.{}".format(self._logs['local'], deployment['id'], deployment['execution_id'])
         query_execution_path = "{}{}.{}/query_execution.py".format(self._logs['local'], deployment['id'], deployment['execution_id'])
         credentials_path = "{}{}.{}/credentials.json".format(self._logs['local'], deployment['id'], deployment['execution_id'])
@@ -207,7 +210,7 @@ class query_execution:
         execution_plan_factor = '--execution_plan_factor "{}"'.format(deployment['epf']) if deployment['epf'] > 0 else ''
 
         # Build Meteor Command
-        command = 'python {} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --execution_name "{}" --deployment_mode "{}" --deployment_id "{}" {}'.format(base_path, environment, deployment['method'].lower(), logs_path, query_execution_path, credentials_path, execution_name, deployment['mode'].lower(), deployment['execution_id'], execution_plan_factor)
+        command = 'python {} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --execution_name "{}" --deployment_mode "{}" --deployment_id "{}" {}'.format(base_path, environment, execution_method, logs_path, query_execution_path, credentials_path, execution_name, deployment['mode'].lower(), deployment['execution_id'], execution_plan_factor)
         print(command)
 
         # Execute Meteor

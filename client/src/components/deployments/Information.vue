@@ -8,7 +8,7 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="'status' in deployment" text title="Show Parameters" @click="parameters()"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
           <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="padding-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
-          <v-btn :disabled="deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED') ? 'Edit execution' : 'Re-Deploy with other parameters'" @click="edit()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>{{(deployment['status'] == 'CREATED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
+          <v-btn :disabled="deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED') ? 'Edit execution' : 'Re-Deploy with other parameters'" @click="edit()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>{{(deployment['status'] == 'CREATED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
           <v-divider v-if="start_execution || deployment['status'] == 'STARTING' || deployment['status'] == 'CREATED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="start_execution" v-if="deployment['status'] == 'CREATED'" text title="Start Execution" @click="start()"><v-icon small style="padding-right:10px">fas fa-play</v-icon>START</v-btn>
           <v-btn :disabled="stop_execution || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING'" v-if="deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' || deployment['status'] == 'IN PROGRESS'" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
@@ -202,7 +202,7 @@
                 <div class="title font-weight-regular" style="margin-top:10px; margin-bottom: 25px;">{{ this.deploymentMode }}</div>
                 <v-text-field readonly v-model="information_dialog_data.name" label="Name" style="padding-top:0px;"></v-text-field>
                 <v-select v-if="deploymentMode != 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="[information_dialog_data.environment]" label="Environment" style="padding-top:0px;"></v-select>
-
+                <v-select v-if="deploymentMode == 'INBENTA'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.product" :items="[information_dialog_data.products]" label="Products" style="padding-top:0px;"></v-select>
                 <v-text-field v-if="deploymentMode != 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" style="padding-top:0px;"></v-text-field>
                 <v-card v-if="deploymentMode != 'PRO'" style="margin-bottom:20px;">
                   <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
@@ -221,8 +221,8 @@
 
                 <codemirror v-if="deploymentMode == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
 
-                <div class="subtitle-1 font-weight-regular">METHOD</div>
-                <v-radio-group :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" hide-details style="margin-top:10px;">
+                <div v-if="deploymentMode == 'BASIC' || deploymentMode == 'PRO'" class="subtitle-1 font-weight-regular">METHOD</div>
+                <v-radio-group v-if="deploymentMode == 'BASIC' || deploymentMode == 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" hide-details style="margin-top:10px;">
                   <v-radio value="validate" color="success">
                     <template v-slot:label>
                       <div class="success--text">VALIDATE</div>
@@ -240,7 +240,7 @@
                   </v-radio>
                 </v-radio-group>
 
-                <v-checkbox v-if="information_dialog_mode != 'parameters' && deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
+                <v-checkbox v-if="(deploymentMode == 'BASIC' || deploymentMode == 'PRO') && information_dialog_mode != 'parameters' && deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
                 <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
 
                 <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
@@ -553,6 +553,7 @@
         this.logs_data = []
         this.tasks_data = []
         this.queries_data = []
+        delete this.deployment.progress.error
 
         this.start_execution = false
         this.stop_execution = false

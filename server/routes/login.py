@@ -34,6 +34,7 @@ class Login:
                     'deployments_enable': user[0]['deployments_enable'],
                     'deployments_basic': user[0]['deployments_basic'],
                     'deployments_pro': user[0]['deployments_pro'],
+                    'deployments_inbenta': user[0]['deployments_inbenta'],
                     'deployments_edit': user[0]['deployments_edit']
                 }
                 return jsonify({'data': ret}), 200

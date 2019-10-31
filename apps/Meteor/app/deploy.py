@@ -321,6 +321,7 @@ class deploy:
                 signal.signal(signal.SIGINT,signal.SIG_IGN)
                 self.clean(remote=(self._args.validate == 'regions' or self._args.validate == 'all'))
                 self.show_execution_time(only_validate=True)
+                self._progress.end(execution_status=1)
 
     def __validate_args(self):
         if not self._args.environment:

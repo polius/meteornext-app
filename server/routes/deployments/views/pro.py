@@ -140,8 +140,9 @@ class Pro:
         if data['start_execution']:
             # Get Meteor Additional Parameters
             data['group_id'] = user['group_id']
-            data['execution_threads'] = group['deployments_threads']
-            data['epf'] = group['deployments_epf']
+            data['execution_threads'] = group['deployments_execution_threads']
+            data['epf'] = group['deployments_execution_plan_factor']
+            data['mode'] = 'PRO'
 
             # Start Meteor Execution
             self._meteor.execute(data)
@@ -181,8 +182,9 @@ class Pro:
             if data['start_execution']:
                 # Get Meteor Additional Parameters
                 data['group_id'] = user['group_id']
-                data['execution_threads'] = group['deployments_threads']
-                data['epf'] = group['deployments_epf']
+                data['execution_threads'] = group['deployments_execution_threads']
+                data['epf'] = group['deployments_execution_plan_factor']
+                data['mode'] = 'PRO'
 
                 # Start Meteor Execution
                 self._meteor.execute(data)
@@ -203,8 +205,9 @@ class Pro:
         # Get Meteor Additional Parameters
         group = self._groups.get(group_id=user['group_id'])[0]
         deployment['group_id'] = user['group_id']
-        deployment['execution_threads'] = group['deployments_threads']
-        deployment['epf'] = group['deployments_epf']
+        deployment['execution_threads'] = group['deployments_execution_threads']
+        deployment['epf'] = group['deployments_execution_plan_factor']
+        deployment['mode'] = 'PRO'
 
         # Update Execution Status
         self._deployments_pro.startExecution(user['id'], deployment['execution_id'])

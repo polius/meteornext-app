@@ -14,7 +14,7 @@ class Deployments:
                 SELECT d.id, d.execution_id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
                 FROM
                 (
-                    SELECT d.id, db.id AS 'execution_id', d.name, db.environment_id, d.mode, db.method, db.status, db.created, db.started, db.ended
+                    SELECT d.id, db.id AS 'execution_id', d.name, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.started, db.ended
                     FROM deployments_basic db
                     JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s AND d.id = %s AND d.deleted = 0
                     JOIN users u ON u.id = d.user_id
@@ -25,7 +25,7 @@ class Deployments:
                         GROUP BY deployment_id
                     )
                     UNION
-                    SELECT d.id, dp.id AS 'execution_id', d.name, dp.environment_id, d.mode, dp.method, dp.status, dp.created, dp.started, dp.ended
+                    SELECT d.id, dp.id AS 'execution_id', d.name, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.started, dp.ended
                     FROM deployments_pro dp
                     JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s AND d.id = %s AND d.deleted = 0
                     JOIN users u ON u.id = d.user_id
@@ -45,7 +45,7 @@ class Deployments:
                 SELECT d.id, d.execution_id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
                 FROM
                 (
-                    SELECT d.id, db.id AS 'execution_id', d.name, db.environment_id, d.mode, db.method, db.status, db.created, db.started, db.ended
+                    SELECT d.id, db.id AS 'execution_id', d.name, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.started, db.ended
                     FROM deployments_basic db
                     JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s AND d.deleted = 0
                     JOIN users u ON u.id = d.user_id
@@ -56,7 +56,7 @@ class Deployments:
                         GROUP BY deployment_id
                     )
                     UNION
-                    SELECT d.id, dp.id AS 'execution_id', d.name, dp.environment_id, d.mode, dp.method, dp.status, dp.created, dp.started, dp.ended
+                    SELECT d.id, dp.id AS 'execution_id', d.name, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.started, dp.ended
                     FROM deployments_pro dp
                     JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s AND d.deleted = 0
                     JOIN users u ON u.id = d.user_id
@@ -73,8 +73,8 @@ class Deployments:
             return self._mysql.execute(query, (user_id, user_id))        
 
     def post(self, user_id, deployment):
-        query = "INSERT INTO deployments (name, user_id, mode) VALUES(%s, %s, %s)"
-        return self._mysql.execute(query, (deployment['name'], user_id, deployment['mode']))
+        query = "INSERT INTO deployments (name, user_id) VALUES(%s, %s)"
+        return self._mysql.execute(query, (deployment['name'], user_id))
 
     def put(self, user_id, deployment):
         query = """
@@ -107,15 +107,6 @@ class Deployments:
             ) AS exist
         """
         return self._mysql.execute(query, (deployment['id'], user_id))[0]['exist'] == 1
-
-    def getMode(self, user_id, deployment):
-        query = """
-            SELECT mode
-            FROM deployments
-            WHERE id = %s
-            AND user_id = %s
-        """
-        return self._mysql.execute(query, (deployment['id'], user_id))
 
     def getResults(self, uri):
         query = """

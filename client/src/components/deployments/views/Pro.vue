@@ -177,7 +177,6 @@ export default {
         name: this.name,
         environment: this.environment,
         code: this.code,
-        mode: 'PRO',
         method: this.method.toUpperCase(),
         start_execution: this.start_execution
       }
@@ -189,7 +188,7 @@ export default {
           // Refresh user coins
           this.$store.dispatch('coins', data['coins'])
           // Redirect page
-          this.$router.push({ name:'deployments.information', params: { executionID: response.data.data, deploymentMode: 'PRO' }})
+          this.$router.push({ name:'deployments.information', params: { executionID: data['execution_id'], deploymentMode: 'PRO' }})
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))

@@ -32,6 +32,7 @@ CREATE TABLE `groups` (
   `deployments_enable` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_basic` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_pro` tinyint(1) NOT NULL DEFAULT '0',
+  `deployments_inbenta` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_edit` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_execution_threads` tinyint(255) UNSIGNED NOT NULL DEFAULT '10',
   `deployments_execution_plan_factor` INT UNSIGNED NOT NULL DEFAULT '0',
@@ -102,7 +103,6 @@ CREATE TABLE `deployments` (
   `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(191) NOT NULL,
   `user_id` INT(10) UNSIGNED NOT NULL,
-  `mode` ENUM('BASIC','PRO') NOT NULL,
   `deleted` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
@@ -126,10 +126,10 @@ CREATE TABLE `deployments_basic` (
  `uri` VARCHAR(191) NULL,
  `engine` VARCHAR(191) NULL,
  `public` TINYINT(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY(id),
+  PRIMARY KEY (`id`),
   KEY `deployment_id` (`deployment_id`),
   KEY `uri` (`uri`),
-  FOREIGN KEY(deployment_id) REFERENCES deployments(id),
+  FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`),
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
@@ -152,6 +152,30 @@ CREATE TABLE `deployments_pro` (
   PRIMARY KEY(id),
   KEY `deployment_id` (`deployment_id`),
   KEY `uri` (`uri`),
-  FOREIGN KEY(deployment_id) REFERENCES deployments(id),
+  FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`),
+  FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `deployments_inbenta` (
+ `id` INT UNSIGNED AUTO_INCREMENT,
+ `deployment_id` INT UNSIGNED NOT NULL,
+ `environment_id` INT(10) UNSIGNED NOT NULL,
+ `products` SET('chatbot','km','no-product','search','ticketing') NOT NULL,
+ `databases` TEXT NULL,
+ `queries` TEXT NOT NULL,
+ `status` ENUM('CREATED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED') NOT NULL DEFAULT 'CREATED',
+ `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ `started` DATETIME NULL,
+ `ended` DATETIME NULL,
+ `pid` INT UNSIGNED NULL,
+ `progress` TEXT NULL,
+ `error` TINYINT(1) NULL,
+ `uri` VARCHAR(191) NULL,
+ `engine` VARCHAR(191) NULL,
+ `public` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `deployment_id` (`deployment_id`),
+  KEY `uri` (`uri`),
+  FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`),
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

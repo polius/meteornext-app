@@ -5,6 +5,7 @@ import datetime
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from cron import Cron
 import routes.login
 import routes.profile
 import routes.admin.settings
@@ -77,4 +78,6 @@ def ping_pong():
     return jsonify('pong!')
 
 if __name__ == '__main__':
+    # Run Cron + Flask App
+    Cron(app, credentials)
     app.run(host=api['host'], port=api['port'])
