@@ -179,3 +179,11 @@ CREATE TABLE `deployments_inbenta` (
   FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`),
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `schedule` (
+  `id` INT UNSIGNED AUTO_INCREMENT,
+  `name` VARCHAR(191) NOT NULL,
+  `executed_at` DATETIME NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

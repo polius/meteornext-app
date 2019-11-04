@@ -188,7 +188,7 @@
       </v-card-text>
     </v-card>
 
-    <v-dialog v-model="information_dialog" :persistent="information_dialog_mode != 'parameters'" max-width="70%">
+    <v-dialog v-model="information_dialog" persistent max-width="70%">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ information_dialog_mode.toUpperCase() }}</v-toolbar-title>
@@ -219,6 +219,7 @@
                   </v-data-table>
                 </v-card>
 
+                <div v-if="deploymentMode == 'PRO'" class="subtitle-1 font-weight-regular" style="margin-top:-5px; margin-bottom:10px;" title="Press ESC when cursor is in the editor to toggle full screen editing">CODE</div>
                 <codemirror v-if="deploymentMode == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
 
                 <div v-if="deploymentMode == 'BASIC' || deploymentMode == 'PRO'" class="subtitle-1 font-weight-regular">METHOD</div>
@@ -379,7 +380,7 @@
 
 <style>
 .CodeMirror {
-  min-height:800px;
+  min-height:450px;
   font-size: 14px;
 }
 .CodeMirror pre {
@@ -409,9 +410,13 @@
   import 'codemirror/addon/comment/comment.js'
   import 'codemirror/addon/dialog/dialog.js'
   import 'codemirror/addon/dialog/dialog.css'
+  import 'codemirror/addon/selection/mark-selection.js'
   import 'codemirror/addon/search/searchcursor.js'
   import 'codemirror/addon/search/search.js'
   import 'codemirror/keymap/sublime.js'
+  import 'codemirror/addon/selection/active-line.js'
+  import 'codemirror/addon/display/fullscreen.js'
+  import 'codemirror/addon/display/fullscreen.css'
 
   // VIEWER
   import Results from './Results'
@@ -498,11 +503,22 @@
         autoCloseBrackets: true,
         styleActiveLine: true,
         lineNumbers: true,
+        tabSize: 4,
         line: true,
+        foldGutter: true,
+        matchBrackets: true,
+        showCursorWhenSelecting: true,
         mode: 'python',
         theme: 'monokai',
         keyMap: 'sublime',
-        extraKeys: { "Tab": function(cm) { cm.replaceSelection("    " , "end"); }}
+        extraKeys: {
+          "Tab": function(cm) { 
+            cm.replaceSelection("    " , "end"); 
+          },
+          "Esc": function(cm) {
+            cm.setOption("fullScreen", !cm.getOption("fullScreen"))
+          }
+        }
       },
 
       // Snackbar
@@ -511,11 +527,11 @@
       snackbarText: '',
       snackbarColor: ''
     }),
+    props: ['executionID', 'deploymentMode'],
     components: { 
       codemirror,
       results: Results
     },
-    props: ['executionID', 'deploymentMode'],
     created() {
       if (typeof this.executionID === "undefined") this.$router.push('/deployments')
       else {

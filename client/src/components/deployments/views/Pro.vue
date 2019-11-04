@@ -6,9 +6,10 @@
           <div class="title font-weight-regular" style="margin-left:10px; margin-top:5px;">PRO</div>
           <v-form ref="form" style="padding:10px;">
             <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-            <v-select :loading="loading_env" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+            <v-select :loading="loading_env" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;" hide-details></v-select>
 
             <!-- CODE -->
+            <div class="subtitle-1 font-weight-regular" style="margin-top:20px; margin-bottom:10px;" title="Press ESC when cursor is in the editor to toggle full screen editing">CODE</div>
             <codemirror v-model="code" :options="cmOptions"></codemirror>
 
             <!-- PARAMETERS -->
@@ -53,7 +54,7 @@
 
 <style>
 .CodeMirror {
-  min-height:800px;
+  min-height:500px;
   font-size: 14px;
 }
 </style>
@@ -61,27 +62,32 @@
 <script>
 import axios from 'axios'
 
-import { codemirror } from 'vue-codemirror'
-import 'codemirror/lib/codemirror.css'
+  // CODE-MIRROR
+  import { codemirror } from 'vue-codemirror'
+  import 'codemirror/lib/codemirror.css'
 
-// language
-import 'codemirror/mode/python/python.js'
-// theme css
-import 'codemirror/theme/monokai.css'
+  // language
+  import 'codemirror/mode/python/python.js'
+  // theme css
+  import 'codemirror/theme/monokai.css'
 
-// require active-line.js
-import 'codemirror/addon/selection/active-line.js'
-// closebrackets
-import 'codemirror/addon/edit/closebrackets.js'
-// keyMap
-import 'codemirror/mode/clike/clike.js'
-import 'codemirror/addon/edit/matchbrackets.js'
-import 'codemirror/addon/comment/comment.js'
-import 'codemirror/addon/dialog/dialog.js'
-import 'codemirror/addon/dialog/dialog.css'
-import 'codemirror/addon/search/searchcursor.js'
-import 'codemirror/addon/search/search.js'
-import 'codemirror/keymap/sublime.js'
+  // require active-line.js
+  import 'codemirror/addon/selection/active-line.js'
+  // closebrackets
+  import 'codemirror/addon/edit/closebrackets.js'
+  // keyMap
+  import 'codemirror/mode/clike/clike.js'
+  import 'codemirror/addon/edit/matchbrackets.js'
+  import 'codemirror/addon/comment/comment.js'
+  import 'codemirror/addon/dialog/dialog.js'
+  import 'codemirror/addon/dialog/dialog.css'
+  import 'codemirror/addon/selection/mark-selection.js'
+  import 'codemirror/addon/search/searchcursor.js'
+  import 'codemirror/addon/search/search.js'
+  import 'codemirror/keymap/sublime.js'
+  import 'codemirror/addon/selection/active-line.js'
+  import 'codemirror/addon/display/fullscreen.js'
+  import 'codemirror/addon/display/fullscreen.css'
 
 export default {
   data() {
@@ -96,16 +102,28 @@ export default {
       // Code
       code: '',
 
+      // Init Code Parameters
       cmOptions: {
         readOnly: true,
         autoCloseBrackets: true,
         styleActiveLine: true,
         lineNumbers: true,
+        tabSize: 4,
         line: true,
+        foldGutter: true,
+        matchBrackets: true,
+        showCursorWhenSelecting: true,
         mode: 'python',
         theme: 'monokai',
         keyMap: 'sublime',
-        extraKeys: { "Tab": function(cm) { cm.replaceSelection("    " , "end"); }}
+        extraKeys: {
+          "Tab": function(cm) { 
+            cm.replaceSelection("    " , "end"); 
+          },
+          "Esc": function(cm) {
+            cm.setOption("fullScreen", !cm.getOption("fullScreen"))
+          }
+        }
       },
 
       // Parameters
