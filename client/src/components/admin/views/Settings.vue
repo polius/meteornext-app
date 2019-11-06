@@ -49,7 +49,9 @@
               <v-divider></v-divider>
               <v-card-text style="padding-top:5px; padding-bottom:0px;">
                 <v-form ref="form" style="padding:5px 5px 0px 5px;">
-                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.local" label="Absolute Path" required :rules="[v => !!v || '']"></v-text-field>
+                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.local" label="Absolute Path" required :rules="[v => !!v || '']" hide-details></v-text-field>
+                  <v-switch :loading="loading" :disabled="loading" label="Expire Logs" style="margin-top:15px;" hide-details></v-switch>
+                  <v-text-field :loading="loading" :disabled="loading" label="Log Retention Days" required :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v >= 0 || '']" style="margin-top:15px;"></v-text-field>
                 </v-form>
               </v-card-text>
             </v-card>

@@ -28,7 +28,7 @@ class Pro:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['admin'] or not user['deployments_enable']:
+            if not user['admin'] or not user['deployments_pro']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -44,6 +44,10 @@ class Pro:
         @deployments_pro_blueprint.route('/deployments/pro/code', methods=['GET'])
         @jwt_required
         def deployments_pro_code():
+            # Check user privileges
+            if not user['admin'] or not user['deployments_pro']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
             # Retrieve code
             with open('{}/../apps/Meteor/app/query_execution.py'.format(self._credentials['path'])) as file_open:
                 return jsonify({'data': file_open.read()}), 200
@@ -55,11 +59,18 @@ class Pro:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['admin'] or not user['deployments_enable']:
+            if not user['admin'] or not user['deployments_pro']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
+            # Check user authority
+            authority = self._deployments.getUser(request.args['deployment_id'])
+            if len(authority) == 0:
+                return jsonify({'message': 'This deployment does not exist'}), 400
+            elif authority[0]['user_id'] != user['id'] and not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 400
+
             # Get deployment executions
-            executions = self._deployments_pro.getExecutions(user['id'], request.args['deployment_id'])
+            executions = self._deployments_pro.getExecutions(request.args['deployment_id'])
             return jsonify({'data': executions }), 200
 
         @deployments_pro_blueprint.route('/deployments/pro/start', methods=['POST'])
@@ -69,11 +80,18 @@ class Pro:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['admin'] or not user['deployments_enable']:
+            if not user['admin'] or not user['deployments_pro']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
             deployment_json = request.get_json()
+
+            # Check deployment authority
+            authority = self._deployments_pro.getUser(deployment_json['execution_id'])
+            if len(authority) == 0:
+                return jsonify({'message': 'This deployment does not exist'}), 400
+            elif authority[0]['user_id'] != user['id'] and not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 400
 
             # Call Auxiliary Method
             return self.__start(user, deployment_json)
@@ -85,11 +103,18 @@ class Pro:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['admin'] or not user['deployments_enable']:
+            if not user['admin'] or not user['deployments_pro']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
             deployment_json = request.get_json()
+
+            # Check deployment authority
+            authority = self._deployments_pro.getUser(deployment_json['execution_id'])
+            if len(authority) == 0:
+                return jsonify({'message': 'This deployment does not exist'}), 400
+            elif authority[0]['user_id'] != user['id'] and not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 400
 
             # Call Auxiliary Method
             return self.__stop(user, deployment_json)
@@ -101,14 +126,21 @@ class Pro:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['admin'] or not user['deployments_enable']:
+            if not user['admin'] or not user['deployments_pro']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
             deployment_json = request.get_json()
 
+            # Check deployment authority
+            authority = self._deployments_pro.getUser(deployment_json['execution_id'])
+            if len(authority) == 0:
+                return jsonify({'message': 'This deployment does not exist'}), 400
+            elif authority[0]['user_id'] != user['id'] and not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 400
+
             # Change deployment public value
-            self._deployments_pro.setPublic(user['id'], deployment_json['execution_id'], deployment_json['public'])
+            self._deployments_pro.setPublic(deployment_json['execution_id'], deployment_json['public'])
 
             return jsonify({'message': 'OK'}), 200
 
@@ -118,7 +150,16 @@ class Pro:
     # Internal Methods #
     ####################
     def __get(self, user):
-        return jsonify({'data': self._deployments_pro.get(user['id'], request.args['execution_id'])}), 200
+        # Check deployment authority
+        authority = self._deployments_pro.getUser(request.args['execution_id'])
+        if len(authority) == 0:
+            return jsonify({'message': 'This deployment does not exist'}), 400
+        elif authority[0]['user_id'] != user['id'] and not user['admin']:
+            return jsonify({'message': 'Insufficient Privileges'}), 400
+
+        # Get deployment
+        deployment = self._deployments_pro.get(request.args['execution_id'])
+        return jsonify({'data': deployment}), 200
 
     def __post(self, user, data):
         # Check Coins
@@ -152,8 +193,15 @@ class Pro:
         return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
 
     def __put(self, user, data):
+        # Check deployment authority
+        authority = self._deployments_pro.getUser(data['execution_id'])
+        if len(authority) == 0:
+            return jsonify({'message': 'This deployment does not exist'}), 400
+        elif authority[0]['user_id'] != user['id'] and not user['admin']:
+            return jsonify({'message': 'Insufficient Privileges'}), 400
+
         # Get current deployment
-        deployment = self._deployments_pro.get(user['id'], data['execution_id'])[0]
+        deployment = self._deployments_pro.get(data['execution_id'])[0]
 
         if deployment['status'] == 'CREATED' and not data['start_execution']:
             # Check if user has modified any value
@@ -166,7 +214,7 @@ class Pro:
         else:
             # Check Coins
             group = self._groups.get(group_id=user['group_id'])[0]
-            if (user['coins'] - group['coins_execution']) < 0:
+            if not (authority[0]['user_id'] != user['id'] and user['admin']) and (user['coins'] - group['coins_execution']) < 0:
                 return jsonify({'message': 'Insufficient Coins'}), 400
 
             # Create a new Pro Deployment
@@ -174,10 +222,14 @@ class Pro:
             data['execution_id'] = self._deployments_pro.post(data)
 
             # Consume Coins
-            self._users.consume_coins(user, group['coins_execution'])
+            if authority[0]['user_id'] != user['id'] and user['admin']:
+                coins = user['coins']
+            else:
+                self._users.consume_coins(user, group['coins_execution'])
+                coins = user['coins'] - group['coins_execution']
 
             # Build Response Data
-            response = {'execution_id': data['execution_id'], 'coins': user['coins'] - group['coins_execution'] }
+            response = {'execution_id': data['execution_id'], 'coins': coins }
 
             if data['start_execution']:
                 # Get Meteor Additional Parameters
@@ -194,7 +246,7 @@ class Pro:
 
     def __start(self, user, data):
         # Get Deployment
-        deployment = self._deployments_pro.get(user['id'], data['execution_id'])
+        deployment = self._deployments_pro.get(data['execution_id'])
 
         # Check if deployment exists
         if len(deployment) == 0:
@@ -210,7 +262,7 @@ class Pro:
         deployment['mode'] = 'PRO'
 
         # Update Execution Status
-        self._deployments_pro.startExecution(user['id'], deployment['execution_id'])
+        self._deployments_pro.startExecution(deployment['execution_id'])
 
         # Start Meteor Execution
         self._meteor.execute(deployment)
@@ -222,20 +274,15 @@ class Pro:
         return jsonify({'data': response, 'message': 'Deployment Launched'}), 200
 
     def __stop(self, user, data):
-        result = self._deployments_pro.getPid(user['id'], data['execution_id'])
-  
-        # Check if deployment exists
-        if len(result) == 0:
-            return jsonify({'message': 'This deployment does not exist.'}), 400
-        else:
-            pid = result[0]['pid']
+        # Get the deployment pid
+        deployment = self._deployments_pro.getPid(data['execution_id'])[0]
 
         # Update Execution Status
-        self._deployments_pro.stopExecution(user['id'], data['execution_id'])
+        self._deployments_pro.stopExecution(data['execution_id'])
 
         # Stop the execution
         try:
-            os.kill(pid, signal.SIGINT)
+            os.kill(deployment['pid'], signal.SIGINT)
         except OSError as e:
             pass
         finally:

@@ -158,7 +158,7 @@ export default {
     deleteQuery() {
       this.query_mode = 'delete'
       this.queryDialogTitle = 'Delete Query'
-      this.queryDialogText = 'Are you sure you want to delete the selected environments?'
+      this.queryDialogText = 'Are you sure you want to delete the selected queries?'
       this.queryDialog = true
     },
     actionConfirm() {

@@ -11,6 +11,7 @@ import routes.profile
 import routes.admin.settings
 import routes.admin.groups
 import routes.admin.users
+import routes.admin.deployments
 import routes.deployments.settings.environments
 import routes.deployments.settings.regions
 import routes.deployments.settings.servers
@@ -45,6 +46,7 @@ profile = routes.profile.Profile(credentials).blueprint()
 settings = routes.admin.settings.Settings(credentials).blueprint()
 groups = routes.admin.groups.Groups(credentials).blueprint()
 users = routes.admin.users.Users(credentials).blueprint()
+admin_deployments = routes.admin.deployments.Deployments(credentials).blueprint()
 environments = routes.deployments.settings.environments.Environments(credentials).blueprint()
 regions = routes.deployments.settings.regions.Regions(credentials).blueprint()
 servers = routes.deployments.settings.servers.Servers(credentials).blueprint()
@@ -60,6 +62,7 @@ app.register_blueprint(profile)
 app.register_blueprint(settings)
 app.register_blueprint(groups)
 app.register_blueprint(users)
+app.register_blueprint(admin_deployments)
 app.register_blueprint(environments)
 app.register_blueprint(regions)
 app.register_blueprint(servers)
@@ -78,6 +81,6 @@ def ping_pong():
     return jsonify('pong!')
 
 if __name__ == '__main__':
+    app.run(host=api['host'], port=api['port'])
     # Run Cron + Flask App
     Cron(app, credentials)
-    app.run(host=api['host'], port=api['port'])

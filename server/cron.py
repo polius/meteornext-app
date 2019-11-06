@@ -2,7 +2,7 @@ import os
 import imp
 import time
 import schedule
-from threading import Thread
+import threading
 
 # https://pypi.org/project/schedule/
 class Cron:
@@ -12,10 +12,17 @@ class Cron:
         # Init Crons
         schedule.every().day.at("00:00").do(self.__coins)
         # Start crons
-        Thread(target=self.__run_schedule).start()
+        t = threading.Thread(target=self.__run_schedule)
+        t.start()
+        try:
+            t.join()
+        except KeyboardInterrupt:
+            print("\nFinishing the execution...")
+            t.do_run = False
 
     def __run_schedule(self):
-        while True:
+        t = threading.currentThread()
+        while getattr(t, "do_run", True):
             schedule.run_pending()
             time.sleep(1)
 

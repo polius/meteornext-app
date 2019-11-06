@@ -33,7 +33,7 @@
 
         <v-spacer></v-spacer>
         <div v-if="last_updated != ''" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ last_updated }}</b> UTC</div>
-        <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
+        <v-btn icon @click="goBack()"><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn>
       </v-toolbar>
 
       <!-- RESULTS -->
@@ -188,7 +188,7 @@
       </v-card-text>
     </v-card>
 
-    <v-dialog v-model="information_dialog" persistent max-width="70%">
+    <v-dialog v-model="information_dialog" persistent no-click-animation max-width="70%">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ information_dialog_mode.toUpperCase() }}</v-toolbar-title>
@@ -533,7 +533,7 @@
       results: Results
     },
     created() {
-      if (typeof this.executionID === "undefined") this.$router.push('/deployments')
+      if (typeof this.executionID === "undefined") this.$router.go(-1)
       else {
         // Init parameters and get deployment
         this.deployment['execution_id'] = this.executionID
@@ -545,6 +545,9 @@
       // -------------
       // BASE METHODS
       // -------------
+      goBack() {
+        this.$router.go(-1)
+      },
       getDeployment() {
         // Get Deployment Data
         const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase()

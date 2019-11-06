@@ -155,6 +155,12 @@ let router = new VueRouter({
           props: true,
           component: () => import('../components/admin/views/GroupsView'),
           meta: { requiresAuth: true }
+        },
+        {
+          path: 'deployments',
+          name: 'admin.deployments',
+          component: () => import('../components/admin/views/Deployments'),
+          meta: { requiresAuth: true }
         }
       ]
     }

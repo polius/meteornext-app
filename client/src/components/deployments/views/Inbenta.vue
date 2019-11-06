@@ -6,7 +6,6 @@
           <div class="title font-weight-regular" style="margin-left:10px; margin-top:5px;">INBENTA</div>
           <v-form ref="form" style="padding:10px;">
             <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-            <v-select :loading="loading" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
             <v-select :loading="loading" v-model="products" :items="product_items" label="Products" multiple :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
             <v-text-field v-model="databases" label="Databases" hint="(Optional) Separated by commas. Wildcards allowed: % _" style="padding-top:0px;"></v-text-field>
 
@@ -89,8 +88,6 @@ export default {
       query_mode: '', // new, edit, delete
 
       // Parameters
-      environment: '',
-      environment_items: [],
       start_execution: false,
 
       // Query Dialog
@@ -98,7 +95,7 @@ export default {
       queryDialogTitle: '',
 
       // Loading Fields
-      loading: true,
+      loading: false,
       
       // Snackbar
       snackbar: false,
@@ -107,24 +104,7 @@ export default {
       snackbarText: ''
     }
   },
-  created() {
-    this.getEnvironments()
-  },
   methods: {
-    getEnvironments() {
-      const path = this.$store.getters.url + '/deployments/environments'
-      axios.get(path)
-        .then((response) => {
-          for (var i = 0; i < response.data.data.length; ++i) this.environment_items.push(response.data.data[i]['name'])
-          this.loading = false
-        })
-        .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
-        })
-    },
     newQuery() {
       this.query_mode = 'new'
       this.query_item = { query: '' }
@@ -140,7 +120,7 @@ export default {
     deleteQuery() {
       this.query_mode = 'delete'
       this.queryDialogTitle = 'Delete Query'
-      this.queryDialogText = 'Are you sure you want to delete the selected environments?'
+      this.queryDialogText = 'Are you sure you want to delete the selected queries?'
       this.queryDialog = true
     },
     actionConfirm() {
@@ -214,7 +194,6 @@ export default {
       const path = this.$store.getters.url + '/deployments/inbenta'
       const payload = {
         name: this.name,
-        environment: this.environment,
         products: this.products,
         databases: this.databases,
         queries: JSON.stringify(this.query_items),

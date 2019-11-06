@@ -17,7 +17,7 @@ class Deployments:
         # Init blueprint
         deployments_blueprint = Blueprint('deployments', __name__, template_folder='deployments')
 
-        @deployments_blueprint.route('/deployments', methods=['GET','POST','PUT','DELETE'])
+        @deployments_blueprint.route('/deployments', methods=['GET','PUT','DELETE'])
         @jwt_required
         def deployments_method():
             # Get user data
@@ -32,8 +32,6 @@ class Deployments:
 
             if request.method == 'GET':
                 return self.get(user['id'])
-            elif request.method == 'POST':
-                return self.post(user['id'], deployment_json)
             elif request.method == 'PUT':
                 return self.put(user['id'], deployment_json)
             elif request.method == 'DELETE':
@@ -100,13 +98,6 @@ class Deployments:
     def get(self, user_id):
         return jsonify({'data': self._deployments.get(user_id)}), 200
 
-    def post(self, user_id, data):
-        if self._deployments.exist(user_id, data):
-            return jsonify({'message': 'This deployment currently exists'}), 400
-        else:
-            self._deployments.post(user_id, data)
-            return jsonify({'message': 'Deployment added successfully'}), 200
-
     def put(self, user_id, data):
         if not self._deployments.exist(user_id, data):
             return jsonify({'message': 'This deployment does not exist'}), 400
@@ -118,6 +109,3 @@ class Deployments:
         for deploy in data:
             self._deployments.delete(user_id, deploy)
         return jsonify({'message': 'Selected deployments deleted successfully'}), 200
-    
-    def remove(self, user_id):
-        self._deployments.remove(user_id)

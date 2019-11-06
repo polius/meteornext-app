@@ -7,8 +7,50 @@ class Deployments:
         self._mysql = imp.load_source('mysql', '{}/models/mysql.py'.format(credentials['path'])).mysql(credentials)
 
     def get(self, user_id=None, deployment_id=None):
-        if user_id is None:
-            return self._mysql.execute("SELECT * FROM deployments ORDER BY id DESC")
+        if user_id is None and deployment_id is None:
+            query = """
+                SELECT *, e.name AS 'environment'
+                FROM
+                (
+                    SELECT *
+                    FROM
+                    (
+                        SELECT d.id, db.id AS 'execution_id', u.username, d.name, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.started, db.ended, CONCAT(TIMEDIFF(db.ended, db.started)) AS 'overall'
+                        FROM deployments_basic db
+                        JOIN deployments d ON d.id = db.deployment_id AND d.deleted = 0
+                        JOIN users u ON u.id = d.user_id
+                        JOIN groups g ON g.id = u.group_id AND g.deployments_basic = 1 
+                        WHERE db.id IN (
+                            SELECT MAX(id)
+                            FROM deployments_basic db2
+                            WHERE db2.deployment_id = db.deployment_id
+                        )
+                        ORDER BY db.created DESC
+                        LIMIT 100
+                    ) t1
+                    UNION ALL
+                    SELECT *
+                    FROM
+                    (
+                        SELECT d.id, dp.id AS 'execution_id', u.username, d.name, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.started, dp.ended, CONCAT(TIMEDIFF(dp.ended, dp.started)) AS 'overall'
+                        FROM deployments_pro dp
+                        JOIN deployments d ON d.id = dp.deployment_id AND d.deleted = 0
+                        JOIN users u ON u.id = d.user_id
+                        JOIN groups g ON g.id = u.group_id AND g.deployments_pro = 1  
+                        WHERE dp.id IN (
+                            SELECT MAX(id)
+                            FROM deployments_pro dp2
+                            WHERE dp2.deployment_id = dp.deployment_id
+                        )
+                        ORDER BY dp.created DESC
+                        LIMIT 100
+                    ) t2
+                ) d
+                JOIN environments e ON e.id = d.environment_id                       
+                ORDER BY d.created DESC
+                LIMIT 100
+            """
+            return self._mysql.execute(query)
         elif deployment_id is not None:
             query = """
                 SELECT d.id, d.execution_id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
@@ -21,8 +63,8 @@ class Deployments:
                     JOIN groups g ON g.id = u.group_id AND g.deployments_basic = 1  
                     WHERE db.id IN (
                         SELECT MAX(id)
-                        FROM deployments_basic
-                        GROUP BY deployment_id
+                        FROM deployments_basic db2
+                        WHERE db2.deployment_id = db.deployment_id
                     )
                     UNION
                     SELECT d.id, dp.id AS 'execution_id', d.name, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.started, dp.ended
@@ -32,8 +74,8 @@ class Deployments:
                     JOIN groups g ON g.id = u.group_id AND g.deployments_pro = 1  
                     WHERE dp.id IN (
                         SELECT MAX(id)
-                        FROM deployments_pro
-                        GROUP BY deployment_id
+                        FROM deployments_pro dp2
+                        WHERE dp2.deployment_id = dp.deployment_id
                     )
                 ) d
                 JOIN environments e ON e.id = d.environment_id
@@ -52,8 +94,8 @@ class Deployments:
                     JOIN groups g ON g.id = u.group_id AND g.deployments_basic = 1 
                     WHERE db.id IN (
                         SELECT MAX(id)
-                        FROM deployments_basic
-                        GROUP BY deployment_id
+                        FROM deployments_basic db2
+                        WHERE db2.deployment_id = db.deployment_id
                     )
                     UNION
                     SELECT d.id, dp.id AS 'execution_id', d.name, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.started, dp.ended
@@ -63,8 +105,8 @@ class Deployments:
                     JOIN groups g ON g.id = u.group_id AND g.deployments_pro = 1  
                     WHERE dp.id IN (
                         SELECT MAX(id)
-                        FROM deployments_pro
-                        GROUP BY deployment_id
+                        FROM deployments_pro dp2
+                        WHERE dp2.deployment_id = dp.deployment_id
                     )
                 ) d
                 JOIN environments e ON e.id = d.environment_id
@@ -76,14 +118,13 @@ class Deployments:
         query = "INSERT INTO deployments (name, user_id) VALUES(%s, %s)"
         return self._mysql.execute(query, (deployment['name'], user_id))
 
-    def put(self, user_id, deployment):
+    def put(self, deployment):
         query = """
             UPDATE deployments
             SET name = %s
-            WHERE user_id = %s
             AND id = %s
         """
-        self._mysql.execute(query, (deployment['name'], user_id, deployment['id']))
+        self._mysql.execute(query, (deployment['name'], deployment['id']))
 
     def delete(self, user_id, deployment):
         query = """
@@ -94,19 +135,13 @@ class Deployments:
         """
         self._mysql.execute(query, (deployment, user_id))
 
-    def remove(self, user_id):
-        self._mysql.execute("DELETE FROM deployments WHERE user_id = %s", (user_id))
-
-    def exist(self, user_id, deployment):
+    def getUser(self, deployment_id):
         query = """
-            SELECT EXISTS ( 
-                SELECT * 
-                FROM deployments
-                WHERE id = %s
-                AND user_id = %s
-            ) AS exist
+            SELECT user_id
+            FROM deployments
+            WHERE id = %s
         """
-        return self._mysql.execute(query, (deployment['id'], user_id))[0]['exist'] == 1
+        return self._mysql.execute(query, (deployment_id))
 
     def getResults(self, uri):
         query = """

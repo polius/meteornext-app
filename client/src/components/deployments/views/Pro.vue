@@ -54,7 +54,7 @@
 
 <style>
 .CodeMirror {
-  min-height:500px;
+  min-height:450px;
   font-size: 14px;
 }
 </style>
