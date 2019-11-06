@@ -6,7 +6,7 @@ CREATE TABLE `settings` (
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-INSERT INTO settings (`name`, `value`) VALUES ('LOGS', '{"local": "","amazon_s3": {}}');
+INSERT INTO settings (`name`, `value`) VALUES ('LOGS', '{"local":{},"amazon_s3":{}}');
 
 CREATE TABLE `users` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,

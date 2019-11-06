@@ -49,9 +49,9 @@
               <v-divider></v-divider>
               <v-card-text style="padding-top:5px; padding-bottom:0px;">
                 <v-form ref="form" style="padding:5px 5px 0px 5px;">
-                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.local" label="Absolute Path" required :rules="[v => !!v || '']" hide-details></v-text-field>
-                  <v-switch :loading="loading" :disabled="loading" label="Expire Logs" style="margin-top:15px;" hide-details></v-switch>
-                  <v-text-field :loading="loading" :disabled="loading" label="Log Retention Days" required :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v >= 0 || '']" style="margin-top:15px;"></v-text-field>
+                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.local.path" label="Absolute Path" required :rules="[v => !!v || '']" hide-details></v-text-field>
+                  <v-switch :loading="loading" :disabled="loading" v-model="logs_expire" label="Expire Logs" style="margin-top:15px; padding-bottom:15px;" hide-details ></v-switch>
+                  <v-text-field v-if="logs_expire" :loading="loading" :disabled="loading" v-model="logs.local.expire" label="Log Retention Days" required :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 || '']" style="margin-top:-5px;"></v-text-field>
                 </v-form>
               </v-card-text>
             </v-card>
@@ -104,8 +104,9 @@ export default {
     api: {},
 
     // Logs
-    logs: { local: '', amazon_s3: {} },
+    logs: { local: {}, amazon_s3: {} },
     logs_mode: 'local',
+    logs_expire: false,
 
     // Loading
     loading: true,
@@ -131,6 +132,9 @@ export default {
           this.api = settings['api']
           this.logs = settings['logs']
 
+          // Init Logs Expire
+          if ('expire' in this.logs.local) this.logs_expire = true
+
           // Disable Loading
           this.loading = false
         })
@@ -153,7 +157,9 @@ export default {
       // Disable the fields while updating fields to the DB
       this.loading = true
       // Parse local absolute path
-      this.logs.local = (this.logs.local.endsWith('/')) ? this.logs.local : this.logs.local + '/'
+      this.logs.local.path = (this.logs.local.path.endsWith('/')) ? this.logs.local.path : this.logs.local.path + '/'
+      // Parse local expiration
+      if (!this.logs_expire) delete this.logs.local.expire
       // Construct path & payload
       const path = this.$store.getters.url + '/admin/settings'
       const payload = { 
