@@ -75,12 +75,9 @@ app.register_blueprint(deployments_pro)
 # enable CORS
 CORS(app, resources={r'/*': {'origins': '*'}})
 
-# sanity check route
-@app.route('/ping', methods=['GET'])
-def ping_pong():
-    return jsonify('pong!')
+# start cron
+if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+    Cron(app, credentials)
 
 if __name__ == '__main__':
     app.run(host=api['host'], port=api['port'])
-    # Run Cron + Flask App
-    Cron(app, credentials)

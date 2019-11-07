@@ -55,7 +55,7 @@ class Deployments:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check if Result is Public
-            if not results['public'] and int(results['user_id']) != user['id']:
+            if not results['public'] and int(results['user_id']) != user['id'] and not user['admin']:
                 return jsonify({'message': 'This results are private'}), 400
 
             # Get Logs Settings
@@ -63,7 +63,7 @@ class Deployments:
             
             # Get Execution Results File
             if results['engine'] == 'local':
-                results_directory = '{}{}.{}'.format(logs['local'], results['deployment_id'], results['execution_id'])
+                results_directory = '{}{}.{}'.format(logs['local']['path'], results['deployment_id'], results['execution_id'])
                 results_name = '{}.js'.format(uri)
                 if not os.path.exists('{}/{}'.format(results_directory, results_name)):
                     # Get compressed file name
