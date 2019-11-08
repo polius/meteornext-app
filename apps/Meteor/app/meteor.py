@@ -65,8 +65,6 @@ def init_parser():
         parser.add_argument('--deploy', required=False, action='store_true', dest='deploy', help='Validation + Deployment')
 
         ## Additional Commands
-        parser.add_argument('--upload', required=False, action='store_true', dest='upload', help='Upload Deploy Logs to S3')
-        parser.add_argument('--execution_name', required=False, action='store', dest='execution_name', help='Set a Name Prefix for the Execution Folder')
         parser.add_argument('--logs_path', required=False, action='store', dest='logs_path', help='Set the Absolute Folder Path to store the Execution Files')
         parser.add_argument('--query_execution_path', required=False, action='store', dest='query_execution_path', help='Set the Absolute File Path to import the "query_execution.py" file')
         parser.add_argument('--credentials_path', required=False, action='store', dest='credentials_path', help='Set the Absolute File Path to import the "credentials.json" file')
@@ -77,11 +75,11 @@ def init_parser():
         parser.add_argument('--execution_plan_factor', required=False, action='store', dest='execution_plan_factor', help='Set the Execution Plan Factor Condition to All Select Queries')
 
         # App Internal Commands
+        parser.add_argument('--uuid', required=False, action='store', dest='uuid', help=argparse.SUPPRESS)
         parser.add_argument('--env_id', required=False, action='store', dest='env_id', help=argparse.SUPPRESS)
         parser.add_argument('--env_check_sql', required=False, action='store', dest='env_check_sql', help=argparse.SUPPRESS)
         parser.add_argument('--env_compress', required=False, action='store_true', dest='env_compress', help=argparse.SUPPRESS)
         parser.add_argument('--env_start_deploy', required=False, action='store_true', dest='env_start_deploy', help=argparse.SUPPRESS)
-        parser.add_argument('--uuid', required=False, action='store', dest='uuid', help=argparse.SUPPRESS)
 
         # Help Commands
         parser.add_argument('--usage', required=False, action='store_true', dest='usage', help='Show Meteor Usage')
@@ -103,20 +101,13 @@ try:
     # Load the Parser
     args = init_parser()
 
-    # Get the Execution Name
-    if args.env_id is None:
-        current_date = datetime.fromtimestamp(time()).strftime('%Y-%m-%d_%H.%M.%S.%f_UTC')
-        execution_name = current_date if args.execution_name is None else args.execution_name
-    else:
-        execution_name = args.execution_name
-
     # Set the Default Logs Path (if it has not been set by the user)
     if args.logs_path is None:
         script_path = os.path.dirname(os.path.realpath(__file__))
         args.logs_path = '{}/logs/'.format(script_path)
 
     # Load the Core
-    core = deploy(logger, args, execution_name)
+    core = deploy(logger, args)
 
     # Print Header
     if args.env_id is None:

@@ -126,9 +126,12 @@ CREATE TABLE `deployments_basic` (
  `uri` VARCHAR(191) NULL,
  `engine` VARCHAR(191) NULL,
  `public` TINYINT(1) NOT NULL DEFAULT 0,
+ `expired` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `deployment_id` (`deployment_id`),
   KEY `uri` (`uri`),
+  KEY `created` (`created`),
+  KEY `expired` (`expired`),
   FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`),
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
@@ -149,9 +152,12 @@ CREATE TABLE `deployments_pro` (
  `uri` VARCHAR(191) NULL,
  `engine` VARCHAR(191) NULL,
  `public` TINYINT(1) NOT NULL DEFAULT 0,
+ `expired` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY(id),
   KEY `deployment_id` (`deployment_id`),
   KEY `uri` (`uri`),
+  KEY `created` (`created`),
+  KEY `expired` (`expired`),
   FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`),
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

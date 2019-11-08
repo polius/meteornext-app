@@ -10,12 +10,11 @@ from query_template import query_template
 
 
 class query:
-    def __init__(self, logger, args, credentials, query_template_js, execution_name, environment_name=None, environment_data=None, sql_connection=None):
+    def __init__(self, logger, args, credentials, query_template_js, environment_name=None, environment_data=None, sql_connection=None):
         self._logger = logger
         self._args = args
         self._credentials = credentials
         self._query_template = query_template_js
-        self._execution_name = execution_name
         self._environment_name = environment_name
         self._environment_data = environment_data
         self._sql_connection = sql_connection

@@ -44,6 +44,9 @@ class Pro:
         @deployments_pro_blueprint.route('/deployments/pro/code', methods=['GET'])
         @jwt_required
         def deployments_pro_code():
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
             # Check user privileges
             if not user['admin'] or not user['deployments_pro']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401

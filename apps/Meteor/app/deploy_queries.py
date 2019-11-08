@@ -15,21 +15,21 @@ from colors import colored
 
 
 class deploy_queries:
-    def __init__(self, logger, args, credentials, query_template, logs_path, execution_name, ENV_NAME=None, ENV_DATA=None):
+    def __init__(self, logger, args, credentials, query_template, logs_path, uuid, ENV_NAME=None, ENV_DATA=None):
         self._logger = logger
         self._args = args
         self._credentials = credentials
         self._query_template = query_template
-        self._execution_name = execution_name
+        self._uuid = uuid
         self._environment_name = ENV_NAME
         self._environment_data = ENV_DATA
         self._logs_path = logs_path
         self._script_path = "{}/logs".format(os.path.dirname(os.path.realpath(__file__))) if self._args.logs_path is None else self._args.logs_path
 
-        self._query = query(logger, args, credentials, query_template, execution_name, ENV_NAME, ENV_DATA)
+        self._query = query(logger, args, credentials, query_template, ENV_NAME, ENV_DATA)
 
         if self._environment_data['ssh']['enabled'] == 'True':
-            self._query_execution = imp.load_source('query_execution', "{0}/{1}/query_execution.py".format(self._script_path, self._execution_name)).query_execution(self._query)
+            self._query_execution = imp.load_source('query_execution', "{0}/{1}/query_execution.py".format(self._script_path, self._uuid)).query_execution(self._query)
         else:
             self._query_execution = imp.load_source('query_execution', "{}query_execution.py".format(self._logs_path)).query_execution(self._query)
 
@@ -53,7 +53,7 @@ class deploy_queries:
 
             # Store Execution Logs
             if self._environment_data['ssh']['enabled'] == 'True':
-                execution_log_path = "{0}/{1}/execution/{2}/{2}_before.json".format(self._script_path, self._execution_name, self._environment_data['region'])
+                execution_log_path = "{0}/{1}/execution/{2}/{2}_before.json".format(self._script_path, self._uuid, self._environment_data['region'])
             else:
                 execution_log_path = "{0}execution/{1}/{1}_before.json".format(self._logs_path, self._environment_data['region'])
 
@@ -80,7 +80,7 @@ class deploy_queries:
             databases = self._query.sql.get_all_databases()
 
             # Create Execution Server Folder (if exists, then delete+create)
-            execution_server_folder = "{0}/{1}/execution/{2}/{3}/".format(self._script_path, self._execution_name, region, server['name'])
+            execution_server_folder = "{0}/{1}/execution/{2}/{3}/".format(self._script_path, self._uuid, region, server['name'])
             if os.path.exists(execution_server_folder):
                 shutil.rmtree(execution_server_folder)
 
@@ -189,7 +189,7 @@ class deploy_queries:
 
     def __store_main_logs(self, region, server, database):
         # Store Logs
-        execution_log_path = "{0}/{1}/execution/{2}/{3}/{4}.json".format(self._script_path, self._execution_name, self._environment_data['region'], server['name'], database)
+        execution_log_path = "{0}/{1}/execution/{2}/{3}/{4}.json".format(self._script_path, self._uuid, self._environment_data['region'], server['name'], database)
         if len(self._query.execution_log['output']) > 0:
             with open(execution_log_path, 'w') as outfile:
                 json.dump(self._query.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
@@ -225,7 +225,7 @@ class deploy_queries:
 
             # Store Execution Logs
             if self._environment_data['ssh']['enabled'] == 'True':
-                execution_log_path = "{0}/{1}/execution/{2}/{2}_after.json".format(self._script_path, self._execution_name, self._environment_data['region'])
+                execution_log_path = "{0}/{1}/execution/{2}/{2}_after.json".format(self._script_path, self._uuid, self._environment_data['region'])
             else:
                 execution_log_path = "{0}execution/{1}/{1}_after.json".format(self._logs_path, self._environment_data['region'])
 

@@ -1917,10 +1917,10 @@ function setCookie(cname, cvalue, exdays) {
 function setLoadingText(text) {
   $("#loading").append("<p>" + text + "</p>");
 }
-function showError() {
+function showError(title, description) {
   $("#loading").html('');
-  var title_message = "Authorized Access Only";
-  var error_message = "The URL provided is private"
+  var title_message = title // "Authorized Access Only";
+  var error_message = description // "The URL provided is private"
   show_error(title_message, error_message, '');
 }
 function initMeteorNext(data) {

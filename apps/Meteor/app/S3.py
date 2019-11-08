@@ -9,11 +9,12 @@ from colors import colored
 
 
 class S3:
-    def __init__(self, logger, args, credentials, progress):
+    def __init__(self, logger, args, credentials, progress, uuid):
         self._logger = logger
         self._args = args
         self._credentials = credentials
         self._progress = progress
+        self._uuid = uuid
 
         if self._credentials['s3']['enabled'] == 'True':
             session = boto3.Session(
@@ -23,7 +24,7 @@ class S3:
             )
             self.__s3 = session.resource('s3')
 
-    def upload_logs(self, deploy_name, deploy_prefix, uuid):
+    def upload_logs(self):
         # Upload Logs to S3
         if self._credentials['s3']['enabled'] == 'True':
             print(colored("+==================================================================+", "magenta", attrs=['bold']))
@@ -37,17 +38,16 @@ class S3:
                 self._progress.track_logs("Uploading Logs to Amazon S3...")
 
                 # 1. Upload Compressed Logs Folder to '/logs'
-                file_path = "{}/{}{}.tar.gz".format(self._args.logs_path, deploy_prefix, deploy_name)
+                file_path = "{}/{}.tar.gz".format(self._args.logs_path, self._uuid)
                 bucket_name = self._credentials['s3']['bucket_name']
-                s3_path = "logs/{}{}.tar.gz".format(deploy_prefix, deploy_name)
+                s3_path = "logs/{}.tar.gz".format(self._uuid)
                 self.__s3.meta.client.upload_file(file_path, bucket_name, s3_path)
 
                 # 2. Upload Results File to '/results'
-                file_path = "{}/{}/meteor.js".format(self._args.logs_path, deploy_name)
-                s3_path = "results/{}.js".format(uuid)
+                file_path = "{}/{}/meteor.js".format(self._args.logs_path, self._uuid)
+                s3_path = "results/{}.js".format(self._uuid)
                 self.__s3.meta.client.upload_file(file_path, bucket_name, s3_path)
 
             except Exception as e:
                 print(colored("- Uploading Process Failed.", 'red', attrs=['bold', 'reverse']))
-                print(e)
-                raise(e)
+                raise

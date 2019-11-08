@@ -77,7 +77,7 @@ CORS(app, resources={r'/*': {'origins': '*'}})
 
 # start cron
 if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") != "true":
-    Cron(app, credentials)
+    Cron(credentials)
 
 if __name__ == '__main__':
     app.run(host=api['host'], port=api['port'])

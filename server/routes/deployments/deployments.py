@@ -47,23 +47,27 @@ class Deployments:
             results = self._deployments.getResults(uri)
 
             if len(results) == 0:
-                return jsonify({'message': 'This execution does not currently exist'}), 400
+                return jsonify({'title': 'Unknown deployment', 'description': 'This deployment does not currently exist' }), 400
             else:
                 results = results[0]
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
-            # Check if Result is Public
-            if not results['public'] and int(results['user_id']) != user['id'] and not user['admin']:
-                return jsonify({'message': 'This results are private'}), 400
+            if not results['public'] and int(results['user_id']) != user['id']:
+                return jsonify({'title': 'Authorized Access Only', 'description': 'The URL provided is private' }), 400
 
             # Get Logs Settings
             logs = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])
             
             # Get Execution Results File
             if results['engine'] == 'local':
-                results_directory = '{}{}.{}'.format(logs['local']['path'], results['deployment_id'], results['execution_id'])
+                results_directory = '{}{}'.format(logs['local']['path'], uri)
+                # Check if Deployment Logs exist
+                if not os.path.exists(results_directory):
+                    print("here")
+                    return jsonify({'title': 'Deployment Expired', 'description': 'This deployment has expired' }), 400
+
                 results_name = '{}.js'.format(uri)
                 if not os.path.exists('{}/{}'.format(results_directory, results_name)):
                     # Get compressed file name
@@ -91,7 +95,7 @@ class Deployments:
                     obj = s3.meta.client.get_object(Bucket=logs['amazon_s3']['bucket_name'], Key='results/{}.js'.format(uri))
                     return jsonify(obj['Body'].read().decode('utf-8')), 200
                 except Exception:
-                    return jsonify({'message': 'This results no longer exists'}), 400
+                    return jsonify({'title': 'Deployment Expired', 'description': 'This deployment has expired' }), 400
 
         return deployments_blueprint
 

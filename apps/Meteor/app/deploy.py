@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
+import uuid
 import time
 import shutil
 import calendar
@@ -12,7 +13,6 @@ import signal
 import multiprocessing
 import json
 import imp
-import uuid
 from multiprocessing.managers import SyncManager
 from collections import OrderedDict
 from datetime import timedelta
@@ -27,16 +27,18 @@ from progress import progress
 
 
 class deploy:
-    def __init__(self, logger, args, execution_name):
+    def __init__(self, logger, args):
         self._logger = logger
         self._args = args
 
-        # Variables to Store all Log Files
+        # Generate Deployment Unique Identifier
+        self._UUID = uuid.uuid4() if args.uuid is None else args.uuid
+
+        # Execution Path
         self._SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
-        self._EXECUTION_NAME = execution_name
 
         # Init the Logs Class
-        self._logs = logs(self._logger, self._args, self._EXECUTION_NAME)
+        self._logs = logs(self._logger, self._args, self._UUID)
 
         # Get Logs Path
         self._LOGS_PATH = self._logs.get_logs_path()
@@ -77,14 +79,11 @@ class deploy:
         self._meteor_logs_path = None
         self._meteor_logs_url = None
 
-        # Deployment Unique Identifier
-        self._UUID = uuid.uuid4()
-
         # Init the Progress Class
         self._progress = progress(self._logger, self._args, self._credentials, self._UUID)
 
         # Init the S3 Class
-        self._s3 = S3(self._logger, self._args, self._credentials, self._progress)
+        self._s3 = S3(self._logger, self._args, self._credentials, self._progress, self._UUID)
 
     def __cls(self):
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -140,8 +139,8 @@ class deploy:
 
                     if self._args.env_compress:
                         # Compress Execution Logs
-                        compressed_file_name = "{}meteor/logs/{}/execution/{}".format(environment['ssh']['deploy_path'], self._EXECUTION_NAME, environment['region'])
-                        compressed_location = "{}meteor/logs/{}/execution/".format(environment['ssh']['deploy_path'], self._EXECUTION_NAME)
+                        compressed_file_name = "{}meteor/logs/{}/execution/{}".format(environment['ssh']['deploy_path'], self._UUID, environment['region'])
+                        compressed_location = "{}meteor/logs/{}/execution/".format(environment['ssh']['deploy_path'], self._UUID)
                         if os.path.isdir(compressed_file_name):
                             shutil.make_archive(compressed_file_name, 'gztar', compressed_location)
                     else:
@@ -210,17 +209,17 @@ class deploy:
                 # Compile Logs
                 self._logs.compile(logs, summary)
                 # Compress Logs Folder
-                self._logs.compress('[SUCCESS]_' + self._EXECUTION_NAME)
+                self._logs.compress()
                 # Upload Logs to S3
-                self._s3.upload_logs(self._EXECUTION_NAME, '[SUCCESS]_', self._UUID)
+                self._s3.upload_logs()
                 # Clean Environments
                 self.clean()
                 # Slack Message
-                self.slack(status=1, summary=summary, compressed_file_name='[SUCCESS]_' + self._EXECUTION_NAME)
+                self.slack(status=1, summary=summary)
                 # Show Execution Time
                 self.show_execution_time()
                 # Show Logs Location
-                self.show_logs_location('[SUCCESS]_' + self._EXECUTION_NAME)
+                self.show_logs_location()
                 # Track Execution Status
                 self._progress.end(execution_status=1)
 
@@ -241,23 +240,23 @@ class deploy:
                 # Compile Logs
                 self._logs.compile(logs, summary, str(error_msg).rstrip())
                 # Compress Logs Folder
-                self._logs.compress(status_name + self._EXECUTION_NAME)
+                self._logs.compress()
                 # Upload Logs to S3
-                self._s3.upload_logs(self._EXECUTION_NAME, status_name, self._UUID)
+                self._s3.upload_logs()
                 # Clean Environments
                 self.clean()
                 # Slack Message
                 if error_msg.__class__ == KeyboardInterrupt:
-                    self.slack(status=2, summary=summary, compressed_file_name = status_name + self._EXECUTION_NAME)
+                    self.slack(status=2, summary=summary)
                 elif str(error_msg) == '':
-                    self.slack(status=3, summary=summary, compressed_file_name = status_name + self._EXECUTION_NAME)
+                    self.slack(status=3, summary=summary)
                 else:
                     message = str(error_msg).rstrip()
-                    self.slack(status=4, summary=summary, compressed_file_name = status_name + self._EXECUTION_NAME, error_msg=message)
+                    self.slack(status=4, summary=summary, error_msg=message)
                 # Show Execution Time
                 self.show_execution_time()
                 # Show Logs Location
-                self.show_logs_location(status_name + self._EXECUTION_NAME)
+                self.show_logs_location()
                 # Track Execution Status
                 if error_msg.__class__ == KeyboardInterrupt:
                     self._progress.end(execution_status=2)
@@ -273,7 +272,7 @@ class deploy:
             # Clean Environments
             self.clean()
             # Slack Message
-            self.slack(status=4, summary=None, compressed_file_name='[FAILED]_' + self._EXECUTION_NAME, error_msg=str(e))
+            self.slack(status=4, summary=None, error_msg=str(e))
             # Exit Program
             sys.exit()
 
@@ -311,7 +310,7 @@ class deploy:
             signal.signal(signal.SIGINT,signal.SIG_IGN)
             if e.__class__ == KeyboardInterrupt and not validate_regions:
                 print(colored("\n--> Ctrl+C received. Stopping the execution...", 'yellow', attrs=['reverse', 'bold']))
-            self._logs.compress('[FAILED]_' + self._EXECUTION_NAME)
+            self._logs.compress()
             self.clean()
             self.show_execution_time(only_validate=True)
             self._progress.end(execution_status=2)
@@ -431,7 +430,7 @@ class deploy:
             print(colored("| Validating Queries                                               |", 'magenta'))
             print(colored("+------------------------------------------------------------------+", 'magenta'))
 
-            validation = query(self._logger, self._args, self._credentials, self._query_template, self._EXECUTION_NAME)
+            validation = query(self._logger, self._args, self._credentials, self._query_template)
             queries_validated = True
             invalid_queries = []
 
@@ -478,7 +477,7 @@ class deploy:
             print(colored("+------------------------------------------------------------------+", 'magenta'))
 
             # Generate App Version
-            deploy_env = deploy_environments(self._logger, self._args, self._credentials)
+            deploy_env = deploy_environments(self._logger, self._args, self._credentials, self._UUID)
             version = deploy_env.generate_app_version()
             with open('{}/version.txt'.format(self._SCRIPT_PATH), 'w') as file_content:
                 file_content.write(version)
@@ -489,7 +488,7 @@ class deploy:
                 if self._credentials['execution_mode']['parallel'] != 'True':
                     validation_succeeded = True
                     for region in self._credentials['environments'][environment]:
-                        deploy_env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, environment, region)
+                        deploy_env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, environment, region)
                         validation_succeeded &= deploy_env.validate()
                     if not validation_succeeded:
                         raise Exception()
@@ -504,7 +503,7 @@ class deploy:
                     try:
                         for region in self._credentials['environments'][environment]:
                             environment_type = '[LOCAL]' if region['ssh']['enabled'] == 'False' else '[SSH]  '
-                            deploy_env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, environment, region)
+                            deploy_env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, environment, region)
                             p = multiprocessing.Process(target=deploy_env.validate, args=(False, shared_array,))
                             p.start()
                             processes.append(p)
@@ -607,7 +606,7 @@ class deploy:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 try:
                     for env_data in self._ENV_DATA[self._ENV_NAME]:
-                        env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, self._ENV_NAME, env_data)
+                        env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
                         env.start()
                 except KeyboardInterrupt:
                     print(colored("\n--> Ctrl+C received. Stopping the execution...", 'yellow', attrs=['reverse', 'bold']))
@@ -626,7 +625,7 @@ class deploy:
                 # Start Deployment
                 try:
                     for env_data in self._ENV_DATA[self._ENV_NAME]:
-                        env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, self._ENV_NAME, env_data, self._UUID)
+                        env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
                         p = multiprocessing.Process(target=env.start, args=(shared_array, progress_array,))
                         p.start()
                         processes.append(p)
@@ -703,19 +702,19 @@ class deploy:
 
                     # Send SIGINT to all Region Processes
                     for env_data in self._ENV_DATA[self._ENV_NAME]:
-                        env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, self._ENV_NAME, env_data, self._UUID)
+                        env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
                         env.sigint()
 
                     # Check all Remaining Region Processes have finished
                     for env_data in self._ENV_DATA[self._ENV_NAME]:
                         print(colored("- Remaining Processes to Finish in '{}'".format(env_data['region']), attrs=['bold']))
-                        env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, self._ENV_NAME, env_data, self._UUID)
+                        env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
                         env.check_processes()
 
                     # Send SIGKILL to clear remaining Zombie Processes
                     print(colored("- Cleaning Remaining Region Processes...", attrs=['bold']))
                     for env_data in self._ENV_DATA[self._ENV_NAME]:
-                        env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, self._ENV_NAME, env_data, self._UUID)
+                        env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
                         env.sigkill()
 
                     # Enable CTRL+C events
@@ -754,7 +753,7 @@ class deploy:
             os.makedirs(self._LOGS_PATH + 'execution/' + env['region'])
 
         # Start the Deploy
-        deploy = deploy_queries(self._logger, self._args, self._credentials, self._query_template, self._LOGS_PATH, self._EXECUTION_NAME, self._ENV_NAME, env)
+        deploy = deploy_queries(self._logger, self._args, self._credentials, self._query_template, self._LOGS_PATH, self._UUID, self._ENV_NAME, env)
 
         # Execute 'BEFORE' Queries Once per Region
         deploy.execute_before(env['region'])
@@ -889,7 +888,7 @@ class deploy:
             try:
                 for env_data in self._ENV_DATA[self._ENV_NAME]:
                     if env_data['ssh']['enabled'] == 'True':
-                        env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, self._ENV_NAME, env_data)
+                        env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
                         p = multiprocessing.Process(target=env.compress_logs, args=(shared_array,))
                         p.start()
                         processes.append(p)
@@ -909,7 +908,7 @@ class deploy:
         else:
             for env_data in self._ENV_DATA[self._ENV_NAME]:
                 if env_data['ssh']['enabled'] == 'True':
-                    env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, self._ENV_NAME, env_data)
+                    env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
                     env.compress_logs()
 
         # 2. Get SSH Execution Logs
@@ -925,7 +924,7 @@ class deploy:
 
             processes = []
             for env_data in self._ENV_DATA[self._ENV_NAME]:
-                env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, self._ENV_NAME, env_data)
+                env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
                 p = multiprocessing.Process(target=env.get_logs, args=(shared_array,))
                 p.start()
                 processes.append(p)
@@ -939,7 +938,7 @@ class deploy:
         ## Sequential Mode
         else:
             for env_data in self._ENV_DATA[self._ENV_NAME]:
-                env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, self._ENV_NAME, env_data)
+                env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
                 env.get_logs()
 
         # 3. Merging Logs
@@ -1046,7 +1045,7 @@ class deploy:
             print(status_msg)
             self._progress.track_tasks(value=status_msg[2:])
 
-            env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME)
+            env = deploy_environments(self._logger, self._args, self._credentials, self._UUID)
             env.clean_local()
 
         except Exception as e:
@@ -1059,7 +1058,7 @@ class deploy:
             self._progress.track_tasks(value=status_msg[2:])
 
             for env_data in self._ENV_DATA[self._ENV_NAME]:
-                env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, self._ENV_NAME, env_data, self._UUID)
+                env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
                 env.sigkill()
 
     def __clean_sequential(self, region=None):
@@ -1067,7 +1066,7 @@ class deploy:
 
         for env_data in env:
             if (env_data['ssh']['enabled'] == 'True'):
-                env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, self._ENV_NAME, env_data)
+                env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
                 env.clean_remote()
     
     def __clean_parallel(self, region=None):
@@ -1080,7 +1079,7 @@ class deploy:
             env = self._credentials['environments'][region] if region is not None else self._ENV_DATA[self._ENV_NAME]
             for env_data in env:
                 if (env_data['ssh']['enabled'] == 'True'):
-                    env = deploy_environments(self._logger, self._args, self._credentials, self._EXECUTION_NAME, self._ENV_NAME, env_data)
+                    env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
                     p = multiprocessing.Process(target=env.clean_remote, args=(shared_array,))
                     p.start()
                     processes.append(p)
@@ -1096,7 +1095,7 @@ class deploy:
                 process.join()
             raise
 
-    def slack(self, status, summary, compressed_file_name, error_msg=None):
+    def slack(self, status, summary, error_msg=None):
         # Send Slack Message if it's enabled
         if self._credentials['slack']['enabled'] != "True":
             return
@@ -1122,7 +1121,7 @@ class deploy:
             status_text = 'Test Execution Finished Successfully' if status == 1 else 'Test Execution Interrupted' if status == 2 else 'Test Execution Finished with errors' if status == 3 else 'Test Execution Failed'
 
         # Logs Path
-        logs_path = "{}/logs/{}.tar.gz".format(self._SCRIPT_PATH, compressed_file_name)
+        logs_path = "{}/logs/{}.tar.gz".format(self._SCRIPT_PATH, self._UUID)
         
         # Logs Url
         logs_url = ''
@@ -1278,15 +1277,15 @@ class deploy:
         overall_time = str(timedelta(seconds=time.time() - self._START_TIME))
         print(colored("- Overall Time: {}".format(overall_time), attrs=['bold']))
 
-    def show_logs_location(self, compressed_file_name):
+    def show_logs_location(self):
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
         print(colored("‖  OUTPUT                                                          ‖", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
         # Show Logs Path
         if self._args.logs_path:
-            self._meteor_logs_path = "{}/{}.tar.gz".format(self._args.logs_path, compressed_file_name)
+            self._meteor_logs_path = "{}/{}.tar.gz".format(self._args.logs_path, self._UUID)
         else:
-            self._meteor_logs_path = "{}/logs/{}.tar.gz".format(self._SCRIPT_PATH, compressed_file_name)
+            self._meteor_logs_path = "{}/logs/{}.tar.gz".format(self._SCRIPT_PATH, self._UUID)
         print("- Logs Path: " + colored(self._meteor_logs_path, 'green'))
 
         if self._credentials['web']['public_url'] != '':

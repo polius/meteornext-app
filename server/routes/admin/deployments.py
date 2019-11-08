@@ -27,9 +27,20 @@ class Deployments:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Deployments
-            return self.get()
+            return jsonify({'data': self._deployments.get()}), 200
+
+        @admin_deployments_blueprint.route('/admin/deployments/search', methods=['GET'])
+        @jwt_required
+        def admin_deployments_search_method():
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Deployments
+            return jsonify({'data': self._deployments.get(search=json.loads(request.args['data']))}), 200
 
         return admin_deployments_blueprint
 
-    def get(self):
-        return jsonify({'data': self._deployments.get()}), 200

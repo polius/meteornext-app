@@ -6,7 +6,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
           <v-btn text @click="refreshDeployment()"><v-icon small style="padding-right:10px">fas fa-sync</v-icon>REFRESH</v-btn>
-          <v-btn text @click="searchDeployment()"><v-icon small style="padding-right:10px">fas fa-search</v-icon>SEARCH</v-btn>
+          <v-btn text @click="search_dialog = true"><v-icon small style="padding-right:10px">fas fa-search</v-icon>SEARCH</v-btn>
           <v-btn text v-if="selected.length == 1" @click="infoDeployment()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
@@ -31,6 +31,37 @@
         </template>
       </v-data-table>
     </v-card>
+
+    <v-dialog v-model="search_dialog" persistent max-width="768px">
+      <v-card>
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">Search Deployments</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="search_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 0px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
+                  <v-text-field v-model="search_dialog_data.username" label="Username"></v-text-field>
+                  <v-select v-model="search_dialog_data.mode" :items="deployment_modes" multiple label="Mode" required style="padding-top:0px;"></v-select>
+                  <v-select v-model="search_dialog_data.status" :items="deployment_status" multiple label="Status" required style="padding-top:0px;"></v-select>
+                  <v-text-field v-model="search_dialog_data.created_from" label="Created (From)" placeholder="YYYY-MM-DD hh:mm:ss" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="search_dialog_data.created_to" label="Created (To)" placeholder="YYYY-MM-DD hh:mm:ss" style="padding-top:0px;"></v-text-field>
+                  <v-divider></v-divider>
+                  <div style="margin-top:20px;">
+                    <v-btn :loading="loading" color="success" @click="searchDeployments()">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="search_dialog=false" style="margin-left:10px;">Cancel</v-btn>
+                  </div>
+                </v-form>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
       {{ snackbarText }}
       <v-btn color="white" text @click="snackbar = false">Close</v-btn>
@@ -59,6 +90,12 @@ export default {
     search: '',
     loading: true,
 
+    // Search Dialog
+    search_dialog: false,
+    search_dialog_data: {},
+    deployment_modes: ['Basic','Pro','Inbenta'],
+    deployment_status: ['CREATED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED'],
+
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -83,12 +120,32 @@ export default {
           console.error(error)
         });
     },
+    searchDeployments() {
+      // Parse Search Filter
+      if (this.search_dialog_data.username == '') delete this.search_dialog_data.username
+      if (this.search_dialog_data.mode == '') delete this.search_dialog_data.mode
+      if (this.search_dialog_data.status == '') delete this.search_dialog_data.status
+      if (this.search_dialog_data.created_from == '') delete this.search_dialog_data.created_from
+      if (this.search_dialog_data.created_to == '') delete this.search_dialog_data.created_to
+      // Enable Loading
+      this.loading = true
+      // Get Deployment Data
+      const path = this.$store.getters.url + '/admin/deployments/search'
+      axios.get(path, { params: { data: this.search_dialog_data }})
+        .then((response) => {
+          this.items = response.data.data
+          this.loading = false
+          this.search_dialog = false
+        })
+        .catch((error) => {
+          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // eslint-disable-next-line
+          console.error(error)
+        })
+    },
     refreshDeployment() {
       this.loading = true
       this.getDeployments()
-    },
-    searchDeployment() {
-
     },
     infoDeployment() {
       this.$router.push({ name:'deployments.information', params: { executionID: this.selected[0]['execution_id'], deploymentMode: this.selected[0]['mode'] }})

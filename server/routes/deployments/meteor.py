@@ -3,6 +3,7 @@
 import os
 import imp
 import json
+import uuid
 import subprocess
 from time import time
 from datetime import datetime
@@ -29,12 +30,15 @@ class Meteor:
         self._logs = {}
 
     def execute(self, deployment):
+        # Generate Deployment Unique Identifier
+        self._uuid = uuid.uuid4()
+
         # Init Logs Settings
         self._logs = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])
 
         # Create Deployment Folder to store Meteor files
-        if not os.path.isdir('{}{}.{}/keys'.format(self._logs['local'], deployment['id'], deployment['execution_id'])):
-            os.makedirs('{}{}.{}/keys'.format(self._logs['local'], deployment['id'], deployment['execution_id']))
+        if not os.path.isdir('{}{}/keys'.format(self._logs['local']['path'], self._uuid)):
+            os.makedirs('{}{}/keys'.format(self._logs['local']['path'], self._uuid))
 
         # Compile Meteor Files
         self.__compile_credentials(deployment)
@@ -59,7 +63,7 @@ class Meteor:
                 self._credentials['environments'][environment['name']] = []
                 for region in regions:
                     if region['environment_id'] == environment['id']:
-                        key_path = "{}{}.{}/keys/{}".format(self._logs['local'], deployment['id'], deployment['execution_id'], region['id'])
+                        key_path = "{}{}/keys/{}".format(self._logs['local']['path'], self._uuid, region['id'])
                         region_data = {
                             "region": region['name'],
                             "ssh": {
@@ -152,7 +156,7 @@ class Meteor:
         }
 
         # Store Credentials
-        with open("{}{}.{}/credentials.json".format(self._logs['local'], deployment['id'], deployment['execution_id']), 'w') as outfile:
+        with open("{}{}/credentials.json".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
             json.dump(self._credentials, outfile)
 
     def __compile_query_execution(self, deployment):
@@ -164,7 +168,7 @@ class Meteor:
         #     self.__compile_query_execution_inbenta(deployment)
 
         # Store Query Execution
-        with open("{}{}.{}/query_execution.py".format(self._logs['local'], deployment['id'], deployment['execution_id']), 'w') as outfile:
+        with open("{}{}/query_execution.py".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
             outfile.write(self._query_execution)
 
     def __compile_query_execution_basic(self, deployment):
@@ -199,18 +203,16 @@ class query_execution:
 
     def __execute(self, deployment):
         # Build Meteor Parameters
-        base_path = "{}/../apps/Meteor/app/meteor.py".format(self._base_path)
+        meteor_path = "{}/../apps/Meteor/app/meteor.py".format(self._base_path)
         environment = deployment['environment']
         execution_method = 'validate all' if deployment['method'].lower() == 'validate' else deployment['method'].lower()
-        logs_path = "{}{}.{}".format(self._logs['local'], deployment['id'], deployment['execution_id'])
-        query_execution_path = "{}{}.{}/query_execution.py".format(self._logs['local'], deployment['id'], deployment['execution_id'])
-        credentials_path = "{}{}.{}/credentials.json".format(self._logs['local'], deployment['id'], deployment['execution_id'])
-        current_date = datetime.fromtimestamp(time()).strftime('%Y-%m-%d_%H.%M.%S.%f_UTC')
-        execution_name = "{}_{}|{}".format(deployment['id'], deployment['execution_id'], current_date)
+        logs_path = "{}{}".format(self._logs['local']['path'], self._uuid)
+        query_execution_path = "{}{}/query_execution.py".format(self._logs['local']['path'], self._uuid)
+        credentials_path = "{}{}/credentials.json".format(self._logs['local']['path'], self._uuid)
         execution_plan_factor = '--execution_plan_factor "{}"'.format(deployment['epf']) if deployment['epf'] > 0 else ''
 
         # Build Meteor Command
-        command = 'python {} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --execution_name "{}" --deployment_mode "{}" --deployment_id "{}" {}'.format(base_path, environment, execution_method, logs_path, query_execution_path, credentials_path, execution_name, deployment['mode'].lower(), deployment['execution_id'], execution_plan_factor)
+        command = 'python {} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}" {}'.format(meteor_path, environment, execution_method, logs_path, query_execution_path, credentials_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor)
         print(command)
 
         # Execute Meteor

@@ -160,6 +160,8 @@ export default {
       this.logs.local.path = (this.logs.local.path.endsWith('/')) ? this.logs.local.path : this.logs.local.path + '/'
       // Parse local expiration
       if (!this.logs_expire) delete this.logs.local.expire
+      // Parse amazon_s3 enable
+      this.logs.amazon_s3.enabled = ('enabled' in this.logs.amazon_s3) ? this.logs.amazon_s3.enabled : false
       // Construct path & payload
       const path = this.$store.getters.url + '/admin/settings'
       const payload = { 

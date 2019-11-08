@@ -6,14 +6,13 @@ import shutil
 from colors import colored
 
 class logs:
-    def __init__(self, logger, args, execution_name):
+    def __init__(self, logger, args, uuid):
         self._logger = logger
         self._args = args
+        self._uuid = uuid
         self._SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
-        self._EXECUTION_NAME = execution_name
-
         logs_path = self._args.logs_path if self._args.logs_path.endswith('/') else self._args.logs_path + '/'
-        self._LOGS_PATH = "{}{}/".format(logs_path, self._EXECUTION_NAME)
+        self._LOGS_PATH = "{}{}/".format(logs_path, uuid)
 
     def get_logs_path(self):
         return self._LOGS_PATH
@@ -60,16 +59,16 @@ class logs:
         except Exception as e:
             raise Exception('[USER] Error Compiling Meteor Data. ' + str(e))
 
-    def compress(self, compressed_name):
+    def compress(self):
         # Delete query_execution.pyc file
         if os.path.exists(self._LOGS_PATH + 'query_execution.pyc'):
             os.remove(self._LOGS_PATH + 'query_execution.pyc')
 
         # Tar Gz Deploy Folder
         if self._args.logs_path is None:
-            compressed_file_name = "{}/logs/{}".format(self._SCRIPT_PATH, compressed_name)
+            compressed_file_name = "{}/logs/{}".format(self._SCRIPT_PATH, self._uuid)
         else:
             logs_path = self._args.logs_path if self._args.logs_path.endswith('/') else self._args.logs_path + '/'
-            compressed_file_name = "{}{}".format(logs_path, compressed_name)
+            compressed_file_name = "{}{}".format(logs_path, self._uuid)
 
         shutil.make_archive(compressed_file_name, 'gztar', self._LOGS_PATH)

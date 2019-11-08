@@ -51,7 +51,7 @@ export default  {
         })
         .catch((error) => {
           if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          else if (error.response.status == 400) this.$refs.frame.contentWindow.showError()
+          else if (error.response.status == 400) this.$refs.frame.contentWindow.showError(error.response.data.title, error.response.data.description)
           else {
             // eslint-disable-next-line
             console.error(error)
