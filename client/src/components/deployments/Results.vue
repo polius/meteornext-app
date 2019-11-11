@@ -1,5 +1,5 @@
 <template>
-  <iframe ref="frame" src="http://34.252.139.218:8080/meteor_viewer/" @load="loadFrame" v-show="loaded" :style="iframe_style" frameborder="0" scrolling="no"></iframe>
+  <iframe ref="frame" :src="url + `:8080/meteor_viewer/`" @load="loadFrame" v-show="loaded" :style="iframe_style" frameborder="0" scrolling="no"></iframe>
 </template>
 
 <script>
@@ -22,7 +22,7 @@ export default  {
     }
   },
   computed : {
-    //url : function(){ return this.$store.getters.url }
+    url : function() { return this.$store.getters.url.substring(0, this.$store.getters.url.lastIndexOf(":")) }
   },
   created() {
     this.parseProps()
