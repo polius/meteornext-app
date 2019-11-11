@@ -41,6 +41,9 @@ class Groups:
 
         return groups_blueprint
 
+    ####################
+    # Internal Methods #
+    ####################
     def get(self, group_id=None):
         if group_id is None and 'groupID' not in request.args:
             return jsonify({'data': self._groups.get()}), 200

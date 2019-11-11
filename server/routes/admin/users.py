@@ -35,6 +35,9 @@ class Users:
 
         return users_blueprint
 
+    ####################
+    # Internal Methods #
+    ####################
     def get(self):
         return jsonify({'data': {'users': self._users.get(), 'groups': self._groups.get()}}), 200
 

@@ -20,7 +20,7 @@ class Environments:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['admin'] or (not user['deployments_edit'] and request.method != 'GET'):
+            if not user['deployments_edit'] and request.method != 'GET':
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -37,6 +37,9 @@ class Environments:
 
         return environments_blueprint
 
+    ####################
+    # Internal Methods #
+    ####################
     def get(self, group_id):
         return jsonify({'data': self._environments.get(group_id)}), 200
 

@@ -14,11 +14,6 @@ class Profile:
         @profile_blueprint.route('/profile', methods=['GET','PUT'])
         @jwt_required
         def profile_method():
-            # Check user privileges
-            is_admin = self._users.is_admin(get_jwt_identity())
-            if not is_admin:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
             # Get User
             user = self._users.get(get_jwt_identity())
 

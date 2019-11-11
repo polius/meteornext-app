@@ -22,7 +22,7 @@ class Settings:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['admin'] or not user['deployments_edit']:
+            if not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -35,6 +35,9 @@ class Settings:
 
         return settings_blueprint
 
+    ####################
+    # Internal Methods #
+    ####################
     def get(self):
         # Init Settings
         settings = {}

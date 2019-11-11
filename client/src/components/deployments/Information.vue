@@ -91,10 +91,12 @@
         <v-card v-if="validation_data.length > 0" style="margin-top:15px;">
           <v-data-table :headers="validation_headers" :items="validation_data" hide-default-footer>
             <template v-slot:item="props">
-              <tr v-for="item in Object.keys(validation_data[0])" :key="item">
-                <td v-if="validation_data[0][item] == 'VALIDATING'" class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{validation_data[0][item]}}</b></td>
-                <td v-else-if="validation_data[0][item] == 'SUCCEEDED'" class="success--text"><v-icon small color="success" style="margin-right:10px;">fas fa-check</v-icon><b>{{validation_data[0][item]}}</b></td>
-                <td v-else-if="validation_data[0][item] == 'FAILED'" class="error--text"><v-icon small color="error" style="margin-right:10px;">fas fa-times</v-icon><b>{{validation_data[0][item]}}</b></td>
+              <tr>
+                <td v-for="item in Object.keys(validation_data[0])" :key="item">
+                  <span v-if="validation_data[0][item] == 'VALIDATING'" class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{ validation_data[0][item] }}</b></span>
+                  <span v-else-if="validation_data[0][item] == 'SUCCEEDED'" class="success--text"><v-icon small color="success" style="margin-right:10px;">fas fa-check</v-icon><b>{{ validation_data[0][item] }}</b></span>
+                  <span v-else-if="validation_data[0][item] == 'FAILED'" class="error--text"><v-icon small color="error" style="margin-right:10px;">fas fa-times</v-icon><b>{{ validation_data[0][item] }}</b></span>
+                </td>
               </tr>
             </template>
           </v-data-table>
@@ -125,11 +127,13 @@
         <!-- EXECUTION -->
         <div v-if="execution_data.length > 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">EXECUTION</div>
         <v-card v-if="execution_data.length > 0" style="margin-top:15px;">
-          <v-data-table :headers="execution_headers" :items="index(execution_data)" hide-default-footer>
+          <v-data-table :headers="execution_headers" :items="this.index(execution_data)" hide-default-footer>
             <template v-slot:item="props">
-              <tr v-for="i in Object.keys(execution_data[0])" :key="i['server']">
-                <td v-if="props.item.index == 0" :style="`background-color:` + regionColor(execution_data[props.item.index][i])"><v-icon small style="margin-right:10px;">{{ regionIcon(execution_data[props.item.index][i]) }}</v-icon><b>{{ execution_data[props.item.index][i] }}</b></td>
-                <td v-if="props.item.index != 0" :class="serverColor(execution_data[props.item.index][i]['progress'])" style="padding-left:20px;">{{ execution_data[props.item.index][i]['server'] }}. {{ execution_data[props.item.index][i]['progress'] }}</td>
+              <tr>
+                <td v-for="item in Object.keys(execution_headers)" :key="item" :style="regionColor(props.item.i, execution_data[props.item.i][item])">
+                  <span v-if="props.item.i == 0"><v-icon small style="margin-right:10px;">{{ regionIcon(execution_data[props.item.i][item]) }}</v-icon><b>{{ execution_data[props.item.i][item] }}</b></span>
+                  <span v-else-if="item in execution_data[props.item.i]" :class="serverColor(execution_data[props.item.i][item]['progress'])"><b>{{ execution_data[props.item.i][item]['server'] }}</b> {{ execution_data[props.item.i][item]['progress'] }}</span>
+                </td>
              </tr>
             </template>
           </v-data-table>
@@ -650,7 +654,7 @@
         var i = 0
 
         // Fill variables
-        for (let [key, value] of Object.entries(this.deployment['progress']['validation'])) {
+        for (let [key, value] of Object.entries(this.deployment['progress']['validation']).sort()) {
           this.validation_headers.push({ text: key, align: 'left', value: 'r' + i.toString(), sortable: false})
           var status = 'VALIDATING' 
           if ('success' in value) {
@@ -670,29 +674,24 @@
         var i = 0
 
         // Fill variables
-        for (let[key] of Object.entries(this.deployment['progress']['execution'])) {
-          var k = 'r' + i.toString()
-          overall_progress[k] = {"d": 0, "t": 0}
-
-          this.execution_headers.push({ text: key, align: 'left', value: k, sortable: false})
+        for (let[key] of Object.entries(this.deployment['progress']['execution']).sort()) {
+          overall_progress[[i]] = {"d": 0, "t": 0}
+          this.execution_headers.push({ text: key, align: 'left', value: i, sortable: false})
           var j = 0
           for (let [key2, value2] of Object.entries(this.deployment['progress']['execution'][key])) {
-            overall_progress[k]['d'] += value2['d']
-            overall_progress[k]['t'] += value2['t']
+            overall_progress[[i]]['d'] += value2['d']
+            overall_progress[[i]]['t'] += value2['t']
 
-            var progress = value2['p'] + '% (' + value2['d'] + '/' + value2['t'] + ' DBs)' 
-            
-            if (j+1 <= this.execution_data.length) {
-              this.execution_data.push({['r' + j.toString()]: {"server": key2, "progress": progress}})
-              j += 1
-            }
-            else this.execution_data[i] = {['r' + j.toString()]: {"server": key2, "progress": progress}}
+            var progress = value2['p'] + '% (' + value2['d'] + '/' + value2['t'] + ' DBs)'
+            if (j+1 >= this.execution_data.length) this.execution_data.push({[[i]]: {"server": key2, "progress": progress}})
+            else this.execution_data[j+1][i] = {"server": key2, "progress": progress}
+            j = j+1
           }
-
+          
           // Add overall
-          if (Object.entries(this.deployment['progress']['execution'][key]).length === 0) this.execution_data[0][k] = "Initiating..."
-          else this.execution_data[0][k] = overall_progress[k]['d'] / overall_progress[k]['t'] * 100 + '% (' + overall_progress[k]['d'] + '/' + overall_progress[k]['t'] + ' DBs)'
-          i += 1
+          if (Object.entries(this.deployment['progress']['execution'][key]).length === 0) this.execution_data[0][[i]] = "Initiating..."
+          else this.execution_data[0][[i]] = overall_progress[[i]]['d'] / overall_progress[[i]]['t'] * 100 + '% (' + overall_progress[[i]]['d'] + '/' + overall_progress[[i]]['t'] + ' DBs)'
+          i = i+1
         }
       },
       parseLogs() {
@@ -1021,9 +1020,10 @@
         if (mode == 'BASIC') return '#67809f'
         else if (mode == 'PRO') return '#22313f'
       },
-      regionColor (progress) {
-        if (progress.startsWith('100%')) return '#4caf50'
-        else return '#fb8c00'
+      regionColor (index, region) {
+        if (index != 0) return ''
+        if (region.startsWith('100%')) return 'background-color: #4caf50'
+        else return 'background-color: #fb8c00'
       },
       regionIcon (progress) {
         if (progress.startsWith('100%')) return 'fas fa-check'
@@ -1040,7 +1040,7 @@
       },
       index (data) {
         return data.map((item, index) => ({
-          index: index,
+          i: index,
           ...item
         }))
       }

@@ -21,7 +21,7 @@ class Regions:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['admin'] or not user['deployments_edit']:
+            if not user['deployments_edit']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -39,22 +39,24 @@ class Regions:
         @regions_blueprint.route('/deployments/regions/list', methods=['POST'])
         @jwt_required
         def regions_list_method():
-            # Check user privileges
-            is_admin = self._users.is_admin(get_jwt_identity())
-            if not is_admin:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
             # Get User
-            user = self._users.get(get_jwt_identity())
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['deployments_edit']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
             data = request.get_json()
 
             # Return Regions By User Environment
-            return jsonify({'data': self._regions.get_by_environment(user[0]['group_id'], data)}), 200
+            return jsonify({'data': self._regions.get_by_environment(user['group_id'], data)}), 200
 
         return regions_blueprint
 
+    ####################
+    # Internal Methods #
+    ####################
     def get(self, group_id):
         return jsonify({'data': {'regions': self._regions.get(group_id), 'environments': self._environments.get(group_id)}}), 200
 
