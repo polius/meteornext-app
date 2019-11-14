@@ -14,8 +14,8 @@ class Cron:
         # Init Crons
         schedule.every().day.at("00:00").do(self.__coins)
         schedule.every().day.at("00:00").do(self.__logs, credentials['path'])
-        # schedule.every().minute.at(":35").do(self.__logs, credentials['path'])
-        
+        # schedule.every().minute.at(":20").do(self.__logs, credentials['path'])
+
         # Start Cron Listener
         threading.Thread(target=self.__run_schedule).start()
 
@@ -45,12 +45,12 @@ class Cron:
                 query = """
                     SELECT id, uri, 'basic' AS 'mode'
                     FROM deployments_basic
-                    WHERE DATE_ADD(DATE(created), INTERVAL {0} DAY) > CURRENT_DATE
+                    WHERE DATE_ADD(DATE(created), INTERVAL {0} DAY) <= CURRENT_DATE
                     AND expired = 0
                     UNION ALL
                     SELECT id, uri, 'pro' AS 'mode'
                     FROM deployments_pro
-                    WHERE DATE_ADD(DATE(created), INTERVAL {0} DAY) > CURRENT_DATE
+                    WHERE DATE_ADD(DATE(created), INTERVAL {0} DAY) <= CURRENT_DATE
                     AND expired = 0
                 """.format(int(setting['local']['expire']))
                 expired = self._mysql.execute(query)
