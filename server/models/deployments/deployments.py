@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import imp
+import models.mysql
 
 class Deployments:
     def __init__(self, credentials):
-        self._mysql = imp.load_source('mysql', '{}/models/mysql.py'.format(credentials['path'])).mysql(credentials)
+        self._mysql = models.mysql.mysql(credentials)
 
     def get(self, user_id=None, deployment_id=None, search=None):
         if user_id is None and deployment_id is None:

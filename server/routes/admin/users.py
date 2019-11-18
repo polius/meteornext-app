@@ -1,13 +1,15 @@
-import imp
 import bcrypt
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import models.admin.groups
+import models.admin.users
+
 class Users:
     def __init__(self, credentials):
         # Init models
-        self._groups = imp.load_source('groups', '{}/models/admin/groups.py'.format(credentials['path'])).Groups(credentials)
-        self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
+        self._groups = models.admin.groups.Groups(credentials)
+        self._users = models.admin.users.Users(credentials)
 
     def blueprint(self):
         # Init blueprint

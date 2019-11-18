@@ -1,23 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import imp
 import json
 import uuid
 import subprocess
 from time import time
 from datetime import datetime
 
+import models.mysql
+import models.admin.settings
+import models.deployments.environments
+import models.deployments.regions
+import models.deployments.servers
+import models.deployments.auxiliary
+import models.deployments.slack
+
 class Meteor:
     def __init__(self, credentials):
-        self._mysql = imp.load_source('mysql', '{}/models/mysql.py'.format(credentials['path'])).mysql(credentials)
+        self._mysql = models.mysql.mysql(credentials)
         # Init models
-        self._settings = imp.load_source('settings', '{}/models/admin/settings.py'.format(credentials['path'])).Settings(credentials)
-        self._environments = imp.load_source('environments', '{}/models/deployments/environments.py'.format(credentials['path'])).Environments(credentials)
-        self._regions = imp.load_source('regions', '{}/models/deployments/regions.py'.format(credentials['path'])).Regions(credentials)
-        self._servers = imp.load_source('servers', '{}/models/deployments/servers.py'.format(credentials['path'])).Servers(credentials)
-        self._auxiliary = imp.load_source('auxiliary', '{}/models/deployments/auxiliary.py'.format(credentials['path'])).Auxiliary(credentials)
-        self._slack = imp.load_source('slack', '{}/models/deployments/slack.py'.format(credentials['path'])).Slack(credentials)
+        self._settings = models.admin.settings.Settings(credentials)
+        self._environments = models.deployments.environments.Environments(credentials)
+        self._regions = models.deployments.regions.Regions(credentials)
+        self._servers = models.deployments.servers.Servers(credentials)
+        self._auxiliary = models.deployments.auxiliary.Auxiliary(credentials)
+        self._slack = models.deployments.slack.Slack(credentials)
 
         # Init Meteor Files
         self._query_execution = ''

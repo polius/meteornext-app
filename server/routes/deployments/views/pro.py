@@ -1,21 +1,26 @@
 import os
-import imp
 import signal
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
+
+import models.admin.users
+import models.admin.groups
+import models.deployments.deployments
+import models.deployments.deployments_pro
+import routes.deployments.meteor
 
 class Pro:
     def __init__(self, credentials):
         self._credentials = credentials
 
         # Init models
-        self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
-        self._groups = imp.load_source('groups', '{}/models/admin/groups.py'.format(credentials['path'])).Groups(credentials)
-        self._deployments = imp.load_source('basic', '{}/models/deployments/deployments.py'.format(credentials['path'])).Deployments(credentials)
-        self._deployments_pro = imp.load_source('pro', '{}/models/deployments/deployments_pro.py'.format(credentials['path'])).Deployments_Pro(credentials)
+        self._users = models.admin.users.Users(credentials)
+        self._groups = models.admin.groups.Groups(credentials)
+        self._deployments = models.deployments.deployments.Deployments(credentials)
+        self._deployments_pro = models.deployments.deployments_pro.Deployments_Pro(credentials)
 
         # Init meteor
-        self._meteor = imp.load_source('meteor', '{}/routes/deployments/meteor.py'.format(credentials['path'])).Meteor(credentials)
+        self._meteor = routes.deployments.meteor.Meteor(credentials)
 
     def blueprint(self):
         # Init blueprint

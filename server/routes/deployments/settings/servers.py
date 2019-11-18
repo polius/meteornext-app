@@ -1,13 +1,16 @@
-import imp
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
+
+import models.admin.users
+import models.deployments.environments
+import models.deployments.servers
 
 class Servers:
     def __init__(self, credentials):
         # Init models
-        self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
-        self._environments = imp.load_source('environments', '{}/models/deployments/environments.py'.format(credentials['path'])).Environments(credentials)
-        self._servers = imp.load_source('servers', '{}/models/deployments/servers.py'.format(credentials['path'])).Servers(credentials)
+        self._users = models.admin.users.Users(credentials)
+        self._environments = models.deployments.environments.Environments(credentials)
+        self._servers = models.deployments.servers.Servers(credentials)
 
     def blueprint(self):
         # Init blueprint

@@ -1,11 +1,12 @@
-import imp
+import bcrypt
+import models.admin.users
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 class Profile:
     def __init__(self, credentials):
         # Init models
-        self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
+        self._users = models.admin.users.Users(credentials)
 
     def blueprint(self):
         # Init blueprint

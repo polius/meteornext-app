@@ -1,12 +1,14 @@
-import imp
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
+
+import models.admin.users
+import models.deployments.auxiliary
 
 class Auxiliary:
     def __init__(self, credentials):
         # Init models
-        self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
-        self._auxiliary = imp.load_source('auxiliary', '{}/models/deployments/auxiliary.py'.format(credentials['path'])).Auxiliary(credentials)
+        self._users = models.admin.users.Users(credentials)
+        self._auxiliary = models.deployments.auxiliary.Auxiliary(credentials)
 
     def blueprint(self):
         # Init blueprint

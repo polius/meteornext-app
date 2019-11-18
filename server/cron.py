@@ -1,16 +1,17 @@
 import os
-import imp
 import json
 import time
 import shutil
 import schedule
 import threading
 
+import models.mysql
+
 # https://pypi.org/project/schedule/
 class Cron:
     def __init__(self, credentials):
         print("[CRON] Starting...")
-        self._mysql = imp.load_source('mysql', '{}/models/mysql.py'.format(credentials['path'])).mysql(credentials)
+        self._mysql = models.mysql.mysql(credentials)
         # Init Crons
         schedule.every().day.at("00:00").do(self.__coins)
         schedule.every().day.at("00:00").do(self.__logs, credentials['path'])

@@ -1,15 +1,17 @@
 import os
-import imp
 import json
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
+
+import models.admin.users
+import models.admin.settings
 
 class Settings:
     def __init__(self, credentials):
         self._credentials = credentials
         # Init models
-        self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
-        self._settings = imp.load_source('settings', '{}/models/admin/settings.py'.format(credentials['path'])).Settings(credentials)
+        self._users = models.admin.users.Users(credentials)
+        self._settings = models.admin.settings.Settings(credentials)
 
     def blueprint(self):
         # Init blueprint

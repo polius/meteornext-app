@@ -1,20 +1,27 @@
-import imp
 import json
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import models.admin.groups
+import models.admin.users
+import routes.deployments.settings.environments
+import routes.deployments.settings.regions
+import routes.deployments.settings.servers
+import routes.deployments.settings.auxiliary
+import routes.deployments.settings.slack
+
 class Groups:
     def __init__(self, credentials):
         # Init models
-        self._groups = imp.load_source('groups', '{}/models/admin/groups.py'.format(credentials['path'])).Groups(credentials)
-        self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
+        self._groups = models.admin.groups.Groups(credentials)
+        self._users = models.admin.users.Users(credentials)
 
         # Init routes
-        self._environments = imp.load_source('environments', '{}/routes/deployments/settings/environments.py'.format(credentials['path'])).Environments(credentials)
-        self._regions = imp.load_source('regions', '{}/routes/deployments/settings/regions.py'.format(credentials['path'])).Regions(credentials)
-        self._servers = imp.load_source('servers', '{}/routes/deployments/settings/servers.py'.format(credentials['path'])).Servers(credentials)
-        self._auxiliary = imp.load_source('auxiliary', '{}/routes/deployments/settings/auxiliary.py'.format(credentials['path'])).Auxiliary(credentials)
-        self._slack = imp.load_source('slack', '{}/routes/deployments/settings/slack.py'.format(credentials['path'])).Slack(credentials)
+        self._environments = routes.deployments.settings.environments.Environments(credentials)
+        self._regions = routes.deployments.settings.regions.Regions(credentials)
+        self._servers = routes.deployments.settings.servers.Servers(credentials)
+        self._auxiliary = routes.deployments.settings.auxiliary.Auxiliary(credentials)
+        self._slack = routes.deployments.settings.slack.Slack(credentials)
 
     def blueprint(self):
         # Init blueprint

@@ -1,12 +1,14 @@
-import imp
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
+
+import models.admin.users
+import models.deployments.slack
 
 class Slack:
     def __init__(self, credentials):
         # Init models
-        self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
-        self._slack = imp.load_source('slack', '{}/models/deployments/slack.py'.format(credentials['path'])).Slack(credentials)
+        self._users = models.admin.users.Users(credentials)
+        self._slack = models.deployments.slack.Slack(credentials)
 
     def blueprint(self):
         # Init blueprint

@@ -1,17 +1,20 @@
 import os
-import imp
 import json
 import boto3
 import tarfile
 from flask import Blueprint, jsonify, request, send_from_directory
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import models.admin.users
+import models.deployments.deployments
+import models.admin.settings
+
 class Deployments:
     def __init__(self, credentials):
         # Init models
-        self._users = imp.load_source('users', '{}/models/admin/users.py'.format(credentials['path'])).Users(credentials)
-        self._deployments = imp.load_source('deployments', '{}/models/deployments/deployments.py'.format(credentials['path'])).Deployments(credentials)
-        self._settings = imp.load_source('settings', '{}/models/admin/settings.py'.format(credentials['path'])).Settings(credentials)
+        self._users = models.admin.users.Users(credentials)
+        self._deployments = models.deployments.deployments.Deployments(credentials)
+        self._settings = models.admin.settings.Settings(credentials)
 
     def blueprint(self):
         # Init blueprint

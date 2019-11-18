@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import imp
+import models.mysql
 
 class Auxiliary:
     def __init__(self, credentials):
-        self._mysql = imp.load_source('mysql', '{}/models/mysql.py'.format(credentials['path'])).mysql(credentials)
+        self._mysql = models.mysql.mysql(credentials)
 
     def get(self, group_id):
         query = """
