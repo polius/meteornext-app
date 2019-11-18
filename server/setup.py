@@ -66,9 +66,13 @@ for root, dirs, files in os.walk(build):
             binaries.append(f)
 
 # 8) Build hidden imports
-hidden_imports = ['json','_cffi_backend','pymysql','uuid']
+hidden_imports = ['json','_cffi_backend','bcrypt','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3']
+for root, dirs, files in os.walk(build):
+    for f in files:
+        if f.endswith('.pyx'):
+            hidden_imports.append(os.path.join(root, f)[len(build)+1:-4].replace('/','.'))
 
-# 8) Build pyinstaller command
+# 9) Build pyinstaller command
 command = "cd '{}'; pyinstaller --distpath '{}' --add-data 'credentials.json:.'".format(cythonized, pwd)
 for i in hidden_imports:
     command += " --hidden-import={}".format(i)
@@ -76,8 +80,11 @@ for b in binaries:
     command += " -r '{}'".format(b)
 command += ' --onefile meteor.py'
 
-# 9) Pack cythonized project using pyinstaller
-p = subprocess.call(command, stdout=open('/dev/null', 'w'), shell=True)
+# 10) Pack cythonized project using pyinstaller
+subprocess.call(command, stdout=open('/dev/null', 'w'), shell=True)
 
 # 11) Clean build data
 shutil.rmtree(build)
+
+# 12) Execute binary
+subprocess.call('./meteor', shell=True)

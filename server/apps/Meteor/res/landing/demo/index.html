@@ -1,0 +1,420 @@
+<html>
+<head>
+  <title>Meteor</title>
+  <meta charset="UTF-8">
+  <!-- JS -->
+  <script src="js/jquery.min.js"></script>
+  <script src="js/ag-grid-community.min.js"></script>
+  <script src="js/select2.full.min.js"></script>
+  <!-- CSS -->
+  <link rel="icon" href="res/favicon.ico" type="image/png">
+  <link rel="stylesheet" href="css/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/bulma.min.css">
+  <link rel="stylesheet" href="css/select2.min.css">
+  <link rel="stylesheet" href="css/pretty-checkbox.min.css">
+  <link rel="stylesheet" href="css/animate.css">
+</head>
+
+<body>
+  <style>
+    html {
+      height: 100%;
+    }
+
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #f9fcff;
+    }
+
+    .cell-ok {
+      background-color: #00c4a7;
+      color: #00c4a7;
+    }
+
+    .cell-error {
+      background-color: #ff6961;
+      color: #ff6961;
+    }
+
+    .cell-warning {
+      background-color: #ffcc33;
+      color: #ffcc33;
+    }
+
+    .delete-button {
+      background-color: #ff6961;
+      border-color: transparent;
+    }
+
+    .delete-button:hover {
+      background-color: #ff5148;
+      border-color: transparent;
+    }
+
+    .button.delete-button[disabled] {
+      background-color: #ff6961;
+      border-color: transparent;
+      box-shadow: none;
+    }
+
+    .button-green {
+      background-color: #00c4a7;
+      color: white;
+      border-color: transparent;
+    }
+
+    .button-green:hover {
+      background-color: #00bb9f;
+      color: white;
+      border-color: transparent;
+    }
+
+    .button-green[disabled] {
+      background-color: #00c4a7;
+      border-color: transparent;
+      box-shadow: none;
+    }
+
+    .code {
+      display: block;
+      padding: 9.5px;
+      margin: 0 0 10px;
+      font-family: Consolas, monaco, monospace;
+      font-size: 13px;
+      color: #333;
+      word-break: break-all;
+      word-wrap: break-word;
+      background-color: #f5f5f5;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .ag-theme-material .ag-header-cell-label .ag-header-icon {
+      display:flex;
+      align-items: center;
+    }
+
+    .dark_scrollbar::-webkit-scrollbar {
+      -webkit-appearance: none;
+      width: 15px;
+      background-color: #4f4d56;
+    }
+    .dark_scrollbar::-webkit-scrollbar-track {
+      background: #4f4d56;
+    }
+    .dark_scrollbar::-webkit-scrollbar-thumb {
+      min-height: 25px;
+      background: #373540;
+      border: 3px solid transparent;
+      border-radius: 10px;
+      background-clip: content-box;
+    }
+    .dark_scrollbar::-webkit-scrollbar-corner {
+      background: #373540;
+    }
+
+    .light-row {
+      background-color: #fff;
+      border-color: #eee;
+    }
+    .light-row:hover {
+      background-color: #fafafa;
+    }
+    .light-row-hover {
+      background-color: #fafafa !important;
+    }
+
+    .dark-row {
+      background-color: #3a3843;
+      border-color: #4f4d56 !important;
+    }
+    .dark-row:hover {
+      background-color: #30384360;
+    }
+    .dark-row-hover {
+      background-color: #30384360 !important;
+    }
+  </style>
+
+  <div class="stage-scenarios" style="height:100vh; padding:20px!important; padding-left: 15px!important; padding-right: 15px!important;">
+    <section>
+      <div id="demo-1" class="demo" style="padding-left: 0px!important; padding-right: 0px!important;">
+        <div class="columns" style="margin-bottom:8px;">
+          <div style="padding-right:0px;">
+            <a href="index.html" style="width:66px; text-decoration:none;text-align:center;display:block;">
+              <img src="res/meteor.png" style="margin-left:15px; margin-top:7px;">
+            </a>
+          </div>
+          <div class="column">
+            <input id="quickFilterInput" class="input" disabled type="text" placeholder="Type text to filter...">
+          </div>
+          <div class="column" style="padding-left: 0em; flex-grow: 0;">
+            <button id="import-button" class="button button-green" title="Import"
+              style="color:white; width: 50px; height: 36px;" data-modal-id="#settings-modal"><i
+                class="fas fa-file-upload"></i></button>
+          </div>
+          <input id="import-file" type="file" style="display:none;" name="file" />
+          <div id="separator" class="column" style="padding-left: 0em; flex-grow: 0;">
+            <p style="background-color:grey; height: 36px; width:1px; margin-left:1px; margin-right:1px;"></p>
+          </div>
+          <div class="column" style="padding-left: 0em; flex-grow: 0;">
+            <button id="delete-button" class="button delete-button" disabled title="Delete Rows"
+              style="color:white; width: 50px; height: 36px;"><i class="fas fa-trash-alt"></i></i></button>
+          </div>
+          <div id="separator" class="column" style="padding-left: 0em; flex-grow: 0;">
+            <p style="background-color:grey; height: 36px; width:1px; margin-left:1px; margin-right:1px;"></p>
+          </div>
+          <div class="column" style="padding-left: 0em; flex-grow: 0;">
+            <button id="theme-button" class="button is-info" title="Dark Mode"
+              style="color:white; width: 50px; height: 36px;"><i class="fas fa-desktop"></i></button>
+          </div>
+          <div class="column" style="padding-left: 0em; flex-grow: 0;">
+            <button id="info-button" class="button is-info" disabled title="Information"
+              style="color:white; width: 50px; height: 36px;" data-modal-id="#info-modal"><i
+                class="fas fa-info-circle"></i></button>
+          </div>
+          <div class="column" style="padding-left: 0em; flex-grow: 0;">
+            <button id="settings-button" class="button is-info" disabled title="Settings"
+              style="color:white; width: 50px; height: 36px;" data-modal-id="#settings-modal"><i
+                class="fas fa-cog"></i></button>
+          </div>
+          <div class="column" style="padding-left: 0em; flex-grow: 0;">
+            <button id="filter-button" class="button is-info" disabled title="Filter"
+              style="color:white; width: 50px; height: 36px;" data-modal-id="#filter-modal"><i
+                class="fas fa-filter"></i></button>
+          </div>
+          <div class="column" style="padding-left: 0em; flex-grow: 0;">
+            <button id="transformation-button" class="button is-info" disabled title="Transformation"
+              style="color:white; width: 50px; height: 36px;" data-modal-id="#transformation-modal"><i
+                class="fas fa-database"></i></button>
+          </div>
+          <div class="column" style="padding-left: 0em; flex-grow: 0;">
+            <button id="errors-button" class="button is-info" disabled title="Errors"
+              style="color:white; width: 50px; height: 36px;"><i class="fas fa-bug"></i></button>
+          </div>
+          <div class="column" style="padding-left: 0em; padding-right: 15px; flex-grow: 0;">
+            <button id="export-button" class="button is-info" disabled title="Export"
+              style="color:white; width:50px; height: 36px;" data-modal-id="#export-modal"><i
+                class="fas fa-file-download"></i></button>
+          </div>
+        </div>
+
+        <!-- INFORMATION MODAL-->
+        <div id="info-modal" class="modal animated faster fadeIn">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title">Information</p>
+              <button id="info-modal-close" class="delete" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body" style="width:100%;">
+              <div id="info-modal-fields" style="width:100%;">
+                <h1 id="info-execution-title" class="subtitle" style="margin-top: 1.0rem; margin-bottom: 1.0rem;">EXECUTION</h1>
+              </div>
+            </section>
+            <footer class="modal-card-foot">
+              <button id="info-modal-save" class="button">Close</button>
+            </footer>
+          </div>
+        </div>
+
+        <!-- SETTINGS MODAL-->
+        <div id="settings-modal" class="modal animated faster fadeIn">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title">Settings</p>
+              <button id="settings-modal-close" class="delete" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body" style="width:100%;">
+              <div id="settings-modal-visible_fields">
+                <h1 class="subtitle" style="margin-bottom: 1.0rem;"><strong>Column Properties</strong></h1>
+              </div>
+            </section>
+            <footer class="modal-card-foot">
+              <button id="settings-modal-save" class="button button-green">Save changes</button>
+              <button id="settings-modal-cancel" class="button">Cancel</button>
+            </footer>
+          </div>
+        </div>
+
+        <!-- FILTER MODAL-->
+        <div id="filter-modal" class="modal animated faster fadeIn">
+          <div class="modal-background"></div>
+          <div class="modal-card" style="width:800px;">
+            <header class="modal-card-head">
+              <p class="modal-card-title">Filter</p>
+              <button id="filter-modal-close" class="delete" aria-label="close"></button>
+            </header>
+            <section id="filter-modal-content" class="modal-card-body" style="width:100%;">
+              <h1 class="subtitle" style="margin-bottom: 1.0rem;"><strong>Data Filter</strong></h1>
+              <div id="filter-modal-meteor_environment-div" style="width:100%;">
+                <!-- Environment -->
+                <div style="width:20%; float:left; margin-top:2px; text-align:right; padding-right: 10px;">
+                  <span>Environment:</span>
+                </div>
+                <div style="width:80%; float:left;">
+                  <select id="filter-environment" class="js-example-basic-single" name="state"
+                    style="width:50%;left:300px;">
+                    <option value="0">- All Data -</option>
+                  </select>
+                </div>
+              </div>
+              <div id="filter-modal-meteor_region-div" style="width:100%; margin-top:10px;">
+                <!-- Region -->
+                <div style="width:20%; float:left; margin-top:2px; text-align:right; padding-right: 10px;">
+                  <span>Region:</span>
+                </div>
+                <div style="width:80%; float:left;">
+                  <select id="filter-region" class="js-example-basic-single" name="state" style="width:50%;">
+                    <option value="0">- All Data -</option>
+                  </select>
+                </div>
+              </div>
+              <div id="filter-modal-meteor_server-div" style="width:100%; margin-top:10px; ">
+                <!-- Server -->
+                <div style="width:20%; float:left; margin-top:2px; text-align:right; padding-right: 10px;">
+                  <span>Server:</span>
+                </div>
+                <div style="width:80%; float:left;">
+                  <select id="filter-server" class="js-example-basic-single" name="state" style="width:50%;">
+                    <option value="0">- All Data -</option>
+                  </select>
+                </div>
+              </div>
+              <div id="filter-modal-meteor_database-div" style="width:100%; margin-top:10px;">
+                <!-- Database -->
+                <div style="width:20%; float:left; margin-top:2px; text-align:right; padding-right: 10px;">
+                  <span>Database:</span>
+                </div>
+                <div style="width:80%; float:left;">
+                  <select id="filter-database" class="js-example-basic-single" name="state" style="width:50%;">
+                    <option value="0">- All Data -</option>
+                  </select>
+                </div>
+              </div>
+              <div id="filter-modal-meteor_query-div" style="width:100%; margin-top:10px;">
+                <!-- Query -->
+                <div style="width:20%; float:left; margin-top:2px; text-align:right; padding-right: 10px;">
+                  <span>Query:</span>
+                </div>
+                <div style="width:80%; float:left;">
+                  <select id="filter-query" class="js-example-basic-single" name="state" style="width:50%;">
+                    <option value="0">- All Data -</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+            <footer class="modal-card-foot">
+              <button id="filter-modal-save" class="button button-green">Save changes</button>
+              <button id="filter-modal-cancel" class="button">Cancel</button>
+            </footer>
+          </div>
+        </div>
+
+        <!-- TRANSFORMATION MODAL-->
+        <div id="transformation-modal" class="modal animated faster fadeIn">
+          <div class="modal-background"></div>
+          <div class="modal-card" style="width:800px;">
+            <header class="modal-card-head">
+              <p class="modal-card-title">Transformation</p>
+              <button id="transformation-modal-close" class="delete" aria-label="close"></button>
+            </header>
+            <section id="transformation-modal-content" class="modal-card-body" style="width:100%;">
+              <h1 class="subtitle" style="margin-bottom: 1.0rem;"><strong>Data Transformation</strong></h1>
+              <div id="transformation-modal-meteor_query-div" style="width:100%; margin-top:10px;">
+                <!-- Query -->
+                <div style="width:10%; float:left; margin-top:2px; text-align:right; padding-right: 10px;">
+                  <span>Query:</span>
+                </div>
+                <div style="width:90%; float:left;">
+                  <select id="transformation-query" class="js-example-basic-single" name="state" style="width:50%;">
+                    <option value="0">- No Transformation -</option>
+                  </select>
+                </div>
+                <!-- Hide empty results -->
+                <div style="width:10%; float:left; margin-top:20px; text-align:right; padding-right: 10px;">
+                  <label class="checkbox">
+                    <input id="transformation_checkbox" type="checkbox" disabled>
+                  </label>
+                </div>
+                <div style="width:90%; float:left; margin-top:15px;">
+                  <span id="transformation_checkbox_text" style="cursor: pointer;">Hide empty results</span>
+                </div>
+              </div>
+            </section>
+            <footer class="modal-card-foot">
+              <button id="transformation-modal-save" class="button button-green">Save changes</button>
+              <button id="transformation-modal-cancel" class="button">Cancel</button>
+            </footer>
+          </div>
+        </div>
+
+        <!-- EXPORT MODAL-->
+        <div id="export-modal" class="modal animated faster fadeIn">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+            <header class="modal-card-head">
+              <p class="modal-card-title">Export</p>
+              <button id="export-modal-close" class="delete" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body" style="width:100%;">
+              <div id="export-modal-div" style="width:100%;">
+                <h1 class="subtitle" style="margin-bottom: 1.0rem;"><strong>Export Data</strong></h1>
+                <!-- Format -->
+                <div style="width:20%; float:left; margin-top:2px; text-align:right; padding-right: 10px;">
+                  <span>Format:</span>
+                </div>
+                <div style="width:80%; float:left;">
+                  <select id="export-format" class="js-example-basic-single" name="state" style="width:50%;left:300px;">
+                    <option value="meteor">Meteor</option>
+                    <option value="json">JSON</option>
+                    <option value="csv">CSV</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+            <footer class="modal-card-foot">
+              <button id="export-modal-save" class="button button-green">Export</button>
+              <button id="export-modal-cancel" class="button">Cancel</button>
+            </footer>
+          </div>
+        </div>
+
+        <!-- ERROR MODAL-->
+        <div id="error-modal" class="modal">
+          <div class="modal-background"></div>
+          <div class="modal-card">
+            <header id="error-modal-card-head" class="modal-card-head" style="background-color:#ff3860;">
+              <p id="error-title" class="modal-card-title" style="color:white;">Error</p>
+              <button id="error-modal-close" class="delete" aria-label="close"></button>
+            </header>
+            <section id="error-message-section" class="modal-card-body" style="width:100%;">
+              <div id="error-message-body" style="width:100%;">
+              </div>
+              <div id="error-message-code" class="code" style="width:100%;">
+              </div>
+            </section>
+            <footer class="modal-card-foot">
+              <button id="error-modal-accept" class="button">Accept</button>
+            </footer>
+          </div>
+        </div>
+
+        <!-- LOADING -->
+        <div id="loading" style="width:100%; height:86vh; border:1px solid #ced4da; background-color:white; padding-left:5px;padding-top:2px;"></div>
+
+        <!-- GRID TABLE -->
+        <div id="bestHtml5Grid" class="ag-theme-material" style="height:calc(100vh - 140px); display:none;"></div>
+        <script inline src="js/core.js"></script>
+        <div id="footer" style="display:none;">
+          <p id="rowCount" style="display:none; text-align:center; margin-top:20px;"></p>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
