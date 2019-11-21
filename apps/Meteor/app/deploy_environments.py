@@ -395,7 +395,7 @@ class deploy_environments:
                     progress_array.append(line)
 
         # Return Execution Output
-        return { "stdout": client.stdout.readlines(), "stderr": ''.join(client.stderr.readlines()) }
+        return { "stdout": client.stdout.readlines(), "stderr": ''.join(str(v) for v in client.stderr.readlines()) }
 
     def __ssh(self, command, show_output=False, progress_array=None):
         try:

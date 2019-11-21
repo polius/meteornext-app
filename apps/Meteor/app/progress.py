@@ -10,8 +10,9 @@ class progress:
         self._credentials = credentials
         self._uuid = uuid
         self._sql = mysql(logger, args, credentials)
-        self._sql.connect(credentials['meteor_next']['hostname'], credentials['meteor_next']['username'], credentials['meteor_next']['password'], credentials['meteor_next']['database'])
         self._progress = {}
+        if self.__enabled():
+            self._sql.connect(credentials['meteor_next']['hostname'], credentials['meteor_next']['username'], credentials['meteor_next']['password'], credentials['meteor_next']['database'])
 
     def start(self, pid):
         if self.__enabled():
@@ -81,7 +82,7 @@ class progress:
         self._sql.execute(query, self._credentials['meteor_next']['database'])
 
     def __enabled(self):
-        if self._args.deployment_id is not None and self._args.deployment_mode is not None:
+        if 'meteor_next' in self._credentials and self._credentials['meteor_next']['enabled'] == 'True':
             return True
         else:
             return False

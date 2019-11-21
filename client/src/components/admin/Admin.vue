@@ -1,6 +1,9 @@
 <template>
 <div>
-  <div style="background-color: #343F57; padding-top:15px; border-radius: 10px;">
+  <div style="background-color: #343F57; padding-top:20px; border-radius: 10px;">
+    <apexchart width="100%" height="435" type="area" :options="options" :series="series" style="margin-left:-10px;"></apexchart>
+  </div>
+  <div style="background-color: #343F57; padding-top:20px; border-radius: 10px;">
     <apexchart width="100%" height="435" type="area" :options="options" :series="series" style="margin-left:-10px;"></apexchart>
   </div>
 </div>
@@ -13,10 +16,8 @@
   .apexcharts-toolbar {
     margin-right: 5px;
   }
-  .apexcharts-legend-marker {
-    top: -1px!important;
-  }
   .apexcharts-legend-text {
+    margin-left: 2px;
     margin-right: 5px;
   }
   .apexcharts-zoom-in-icon, .apexcharts-zoom-out-icon, .apexcharts-reset-zoom-icon, .apexcharts-menu-icon {
@@ -97,10 +98,21 @@ export default {
       },
       legend: {
         position: 'top',
-        horizontalAlign: 'center',
-        fontSize: '17px',
+        horizontalAlign: 'left',
+        offsetX: 0,
+        fontSize: '15px',
         fontFamily: 'Roboto',
       },
+      title: {
+          text: 'EXECUTIONS PER DAY',
+          align: 'center',
+          floating: true,
+          style: {
+            fontSize:  '19px',
+            fontFamily: 'Roboto',
+            color:  'white'
+          }
+      }
     }
   })
 }

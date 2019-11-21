@@ -304,7 +304,7 @@ class query_template:
                         exists = connection.check_column_exists(database_name, table_name, column_name)
 
                         if exists is False:
-                            raise Exception("Column '{}' doesn't exist in '{}.{}'".format(column_parsed, database_name, table_name))
+                            raise Exception("Column '{}' doesn't exist in '{}.{}'".format(column_name, database_name, table_name))
 
                         # Check FK
                         exists = connection.check_fk_exists(database_name, table_name, column_name)
@@ -519,7 +519,7 @@ class query_template:
                         exists = connection.check_trigger_exists(database_name, '%', trigger_name)
 
                         if exists is False:
-                            raise Exception("Trigger '{}' doesn't exist in '{}.{}'".format(trigger_name, database_name, table_name))
+                            raise Exception("Trigger '{}' doesn't exist in '{}'".format(trigger_name, database_name))
 
                         break
 

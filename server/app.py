@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import uuid
 import datetime
@@ -34,7 +35,10 @@ jwt = JWTManager(app)
 # load mysql credentials
 credentials = {}
 api = {}
-with open('credentials.json') as file_open:
+
+credentials_path = "{}/credentials.json".format(sys._MEIPASS) if getattr(sys, 'frozen', False) else 'credentials.json'
+
+with open(credentials_path) as file_open:
     credentials = json.load(file_open)
     api = credentials['api']
     credentials = credentials['sql']

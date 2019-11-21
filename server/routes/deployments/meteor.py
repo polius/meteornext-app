@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import sys
+sys.path.append('apps/Meteor/app')
+
 import os
 import json
 import uuid
@@ -26,7 +29,7 @@ class Meteor:
         self._auxiliary = models.deployments.auxiliary.Auxiliary(credentials)
         self._slack = models.deployments.slack.Slack(credentials)
 
-        # Init Meteor Files
+        # Init Meteor Credentials
         self._query_execution = ''
         self._credentials = {}
 
@@ -38,7 +41,7 @@ class Meteor:
 
     def execute(self, deployment):
         # Generate Deployment Unique Identifier
-        self._uuid = uuid.uuid4()
+        self._uuid = str(uuid.uuid4())
 
         # Init Logs Settings
         self._logs = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])
@@ -219,7 +222,7 @@ class query_execution:
         execution_plan_factor = '--execution_plan_factor "{}"'.format(deployment['epf']) if deployment['epf'] > 0 else ''
 
         # Build Meteor Command
-        command = 'python {} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}" {}'.format(meteor_path, environment, execution_method, logs_path, query_execution_path, credentials_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor)
+        command = './{} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}" {}'.format(meteor_path, environment, execution_method, logs_path, query_execution_path, credentials_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor)
         print(command)
 
         # Execute Meteor

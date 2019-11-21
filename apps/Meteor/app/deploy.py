@@ -48,12 +48,20 @@ class deploy:
             self._logs.generate()
 
         # Import 'query_execution.py' file dynamically
-        self._query_execution = imp.load_source('query_execution', "{}query_execution.py".format(self._LOGS_PATH))
-        self._query_execution = self._query_execution.query_execution()
+        try:
+            self._query_execution = imp.load_source('query_execution', "{}query_execution.py".format(self._LOGS_PATH))
+            self._query_execution = self._query_execution.query_execution()
+        except Exception:
+            print("'query_execution.py' file not found")
+            sys.exit()
 
         # Load the 'credentials.json' file dynamically
-        credentials_location = '{}credentials.json'.format(self._LOGS_PATH)
-        self._credentials = self.__load_credentials(credentials_location)
+        try:
+            credentials_location = '{}credentials.json'.format(self._LOGS_PATH)
+            self._credentials = self.__load_credentials(credentials_location)
+        except Exception:
+            print("'credentials.json' file not found")
+            sys.exit()
 
         # Load the 'query_template.json' file dynamically
         query_template_location = '{}/query_template.json'.format(self._SCRIPT_PATH)
@@ -579,16 +587,17 @@ class deploy:
             raise
 
     def __show_execution_header(self, started_datetime, started_time):
-        # Show Header
-        self.__cls()
-        title = "‖  TEST EXECUTION                                                  ‖" if self._args.test else "‖  DEPLOYMENT                                                      ‖"
-        print(colored("+==================================================================+", "magenta", attrs=['bold']))
-        print(colored(title, "magenta", attrs=['bold']))
-        print(colored("+==================================================================+", "magenta", attrs=['bold']))
-        # Show Execution Status
-        if self._credentials['execution_mode']['parallel'] == 'True':
-            elapsed = str(timedelta(seconds=time.time() - started_time))
-            print(colored("> Started: ", 'magenta') + colored(started_datetime, attrs=['bold']) + colored(" > Elapsed: ", 'magenta') + colored(elapsed, attrs=['bold']))
+        if self._args.deployment_mode is None:
+            # Show Header
+            self.__cls()
+            title = "‖  TEST EXECUTION                                                  ‖" if self._args.test else "‖  DEPLOYMENT                                                      ‖"
+            print(colored("+==================================================================+", "magenta", attrs=['bold']))
+            print(colored(title, "magenta", attrs=['bold']))
+            print(colored("+==================================================================+", "magenta", attrs=['bold']))
+            # Show Execution Status
+            if self._credentials['execution_mode']['parallel'] == 'True':
+                elapsed = str(timedelta(seconds=time.time() - started_time))
+                print(colored("> Started: ", 'magenta') + colored(started_datetime, attrs=['bold']) + colored(" > Elapsed: ", 'magenta') + colored(elapsed, attrs=['bold']))
 
     def __start(self, environment_data=None):
         try:
@@ -651,7 +660,7 @@ class deploy:
 
                         # Calculate Progress
                         for r in range(len(progress_array)):
-                            raw_item = progress_array.pop(0).split('}')
+                            raw_item = progress_array.pop(0).decode('utf-8').split('}')
                             for i in raw_item:
                                 if len(i) > 1:  # Ignore: [u''] & [u'\n']
                                     item = json.loads(''.join(i + '}').encode('utf-8'))
@@ -1008,9 +1017,7 @@ class deploy:
             return environment_logs
 
         except Exception:
-            execution_log_merge['success'] = False
-            execution_log_merge['error'] = traceback.format_exc()
-            raise Exception(colored("--> Error Merging Logs:\n{}".format(execution_log_merge['error']), 'red'))
+            raise Exception(colored("--> Error Merging Logs:\n{}".format(traceback.format_exc()), 'red'))
 
     def clean(self, remote=True):
         print(colored("+==================================================================+", "magenta", attrs=['bold']))

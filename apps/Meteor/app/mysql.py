@@ -49,7 +49,7 @@ class mysql:
                         cursor.execute(query)
 
                     # Get the query results
-                    query_result = cursor.fetchall()
+                    query_result = cursor.fetchall() if not query.startswith('INSERT INTO') else cursor.lastrowid
 
                 # Commit the changes in the database
                 self._connection.commit()
