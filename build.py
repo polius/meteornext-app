@@ -10,7 +10,7 @@ from Cython.Build import cythonize
 
 if __name__ == '__main__':
     from build import build
-    build() 
+    build()
 
 class build:
     def __init__(self):
@@ -18,7 +18,7 @@ class build:
         
         if len(sys.argv) == 1:
             subprocess.call("python3 build.py build_ext server", shell=True)
-            subprocess.call("python3 build.py build_ext meteor", shell=True)
+            # subprocess.call("python3 build.py build_ext meteor", shell=True)
             # subprocess.call("python3 build.py build_ext client", shell=True)            
 
         elif 'server' in sys.argv:
@@ -41,7 +41,7 @@ class build:
     def __build_meteor(self):
         # Build Meteor Py
         build_path = "{}/apps/Meteor/app".format(self._pwd)
-        additional_files = []
+        additional_files = ['query_template.json']
         hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3']
         binary_name = 'meteor'
         self.__start(build_path, additional_files, hidden_imports, binary_name)

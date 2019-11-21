@@ -20,7 +20,7 @@ class deploy_environments:
         self._logger = logger
         self._args = args
         self._credentials = credentials
-        self._SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
+        self._SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__)) if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
         self._UUID = uuid
         self._ENV_NAME = ENV_NAME
         self._ENV_DATA = ENV_DATA
@@ -110,6 +110,10 @@ class deploy_environments:
         return True
 
     def generate_app_version(self):
+        if not sys.argv[0].endswith('.py'):
+            with open("{}/meteor".format(self._SCRIPT_PATH), 'rb') as file_content:
+                return hashlib.sha512(file_content.read()).hexdigest()
+
         version = ''
         files = os.listdir(self._SCRIPT_PATH)
         for f in files:
@@ -126,7 +130,11 @@ class deploy_environments:
 
         if output:
             print('- Creating Deploy...')
-        self.__local('rm -rf "{0}" && tar -czvf "{0}" . --exclude "logs" --exclude "*.git*" --exclude "*.pyc" --exclude "web" --exclude "credentials.json" --exclude "query_execution.py"'.format(self._COMPRESSED_FILE_NAME), show_output=False)
+        
+        if sys.argv[0].endswith('.py'):
+            self.__local('rm -rf "{0}" && tar -czvf "{0}" . --exclude "logs" --exclude "*.git*" --exclude "*.pyc" --exclude "web" --exclude "credentials.json" --exclude "query_execution.py"'.format(self._COMPRESSED_FILE_NAME), show_output=False)
+        else:
+            self.__local('rm -rf "{0}" && tar -czvf "{0}" meteor"'.format(self._COMPRESSED_FILE_NAME), show_output=False)
 
         if output:
             print('- Uploading Deploy...')
@@ -138,7 +146,9 @@ class deploy_environments:
 
         if output:
             print("- Installing Requirements...")
-        self.__ssh('pip install -r {}meteor/requirements.txt --user'.format(self._ENV_DATA['ssh']['deploy_path']))
+
+        if sys.argv[0].endswith('.py'):
+            self.__ssh('pip install -r {}meteor/requirements.txt --user'.format(self._ENV_DATA['ssh']['deploy_path']))
 
     def setup(self, output=True):
         if output:
@@ -146,11 +156,12 @@ class deploy_environments:
 
         logs_path = "{}logs/{}/".format(self._DEPLOY_PATH, self._UUID)
         self.__ssh('mkdir -p {}'.format(logs_path))
+        # TO REVIEW: Binary Mode
         self.__put(self._SCRIPT_PATH + '/credentials.json', logs_path + 'credentials.json')
         self.__put(self._SCRIPT_PATH + '/query_execution.py', logs_path + 'query_execution.py')
 
     def start(self, shared_array=None, progress_array=None):
-        try:
+        try:           
             # Get Execution Plan Factor
             execution_plan_factor = '--execution_plan_factor "{}"'.format(self._args.execution_plan_factor) if self._args.execution_plan_factor is not None else ''
 
@@ -160,15 +171,16 @@ class deploy_environments:
                 if self._ENV_DATA['ssh']['enabled'] == 'True':
                     # Start the Execution
                     if self._args.env_start_deploy:
-                        deploy = self.__ssh('cd "{0}" && python -u meteor.py --environment "{1}" {2} --env_id "{3}" --env_start_deploy {4} --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
+                        deploy = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_start_deploy {4} --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
                     else:
-                        deploy = self.__ssh('cd "{0}" && python -u meteor.py --environment "{1}" {2} --env_id "{3}" {4} --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
+                        deploy = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" {4} --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
                 # Local Execution
                 else:
+                    binary_name = '{}/meteor'.format(self._SCRIPT_PATH)
                     if self._args.env_start_deploy:
-                        deploy = self.__local('python -u {0}/meteor.py --environment "{1}" {2} --env_id "{3}" --env_start_deploy --logs_path "{4}" {5} --uuid "{6}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
+                        deploy = self.__local('{0} --environment "{1}" {2} --env_id "{3}" --env_start_deploy --logs_path "{4}" {5} --uuid "{6}"'.format(binary_name, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
                     else:
-                        deploy = self.__local('python -u {0}/meteor.py --environment "{1}" {2} --env_id "{3}" --logs_path "{4}" {5} --uuid "{6}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
+                        deploy = self.__local('{0} --environment "{1}" {2} --env_id "{3}" --logs_path "{4}" {5} --uuid "{6}"'.format(binary_name, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
 
                 # Check for Execution Error
                 if len(deploy['stderr']) > 0:
@@ -212,7 +224,7 @@ class deploy_environments:
 
     def compress_logs(self, shared_array=None):
         try:
-            output = self.__ssh('cd "{0}" && python meteor.py --environment "{1}" {2} --env_id "{3}" --env_compress --uuid "{4}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._UUID))
+            output = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_compress --uuid "{4}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._UUID))
 
             if len(output['stderr']) > 0:
                 shared_array.append(output['stderr'])
@@ -318,10 +330,10 @@ class deploy_environments:
     def __check_sql_connection_logic(self, sql, output, shared_array=None):
         try:
             if self._ENV_DATA['ssh']['enabled'] == 'True':
-                command = 'cd "{0}" && python meteor.py --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], sql['name'], self._UUID)
+                command = 'cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], sql['name'], self._UUID)
                 result = self.__ssh(command)['stdout']
             else:
-                result = self.__local('cd "{0}" && python meteor.py --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --logs_path "{5}" --uuid "{6}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], sql['name'], self._args.logs_path, self._UUID), show_output=False)['stdout']
+                result = self.__local('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --logs_path "{5}" --uuid "{6}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], sql['name'], self._args.logs_path, self._UUID), show_output=False)['stdout']
             
             if len(result) == 0:
                 if output:

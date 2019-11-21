@@ -213,7 +213,8 @@ class query_execution:
 
     def __execute(self, deployment):
         # Build Meteor Parameters
-        meteor_path = "{}/apps/Meteor/app/meteor.py".format(self._base_path)
+        # meteor_path = "{}/apps/Meteor/app/meteor.py".format(self._base_path)
+        meteor_path = "{}/meteor".format(os.path.dirname(sys.executable))
         environment = deployment['environment']
         execution_method = 'validate all' if deployment['method'].lower() == 'validate' else deployment['method'].lower()
         logs_path = "{}{}".format(self._logs['local']['path'], self._uuid)
@@ -222,7 +223,7 @@ class query_execution:
         execution_plan_factor = '--execution_plan_factor "{}"'.format(deployment['epf']) if deployment['epf'] > 0 else ''
 
         # Build Meteor Command
-        command = './{} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}" {}'.format(meteor_path, environment, execution_method, logs_path, query_execution_path, credentials_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor)
+        command = '{} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}" {}'.format(meteor_path, environment, execution_method, logs_path, query_execution_path, credentials_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor)
         print(command)
 
         # Execute Meteor

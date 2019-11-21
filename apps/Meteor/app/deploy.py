@@ -64,7 +64,8 @@ class deploy:
             sys.exit()
 
         # Load the 'query_template.json' file dynamically
-        query_template_location = '{}/query_template.json'.format(self._SCRIPT_PATH)
+        query_template_prefix = os.path.dirname(sys.executable) if sys.argv[0].endswith('.py') else self._SCRIPT_PATH
+        query_template_location = '{}/query_template.json'.format(query_template_prefix)
         self._query_template = self.__load_query_template(query_template_location)
 
         # Store the 'Environment Name', 'Environment Data' and the list of SQL Servers that is going to perform the deploy
