@@ -1,4 +1,4 @@
-# python3 build.py build_ext
+# python3 build.py
 import os
 import sys
 import shutil
@@ -15,34 +15,42 @@ if __name__ == '__main__':
 class build:
     def __init__(self):
         self._pwd = os.path.dirname(os.path.realpath(__file__))
-        self.__build_server()
-        self.__build_client()
+        
+        if len(sys.argv) == 1:
+            subprocess.call("python3 build.py build_ext server", shell=True)
+            subprocess.call("python3 build.py build_ext meteor", shell=True)
+            # subprocess.call("python3 build.py build_ext client", shell=True)            
 
-    ##########
-    # CLIENT #
-    ##########
-    def __build_client(self):
-        pass
+        elif 'server' in sys.argv:
+            sys.argv.remove("server")
+            self.__build_server()
+        elif 'meteor' in sys.argv:
+            sys.argv.remove("meteor")
+            self.__build_meteor()
+        elif 'client' in sys.argv:
+            subprocess.call("cd client; npm run build", shell=True)
 
-    ##########
-    # SERVER #
-    ##########
     def __build_server(self):
+        # Build Meteor Next Server
+        build_path = "{}/server".format(self._pwd)
+        additional_files = ['credentials.json']
+        hidden_imports = ['json','_cffi_backend','bcrypt','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3']
+        binary_name = 'server'
+        self.__start(build_path, additional_files, hidden_imports, binary_name)
+
+    def __build_meteor(self):
         # Build Meteor Py
         build_path = "{}/apps/Meteor/app".format(self._pwd)
         additional_files = []
         hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3']
         binary_name = 'meteor'
-        self.__build_server_start(build_path, additional_files, hidden_imports, binary_name)
+        self.__start(build_path, additional_files, hidden_imports, binary_name)
 
-        # Build Meteor Next Server
-        # build_path = "{}/server".format(self._pwd)
-        # additional_files = ['credentials.json']
-        # hidden_imports = ['json','_cffi_backend','bcrypt','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3']
-        # binary_name = 'server'
-        # self.__build_server_start(build_path, additional_files, hidden_imports, binary_name)
 
-    def __build_server_start(self, build_path, additional_files, hidden_imports, binary_name):
+    ####################
+    # INTERNAL METHODS #
+    ####################
+    def __start(self, build_path, additional_files, hidden_imports, binary_name):
         shutil.rmtree("{}/build".format(build_path), ignore_errors=True)
         shutil.copytree(build_path, "{}/build".format(build_path))
         shutil.rmtree("{}/logs".format(build_path), ignore_errors=True)
@@ -53,12 +61,12 @@ class build:
 
         # Start building process
         try:
-            self.__build_server_compile(build_path, binary_name)
-            self.__build_server_pack(build_path, additional_files, hidden_imports, binary_name)
+            self.__compile(build_path, binary_name)
+            self.__pack(build_path, additional_files, hidden_imports, binary_name)
         finally:
-            self.__build_server_clean(build_path)
+            self.__clean(build_path)
 
-    def __build_server_compile(self, build_path, binary_name):
+    def __compile(self, build_path, binary_name):
         # Build ext_modules
         ext_modules = []
         for root, dirs, files in os.walk("{}/build".format(build_path)):
@@ -81,7 +89,7 @@ class build:
             )
         )
 
-    def __build_server_pack(self, build_path, additional_files, hidden_imports, binary_name):
+    def __pack(self, build_path, additional_files, hidden_imports, binary_name):
         # 4) Get the cythonized directory path
         files = os.listdir("{}/build".format(self._pwd))
         for f in files:
@@ -130,11 +138,18 @@ class build:
         command += ' --onefile "{}/init.py"'.format(cythonized)
 
         # 11) Pack cythonized project using pyinstaller
-        subprocess.call(command, stdout=open('/dev/null', 'w'), shell=True)
+        subprocess.call(command, shell=True)
 
         # 12) Rename pyinstaller file
         os.rename('{}/dist/init'.format(self._pwd), '{}/dist/{}'.format(self._pwd, binary_name))
 
-    def __build_server_clean(self, build_path):
-        shutil.rmtree("{}/build".format(build_path))
-        shutil.rmtree("{}/build".format(self._pwd))
+    def __clean(self, build_path):
+        shutil.rmtree("{}/build".format(build_path), ignore_errors=True)
+        shutil.rmtree("{}/build".format(self._pwd), ignore_errors=True)
+
+        # Delete compiled path
+        compile_path = build_path[len(self._pwd)+1:]
+        if compile_path.find('/') == -1:
+            shutil.rmtree("{}/{}".format(build_path, compile_path), ignore_errors=True)
+        else:
+            shutil.rmtree("{}/{}".format(build_path, compile_path[:compile_path.find('/')+1]), ignore_errors=True)
