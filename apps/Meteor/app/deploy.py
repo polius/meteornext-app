@@ -661,10 +661,16 @@ class deploy:
 
                         # Calculate Progress
                         for r in range(len(progress_array)):
-                            raw_item = progress_array.pop(0).decode('utf-8').split('}')
+                            pop = progress_array.pop(0)
+                            try:
+                                raw_item = pop.decode('utf-8').split('}')
+                            except:
+                                raw_item = pop.split('}')
+
                             for i in raw_item:
                                 if len(i) > 1:  # Ignore: [u''] & [u'\n']
-                                    item = json.loads(''.join(i + '}').encode('utf-8'))
+                                    item = json.loads(''.join(i + '}'))
+                                    print(item)
                                     if 'e' in item:
                                         execution_status = 0
                                         if item['s'] not in progress[item['r']]:
@@ -684,9 +690,9 @@ class deploy:
 
                         for r in self._ENV_DATA[self._ENV_NAME]:
                             environment_type = '[LOCAL]' if r['ssh']['enabled'] == 'False' else '[SSH]  '
-                            region_total_databases = sum([int(rp['t']) for rp in progress[r['region']].values()])
-                            region_databases = sum([int(rp['d']) for rp in progress[r['region']].values()])
-
+                            # FIX
+                            region_total_databases = sum([int(rp['t']) if 't' in rp else 0 for rp in progress[r['region']].values()])
+                            region_databases = sum([int(rp['d']) if 'd' in rp else 0 for rp in progress[r['region']].values()])
                             overall_progress = 0 if region_total_databases == 0 else float(region_databases) / float(region_total_databases) * 100
                             color = 'green' if overall_progress == 100 else 'yellow'
                             print(colored("--> {} Region '{}': {:.2f}% ({}/{} DBs)".format(environment_type, r['region'], overall_progress, region_databases, region_total_databases), color))

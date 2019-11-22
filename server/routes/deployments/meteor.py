@@ -186,9 +186,7 @@ class Meteor:
         for i, q in enumerate(json.loads(deployment['queries'])):
             queries[str(i+1)] = q['query']
 
-        self._query_execution = """#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-import fnmatch
+        self._query_execution = """import fnmatch
 class query_execution:
     def __init__(self, query_instance=None):
         self._meteor = query_instance
@@ -197,7 +195,7 @@ class query_execution:
     def before(self, environment, region):
         pass
     def main(self, environment, region, server, database):
-        if len(fnmatch.filter([database], '{}')) > 0:
+        if len(fnmatch.filter([database.decode('utf-8')], '{}')) > 0:
             for i in self._queries.keys():
                 self._meteor.execute(query=self._queries[str(i)], database=database)
     def after(self, environment, region):

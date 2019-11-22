@@ -199,6 +199,7 @@ class deploy_queries:
             if (log['meteor_status'] == '0'):
                 # Log Query Error in Parallel
                 if self._credentials['execution_mode']['parallel'] == 'True':
+                    # !!! Add 'd' and 't' ???
                     print('{{"r":"{}","s":"{}","e":"{}"}}'.format(region, server['name'], log['meteor_response']))
                 break
 

@@ -203,15 +203,15 @@ class deploy_environments:
                 if self._ENV_DATA['ssh']['enabled'] == 'True':
                     # Start the Execution
                     if self._args.env_start_deploy:
-                        stderr = self.__ssh('cd "{0}" && python meteor.py --environment "{1}" {2} --env_id "{3}" --env_start_deploy --uuid "{4}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._UUID), show_output=True)['stderr']
+                        stderr = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_start_deploy --uuid "{4}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._UUID), show_output=True)['stderr']
                     else:
-                        stderr = self.__ssh('cd "{0}" && python meteor.py --environment "{1}" {2} --env_id "{3}" --uuid "{4}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._UUID), show_output=True)['stderr']
+                        stderr = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --uuid "{4}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._UUID), show_output=True)['stderr']
                 # Local Execution
                 else:
                     if self._args.env_start_deploy:
-                        stderr = self.__local('python {0}/meteor.py --environment "{1}" {2} --env_id "{3}" --env_start_deploy --logs_path "{4}" --uuid "{5}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, self._UUID), show_output=True)['stderr']
+                        stderr = self.__local('{0}/meteor --environment "{1}" {2} --env_id "{3}" --env_start_deploy --logs_path "{4}" --uuid "{5}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, self._UUID), show_output=True)['stderr']
                     else:
-                        stderr = self.__local('python {0}/meteor.py --environment "{1}" {2} --env_id "{3}" --logs_path "{4}" --uuid "{5}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, self._UUID), show_output=True)['stderr']
+                        stderr = self.__local('{0}/meteor --environment "{1}" {2} --env_id "{3}" --logs_path "{4}" --uuid "{5}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, self._UUID), show_output=True)['stderr']
 
                 # Check for Execution Error
                 if len(stderr) > 0:
