@@ -17,8 +17,8 @@ class build:
         self._pwd = os.path.dirname(os.path.realpath(__file__))
         
         if len(sys.argv) == 1:
-            subprocess.call("python3 build.py build_ext server", shell=True)
-            # subprocess.call("python3 build.py build_ext meteor", shell=True)
+            # subprocess.call("python3 build.py build_ext server", shell=True)
+            subprocess.call("python3 build.py build_ext meteor", shell=True)
             # subprocess.call("python3 build.py build_ext client", shell=True)            
 
         elif 'server' in sys.argv:
@@ -46,14 +46,12 @@ class build:
         binary_name = 'meteor'
         self.__start(build_path, additional_files, hidden_imports, binary_name)
 
-
     ####################
     # INTERNAL METHODS #
     ####################
     def __start(self, build_path, additional_files, hidden_imports, binary_name):
-        shutil.rmtree("{}/build".format(build_path), ignore_errors=True)
+        self.__clean(build_path)
         shutil.copytree(build_path, "{}/build".format(build_path))
-        shutil.rmtree("{}/logs".format(build_path), ignore_errors=True)
 
         for root, dirs, files in os.walk("{}/build".format(build_path)):
             if '__pycache__' in dirs:
@@ -146,6 +144,7 @@ class build:
     def __clean(self, build_path):
         shutil.rmtree("{}/build".format(build_path), ignore_errors=True)
         shutil.rmtree("{}/build".format(self._pwd), ignore_errors=True)
+        shutil.rmtree("{}/logs".format(build_path), ignore_errors=True)
 
         # Delete compiled path
         compile_path = build_path[len(self._pwd)+1:]

@@ -684,8 +684,8 @@
           for (let [key2, value2] of Object.entries(this.deployment['progress']['execution'][key])) {
             overall_progress[[i]]['d'] += value2['d']
             overall_progress[[i]]['t'] += value2['t']
-
             var progress = value2['p'] + '% (' + value2['d'] + '/' + value2['t'] + ' DBs)'
+
             if (j+1 >= this.execution_data.length) this.execution_data.push({[[i]]: {"server": key2, "progress": progress}})
             else this.execution_data[j+1][i] = {"server": key2, "progress": progress}
             j = j+1

@@ -40,11 +40,12 @@ class progress:
             self._progress['syntax'].append(value)
             self.__store()
 
-    def track_validation(self, region, value):
+    def track_validation(self, region, value=None):
         if self.__enabled():
             if 'validation' not in self._progress:
-                self._progress['validation'] = {}
-            self._progress['validation'][region] = value
+                self._progress['validation'] = region
+            else:
+                self._progress['validation'][region] = value
             self.__store()
     
     def track_execution(self, value):

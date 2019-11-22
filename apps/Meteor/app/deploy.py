@@ -510,7 +510,12 @@ class deploy:
 
                     processes = []
                     try:
+                        validation_process = {}
                         for region in self._credentials['environments'][environment]:
+                            validation_process[region['region']] = {}
+                        self._progress.track_validation(region=validation_process)
+
+                        for region in self._credentials['environments'][environment]:    
                             environment_type = '[LOCAL]' if region['ssh']['enabled'] == 'False' else '[SSH]  '
                             deploy_env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, environment, region)
                             p = multiprocessing.Process(target=deploy_env.validate, args=(False, shared_array,))
@@ -588,17 +593,16 @@ class deploy:
             raise
 
     def __show_execution_header(self, started_datetime, started_time):
-        if self._args.deployment_mode is None:
-            # Show Header
-            self.__cls()
-            title = "‖  TEST EXECUTION                                                  ‖" if self._args.test else "‖  DEPLOYMENT                                                      ‖"
-            print(colored("+==================================================================+", "magenta", attrs=['bold']))
-            print(colored(title, "magenta", attrs=['bold']))
-            print(colored("+==================================================================+", "magenta", attrs=['bold']))
-            # Show Execution Status
-            if self._credentials['execution_mode']['parallel'] == 'True':
-                elapsed = str(timedelta(seconds=time.time() - started_time))
-                print(colored("> Started: ", 'magenta') + colored(started_datetime, attrs=['bold']) + colored(" > Elapsed: ", 'magenta') + colored(elapsed, attrs=['bold']))
+        # Show Header
+        self.__cls()
+        title = "‖  TEST EXECUTION                                                  ‖" if self._args.test else "‖  DEPLOYMENT                                                      ‖"
+        print(colored("+==================================================================+", "magenta", attrs=['bold']))
+        print(colored(title, "magenta", attrs=['bold']))
+        print(colored("+==================================================================+", "magenta", attrs=['bold']))
+        # Show Execution Status
+        if self._credentials['execution_mode']['parallel'] == 'True':
+            elapsed = str(timedelta(seconds=time.time() - started_time))
+            print(colored("> Started: ", 'magenta') + colored(started_datetime, attrs=['bold']) + colored(" > Elapsed: ", 'magenta') + colored(elapsed, attrs=['bold']))
 
     def __start(self, environment_data=None):
         try:
@@ -648,6 +652,7 @@ class deploy:
                     # Track Progress
                     tracking = True
                     while tracking:
+                        track_progress = True
                         # Check if all processes have finished
                         if all(not p.is_alive() for p in processes):
                             tracking = False
@@ -670,11 +675,11 @@ class deploy:
                             for i in raw_item:
                                 if len(i) > 1:  # Ignore: [u''] & [u'\n']
                                     item = json.loads(''.join(i + '}'))
-                                    print(item)
                                     if 'e' in item:
                                         execution_status = 0
                                         if item['s'] not in progress[item['r']]:
                                             progress[item['r']][item['s']] = { "e": item['e'] }
+                                            track_progress = False
                                         else:
                                             progress[item['r']][item['s']]['e'] = item['e']
                                     else:
@@ -697,7 +702,8 @@ class deploy:
                             color = 'green' if overall_progress == 100 else 'yellow'
                             print(colored("--> {} Region '{}': {:.2f}% ({}/{} DBs)".format(environment_type, r['region'], overall_progress, region_databases, region_total_databases), color))
 
-                        self._progress.track_execution(value=progress)
+                        if track_progress:
+                            self._progress.track_execution(value=progress)
                         time.sleep(1)
 
                     # Ensure all processes have finished before proceeding forward
