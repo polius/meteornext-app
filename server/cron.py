@@ -18,7 +18,9 @@ class Cron:
         # schedule.every().minute.at(":20").do(self.__logs, credentials['path'])
 
         # Start Cron Listener
-        threading.Thread(target=self.__run_schedule).start()
+        t = threading.Thread(target=self.__run_schedule)
+        t.daemon = True
+        t.start()
 
     def __run_schedule(self):
         while True:

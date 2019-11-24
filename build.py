@@ -17,8 +17,8 @@ class build:
         self._pwd = os.path.dirname(os.path.realpath(__file__))
         
         if len(sys.argv) == 1:
-            # subprocess.call("python3 build.py build_ext server", shell=True)
-            subprocess.call("python3 build.py build_ext meteor", shell=True)
+            subprocess.call("python3 build.py build_ext server", shell=True)
+            # subprocess.call("python3 build.py build_ext meteor", shell=True)
             # subprocess.call("python3 build.py build_ext client", shell=True)            
 
         elif 'server' in sys.argv:
@@ -41,7 +41,7 @@ class build:
     def __build_meteor(self):
         # Build Meteor Py
         build_path = "{}/apps/Meteor/app".format(self._pwd)
-        additional_files = ['query_template.json']
+        additional_files = ['query_template.json', 'query_execution.py']
         hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3']
         binary_name = 'meteor'
         self.__start(build_path, additional_files, hidden_imports, binary_name)
@@ -104,7 +104,27 @@ class build:
         init_file = "{}/init.py".format(cythonized)
         with open(init_file, 'w') as file_open:
             if binary_name == 'server':
-                file_open.write("from app import app")
+                file_open.write("""# -*- coding: utf-8 -*-
+from gunicorn.app.base import Application, Config
+import gunicorn
+from gunicorn import glogging
+from gunicorn.workers import sync
+from app import app
+
+class GUnicornFlaskApplication(Application):
+    def __init__(self, app):
+        self.usage, self.callable, self.prog, self.app = None, None, None, app
+
+    def run(self, **options):
+        self.cfg = Config()
+        [self.cfg.set(key, value) for key, value in options.items()]
+        return Application.run(self)
+
+    load = lambda self:self.app
+
+if __name__ == "__main__":
+    gunicorn_app = GUnicornFlaskApplication(app)
+    gunicorn_app.run(worker_class="gunicorn.workers.sync.SyncWorker", bind="0.0.0.0:5000")""")
             else:
                 file_open.write("from {0} import {0}\n{0}()".format(binary_name))
 
@@ -126,7 +146,7 @@ class build:
             os.mkdir('{}/dist'.format(self._pwd))
 
         # 10) Build pyinstaller command
-        command = "cd '{}'; pyinstaller --distpath '{}/dist'".format(cythonized, self._pwd)
+        command = "cd '{}'; pyinstaller --clean --distpath '{}/dist'".format(cythonized, self._pwd)
         for i in hidden_imports:
             command += " --hidden-import={}".format(i)
         for b in binaries:

@@ -52,7 +52,7 @@ class query_execution:
 
     def __dict2str(self, data):
         # Convert a dictionary to a string
-        return json.dumps(data, separators=(',', ':'))
+        return json.dumps(data, separators=(',', ':')).encode('unicode_escape').replace("'","\\'")
 
     #################
     # DO NOT CHANGE #

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import sys
 import json
@@ -84,8 +85,8 @@ if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") != "true":
     Cron(credentials)
 
 # DEBUG
-# if __name__ == '__main__':
-#     app.run(host=api['host'], port=api['port'])
+if __name__ == '__main__':
+    app.run(host=api['host'], port=api['port'])
 
 # PROD
-app.run(host=api['host'], port=api['port'], debug=False)
+# app.run(host=api['host'], port=api['port'], debug=False)
