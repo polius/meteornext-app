@@ -1,20 +1,16 @@
-import os
 import json
 import time
 import shutil
 import schedule
 import threading
 
-import models.mysql
-
-# https://pypi.org/project/schedule/
 class Cron:
-    def __init__(self, credentials):
+    def __init__(self, sql):
         print("[CRON] Starting...")
-        self._mysql = models.mysql.mysql(credentials)
+        self._sql = sql
         # Init Crons
         schedule.every().day.at("00:00").do(self.__coins)
-        schedule.every().day.at("00:00").do(self.__logs, credentials['path'])
+        schedule.every().day.at("00:00").do(self.__logs)
         # schedule.every().minute.at(":20").do(self.__logs, credentials['path'])
 
         # Start Cron Listener
@@ -34,12 +30,12 @@ class Cron:
             JOIN groups g ON g.id = u.group_id
             SET u.coins = IF (u.coins + g.coins_day > coins_max, coins_max, u.coins + g.coins_day);
         """
-        self._mysql.execute(query)
+        self._sql.execute(query)
 
-    def __logs(self, path):
+    def __logs(self):
         print("[CRON] Cleaning logs...")
         # Get expiration value
-        setting = self._mysql.execute("SELECT value FROM settings WHERE name = 'LOGS'")
+        setting = self._sql.execute("SELECT value FROM settings WHERE name = 'LOGS'")
 
         # Check expiration is active
         if len(setting) > 0:
@@ -56,11 +52,11 @@ class Cron:
                     WHERE DATE_ADD(DATE(created), INTERVAL {0} DAY) <= CURRENT_DATE
                     AND expired = 0
                 """.format(int(setting['local']['expire']))
-                expired = self._mysql.execute(query)
+                expired = self._sql.execute(query)
 
                 # Expire deployments
                 for i in expired:
                     # DISK
-                    shutil.rmtree('{}/logs/{}'.format(path, i['uri']), ignore_errors=True)
+                    shutil.rmtree('{}/{}'.format(setting['local']['path'], i['uri']), ignore_errors=True)
                     # SQL
-                    self._mysql.execute("UPDATE deployments_{} SET expired = 1 WHERE id = {}".format(i['mode'], i['id']))
+                    self._sql.execute("UPDATE deployments_{} SET expired = 1 WHERE id = {}".format(i['mode'], i['id']))

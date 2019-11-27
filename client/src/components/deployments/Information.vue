@@ -367,7 +367,7 @@
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 style="padding-bottom:10px">
-                <v-btn ref="results_url" block text :href="url + `:8080/results/` + deployment['uri']" target="_blank" class="text-lowercase title font-weight-light" style="margin-top:25px;">{{ url + `:8080/results/` + deployment['uri'] }}</v-btn>
+                <v-btn ref="results_url" block text :href="`http://` + url + `/results/` + deployment['uri']" target="_blank" class="text-lowercase title font-weight-light" style="margin-top:25px;">{{ url + `/results/` + deployment['uri'] }}</v-btn>
               </v-flex>
             </v-layout>
           </v-container>
@@ -529,15 +529,14 @@
       snackbar: false,
       snackbarTimeout: Number(3000),
       snackbarText: '',
-      snackbarColor: ''
+      snackbarColor: '',
+
+      url: window.location.host 
     }),
     props: ['executionID', 'deploymentMode'],
     components: { 
       codemirror,
       results: Results
-    },
-    computed : {
-      url : function() { return this.$store.getters.url.substring(0, this.$store.getters.url.lastIndexOf(":")) }
     },
     created() {
       if (typeof this.executionID === "undefined") this.$router.go(-1)

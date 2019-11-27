@@ -5,10 +5,10 @@ import models.admin.users
 import models.deployments.slack
 
 class Slack:
-    def __init__(self, credentials):
+    def __init__(self, sql):
         # Init models
-        self._users = models.admin.users.Users(credentials)
-        self._slack = models.deployments.slack.Slack(credentials)
+        self._users = models.admin.users.Users(sql)
+        self._slack = models.deployments.slack.Slack(sql)
 
     def blueprint(self):
         # Init blueprint

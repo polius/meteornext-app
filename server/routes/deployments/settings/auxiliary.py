@@ -5,10 +5,10 @@ import models.admin.users
 import models.deployments.auxiliary
 
 class Auxiliary:
-    def __init__(self, credentials):
+    def __init__(self, sql):
         # Init models
-        self._users = models.admin.users.Users(credentials)
-        self._auxiliary = models.deployments.auxiliary.Auxiliary(credentials)
+        self._users = models.admin.users.Users(sql)
+        self._auxiliary = models.deployments.auxiliary.Auxiliary(sql)
 
     def blueprint(self):
         # Init blueprint

@@ -157,7 +157,7 @@ export default {
       // Disable the fields while updating fields to the DB
       this.loading = true
       // Parse local absolute path
-      this.logs.local.path = (this.logs.local.path.endsWith('/')) ? this.logs.local.path : this.logs.local.path + '/'
+      this.logs.local.path = (this.logs.local.path.endsWith('/')) ? this.logs.local.path.slice(0, -1) : this.logs.local.path
       // Parse local expiration
       if (!this.logs_expire) delete this.logs.local.expire
       // Parse amazon_s3 enable

@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import models.mysql
 
 class Slack:
-    def __init__(self, credentials):
-        self._mysql = models.mysql.mysql(credentials)
+    def __init__(self, sql):
+        self._sql = sql
 
     def get(self, group_id):
         query = """
@@ -12,14 +11,14 @@ class Slack:
             FROM slack
             WHERE group_id = %s
         """
-        return self._mysql.execute(query, (group_id))
+        return self._sql.execute(query, (group_id))
 
     def post(self, group_id, slack):
         query = """
             INSERT INTO slack (webhook, enabled, group_id)             
             VALUES (%s, %s, %s)
         """
-        self._mysql.execute(query, (slack['webhook'], slack['enabled'], group_id))
+        self._sql.execute(query, (slack['webhook'], slack['enabled'], group_id))
 
     def put(self, group_id, slack):
         query = """
@@ -28,10 +27,10 @@ class Slack:
                 enabled = %s
             WHERE group_id = %s
         """
-        self._mysql.execute(query, (slack['webhook'], slack['enabled'], group_id))
+        self._sql.execute(query, (slack['webhook'], slack['enabled'], group_id))
     
     def delete(self, group_id):
-       self._mysql.execute("DELETE FROM slack WHERE group_id = %s", (group_id))
+       self._sql.execute("DELETE FROM slack WHERE group_id = %s", (group_id))
 
     def exist(self, group_id):
         query = """
@@ -41,4 +40,4 @@ class Slack:
                 WHERE group_id = %s
             ) AS exist
         """
-        return self._mysql.execute(query, (group_id))[0]['exist'] == 1
+        return self._sql.execute(query, (group_id))[0]['exist'] == 1

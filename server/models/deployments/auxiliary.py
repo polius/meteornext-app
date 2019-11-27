@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import models.mysql
 
 class Auxiliary:
-    def __init__(self, credentials):
-        self._mysql = models.mysql.mysql(credentials)
+    def __init__(self, sql):
+        self._sql = sql
 
     def get(self, group_id):
         query = """
@@ -12,14 +11,14 @@ class Auxiliary:
             FROM auxiliary
             WHERE group_id = %s
         """
-        return self._mysql.execute(query, (group_id))
+        return self._sql.execute(query, (group_id))
 
     def post(self, group_id, auxiliary):
         query = """
             INSERT INTO auxiliary (name, group_id, hostname, username, password)             
             VALUES (%s, %s, %s, %s, %s)
         """
-        self._mysql.execute(query, (auxiliary['name'], group_id, auxiliary['hostname'], auxiliary['username'], auxiliary['password']))
+        self._sql.execute(query, (auxiliary['name'], group_id, auxiliary['hostname'], auxiliary['username'], auxiliary['password']))
 
     def put(self, group_id, auxiliary):
         query = """
@@ -31,7 +30,7 @@ class Auxiliary:
             WHERE id = %s
             AND group_id = %s
         """
-        self._mysql.execute(query, (auxiliary['name'], auxiliary['hostname'], auxiliary['username'], auxiliary['password'], auxiliary['id'], group_id))
+        self._sql.execute(query, (auxiliary['name'], auxiliary['hostname'], auxiliary['username'], auxiliary['password'], auxiliary['id'], group_id))
 
     def delete(self, group_id, auxiliary_connection):
         query = """
@@ -39,14 +38,14 @@ class Auxiliary:
             WHERE name = %s
             AND group_id = %s
         """
-        self._mysql.execute(query, (auxiliary_connection['name'], group_id))
+        self._sql.execute(query, (auxiliary_connection['name'], group_id))
 
     def remove(self, group_id):
         query = """
             DELETE FROM auxiliary
             WHERE group_id = %s
         """
-        self._mysql.execute(query, (group_id))
+        self._sql.execute(query, (group_id))
 
     def exist(self, group_id, auxiliary):
         if 'id' in auxiliary:
@@ -59,7 +58,7 @@ class Auxiliary:
                     AND id != %s
                 ) AS exist
             """
-            return self._mysql.execute(query, (auxiliary['name'], group_id, auxiliary['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (auxiliary['name'], group_id, auxiliary['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -69,4 +68,4 @@ class Auxiliary:
                     AND group_id = %s
                 ) AS exist
             """
-            return self._mysql.execute(query, (auxiliary['name'], group_id))[0]['exist'] == 1
+            return self._sql.execute(query, (auxiliary['name'], group_id))[0]['exist'] == 1

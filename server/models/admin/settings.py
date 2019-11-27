@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import models.mysql
 
 class Settings:
-    def __init__(self, credentials):
-        self._mysql = models.mysql.mysql(credentials)
+    def __init__(self, sql):
+        self._sql = sql
 
     def get(self, setting_name=None):
         if setting_name:
@@ -13,13 +12,13 @@ class Settings:
                 FROM settings
                 WHERE name = %s
             """
-            return self._mysql.execute(query, (setting_name))
+            return self._sql.execute(query, (setting_name))
         else:
             query = """
                 SELECT name, value
                 FROM settings
             """
-            return self._mysql.execute(query)
+            return self._sql.execute(query)
 
     def post(self, settings):
         query = """
@@ -27,4 +26,4 @@ class Settings:
             VALUES (%s, %s)
             ON DUPLICATE KEY UPDATE value = VALUES(value)
         """
-        self._mysql.execute(query, (settings['name'], settings['value']))
+        self._sql.execute(query, (settings['name'], settings['value']))

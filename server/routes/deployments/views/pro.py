@@ -1,4 +1,5 @@
 import os
+import sys
 import signal
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
@@ -10,17 +11,15 @@ import models.deployments.deployments_pro
 import routes.deployments.meteor
 
 class Pro:
-    def __init__(self, credentials):
-        self._credentials = credentials
-
+    def __init__(self, sql):
         # Init models
-        self._users = models.admin.users.Users(credentials)
-        self._groups = models.admin.groups.Groups(credentials)
-        self._deployments = models.deployments.deployments.Deployments(credentials)
-        self._deployments_pro = models.deployments.deployments_pro.Deployments_Pro(credentials)
+        self._users = models.admin.users.Users(sql)
+        self._groups = models.admin.groups.Groups(sql)
+        self._deployments = models.deployments.deployments.Deployments(sql)
+        self._deployments_pro = models.deployments.deployments_pro.Deployments_Pro(sql)
 
         # Init meteor
-        self._meteor = routes.deployments.meteor.Meteor(credentials)
+        self._meteor = routes.deployments.meteor.Meteor(sql)
 
     def blueprint(self):
         # Init blueprint
@@ -57,7 +56,8 @@ class Pro:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Retrieve code
-            with open('{}/../apps/Meteor/app/query_execution.py'.format(self._credentials['path'])) as file_open:
+            code_path = os.path.dirname(os.path.realpath(__file__))
+            with open('{}/routes/deployments/query_execution.py'.format(code_path)) as file_open:
                 return jsonify({'data': file_open.read()}), 200
 
         @deployments_pro_blueprint.route('/deployments/pro/executions', methods=['GET'])

@@ -9,10 +9,10 @@ import models.admin.users
 import models.deployments.deployments
 
 class Deployments:
-    def __init__(self, credentials):
+    def __init__(self, sql):
         # Init models
-        self._users = models.admin.users.Users(credentials)
-        self._deployments = models.deployments.deployments.Deployments(credentials)
+        self._users = models.admin.users.Users(sql)
+        self._deployments = models.deployments.deployments.Deployments(sql)
 
     def blueprint(self):
         # Init blueprint

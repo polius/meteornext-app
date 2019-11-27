@@ -1,0 +1,11 @@
+{
+    "bind": "",
+    "sql": 
+    {
+        "hostname": "",
+        "username": "",
+        "password": "",
+        "port": "",
+        "database": ""
+    }
+}

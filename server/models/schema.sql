@@ -8,20 +8,6 @@ CREATE TABLE `settings` (
 
 INSERT INTO settings (`name`, `value`) VALUES ('LOGS', '{"local":{},"amazon_s3":{}}');
 
-CREATE TABLE `users` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `username` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `password` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `coins` INT UNSIGNED NOT NULL DEFAULT '0',
-  `group_id` int(10) unsigned NOT NULL,
-  `admin` tinyint(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `username` (`username`),
-  KEY `group_id` (`group_id`),
-  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
-
 CREATE TABLE `groups` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) NOT NULL,
@@ -39,6 +25,24 @@ CREATE TABLE `groups` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+INSERT INTO `groups`(`id`, `name`, `description`, `coins_day`, `coins_max`, `coins_execution`, `deployments_enable`, `deployments_basic`, `deployments_pro`, `deployments_inbenta`, `deployments_edit`, `deployments_execution_threads`, `deployments_execution_plan_factor`) VALUES (1, 'Administrator', 'Full Access', 25, 100, 10, 1, 1, 1, 1, 1, 10, 0);
+
+CREATE TABLE `users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `username` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `coins` INT UNSIGNED NOT NULL DEFAULT '0',
+  `group_id` int(10) unsigned NOT NULL,
+  `admin` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  KEY `group_id` (`group_id`),
+  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+INSERT INTO `users`(`id`, `username`, `password`, `email`, `coins`, `group_id`, `admin`) VALUES (1, 'admin', '$2b$12$Zxo.RTjV0duMDsGJ.lWlQeya51iXTYvcZXA3Zcr53vIbvYUlS0vYe', 'admin@admin.com', 100, 1, 1);
 
 CREATE TABLE `environments` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,

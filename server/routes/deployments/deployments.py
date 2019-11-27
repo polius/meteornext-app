@@ -10,11 +10,11 @@ import models.deployments.deployments
 import models.admin.settings
 
 class Deployments:
-    def __init__(self, credentials):
+    def __init__(self, sql):
         # Init models
-        self._users = models.admin.users.Users(credentials)
-        self._deployments = models.deployments.deployments.Deployments(credentials)
-        self._settings = models.admin.settings.Settings(credentials)
+        self._users = models.admin.users.Users(sql)
+        self._deployments = models.deployments.deployments.Deployments(sql)
+        self._settings = models.admin.settings.Settings(sql)
 
     def blueprint(self):
         # Init blueprint
@@ -68,7 +68,6 @@ class Deployments:
                 results_directory = '{}{}'.format(logs['local']['path'], uri)
                 # Check if Deployment Logs exist
                 if not os.path.exists(results_directory):
-                    print("here")
                     return jsonify({'title': 'Deployment Expired', 'description': 'This deployment has expired' }), 400
 
                 results_name = '{}.js'.format(uri)

@@ -11,17 +11,17 @@ import routes.deployments.settings.auxiliary
 import routes.deployments.settings.slack
 
 class Groups:
-    def __init__(self, credentials):
+    def __init__(self, sql):
         # Init models
-        self._groups = models.admin.groups.Groups(credentials)
-        self._users = models.admin.users.Users(credentials)
+        self._groups = models.admin.groups.Groups(sql)
+        self._users = models.admin.users.Users(sql)
 
         # Init routes
-        self._environments = routes.deployments.settings.environments.Environments(credentials)
-        self._regions = routes.deployments.settings.regions.Regions(credentials)
-        self._servers = routes.deployments.settings.servers.Servers(credentials)
-        self._auxiliary = routes.deployments.settings.auxiliary.Auxiliary(credentials)
-        self._slack = routes.deployments.settings.slack.Slack(credentials)
+        self._environments = routes.deployments.settings.environments.Environments(sql)
+        self._regions = routes.deployments.settings.regions.Regions(sql)
+        self._servers = routes.deployments.settings.servers.Servers(sql)
+        self._auxiliary = routes.deployments.settings.auxiliary.Auxiliary(sql)
+        self._slack = routes.deployments.settings.slack.Slack(sql)
 
     def blueprint(self):
         # Init blueprint

@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import models.mysql
 
 class Deployments:
-    def __init__(self, credentials):
-        self._mysql = models.mysql.mysql(credentials)
+    def __init__(self, sql):
+        self._sql = sql
 
     def get(self, user_id=None, deployment_id=None, search=None):
         if user_id is None and deployment_id is None:
@@ -59,7 +58,7 @@ class Deployments:
                 ORDER BY d.created DESC
                 LIMIT 100
             """.format(search_user, search_mode, search_status, search_created_from, search_created_to)
-            return self._mysql.execute(query)
+            return self._sql.execute(query)
         elif deployment_id is not None:
             query = """
                 SELECT d.id, d.execution_id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
@@ -90,7 +89,7 @@ class Deployments:
                 JOIN environments e ON e.id = d.environment_id
                 ORDER BY id DESC
             """
-            return self._mysql.execute(query, (user_id, deployment_id, user_id, deployment_id))    
+            return self._sql.execute(query, (user_id, deployment_id, user_id, deployment_id))    
         else:
             query = """
                 SELECT d.id, d.execution_id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
@@ -121,11 +120,11 @@ class Deployments:
                 JOIN environments e ON e.id = d.environment_id
                 ORDER BY created DESC
             """
-            return self._mysql.execute(query, (user_id, user_id))        
+            return self._sql.execute(query, (user_id, user_id))        
 
     def post(self, user_id, deployment):
         query = "INSERT INTO deployments (name, user_id) VALUES(%s, %s)"
-        return self._mysql.execute(query, (deployment['name'], user_id))
+        return self._sql.execute(query, (deployment['name'], user_id))
 
     def put(self, deployment):
         query = """
@@ -133,7 +132,7 @@ class Deployments:
             SET name = %s
             AND id = %s
         """
-        self._mysql.execute(query, (deployment['name'], deployment['id']))
+        self._sql.execute(query, (deployment['name'], deployment['id']))
 
     def delete(self, user_id, deployment):
         query = """
@@ -142,7 +141,7 @@ class Deployments:
             WHERE id = %s
             AND user_id = %s 
         """
-        self._mysql.execute(query, (deployment, user_id))
+        self._sql.execute(query, (deployment, user_id))
 
     def getUser(self, deployment_id):
         query = """
@@ -150,7 +149,7 @@ class Deployments:
             FROM deployments
             WHERE id = %s
         """
-        return self._mysql.execute(query, (deployment_id))
+        return self._sql.execute(query, (deployment_id))
 
     def getResults(self, uri):
         query = """
@@ -167,4 +166,4 @@ class Deployments:
             ) r
             JOIN deployments d ON d.id = r.deployment_id
         """
-        return self._mysql.execute(query, (uri, uri))
+        return self._sql.execute(query, (uri, uri))

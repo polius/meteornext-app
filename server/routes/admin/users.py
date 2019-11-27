@@ -6,10 +6,10 @@ import models.admin.groups
 import models.admin.users
 
 class Users:
-    def __init__(self, credentials):
+    def __init__(self, sql):
         # Init models
-        self._groups = models.admin.groups.Groups(credentials)
-        self._users = models.admin.users.Users(credentials)
+        self._groups = models.admin.groups.Groups(sql)
+        self._users = models.admin.users.Users(sql)
 
     def blueprint(self):
         # Init blueprint

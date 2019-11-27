@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import models.mysql
 
 class Servers:
-    def __init__(self, credentials):
-        self._mysql = models.mysql.mysql(credentials)
+    def __init__(self, sql):
+        self._sql = sql
 
     def get(self, group_id):
         query = """
@@ -13,7 +12,7 @@ class Servers:
             JOIN regions r ON r.id = s.region_id
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
         """
-        return self._mysql.execute(query, (group_id))
+        return self._sql.execute(query, (group_id))
 
     def post(self, group_id, server):
         query = """
@@ -23,7 +22,7 @@ class Servers:
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
             WHERE r.name = %s
         """
-        self._mysql.execute(query, (server['name'], server['hostname'], server['username'], server['password'], group_id, server['environment'], server['region']))
+        self._sql.execute(query, (server['name'], server['hostname'], server['username'], server['password'], group_id, server['environment'], server['region']))
 
     def put(self, group_id, server):
         query = """
@@ -37,7 +36,7 @@ class Servers:
                 servers.password = %s
             WHERE servers.id = %s
         """
-        self._mysql.execute(query, (server['region'], group_id, server['environment'], server['name'], server['hostname'], server['username'], server['password'], server['id']))
+        self._sql.execute(query, (server['region'], group_id, server['environment'], server['name'], server['hostname'], server['username'], server['password'], server['id']))
 
     def delete(self, group_id, server):
         query = """
@@ -47,7 +46,7 @@ class Servers:
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
             WHERE s.id = %s
         """
-        self._mysql.execute(query, (group_id, server['id']))
+        self._sql.execute(query, (group_id, server['id']))
 
     def remove(self, group_id):
         query = """
@@ -56,7 +55,7 @@ class Servers:
             JOIN regions r ON r.id = s.region_id
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
         """
-        self._mysql.execute(query, (group_id))
+        self._sql.execute(query, (group_id))
 
     def exist(self, group_id, server):
         if 'id' in server:
@@ -69,7 +68,7 @@ class Servers:
                     WHERE s.name = %s AND s.id != %s
                 ) AS exist
             """
-            return self._mysql.execute(query, (server['region'], group_id, server['environment'], server['name'], server['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['region'], group_id, server['environment'], server['name'], server['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -80,7 +79,7 @@ class Servers:
                     WHERE s.name = %s
                 ) AS exist
             """
-            return self._mysql.execute(query, (server['region'], group_id, server['environment'], server['name']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['region'], group_id, server['environment'], server['name']))[0]['exist'] == 1
 
     def exist_by_region(self, group_id, region):
         query = """
@@ -91,4 +90,4 @@ class Servers:
                 JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
             ) AS exist
         """
-        return self._mysql.execute(query, (region['name'], group_id))[0]['exist'] == 1
+        return self._sql.execute(query, (region['name'], group_id))[0]['exist'] == 1

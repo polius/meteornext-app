@@ -19,8 +19,7 @@ export default new Vuex.Store({
   },
   mutations: {
     init(state, data) {
-      var prefix = data.settings.ssl ? 'https://' : 'http://'
-      state.url = prefix + data.settings.host + ':' + data.settings.port
+      state.url = 'http://' + data.settings.server.host + ':' + data.settings.server.port
     },
     auth(state, data) {
       state.username = data.username

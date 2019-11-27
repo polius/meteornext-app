@@ -7,12 +7,12 @@ import models.deployments.regions
 import models.deployments.servers
 
 class Regions:
-    def __init__(self, credentials):
+    def __init__(self, sql):
         # Init models
-        self._users = models.admin.users.Users(credentials)
-        self._environments = models.deployments.environments.Environments(credentials)
-        self._regions = models.deployments.regions.Regions(credentials)
-        self._servers = models.deployments.servers.Servers(credentials)
+        self._users = models.admin.users.Users(sql)
+        self._environments = models.deployments.environments.Environments(sql)
+        self._regions = models.deployments.regions.Regions(sql)
+        self._servers = models.deployments.servers.Servers(sql)
 
     def blueprint(self):
         # Init blueprint

@@ -19,22 +19,21 @@ import models.deployments.auxiliary
 import models.deployments.slack
 
 class Meteor:
-    def __init__(self, credentials):
-        self._mysql = models.mysql.mysql(credentials)
+    def __init__(self, sql):
         # Init models
-        self._settings = models.admin.settings.Settings(credentials)
-        self._environments = models.deployments.environments.Environments(credentials)
-        self._regions = models.deployments.regions.Regions(credentials)
-        self._servers = models.deployments.servers.Servers(credentials)
-        self._auxiliary = models.deployments.auxiliary.Auxiliary(credentials)
-        self._slack = models.deployments.slack.Slack(credentials)
+        self._settings = models.admin.settings.Settings(sql)
+        self._environments = models.deployments.environments.Environments(sql)
+        self._regions = models.deployments.regions.Regions(sql)
+        self._servers = models.deployments.servers.Servers(sql)
+        self._auxiliary = models.deployments.auxiliary.Auxiliary(sql)
+        self._slack = models.deployments.slack.Slack(sql)
 
         # Init Meteor Credentials
         self._query_execution = ''
         self._credentials = {}
 
         # Retrieve Meteor Logs Path
-        self._base_path = credentials['path']
+        self._base_path = os.path.dirname(os.path.realpath(__file__)) if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
 
         # Logs Settings
         self._logs = {}
@@ -211,8 +210,8 @@ class query_execution:
 
     def __execute(self, deployment):
         # Build Meteor Parameters
-        # meteor_path = "{}/apps/Meteor/app/meteor.py".format(self._base_path)
-        meteor_path = "{}/meteor".format(os.path.dirname(sys.executable))
+        meteor_base_path = os.path.dirname(os.path.realpath(__file__)) if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
+        meteor_path = "{}/meteor".format(meteor_base_path)
         environment = deployment['environment']
         execution_method = 'validate all' if deployment['method'].lower() == 'validate' else deployment['method'].lower()
         logs_path = "{}{}".format(self._logs['local']['path'], self._uuid)

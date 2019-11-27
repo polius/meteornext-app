@@ -7,11 +7,12 @@ import models.admin.users
 import models.admin.settings
 
 class Settings:
-    def __init__(self, credentials):
-        self._credentials = credentials
+    def __init__(self, settings, sql):
+        self._settings = settings
+        self._sql = sql
         # Init models
-        self._users = models.admin.users.Users(credentials)
-        self._settings = models.admin.settings.Settings(credentials)
+        self._users = models.admin.users.Users(sql)
+        self._settings = models.admin.settings.Settings(sql)
 
     def blueprint(self):
         # Init blueprint
@@ -45,13 +46,10 @@ class Settings:
         settings = {}
 
         # Get SQL Settings
-        settings['sql'] = self._credentials
+        settings['sql'] = self._settings['sql']
 
         # Get API Settings
-        api_path = os.path.normpath(self._credentials['path'] + '/../client/src/settings.json')
-        with open(api_path) as file_open:
-            settings['api'] = json.load(file_open)
-            settings['api']['path'] = api_path
+        settings['api'] = self._settings['bind']
 
         # Get Logs Settings
         settings['logs'] = json.loads(self._settings.get()[0]['value'])

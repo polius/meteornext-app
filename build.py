@@ -33,7 +33,7 @@ class build:
     def __build_server(self):
         # Build Meteor Next Server
         build_path = "{}/server".format(self._pwd)
-        additional_files = ['credentials.json']
+        additional_files = ['routes/deployments/query_execution.py', 'models/schema.sql']
         hidden_imports = ['json','_cffi_backend','bcrypt','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3']
         binary_name = 'server'
         self.__start(build_path, additional_files, hidden_imports, binary_name)
@@ -106,6 +106,9 @@ class build:
             if binary_name == 'server':
                 file_open.write("""# -*- coding: utf-8 -*-
 from gunicorn.app.base import Application, Config
+import os
+import sys
+import json
 import gunicorn
 from gunicorn import glogging
 from gunicorn.workers import sync
@@ -123,8 +126,14 @@ class GUnicornFlaskApplication(Application):
     load = lambda self:self.app
 
 if __name__ == "__main__":
-    gunicorn_app = GUnicornFlaskApplication(app)
-    gunicorn_app.run(worker_class="gunicorn.workers.sync.SyncWorker", bind="0.0.0.0:5000")""")
+    PATH = os.path.dirname(os.path.realpath(__file__)) if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
+    with open("{}/settings.json".format(PATH)) as file_open:
+        settings = json.load(file_open)
+        if len(settings['bind']) == 0:
+            print("Please before starting the server enter the config: $ ./server config")
+        else:
+            gunicorn_app = GUnicornFlaskApplication(app)
+            gunicorn_app.run(worker_class="gunicorn.workers.sync.SyncWorker", bind=settings['bind'])""")
             else:
                 file_open.write("from {0} import {0}\n{0}()".format(binary_name))
 
@@ -152,7 +161,8 @@ if __name__ == "__main__":
         for b in binaries:
             command += " -r '{}'".format(b)
         for f in additional_files:
-            command += " --add-data '{}:.'".format(f)
+            path = '.' if f.find('/') == -1 else f[:f.rfind('/')]
+            command += " --add-data '{}:{}'".format(f, path)
         command += ' --onefile "{}/init.py"'.format(cythonized)
 
         # 11) Pack cythonized project using pyinstaller

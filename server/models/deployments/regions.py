@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import models.mysql
 
 class Regions:
-    def __init__(self, credentials):
-        self._mysql = models.mysql.mysql(credentials)
+    def __init__(self, sql):
+        self._sql = sql
 
     def get(self, group_id):
         query = """
@@ -12,7 +11,7 @@ class Regions:
             FROM regions r 
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
         """
-        return self._mysql.execute(query, (group_id))
+        return self._sql.execute(query, (group_id))
 
     def post(self, group_id, region):
         query = """
@@ -21,7 +20,7 @@ class Regions:
             FROM environments
             WHERE group_id = %s AND name = %s
         """
-        self._mysql.execute(query, (region['name'], region['cross_region'], region['hostname'], region['hostname'], region['username'], region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], group_id, region['environment']))
+        self._sql.execute(query, (region['name'], region['cross_region'], region['hostname'], region['hostname'], region['username'], region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], group_id, region['environment']))
 
     def put(self, group_id, region):
         query = """
@@ -37,7 +36,7 @@ class Regions:
                 deploy_path = IF(%s = '', NULL, %s)
             WHERE regions.id = %s
         """
-        self._mysql.execute(query, (group_id, region['environment'], region['name'], region['cross_region'], region['hostname'], region['hostname'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], region['id']))
+        self._sql.execute(query, (group_id, region['environment'], region['name'], region['cross_region'], region['hostname'], region['hostname'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], region['id']))
 
     def delete(self, group_id, region):
         query = """
@@ -46,7 +45,7 @@ class Regions:
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
             WHERE r.id = %s
         """
-        self._mysql.execute(query, (group_id, region['id']))
+        self._sql.execute(query, (group_id, region['id']))
 
     def remove(self, group_id):
         query = """
@@ -54,7 +53,7 @@ class Regions:
             FROM regions r
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
         """
-        self._mysql.execute(query, (group_id))
+        self._sql.execute(query, (group_id))
 
     def exist(self, group_id, region):
         if 'id' in region:
@@ -67,7 +66,7 @@ class Regions:
                     AND r.id != %s
                 ) AS exist
             """
-            return self._mysql.execute(query, (group_id, region['environment'], region['name'], region['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (group_id, region['environment'], region['name'], region['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -77,7 +76,7 @@ class Regions:
                     WHERE r.name = %s
                 ) AS exist
             """
-            return self._mysql.execute(query, (group_id, region['environment'], region['name']))[0]['exist'] == 1
+            return self._sql.execute(query, (group_id, region['environment'], region['name']))[0]['exist'] == 1
 
 
     def get_by_environment(self, group_id, environment):
@@ -86,7 +85,7 @@ class Regions:
             FROM regions r 
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
         """
-        return self._mysql.execute(query, (group_id, environment['name']))
+        return self._sql.execute(query, (group_id, environment['name']))
 
     def exist_by_environment(self, group_id, environment):
         query = """
@@ -96,4 +95,4 @@ class Regions:
                 JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
             ) AS exist
         """
-        return self._mysql.execute(query, (group_id, environment['name']))[0]['exist'] == 1
+        return self._sql.execute(query, (group_id, environment['name']))[0]['exist'] == 1

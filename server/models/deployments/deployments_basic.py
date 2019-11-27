@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import models.mysql
 
 class Deployments_Basic:
-    def __init__(self, credentials):
-        self._mysql = models.mysql.mysql(credentials)
+    def __init__(self, sql):
+        self._sql = sql
 
     def get(self, execution_id):
         query = """
@@ -14,7 +13,7 @@ class Deployments_Basic:
             JOIN environments e ON e.id = b.environment_id 
             WHERE b.id = %s
         """
-        return self._mysql.execute(query, (execution_id))
+        return self._sql.execute(query, (execution_id))
 
     def post(self, deployment):
         query = """
@@ -23,7 +22,7 @@ class Deployments_Basic:
             FROM environments e
             WHERE e.name = %s
         """
-        return self._mysql.execute(query, (deployment['id'], deployment['databases'], str(deployment['queries']), deployment['method'], deployment['status'], deployment['environment']))
+        return self._sql.execute(query, (deployment['id'], deployment['databases'], str(deployment['queries']), deployment['method'], deployment['status'], deployment['environment']))
 
     def put(self, deployment):
         query = """
@@ -34,7 +33,7 @@ class Deployments_Basic:
                 `method` = %s
             WHERE id = %s
         """
-        self._mysql.execute(query, (deployment['environment'], deployment['databases'], deployment['queries'], deployment['method'], deployment['execution_id']))
+        self._sql.execute(query, (deployment['environment'], deployment['databases'], deployment['queries'], deployment['method'], deployment['execution_id']))
 
     def getExecutions(self, deployment_id):
         query = """
@@ -44,7 +43,7 @@ class Deployments_Basic:
             WHERE b.deployment_id = %s
             ORDER BY b.created DESC;
         """
-        return self._mysql.execute(query, (deployment_id))
+        return self._sql.execute(query, (deployment_id))
     
     def startExecution(self, execution_id):
         query = """
@@ -52,7 +51,7 @@ class Deployments_Basic:
             SET status = 'STARTING'
             WHERE id = %s
         """
-        return self._mysql.execute(query, (execution_id))
+        return self._sql.execute(query, (execution_id))
 
     def stopExecution(self, execution_id):
         query = """
@@ -60,7 +59,7 @@ class Deployments_Basic:
             SET status = 'STOPPING'
             WHERE id = %s
         """
-        return self._mysql.execute(query, (execution_id))
+        return self._sql.execute(query, (execution_id))
 
     def setPublic(self, execution_id, public):
         query = """
@@ -68,7 +67,7 @@ class Deployments_Basic:
             SET public = %s
             WHERE id = %s
         """
-        return self._mysql.execute(query, (public, execution_id))
+        return self._sql.execute(query, (public, execution_id))
 
     def getUser(self, execution_id):
         query = """
@@ -77,7 +76,7 @@ class Deployments_Basic:
             JOIN deployments d ON d.id = b.deployment_id
             WHERE b.id = %s
         """
-        return self._mysql.execute(query, (execution_id))
+        return self._sql.execute(query, (execution_id))
 
     def getPid(self, execution_id):
         query = """
@@ -85,4 +84,4 @@ class Deployments_Basic:
             FROM deployments_basic
             WHERE id = %s
         """
-        return self._mysql.execute(query, (execution_id))
+        return self._sql.execute(query, (execution_id))

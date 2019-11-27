@@ -6,11 +6,11 @@ import models.deployments.environments
 import models.deployments.regions
 
 class Environments:
-    def __init__(self, credentials):
+    def __init__(self, sql):
         # Init models
-        self._users = models.admin.users.Users(credentials)
-        self._environments = models.deployments.environments.Environments(credentials)
-        self._regions = models.deployments.regions.Regions(credentials)
+        self._users = models.admin.users.Users(sql)
+        self._environments = models.deployments.environments.Environments(sql)
+        self._regions = models.deployments.regions.Regions(sql)
 
     def blueprint(self):
         # Init blueprint
