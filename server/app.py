@@ -62,15 +62,15 @@ def config(args):
         settings['sql']['port'] = config['sql']['port'] if config['sql']['port'] != '' else '3306' if settings['sql']['port'] == '' else settings['sql']['port']
         settings['sql']['database'] = config['sql']['database'] if config['sql']['database'] != '' else 'meteor' if settings['sql']['database'] == '' else settings['sql']['database']
 
-        # Check SQL Connection
-        try:
-            sql = models.mysql.mysql()
-            sql.connect(settings['sql']['hostname'], settings['sql']['username'], settings['sql']['password'])
-            print("--> SQL Connection succeeded.")
-        except Exception as e:
-            print("--> SQL Connection failed. Please check the entered SQL credentials.")
-            sys.exit()
+    # Check SQL Connection
+    try:
+        sql = models.mysql.mysql()
+        sql.connect(settings['sql']['hostname'], settings['sql']['username'], settings['sql']['password'], settings['sql']['database'])
+    except Exception as e:
+        print("--> SQL Connection failed. Please check the entered SQL credentials.")
+        sys.exit()
 
+    if args.config:
         # Check SQL Database
         if sql.check_db_exists(settings['sql']['database']):
             print("--> A database named '{}' has been detected in '{}'.".format(settings['sql']['database'], settings['sql']['hostname']))

@@ -2,6 +2,7 @@
 import os
 import sys
 import json
+import uuid
 import traceback
 import logging
 import argparse
@@ -23,8 +24,10 @@ class meteor:
 
         # Set the Default Logs Path (if it has not been set by the user)
         if self._args.logs_path is None:
-            script_path = os.path.dirname(os.path.realpath(__file__))
-            self._args.logs_path = '{}/logs/'.format(script_path)
+            self._args.uuid = uuid.uuid4()
+            self._args.logs_path = '{}/logs/{}'.format(os.path.dirname(os.path.realpath(__file__)), self._args.uuid)
+        else:
+            self._args.logs_path = self._args.logs_path[:-1] if self._args.logs_path.endswith('/') else self._args.logs_path
 
         # Print Header
         if self._args.env_id is None:

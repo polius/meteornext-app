@@ -46,8 +46,8 @@ class Meteor:
         self._logs = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])
 
         # Create Deployment Folder to store Meteor files
-        if not os.path.isdir('{}{}/keys'.format(self._logs['local']['path'], self._uuid)):
-            os.makedirs('{}{}/keys'.format(self._logs['local']['path'], self._uuid))
+        if not os.path.isdir('{}/{}/keys'.format(self._logs['local']['path'], self._uuid)):
+            os.makedirs('{}/{}/keys'.format(self._logs['local']['path'], self._uuid))
 
         # Compile Meteor Files
         self.__compile_credentials(deployment)
@@ -152,7 +152,7 @@ class Meteor:
         }
 
         # Enable Meteor Next
-        with open("{}/credentials.json".format(self._base_path)) as outfile:
+        with open("{}/settings.json".format(self._base_path)) as outfile:
             next_credentials = json.load(outfile)['sql']
 
         self._credentials['meteor_next'] = {
@@ -165,7 +165,7 @@ class Meteor:
         }
 
         # Store Credentials
-        with open("{}{}/credentials.json".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
+        with open("{}/{}/credentials.json".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
             json.dump(self._credentials, outfile)
 
     def __compile_query_execution(self, deployment):
@@ -177,7 +177,7 @@ class Meteor:
         #     self.__compile_query_execution_inbenta(deployment)
 
         # Store Query Execution
-        with open("{}{}/query_execution.py".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
+        with open("{}/{}/query_execution.py".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
             outfile.write(self._query_execution)
 
     def __compile_query_execution_basic(self, deployment):
@@ -214,9 +214,9 @@ class query_execution:
         meteor_path = "{}/meteor".format(meteor_base_path)
         environment = deployment['environment']
         execution_method = 'validate all' if deployment['method'].lower() == 'validate' else deployment['method'].lower()
-        logs_path = "{}{}".format(self._logs['local']['path'], self._uuid)
-        query_execution_path = "{}{}/query_execution.py".format(self._logs['local']['path'], self._uuid)
-        credentials_path = "{}{}/credentials.json".format(self._logs['local']['path'], self._uuid)
+        logs_path = "{}/{}".format(self._logs['local']['path'], self._uuid)
+        query_execution_path = "{}/{}/query_execution.py".format(self._logs['local']['path'], self._uuid)
+        credentials_path = "{}/{}/credentials.json".format(self._logs['local']['path'], self._uuid)
         execution_plan_factor = '--execution_plan_factor "{}"'.format(deployment['epf']) if deployment['epf'] > 0 else ''
 
         # Build Meteor Command

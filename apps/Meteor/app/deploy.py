@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sys
 import os
-import uuid
+import sys
 import time
 import shutil
 import calendar
@@ -31,17 +30,11 @@ class deploy:
         self._logger = logger
         self._args = args
 
-        # Generate Deployment Unique Identifier
-        self._UUID = uuid.uuid4() if args.uuid is None else args.uuid
-
         # Execution Path
         self._SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
         # Init the Logs Class
-        self._logs = logs(self._logger, self._args, self._UUID)
-
-        # Get Logs Path
-        self._LOGS_PATH = self._logs.get_logs_path()
+        self._logs = logs(self._logger, self._args)
 
         # Generate the basic user logs: 'query_execution.py' & 'credentials.json' files
         if self._args.env_id is None:
@@ -49,7 +42,7 @@ class deploy:
 
         # Import 'query_execution.py' file dynamically
         try:
-            self._query_execution = imp.load_source('query_execution', "{}query_execution.py".format(self._LOGS_PATH))
+            self._query_execution = imp.load_source('query_execution', "{}/query_execution.py".format(self._args.logs_path))
             self._query_execution = self._query_execution.query_execution()
         except Exception:
             print("'query_execution.py' file not found")
@@ -57,7 +50,7 @@ class deploy:
 
         # Load the 'credentials.json' file dynamically
         try:
-            credentials_location = '{}credentials.json'.format(self._LOGS_PATH)
+            credentials_location = '{}/credentials.json'.format(self._args.logs_path)
             self._credentials = self.__load_credentials(credentials_location)
         except Exception:
             print("'credentials.json' file not found")
@@ -89,10 +82,10 @@ class deploy:
         self._meteor_logs_url = None
 
         # Init the Progress Class
-        self._progress = progress(self._logger, self._args, self._credentials, self._UUID)
+        self._progress = progress(self._logger, self._args, self._credentials)
 
         # Init the S3 Class
-        self._s3 = S3(self._logger, self._args, self._credentials, self._progress, self._UUID)
+        self._s3 = S3(self._logger, self._args, self._credentials, self._progress)
 
     def __cls(self):
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -148,8 +141,8 @@ class deploy:
 
                     if self._args.env_compress:
                         # Compress Execution Logs
-                        compressed_file_name = "{}meteor/logs/{}/execution/{}".format(environment['ssh']['deploy_path'], self._UUID, environment['region'])
-                        compressed_location = "{}meteor/logs/{}/execution/".format(environment['ssh']['deploy_path'], self._UUID)
+                        compressed_file_name = "{}meteor/logs/{}/execution/{}".format(environment['ssh']['deploy_path'], self._args.uuid, environment['region'])
+                        compressed_location = "{}meteor/logs/{}/execution/".format(environment['ssh']['deploy_path'], self._args.uuid)
                         if os.path.isdir(compressed_file_name):
                             shutil.make_archive(compressed_file_name, 'gztar', compressed_location)
                     else:
@@ -486,7 +479,7 @@ class deploy:
             print(colored("+------------------------------------------------------------------+", 'magenta'))
 
             # Generate App Version
-            deploy_env = deploy_environments(self._logger, self._args, self._credentials, self._UUID)
+            deploy_env = deploy_environments(self._logger, self._args, self._credentials)
             version = deploy_env.generate_app_version()
             with open('{}/version.txt'.format(self._SCRIPT_PATH), 'w') as file_content:
                 file_content.write(version)
@@ -497,7 +490,7 @@ class deploy:
                 if self._credentials['execution_mode']['parallel'] != 'True':
                     validation_succeeded = True
                     for region in self._credentials['environments'][environment]:
-                        deploy_env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, environment, region)
+                        deploy_env = deploy_environments(self._logger, self._args, self._credentials, environment, region)
                         validation_succeeded &= deploy_env.validate()
                     if not validation_succeeded:
                         raise Exception()
@@ -517,7 +510,7 @@ class deploy:
 
                         for region in self._credentials['environments'][environment]:    
                             environment_type = '[LOCAL]' if region['ssh']['enabled'] == 'False' else '[SSH]  '
-                            deploy_env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, environment, region)
+                            deploy_env = deploy_environments(self._logger, self._args, self._credentials, environment, region)
                             p = multiprocessing.Process(target=deploy_env.validate, args=(False, shared_array,))
                             p.start()
                             processes.append(p)
@@ -620,7 +613,7 @@ class deploy:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 try:
                     for env_data in self._ENV_DATA[self._ENV_NAME]:
-                        env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
+                        env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                         env.start()
                 except KeyboardInterrupt:
                     print(colored("\n--> Ctrl+C received. Stopping the execution...", 'yellow', attrs=['reverse', 'bold']))
@@ -639,7 +632,7 @@ class deploy:
                 # Start Deployment
                 try:
                     for env_data in self._ENV_DATA[self._ENV_NAME]:
-                        env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
+                        env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                         p = multiprocessing.Process(target=env.start, args=(shared_array, progress_array,))
                         p.start()
                         processes.append(p)
@@ -682,6 +675,7 @@ class deploy:
                                             track_progress = False
                                         else:
                                             progress[item['r']][item['s']]['e'] = item['e']
+                                            track_progress = False
                                     else:
                                         if item['s'] not in progress[item['r']] or 'e' not in progress[item['r']][item['s']]:
                                             progress[item['r']][item['s']] = { "p": item['p'], "d": item['d'], "t": item['t'] }
@@ -724,19 +718,19 @@ class deploy:
 
                     # Send SIGINT to all Region Processes
                     for env_data in self._ENV_DATA[self._ENV_NAME]:
-                        env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
+                        env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                         env.sigint()
 
                     # Check all Remaining Region Processes have finished
                     for env_data in self._ENV_DATA[self._ENV_NAME]:
                         print(colored("- Remaining Processes to Finish in '{}'".format(env_data['region']), attrs=['bold']))
-                        env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
+                        env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                         env.check_processes()
 
                     # Send SIGKILL to clear remaining Zombie Processes
                     print(colored("- Cleaning Remaining Region Processes...", attrs=['bold']))
                     for env_data in self._ENV_DATA[self._ENV_NAME]:
-                        env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
+                        env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                         env.sigkill()
 
                     # Enable CTRL+C events
@@ -771,11 +765,11 @@ class deploy:
         environment_type = '[LOCAL]' if env['ssh']['enabled'] == 'False' else '[SSH]'
 
         # Create Execution Folders
-        if not os.path.exists(self._LOGS_PATH + 'execution/' + env['region']):
-            os.makedirs(self._LOGS_PATH + 'execution/' + env['region'])
+        if not os.path.exists(self._args.logs_path + '/execution/' + env['region']):
+            os.makedirs(self._args.logs_path + '/execution/' + env['region'])
 
         # Start the Deploy
-        deploy = deploy_queries(self._logger, self._args, self._credentials, self._query_template, self._LOGS_PATH, self._UUID, self._ENV_NAME, env)
+        deploy = deploy_queries(self._logger, self._args, self._credentials, self._query_template, self._ENV_NAME, env)
 
         # Execute 'BEFORE' Queries Once per Region
         deploy.execute_before(env['region'])
@@ -910,7 +904,7 @@ class deploy:
             try:
                 for env_data in self._ENV_DATA[self._ENV_NAME]:
                     if env_data['ssh']['enabled'] == 'True':
-                        env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
+                        env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                         p = multiprocessing.Process(target=env.compress_logs, args=(shared_array,))
                         p.start()
                         processes.append(p)
@@ -930,7 +924,7 @@ class deploy:
         else:
             for env_data in self._ENV_DATA[self._ENV_NAME]:
                 if env_data['ssh']['enabled'] == 'True':
-                    env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
+                    env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                     env.compress_logs()
 
         # 2. Get SSH Execution Logs
@@ -946,7 +940,7 @@ class deploy:
 
             processes = []
             for env_data in self._ENV_DATA[self._ENV_NAME]:
-                env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
+                env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                 p = multiprocessing.Process(target=env.get_logs, args=(shared_array,))
                 p.start()
                 processes.append(p)
@@ -960,12 +954,12 @@ class deploy:
         ## Sequential Mode
         else:
             for env_data in self._ENV_DATA[self._ENV_NAME]:
-                env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
+                env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                 env.get_logs()
 
         # 3. Merging Logs
         try:
-            execution_logs_path = self._LOGS_PATH + "execution/"
+            execution_logs_path = self._args.logs_path + "/execution/"
             region_items = os.listdir(execution_logs_path)
 
             for region_item in region_items:
@@ -1019,12 +1013,12 @@ class deploy:
                         environment_logs.extend(json_decoded['output'])
 
             # Write Environment Log
-            with open(self._LOGS_PATH + 'meteor.js', 'w') as f:
+            with open(self._args.logs_path + '/meteor.js', 'w') as f:
                 json.dump({"output": environment_logs}, f, separators=(',', ':'))
 
             # Compress Execution Logs and Delete Uncompressed Folder
-            shutil.make_archive(self._LOGS_PATH + 'execution', 'gztar', self._LOGS_PATH + 'execution')
-            shutil.rmtree(self._LOGS_PATH + 'execution')
+            shutil.make_archive(self._args.logs_path + '/execution', 'gztar', self._args.logs_path + '/execution')
+            shutil.rmtree(self._args.logs_path + '/execution')
 
             # Return All Logs
             return environment_logs
@@ -1065,7 +1059,7 @@ class deploy:
             print(status_msg)
             self._progress.track_tasks(value=status_msg[2:])
 
-            env = deploy_environments(self._logger, self._args, self._credentials, self._UUID)
+            env = deploy_environments(self._logger, self._args, self._credentials)
             env.clean_local()
 
         except Exception as e:
@@ -1078,7 +1072,7 @@ class deploy:
             self._progress.track_tasks(value=status_msg[2:])
 
             for env_data in self._ENV_DATA[self._ENV_NAME]:
-                env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
+                env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                 env.sigkill()
 
     def __clean_sequential(self, region=None):
@@ -1086,7 +1080,7 @@ class deploy:
 
         for env_data in env:
             if (env_data['ssh']['enabled'] == 'True'):
-                env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
+                env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                 env.clean_remote()
     
     def __clean_parallel(self, region=None):
@@ -1099,7 +1093,7 @@ class deploy:
             env = self._credentials['environments'][region] if region is not None else self._ENV_DATA[self._ENV_NAME]
             for env_data in env:
                 if (env_data['ssh']['enabled'] == 'True'):
-                    env = deploy_environments(self._logger, self._args, self._credentials, self._UUID, self._ENV_NAME, env_data)
+                    env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                     p = multiprocessing.Process(target=env.clean_remote, args=(shared_array,))
                     p.start()
                     processes.append(p)
@@ -1141,13 +1135,13 @@ class deploy:
             status_text = 'Test Execution Finished Successfully' if status == 1 else 'Test Execution Interrupted' if status == 2 else 'Test Execution Finished with errors' if status == 3 else 'Test Execution Failed'
 
         # Logs Path
-        logs_path = "{}/logs/{}.tar.gz".format(self._SCRIPT_PATH, self._UUID)
+        logs_path = "{}/logs/{}.tar.gz".format(self._SCRIPT_PATH, self._args.uuid)
         
         # Logs Url
         logs_url = ''
         if self._credentials['web']['public_url'] != '':
             public_url = self._credentials['web']['public_url'] + '/' if not self._credentials['web']['public_url'].endswith('/') else self._credentials['web']['public_url']
-            logs_url = "{}?uri={}".format(public_url, self._UUID)
+            logs_url = "{}?uri={}".format(public_url, self._args.uuid)
         
         # Current Time
         current_time = calendar.timegm(time.gmtime())
@@ -1302,14 +1296,11 @@ class deploy:
         print(colored("‖  OUTPUT                                                          ‖", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
         # Show Logs Path
-        if self._args.logs_path:
-            self._meteor_logs_path = "{}/{}.tar.gz".format(self._args.logs_path, self._UUID)
-        else:
-            self._meteor_logs_path = "{}/logs/{}.tar.gz".format(self._SCRIPT_PATH, self._UUID)
+        self._meteor_logs_path = "{}/{}.tar.gz".format(self._args.logs_path, self._args.uuid)
         print("- Logs Path: " + colored(self._meteor_logs_path, 'green'))
 
         if self._credentials['web']['public_url'] != '':
             # Show Logs Url
             public_url = self._credentials['web']['public_url'] + '/' if not self._credentials['web']['public_url'].endswith('/') else self._credentials['web']['public_url']
-            self._meteor_logs_url = "{}?uri={}".format(public_url, self._UUID)
+            self._meteor_logs_url = "{}?uri={}".format(public_url, self._args.uuid)
             print("- Logs Url: " + colored(self._meteor_logs_url, 'yellow'))

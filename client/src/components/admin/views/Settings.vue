@@ -26,10 +26,11 @@
           <!-- API -->
           <v-flex v-else-if="setting_mode == 'api'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="headline font-weight-regular" style="margin-left:10px;">API</div>
-            <div v-if="!loading" class="body-1 font-weight-light font-italic" style="margin-left:10px; margin-top:10px; margin-bottom:25px;">{{ api.path }}</div>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="api.host" label="Hostname" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="api.port" label="Port" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
-            <v-switch readonly :loading="loading" :disabled="loading" v-model="api.ssl" label="SSL Connection" color="success" style="margin-left:10px; margin-top:0px; margin-bottom:5px;" hide-details></v-switch>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="api" label="Bind" style="margin-left:10px; padding-top:20px;" required :rules="[v => !!v || '']"></v-text-field>
+            <!-- <div v-if="!loading" class="body-1 font-weight-light font-italic" style="margin-left:10px; margin-top:10px; margin-bottom:25px;">{{ api.path }}</div> -->
+            <!-- <v-text-field readonly :loading="loading" :disabled="loading" v-model="api.host" label="Hostname" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field> -->
+            <!-- <v-text-field readonly :loading="loading" :disabled="loading" v-model="api.port" label="Port" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field> -->
+            <!-- <v-switch readonly :loading="loading" :disabled="loading" v-model="api.ssl" label="SSL Connection" color="success" style="margin-left:10px; margin-top:0px; margin-bottom:5px;" hide-details></v-switch> -->
           </v-flex>
 
           <!-- LOGS -->
@@ -127,7 +128,6 @@ export default {
         .then((response) => {
           // Get Settings
           var settings = response.data.data
-          settings['sql']['path'] += '/credentials.json'
           this.sql = settings['sql']
           this.api = settings['api']
           this.logs = settings['logs']

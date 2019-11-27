@@ -9,12 +9,11 @@ from colors import colored
 
 
 class S3:
-    def __init__(self, logger, args, credentials, progress, uuid):
+    def __init__(self, logger, args, credentials, progress):
         self._logger = logger
         self._args = args
         self._credentials = credentials
         self._progress = progress
-        self._uuid = uuid
 
         if self._credentials['s3']['enabled'] == 'True':
             session = boto3.Session(
@@ -38,14 +37,14 @@ class S3:
                 self._progress.track_logs("Uploading Logs to Amazon S3...")
 
                 # 1. Upload Compressed Logs Folder to '/logs'
-                file_path = "{}/{}.tar.gz".format(self._args.logs_path, self._uuid)
+                file_path = "{}.tar.gz".format(self._args.logs_path)
                 bucket_name = self._credentials['s3']['bucket_name']
-                s3_path = "logs/{}.tar.gz".format(self._uuid)
+                s3_path = "logs/{}.tar.gz".format(self._args.uuid)
                 self.__s3.meta.client.upload_file(file_path, bucket_name, s3_path)
 
                 # 2. Upload Results File to '/results'
-                file_path = "{}/{}/meteor.js".format(self._args.logs_path, self._uuid)
-                s3_path = "results/{}.js".format(self._uuid)
+                file_path = "{}/meteor.js".format(self._args.logs_path)
+                s3_path = "results/{}.js".format(self._args.uuid)
                 self.__s3.meta.client.upload_file(file_path, bucket_name, s3_path)
 
             except Exception as e:

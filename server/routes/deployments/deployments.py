@@ -65,26 +65,17 @@ class Deployments:
             
             # Get Execution Results File
             if results['engine'] == 'local':
-                results_directory = '{}{}'.format(logs['local']['path'], uri)
-                # Check if Deployment Logs exist
-                if not os.path.exists(results_directory):
+                execution_results = '{}/{}'.format(logs['local']['path'], uri)
+                # Check if exists
+                if not os.path.exists(execution_results + '.js') and not os.path.exists(execution_results + '.tar.gz'):
                     return jsonify({'title': 'Deployment Expired', 'description': 'This deployment has expired' }), 400
+                elif not os.path.exists(execution_results + '.js'):
+                    tf = tarfile.open("{}.tar.gz".format(execution_results), mode="r")
+                    tf.extract("./meteor.js", path=execution_results)
+                    os.rename('{}/meteor.js'.format(execution_results), '{}.js'.format(execution_results))
+                    os.rmdir(execution_results)
 
-                results_name = '{}.js'.format(uri)
-                if not os.path.exists('{}/{}'.format(results_directory, results_name)):
-                    # Get compressed file name
-                    for f in os.listdir(results_directory):
-                        if f.endswith('.tar.gz'):
-                            break
-
-                    # Extract results file name
-                    tf = tarfile.open("{}/{}".format(results_directory, f), mode="r")
-                    tf.extract("./meteor.js", path=results_directory)
-
-                    # Rename results
-                    os.rename('{}/meteor.js'.format(results_directory), '{}/{}.js'.format(results_directory, uri))
-
-                return send_from_directory(results_directory, results_name)
+                return send_from_directory(logs['local']['path'], uri + '.js')
 
             elif results['engine'] == 'amazon_s3':
                 session = boto3.Session(

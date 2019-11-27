@@ -23,32 +23,25 @@ class mysql:
     def __connect(self, database=None):
         # Establish the Connection
         if database is not None:
-            self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], db=database, charset='utf8mb4', use_unicode=False, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
+            self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], db=database, charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
         else:
-            self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], charset='utf8mb4', use_unicode=False, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
+            self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
 
-    def execute(self, query, database_name=None):
+    def execute(self, query, args=None):
         try:
             try:
                 # Check the connection
-                if self._connection:
-                    self._connection.ping(reconnect=True)
-                else:
-                    self.__connect(database_name)
-
-                # Select the database
-                if database_name:
-                    self._connection.select_db(database_name)
+                self._connection.ping(reconnect=True)
 
                 # Prepare the cursor
                 with self._connection.cursor(OrderedDictCursor) as cursor:            
                     # Execute the SQL query ignoring warnings
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore")
-                        cursor.execute(query)
+                        cursor.execute(query, args)
 
                     # Get the query results
-                    query_result = cursor.fetchall() if not query.startswith('INSERT INTO') else cursor.lastrowid
+                    query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
 
                 # Commit the changes in the database
                 self._connection.commit()
@@ -68,7 +61,7 @@ class mysql:
             except Exception as e2:
                 print("--> Rollback not performed. Error: {}".format(e2))
             finally:
-                if self._connection and self._connection.open:
+                if self._connection.open:
                     self._connection.close()
             raise e
 
@@ -80,7 +73,7 @@ class mysql:
             except Exception as e:
                 print("--> Rollback not performed. Error: {}".format(e))
             finally:
-                if self._connection and self._connection.open:
+                if self._connection.open:
                     self._connection.close()
             raise KeyboardInterrupt("Program Interrupted by User. Rollback successfully performed.")
 

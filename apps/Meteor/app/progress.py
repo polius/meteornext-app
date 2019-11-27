@@ -5,10 +5,9 @@ from datetime import datetime
 from mysql import mysql
 
 class progress:
-    def __init__(self, logger, args, credentials, uuid):
+    def __init__(self, logger, args, credentials):
         self._args = args
         self._credentials = credentials
-        self._uuid = uuid
         self._sql = mysql(logger, args, credentials)
         self._progress = {}
         if self.__enabled():
@@ -17,7 +16,7 @@ class progress:
     def start(self, pid):
         if self.__enabled():
             engine = 'amazon_s3' if self._credentials['s3']['enabled'] == 'True' else 'local'
-            query = "UPDATE deployments_{} SET status = 'IN PROGRESS', uri = '{}', engine = '{}', started = '{}', pid = '{}' WHERE id = {}".format(self._args.deployment_mode, self._uuid, engine, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), pid, self._args.deployment_id)
+            query = "UPDATE deployments_{} SET status = 'IN PROGRESS', uri = '{}', engine = '{}', started = '{}', pid = '{}' WHERE id = {}".format(self._args.deployment_mode, self._args.uuid, engine, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), pid, self._args.deployment_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
 
     def end(self, execution_status):

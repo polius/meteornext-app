@@ -16,20 +16,15 @@ from colors import colored
 
 
 class deploy_environments:
-    def __init__(self, logger, args, credentials, uuid, ENV_NAME=None, ENV_DATA=None):
+    def __init__(self, logger, args, credentials, ENV_NAME=None, ENV_DATA=None):
         self._logger = logger
         self._args = args
         self._credentials = credentials
         self._SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__)) if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
-        self._UUID = uuid
         self._ENV_NAME = ENV_NAME
         self._ENV_DATA = ENV_DATA
         self._COMPRESSED_FILE_NAME = 'METEOR.tar.gz'
         self._servers = '' if self._args.servers is None else '--servers "{}"'.format(self._args.servers)
-
-        # Setup the Execution Logs Path
-        self._LOGS_PATH = self._args.logs_path if self._args.logs_path.endswith('/') else self._args.logs_path + '/'
-        self._LOCAL_EXECUTION_LOGS_PATH = "{}{}/execution".format(self._LOGS_PATH, self._UUID)
 
         # Environment Variables
         if self._ENV_DATA is not None:
@@ -40,7 +35,7 @@ class deploy_environments:
                 self._DEPLOY_PATH = self._SCRIPT_PATH + '/'
 
             # Remote Execution Logs Path
-            self._REMOTE_EXECUTION_LOGS_PATH = "{}logs/{}/execution".format(self._DEPLOY_PATH, self._UUID)
+            self._REMOTE_EXECUTION_LOGS_PATH = "{}logs/{}/execution".format(self._DEPLOY_PATH, self._args.uuid)
 
     def validate(self, output=True, shared_array=None):
         try:
@@ -154,7 +149,7 @@ class deploy_environments:
         if output:
             print("- Setting Up New Execution...")
 
-        logs_path = "{}logs/{}/".format(self._DEPLOY_PATH, self._UUID)
+        logs_path = "{}logs/{}/".format(self._DEPLOY_PATH, self._args.uuid)
         self.__ssh('mkdir -p {}'.format(logs_path))
         # TO REVIEW: Binary Mode
         self.__put(self._SCRIPT_PATH + '/credentials.json', logs_path + 'credentials.json')
@@ -171,16 +166,16 @@ class deploy_environments:
                 if self._ENV_DATA['ssh']['enabled'] == 'True':
                     # Start the Execution
                     if self._args.env_start_deploy:
-                        deploy = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_start_deploy {4} --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
+                        deploy = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_start_deploy {4} --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], execution_plan_factor, self._args.uuid), show_output=True, progress_array=progress_array)
                     else:
-                        deploy = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" {4} --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
+                        deploy = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" {4} --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], execution_plan_factor, self._args.uuid), show_output=True, progress_array=progress_array)
                 # Local Execution
                 else:
                     binary_name = '{}/meteor'.format(self._SCRIPT_PATH)
                     if self._args.env_start_deploy:
-                        deploy = self.__local('{0} --environment "{1}" {2} --env_id "{3}" --env_start_deploy --logs_path "{4}" {5} --uuid "{6}"'.format(binary_name, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
+                        deploy = self.__local('{0} --environment "{1}" {2} --env_id "{3}" --env_start_deploy --logs_path "{4}" {5} --uuid "{6}"'.format(binary_name, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, execution_plan_factor, self._args.uuid), show_output=True, progress_array=progress_array)
                     else:
-                        deploy = self.__local('{0} --environment "{1}" {2} --env_id "{3}" --logs_path "{4}" {5} --uuid "{6}"'.format(binary_name, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, execution_plan_factor, self._UUID), show_output=True, progress_array=progress_array)
+                        deploy = self.__local('{0} --environment "{1}" {2} --env_id "{3}" --logs_path "{4}" {5} --uuid "{6}"'.format(binary_name, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, execution_plan_factor, self._args.uuid), show_output=True, progress_array=progress_array)
 
                 # Check for Execution Error
                 if len(deploy['stderr']) > 0:
@@ -203,15 +198,15 @@ class deploy_environments:
                 if self._ENV_DATA['ssh']['enabled'] == 'True':
                     # Start the Execution
                     if self._args.env_start_deploy:
-                        stderr = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_start_deploy --uuid "{4}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._UUID), show_output=True)['stderr']
+                        stderr = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_start_deploy --uuid "{4}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.uuid), show_output=True)['stderr']
                     else:
-                        stderr = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --uuid "{4}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._UUID), show_output=True)['stderr']
+                        stderr = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --uuid "{4}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.uuid), show_output=True)['stderr']
                 # Local Execution
                 else:
                     if self._args.env_start_deploy:
-                        stderr = self.__local('{0}/meteor --environment "{1}" {2} --env_id "{3}" --env_start_deploy --logs_path "{4}" --uuid "{5}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, self._UUID), show_output=True)['stderr']
+                        stderr = self.__local('{0}/meteor --environment "{1}" {2} --env_id "{3}" --env_start_deploy --logs_path "{4}" --uuid "{5}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, self._args.uuid), show_output=True)['stderr']
                     else:
-                        stderr = self.__local('{0}/meteor --environment "{1}" {2} --env_id "{3}" --logs_path "{4}" --uuid "{5}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, self._UUID), show_output=True)['stderr']
+                        stderr = self.__local('{0}/meteor --environment "{1}" {2} --env_id "{3}" --logs_path "{4}" --uuid "{5}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.logs_path, self._args.uuid), show_output=True)['stderr']
 
                 # Check for Execution Error
                 if len(stderr) > 0:
@@ -224,7 +219,7 @@ class deploy_environments:
 
     def compress_logs(self, shared_array=None):
         try:
-            output = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_compress --uuid "{4}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._UUID))
+            output = self.__ssh('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_compress --uuid "{4}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], self._args.uuid))
 
             if len(output['stderr']) > 0:
                 shared_array.append(output['stderr'])
@@ -237,7 +232,7 @@ class deploy_environments:
         try:
             if self._ENV_DATA['ssh']['enabled'] == 'True':
                 remote_path = "{0}/{1}.tar.gz".format(self._REMOTE_EXECUTION_LOGS_PATH, self._ENV_DATA['region'])
-                local_path = "{0}/{1}".format(self._LOCAL_EXECUTION_LOGS_PATH, self._ENV_DATA['region'])
+                local_path = "{0}/execution/{1}".format(self._args.logs_path, self._ENV_DATA['region'])
 
                 # 1. Download Compressed Logs
                 status = self.__get(remote_path, local_path + '.tar.gz')
@@ -245,7 +240,7 @@ class deploy_environments:
                 if status:
                     # 2. Uncompress Downloaded Logs
                     with tarfile.open(local_path + '.tar.gz') as tar:
-                        tar.extractall(path=self._LOCAL_EXECUTION_LOGS_PATH)
+                        tar.extractall(path=self._args.logs_path + '/execution')
 
                     # 3. Delete Downloaded Compressed Logs
                     os.remove(local_path + '.tar.gz')
@@ -262,7 +257,7 @@ class deploy_environments:
                 raise
 
     def clean_remote(self, shared_array=None):
-        environment_logs = "{}logs/{}/".format(self._DEPLOY_PATH, self._UUID)
+        environment_logs = "{}logs/{}/".format(self._DEPLOY_PATH, self._args.uuid)
         output = self.__ssh('rm -rf {0}'.format(environment_logs))
 
         if len(output['stderr']) > 0:
@@ -270,10 +265,9 @@ class deploy_environments:
 
     def clean_local(self):
         # Delete Uncompressed Deployment Folder
-        uncompressed_deployment_path = self._LOGS_PATH + self._UUID
-        if os.path.exists(uncompressed_deployment_path):
-            if os.path.isdir(uncompressed_deployment_path):
-                shutil.rmtree(uncompressed_deployment_path)
+        if os.path.exists(self._args.logs_path):
+            if os.path.isdir(self._args.logs_path):
+                shutil.rmtree(self._args.logs_path)
 
         # Delete 'METEOR.tar.gz'
         self.__local('rm -rf {0}'.format(self._COMPRESSED_FILE_NAME), show_output=False)
@@ -330,10 +324,10 @@ class deploy_environments:
     def __check_sql_connection_logic(self, sql, output, shared_array=None):
         try:
             if self._ENV_DATA['ssh']['enabled'] == 'True':
-                command = 'cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], sql['name'], self._UUID)
+                command = 'cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --uuid "{5}"'.format(self._DEPLOY_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], sql['name'], self._args.uuid)
                 result = self.__ssh(command)['stdout']
             else:
-                result = self.__local('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --logs_path "{5}" --uuid "{6}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], sql['name'], self._args.logs_path, self._UUID), show_output=False)['stdout']
+                result = self.__local('cd "{0}" && ./meteor --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --logs_path "{5}" --uuid "{6}"'.format(self._SCRIPT_PATH, self._ENV_NAME, self._servers, self._ENV_DATA['region'], sql['name'], self._args.logs_path, self._args.uuid), show_output=False)['stdout']
             
             if len(result) == 0:
                 if output:
@@ -358,7 +352,7 @@ class deploy_environments:
                 raise
 
     def sigint(self):
-        command = "ps -U $USER -u $USER u | grep \"" + str(self._UUID) + "\" | grep -v grep | awk '{print $2}' | xargs kill -2"
+        command = "ps -U $USER -u $USER u | grep \"" + str(self._args.uuid) + "\" | grep -v grep | awk '{print $2}' | xargs kill -2"
 
         if self._ENV_DATA['ssh']['enabled'] == 'False':
             self.__local(command)
@@ -370,7 +364,7 @@ class deploy_environments:
         attempts = 99
 
         for i in range(attempts+1):
-            command = "ps -U $USER -u $USER u | grep \"" + str(self._UUID) + "\" | grep -v grep | awk '{print $2}' | wc -l"
+            command = "ps -U $USER -u $USER u | grep \"" + str(self._args.uuid) + "\" | grep -v grep | awk '{print $2}' | wc -l"
             
             if self._ENV_DATA['ssh']['enabled'] == 'False':
                 count = int(self.__local(command)['stdout'][0])
@@ -385,7 +379,7 @@ class deploy_environments:
 
 
     def sigkill(self):
-        command = "ps -U $USER -u $USER u | grep '" + str(self._UUID) + "' | grep '--env_id'  | grep -v grep | awk '{print $2}' | xargs kill -9 2> /dev/null"
+        command = "ps -U $USER -u $USER u | grep '" + str(self._args.logs_path) + "' | grep '--env_id'  | grep -v grep | awk '{print $2}' | xargs kill -9 2> /dev/null"
         if self._ENV_DATA['ssh']['enabled'] == 'False':
             self.__local(command)
         else:

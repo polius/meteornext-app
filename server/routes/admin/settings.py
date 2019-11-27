@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
@@ -8,7 +9,7 @@ import models.admin.settings
 
 class Settings:
     def __init__(self, settings, sql):
-        self._settings = settings
+        self._settings_conf = settings
         self._sql = sql
         # Init models
         self._users = models.admin.users.Users(sql)
@@ -46,10 +47,12 @@ class Settings:
         settings = {}
 
         # Get SQL Settings
-        settings['sql'] = self._settings['sql']
+        settings['sql'] = self._settings_conf['sql']
+        settings['sql']['path'] = os.path.dirname(os.path.realpath(__file__)) if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
+        settings['sql']['path'] += '/settings.json'
 
         # Get API Settings
-        settings['api'] = self._settings['bind']
+        settings['api'] = self._settings_conf['bind']
 
         # Get Logs Settings
         settings['logs'] = json.loads(self._settings.get()[0]['value'])

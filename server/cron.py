@@ -57,6 +57,10 @@ class Cron:
                 # Expire deployments
                 for i in expired:
                     # DISK
-                    shutil.rmtree('{}/{}'.format(setting['local']['path'], i['uri']), ignore_errors=True)
+                    execution_path = '{}/{}'.format(setting['local']['path'], i['uri'])
+                    if os.path.isfile(execution_path + '.tar.gz'):
+                        os.remove(execution_path + '.tar.gz')
+                    if os.path.isfile(execution_path + '.js'):
+                        os.remove(execution_path + '.js')
                     # SQL
                     self._sql.execute("UPDATE deployments_{} SET expired = 1 WHERE id = {}".format(i['mode'], i['id']))
