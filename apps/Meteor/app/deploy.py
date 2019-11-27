@@ -41,24 +41,15 @@ class deploy:
             self._logs.generate()
 
         # Import 'query_execution.py' file dynamically
-        try:
-            self._query_execution = imp.load_source('query_execution', "{}/query_execution.py".format(self._args.logs_path))
-            self._query_execution = self._query_execution.query_execution()
-        except Exception:
-            print("'query_execution.py' file not found")
-            sys.exit()
+        query_execution_location = "{}/query_execution.py".format(self._args.logs_path)
+        self._query_execution = self.__load_query_execution(query_execution_location)
 
-        # Load the 'credentials.json' file dynamically
-        try:
-            credentials_location = '{}/credentials.json'.format(self._args.logs_path)
-            self._credentials = self.__load_credentials(credentials_location)
-        except Exception:
-            print("'credentials.json' file not found")
-            sys.exit()
+        # Import the 'credentials.json' file dynamically
+        credentials_location = '{}/credentials.json'.format(self._args.logs_path)
+        self._credentials = self.__load_credentials(credentials_location)
 
         # Load the 'query_template.json' file dynamically
-        query_template_prefix = os.path.dirname(sys.executable) if sys.argv[0].endswith('.py') else self._SCRIPT_PATH
-        query_template_location = '{}/query_template.json'.format(query_template_prefix)
+        query_template_location = '{}/query_template.json'.format(self._SCRIPT_PATH)
         self._query_template = self.__load_query_template(query_template_location)
 
         # Store the 'Environment Name', 'Environment Data' and the list of SQL Servers that is going to perform the deploy
@@ -90,8 +81,22 @@ class deploy:
     def __cls(self):
         os.system('cls' if os.name == 'nt' else 'clear')
 
+    def __load_query_execution(self, file_path):
+        if not os.path.isfile(file_path):
+            error_msg = "The 'query_execution.py' has not been found in '{}'".format(file_path)
+            self._logger.critical(colored(error_msg, 'red', attrs=['reverse', 'bold']))
+            self._progress.error(error_msg)
+            sys.exit()
+
+        query_execution = imp.load_source('query_execution', file_path)
+        return query_execution.query_execution()
+
     def __load_credentials(self, json_path):
         try:
+            if not os.path.isfile(json_path):
+                print("The 'credentials.json' file has not been found in '{}'".format(json_path))
+                sys.exit()
+
             with open(json_path) as data_file:
                 data = json.load(data_file, object_pairs_hook=OrderedDict)
                 return data
@@ -1135,7 +1140,7 @@ class deploy:
             status_text = 'Test Execution Finished Successfully' if status == 1 else 'Test Execution Interrupted' if status == 2 else 'Test Execution Finished with errors' if status == 3 else 'Test Execution Failed'
 
         # Logs Path
-        logs_path = "{}/logs/{}.tar.gz".format(self._SCRIPT_PATH, self._args.uuid)
+        logs_path = "{}.tar.gz".format(self._args.logs_path)
         
         # Logs Url
         logs_url = ''

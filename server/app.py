@@ -29,17 +29,16 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__)) if sys.argv[0].endswith('
 EXE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 def config(args):
-    if not os.path.isfile("{}/settings.json".format(DIR_PATH)) and not args.config:
-        print("Please run: './server --config' to initialize all settings")
+    if not os.path.isfile("{}/server.conf".format(DIR_PATH)) and not args.setup:
+        print("Please run: './server --setup' to run the wizard")
         sys.exit()
-
     try:
-        with open("{}/settings.json".format(DIR_PATH)) as file_open:
+        with open("{}/server.conf".format(DIR_PATH)) as file_open:
             settings = json.load(file_open)
     except Exception:
         settings = {"bind": '', "sql": {"hostname": '', "username": '', "password": '', "port": '', "database": ''}}
     
-    if args.config:
+    if args.setup:
         config = {}
         bind = "[0.0.0.0:5000]" if settings['bind'] == '' else '[' + settings['bind'] + ']'
         config['bind'] = raw_input("- Enter the server bind address {}: ".format(bind))
@@ -62,45 +61,60 @@ def config(args):
         settings['sql']['port'] = config['sql']['port'] if config['sql']['port'] != '' else '3306' if settings['sql']['port'] == '' else settings['sql']['port']
         settings['sql']['database'] = config['sql']['database'] if config['sql']['database'] != '' else 'meteor' if settings['sql']['database'] == '' else settings['sql']['database']
 
+        print("+-----------------------------+")
+        print("| Please confirm the settings |")
+        print("+-----------------------------+")
+        print("- Server Bind Address: {}".format(settings['bind']))
+        print("- SQL Hostname: {}".format(settings['sql']['hostname']))
+        print("- SQL Username: {}".format(settings['sql']['username']))
+        print("- SQL Password: {}".format(settings['sql']['password']))
+        print("- SQL Port: {}".format(settings['sql']['port']))
+        print("- SQL Database: {}".format(settings['sql']['database']))
+        confirmation = ''
+        while confirmation not in ['y','n']:
+            confirmation = raw_input("--> Do you confirm the entered parameters? (y/n): ")
+        if confirmation == 'n':
+            sys.exit()
+
     # Check SQL Connection
     try:
         sql = models.mysql.mysql()
         sql.connect(settings['sql']['hostname'], settings['sql']['username'], settings['sql']['password'], settings['sql']['database'])
+        print("SQL Connection succeeded.")
     except Exception as e:
-        print("--> SQL Connection failed. Please check the entered SQL credentials.")
+        print("SQL Connection failed. Please check the entered SQL credentials.")
         sys.exit()
 
-    if args.config:
-        # Check SQL Database
-        if sql.check_db_exists(settings['sql']['database']):
-            print("--> A database named '{}' has been detected in '{}'.".format(settings['sql']['database'], settings['sql']['hostname']))
-            confirm = raw_input("- Do you want to recreate the database '{}'? (y/n): ",format(settings['sql']['database']))
-            if confirm == 'y':
-                sql.execute('DROP DATABASE {}'.format(settings['sql']['database']))
-                sql.execute('CREATE DATABASE {}'.format(settings['sql']['database']))
-                print("--> Building SQL Schema in '{}' database ...".format(settings['sql']['database']))
-                sql.execute('CREATE DATABASE {}'.format(settings['sql']['database']))
-                with open('{}/models/schema.sql'.format(EXE_PATH)) as file_open:
-                    queries = file_open.read().split(';')
-                    for q in queries:
-                        if q != '':
-                            sql.execute(q, settings['sql']['database'])
+    # Build SQL Schema
+    if args.setup and sql.check_db_exists(settings['sql']['database']):
+        print("A database named '{}' has been detected in '{}'.".format(settings['sql']['database'], settings['sql']['hostname']))
+        confirm = raw_input("--> Do you want to recreate the database '{}'? (y/n): ",format(settings['sql']['database']))
+        if confirm == 'y':
+            sql.execute('DROP DATABASE {}'.format(settings['sql']['database']))
+            sql.execute('CREATE DATABASE {}'.format(settings['sql']['database']))
+            print("Building SQL Schema in '{}' database ...".format(settings['sql']['database']))
+            sql.execute('CREATE DATABASE {}'.format(settings['sql']['database']))
+            with open('{}/models/schema.sql'.format(EXE_PATH)) as file_open:
+                queries = file_open.read().split(';')
+                for q in queries:
+                    if q != '':
+                        sql.execute(q, settings['sql']['database'])
 
         # Store Credentials
-        with open("{}/settings.json".format(DIR_PATH), 'w') as outfile:
+        with open("{}/server.conf".format(DIR_PATH), 'w') as outfile:
             json.dump(settings, outfile)
-        print("--> Configuration stored successfully in '{}/settings.json'.".format(DIR_PATH))
+        print("Configuration stored successfully in '{}/server.conf'.".format(DIR_PATH))
         sys.exit()
 
     if settings['bind'] == '' or settings['sql']['hostname'] == '' or settings['sql']['username'] == '' or settings['sql']['password'] == '' or settings['sql']['port'] == '' or settings['sql']['database'] == '':
-        print("Some configuration fields are empty. Please use: './server --config' and fill all fields accordingly.")
+        print("Some configuration fields are empty. Please use: './server --setup' and fill all fields accordingly.")
         sys.exit()
 
     return {"settings": settings, "sql": sql}
 
 # Start Parser
 parser = argparse.ArgumentParser(description='Meteor Next Server')
-parser.add_argument('--config', required=False, action='store_true', dest='config', help='Configure required Meteor Next settings')
+parser.add_argument('--setup', required=False, action='store_true', dest='setup', help='Start the configuration wizard')
 args = parser.parse_args()
 
 # Instantiate Flask App

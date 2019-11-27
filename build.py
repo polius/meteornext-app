@@ -17,7 +17,7 @@ class build:
         self._pwd = os.path.dirname(os.path.realpath(__file__))
         
         if len(sys.argv) == 1:
-            # subprocess.call("python3 build.py build_ext server", shell=True)
+            # subprocess.call("python3 build.py build_ext server", shell=True)
             subprocess.call("python3 build.py build_ext meteor", shell=True)
             # subprocess.call("python3 build.py build_ext client", shell=True)            
 
@@ -127,10 +127,10 @@ class GUnicornFlaskApplication(Application):
 
 if __name__ == "__main__":
     PATH = os.path.dirname(os.path.realpath(__file__)) if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
-    with open("{}/settings.json".format(PATH)) as file_open:
+    with open("{}/server.conf".format(PATH)) as file_open:
         settings = json.load(file_open)
         if len(settings['bind']) == 0:
-            print("Please before starting the server enter the config: $ ./server config")
+            print("Please run: './server --setup' to run the wizard")
         else:
             gunicorn_app = GUnicornFlaskApplication(app)
             gunicorn_app.run(worker_class="gunicorn.workers.sync.SyncWorker", bind=settings['bind'])""")
