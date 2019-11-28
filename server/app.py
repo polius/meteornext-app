@@ -30,7 +30,7 @@ EXE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 def config(args):
     if not os.path.isfile("{}/server.conf".format(DIR_PATH)) and not args.setup:
-        print("Please run: './server --setup' to run the wizard")
+        print("* Please run: './server --setup' to run the wizard")
         sys.exit()
     try:
         with open("{}/server.conf".format(DIR_PATH)) as file_open:
@@ -39,6 +39,9 @@ def config(args):
         settings = {"bind": '', "sql": {"hostname": '', "username": '', "password": '', "port": '', "database": ''}}
     
     if args.setup:
+        print("+-------------------+")
+        print("| Meteor Next Setup |")
+        print("+-------------------+")
         config = {}
         bind = "[0.0.0.0:5000]" if settings['bind'] == '' else '[' + settings['bind'] + ']'
         config['bind'] = raw_input("- Enter the server bind address {}: ".format(bind))
@@ -79,35 +82,41 @@ def config(args):
     # Check SQL Connection
     try:
         sql = models.mysql.mysql()
-        sql.connect(settings['sql']['hostname'], settings['sql']['username'], settings['sql']['password'], settings['sql']['database'])
-        print("SQL Connection succeeded.")
+        sql.connect(settings['sql']['hostname'], settings['sql']['username'], settings['sql']['password'])
+        if not args.setup:
+            sql.select_database(settings['sql']['database'])
+        print("* SQL Connection succeeded.")
+
     except Exception as e:
-        print("SQL Connection failed. Please check the entered SQL credentials.")
+        print("* SQL Connection failed. Please check the entered SQL credentials.")
+        print("* Error: {}".format(e))
         sys.exit()
 
     # Build SQL Schema
-    if args.setup and sql.check_db_exists(settings['sql']['database']):
-        print("A database named '{}' has been detected in '{}'.".format(settings['sql']['database'], settings['sql']['hostname']))
-        confirm = raw_input("--> Do you want to recreate the database '{}'? (y/n): ",format(settings['sql']['database']))
-        if confirm == 'y':
-            sql.execute('DROP DATABASE {}'.format(settings['sql']['database']))
+    if args.setup:
+        database_exists = sql.check_db_exists(settings['sql']['database'])
+        if database_exists:
+            print("* A database named '{}' has been detected in '{}'.".format(settings['sql']['database'], settings['sql']['hostname']))
+            confirm = raw_input("--> Do you want to recreate the database '{}'? (y/n): ".format(settings['sql']['database']))
+        if not database_exists or confirm == 'y':
+            sql.execute('DROP DATABASE IF EXISTS {}'.format(settings['sql']['database']))
             sql.execute('CREATE DATABASE {}'.format(settings['sql']['database']))
-            print("Building SQL Schema in '{}' database ...".format(settings['sql']['database']))
-            sql.execute('CREATE DATABASE {}'.format(settings['sql']['database']))
+            sql.select_database(settings['sql']['database'])
+            print("* Building SQL Schema in '{}' database ...".format(settings['sql']['database']))
             with open('{}/models/schema.sql'.format(EXE_PATH)) as file_open:
                 queries = file_open.read().split(';')
                 for q in queries:
                     if q != '':
-                        sql.execute(q, settings['sql']['database'])
+                        sql.execute(q)
 
         # Store Credentials
         with open("{}/server.conf".format(DIR_PATH), 'w') as outfile:
             json.dump(settings, outfile)
-        print("Configuration stored successfully in '{}/server.conf'.".format(DIR_PATH))
+        print("* Configuration stored successfully in '{}/server.conf'.".format(DIR_PATH))
         sys.exit()
 
     if settings['bind'] == '' or settings['sql']['hostname'] == '' or settings['sql']['username'] == '' or settings['sql']['password'] == '' or settings['sql']['port'] == '' or settings['sql']['database'] == '':
-        print("Some configuration fields are empty. Please use: './server --setup' and fill all fields accordingly.")
+        print("* Some configuration fields are empty. Please use: './server --setup' and fill all fields accordingly.")
         sys.exit()
 
     return {"settings": settings, "sql": sql}

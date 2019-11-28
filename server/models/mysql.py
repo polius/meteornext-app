@@ -27,6 +27,9 @@ class mysql:
         else:
             self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
 
+    def select_database(self, database):
+        self._connection.select_db(database)
+
     def execute(self, query, args=None):
         try:
             try:

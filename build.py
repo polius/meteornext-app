@@ -3,6 +3,7 @@ import os
 import sys
 import shutil
 import subprocess
+from pathlib import Path
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
@@ -22,49 +23,46 @@ class build:
             # subprocess.call("python3 build.py build_ext client", shell=True)            
 
         elif 'meteor' in sys.argv:
+            sys.argv.append("build_ext")
             sys.argv.remove("meteor")
-            self.__build_server()
-        elif 'server' in sys.argv:
-            sys.argv.remove("server")
             self.__build_meteor()
+        elif 'server' in sys.argv:
+            sys.argv.append("build_ext")
+            sys.argv.remove("server")
+            self.__build_server()
         elif 'client' in sys.argv:
             subprocess.call("cd client; npm run build", shell=True)
 
     def __build_meteor(self):
         # Build Meteor Py
-        build_path = "{}/server/apps/meteor".format(self._pwd)
+        build_path = "{}/meteor".format(self._pwd)
         additional_files = ['query_template.json', 'query_execution.py']
         additional_binaries = []
         hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3']
-        exclude_folders = []
         binary_name = 'meteor'
         binary_path = '{}/server/apps/meteor'.format(self._pwd)
-        self.__start(build_path, additional_files, additional_binaries, hidden_imports, exclude_folders, binary_name, binary_path)
+        self.__start(build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path)
 
     def __build_server(self):
         # Build Meteor Next Server
         build_path = "{}/server".format(self._pwd)
         additional_files = ['routes/deployments/query_execution.py', 'models/schema.sql']
         hidden_imports = ['json','_cffi_backend','bcrypt','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3']
-        additional_binaries = ['apps/meteor/meteor']
-        exclude_folders = ['apps']
+        additional_binaries = [['{}/server/apps/meteor/meteor'.format(self._pwd), 'apps/meteor']]
         binary_name = 'server'
         binary_path = '{}/dist'.format(self._pwd)
-        self.__start(build_path, additional_files, additional_binaries, hidden_imports, exclude_folders, binary_name, binary_path)
+        self.__start(build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path)
 
     ####################
     # INTERNAL METHODS #
     ####################
-    def __start(self, build_path, additional_files, additional_binaries, hidden_imports, exclude_folders, binary_name, binary_path):
+    def __start(self, build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path):
         self.__clean(build_path)
         shutil.copytree(build_path, "{}/build".format(build_path))
 
         for root, dirs, files in os.walk("{}/build".format(build_path)):
             if '__pycache__' in dirs:
                 shutil.rmtree("{}/{}".format(root, '__pycache__'), ignore_errors=True)
-
-        for f in exclude_folders:
-            shutil.rmtree("{}/{}".format(build_path, f), ignore_errors=True)   
 
         # Start building process
         try:
@@ -159,12 +157,11 @@ if __name__ == "__main__":
                 if f.endswith('.pyx'):
                     hidden_imports.append(os.path.join(root, f)[len("{}/build".format(build_path))+1:-4].replace('/','.'))
 
-        # 9) Create dist folder
-        if not os.path.isdir('{}/dist'.format(self._pwd)):
-            os.mkdir('{}/dist'.format(self._pwd))
+        # 9) Create "dist" folder
+        os.makedirs(binary_path, exist_ok=True)
 
         # 10) Build pyinstaller command
-        command = "cd '{}'; pyinstaller --clean --distpath '{}/dist'".format(cythonized, self._pwd)
+        command = "cd '{}'; pyinstaller --clean --distpath '{}'".format(cythonized, binary_path)
         for i in hidden_imports:
             command += " --hidden-import={}".format(i)
         for b in binaries:
@@ -173,15 +170,19 @@ if __name__ == "__main__":
             path = '.' if f.find('/') == -1 else f[:f.rfind('/')]
             command += " --add-data '{}:{}'".format(f, path)
         for b in additional_binaries:
-            path = '.' if b.find('/') == -1 else b[:b.rfind('/')]
-            command += " --add-binary '{}:{}'".format(f, path)
+            command += " --add-binary '{}:{}'".format(b[0], b[1])
+
+        command += ' --runtime-tmpdir "{}/.meteor_next/"'.format(Path.home())
         command += ' --onefile "{}/init.py"'.format(cythonized)
+
+        # Create runtime directory
+        os.makedirs("{}/.meteor_next".format(Path.home()), exist_ok=True)
 
         # 11) Pack cythonized project using pyinstaller
         subprocess.call(command, shell=True)
 
         # 12) Rename pyinstaller file
-        os.rename('{}/dist/init'.format(self._pwd), '{}/dist/{}'.format(self._pwd, binary_name))
+        os.rename('{}/init'.format(binary_path), '{}/{}'.format(binary_path, binary_name))
 
     def __clean(self, build_path):
         shutil.rmtree("{}/build".format(build_path), ignore_errors=True)
