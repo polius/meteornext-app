@@ -30,30 +30,32 @@ class build:
         elif 'client' in sys.argv:
             subprocess.call("cd client; npm run build", shell=True)
 
+    def __build_meteor(self):
+        # Build Meteor Py
+        build_path = "{}/server/apps/meteor".format(self._pwd)
+        additional_files = ['query_template.json', 'query_execution.py']
+        additional_binaries = []
+        hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3']
+        exclude_folders = []
+        binary_name = 'meteor'
+        binary_path = '{}/server/apps/meteor'.format(self._pwd)
+        self.__start(build_path, additional_files, additional_binaries, hidden_imports, exclude_folders, binary_name, binary_path)
+
     def __build_server(self):
         # Build Meteor Next Server
         build_path = "{}/server".format(self._pwd)
         additional_files = ['routes/deployments/query_execution.py', 'models/schema.sql']
         hidden_imports = ['json','_cffi_backend','bcrypt','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3']
+        additional_binaries = ['apps/meteor/meteor']
         exclude_folders = ['apps']
         binary_name = 'server'
         binary_path = '{}/dist'.format(self._pwd)
-        self.__start(build_path, additional_files, hidden_imports, exclude_folders, binary_name, binary_path)
-
-    def __build_meteor(self):
-        # Build Meteor Py
-        build_path = "{}/server/apps/meteor".format(self._pwd)
-        additional_files = ['query_template.json', 'query_execution.py']
-        hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3']
-        exclude_folders = []
-        binary_name = 'meteor'
-        binary_path = '{}/dist'.format(self._pwd)
-        self.__start(build_path, additional_files, hidden_imports, exclude_folders, binary_name, binary_path)
+        self.__start(build_path, additional_files, additional_binaries, hidden_imports, exclude_folders, binary_name, binary_path)
 
     ####################
     # INTERNAL METHODS #
     ####################
-    def __start(self, build_path, additional_files, hidden_imports, exclude_folders, binary_name, binary_path):
+    def __start(self, build_path, additional_files, additional_binaries, hidden_imports, exclude_folders, binary_name, binary_path):
         self.__clean(build_path)
         shutil.copytree(build_path, "{}/build".format(build_path))
 
@@ -67,7 +69,7 @@ class build:
         # Start building process
         try:
             self.__compile(build_path, binary_name)
-            self.__pack(build_path, additional_files, hidden_imports, binary_name, binary_path)
+            self.__pack(build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path)
         finally:
             self.__clean(build_path)
 
@@ -94,7 +96,7 @@ class build:
             )
         )
 
-    def __pack(self, build_path, additional_files, hidden_imports, binary_name, binary_path):
+    def __pack(self, build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path):
         # 4) Get the cythonized directory path
         files = os.listdir("{}/build".format(self._pwd))
         for f in files:
@@ -170,10 +172,9 @@ if __name__ == "__main__":
         for f in additional_files:
             path = '.' if f.find('/') == -1 else f[:f.rfind('/')]
             command += " --add-data '{}:{}'".format(f, path)
-        # Add meteor app
-        if binary_name == 'server':
-            command += " --add-binary '{}/dist/meteor:apps'".format(self._pwd)
-
+        for b in additional_binaries:
+            path = '.' if b.find('/') == -1 else b[:b.rfind('/')]
+            command += " --add-binary '{}:{}'".format(f, path)
         command += ' --onefile "{}/init.py"'.format(cythonized)
 
         # 11) Pack cythonized project using pyinstaller
@@ -193,7 +194,3 @@ if __name__ == "__main__":
             shutil.rmtree("{}/{}".format(build_path, compile_path), ignore_errors=True)
         else:
             shutil.rmtree("{}/{}".format(build_path, compile_path[:compile_path.find('/')+1]), ignore_errors=True)
-
-        # Delete meteor binary
-        if os.path.isfile("{}/dist/meteor".format(self._pwd)):
-            os.remove("{}/dist/meteor".format(self._pwd))
