@@ -6,4 +6,5 @@ __pycache__
 /server/logs/*
 /server/build/*
 /server/apps/*
+*.conf
 *.pyc

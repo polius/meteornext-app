@@ -15,6 +15,13 @@ let router = new VueRouter({
       meta: { requiresAuth: true }  
     },
     {
+      path: '/setup',
+      name: 'setup',
+      props: true,
+      component: () => import('../components/Setup'),
+      meta: { requiresAuth: false }
+    },
+    {
       path: '/login',
       name: 'login',
       props: true,
@@ -169,6 +176,7 @@ let router = new VueRouter({
 
 router.beforeEach((to, from, next) => {
   if (to.path == '/login' && store.getters.isLoggedIn) next('/')
+  else if (to.path == '/setup' && from.path == '/login') next('/')
   else if (to.matched.some(record => record.meta.requiresAuth)) {
     if (store.getters.isLoggedIn) next()
     else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })

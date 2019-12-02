@@ -210,8 +210,7 @@ class query_execution:
 
     def __execute(self, deployment):
         # Build Meteor Parameters
-        meteor_base_path = os.path.dirname(os.path.realpath(__file__)) if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
-        meteor_path = "{}/meteor".format(meteor_base_path)
+        meteor_path = "{}/apps/meteor".format(os.path.dirname(os.path.realpath(__file__)))
         environment = deployment['environment']
         execution_method = 'validate all' if deployment['method'].lower() == 'validate' else deployment['method'].lower()
         logs_path = "{}/{}".format(self._logs['local']['path'], self._uuid)

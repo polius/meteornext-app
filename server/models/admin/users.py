@@ -18,7 +18,7 @@ class Users:
             return self._sql.execute(query, (username))
     
     def post(self, user):
-        self._sql.execute("INSERT INTO users (username, password, email, coins, group_id, admin) SELECT %s, %s, %s, id, %s FROM groups WHERE name = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['group']))
+        self._sql.execute("INSERT INTO users (username, password, email, coins, group_id, admin) SELECT %s, %s, %s, %s, id, %s FROM groups WHERE name = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['group']))
 
     def put(self, user):
         self._sql.execute("UPDATE users SET username = %s, password = %s, email = %s, coins = %s, admin = %s, group_id = (SELECT id FROM groups WHERE `name` = %s) WHERE username = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['group'], user['current_username']))

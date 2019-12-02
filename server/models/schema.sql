@@ -26,7 +26,7 @@ CREATE TABLE `groups` (
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-INSERT INTO `groups`(`id`, `name`, `description`, `coins_day`, `coins_max`, `coins_execution`, `deployments_enable`, `deployments_basic`, `deployments_pro`, `deployments_inbenta`, `deployments_edit`, `deployments_execution_threads`, `deployments_execution_plan_factor`) VALUES (1, 'Administrator', 'Full Access', 25, 100, 10, 1, 1, 1, 1, 1, 10, 0);
+INSERT INTO `groups`(`id`, `name`, `description`, `coins_day`, `coins_max`, `coins_execution`, `deployments_enable`, `deployments_basic`, `deployments_pro`, `deployments_inbenta`, `deployments_edit`, `deployments_execution_threads`, `deployments_execution_plan_factor`) VALUES (1, 'Administrator', 'The Admin', 25, 100, 10, 1, 1, 1, 1, 1, 10, 0);
 
 CREATE TABLE `users` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
