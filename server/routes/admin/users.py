@@ -6,7 +6,7 @@ import models.admin.groups
 import models.admin.users
 
 class Users:
-    def __init__(self, sql):
+    def __init__(self, app, sql):
         # Init models
         self._groups = models.admin.groups.Groups(sql)
         self._users = models.admin.users.Users(sql)

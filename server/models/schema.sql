@@ -42,7 +42,7 @@ CREATE TABLE `users` (
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-INSERT INTO `users`(`id`, `username`, `password`, `email`, `coins`, `group_id`, `admin`) VALUES (1, 'admin', '$2b$12$Zxo.RTjV0duMDsGJ.lWlQeya51iXTYvcZXA3Zcr53vIbvYUlS0vYe', 'admin@admin.com', 100, 1, 1);
+# INSERT INTO `users`(`id`, `username`, `password`, `email`, `coins`, `group_id`, `admin`) VALUES (1, 'admin', '$2b$12$Zxo.RTjV0duMDsGJ.lWlQeya51iXTYvcZXA3Zcr53vIbvYUlS0vYe', 'admin@admin.com', 100, 1, 1);
 
 CREATE TABLE `environments` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,

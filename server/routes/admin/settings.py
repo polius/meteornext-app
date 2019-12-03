@@ -8,7 +8,7 @@ import models.admin.users
 import models.admin.settings
 
 class Settings:
-    def __init__(self, settings, sql):
+    def __init__(self, app, settings, sql):
         self._settings_conf = settings
         self._sql = sql
         # Init models

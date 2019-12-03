@@ -11,7 +11,7 @@ import models.deployments.deployments_pro
 import routes.deployments.meteor
 
 class Pro:
-    def __init__(self, sql):
+    def __init__(self, app, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
@@ -19,7 +19,7 @@ class Pro:
         self._deployments_pro = models.deployments.deployments_pro.Deployments_Pro(sql)
 
         # Init meteor
-        self._meteor = routes.deployments.meteor.Meteor(sql)
+        self._meteor = routes.deployments.meteor.Meteor(app, sql)
 
     def blueprint(self):
         # Init blueprint

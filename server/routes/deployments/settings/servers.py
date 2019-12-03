@@ -6,7 +6,7 @@ import models.deployments.environments
 import models.deployments.servers
 
 class Servers:
-    def __init__(self, sql):
+    def __init__(self, app, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._environments = models.deployments.environments.Environments(sql)

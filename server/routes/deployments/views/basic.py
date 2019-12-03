@@ -10,7 +10,7 @@ import models.deployments.deployments_basic
 import routes.deployments.meteor
 
 class Basic:
-    def __init__(self, sql):
+    def __init__(self, app, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
@@ -18,7 +18,7 @@ class Basic:
         self._deployments_basic = models.deployments.deployments_basic.Deployments_Basic(sql)
 
         # Init meteor
-        self._meteor = routes.deployments.meteor.Meteor(sql)
+        self._meteor = routes.deployments.meteor.Meteor(app, sql)
 
     def blueprint(self):
         # Init blueprint

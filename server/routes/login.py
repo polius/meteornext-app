@@ -4,7 +4,7 @@ from flask import request, jsonify, Blueprint
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity)
 
 class Login:
-    def __init__(self, sql):
+    def __init__(self, app, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
 

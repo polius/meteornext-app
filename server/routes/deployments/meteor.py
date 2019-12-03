@@ -19,7 +19,9 @@ import models.deployments.auxiliary
 import models.deployments.slack
 
 class Meteor:
-    def __init__(self, sql):
+    def __init__(self, app, sql):
+        self._app = app
+
         # Init models
         self._settings = models.admin.settings.Settings(sql)
         self._environments = models.deployments.environments.Environments(sql)
@@ -33,7 +35,7 @@ class Meteor:
         self._credentials = {}
 
         # Retrieve Meteor Logs Path
-        self._base_path = os.path.dirname(os.path.realpath(__file__)) if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
+        self._base_path = app.root_path if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
 
         # Logs Settings
         self._logs = {}
@@ -210,7 +212,8 @@ class query_execution:
 
     def __execute(self, deployment):
         # Build Meteor Parameters
-        meteor_path = "{}/apps/meteor".format(os.path.dirname(os.path.realpath(__file__)))
+        meteor_base_path = self._app.root_path if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
+        meteor_path = "{}/apps/meteor.py".format(meteor_base_path) if sys.argv[0].endswith('.py') else "{}/apps/meteor".format(meteor_base_path)
         environment = deployment['environment']
         execution_method = 'validate all' if deployment['method'].lower() == 'validate' else deployment['method'].lower()
         logs_path = "{}/{}".format(self._logs['local']['path'], self._uuid)

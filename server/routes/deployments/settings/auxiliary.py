@@ -5,7 +5,7 @@ import models.admin.users
 import models.deployments.auxiliary
 
 class Auxiliary:
-    def __init__(self, sql):
+    def __init__(self, app, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._auxiliary = models.deployments.auxiliary.Auxiliary(sql)

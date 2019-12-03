@@ -4,11 +4,11 @@ import vuetify from './plugins/vuetify';
 import router from './router'
 import store from './store'
 import Axios from 'axios'
-import settings from './settings.json'
 
 Vue.config.productionTip = false
 
 Vue.prototype.$http = Axios;
+Vue.prototype.$http.defaults.baseURL = "http://34.252.139.218:5000"
 Vue.prototype.$http.defaults.headers.common['Content-type'] = "application/json"
 
 const token = localStorage.getItem('token')
@@ -24,5 +24,5 @@ new Vue({
   render: h => h(App)
 })
 
-// Load IP from 'settings.json'
-store.dispatch('init', { settings })
+// Load IP from 'server.conf'
+// store.dispatch('init')

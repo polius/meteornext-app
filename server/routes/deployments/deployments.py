@@ -10,7 +10,7 @@ import models.deployments.deployments
 import models.admin.settings
 
 class Deployments:
-    def __init__(self, sql):
+    def __init__(self, app, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)

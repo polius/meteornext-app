@@ -18,8 +18,9 @@ export default new Vuex.Store({
     deployments_edit: localStorage.getItem('deployments_edit') == '1' ? true : false
   },
   mutations: {
-    init(state, data) {
-      state.url = 'http://' + data.settings.server.host + ':' + data.settings.server.port
+    init(state) {
+      //state.url = 'http://' + data.settings.server.host + ':' + data.settings.server.port
+      state.url = ''
     },
     auth(state, data) {
       state.username = data.username
