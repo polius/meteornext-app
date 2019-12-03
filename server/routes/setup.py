@@ -23,6 +23,7 @@ import routes.deployments.views.basic
 import routes.deployments.views.pro
 import models.mysql
 import models.admin.settings
+from cron import Cron
 
 class Setup:
     def __init__(self, args, app):
@@ -34,6 +35,14 @@ class Setup:
         try:
             with open(self._setup_file) as file_open:
                 self._conf = json.load(file_open)
+            
+            sql = models.mysql.mysql()
+            sql.connect(self._conf['sql']['hostname'], self._conf['sql']['username'], self._conf['sql']['password'], self._conf['sql']['database'])
+            self.__register_blueprints(sql)
+
+            # Start cron
+            Cron(sql)
+
         except Exception:
             self._conf = {}
 

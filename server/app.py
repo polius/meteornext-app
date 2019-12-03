@@ -8,7 +8,6 @@ import argparse
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from cron import Cron
 import routes.setup
 
 # Start Parser
@@ -36,7 +35,3 @@ if __name__ == '__main__':
     host = BIND[:BIND.find(':')]
     port = BIND[BIND.find(':')+1:]
     app.run(host=host, port=port, debug=False)
-
-# Start cron
-if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") != "true":
-    Cron(sql)
