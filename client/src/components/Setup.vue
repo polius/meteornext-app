@@ -72,7 +72,7 @@
   export default {
     data: () => ({
       // Setup Form
-      sql: { hostname: 'localhost', username: 'meteor', password: 'LjIqPL9rI9JJeJAEggk64lqzxaMgk+hRbqYM0S+Q2bg=', port: '3306', database: 'meteor' },
+      sql: { hostname: '', username: '', password: '', port: '3306', database: 'meteor' },
       account: { username: '', password: '' },
       setup_part: 1,
       formButton: 'CHECK CONNECTION',

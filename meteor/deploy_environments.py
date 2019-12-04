@@ -6,11 +6,11 @@ import multiprocessing
 import signal
 import sys
 import time
-import paramiko
 import traceback
 import shutil
 import tarfile
 import hashlib
+import paramiko
 from multiprocessing.managers import SyncManager
 from colors import colored
 
@@ -33,7 +33,7 @@ class deploy_environments:
             if self._environment_data['ssh']['enabled'] == 'True':
                 self._bin_path = "python {}/meteor/meteor.py".format(self._environment_data['ssh']['deploy_path']) if sys.argv[0].endswith('.py') else "{}/meteor/meteor".format(self._environment_data['ssh']['deploy_path'])
             else:
-                self._bin_path = "python {}/meteor.py".format(os.path.dirname(os.path.realpath(__file__))) if sys.argv[0].endswith('.py') else "{}/meteor".format(sys._MEIPASS)
+                self._bin_path = "python {}/meteor.py".format(os.path.dirname(os.path.realpath(__file__))) if sys.argv[0].endswith('.py') else "{}/apps/meteor/meteor".format(sys._MEIPASS)
 
             # print(self._bin_path)
 

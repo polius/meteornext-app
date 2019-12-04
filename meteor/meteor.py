@@ -6,10 +6,9 @@ import uuid
 import traceback
 import logging
 import argparse
+import time
 
-from time import time
-from datetime import datetime
-from deploy import deploy
+import deploy
 from colors import colored
 
 # Execute Meteor using $ python meteor.py ...
@@ -35,7 +34,7 @@ class meteor:
     def start(self):
         try: 
             # Load the Core
-            core = deploy(self._logger, self._args)
+            core = deploy.deploy(self._logger, self._args)
 
             # Remote Execution - Check SSH Connection
             core.check_remote_execution()

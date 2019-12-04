@@ -1,19 +1,9 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
-import json
-import uuid
 import datetime
-import argparse
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 import routes.setup
-
-# Start Parser
-parser = argparse.ArgumentParser(description='Meteor Next Server')
-parser.add_argument('--setup', required=False, action='store_true', dest='setup', help='Start the configuration wizard')
-args = parser.parse_args()
 
 # Instantiate Flask App
 app = Flask(__name__)
@@ -23,7 +13,7 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=8)  # days = 1
 jwt = JWTManager(app)
 
 # Instantiate & Register Settings Blueprint
-setup = routes.setup.Setup(args, app)
+setup = routes.setup.Setup(app)
 app.register_blueprint(setup.blueprint())
 
 # Enable CORS

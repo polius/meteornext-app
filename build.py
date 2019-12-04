@@ -40,15 +40,15 @@ class build:
         additional_binaries = []
         hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3']
         binary_name = 'meteor'
-        binary_path = '{}/server/apps/meteor'.format(self._pwd)
+        binary_path = '{}/server/apps'.format(self._pwd)
         self.__start(build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path)
 
     def __build_server(self):
         # Build Meteor Next Server
         build_path = "{}/server".format(self._pwd)
-        additional_files = ['routes/deployments/query_execution.py', 'models/schema.sql']
+        additional_files = ['routes/deployments/query_execution.py', 'models/schema.sql', 'apps/meteor.tar.gz']
         hidden_imports = ['json','_cffi_backend','bcrypt','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3']
-        additional_binaries = [['{}/server/apps/meteor/meteor'.format(self._pwd), 'apps/meteor']]
+        additional_binaries = []
         binary_name = 'server'
         binary_path = '{}/dist'.format(self._pwd)
         self.__start(build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path)
@@ -58,8 +58,14 @@ class build:
     ####################
     def __start(self, build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path):
         self.__clean(build_path)
+        
+        # Clean distpath files
+        shutil.rmtree("{}/{}".format(binary_path, binary_name), ignore_errors=True)
+
+        # Copy files to the build dir
         shutil.copytree(build_path, "{}/build".format(build_path))
 
+        # Clean __pycache__ folders in build dir
         for root, dirs, files in os.walk("{}/build".format(build_path)):
             if '__pycache__' in dirs:
                 shutil.rmtree("{}/{}".format(root, '__pycache__'), ignore_errors=True)
@@ -75,6 +81,7 @@ class build:
         # Build ext_modules
         ext_modules = []
         for root, dirs, files in os.walk("{}/build".format(build_path)):
+            dirs[:] = [d for d in dirs if d not in ['apps']]
             for f in files:
                 if f.endswith('.py'):
                     os.rename(os.path.join(root, f), os.path.join(root, f) + 'x')
@@ -102,6 +109,10 @@ class build:
                 break
         cythonized = "{}/build/{}".format(self._pwd, f)
 
+        # Create apps folder
+        if binary_name == 'server':
+            os.makedirs("{}/apps".format(cythonized), exist_ok=True)
+
         # 5) Copy additional files to the cytonized directory path
         for f in additional_files:
             if (os.path.isfile("{}/{}".format(build_path, f))):
@@ -116,6 +127,7 @@ from gunicorn.app.base import Application, Config
 import os
 import sys
 import json
+import tarfile
 import gunicorn
 from gunicorn import glogging
 from gunicorn.workers import sync
@@ -133,14 +145,12 @@ class GUnicornFlaskApplication(Application):
     load = lambda self:self.app
 
 if __name__ == "__main__":
-    PATH = os.path.dirname(os.path.realpath(__file__)) if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
-    with open("{}/server.conf".format(PATH)) as file_open:
-        settings = json.load(file_open)
-        if len(settings['bind']) == 0:
-            print("Please run: './server --setup' to run the wizard")
-        else:
-            gunicorn_app = GUnicornFlaskApplication(app)
-            gunicorn_app.run(worker_class="gunicorn.workers.sync.SyncWorker", bind=settings['bind'])""")
+    # Extract Meteor
+    with tarfile.open("{}/apps/meteor.tar.gz".format(sys._MEIPASS)) as tar:
+        tar.extractall(path="{}/apps/meteor/".format(sys._MEIPASS))
+    # Init Gunicorn App
+    gunicorn_app = GUnicornFlaskApplication(app)
+    gunicorn_app.run(worker_class="gunicorn.workers.sync.SyncWorker", bind='0.0.0.0:5000')""")
             else:
                 file_open.write("from {0} import {0}\n{0}()".format(binary_name))
 
@@ -173,7 +183,11 @@ if __name__ == "__main__":
             command += " --add-binary '{}:{}'".format(b[0], b[1])
 
         command += ' --runtime-tmpdir "{}/.meteor_next/"'.format(Path.home())
-        command += ' --onefile "{}/init.py"'.format(cythonized)
+        if binary_name == 'server':
+            command += ' --onefile'
+        else:
+            command += ' --onedir'
+        command += ' "{}/init.py"'.format(cythonized)
 
         # Create runtime directory
         os.makedirs("{}/.meteor_next".format(Path.home()), exist_ok=True)
@@ -183,6 +197,11 @@ if __name__ == "__main__":
 
         # 12) Rename pyinstaller file
         os.rename('{}/init'.format(binary_path), '{}/{}'.format(binary_path, binary_name))
+
+        # 13) Compress Meteor
+        if binary_name == 'meteor':
+            shutil.make_archive('{}/{}'.format(binary_path, binary_name), 'gztar', '{}/{}'.format(binary_path, binary_name))
+            shutil.rmtree('{}/{}'.format(binary_path, binary_name), ignore_errors=True)
 
     def __clean(self, build_path):
         shutil.rmtree("{}/build".format(build_path), ignore_errors=True)

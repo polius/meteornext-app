@@ -26,11 +26,11 @@ import models.admin.settings
 from cron import Cron
 
 class Setup:
-    def __init__(self, args, app):
+    def __init__(self, app):
         self._app = app
-        self._base_path = app.root_path if sys.argv[0].endswith('.py') else sys._MEIPASS
         self._setup_file = "{}/server.conf".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
         self._schema_file = "{}/models/schema.sql".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/models/schema.sql".format(sys._MEIPASS)
+        self._logs_folder = "{}/logs".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/logs".format(os.path.dirname(sys.executable))
 
         try:
             with open(self._setup_file) as file_open:
@@ -45,9 +45,6 @@ class Setup:
 
         except Exception:
             self._conf = {}
-
-        if args.setup:
-            self.__setup(args)
 
     def getBind(self):
         if 'bind' in self._conf:
@@ -105,7 +102,6 @@ class Setup:
                 sql.execute('DROP DATABASE IF EXISTS {}'.format(setup_json['sql']['database']))
                 sql.execute('CREATE DATABASE {}'.format(setup_json['sql']['database']))
                 sql.select_database(setup_json['sql']['database'])
-                print("- Building SQL Schema in '{}' database ...".format(setup_json['sql']['database']))                
                 with open(self._schema_file) as file_open:
                     queries = file_open.read().split(';')
                     for q in queries:
@@ -120,7 +116,7 @@ class Setup:
 
                 # Init Logs Local Path
                 settings = models.admin.settings.Settings(sql)
-                setting = {"name": "LOGS", "value": '{{"amazon_s3":{{"enabled":false}},"local":{{"path":"{}/logs"}}}}'.format(self._base_path)}
+                setting = {"name": "LOGS", "value": '{{"amazon_s3":{{"enabled":false}},"local":{{"path":"{}"}}}}'.format(self._logs_folder)}
                 settings.post(setting)
 
             except Exception as e:
@@ -192,84 +188,3 @@ class Setup:
         self._app.register_blueprint(deployments)
         self._app.register_blueprint(deployments_basic)
         self._app.register_blueprint(deployments_pro)
-
-    def __setup(self, args):
-        try:
-            with open(self._setup_file) as file_open:
-                settings = json.load(file_open)
-        except Exception:
-            settings = {"bind": '0.0.0.0:5000', "sql": {"hostname": '', "username": '', "password": '', "port": '', "database": ''}}
-    
-        print("+-------------------+")
-        print("| Meteor Next Setup |")
-        print("+-------------------+")
-        config = {}
-        bind = "[0.0.0.0:5000]" if settings['bind'] == '' else '[' + settings['bind'] + ']'
-        config['bind'] = input("- Enter the server bind address {}: ".format(bind))
-        settings['bind'] = config['bind'] if config['bind'] != '' else '0.0.0.0:5000' if settings['bind'] == '' else settings['bind']
-        hostname = ' [' + settings['sql']['hostname'] + ']' if settings['sql']['hostname'] != '' else ''
-        username = ' [' + settings['sql']['username'] + ']' if settings['sql']['username'] != '' else ''
-        password = ' [' + settings['sql']['password'] + ']' if settings['sql']['password'] != '' else ''
-        port = ' [' + settings['sql']['port'] + ']' if settings['sql']['port'] != '' else ' [3306]'
-        database = ' [' + settings['sql']['database'] + ']' if settings['sql']['database'] != '' else ' [meteor]'
-        config['sql'] = {
-            "hostname": input("- Enter the SQL hostname{}: ".format(hostname)),
-            "username": input("- Enter the SQL username{}: ".format(username)),
-            "password": input("- Enter the SQL password{}: ".format(password)),
-            "port": input("- Enter the SQL port{}: ".format(port)),
-            "database": input("- Enter the SQL database{}: ".format(database))
-        }
-        settings['sql']['hostname'] = config['sql']['hostname'] if config['sql']['hostname'] != '' else settings['sql']['hostname']
-        settings['sql']['username'] = config['sql']['username'] if config['sql']['username'] != '' else settings['sql']['username']
-        settings['sql']['password'] = config['sql']['password'] if config['sql']['password'] != '' else settings['sql']['password']
-        settings['sql']['port'] = config['sql']['port'] if config['sql']['port'] != '' else '3306' if settings['sql']['port'] == '' else settings['sql']['port']
-        settings['sql']['database'] = config['sql']['database'] if config['sql']['database'] != '' else 'meteor' if settings['sql']['database'] == '' else settings['sql']['database']
-
-        print("+-----------------------------+")
-        print("| Please confirm the settings |")
-        print("+-----------------------------+")
-        print("- Server Bind Address: {}".format(settings['bind']))
-        print("- SQL Hostname: {}".format(settings['sql']['hostname']))
-        print("- SQL Username: {}".format(settings['sql']['username']))
-        print("- SQL Password: {}".format(settings['sql']['password']))
-        print("- SQL Port: {}".format(settings['sql']['port']))
-        print("- SQL Database: {}".format(settings['sql']['database']))
-        confirmation = ''
-        while confirmation not in ['y','n']:
-            confirmation = input("--> Do you confirm the entered parameters? (y/n): ")
-        if confirmation == 'n':
-            sys.exit()
-
-        # Check SQL Connection
-        try:
-            sql = models.mysql.mysql()
-            sql.connect(settings['sql']['hostname'], settings['sql']['username'], settings['sql']['password'])
-            if not args.setup:
-                sql.select_database(settings['sql']['database'])
-
-        except Exception as e:
-            print("* SQL Connection failed. Please check the entered SQL credentials.")
-            print("* Error: {}".format(e))
-            sys.exit()
-
-        # Build SQL Schema
-        database_exists = sql.check_db_exists(settings['sql']['database'])
-        if database_exists:
-            print("* A database named '{}' has been detected in '{}'.".format(settings['sql']['database'], settings['sql']['hostname']))
-            confirm = input("--> Do you want to recreate the database '{}'? (y/n): ".format(settings['sql']['database']))
-        if not database_exists or confirm == 'y':
-            sql.execute('DROP DATABASE IF EXISTS {}'.format(settings['sql']['database']))
-            sql.execute('CREATE DATABASE {}'.format(settings['sql']['database']))
-            sql.select_database(settings['sql']['database'])
-            print("* Building SQL Schema in '{}' database ...".format(settings['sql']['database']))
-            with open(self._schema_file) as file_open:
-                queries = file_open.read().split(';')
-                for q in queries:
-                    if q != '':
-                        sql.execute(q)
-
-        # Store Credentials
-        with open(self._setup_file, 'w') as outfile:
-            json.dump(settings, outfile)
-        print("* Configuration stored successfully in '{}'.".format(self._setup_file))
-        sys.exit()
