@@ -22,10 +22,6 @@ class meteor:
         self._logger = self.__init_logger_stream()
         self._args = self.__init_parser()
 
-        # Check that Meteor has been called from Meteor Next 
-        if self._args.deployment_id is None and self._args.deployment_mode is None:
-            sys.exit()
-
         # Set the Default Logs Path (if it has not been set by the user)
         if self._args.logs_path is None:
             self._args.uuid = uuid.uuid4()

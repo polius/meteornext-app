@@ -48,8 +48,7 @@ export default {
   },
   methods: {
     getSlack() {
-      const path = this.$store.getters.url + '/deployments/slack'
-      axios.get(path)
+      axios.get('/deployments/slack')
         .then((response) => {
           if (response.data.data.length > 0) {
             this.webhook = response.data.data[0]['webhook']
@@ -68,12 +67,11 @@ export default {
       // Disable the fields while updating fields to the DB
       this.loading = true
       // Edit item in the DB
-      const path = this.$store.getters.url + '/deployments/slack'
       const payload = { 
         webhook: this.webhook,
         enabled: this.enabled
       }
-      axios.put(path, payload)
+      axios.put('/deployments/slack', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           this.loading = false

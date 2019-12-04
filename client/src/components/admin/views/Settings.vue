@@ -123,8 +123,7 @@ export default {
   },
   methods: {
     getSettings() {
-      const path = this.$store.getters.url + '/admin/settings'
-      axios.get(path)
+      axios.get('/admin/settings')
         .then((response) => {
           // Get Settings
           var settings = response.data.data
@@ -163,13 +162,12 @@ export default {
       // Parse amazon_s3 enable
       this.logs.amazon_s3.enabled = ('enabled' in this.logs.amazon_s3) ? this.logs.amazon_s3.enabled : false
       // Construct path & payload
-      const path = this.$store.getters.url + '/admin/settings'
       const payload = { 
         name: 'logs',
         value: JSON.stringify(this.logs)
       }
       // Update Logs values to the DB
-      axios.put(path, payload)
+      axios.put('/admin/settings', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           this.loading = false

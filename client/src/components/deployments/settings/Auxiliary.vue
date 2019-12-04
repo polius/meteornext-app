@@ -85,8 +85,7 @@ export default {
   },
   methods: {
     getAuxiliary() {
-      const path = this.$store.getters.url + '/deployments/auxiliary'
-      axios.get(path)
+      axios.get('/deployments/auxiliary')
         .then((response) => {
           this.items = response.data.data
           this.loading = false
@@ -137,9 +136,8 @@ export default {
         }
       }
       // Add item in the DB
-      const path = this.$store.getters.url + '/deployments/auxiliary'
       const payload = JSON.stringify(this.item);
-      axios.post(path, payload)
+      axios.post('/deployments/auxiliary', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           this.getAuxiliary()
@@ -177,9 +175,8 @@ export default {
         }
       }
       // Edit item in the DB
-      const path = this.$store.getters.url + '/deployments/auxiliary'
       const payload = JSON.stringify(this.item)
-      axios.put(path, payload)
+      axios.put('/deployments/auxiliary', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Edit item in the data table
@@ -202,8 +199,7 @@ export default {
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i])
       // Delete items to the DB
-      const path = this.$store.getters.url + '/deployments/auxiliary'
-      axios.delete(path, { data: payload })
+      axios.delete('/deployments/auxiliary', { data: payload })
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Delete items from the data table

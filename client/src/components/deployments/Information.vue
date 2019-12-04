@@ -531,7 +531,7 @@
       snackbarText: '',
       snackbarColor: '',
 
-      url: window.location.host 
+      url: window.location.host
     }),
     props: ['executionID', 'deploymentMode'],
     components: { 
@@ -556,7 +556,7 @@
       },
       getDeployment() {
         // Get Deployment Data
-        const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase()
+        const path = '/deployments/' + this.deployment['mode'].toLowerCase()
         axios.get(path, { params: { execution_id: this.deployment['execution_id'] } })
           .then((response) => {
             const data = response.data.data[0]
@@ -734,7 +734,7 @@
       },
       getExecutions() {
         // Get Deployment Executions
-        const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase() + '/executions'
+        const path = '/deployments/' + this.deployment['mode'].toLowerCase() + '/executions'
         axios.get(path, { params: { deployment_id: this.deployment['id'] } })
           .then((response) => {
             this.executions['items'] = response.data.data
@@ -795,7 +795,7 @@
         this.action_dialog = false
         
         // Build parameters
-        const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase() +  '/start'
+        const path = '/deployments/' + this.deployment['mode'].toLowerCase() +  '/start'
         const payload = {
           execution_id: this.deployment['execution_id']
         }
@@ -818,7 +818,7 @@
           this.stop_execution = true
 
           // Build parameters
-          const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase() +  '/stop'
+          const path = '/deployments/' + this.deployment['mode'].toLowerCase() +  '/stop'
           const payload = {
             execution_id: this.deployment['execution_id']
           }
@@ -848,7 +848,7 @@
       // -------------------------------------
       editSubmit() {
         // Build parameters
-        const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase()
+        const path = '/deployments/' + this.deployment['mode'].toLowerCase()
         var payload = {
           id: this.deployment.id,
           execution_id: this.deployment.execution_id,
@@ -983,7 +983,7 @@
       },
       resultsShare() {
         // Build parameters
-        const path = this.$store.getters.url + '/deployments/' + this.deployment['mode'].toLowerCase() +  '/public'
+        const path = '/deployments/' + this.deployment['mode'].toLowerCase() +  '/public'
         const payload = {
           execution_id: this.deployment['execution_id'],
           public: !this.deployment['public']

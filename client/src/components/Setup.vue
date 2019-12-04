@@ -101,8 +101,7 @@
     },
     methods: {
       setupAvailable() {
-        const path = this.$store.getters.url + '/setup'
-        axios.get(path)
+        axios.get('/setup')
           .then(() => {
             this.available = true
           })
@@ -120,9 +119,8 @@
           return
         }
         this.loading = true
-        const path = this.$store.getters.url + '/setup/1'
         const payload = JSON.stringify(this.sql)
-        axios.post(path, payload)
+        axios.post('/setup/1', payload)
           .then((response) => {
             this.notification('Connection successful', 'success')
               if (response.data.exists) this.dialog = true
@@ -142,12 +140,11 @@
         }
         this.notification('Setting up Meteor Next...', 'info')
         this.loading = true
-        const path = this.$store.getters.url + '/setup/2'
         const payload = {
           sql: this.sql,
           account: this.account
         }
-        axios.post(path, JSON.stringify(payload))
+        axios.post('/setup/2', JSON.stringify(payload))
           .then((response) => {
             this.notification(response.data.message, 'success')
             this.setup_part += 1

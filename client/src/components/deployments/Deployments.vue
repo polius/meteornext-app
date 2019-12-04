@@ -108,8 +108,7 @@ export default {
   },
   methods: {
     getDeployments() {
-      const path = this.$store.getters.url + '/deployments'
-      axios.get(path)
+      axios.get('/deployments')
         .then((res) => {
           this.items = res.data.data
           this.loading = false
@@ -131,12 +130,11 @@ export default {
       }
       this.loading = true
       // Edit environment name in the DB
-      const path = this.$store.getters.url + '/deployments'
       const payload = {
         id: item.id,
         name: this.inline_editing
       }
-      axios.put(path, payload)
+      axios.put('/deployments', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Reload Deployments Data
@@ -172,8 +170,7 @@ export default {
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
       // Delete items to the DB
-      const path = this.$store.getters.url + '/deployments'
-      axios.delete(path, { data: payload })
+      axios.delete('/deployments', { data: payload })
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Reload Deployments Data

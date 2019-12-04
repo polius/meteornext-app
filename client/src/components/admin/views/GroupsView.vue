@@ -434,8 +434,7 @@ export default {
     // | GROUPS |
     // +--------+
     getGroup() {
-      const path = this.$store.getters.url + '/admin/groups'
-      axios.get(path, { params: { groupID: this.groupID } })
+      axios.get('/admin/groups', { params: { groupID: this.groupID } })
         .then((response) => {
           this.group = response.data.group[0]
           this.group_epf_switch = this.group['deployments_epf'] > 0
@@ -467,7 +466,6 @@ export default {
         return
       }
       // Add group to the DB
-      const path = this.$store.getters.url + '/admin/groups'
       const payload = {
         group: JSON.stringify(this.group),
         environments: this.environment_items,
@@ -476,7 +474,7 @@ export default {
         auxiliary: this.auxiliary_items,
         slack: JSON.stringify(this.slack),        
       }
-      axios.post(path, payload)
+      axios.post('/admin/groups', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Add item in the data table
@@ -502,7 +500,6 @@ export default {
       this.group['deployments_epf'] = (this.group_epf_switch) ? this.group['deployments_epf'] : 0
 
       // Edit group to the DB
-      const path = this.$store.getters.url + '/admin/groups'
       const payload = {
         group: JSON.stringify(this.group),
         environments: this.environment_items,
@@ -511,7 +508,7 @@ export default {
         auxiliary: this.auxiliary_items,
         slack: JSON.stringify(this.slack),        
       }
-      axios.put(path, payload)
+      axios.put('/admin/groups', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Add item in the data table

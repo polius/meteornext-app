@@ -110,8 +110,7 @@ export default {
   },
   methods: {
     getRegions() {
-      const path = this.$store.getters.url + '/deployments/regions'
-      axios.get(path)
+      axios.get('/deployments/regions')
         .then((response) => {
           this.items = response.data.data.regions
           for (var i = 0; i < response.data.data.environments.length; ++i) this.environments.push(response.data.data.environments[i]['name'])
@@ -154,6 +153,8 @@ export default {
         this.loading = false
         return
       }
+      // Fix deploy_path
+      this.item.deploy_path = this.item.deploy_path.endsWith('/') ? this.item.deploy_path.slice(0, -1) : this.item.deploy_path
       // Check if new item already exists
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['environment'] == this.item.environment && this.items[i]['name'] == this.item.name) {
@@ -163,9 +164,8 @@ export default {
         }
       }
       // Add item in the DB
-      const path = this.$store.getters.url + '/deployments/regions'
       const payload = JSON.stringify(this.item);
-      axios.post(path, payload)
+      axios.post('/deployments/regions', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           this.getRegions()
@@ -190,6 +190,8 @@ export default {
         this.loading = false
         return
       }
+      // Fix deploy_path
+      this.item.deploy_path = this.item.deploy_path.endsWith('/') ? this.item.deploy_path.slice(0, -1) : this.item.deploy_path
       // Get Item Position
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['environment'] == this.selected[0]['environment'] && this.items[i]['name'] == this.selected[0]['name']) break
@@ -203,9 +205,8 @@ export default {
         }
       }
       // Edit item in the DB
-      const path = this.$store.getters.url + '/deployments/regions'
       const payload = JSON.stringify(this.item)
-      axios.put(path, payload)
+      axios.put('/deployments/regions', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Edit item in the data table
@@ -228,8 +229,7 @@ export default {
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i])
       // Delete items to the DB
-      const path = this.$store.getters.url + '/deployments/regions'
-      axios.delete(path, { data: payload })
+      axios.delete('/deployments/regions', { data: payload })
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Delete items from the data table

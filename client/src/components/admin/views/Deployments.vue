@@ -107,8 +107,7 @@ export default {
   },
   methods: {
     getDeployments() {
-      const path = this.$store.getters.url + '/admin/deployments'
-      axios.get(path)
+      axios.get('/admin/deployments')
         .then((res) => {
           this.items = res.data.data
           this.loading = false
@@ -130,8 +129,7 @@ export default {
       // Enable Loading
       this.loading = true
       // Get Deployment Data
-      const path = this.$store.getters.url + '/admin/deployments/search'
-      axios.get(path, { params: { data: this.search_dialog_data }})
+      axios.get('/admin/deployments/search', { params: { data: this.search_dialog_data }})
         .then((response) => {
           this.items = response.data.data
           this.loading = false

@@ -52,8 +52,7 @@ export default {
   },
   methods: {
     getProfile() {
-      const path = this.$store.getters.url + '/profile'
-      axios.get(path)
+      axios.get('/profile')
         .then((response) => {
           this.username = response.data.data[0]['username']
           this.group = response.data.data[0]['group']
@@ -74,12 +73,11 @@ export default {
       // Disable the fields while updating fields to the DB
       this.loading = true
       // Edit item in the DB
-      const path = this.$store.getters.url + '/profile'
       const payload = { 
         email: this.email,
         password: this.newPassword
       }
-      axios.put(path, payload)
+      axios.put('/profile', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           this.loading = false

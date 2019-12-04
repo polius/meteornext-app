@@ -94,8 +94,7 @@ export default {
   },
   methods: {
     getUsers() {
-      const path = this.$store.getters.url + '/admin/users'
-      axios.get(path)
+      axios.get('/admin/users')
         .then((response) => {
           this.items = response.data.data.users
           for (var i = 0; i < response.data.data.groups.length; ++i) this.groups.push(response.data.data.groups[i]['name'])
@@ -145,9 +144,8 @@ export default {
         }
       }
       // Add item to the DB
-      const path = this.$store.getters.url + '/admin/users'
       const payload = JSON.stringify(this.item);
-      axios.post(path, payload)
+      axios.post('/admin/users', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Retrieve again the users list
@@ -182,7 +180,6 @@ export default {
         }
       }
       // Add item to the DB
-      const path = this.$store.getters.url + '/admin/users'
       const payload = { 
         current_username: this.selected[0]['username'], 
         username: this.item.username, 
@@ -192,7 +189,7 @@ export default {
         group: this.item.group, 
         admin: this.item.admin 
       }
-      axios.put(path, payload)
+      axios.put('/admin/users', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Edit item in the data table
@@ -218,8 +215,7 @@ export default {
         payload.push(this.selected[i]['username'])
       }
       // Delete items to the DB
-      const path = this.$store.getters.url + '/admin/users'
-      axios.delete(path, { data: payload })
+      axios.delete('/admin/users', { data: payload })
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Delete items from the data table

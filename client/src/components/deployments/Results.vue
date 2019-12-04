@@ -1,5 +1,5 @@
 <template>
-  <iframe ref="frame" :src="url + `:8080/meteor_viewer/`" @load="loadFrame" v-show="loaded" :style="iframe_style" frameborder="0" scrolling="no"></iframe>
+  <iframe ref="frame" :src="`http://` + url + `/meteor_viewer/`" @load="loadFrame" v-show="loaded" :style="iframe_style" frameborder="0" scrolling="no"></iframe>
 </template>
 
 <script>
@@ -7,6 +7,7 @@ import axios from 'axios'
 
 export default  {
   data: () => ({
+    url: window.location.host,
     loaded: false,
     iframe_src: '',
     iframe_style: 'width:100%; height:'
@@ -20,9 +21,6 @@ export default  {
       type: String,
       required: false
     }
-  },
-  computed : {
-    url : function() { return this.$store.getters.url.substring(0, this.$store.getters.url.lastIndexOf(":")) }
   },
   created() {
     this.parseProps()
@@ -43,8 +41,7 @@ export default  {
       // Add status message
       this.$refs.frame.contentWindow.setLoadingText("- Retrieving Data...")
       // Get Execution Results
-      const path = this.$store.getters.url + '/deployments/results'
-      axios.get(path, { params: { uri: this.iframe_src } })
+      axios.get('/deployments/results', { params: { uri: this.iframe_src } })
         .then((response) => {
           // Inject Execution Data to Iframe
           this.$refs.frame.contentWindow.initMeteorNext(response.data)

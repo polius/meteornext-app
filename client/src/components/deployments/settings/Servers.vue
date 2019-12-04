@@ -96,8 +96,7 @@ export default {
   },
   methods: {
     getServers() {
-      const path = this.$store.getters.url + '/deployments/servers'
-      axios.get(path)
+      axios.get('/deployments/servers')
         .then((response) => {
           this.items = response.data.data.servers
           for (var i = 0; i < response.data.data.environments.length; ++i) this.environments.push(response.data.data.environments[i]['name'])
@@ -112,9 +111,8 @@ export default {
     },
     getRegions() {
       this.regions = []
-      const path = this.$store.getters.url + '/deployments/regions/list'
       const payload = {"name": this.item.environment}
-      axios.post(path, payload)
+      axios.post('/deployments/regions/list', payload)
         .then((response) => {
           for (var i = 0; i < response.data.data.length; ++i) this.regions.push(response.data.data[i]['name'])
         })
@@ -165,9 +163,8 @@ export default {
         }
       }
       // Add item in the DB
-      const path = this.$store.getters.url + '/deployments/servers'
       const payload = JSON.stringify(this.item);
-      axios.post(path, payload)
+      axios.post('/deployments/servers', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           this.getServers()
@@ -205,9 +202,8 @@ export default {
         }
       }
       // Edit item in the DB
-      const path = this.$store.getters.url + '/deployments/servers'
       const payload = JSON.stringify(this.item)
-      axios.put(path, payload)
+      axios.put('/deployments/servers', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Edit item in the data table
@@ -230,8 +226,7 @@ export default {
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i])
       // Delete items to the DB
-      const path = this.$store.getters.url + '/deployments/servers'
-      axios.delete(path, { data: payload })
+      axios.delete('/deployments/servers', { data: payload })
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Delete items from the data table

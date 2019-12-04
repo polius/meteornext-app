@@ -79,8 +79,7 @@ export default {
     // | GROUPS |
     // +--------+
     getGroups() {
-      const path = this.$store.getters.url + '/admin/groups'
-      axios.get(path)
+      axios.get('/admin/groups')
         .then((response) => {
           this.loading = false
           this.items = response.data.data
@@ -107,8 +106,7 @@ export default {
         payload.push(this.selected[i]['id'])
       }
       // Delete items to the DB
-      const path = this.$store.getters.url + '/admin/groups'
-      axios.delete(path, { data: payload })
+      axios.delete('/admin/groups', { data: payload })
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Delete items from the data table

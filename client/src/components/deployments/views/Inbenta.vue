@@ -191,7 +191,6 @@ export default {
       }
       this.loading = true
       // Build parameters
-      const path = this.$store.getters.url + '/deployments/inbenta'
       const payload = {
         name: this.name,
         products: this.products,
@@ -200,7 +199,7 @@ export default {
         start_execution: this.start_execution
       }
       // Add deployment to the DB
-      axios.post(path, payload)
+      axios.post('/deployments/inbenta', payload)
         .then((response) => {
           const data = response.data.data
           this.notification(response.data.message, 'success')

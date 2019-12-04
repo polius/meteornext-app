@@ -6,7 +6,6 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    url: '',
     username: localStorage.getItem('username') || '',
     token: localStorage.getItem('token') || '',
     coins: localStorage.getItem('coins') || 0,
@@ -18,10 +17,6 @@ export default new Vuex.Store({
     deployments_edit: localStorage.getItem('deployments_edit') == '1' ? true : false
   },
   mutations: {
-    init(state) {
-      //state.url = 'http://' + data.settings.server.host + ':' + data.settings.server.port
-      state.url = ''
-    },
     auth(state, data) {
       state.username = data.username
       state.token = data.token
@@ -54,7 +49,7 @@ export default new Vuex.Store({
     },
     login({ commit }, user) {
       return new Promise((resolve, reject) => {
-        axios({ url: this.getters.url + '/login', data: user, method: 'POST' })
+        axios.post('/login', user)
           .then(response => {
             var data = { 
               username: response.data.data.username,
@@ -131,7 +126,6 @@ export default new Vuex.Store({
   },
   getters: {
     isLoggedIn: state => !!state.token,
-    url: state => state.url,
     username: state => state.username,
     coins: state => state.coins,
     admin: state => state.admin,

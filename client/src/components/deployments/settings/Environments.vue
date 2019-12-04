@@ -25,7 +25,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
-                  <v-text-field v-if="mode!='delete'" ref="field" v-on:keyup.enter="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Environment Name" required></v-text-field>
+                  <v-text-field v-if="mode!='delete'" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Environment Name" required></v-text-field>
                   <div style="padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected environments?</div>
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
@@ -73,8 +73,7 @@ export default {
   },
   methods: {
     getEnvironments() {
-      const path = this.$store.getters.url + '/deployments/environments'
-      axios.get(path)
+      axios.get('/deployments/environments')
         .then((response) => {
           this.items = response.data.data
           this.loading = false
@@ -125,9 +124,8 @@ export default {
         }
       }
       // Add item in the DB
-      const path = this.$store.getters.url + '/deployments/environments'
       const payload = JSON.stringify(this.item)
-      axios.post(path, payload)
+      axios.post('/deployments/environments', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           this.getEnvironments()
@@ -165,9 +163,8 @@ export default {
         }
       }
       // Edit item in the DB
-      const path = this.$store.getters.url + '/deployments/environments'
       const payload = JSON.stringify(this.item)
-      axios.put(path, payload)
+      axios.put('/deployments/environments', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Edit item in the data table
@@ -190,8 +187,7 @@ export default {
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i])
       // Delete items to the DB
-      const path = this.$store.getters.url + '/deployments/environments'
-      axios.delete(path, { data: payload })
+      axios.delete('/deployments/environments', { data: payload })
         .then((response) => {
           this.notification(response.data.message, 'success')
           // Delete items from the data table

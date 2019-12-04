@@ -130,8 +130,7 @@ export default {
   },
   methods: {
     getEnvironments() {
-      const path = this.$store.getters.url + '/deployments/environments'
-      axios.get(path)
+      axios.get('/deployments/environments')
         .then((response) => {
           for (var i = 0; i < response.data.data.length; ++i) this.environment_items.push(response.data.data[i]['name'])
           this.loading = false
@@ -229,7 +228,6 @@ export default {
       }
       this.loading = true
       // Build parameters
-      const path = this.$store.getters.url + '/deployments/basic'
       const payload = {
         name: this.name,
         environment: this.environment,
@@ -239,7 +237,7 @@ export default {
         start_execution: this.start_execution
       }
       // Add deployment to the DB
-      axios.post(path, payload)
+      axios.post('/deployments/basic', payload)
         .then((response) => {
           const data = response.data.data
           this.notification(response.data.message, 'success')
