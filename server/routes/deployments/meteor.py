@@ -35,7 +35,8 @@ class Meteor:
         self._credentials = {}
 
         # Retrieve Meteor Logs Path
-        self._base_path = app.root_path if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
+        self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+        self._base_path = os.path.dirname(sys.executable) if self._bin else app.root_path
 
         # Logs Settings
         self._logs = {}
@@ -74,7 +75,7 @@ class Meteor:
                 self._credentials['environments'][environment['name']] = []
                 for region in regions:
                     if region['environment_id'] == environment['id']:
-                        key_path = "{}{}/keys/{}".format(self._logs['local']['path'], self._uuid, region['id'])
+                        key_path = "{}/{}/keys/{}".format(self._logs['local']['path'], self._uuid, region['id'])
                         region_data = {
                             "region": region['name'],
                             "ssh": {
@@ -212,8 +213,8 @@ class query_execution:
 
     def __execute(self, deployment):
         # Build Meteor Parameters
-        meteor_base_path = self._app.root_path if sys.argv[0].endswith('.py') else sys._MEIPASS
-        meteor_path = "python {}/../meteor/meteor.py".format(meteor_base_path) if sys.argv[0].endswith('.py') else "{}/apps/meteor/meteor".format(meteor_base_path)
+        meteor_base_path = sys._MEIPASS if self._bin else self._app.root_path
+        meteor_path = "{}/apps/meteor/init".format(meteor_base_path) if self._bin else "python {}/../meteor/meteor.py".format(meteor_base_path)
         environment = deployment['environment']
         execution_method = 'validate all' if deployment['method'].lower() == 'validate' else deployment['method'].lower()
         logs_path = "{}/{}".format(self._logs['local']['path'], self._uuid)

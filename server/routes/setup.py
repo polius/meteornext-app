@@ -35,7 +35,6 @@ class Setup:
         try:
             with open(self._setup_file) as file_open:
                 self._conf = json.load(file_open)
-            
             sql = models.mysql.mysql()
             sql.connect(self._conf['sql']['hostname'], self._conf['sql']['username'], self._conf['sql']['password'], self._conf['sql']['database'])
             self.__register_blueprints(sql)

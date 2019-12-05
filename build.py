@@ -2,6 +2,7 @@
 import os
 import sys
 import shutil
+import hashlib
 import subprocess
 from pathlib import Path
 from distutils.core import setup
@@ -36,11 +37,24 @@ class build:
     def __build_meteor(self):
         # Build Meteor Py
         build_path = "{}/meteor".format(self._pwd)
-        additional_files = ['query_template.json', 'query_execution.py']
+        additional_files = ['query_template.json', 'query_execution.py', 'version.txt']
         additional_binaries = []
         hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3']
         binary_name = 'meteor'
         binary_path = '{}/server/apps'.format(self._pwd)
+
+        # Generate app version
+        version = ''
+        files = os.listdir(build_path)
+        for f in files:
+            if not os.path.isdir("{}/{}".format(build_path, f)) and not f.endswith('.pyc') and not f.startswith('.') and not f.endswith('.gz') and f not in ['version.txt', 'query_execution.py', 'credentials.json']:
+                with open("{}/{}".format(build_path, f), 'rb') as file_content:
+                    file_hash = hashlib.sha512(file_content.read()).hexdigest()
+                    version += file_hash
+        with open("{}/version.txt".format(build_path), 'w') as fout:
+            fout.write(version)
+
+        # Start Build
         self.__start(build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path)
 
     def __build_server(self):
@@ -97,7 +111,8 @@ class build:
                 ext_modules,
                 build_dir=build_path,
                 language_level="3",
-                compiler_directives={'always_allow_keywords': True}
+                compiler_directives={'always_allow_keywords': True},
+                force=True
             )
         )
 

@@ -20,22 +20,21 @@ class deploy_environments:
         self._logger = logger
         self._args = args
         self._credentials = credentials
-
-        self._script_path = os.path.dirname(os.path.realpath(__file__)) if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
         self._environment_name = environment_name
         self._environment_data = environment_data
-        self._compressed_file_name = 'METEOR.tar.gz'
         self._servers = '' if self._args.servers is None else '--servers "{}"'.format(self._args.servers)
 
+        self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+
         # Environment Variables
+        self._script_path = sys._MEIPASS if self._bin else os.path.dirname(os.path.realpath(__file__))
         if self._environment_data is not None:
             # Deploy Path
             if self._environment_data['ssh']['enabled'] == 'True':
-                self._bin_path = "python {}/meteor/meteor.py".format(self._environment_data['ssh']['deploy_path']) if sys.argv[0].endswith('.py') else "{}/meteor/meteor".format(self._environment_data['ssh']['deploy_path'])
+                self._bin_path = "{}/init".format(self._environment_data['ssh']['deploy_path']) if self._bin else "python {}/meteor.py".format(self._environment_data['ssh']['deploy_path'])
+                self._ssh_logs_path = "{}/logs/{}".format(self._environment_data['ssh']['deploy_path'], self._args.uuid)
             else:
-                self._bin_path = "python {}/meteor.py".format(os.path.dirname(os.path.realpath(__file__))) if sys.argv[0].endswith('.py') else "{}/apps/meteor/meteor".format(sys._MEIPASS)
-
-            # print(self._bin_path)
+                self._bin_path = "{}/init".format(sys._MEIPASS) if self._bin else "python {}/meteor.py".format(os.path.dirname(os.path.realpath(__file__)))
 
     def validate(self, output=True, shared_array=None):
         try:
@@ -88,7 +87,7 @@ class deploy_environments:
 
     def check_version(self, output=True):    
         # Get SSH Version
-        ssh_version = self.__ssh("cat {}version.txt".format(self._deploy_path))['stdout']
+        ssh_version = self.__ssh("cat {}/version.txt".format(self._script_path))['stdout']
         if len(ssh_version) == 0:
             return False
         else:
@@ -105,55 +104,50 @@ class deploy_environments:
         return True
 
     def generate_app_version(self):
-        if not sys.argv[0].endswith('.py'):
-            with open("{}/meteor".format(self._script_path), 'rb') as file_content:
-                return hashlib.sha512(file_content.read()).hexdigest()
-
-        version = ''
-        files = os.listdir(self._script_path)
-        for f in files:
-            if not os.path.isdir(self._script_path + '/' + f) and not f.endswith('.pyc') and not f.startswith('.') and not f.endswith('.gz') and f not in ['version.txt', 'query_execution.py', 'credentials.json']:
-                with open("{0}/{1}".format(self._script_path, f), 'rb') as file_content:
-                    file_hash = hashlib.sha512(file_content.read()).hexdigest()
-                    version += file_hash
-        return version
+        if not self._bin:
+            version = ''
+            files = os.listdir(self._script_path)
+            for f in files:
+                if not os.path.isdir(self._script_path + '/' + f) and not f.endswith('.pyc') and not f.startswith('.') and not f.endswith('.gz') and f not in ['version.txt', 'query_execution.py', 'credentials.json']:
+                    with open("{0}/{1}".format(self._script_path, f), 'rb') as file_content:
+                        file_hash = hashlib.sha512(file_content.read()).hexdigest()
+                        version += file_hash
+            with open('{}/version.txt'.format(self._script_path), 'w') as file_content:
+                file_content.write(version)
 
     def prepare(self, output=True):
         if output:
             print('- Preparing Deploy...')
-        self.__ssh("mkdir -p {0} && chmod 700 {0} && rm -rf {0}*".format(self._deploy_path))
+        self.__ssh("mkdir -p {0} && chmod 700 {0} && rm -rf {0}/*".format(self._environment_data['ssh']['deploy_path']))
 
         if output:
             print('- Creating Deploy...')
         
-        if sys.argv[0].endswith('.py'):
-            self.__local('rm -rf "{0}" && tar -czvf "{0}" . --exclude "logs" --exclude "*.git*" --exclude "*.pyc" --exclude "web" --exclude "credentials.json" --exclude "query_execution.py"'.format(self._compressed_file_name), show_output=False)
-        else:
-            self.__local('rm -rf "{0}" && tar -czvf "{0}" meteor"'.format(self._compressed_file_name), show_output=False)
+        if not self._bin:
+            self.__local('cd {} && rm -rf meteor.tar.gz && tar -czvf meteor.tar.gz . --exclude "logs" --exclude "*.git*" --exclude "*.pyc" --exclude "web" --exclude "credentials.json" --exclude "query_execution.py"'.format(self._script_path), show_output=False)
 
         if output:
             print('- Uploading Deploy...')
-        self.__put(self._script_path + '/' + self._compressed_file_name, self._deploy_path + self._compressed_file_name)
+
+        compressed_file_path = "{}/../meteor.tar.gz".format(self._script_path) if self._bin else "{}/meteor.tar.gz".format(self._script_path)
+        self.__put(compressed_file_path, "{}/meteor.tar.gz".format(self._environment_data['ssh']['deploy_path']))
 
         if output:
             print("- Uncompressing Deploy...")
-        self.__ssh("tar -xvzf {0}{1} -C {0} && rm -rf {0}{1}".format(self._deploy_path, self._compressed_file_name))
+        self.__ssh("cd {} && tar -xvzf meteor.tar.gz -C . && rm -rf meteor.tar.gz".format(self._environment_data['ssh']['deploy_path']))
 
-        if output:
-            print("- Installing Requirements...")
-
-        if sys.argv[0].endswith('.py'):
-            self.__ssh('pip install -r {}meteor/requirements.txt --user'.format(self._environment_data['ssh']['deploy_path']))
+        if not self._bin:
+            if output:
+                print("- Installing Requirements...")
+            self.__ssh('pip install -r {}/requirements.txt --user'.format(self._environment_data['ssh']['deploy_path']))
 
     def setup(self, output=True):
         if output:
             print("- Setting Up New Execution...")
 
-        logs_path = "{}logs/{}/".format(self._deploy_path, self._args.uuid)
-        self.__ssh('mkdir -p {}'.format(logs_path))
-        # TO REVIEW: Binary Mode
-        self.__put(self._script_path + '/credentials.json', logs_path + 'credentials.json')
-        self.__put(self._script_path + '/query_execution.py', logs_path + 'query_execution.py')
+        self.__ssh('mkdir -p {}'.format(self._ssh_logs_path))
+        self.__put(self._args.logs_path + '/credentials.json', self._ssh_logs_path + '/credentials.json')
+        self.__put(self._args.logs_path + '/query_execution.py', self._ssh_logs_path + '/query_execution.py')
 
     def start(self, shared_array=None, progress_array=None):
         try:           
@@ -166,9 +160,9 @@ class deploy_environments:
                 if self._environment_data['ssh']['enabled'] == 'True':
                     # Start the Execution
                     if self._args.env_start_deploy:
-                        deploy = self.__ssh('{0} --environment "{1}" {2} --env_id "{3}" --env_start_deploy {4} --uuid "{5}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], execution_plan_factor, self._args.uuid), show_output=True, progress_array=progress_array)
+                        deploy = self.__ssh('{0} --environment "{1}" {2} --env_id "{3}" --env_start_deploy --logs_path "{4}" {5} --uuid "{6}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], self._ssh_logs_path, execution_plan_factor, self._args.uuid), show_output=True, progress_array=progress_array)
                     else:
-                        deploy = self.__ssh('{0} --environment "{1}" {2} --env_id "{3}" {4} --uuid "{5}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], execution_plan_factor, self._args.uuid), show_output=True, progress_array=progress_array)
+                        deploy = self.__ssh('{0} --environment "{1}" {2} --env_id "{3}" --logs_path "{4}" {5} --uuid "{6}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], self._ssh_logs_path, execution_plan_factor, self._args.uuid), show_output=True, progress_array=progress_array)
                 # Local Execution
                 else:
                     if self._args.env_start_deploy:
@@ -179,7 +173,7 @@ class deploy_environments:
                 # Check for Execution Error
                 if len(deploy['stderr']) > 0:
                     # Parse stderr
-                    stderr_parsed = str(deploy['stderr']).split("Traceback (most recent call last):\n")
+                    stderr_parsed = str(deploy['stderr'].encode('utf-8')).split("Traceback (most recent call last):\n")
                     if len(stderr_parsed) > 1:
                         stderr_parsed = "Traceback (most recent call last):\n" + stderr_parsed[1]
                         if stderr_parsed.splitlines()[-1].startswith('Process Process-'):
@@ -197,9 +191,9 @@ class deploy_environments:
                 if self._environment_data['ssh']['enabled'] == 'True':
                     # Start the Execution
                     if self._args.env_start_deploy:
-                        stderr = self.__ssh('{0} --environment "{1}" {2} --env_id "{3}" --env_start_deploy --uuid "{4}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], self._args.uuid), show_output=True)['stderr']
+                        stderr = self.__ssh('{0} --environment "{1}" {2} --env_id "{3}" --env_start_deploy --logs_path "{4}" --uuid "{5}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], self._ssh_logs_path, self._args.uuid), show_output=True)['stderr']
                     else:
-                        stderr = self.__ssh('{0} --environment "{1}" {2} --env_id "{3}" --uuid "{4}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], self._args.uuid), show_output=True)['stderr']
+                        stderr = self.__ssh('{0} --environment "{1}" {2} --env_id "{3}" --logs_path "{4}" --uuid "{5}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], self._ssh_logs_path, self._args.uuid), show_output=True)['stderr']
                 # Local Execution
                 else:
                     if self._args.env_start_deploy:
@@ -218,7 +212,7 @@ class deploy_environments:
 
     def compress_logs(self, shared_array=None):
         try:
-            output = self.__ssh('{0} --environment "{1}" {2} --env_id "{3}" --env_compress --uuid "{4}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], self._args.uuid))
+            output = self.__ssh('{0} --environment "{1}" {2} --env_id "{3}" --env_compress --logs_path "{4}" --uuid "{5}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], self._ssh_logs_path, self._args.uuid))
 
             if len(output['stderr']) > 0:
                 shared_array.append(output['stderr'])
@@ -230,7 +224,7 @@ class deploy_environments:
     def get_logs(self, shared_array=None):
         try:
             if self._environment_data['ssh']['enabled'] == 'True':
-                remote_path = "{0}/meteor/logs/{1}/execution/{2}.tar.gz".format(self._environment_data['ssh']['deploy_path'], self._args.uuid, self._environment_data['region'])
+                remote_path = "{0}/logs/{1}/execution/{2}.tar.gz".format(self._environment_data['ssh']['deploy_path'], self._args.uuid, self._environment_data['region'])
                 local_path = "{0}/execution/{1}".format(self._args.logs_path, self._environment_data['region'])
 
                 # 1. Download Compressed Logs
@@ -256,7 +250,7 @@ class deploy_environments:
                 raise
 
     def clean_remote(self, shared_array=None):
-        environment_logs = "{}logs/{}/".format(self._deploy_path, self._args.uuid)
+        environment_logs = "{}/logs/{}/".format(self._environment_data['ssh']['deploy_path'], self._args.uuid)
         output = self.__ssh('rm -rf {0}'.format(environment_logs))
 
         if len(output['stderr']) > 0:
@@ -268,8 +262,8 @@ class deploy_environments:
             if os.path.isdir(self._args.logs_path):
                 shutil.rmtree(self._args.logs_path)
 
-        # Delete 'METEOR.tar.gz'
-        self.__local('rm -rf {0}'.format(self._compressed_file_name), show_output=False)
+        # Delete 'meteor.tar.gz'
+        self.__local('rm -rf meteor.tar.gz', show_output=False)
 
     # Handle SIGINT from SyncManager object
     def mgr_sig_handler(self, signal, frame):
@@ -323,7 +317,7 @@ class deploy_environments:
     def __check_sql_connection_logic(self, sql, output, shared_array=None):
         try:
             if self._environment_data['ssh']['enabled'] == 'True':
-                command = '{0} --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --uuid "{5}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], sql['name'], self._args.uuid)
+                command = '{0} --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --logs_path "{5}" --uuid "{6}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], sql['name'], self._ssh_logs_path, self._args.uuid)
                 result = self.__ssh(command)['stdout']
             else:
                 result = self.__local('{0} --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --logs_path "{5}" --uuid "{6}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], sql['name'], self._args.logs_path, self._args.uuid), show_output=False)['stdout']

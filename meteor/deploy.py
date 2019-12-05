@@ -83,6 +83,7 @@ class deploy:
 
     def __load_query_execution(self, file_path):
         if not os.path.isfile(file_path):
+            print(file_path)
             error_msg = "The 'query_execution.py' has not been found in '{}'".format(file_path)
             self._logger.critical(colored(error_msg, 'red', attrs=['reverse', 'bold']))
             self._progress.error(error_msg)
@@ -146,8 +147,8 @@ class deploy:
 
                     if self._args.env_compress:
                         # Compress Execution Logs
-                        compressed_file_name = "{}meteor/logs/{}/execution/{}".format(environment['ssh']['deploy_path'], self._args.uuid, environment['region'])
-                        compressed_location = "{}meteor/logs/{}/execution/".format(environment['ssh']['deploy_path'], self._args.uuid)
+                        compressed_file_name = "{}/logs/{}/execution/{}".format(environment['ssh']['deploy_path'], self._args.uuid, environment['region'])
+                        compressed_location = "{}/logs/{}/execution/".format(environment['ssh']['deploy_path'], self._args.uuid)
                         if os.path.isdir(compressed_file_name):
                             shutil.make_archive(compressed_file_name, 'gztar', compressed_location)
                     else:
@@ -394,8 +395,8 @@ class deploy:
                         raise Exception("[Environment: {}] The SSH deploy path can not be empty.".format(environment))
                     if region['ssh']['enabled'] == 'True' and region['ssh']['key'] != '' and not os.path.isfile(region['ssh']['key']):
                         raise Exception("[Environment: {}] The SSH key '{}' does not exist in the path provided.".format(environment, region['ssh']['key']))
-                    if region['ssh']['enabled'] == 'True' and not region['ssh']['deploy_path'].endswith('/'):
-                        raise Exception("[Environment: {}] The SSH deploy path has to end with '/'".format(environment))
+                    if region['ssh']['enabled'] == 'True' and region['ssh']['deploy_path'].endswith('/'):
+                        region['ssh']['deploy_path'] = region['ssh']['deploy_path'][:-1]
 
                     # SQL
                     for sql in region['sql']:
@@ -485,9 +486,7 @@ class deploy:
 
             # Generate App Version
             deploy_env = deploy_environments(self._logger, self._args, self._credentials)
-            version = deploy_env.generate_app_version()
-            with open('{}/version.txt'.format(self._SCRIPT_PATH), 'w') as file_content:
-                file_content.write(version)
+            deploy_env.generate_app_version()  
 
             # Start the Validation Process
             for environment in [self._args.environment]:
@@ -1018,12 +1017,13 @@ class deploy:
                         environment_logs.extend(json_decoded['output'])
 
             # Write Environment Log
+            print(self._args.logs_path + '/meteor.js')
             with open(self._args.logs_path + '/meteor.js', 'w') as f:
                 json.dump({"output": environment_logs}, f, separators=(',', ':'))
 
             # Compress Execution Logs and Delete Uncompressed Folder
             shutil.make_archive(self._args.logs_path + '/execution', 'gztar', self._args.logs_path + '/execution')
-            shutil.rmtree(self._args.logs_path + '/execution')
+            # shutil.rmtree(self._args.logs_path + '/execution')
 
             # Return All Logs
             return environment_logs
@@ -1058,6 +1058,16 @@ class deploy:
             except Exception as e:
                 self._logger.error(colored("--> Encountered an error cleaning Remote Environments.\n{}".format(e), 'red'))
 
+        # Send SIGKILL to clear remaining Zombie Processes
+        if self._credentials['execution_mode']['parallel'] == 'True' and not self._args.validate:
+            status_msg = "- Cleaning Remaining Processes..."
+            print(status_msg)
+            self._progress.track_tasks(value=status_msg[2:])
+
+            for env_data in self._ENV_DATA[self._ENV_NAME]:
+                env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
+                env.sigkill()
+
         # Clean Local Environment
         try:
             status_msg = "- Cleaning Local Environment..."
@@ -1069,16 +1079,6 @@ class deploy:
 
         except Exception as e:
             self._logger.error(colored("--> Encountered an error cleaning Local Environment.\n{}".format(traceback.format_exc()), 'red'))
-
-        # Send SIGKILL to clear remaining Zombie Processes
-        if self._credentials['execution_mode']['parallel'] == 'True' and not self._args.validate:
-            status_msg = "- Cleaning Remaining Processes..."
-            print(status_msg)
-            self._progress.track_tasks(value=status_msg[2:])
-
-            for env_data in self._ENV_DATA[self._ENV_NAME]:
-                env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
-                env.sigkill()
 
     def __clean_sequential(self, region=None):
         env = self._credentials['environments'][region] if region is not None else self._ENV_DATA[self._ENV_NAME]

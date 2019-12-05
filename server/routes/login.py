@@ -14,9 +14,10 @@ class Login:
 
         @login_blueprint.route('/login', methods=['POST'])
         def login_user():
+            print("aaaaa")
             if not request.is_json:
                 return jsonify({"message": "Missing JSON in request"}), 400
-
+            print("asdasd")
             login_json = request.get_json()
             
             # Get User from Database
