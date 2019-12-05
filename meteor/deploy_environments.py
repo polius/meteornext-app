@@ -263,7 +263,7 @@ class deploy_environments:
                 shutil.rmtree(self._args.logs_path)
 
         # Delete 'meteor.tar.gz'
-        self.__local('rm -rf meteor.tar.gz', show_output=False)
+        self.__local('rm -rf {}/meteor.tar.gz'.format(self._script_path), show_output=False)
 
     # Handle SIGINT from SyncManager object
     def mgr_sig_handler(self, signal, frame):
