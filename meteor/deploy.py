@@ -521,6 +521,7 @@ class deploy:
 
                         # Track Progress
                         tracking = True
+                        error = False
                         while tracking:
                             # Check if all processes have finished
                             if all(not p.is_alive() for p in processes):
@@ -537,13 +538,17 @@ class deploy:
                                 self._progress.track_validation(region=data['region'], value=progress)
                                 # Check if there are any validation errors
                                 if data['success'] is False:
-                                    raise Exception()
+                                    error = True
 
                             time.sleep(1)
 
                         # Ensure all processes have finished before proceeding forward
                         for process in processes:
                             process.join()
+
+                        # If there's a validation error throw an Exception
+                        if error:
+                            raise Exception()
 
                     except KeyboardInterrupt:
                         signal.signal(signal.SIGINT,signal.SIG_IGN)

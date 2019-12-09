@@ -254,7 +254,6 @@ class deploy_environments:
                 raise
 
     def clean_remote(self, shared_array=None):
-        return
         environment_logs = "{}/logs/{}/".format(self._environment_data['ssh']['deploy_path'], self._args.uuid)
         output = self.__ssh('rm -rf {0}'.format(environment_logs))
 
@@ -263,9 +262,9 @@ class deploy_environments:
 
     def clean_local(self):
         # Delete Uncompressed Deployment Folder
-        # if os.path.exists(self._args.logs_path):
-        #     if os.path.isdir(self._args.logs_path):
-        #         shutil.rmtree(self._args.logs_path)
+        if os.path.exists(self._args.logs_path):
+            if os.path.isdir(self._args.logs_path):
+                shutil.rmtree(self._args.logs_path)
 
         # Delete 'meteor.tar.gz'
         self.__local('rm -rf {}/meteor.tar.gz'.format(self._script_path), show_output=False)
