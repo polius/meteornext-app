@@ -25,9 +25,9 @@ class Regions:
     def put(self, group_id, region):
         query = """
             UPDATE regions
-            JOIN environments e ON e.id = regions.environment_id AND e.group_id = %s AND e.name = %s
+            JOIN environments e ON e.id = regions.environment_id AND e.group_id = %s
             SET regions.name = %s,
-                environment_id = e.id,
+                environment_id = (SELECT id FROM environments WHERE name = %s),
                 cross_region = %s,
                 hostname = IF(%s = '', NULL, %s),
                 username = IF(%s = '', NULL, %s),
@@ -36,7 +36,7 @@ class Regions:
                 deploy_path = IF(%s = '', NULL, %s)
             WHERE regions.id = %s
         """
-        self._sql.execute(query, (group_id, region['environment'], region['name'], region['cross_region'], region['hostname'], region['hostname'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], region['id']))
+        self._sql.execute(query, (group_id, region['name'], region['environment'], region['cross_region'], region['hostname'], region['hostname'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], region['id']))
 
     def delete(self, group_id, region):
         query = """

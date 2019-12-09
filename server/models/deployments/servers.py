@@ -7,7 +7,7 @@ class Servers:
 
     def get(self, group_id):
         query = """
-            SELECT s.*, e.id AS 'environment_id', e.name AS 'environment', r.id AS 'region_id', r.name AS 'region' 
+            SELECT s.*, e.id AS 'environment_id', e.name AS 'environment', r.name AS 'region' 
             FROM servers s
             JOIN regions r ON r.id = s.region_id
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
@@ -27,16 +27,16 @@ class Servers:
     def put(self, group_id, server):
         query = """
             UPDATE servers
-            JOIN regions r ON r.id = servers.region_id AND r.name = %s
-            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
+            JOIN regions r ON r.id = servers.region_id AND r.id = %s
+            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.id = %s
             SET servers.name = %s,
-                servers.region_id = r.id,
+                servers.region_id = (SELECT r.id FROM regions r JOIN environments e ON e.id = r.environment_id AND e.name = %s WHERE r.name = %s),
                 servers.hostname = %s,
                 servers.username = %s,
                 servers.password = %s
             WHERE servers.id = %s
         """
-        self._sql.execute(query, (server['region'], group_id, server['environment'], server['name'], server['hostname'], server['username'], server['password'], server['id']))
+        self._sql.execute(query, (server['region_id'], group_id, server['environment_id'], server['name'], server['environment'], server['region'], server['hostname'], server['username'], server['password'], server['id']))
 
     def delete(self, group_id, server):
         query = """

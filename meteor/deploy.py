@@ -532,6 +532,8 @@ class deploy:
                                 progress = {'success': data['success']}
                                 if len(data['progress']) > 0:
                                     progress['errors'] = data['progress']
+                                if 'error' in data:
+                                    progress['error'] = data['error']
                                 self._progress.track_validation(region=data['region'], value=progress)
                                 # Check if there are any validation errors
                                 if data['success'] is False:
@@ -1017,13 +1019,12 @@ class deploy:
                         environment_logs.extend(json_decoded['output'])
 
             # Write Environment Log
-            print(self._args.logs_path + '/meteor.js')
             with open(self._args.logs_path + '/meteor.js', 'w') as f:
                 json.dump({"output": environment_logs}, f, separators=(',', ':'))
 
             # Compress Execution Logs and Delete Uncompressed Folder
             shutil.make_archive(self._args.logs_path + '/execution', 'gztar', self._args.logs_path + '/execution')
-            # shutil.rmtree(self._args.logs_path + '/execution')
+            shutil.rmtree(self._args.logs_path + '/execution')
 
             # Return All Logs
             return environment_logs

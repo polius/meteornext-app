@@ -54,9 +54,9 @@ class meteor:
             self.__print_error()
             message = str(e).replace('[USER] ', '') if str(e).startswith('[USER] ') else str(e)
             self._logger.critical(colored("Message: ", attrs=['bold']) + message)
-            if not str(e).startswith('[USER] '):
-                self._logger.critical(colored("Showing Error Traceback ...", attrs=['bold']))
-                self._logger.critical(traceback.format_exc())
+            # if not str(e).startswith('[USER] '):
+            #     self._logger.critical(colored("Showing Error Traceback ...", attrs=['bold']))
+            #     self._logger.critical(traceback.format_exc())
             core.clean()
 
     ####################

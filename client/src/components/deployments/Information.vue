@@ -104,14 +104,15 @@
 
         <!-- VALIDATION - ERROR -->
         <div v-if="validation_data.length > 0 && validation_error" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">ERROR</div>
-        <v-card v-if="validation_data.length > 0 && validation_error" style="margin-top:15px; margin-left:5px; margin-right:5px;">
+        <v-card v-if="validation_data.length > 0 && validation_error" style="margin-top:15px;">
           <v-card-text style="padding:10px 15px 10px 17px;">
             <v-container style="padding:0px!important; margin:0px!important;">
               <v-layout wrap>
                 <v-flex xs12>
                   <div v-for="region in Object.keys(deployment['progress']['validation'])" :key="region">
-                    <div v-if="!deployment['progress']['validation'][region]['success']" >
+                    <div v-if="!deployment['progress']['validation'][region]['success']">
                       <div class="subtitle-1 font-weight-medium warning--text">{{ region }}</div>
+                      <div v-if="'error' in deployment['progress']['validation'][region]" class="body-1 font-weight-regular">{{ deployment['progress']['validation'][region]['error'] }}</div>
                       <div v-for="item in deployment['progress']['validation'][region]['errors']" :key="item['server']">
                         <div class="body-1 font-weight-regular"><b>- {{ item['server'] }}.</b> {{ item['error'] }} </div>
                       </div>
@@ -579,7 +580,8 @@
         this.tasks_data = []
         this.queries_data = []
         delete this.deployment.progress.error
-
+        
+        this.validation_error = false
         this.start_execution = false
         this.stop_execution = false
       },
@@ -661,7 +663,7 @@
           var status = 'VALIDATING' 
           if ('success' in value) {
             status = (value['success'] ? 'SUCCEEDED' : 'FAILED')
-            this.validation_error = (value['success'] ? false : true)
+            if (!this.validation_error && !value['success']) this.validation_error = true
           }
           this.validation_data[0]['r' + i.toString()] = status
           i += 1

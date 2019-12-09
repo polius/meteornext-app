@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import socket
 import subprocess
 import multiprocessing
 import signal
@@ -76,11 +77,14 @@ class deploy_environments:
                 # Handle SSH Error
                 if self._credentials['execution_mode']['parallel'] == 'True':
                     print(colored("    [{}/SSH] {} ".format(self._environment_data['region'], self._environment_data['ssh']['hostname']), attrs=['bold']) + str(e))
+                    shared_array.append({'region': self._environment_data['region'], 'success': False, 'progress': [], 'error': str(e)})
                 else:
                     print(colored("✘", 'red') + colored(" [{}] ".format(self._environment_data['ssh']['hostname']), attrs=['bold']) + str(e))
 
                 print(colored('--> {} Region \'{}\' Failed.'.format(environment_type, self._environment_data['region']), 'red'))
-            raise
+
+            if self._credentials['execution_mode']['parallel'] != 'True':  
+                raise
         except KeyboardInterrupt:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 raise
@@ -250,6 +254,7 @@ class deploy_environments:
                 raise
 
     def clean_remote(self, shared_array=None):
+        return
         environment_logs = "{}/logs/{}/".format(self._environment_data['ssh']['deploy_path'], self._args.uuid)
         output = self.__ssh('rm -rf {0}'.format(environment_logs))
 
@@ -258,9 +263,9 @@ class deploy_environments:
 
     def clean_local(self):
         # Delete Uncompressed Deployment Folder
-        if os.path.exists(self._args.logs_path):
-            if os.path.isdir(self._args.logs_path):
-                shutil.rmtree(self._args.logs_path)
+        # if os.path.exists(self._args.logs_path):
+        #     if os.path.isdir(self._args.logs_path):
+        #         shutil.rmtree(self._args.logs_path)
 
         # Delete 'meteor.tar.gz'
         self.__local('rm -rf {}/meteor.tar.gz'.format(self._script_path), show_output=False)
@@ -340,7 +345,7 @@ class deploy_environments:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 raise
 
-        except Exception:      
+        except Exception:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 raise
 
@@ -406,7 +411,7 @@ class deploy_environments:
             client = paramiko.SSHClient()
             client.load_system_host_keys()
             client.set_missing_host_key_policy(paramiko.WarningPolicy())
-            client.connect(self._environment_data['ssh']['hostname'], port=22, username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'])
+            client.connect(self._environment_data['ssh']['hostname'], port=22, username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'], timeout=5)
 
             # Show Errors Output Again
             sys.stderr = sys_stderr
@@ -425,6 +430,9 @@ class deploy_environments:
             # Return Execution Output
             return { "stdout": stdout.readlines(), "stderr": ''.join(stderr.readlines()) }
 
+        except socket.error as e:
+            raise Exception("Connection Timeout. Can't establish a SSH connection.")
+
         finally:
             # Paramiko Close Connection
             client.close()
@@ -439,7 +447,7 @@ class deploy_environments:
             client = paramiko.SSHClient()
             client.load_system_host_keys()
             client.set_missing_host_key_policy(paramiko.WarningPolicy())
-            client.connect(self._environment_data['ssh']['hostname'], port=22, username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'])
+            client.connect(self._environment_data['ssh']['hostname'], port=22, username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'], timeout=10)
             
             # Show Errors Output Again
             sys.stderr = sys_stderr
@@ -465,13 +473,16 @@ class deploy_environments:
             client = paramiko.SSHClient()
             client.load_system_host_keys()
             client.set_missing_host_key_policy(paramiko.WarningPolicy())
-            client.connect(self._environment_data['ssh']['hostname'], port=22, username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'])
+            client.connect(self._environment_data['ssh']['hostname'], port=22, username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'], timeout=10)
 
             # Open sftp connection
             sftp = client.open_sftp()
 
             # Upload File
             sftp.put(local_path, remote_path)
+
+        except IOError:
+            raise Exception("The current user does not have permissions to write to the provided deployment path.")
 
         finally:
             if 'sftp' in locals():

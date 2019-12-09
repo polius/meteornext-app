@@ -191,7 +191,7 @@ export default {
         return
       }
       // Fix deploy_path
-      this.item.deploy_path = this.item.deploy_path.endsWith('/') ? this.item.deploy_path.slice(0, -1) : this.item.deploy_path
+      if (this.item.deploy_path) this.item.deploy_path = this.item.deploy_path.endsWith('/') ? this.item.deploy_path.slice(0, -1) : this.item.deploy_path
       // Get Item Position
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['environment'] == this.selected[0]['environment'] && this.items[i]['name'] == this.selected[0]['name']) break
