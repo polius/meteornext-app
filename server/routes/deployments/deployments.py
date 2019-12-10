@@ -2,6 +2,7 @@ import os
 import json
 import boto3
 import tarfile
+import shutil
 from flask import Blueprint, jsonify, request, send_from_directory
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -73,7 +74,7 @@ class Deployments:
                     tf = tarfile.open("{}.tar.gz".format(execution_results), mode="r")
                     tf.extract("./meteor.js", path=execution_results)
                     os.rename('{}/meteor.js'.format(execution_results), '{}.js'.format(execution_results))
-                    os.rmdir(execution_results)
+                    shutil.rmtree(execution_results, ignore_errors=True)
 
                 return send_from_directory(logs['local']['path'], uri + '.js')
 

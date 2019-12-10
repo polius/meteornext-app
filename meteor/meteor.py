@@ -45,7 +45,7 @@ class meteor:
         except KeyboardInterrupt:
             self._logger.warning("")
             self._logger.warning(colored("+==================================================================+", 'yellow'))
-            self._logger.warning(colored("‖  WARNING                                                         ‖", 'yellow'))
+            self._logger.warning(colored("|  WARNING                                                         |", 'yellow'))
             self._logger.warning(colored("+==================================================================+", 'yellow'))
             self._logger.warning("Program Interrupted By User.")
             core.clean()
@@ -64,7 +64,7 @@ class meteor:
     ####################
     def __print_error(self):
         self._logger.critical(colored("+==================================================================+", 'red', attrs=['bold']))
-        self._logger.critical(colored("‖  ERROR                                                           ‖", 'red', attrs=['bold']))
+        self._logger.critical(colored("|  ERROR                                                           |", 'red', attrs=['bold']))
         self._logger.critical(colored("+==================================================================+", 'red', attrs=['bold']))
 
     def __init_logger_stream(self):

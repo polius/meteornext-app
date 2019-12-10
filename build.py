@@ -4,7 +4,6 @@ import sys
 import shutil
 import hashlib
 import subprocess
-from pathlib import Path
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
@@ -39,7 +38,7 @@ class build:
         build_path = "{}/meteor".format(self._pwd)
         additional_files = ['query_template.json', 'query_execution.py', 'version.txt']
         additional_binaries = []
-        hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3']
+        hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3', 'socket']
         binary_name = 'meteor'
         binary_path = '{}/server/apps'.format(self._pwd)
 
@@ -197,7 +196,7 @@ if __name__ == "__main__":
         for b in additional_binaries:
             command += " --add-binary '{}:{}'".format(b[0], b[1])
 
-        command += ' --runtime-tmpdir "{}/.meteor_next/"'.format(Path.home())
+        # command += ' --runtime-tmpdir ".meteor_next"'
         if binary_name == 'server':
             command += ' --onefile'
         else:
@@ -205,7 +204,7 @@ if __name__ == "__main__":
         command += ' "{}/init.py"'.format(cythonized)
 
         # Create runtime directory
-        os.makedirs("{}/.meteor_next".format(Path.home()), exist_ok=True)
+        # os.makedirs(".meteor_next", exist_ok=True)
 
         # 11) Pack cythonized project using pyinstaller
         subprocess.call(command, shell=True)

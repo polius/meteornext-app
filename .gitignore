@@ -8,3 +8,5 @@ __pycache__
 /server/apps/*
 *.conf
 *.pyc
+.bash_history
+.cache/

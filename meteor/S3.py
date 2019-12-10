@@ -27,7 +27,7 @@ class S3:
         # Upload Logs to S3
         if self._credentials['s3']['enabled'] == 'True':
             print(colored("+==================================================================+", "magenta", attrs=['bold']))
-            print(colored("‖  AMAZON S3                                                       ‖", "magenta", attrs=['bold']))
+            print(colored("|  AMAZON S3                                                       |", "magenta", attrs=['bold']))
             print(colored("+==================================================================+", "magenta", attrs=['bold']))
 
             try:

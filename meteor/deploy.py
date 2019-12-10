@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
 import sys
@@ -167,7 +166,7 @@ class deploy:
 
     def __show_usage(self):
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
-        print(colored("‖  USAGE                                                           ‖", "magenta", attrs=['bold']))
+        print(colored("|  USAGE                                                           |", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
         print(colored("# python meteor.py --environment \"environment_name\" (--servers \"server1,server2,servern\") [ --validate [ credentials | queries | regions | all ] | --test | --deploy ]", attrs=['bold']))
         print(colored("\nModes:", 'yellow'))
@@ -236,7 +235,7 @@ class deploy:
                 if error_msg.__class__ == Exception:
                     if str(error_msg) != '':
                         print(colored("+==================================================================+", 'red', attrs=['bold']))
-                        print(colored("‖  ERROR FOUND IN 'query_execution.py'                             ‖", 'red', attrs=['bold']))
+                        print(colored("|  ERROR FOUND IN 'query_execution.py'                             |", 'red', attrs=['bold']))
                         print(colored("+==================================================================+", 'red', attrs=['bold']))
                         print(colored("Showing Error Traceback ...", attrs=['bold']))
                         print(str(error_msg).rstrip())
@@ -290,7 +289,7 @@ class deploy:
     def __validate(self):
         ## VALIDATION
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
-        print(colored("‖  VALIDATION                                                      ‖", "magenta", attrs=['bold']))
+        print(colored("|  VALIDATION                                                      |", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
 
         try:
@@ -599,7 +598,7 @@ class deploy:
     def __show_execution_header(self, started_datetime, started_time):
         # Show Header
         self.__cls()
-        title = "‖  TEST EXECUTION                                                  ‖" if self._args.test else "‖  DEPLOYMENT                                                      ‖"
+        title = "|  TEST EXECUTION                                                  |" if self._args.test else "|  DEPLOYMENT                                                      |"
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
         print(colored(title, "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
@@ -832,7 +831,7 @@ class deploy:
 
     def __analyze_log(self, data, log_name):
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
-        print(colored("‖  SUMMARY                                                         ‖", "magenta", attrs=['bold']))
+        print(colored("|  SUMMARY                                                         |", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
         
         # Init summary
@@ -897,7 +896,7 @@ class deploy:
 
     def __get_logs(self):
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
-        print(colored("‖  LOGS                                                            ‖", "magenta", attrs=['bold']))
+        print(colored("|  LOGS                                                            |", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
 
         # 1. Compress Execution Logs
@@ -1039,7 +1038,7 @@ class deploy:
 
     def clean(self, remote=True):
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
-        print(colored("‖  CLEAN UP                                                        ‖", "magenta", attrs=['bold']))
+        print(colored("|  CLEAN UP                                                        |", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
 
         # Clean Remote Environments
@@ -1126,7 +1125,7 @@ class deploy:
             return
 
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
-        print(colored("‖  SLACK                                                           ‖", "magenta", attrs=['bold']))
+        print(colored("|  SLACK                                                           |", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
         status_msg = "- Sending Slack Message to #meteor ..."
         self._logger.info(status_msg)
@@ -1275,7 +1274,7 @@ class deploy:
 
     def show_execution_time(self, only_validate=False):
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
-        print(colored("‖  EXECUTION TIME                                                  ‖", "magenta", attrs=['bold']))
+        print(colored("|  EXECUTION TIME                                                  |", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
 
         if not only_validate:
@@ -1304,7 +1303,7 @@ class deploy:
 
     def show_logs_location(self):
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
-        print(colored("‖  OUTPUT                                                          ‖", "magenta", attrs=['bold']))
+        print(colored("|  OUTPUT                                                          |", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
         # Show Logs Path
         self._meteor_logs_path = "{}/{}.tar.gz".format(self._args.logs_path, self._args.uuid)

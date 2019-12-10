@@ -254,6 +254,7 @@ class deploy_environments:
                 raise
 
     def clean_remote(self, shared_array=None):
+        return
         environment_logs = "{}/logs/{}/".format(self._environment_data['ssh']['deploy_path'], self._args.uuid)
         output = self.__ssh('rm -rf {0}'.format(environment_logs))
 
@@ -262,9 +263,9 @@ class deploy_environments:
 
     def clean_local(self):
         # Delete Uncompressed Deployment Folder
-        if os.path.exists(self._args.logs_path):
-            if os.path.isdir(self._args.logs_path):
-                shutil.rmtree(self._args.logs_path)
+        # if os.path.exists(self._args.logs_path):
+        #     if os.path.isdir(self._args.logs_path):
+        #         shutil.rmtree(self._args.logs_path)
 
         # Delete 'meteor.tar.gz'
         self.__local('rm -rf {}/meteor.tar.gz'.format(self._script_path), show_output=False)
@@ -410,7 +411,7 @@ class deploy_environments:
             client = paramiko.SSHClient()
             client.load_system_host_keys()
             client.set_missing_host_key_policy(paramiko.WarningPolicy())
-            client.connect(self._environment_data['ssh']['hostname'], port=22, username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'], timeout=5)
+            client.connect(self._environment_data['ssh']['hostname'], port=22, username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'], timeout=10)
 
             # Show Errors Output Again
             sys.stderr = sys_stderr
