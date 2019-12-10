@@ -849,6 +849,8 @@
       // EDIT
       // -------------------------------------
       editSubmit() {
+        // Hide Results View
+        this.show_results = false
         // Build parameters
         const path = '/deployments/' + this.deployment['mode'].toLowerCase()
         var payload = {

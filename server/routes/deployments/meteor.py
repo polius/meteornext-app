@@ -197,7 +197,7 @@ class query_execution:
     def before(self, environment, region):
         pass
     def main(self, environment, region, server, database):
-        if len(fnmatch.filter([database.decode('utf-8')], '{}')) > 0:
+        if len(fnmatch.filter([database], '{}')) > 0:
             for i in self._queries.keys():
                 self._meteor.execute(query=self._queries[str(i)], database=database)
     def after(self, environment, region):
@@ -224,8 +224,8 @@ class query_execution:
 
         # Build Meteor Command
         command = '{} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}" {}'.format(meteor_path, environment, execution_method, logs_path, query_execution_path, credentials_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor)
-        print(command)
+        # print(command)
 
         # Execute Meteor
         p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)
-        print(p.pid)
+        # print(p.pid)

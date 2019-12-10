@@ -129,6 +129,11 @@ class deploy_queries:
             raise       
 
     def __execute_main_databases(self, region, server, thread_shared_array, progress_array=None):
+        # Set SQL Connection
+        self._query.set_sql_connection(server)
+        self._query_execution.set_query(self._query)
+
+        # Supress stdout
         stdout = sys.stdout
         supress = open('/dev/null', 'w') if progress_array is not None else sys.stdout
 

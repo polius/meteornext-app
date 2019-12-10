@@ -562,7 +562,7 @@ class deploy:
             if len(str(e)) > 0:
                 self._logger.critical(str(e))
             error_msg = "- Regions Not Passed the Environment Validation."
-            self._logger.critical(colored(error_msg, 'red', attrs=['reverse', 'bold']))
+            print(colored(error_msg, 'red', attrs=['reverse', 'bold']))
             self._progress.error(error_msg[2:])
             self.clean()
             sys.exit()
