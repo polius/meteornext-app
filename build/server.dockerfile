@@ -20,4 +20,4 @@ RUN yum update -y && \
     python3 -m pip install gunicorn && \
     python3 -m pip install pyinstaller
 WORKDIR /root/build
-CMD [ "python3", "build.py" ]
+CMD [ "python3", "build_server.py" ]
