@@ -118,6 +118,9 @@ class deploy_queries:
             else:
                 self.__execute_main_databases(region, server, databases)
 
+            # Close SQL Connection
+            self._query.close_sql_connection()
+
         except KeyboardInterrupt:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 raise
@@ -181,6 +184,9 @@ class deploy_queries:
 
             # Prevent CPU bursting at 100%
             time.sleep(0.001)
+
+        # Close SQL Connection
+        self._query.close_sql_connection()
 
     def __store_main_logs(self, region, server, database):
         # Store Logs

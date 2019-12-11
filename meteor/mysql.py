@@ -25,6 +25,10 @@ class mysql:
         # Init Connection
         self.__connect(database)
 
+    def close(self):
+        if self._connection and self._connection.open:
+            self._connection.close()
+
     def __connect(self, database=None):
         # Establish the Connection
         if database is not None:

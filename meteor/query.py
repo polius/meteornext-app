@@ -52,6 +52,9 @@ class query:
         self._sql_connection = server
         self.__init_mysql()
 
+    def close_sql_connection(self):
+        self._sql.close()
+
     def __init_mysql(self):
         self._sql = mysql(self._logger, self._args, self._credentials)
         self._sql.connect(self._sql_connection.get('hostname'), self._sql_connection.get('username'), self._sql_connection.get('password'), self._sql_connection.get('database'))

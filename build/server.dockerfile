@@ -1,5 +1,3 @@
-# docker build -t meteor:latest - < Dockerfile
-# docker run --rm -it -v /home/ec2-user/git/meteor-next/:/root/ meteor:latest
 FROM amazonlinux:1
 RUN yum update -y && \
     yum upgrade -y && \

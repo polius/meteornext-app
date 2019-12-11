@@ -4,10 +4,10 @@ import time
 import subprocess
 
 if __name__ == '__main__':
-    from build import build
-    build()
+    from builder import builder
+    builder()
 
-class build:
+class builder:
     def __init__(self):
         self._pwd = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
         self.menu()
@@ -31,7 +31,7 @@ class build:
     def build_binaries(self):
         self.__show_header()
         option = ''
-        while option not in ['1','2']:
+        while option not in ['1','2','3','4']:
             print("|         Build Local         |")
             print("+=============================+")
             print("1) Build Server & Client")
@@ -44,15 +44,17 @@ class build:
             if option == '1':
                 self.__build_server()
                 self.__build_client()
-                print("- Server & Client Builded in: ".format(time.time() - start_time))
             elif option == '2':
-                self.__build_server()
-                print("- Server Builded in: ".format(time.time() - start_time))
+                self.__build_server()                
             elif option == '3':
                 self.__build_client()
-                print("- Client Builded in: ".format(time.time() - start_time))
             elif option == '4':
                 self.menu()
+
+            if option in ['1','2','3']:
+                self.__show_header()
+                print("- Distribution Path: '{}/dist/'".format(self._pwd))
+                print("- Overall Time: {}".format(time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))))
 
     def build_docker(self):
         pass
@@ -63,11 +65,12 @@ class build:
     def __build_server(self):
         subprocess.call("docker image rm meteornextbuild:latest", shell=True)
         subprocess.call("docker build -t meteornextbuild:latest - < server.dockerfile", shell=True)
-        subprocess.call("docker run --rm -it -v {}:/root/build/ meteornextbuild:latest".format(self._pwd), shell=True)
+        subprocess.call("docker run --rm -it -v {}:/root/ meteornextbuild:latest".format(self._pwd), shell=True)
         subprocess.call("docker image rm meteornextbuild:latest", shell=True)
 
     def __build_client(self):
         subprocess.call("cd {}/client ; npm run build".format(self._pwd), shell=True)
+        subprocess.call("mv {0}/client/dist {0}/dist/client".format(self._pwd), shell=True)
 
     def __show_header(self):
         os.system('cls' if os.name == 'nt' else 'clear')

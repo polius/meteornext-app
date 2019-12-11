@@ -95,7 +95,9 @@ class build_server:
                 if f.endswith('.py'):
                     os.rename(os.path.join(root, f), os.path.join(root, f) + 'x')
                     ext_name = os.path.join(root, f)[len(build_path + "/build")+1:-3].replace('/','.')
-                    ext_path = os.path.join(root, f)[len(self._pwd)+1:] + 'x'
+                    # ext_path = os.path.join(root, f)[len(self._pwd)+1:] + 'x'
+                    # ext_path = os.path.join(root, f) + 'x'
+                    ext_path = '../' + os.path.join(root, f)[len(self._pwd)+1:] + 'x'
                     ext_modules.append(Extension(ext_name, [ext_path]))
 
         # Start compilation
@@ -109,15 +111,15 @@ class build_server:
                 compiler_directives={'always_allow_keywords': True},
                 force=True
             )
-        )
+        )        
 
     def __pack(self, build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path):
         # 4) Get the cythonized directory path
-        files = os.listdir("{}/build".format(self._pwd))
+        files = os.listdir("{}/build/build".format(self._pwd))
         for f in files:
             if f.startswith('lib.') and os.path.isdir("{}/{}".format("{}/build".format(self._pwd), f)):
                 break
-        cythonized = "{}/build/{}".format(self._pwd, f)
+        cythonized = "{}/build/build/{}".format(self._pwd, f)
 
         # Create apps folder
         if binary_name == 'server':
@@ -210,8 +212,8 @@ if __name__ == "__main__":
             shutil.rmtree('{}/{}'.format(binary_path, binary_name), ignore_errors=True)
 
     def __clean(self, build_path):
-        shutil.rmtree("{}/build".format(build_path), ignore_errors=True)
         shutil.rmtree("{}/build/build".format(self._pwd), ignore_errors=True)
+        shutil.rmtree("{}/build".format(build_path), ignore_errors=True)
         shutil.rmtree("{}/logs".format(build_path), ignore_errors=True)
 
         # Delete compiled path
