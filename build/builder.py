@@ -63,10 +63,10 @@ class builder:
     # Internal Methods #
     ####################
     def __build_server(self):
-        subprocess.call("docker image rm meteornextbuild:latest", shell=True)
+        subprocess.call("docker rmi meteornextbuild:latest", shell=True)
         subprocess.call("docker build -t meteornextbuild:latest - < server.dockerfile", shell=True)
         subprocess.call("docker run --rm -it -v {}:/root/ meteornextbuild:latest".format(self._pwd), shell=True)
-        subprocess.call("docker image rm meteornextbuild:latest", shell=True)
+        subprocess.call("docker rmi meteornextbuild:latest", shell=True)
 
     def __build_client(self):
         subprocess.call("cd {}/client ; npm run build".format(self._pwd), shell=True)
