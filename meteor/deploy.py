@@ -273,9 +273,6 @@ class deploy:
                     self._progress.end(execution_status=0)
 
         except Exception as e:
-            print("errorrrr")
-            raise
-            print(str(e))
             # Store Error in the Progress
             self._progress.error(str(e))
             # Clean Environments
