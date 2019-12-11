@@ -192,6 +192,7 @@ class Pro:
             data['execution_threads'] = group['deployments_execution_threads']
             data['epf'] = group['deployments_execution_plan_factor']
             data['mode'] = 'PRO'
+            data['user'] = user['username']
 
             # Start Meteor Execution
             self._meteor.execute(data)
@@ -245,6 +246,7 @@ class Pro:
                 data['execution_threads'] = group['deployments_execution_threads']
                 data['epf'] = group['deployments_execution_plan_factor']
                 data['mode'] = 'PRO'
+                data['user'] = user['username']
 
                 # Start Meteor Execution
                 self._meteor.execute(data)
@@ -268,6 +270,7 @@ class Pro:
         deployment['execution_threads'] = group['deployments_execution_threads']
         deployment['epf'] = group['deployments_execution_plan_factor']
         deployment['mode'] = 'PRO'
+        deployment['user'] = user['username']
 
         # Update Execution Status
         self._deployments_pro.startExecution(deployment['execution_id'])

@@ -107,6 +107,7 @@ class meteor:
             parser.add_argument('--deployment_id', required=False, action='store', dest='deployment_id', help=argparse.SUPPRESS)
             parser.add_argument('--deployment_mode', required=False, action='store', dest='deployment_mode', help=argparse.SUPPRESS)
             parser.add_argument('--execution_plan_factor', required=False, action='store', dest='execution_plan_factor', help=argparse.SUPPRESS)
+            parser.add_argument('--user', required=False, action='store', dest='user', help=argparse.SUPPRESS)
 
             # App Internal Commands
             parser.add_argument('--uuid', required=False, action='store', dest='uuid', help=argparse.SUPPRESS)

@@ -1116,12 +1116,12 @@ class deploy:
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
         print(colored("|  SLACK                                                           |", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
-        status_msg = "- Sending Slack Message to #meteor ..."
-        self._logger.info(status_msg)
+        status_msg = "- Sending Slack to '#{}'...".format(self._credentials['slack']['channel_name'])
+        print(status_msg)
         self._progress.track_tasks(value=status_msg[2:])
 
         # Get Webhook Data
-        webhook_url = self._credentials['slack']['webhook']
+        webhook_url = self._credentials['slack']['webhook_url']
 
         # Execution
         execution_text = 'Deployment' if self._args.deploy else 'Test'
@@ -1186,6 +1186,11 @@ class deploy:
                 {
                     "text": "",
                     "fields": [
+                        {
+                            "title": "User",
+                            "value": "```{}```".format(self._args.user),
+                            "short": False
+                        },
                         {
                             "title": "Execution",
                             "value": "```{}```".format(execution_text),
@@ -1256,10 +1261,8 @@ class deploy:
         if response.status_code == 200:
             response = "- Slack Webhook Response: {0} [{1}]".format(str(response.text).upper(), str(response.status_code))
         else:
-            response = "- Slack Webhook Response: {0} [{1}]".format(str(response.text).upper(), str(response.status_code))
-        
+            response = "- Slack Webhook Response: {0} [{1}]".format(str(response.text).upper(), str(response.status_code))        
         print(response)
-        self._progress.track_tasks(value=response[2:])
 
     def show_execution_time(self, only_validate=False):
         print(colored("+==================================================================+", "magenta", attrs=['bold']))

@@ -95,7 +95,8 @@ CREATE TABLE `auxiliary` (
 
 CREATE TABLE `slack` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `webhook` text COLLATE utf8mb4_unicode_ci,
+  `channel_name` varchar(191) COLLATE utf8mb4_unicode_ci,
+  `webhook_url` text COLLATE utf8mb4_unicode_ci,
   `enabled` tinyint(1) DEFAULT NULL,
   `group_id` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),

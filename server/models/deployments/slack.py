@@ -7,7 +7,7 @@ class Slack:
 
     def get(self, group_id):
         query = """
-            SELECT webhook, enabled
+            SELECT channel_name, webhook_url, enabled
             FROM slack
             WHERE group_id = %s
         """
@@ -15,19 +15,20 @@ class Slack:
 
     def post(self, group_id, slack):
         query = """
-            INSERT INTO slack (webhook, enabled, group_id)             
-            VALUES (%s, %s, %s)
+            INSERT INTO slack (channel_name, webhook_url, enabled, group_id)             
+            VALUES (%s, %s, %s, %s)
         """
-        self._sql.execute(query, (slack['webhook'], slack['enabled'], group_id))
+        self._sql.execute(query, (slack['channel_name'], slack['webhook_url'], slack['enabled'], group_id))
 
     def put(self, group_id, slack):
         query = """
             UPDATE slack
-            SET webhook = %s,
+            SET channel_name = %s,
+                webhook_url = %s,
                 enabled = %s
             WHERE group_id = %s
         """
-        self._sql.execute(query, (slack['webhook'], slack['enabled'], group_id))
+        self._sql.execute(query, (slack['channel_name'], slack['webhook_url'], slack['enabled'], group_id))
     
     def delete(self, group_id):
        self._sql.execute("DELETE FROM slack WHERE group_id = %s", (group_id))

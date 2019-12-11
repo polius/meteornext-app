@@ -8,7 +8,8 @@
         <v-layout row wrap>
           <v-flex xs12>
             <v-form style="padding:0px 10px 10px 10px;">
-              <v-text-field :loading="loading" :disabled="loading" v-model="webhook" label="Webhook URL" required></v-text-field>
+              <v-text-field :loading="loading" :disabled="loading" v-model="channel_name" label="Channel Name"></v-text-field>
+              <v-text-field :loading="loading" :disabled="loading" v-model="webhook_url" label="Webhook URL" style="padding-top:0px;"></v-text-field>
               <v-switch :disabled="loading" v-model="enabled" label="Enable Notifications" style="margin-top:0px;"></v-switch>
               <v-divider style="margin-top:-5px;"></v-divider>
               <div style="margin-top:20px;">
@@ -33,7 +34,8 @@ import axios from 'axios';
 
 export default {
   data: () => ({
-    webhook: '',
+    channel_name: '',
+    webhook_url: '',
     enabled: false,
     loading: true,
 
@@ -51,7 +53,8 @@ export default {
       axios.get('/deployments/slack')
         .then((response) => {
           if (response.data.data.length > 0) {
-            this.webhook = response.data.data[0]['webhook']
+            this.channel_name = response.data.data[0]['channel_name']
+            this.webhook_url = response.data.data[0]['webhook_url']
             this.enabled = response.data.data[0]['enabled']
           }
           this.loading = false
@@ -67,8 +70,9 @@ export default {
       // Disable the fields while updating fields to the DB
       this.loading = true
       // Edit item in the DB
-      const payload = { 
-        webhook: this.webhook,
+      const payload = {
+        channel_name: this.channel_name,
+        webhook_url: this.webhook_url,
         enabled: this.enabled
       }
       axios.put('/deployments/slack', payload)

@@ -176,6 +176,7 @@ class Basic:
             data['execution_threads'] = group['deployments_execution_threads']
             data['epf'] = group['deployments_execution_plan_factor']
             data['mode'] = 'BASIC'
+            data['user'] = user['username']
 
             # Start Meteor Execution
             self._meteor.execute(data)
@@ -229,6 +230,7 @@ class Basic:
                 data['execution_threads'] = group['deployments_execution_threads']
                 data['epf'] = group['deployments_execution_plan_factor']
                 data['mode'] = 'BASIC'
+                data['user'] = user['username']
 
                 # Start Meteor Execution
                 self._meteor.execute(data)
@@ -246,6 +248,7 @@ class Basic:
         deployment['execution_threads'] = group['deployments_execution_threads']
         deployment['epf'] = group['deployments_execution_plan_factor']
         deployment['mode'] = 'BASIC'
+        deployment['user'] = user['username']
 
         # Update Execution Status
         self._deployments_basic.startExecution(deployment['execution_id'])

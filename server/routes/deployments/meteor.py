@@ -140,12 +140,14 @@ class Meteor:
         # Compile Slack
         self._credentials['slack'] = {
             "enabled": "False",
-            "webhook": ""
+            "channel_name": "",
+            "webhook_url": ""
         }
         if len(slack) > 0:
             self._credentials['slack'] = {
                 "enabled": "True" if slack[0]['enabled'] == 1 else 'False',
-                "webhook": slack[0]['webhook']
+                "channel_name": slack[0]['channel_name'],
+                "webhook_url": slack[0]['webhook_url']
             }        
 
         # Compile Execution Mode
@@ -221,9 +223,10 @@ class query_execution:
         query_execution_path = "{}/{}/query_execution.py".format(self._logs['local']['path'], self._uuid)
         credentials_path = "{}/{}/credentials.json".format(self._logs['local']['path'], self._uuid)
         execution_plan_factor = '--execution_plan_factor "{}"'.format(deployment['epf']) if deployment['epf'] > 0 else ''
+        user = deployment['user']
 
         # Build Meteor Command
-        command = '{} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}" {}'.format(meteor_path, environment, execution_method, logs_path, query_execution_path, credentials_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor)
+        command = '{} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}" {} --user "{}"'.format(meteor_path, environment, execution_method, logs_path, query_execution_path, credentials_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor, user)
         # print(command)
 
         # Execute Meteor
