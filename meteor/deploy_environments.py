@@ -253,12 +253,17 @@ class deploy_environments:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 raise
 
-    def clean_remote(self, shared_array=None):
-        environment_logs = "{}/logs/{}/".format(self._environment_data['ssh']['deploy_path'], self._args.uuid)
-        output = self.__ssh('rm -rf {0}'.format(environment_logs))
+    def clean_remote(self, remote=True, shared_array=None):
+        if remote:
+            # Clean Remote Execution Logs
+            environment_logs = "{}/logs/{}/".format(self._environment_data['ssh']['deploy_path'], self._args.uuid)
+            output = self.__ssh('rm -rf {0}'.format(environment_logs))
 
-        if len(output['stderr']) > 0:
-            shared_array.append(output['stderr'])
+            if len(output['stderr']) > 0:
+                shared_array.append(output['stderr'])
+
+            # Clean Remaining Processes
+            self.sigkill()
 
     def clean_local(self):
         # Delete Uncompressed Deployment Folder
@@ -268,6 +273,9 @@ class deploy_environments:
 
         # Delete 'meteor.tar.gz'
         self.__local('rm -rf {}/meteor.tar.gz'.format(self._script_path), show_output=False)
+
+        # Clean Remaining Processes
+        self.sigkill()
 
     # Handle SIGINT from SyncManager object
     def mgr_sig_handler(self, signal, frame):
@@ -348,14 +356,6 @@ class deploy_environments:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 raise
 
-    def sigint(self):
-        command = "ps -U $USER -u $USER u | grep \"" + str(self._args.uuid) + "\" | grep -v grep | awk '{print $2}' | xargs kill -2"
-
-        if self._environment_data['ssh']['enabled'] == 'False':
-            self.__local(command)
-        else:
-            self.__ssh(command)
-    
     def check_processes(self):
         # Check Processes Currently Executing
         attempts = 99
@@ -374,13 +374,20 @@ class deploy_environments:
                 break
             time.sleep(10)
 
+    def sigint(self):
+        command = "ps -U $USER -u $USER u | grep \"" + str(self._args.uuid) + "\" | grep -v grep | awk '{print $2}' | xargs kill -2"
 
-    def sigkill(self):
-        command = "ps -U $USER -u $USER u | grep '" + str(self._args.logs_path) + "' | grep '--env_id'  | grep -v grep | awk '{print $2}' | xargs kill -9 2> /dev/null"
         if self._environment_data['ssh']['enabled'] == 'False':
             self.__local(command)
         else:
             self.__ssh(command)
+
+    def sigkill(self):
+        command = "ps -U $USER -u $USER u | grep '" + str(self._args.logs_path) + "' | grep '--env_id'  | grep -v grep | awk '{print $2}' | xargs kill -9 2> /dev/null"
+        if self._environment_data and self._environment_data['ssh']['enabled'] == 'True':
+            self.__ssh(command)
+        else:
+            self.__local(command)
 
     ################
     # Core Methods #
@@ -434,7 +441,8 @@ class deploy_environments:
 
         finally:
             # Paramiko Close Connection
-            client.close()
+            if client.get_transport() is not None and client.get_transport().is_active():
+                client.close()
 
     def __get(self, remote_path, local_path):
         try:

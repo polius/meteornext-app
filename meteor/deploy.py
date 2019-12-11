@@ -273,6 +273,8 @@ class deploy:
                     self._progress.end(execution_status=0)
 
         except Exception as e:
+            print("errorrrr")
+            raise
             print(str(e))
             # Store Error in the Progress
             self._progress.error(str(e))
@@ -1041,38 +1043,6 @@ class deploy:
         print(colored("|  CLEAN UP                                                        |", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
 
-        # Clean Remote Environments
-        if remote:
-            try:
-                status_msg = "- Cleaning Remote Environments..."
-                print(status_msg)
-                self._progress.track_tasks(value=status_msg[2:])
-
-                if self._ENV_DATA != {}:
-                    if self._credentials['execution_mode']['parallel'] == "True":
-                        self.__clean_parallel()
-                    else:
-                        self.__clean_sequential()
-                else:
-                    for region in self._credentials['environments']:
-                        if self._credentials['execution_mode']['parallel'] == "True":
-                            self.__clean_parallel(region)
-                        else:
-                            self.__clean_sequential(region)
-
-            except Exception as e:
-                self._logger.error(colored("--> Encountered an error cleaning Remote Environments.\n{}".format(e), 'red'))
-
-        # Send SIGKILL to clear remaining Zombie Processes
-        if self._credentials['execution_mode']['parallel'] == 'True' and not self._args.validate:
-            status_msg = "- Cleaning Remaining Processes..."
-            print(status_msg)
-            self._progress.track_tasks(value=status_msg[2:])
-
-            for env_data in self._ENV_DATA[self._ENV_NAME]:
-                env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
-                env.sigkill()
-
         # Clean Local Environment
         try:
             status_msg = "- Cleaning Local Environment..."
@@ -1085,26 +1055,48 @@ class deploy:
         except Exception as e:
             self._logger.error(colored("--> Encountered an error cleaning Local Environment.\n{}".format(traceback.format_exc()), 'red'))
 
-    def __clean_sequential(self, region=None):
+        # Clean Remote Environments
+        if remote:
+            try:
+                status_msg = "- Cleaning Remote Environments..."
+                print(status_msg)
+                self._progress.track_tasks(value=status_msg[2:])
+
+                if self._ENV_DATA != {}:
+                    if self._credentials['execution_mode']['parallel'] == "True":
+                        self.__clean_parallel(region=None, remote=remote)
+                    else:
+                        self.__clean_sequential(region=None, remote=remote)
+                else:
+                    for region in self._credentials['environments']:
+                        if self._credentials['execution_mode']['parallel'] == "True":
+                            self.__clean_parallel(region, remote)
+                        else:
+                            self.__clean_sequential(region, remote)
+
+            except Exception as e:
+                self._logger.error(colored("--> Encountered an error cleaning Remote Environments.\n{}".format(e), 'red'))
+
+    def __clean_sequential(self, region=None, remote=True):
         env = self._credentials['environments'][region] if region is not None else self._ENV_DATA[self._ENV_NAME]
 
         for env_data in env:
             if (env_data['ssh']['enabled'] == 'True'):
                 env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
-                env.clean_remote()
+                env.clean_remote(remote)
     
-    def __clean_parallel(self, region=None):
+    def __clean_parallel(self, region=None, remote=True):
         try:
             manager = SyncManager()
             manager.start(self.__mgr_init)
             shared_array = manager.list()
-
             processes = []
             env = self._credentials['environments'][region] if region is not None else self._ENV_DATA[self._ENV_NAME]
+
             for env_data in env:
                 if (env_data['ssh']['enabled'] == 'True'):
                     env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
-                    p = multiprocessing.Process(target=env.clean_remote, args=(shared_array,))
+                    p = multiprocessing.Process(target=env.clean_remote, args=(remote, shared_array,))
                     p.start()
                     processes.append(p)
 
