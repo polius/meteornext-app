@@ -162,7 +162,7 @@ if __name__ == "__main__":
         tar.extractall(path="{}/apps/meteor/".format(sys._MEIPASS))
     # Init Gunicorn App
     gunicorn_app = GUnicornFlaskApplication(app)
-    gunicorn_app.run(worker_class="gunicorn.workers.sync.SyncWorker", bind='0.0.0.0:5000')""")
+    gunicorn_app.run(worker_class="gunicorn.workers.sync.SyncWorker", bind='unix:server.sock')""")
             else:
                 file_open.write("from {0} import {0}\n{0}()".format(binary_name))
 
@@ -213,6 +213,7 @@ if __name__ == "__main__":
 
     def __clean(self, build_path):
         shutil.rmtree("{}/build/build".format(self._pwd), ignore_errors=True)
+        shutil.rmtree("{}/dist/logs".format(self._pwd), ignore_errors=True)
         shutil.rmtree("{}/build".format(build_path), ignore_errors=True)
         shutil.rmtree("{}/logs".format(build_path), ignore_errors=True)
 
