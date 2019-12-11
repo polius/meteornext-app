@@ -1,4 +1,3 @@
-# python3 build.py
 import os
 import sys
 import shutil
@@ -10,17 +9,16 @@ from Cython.Distutils import build_ext
 from Cython.Build import cythonize
 
 if __name__ == '__main__':
-    from build import build
-    build()
+    from build_server import build_server
+    build_server()
 
-class build:
+class build_server:
     def __init__(self):
-        self._pwd = os.path.dirname(os.path.realpath(__file__))
+        self._pwd = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
         
         if len(sys.argv) == 1:
-            subprocess.call("python3 build.py build_ext meteor", shell=True)
-            subprocess.call("python3 build.py build_ext server", shell=True)
-            # subprocess.call("python3 build.py build_ext client", shell=True)            
+            subprocess.call("python3 build_server.py build_ext meteor", shell=True)
+            subprocess.call("python3 build_server.py build_ext server", shell=True)
 
         elif 'meteor' in sys.argv:
             sys.argv.append("build_ext")
@@ -30,8 +28,6 @@ class build:
             sys.argv.append("build_ext")
             sys.argv.remove("server")
             self.__build_server()
-        elif 'client' in sys.argv:
-            subprocess.call("cd client; npm run build", shell=True)
 
     def __build_meteor(self):
         # Build Meteor Py
@@ -196,15 +192,11 @@ if __name__ == "__main__":
         for b in additional_binaries:
             command += " --add-binary '{}:{}'".format(b[0], b[1])
 
-        # command += ' --runtime-tmpdir ".meteor_next"'
         if binary_name == 'server':
             command += ' --onefile'
         else:
             command += ' --onedir'
         command += ' "{}/init.py"'.format(cythonized)
-
-        # Create runtime directory
-        # os.makedirs(".meteor_next", exist_ok=True)
 
         # 11) Pack cythonized project using pyinstaller
         subprocess.call(command, shell=True)
@@ -219,7 +211,7 @@ if __name__ == "__main__":
 
     def __clean(self, build_path):
         shutil.rmtree("{}/build".format(build_path), ignore_errors=True)
-        shutil.rmtree("{}/build".format(self._pwd), ignore_errors=True)
+        shutil.rmtree("{}/build/build".format(self._pwd), ignore_errors=True)
         shutil.rmtree("{}/logs".format(build_path), ignore_errors=True)
 
         # Delete compiled path

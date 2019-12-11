@@ -19,5 +19,5 @@ RUN yum update -y && \
     python3 -m pip install cython && \
     python3 -m pip install gunicorn && \
     python3 -m pip install pyinstaller
-WORKDIR /root
+WORKDIR /root/build
 CMD [ "python3", "build.py" ]

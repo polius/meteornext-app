@@ -178,8 +178,8 @@ class Meteor:
             self.__compile_query_execution_basic(deployment)
         elif deployment['mode'] == 'PRO':
             self._query_execution = deployment['code']
-        # elif deployment['mode'] == 'INBENTA':
-        #     self.__compile_query_execution_inbenta(deployment)
+        elif deployment['mode'] == 'INBENTA':
+            self.__compile_query_execution_inbenta(deployment)
 
         # Store Query Execution
         with open("{}/{}/query_execution.py".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
@@ -212,6 +212,9 @@ class query_execution:
         return self._auxiliary_queries
     def set_query(self, query_instance):
         self._meteor = query_instance""".format(json.dumps(queries), deployment['databases'])
+
+    def __compile_query_execution_inbenta(self, deployment):
+        pass
 
     def __execute(self, deployment):
         # Build Meteor Parameters
