@@ -15,9 +15,9 @@ COPY build/start.sh /root/
 
 # Make all files belong to the nginx user
 RUN apt-get update -qq && \
-    apt-get install -qq apt-utils > /dev/null 2>&1 && \
-    apt-get install -qq procps > /dev/null 2>&1 && \
-    apt-get install -qq iputils-ping > /dev/null 2>&1 && \
+    # apt-get install -qq apt-utils > /dev/null 2>&1 && \
+    # apt-get install -qq procps > /dev/null 2>&1 && \
+    # apt-get install -qq iputils-ping > /dev/null 2>&1 && \
     tar -zxf /usr/share/nginx/html/client.tar.gz -C /usr/share/nginx/html/ && \
     mv /usr/share/nginx/html/client/* /usr/share/nginx/html/ && \
     rm -rf /usr/share/nginx/html/client* && \

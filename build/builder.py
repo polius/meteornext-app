@@ -63,6 +63,9 @@ class builder:
                     self.build_docker()
 
     def build_docker(self):
+        self.__show_header()
+        print("|         Build Docker        |")
+        print("+=============================+")
         start_time = time.time()
         subprocess.call("docker rmi meteornext:latest >/dev/null 2>&1", shell=True)
         subprocess.call("docker pull nginx:latest", shell=True)
@@ -76,9 +79,21 @@ class builder:
             self.start_docker()
 
     def start_docker(self):
+        self.__show_header()
+        print("|         Start Docker        |")
+        print("+=============================+")
+        environment = ''
+        option = input("- Assign environment variables? (y/n): ")
+        if option == 'y':
+            environment += ' -e HOST=' + input("- HOST: ")
+            environment += ' -e USER=' + input("- USER: ")
+            environment += ' -e PASS=' + input("- PASS: ")
+            environment += ' -e PORT=' + input("- PORT: ")
+            environment += ' -e DB=' + input("- DB: ")
+
         print("- Starting new container...")
         subprocess.call("docker kill $(docker ps -a -q --filter ancestor=meteornext) >/dev/null 2>&1", shell=True)
-        container_id = subprocess.check_output("docker run --rm -itd -p8080:80 meteornext", shell=True)
+        container_id = subprocess.check_output("docker run --name meteornext -itd -p8080:80{} meteornext".format(environment), shell=True)
         print("- Container ID: {}".format(container_id.decode("utf-8")[:12]))
 
     ####################

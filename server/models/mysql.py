@@ -11,11 +11,11 @@ class OrderedDictCursor(DictCursorMixin, Cursor):
 class mysql:
     def __init__(self, credentials=None):
         self._connection = None
-        self._mysql = {"hostname": credentials['hostname'], "username": credentials['username'], "password": credentials['password'], "database": credentials['database']} if credentials else {}
+        self._mysql = {"hostname": credentials['hostname'], "username": credentials['username'], "password": credentials['password'], "port": credentials['port'], "database": credentials['database']} if credentials else {}
 
     def connect(self, hostname, username, password, database=None):
         # Store the Credentials
-        self._mysql = {"hostname": hostname, "username": username, "password": password, "database": database}
+        self._mysql = {"hostname": hostname, "username": username, "password": password, "port": port, "database": database}
 
         # Init Connection
         self.__connect(database)
@@ -23,9 +23,9 @@ class mysql:
     def __connect(self, database=None):
         # Establish the Connection
         if database is not None:
-            self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], db=database, charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
+            self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], port=self._mysql['port'], db=database, charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
         else:
-            self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
+            self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], port=self._mysql['port'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
 
     def select_database(self, database):
         self._connection.select_db(database)

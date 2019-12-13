@@ -37,7 +37,7 @@ class Setup:
             with open(self._setup_file) as file_open:
                 self._conf = json.load(file_open)
             sql = models.mysql.mysql()
-            sql.connect(self._conf['sql']['hostname'], self._conf['sql']['username'], self._conf['sql']['password'], self._conf['sql']['database'])
+            sql.connect(self._conf['sql']['hostname'], self._conf['sql']['username'], self._conf['sql']['password'], self._conf['sql']['port'], self._conf['sql']['database'])
             self.__register_blueprints(sql)
 
             # Start cron
@@ -45,12 +45,6 @@ class Setup:
 
         except Exception:
             self._conf = {}
-
-    def getBind(self):
-        if 'bind' in self._conf:
-            return self._conf['bind']
-        else:
-            return '0.0.0.0:5000'
 
     def blueprint(self):
         # Init blueprint
@@ -77,7 +71,7 @@ class Setup:
             # Part 1: Check SQL Credentials
             try:
                 sql = models.mysql.mysql()
-                sql.connect(setup_json['hostname'], setup_json['username'], setup_json['password'])
+                sql.connect(setup_json['hostname'], setup_json['username'], setup_json['password'], setup_json['port'])
                 exists = sql.check_db_exists(setup_json['database'])
                 return jsonify({'message': 'Connection Successful', 'exists': exists}), 200
             except Exception as e:
@@ -96,7 +90,7 @@ class Setup:
 
             # Part 2: Build Meteor & Create User Admin Account
             sql = models.mysql.mysql()
-            sql.connect(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'])
+            sql.connect(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'])
 
             try:
                 sql.execute('DROP DATABASE IF EXISTS {}'.format(setup_json['sql']['database']))
@@ -124,7 +118,6 @@ class Setup:
 
             # Write setup to the setup file
             self._conf = {
-                "bind": "0.0.0.0:5000",
                 "sql":
                 {
                     "hostname": setup_json['sql']['hostname'],

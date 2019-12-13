@@ -22,7 +22,4 @@ CORS(app, resources={r'/*': {'origins': '*'}})
 
 # Run with python
 if __name__ == '__main__':
-    BIND = setup.getBind()
-    host = BIND[:BIND.find(':')]
-    port = BIND[BIND.find(':')+1:]
-    app.run(host=host, port=port, debug=False)
+    app.run(host='0.0.0.0', port='5000', debug=False)
