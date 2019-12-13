@@ -14,12 +14,13 @@ class builder:
 
     def menu(self):
         option = ''
-        while option not in ['1','2','3','4']:
+        while option not in ['1','2','3','4','5']:
             self.__show_header()
             print("1) Build Project")
             print("2) Build Docker")
             print("3) Start Docker")
-            print("4) Exit")
+            print("4) Clean Docker")
+            print("5) Exit")
             option = input("- Select an option: ")
 
             if option == '1':
@@ -29,6 +30,8 @@ class builder:
             elif option == '3':
                 self.start_docker()
             elif option == '4':
+                self.clean_docker()
+            elif option == '5':
                 sys.exit()
 
     def build_project(self):
