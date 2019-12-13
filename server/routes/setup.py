@@ -26,8 +26,9 @@ import models.admin.settings
 from cron import Cron
 
 class Setup:
-    def __init__(self, app):
+    def __init__(self, app, url_prefix):
         self._app = app
+        self._url_prefix = url_prefix
         self._setup_file = "{}/server.conf".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
         self._schema_file = "{}/models/schema.sql".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/models/schema.sql".format(sys._MEIPASS)
         self._logs_folder = "{}/logs".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/logs".format(os.path.dirname(sys.executable))
@@ -173,18 +174,17 @@ class Setup:
         deployments_pro = routes.deployments.views.pro.Pro(self._app, sql).blueprint()
 
         # Instantiate all routes
-        URL_PREFIX = "/api"
-        self._app.register_blueprint(login, url_prefix=URL_PREFIX)
-        self._app.register_blueprint(profile, url_prefix=URL_PREFIX)
-        self._app.register_blueprint(settings, url_prefix=URL_PREFIX)
-        self._app.register_blueprint(groups, url_prefix=URL_PREFIX)
-        self._app.register_blueprint(users, url_prefix=URL_PREFIX)
-        self._app.register_blueprint(admin_deployments, url_prefix=URL_PREFIX)
-        self._app.register_blueprint(environments, url_prefix=URL_PREFIX)
-        self._app.register_blueprint(regions, url_prefix=URL_PREFIX)
-        self._app.register_blueprint(servers, url_prefix=URL_PREFIX)
-        self._app.register_blueprint(auxiliary, url_prefix=URL_PREFIX)
-        self._app.register_blueprint(slack, url_prefix=URL_PREFIX)
-        self._app.register_blueprint(deployments, url_prefix=URL_PREFIX)
-        self._app.register_blueprint(deployments_basic, url_prefix=URL_PREFIX)
-        self._app.register_blueprint(deployments_pro, url_prefix=URL_PREFIX)
+        self._app.register_blueprint(login, url_prefix=self._url_prefix)
+        self._app.register_blueprint(profile, url_prefix=self._url_prefix)
+        self._app.register_blueprint(settings, url_prefix=self._url_prefix)
+        self._app.register_blueprint(groups, url_prefix=self._url_prefix)
+        self._app.register_blueprint(users, url_prefix=self._url_prefix)
+        self._app.register_blueprint(admin_deployments, url_prefix=self._url_prefix)
+        self._app.register_blueprint(environments, url_prefix=self._url_prefix)
+        self._app.register_blueprint(regions, url_prefix=self._url_prefix)
+        self._app.register_blueprint(servers, url_prefix=self._url_prefix)
+        self._app.register_blueprint(auxiliary, url_prefix=self._url_prefix)
+        self._app.register_blueprint(slack, url_prefix=self._url_prefix)
+        self._app.register_blueprint(deployments, url_prefix=self._url_prefix)
+        self._app.register_blueprint(deployments_basic, url_prefix=self._url_prefix)
+        self._app.register_blueprint(deployments_pro, url_prefix=self._url_prefix)

@@ -13,8 +13,9 @@ app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=8)  # days = 1
 jwt = JWTManager(app)
 
 # Instantiate & Register Settings Blueprint
-setup = routes.setup.Setup(app)
-app.register_blueprint(setup.blueprint(), url_prefix='/api')
+URL_PREFIX = "/api"
+setup = routes.setup.Setup(app, URL_PREFIX)
+app.register_blueprint(setup.blueprint(), url_prefix=URL_PREFIX)
 
 # Enable CORS
 CORS(app, resources={r'/*': {'origins': '*'}})

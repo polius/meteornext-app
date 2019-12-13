@@ -58,6 +58,9 @@ class builder:
                 self.__show_header()
                 print("- Distribution Path: '{}/dist/'".format(self._pwd))
                 print("- Overall Time: {}".format(time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))))
+                option2 = input("- Build Docker? (y/n): ")
+                if option2 == 'y':
+                    self.build_docker()
 
     def build_docker(self):
         start_time = time.time()
@@ -68,7 +71,7 @@ class builder:
 
         self.__show_header()
         print("- Overall Time: {}".format(time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))))
-        option = input("- Start the builded container? (y/n): ")
+        option = input("- Start container? (y/n): ")
         if option == 'y':
             self.start_docker()
 
