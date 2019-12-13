@@ -5,3 +5,4 @@ __pycache__
 client
 meteor
 server
+dist/meteornext.tar

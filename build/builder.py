@@ -67,18 +67,26 @@ class builder:
         print("|         Build Docker        |")
         print("+=============================+")
         start_time = time.time()
-        subprocess.call("docker rmi meteornext:latest >/dev/null 2>&1", shell=True)
+        self.clean_docker()
         subprocess.call("docker pull nginx:latest", shell=True)
         subprocess.call("cd {} ; docker build -t meteornext:latest -f build/docker.dockerfile .".format(self._pwd), shell=True)
         subprocess.call("docker rmi nginx:latest", shell=True)
+        subprocess.call("docker save meteornext > {}/dist/meteornext.tar".format(self._pwd), shell=True)
+        self.clean_docker()
 
         self.__show_header()
+        print("- Build Path: {}/dist/meteornext.tar".format(self._pwd))
         print("- Overall Time: {}".format(time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))))
+
         option = input("- Start container? (y/n): ")
         if option == 'y':
             self.start_docker()
 
     def start_docker(self):
+        if not os.path.exists("{}/dist/meteornext.tar".format(self._pwd)):
+            print("Docker not build. Start building...")
+            self.build_docker()
+
         self.__show_header()
         print("|         Start Docker        |")
         print("+=============================+")
@@ -91,10 +99,18 @@ class builder:
             environment += ' -e PORT=' + input("- PORT: ")
             environment += ' -e DB=' + input("- DB: ")
 
+        print("- Stopping current containers...")
+        self.clean_docker()
+        print("- Importing image...")
+        subprocess.call("docker load -i {}/dist/meteornext.tar".format(self._pwd), shell=True)
         print("- Starting new container...")
-        subprocess.call("docker kill $(docker ps -a -q --filter ancestor=meteornext) >/dev/null 2>&1", shell=True)
         container_id = subprocess.check_output("docker run --name meteornext -itd -p8080:80{} meteornext".format(environment), shell=True)
         print("- Container ID: {}".format(container_id.decode("utf-8")[:12]))
+
+    def clean_docker(self):
+        subprocess.call("docker kill $(docker ps -a -q --filter ancestor=meteornext) >/dev/null 2>&1", shell=True)
+        subprocess.call("docker rm $(docker ps -a -q --filter ancestor=meteornext) >/dev/null 2>&1", shell=True)
+        subprocess.call("docker rmi meteornext:latest >/dev/null 2>&1", shell=True)
 
     ####################
     # Internal Methods #
