@@ -16,19 +16,19 @@ class builder:
         option = ''
         while option not in ['1','2','3']:
             self.__show_header()
-            print("1) Build Local")
+            print("1) Build Project")
             print("2) Build Docker")
             print("3) Exit")
             option = input("- Select an option: ")
 
             if option == '1':
-                self.build_binaries()
+                self.build_project()
             elif option == '2':
                 self.build_docker()
             elif option == '3':
                 sys.exit()
 
-    def build_binaries(self):
+    def build_project(self):
         self.__show_header()
         option = ''
         while option not in ['1','2','3','4']:
@@ -57,20 +57,35 @@ class builder:
                 print("- Overall Time: {}".format(time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))))
 
     def build_docker(self):
-        pass
+        start_time = time.time()
+        # self.__build_server()
+        # self.__build_client()
+        print("- Stopping all running meteornext dockers...")
+        subprocess.call("docker stop $(docker ps -a -q --filter ancestor=meteornext)", shell=True)
+        subprocess.call("docker rmi meteornext:latest", shell=True)
+        subprocess.call("docker pull nginx:latest", shell=True)
+        subprocess.call("cd {} ; docker build -t meteornext:latest -f build/docker.dockerfile .".format(self._pwd), shell=True)
+        subprocess.call("docker rmi nginx:latest", shell=True)
+        subprocess.call("docker run --rm -itd -p8080:80 meteornext", shell=True)
+
+        self.__show_header()
+        print("- Overall Time: {}".format(time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))))
 
     ####################
     # Internal Methods #
     ####################
     def __build_server(self):
         subprocess.call("docker rmi meteornextbuild:latest", shell=True)
+        subprocess.call("docker pull amazonlinux:1", shell=True)
         subprocess.call("docker build -t meteornextbuild:latest - < server.dockerfile", shell=True)
         subprocess.call("docker run --rm -it -v {}:/root/ meteornextbuild:latest".format(self._pwd), shell=True)
         subprocess.call("docker rmi meteornextbuild:latest", shell=True)
+        subprocess.call("docker rmi amazonlinux:1", shell=True)
 
     def __build_client(self):
         subprocess.call("cd {}/client ; npm run build".format(self._pwd), shell=True)
         subprocess.call("mv {0}/client/dist {0}/dist/client".format(self._pwd), shell=True)
+        subprocess.call("cd {}/dist/ ; tar -czvf client.tar.gz client ; rm -rf client".format(self._pwd), shell=True)
 
     def __show_header(self):
         os.system('cls' if os.name == 'nt' else 'clear')

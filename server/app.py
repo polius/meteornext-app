@@ -14,7 +14,7 @@ jwt = JWTManager(app)
 
 # Instantiate & Register Settings Blueprint
 setup = routes.setup.Setup(app)
-app.register_blueprint(setup.blueprint())
+app.register_blueprint(setup.blueprint(), url_prefix='/api')
 
 # Enable CORS
 CORS(app, resources={r'/*': {'origins': '*'}})

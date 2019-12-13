@@ -126,7 +126,9 @@
               if (response.data.exists) this.dialog = true
               else this.submitDialog(false)
           })
-          .catch(() => {
+          .catch((error) => {
+            console.log(error)
+            console.log(error.response)
             this.notification("Can't connect to MySQL server", 'error')
           })
           .finally(() => {
