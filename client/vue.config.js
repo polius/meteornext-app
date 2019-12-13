@@ -1,5 +1,9 @@
 const fs = require('fs')
 
+module.exports = {
+  productionSourceMap: false
+}
+
 /*
 module.exports = {
     devServer: {

@@ -14,11 +14,12 @@ class builder:
 
     def menu(self):
         option = ''
-        while option not in ['1','2','3']:
+        while option not in ['1','2','3','4']:
             self.__show_header()
             print("1) Build Project")
             print("2) Build Docker")
-            print("3) Exit")
+            print("3) Start Docker")
+            print("4) Exit")
             option = input("- Select an option: ")
 
             if option == '1':
@@ -26,6 +27,8 @@ class builder:
             elif option == '2':
                 self.build_docker()
             elif option == '3':
+                self.start_docker()
+            elif option == '4':
                 sys.exit()
 
     def build_project(self):
@@ -58,24 +61,28 @@ class builder:
 
     def build_docker(self):
         start_time = time.time()
-        # self.__build_server()
-        # self.__build_client()
-        print("- Stopping all running meteornext dockers...")
-        subprocess.call("docker stop $(docker ps -a -q --filter ancestor=meteornext)", shell=True)
-        subprocess.call("docker rmi meteornext:latest", shell=True)
+        subprocess.call("docker rmi meteornext:latest >/dev/null 2>&1", shell=True)
         subprocess.call("docker pull nginx:latest", shell=True)
         subprocess.call("cd {} ; docker build -t meteornext:latest -f build/docker.dockerfile .".format(self._pwd), shell=True)
         subprocess.call("docker rmi nginx:latest", shell=True)
-        subprocess.call("docker run --rm -itd -p8080:80 meteornext", shell=True)
 
         self.__show_header()
         print("- Overall Time: {}".format(time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))))
+        option = input("- Start the builded container? (y/n): ")
+        if option == 'y':
+            self.start_docker()
+
+    def start_docker(self):
+        print("- Starting new container...")
+        subprocess.call("docker kill $(docker ps -a -q --filter ancestor=meteornext) >/dev/null 2>&1", shell=True)
+        container_id = subprocess.check_output("docker run --rm -itd -p8080:80 meteornext", shell=True)
+        print("- Container ID: {}".format(container_id.decode("utf-8")[:12]))
 
     ####################
     # Internal Methods #
     ####################
     def __build_server(self):
-        subprocess.call("docker rmi meteornextbuild:latest", shell=True)
+        subprocess.call("docker rmi meteornextbuild:latest >/dev/null 2>&1", shell=True)
         subprocess.call("docker pull amazonlinux:1", shell=True)
         subprocess.call("docker build -t meteornextbuild:latest - < server.dockerfile", shell=True)
         subprocess.call("docker run --rm -it -v {}:/root/ meteornextbuild:latest".format(self._pwd), shell=True)
