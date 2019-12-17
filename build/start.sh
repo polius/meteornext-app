@@ -19,6 +19,7 @@ if [[ -n $LIC_EMAIL && -n $LIC_KEY && -n $SQL_HOST && -n $SQL_USER && -n $SQL_PA
 EOF
 fi
 
-nohup ./server >/dev/null 2>&1 &
+# nohup ./server >/dev/null 2>&1 &
+nohup ./server > /dev/null 2> error.log &
 nginx
 /bin/bash
