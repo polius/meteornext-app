@@ -114,10 +114,8 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
         });
     },
     open(item) {
@@ -141,10 +139,8 @@ export default {
           this.getDeployments()
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
         }) 
     },
     getModeColor (mode) {
@@ -178,10 +174,8 @@ export default {
           this.selected = []
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
         })
         .finally(() => {
           this.loading = false

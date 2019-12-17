@@ -117,10 +117,8 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
         })
     },
     newRegion() {
@@ -169,15 +167,11 @@ export default {
         .then((response) => {
           this.notification(response.data.message, 'success')
           this.getRegions()
-          // Add item in the data table
-          // this.items.push(this.item)
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
         })
         .finally(() => {
           this.loading = false
@@ -214,10 +208,8 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
         })
         .finally(() => {
           this.loading = false
@@ -246,10 +238,8 @@ export default {
           this.selected = []
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
         })
         .finally(() => {
           this.loading = false

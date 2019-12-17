@@ -568,9 +568,8 @@
             }
           })
           .catch((error) => {
-            if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-            // eslint-disable-next-line
-            console.error(error)
+            if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message, 'error')
           })
       },
       clear() {
@@ -751,9 +750,8 @@
             ]
           })
           .catch((error) => {
-            if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-            // eslint-disable-next-line
-            console.error(error)
+            if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message, 'error')
           })
       },
       // ------------------
@@ -807,10 +805,8 @@
           this.getDeployment()
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
         })
       },
       actionSubmitStop() {
@@ -828,10 +824,8 @@
           .then(() => {
           })
           .catch((error) => {
-            if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
-            // eslint-disable-next-line
-            console.error(error)
           })
         }
         this.action_dialog = false
@@ -886,7 +880,7 @@
           this.information_dialog = false
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
@@ -1004,10 +998,8 @@
           else this.notification('Results changed to private', 'info')
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
         })
       },
       // -------------------------------------

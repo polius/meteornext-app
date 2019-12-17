@@ -448,9 +448,8 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          // eslint-disable-next-line
-          console.error(error)
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
         })
     },
     submitGroup() {
@@ -481,11 +480,11 @@ export default {
           this.$router.push({ name: 'admin.groups' })
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          this.notification(error.response.data.message, 'error')
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
           this.loading = false
-          // eslint-disable-next-line
-          console.error(error)
         })
     },
     editGroupSubmit() {
@@ -515,11 +514,11 @@ export default {
           this.$router.push({ name: 'admin.groups' })
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          this.notification(error.response.data.message, 'error')
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
           this.loading = false
-          // eslint-disable-next-line
-          console.error(error)
         })
     },
     // +--------------+

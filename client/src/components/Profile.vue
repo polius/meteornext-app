@@ -63,10 +63,8 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
         })
     },
     saveProfile() {
@@ -80,14 +78,13 @@ export default {
       axios.put('/profile', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
-          this.loading = false
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
           this.loading = false
-          // eslint-disable-next-line
-          console.error(error)
         })
     },
     notification(message, color) {

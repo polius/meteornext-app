@@ -27,10 +27,6 @@
           <v-flex v-else-if="setting_mode == 'api'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="headline font-weight-regular" style="margin-left:10px;">API</div>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="api" label="Bind" style="margin-left:10px; padding-top:20px;" required :rules="[v => !!v || '']"></v-text-field>
-            <!-- <div v-if="!loading" class="body-1 font-weight-light font-italic" style="margin-left:10px; margin-top:10px; margin-bottom:25px;">{{ api.path }}</div> -->
-            <!-- <v-text-field readonly :loading="loading" :disabled="loading" v-model="api.host" label="Hostname" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field> -->
-            <!-- <v-text-field readonly :loading="loading" :disabled="loading" v-model="api.port" label="Port" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field> -->
-            <!-- <v-switch readonly :loading="loading" :disabled="loading" v-model="api.ssl" label="SSL Connection" color="success" style="margin-left:10px; margin-top:0px; margin-bottom:5px;" hide-details></v-switch> -->
           </v-flex>
 
           <!-- LOGS -->
@@ -138,10 +134,8 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
         })
     },
     setSetting(setting) {
@@ -170,14 +164,13 @@ export default {
       axios.put('/admin/settings', payload)
         .then((response) => {
           this.notification(response.data.message, 'success')
-          this.loading = false
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
           this.loading = false
-          // eslint-disable-next-line
-          console.error(error)
         })
     },
     notification(message, color) {

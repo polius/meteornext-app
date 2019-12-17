@@ -85,9 +85,8 @@ export default {
           this.items = response.data.data
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          // eslint-disable-next-line
-          console.error(error)
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
         })
     },
     newGroup() {
@@ -123,9 +122,8 @@ export default {
           this.selected = []
         })
         .catch((error) => {
-          this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
           this.loading = false

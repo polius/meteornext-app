@@ -209,10 +209,8 @@ export default {
           this.$router.push({ name:'deployments.information', params: { executionID: data['execution_id'], deploymentMode: 'INBENTA' }})
         })
         .catch((error) => {
-          if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-          // eslint-disable-next-line
-          console.error(error)
         })
         .finally(() => {
           this.loading = false

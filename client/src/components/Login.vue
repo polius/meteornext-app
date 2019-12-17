@@ -67,7 +67,7 @@
           else this.$router.push('/')
         })
         .catch((error) => {
-          if (typeof error.response === 'undefined') this.notification("Can't establish a connection to the server", 'error')
+          if (error.response.status != 400) this.notification("Can't establish a connection to the server", 'error')
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
