@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import bcrypt
+import requests
 import models.admin.users
 import models.mysql
 from flask import request, jsonify, Blueprint
@@ -32,18 +33,19 @@ class Setup:
         self._setup_file = "{}/server.conf".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
         self._schema_file = "{}/models/schema.sql".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/models/schema.sql".format(sys._MEIPASS)
         self._logs_folder = "{}/logs".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/logs".format(os.path.dirname(sys.executable))
-
         try:
             with open(self._setup_file) as file_open:
                 self._conf = json.load(file_open)
             sql = models.mysql.mysql()
             sql.connect(self._conf['sql']['hostname'], self._conf['sql']['username'], self._conf['sql']['password'], self._conf['sql']['port'], self._conf['sql']['database'])
+
+            # Init cron
+            cron = Cron(sql, self._conf['license'])
+            self.__cron_start(cron)
+
+            # Init blueprints
             self.__register_blueprints(sql)
-
-            # Start cron
-            Cron(sql)
-
-        except Exception:
+        except Exception as e:
             self._conf = {}
 
     def blueprint(self):
@@ -65,17 +67,17 @@ class Setup:
 
             if not request.is_json:
                 return jsonify({"message": "Missing JSON in request"}), 400
-            
+
+            # Get Params
             setup_json = request.get_json()
 
-            # Part 1: Check SQL Credentials
+            # Part 1: Check License
             try:
-                sql = models.mysql.mysql()
-                sql.connect(setup_json['hostname'], setup_json['username'], setup_json['password'], setup_json['port'])
-                exists = sql.check_db_exists(setup_json['database'])
-                return jsonify({'message': 'Connection Successful', 'exists': exists}), 200
-            except Exception as e:
-                return jsonify({'message': str(e)}), 500
+                response = requests.post("http://www.poliuscorp.com:12350/license", json=setup_json)
+                response_text = json.loads(response.text)['response']
+                return jsonify({"message": response_text}), response.status_code
+            except requests.exceptions.RequestException:
+                return jsonify({"message": "A connection to the licensing server could not be established"}), 401
 
         @setup_blueprint.route('/setup/2', methods=['POST'])
         def setup2():
@@ -85,10 +87,32 @@ class Setup:
 
             if not request.is_json:
                 return jsonify({"message": "Missing JSON in request"}), 400
-            
+
+            # Get Params
             setup_json = request.get_json()
 
-            # Part 2: Build Meteor & Create User Admin Account
+            # Part 2: Check SQL Credentials
+            try:
+                sql = models.mysql.mysql()
+                sql.connect(setup_json['hostname'], setup_json['username'], setup_json['password'], setup_json['port'])
+                exists = sql.check_db_exists(setup_json['database'])
+                return jsonify({'message': 'Connection Successful', 'exists': exists}), 200
+            except Exception as e:
+                return jsonify({'message': str(e)}), 500
+
+        @setup_blueprint.route('/setup/3', methods=['POST'])
+        def setup3():
+            # Protect api call once is already configured
+            if not self.__setup_available():
+                return jsonify({}), 400
+
+            if not request.is_json:
+                return jsonify({"message": "Missing JSON in request"}), 400
+
+            # Get Params
+            setup_json = request.get_json()
+
+            # Part 3: Build Meteor & Create User Admin Account
             sql = models.mysql.mysql()
             sql.connect(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'])
 
@@ -118,6 +142,11 @@ class Setup:
 
             # Write setup to the setup file
             self._conf = {
+                "license":
+                {
+                    "email": setup_json['license']['email'],
+                    "key": setup_json['license']['key']
+                },
                 "sql":
                 {
                     "hostname": setup_json['sql']['hostname'],
@@ -129,6 +158,10 @@ class Setup:
             }
             with open(self._setup_file, 'w') as outfile:
                 json.dump(self._conf, outfile)
+
+            # Init cron
+            cron = Cron(sql, self._conf['license'])
+            self.__cron_start(cron)
 
             # Init blueprints
             self.__register_blueprints(sql)
@@ -181,3 +214,15 @@ class Setup:
         self._app.register_blueprint(deployments, url_prefix=self._url_prefix)
         self._app.register_blueprint(deployments_basic, url_prefix=self._url_prefix)
         self._app.register_blueprint(deployments_pro, url_prefix=self._url_prefix)
+
+    def __cron_start(self, cron):
+        # Check integrity
+        try:
+            response = cron.KMMLeSdKHFP9hBQCm7Pg9J3VtvjsNeEnuc4nyDV9ZD7QDxQUwaRgyddSZqxhsFP3()
+            if response != 'FBfLXedVRQ4Kj4tAZ2EUcYruu8KX8WPYLaxjaCYzxuM3yF89aPXwLxE2AMwWz5Jr':
+                sys.exit()
+        except BaseException:
+            sys.exit()
+
+        # Start Cron
+        cron.start()

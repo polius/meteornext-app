@@ -1,4 +1,4 @@
-# Create the container from the alpine nginx image
+# Create the container from the nginx image
 FROM nginx:latest
 
 # Copy the web client application into nginx

@@ -1,3 +1,4 @@
+# curl -d '{"email":"test@test.com","key":"test"}' -H 'Content-Type: application/json' http://localhost:5000/license
 import os
 import sys
 import time
@@ -35,9 +36,9 @@ class builder:
                 sys.exit()
 
     def build_project(self):
-        self.__show_header()
         option = ''
         while option not in ['1','2','3','4']:
+            self.__show_header()
             print("|         Build Local         |")
             print("+=============================+")
             print("1) Build Server & Client")
@@ -96,11 +97,19 @@ class builder:
         environment = ''
         option = input("- Assign environment variables? (y/n): ")
         if option == 'y':
-            environment += ' -e HOST=' + input("- HOST: ")
-            environment += ' -e USER=' + input("- USER: ")
-            environment += ' -e PASS=' + input("- PASS: ")
-            environment += ' -e PORT=' + input("- PORT: ")
-            environment += ' -e DB=' + input("- DB: ")
+            print("+---------+")
+            print("| LICENSE |")
+            print("+---------+")
+            environment += ' -e LIC_EMAIL=' + input("- Email: ")
+            environment += ' -e LIC_KEY=' + input("- Key: ")
+            print("+---------+")
+            print("|   SQL   |")
+            print("+---------+")
+            environment += ' -e SQL_HOST=' + input("- Hostname: ")
+            environment += ' -e SQL_USER=' + input("- Username: ")
+            environment += ' -e SQL_PASS=' + input("- Password: ")
+            environment += ' -e SQL_PORT=' + input("- Port: ")
+            environment += ' -e SQL_DB=' + input("- Database: ")
 
         print("- Stopping current containers...")
         self.clean_docker()

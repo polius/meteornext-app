@@ -53,7 +53,7 @@
     },
     methods: {
       login() {
-        if (this.username == '' || this.password == '') this.notification('Please enter the username and password.', 'warning')
+        if (this.username == '' || this.password == '') this.notification('Please enter the username and password', 'warning')
         else this.login_submit()
       },
       login_submit() {
@@ -67,8 +67,11 @@
           else this.$router.push('/')
         })
         .catch((error) => {
+          if (typeof error.response === 'undefined') this.notification("Can't establish a connection to the server", 'error')
+          else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
           this.loading = false
-          this.notification(error.response.data.message, 'error')
         })
       },
       notification(message, color) {

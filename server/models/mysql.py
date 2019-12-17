@@ -11,11 +11,11 @@ class OrderedDictCursor(DictCursorMixin, Cursor):
 class mysql:
     def __init__(self, credentials=None):
         self._connection = None
-        self._mysql = {"hostname": credentials['hostname'], "username": credentials['username'], "password": credentials['password'], "port": credentials['port'], "database": credentials['database']} if credentials else {}
+        self._mysql = {"hostname": credentials['hostname'], "username": credentials['username'], "password": credentials['password'], "port": int(credentials['port']), "database": credentials['database']} if credentials else {}
 
-    def connect(self, hostname, username, password, database=None):
+    def connect(self, hostname, username, password, port, database=None):
         # Store the Credentials
-        self._mysql = {"hostname": hostname, "username": username, "password": password, "port": port, "database": database}
+        self._mysql = {"hostname": hostname, "username": username, "password": password, "port": int(port), "database": database}
 
         # Init Connection
         self.__connect(database)

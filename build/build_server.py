@@ -17,7 +17,7 @@ class build_server:
         self._pwd = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
         
         if len(sys.argv) == 1:
-            subprocess.call("python3 build_server.py build_ext meteor", shell=True)
+            # subprocess.call("python3 build_server.py build_ext meteor", shell=True)
             subprocess.call("python3 build_server.py build_ext server", shell=True)
 
         elif 'meteor' in sys.argv:
@@ -56,7 +56,7 @@ class build_server:
         # Build Meteor Next Server
         build_path = "{}/server".format(self._pwd)
         additional_files = ['routes/deployments/query_execution.py', 'models/schema.sql', 'apps/meteor.tar.gz']
-        hidden_imports = ['json','_cffi_backend','bcrypt','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3']
+        hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3']
         additional_binaries = []
         binary_name = 'server'
         binary_path = '{}/dist'.format(self._pwd)
@@ -95,8 +95,6 @@ class build_server:
                 if f.endswith('.py'):
                     os.rename(os.path.join(root, f), os.path.join(root, f) + 'x')
                     ext_name = os.path.join(root, f)[len(build_path + "/build")+1:-3].replace('/','.')
-                    # ext_path = os.path.join(root, f)[len(self._pwd)+1:] + 'x'
-                    # ext_path = os.path.join(root, f) + 'x'
                     ext_path = '../' + os.path.join(root, f)[len(self._pwd)+1:] + 'x'
                     ext_modules.append(Extension(ext_name, [ext_path]))
 

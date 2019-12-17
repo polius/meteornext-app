@@ -1,15 +1,19 @@
 #!/bin/bash
 cd /root
 
-if [[ -n $HOST && -n $USER && -n $PASS && -n $PORT && -n $DB ]]; then
+if [[ -n $LIC_EMAIL && -n $LIC_KEY && -n $SQL_HOST && -n $SQL_USER && -n $SQL_PASS && -n $SQL_PORT && -n $SQL_DB ]]; then
     cat >./server.conf <<EOF
 {
+    "license": {
+        "email": "$LIC_EMAIL",
+        "key": "$LIC_KEY"
+    },
     "sql": {
-        "hostname": "$HOST",
-        "username": "$USER",
-        "password": "$PASS",
-        "port": "$PORT",
-        "database": "$DB"
+        "hostname": "$SQL_HOST",
+        "username": "$SQL_USER",
+        "password": "$SQL_PASS",
+        "port": "$SQL_PORT",
+        "database": "$SQL_DB"
     }
 }
 EOF

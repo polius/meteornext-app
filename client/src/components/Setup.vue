@@ -12,19 +12,24 @@
                   <div class="headline" style="margin-top:10px; margin-bottom:20px;">SETUP</div>
                   <v-divider></v-divider>
                   <v-form ref="form1" v-show="setup_part == 1">
-                    <div class="title font-weight-medium" style="margin-top:15px; margin-bottom:10px;">MySQL Server</div>
-                    <v-text-field filled v-model="sql.hostname" name="hostname" label="Hostname" required append-icon="cloud" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup1()"></v-text-field>
-                    <v-text-field filled v-model="sql.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup1()"></v-text-field>
-                    <v-text-field filled v-model="sql.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup1()"></v-text-field>
-                    <v-text-field filled v-model="sql.port" name="port" label="Port" required append-icon="directions_boat" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup1()"></v-text-field>
-                    <v-text-field filled v-model="sql.database" name="database" label="Database" required append-icon="storage" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup1()"></v-text-field>
+                    <div class="title font-weight-medium" style="margin-top:15px; margin-bottom:10px;">License</div>
+                    <v-text-field filled v-model="license.email" name="email" label="Email" required append-icon="account_circle" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup1()"></v-text-field>
+                    <v-text-field filled v-model="license.key" name="key" label="Key" required append-icon="vpn_key" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup1()"></v-text-field>
                   </v-form>
                   <v-form ref="form2" v-show="setup_part == 2">
-                    <div class="title font-weight-medium" style="margin-top:10px; margin-bottom:10px;">Create Admin Account</div>
-                    <v-text-field filled v-model="account.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup2()"></v-text-field>
-                    <v-text-field filled v-model="account.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup2()"></v-text-field>
+                    <div class="title font-weight-medium" style="margin-top:15px; margin-bottom:10px;">MySQL Server</div>
+                    <v-text-field filled v-model="sql.hostname" name="hostname" label="Hostname" required append-icon="cloud" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup2()"></v-text-field>
+                    <v-text-field filled v-model="sql.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup2()"></v-text-field>
+                    <v-text-field filled v-model="sql.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup2()"></v-text-field>
+                    <v-text-field filled v-model="sql.port" name="port" label="Port" required append-icon="directions_boat" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup2()"></v-text-field>
+                    <v-text-field filled v-model="sql.database" name="database" label="Database" required append-icon="storage" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup2()"></v-text-field>
                   </v-form>
-                  <v-btn v-if="setup_part != 3" x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="setupSubmit()">{{ formButton }}</v-btn>
+                  <v-form ref="form3" v-show="setup_part == 3">
+                    <div class="title font-weight-medium" style="margin-top:10px; margin-bottom:10px;">Create Admin Account</div>
+                    <v-text-field filled v-model="account.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup3()"></v-text-field>
+                    <v-text-field filled v-model="account.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup3()"></v-text-field>
+                  </v-form>
+                  <v-btn v-if="setup_part != 4" x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="setupSubmit()">{{ formButton }}</v-btn>
                   <v-btn v-else x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()"><b>LOGIN</b></v-btn>
                 </v-card-text>
               </v-card>
@@ -72,10 +77,11 @@
   export default {
     data: () => ({
       // Setup Form
+      license: { email: '', key: '' },
       sql: { hostname: '', username: '', password: '', port: '3306', database: 'meteor' },
       account: { username: '', password: '' },
       setup_part: 1,
-      formButton: 'CHECK CONNECTION',
+      formButton: 'VERIFY',
       loading: false,
 
       // Setup Dialog
@@ -110,8 +116,9 @@
           })
       },
       setupSubmit() {
-        if (this.account['username'] == '' && this.account['password'] == '') this.setup1()
-        else this.setup2()
+        if (this.setup_part == 1) this.setup1()
+        else if (this.setup_part == 2) this.setup2()
+        else if (this.setup_part == 3) this.setup3()
       },
       setup1() {
         if (!this.$refs.form1.validate()) {
@@ -119,17 +126,15 @@
           return
         }
         this.loading = true
-        const payload = JSON.stringify(this.sql)
+        const payload = JSON.stringify(this.license)
         axios.post('/setup/1', payload)
           .then((response) => {
-            this.notification('Connection successful', 'success')
-              if (response.data.exists) this.dialog = true
-              else this.submitDialog(false)
+            this.notification(response.data.message, 'success')
+            this.setup_part += 1
+            this.formButton = 'CHECK CONNECTION'
           })
           .catch((error) => {
-            console.log(error)
-            console.log(error.response)
-            this.notification("Can't connect to MySQL server", 'error')
+            this.notification(error.response.data.message, 'error')
           })
           .finally(() => {
             this.loading = false
@@ -140,13 +145,34 @@
           this.notification('Please fill all fields', 'error')
           return
         }
+        this.loading = true
+        const payload = JSON.stringify(this.sql)
+        axios.post('/setup/2', payload)
+          .then((response) => {
+            this.notification('Connection successful', 'success')
+              if (response.data.exists) this.dialog = true
+              else this.submitDialog(false)
+          })
+          .catch(() => {
+            this.notification("Can't connect to MySQL server", 'error')
+          })
+          .finally(() => {
+            this.loading = false
+          })
+      },
+      setup3() {
+        if (!this.$refs.form3.validate()) {
+          this.notification('Please fill all fields', 'error')
+          return
+        }
         this.notification('Setting up Meteor Next...', 'info')
         this.loading = true
         const payload = {
+          license: this.license,
           sql: this.sql,
           account: this.account
         }
-        axios.post('/setup/2', JSON.stringify(payload))
+        axios.post('/setup/3', JSON.stringify(payload))
           .then((response) => {
             this.notification(response.data.message, 'success')
             this.setup_part += 1
@@ -164,7 +190,6 @@
       submitDialog() {
         this.dialog = false
         this.setup_part += 1
-        this.$refs.form2.reset()
         this.formButton = 'CONFIRM'
       },
       notification(message, color) {

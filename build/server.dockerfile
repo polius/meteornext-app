@@ -3,12 +3,6 @@ RUN yum update -y && \
     yum upgrade -y && \
     yum install python36-devel -y && \
     yum install gcc -y && \
-#RUN 
-    # apk update && \
-    # apk upgrade && \
-    # apk add musl-dev && \
-    # apk add gcc && \
-    # apk add make && \
     python3 -m pip install --upgrade pip && \
     python3 -m pip install boto3 && \
     python3 -m pip install requests && \
