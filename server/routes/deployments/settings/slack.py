@@ -10,6 +10,9 @@ class Slack:
         self._users = models.admin.users.Users(sql)
         self._slack = models.deployments.slack.Slack(sql)
 
+    def license(self, value):
+        self._license = value
+
     def blueprint(self):
         # Init blueprint
         slack_blueprint = Blueprint('slack', __name__, template_folder='slack')
@@ -17,6 +20,10 @@ class Slack:
         @slack_blueprint.route('/deployments/slack', methods=['GET','PUT'])
         @jwt_required
         def slack_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 

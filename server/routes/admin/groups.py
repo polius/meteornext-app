@@ -23,6 +23,9 @@ class Groups:
         self._auxiliary = routes.deployments.settings.auxiliary.Auxiliary(app, sql)
         self._slack = routes.deployments.settings.slack.Slack(app, sql)
 
+    def license(self, value):
+        self._license = value
+
     def blueprint(self):
         # Init blueprint
         groups_blueprint = Blueprint('groups', __name__, template_folder='groups')
@@ -30,6 +33,10 @@ class Groups:
         @groups_blueprint.route('/admin/groups', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
         def groups_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Check user privileges
             is_admin = self._users.is_admin(get_jwt_identity())
             if not is_admin:

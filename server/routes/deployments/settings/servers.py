@@ -12,6 +12,9 @@ class Servers:
         self._environments = models.deployments.environments.Environments(sql)
         self._servers = models.deployments.servers.Servers(sql)
 
+    def license(self, value):
+        self._license = value
+
     def blueprint(self):
         # Init blueprint
         servers_blueprint = Blueprint('servers', __name__, template_folder='servers')
@@ -19,6 +22,10 @@ class Servers:
         @servers_blueprint.route('/deployments/servers', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
         def servers_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 

@@ -10,6 +10,9 @@ class Auxiliary:
         self._users = models.admin.users.Users(sql)
         self._auxiliary = models.deployments.auxiliary.Auxiliary(sql)
 
+    def license(self, value):
+        self._license = value
+
     def blueprint(self):
         # Init blueprint
         auxiliary_blueprint = Blueprint('auxiliary', __name__, template_folder='auxiliary')
@@ -17,6 +20,10 @@ class Auxiliary:
         @auxiliary_blueprint.route('/deployments/auxiliary', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
         def auxiliary_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 

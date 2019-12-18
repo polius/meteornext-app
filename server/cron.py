@@ -7,22 +7,21 @@ import schedule
 import threading
 
 class Cron:
-    def __init__(self, sql, license):
-        self._sql = sql
+    def __init__(self, license, license_conf, blueprints, sql):
         self._license = license
+        self._license_conf = license_conf
+        self._blueprints = blueprints
+        self._sql = sql
 
     def KMMLeSdKHFP9hBQCm7Pg9J3VtvjsNeEnuc4nyDV9ZD7QDxQUwaRgyddSZqxhsFP3(self):
         return 'FBfLXedVRQ4Kj4tAZ2EUcYruu8KX8WPYLaxjaCYzxuM3yF89aPXwLxE2AMwWz5Jr'
 
     def start(self):
-        # Check License
-        self.__license()
-
         # Init Crons
-        schedule.every().day.at("00:00").do(self.__license)
+        schedule.every(1).minutes.do(self.__license, 'minute')
+        schedule.every().day.at("00:00").do(self.__license, 'day')
         schedule.every().day.at("00:00").do(self.__coins)
         schedule.every().day.at("00:00").do(self.__logs)
-        schedule.every(1).minutes.do(self.__license)
 
         # Start Cron Listener
         t = threading.Thread(target=self.__run_schedule)
@@ -34,27 +33,29 @@ class Cron:
             schedule.run_pending()
             time.sleep(1)
 
-    def __license(self):
+    def __license(self, mode):
         print("LICENSE")
-        retries = 10
-        for i in range(retries+1):
-            if i == retries:
-                os._exit(0)
-            try:
-                response = requests.post("http://www.poliuscorp.com:12350/license", json=self._license)
-                response_text = json.loads(response.text)['response']
-                check_license = False
-
-                if response.status_code != 200:
-                    print('- ' + response_text)
-                    os._exit(0)
-                break
-
-            except requests.exceptions.RequestException as e:
-                print("- [Attempt {}/{}] A connection with the licensing server could not be established. Trying again in 5 seconds...".format(i+1, retries))
-                time.sleep(5)
+        # if mode == 'minute' and self._license['status']:
+        #     return
+        if mode == 'hour' and not self._license['status']:
+            return
+        try:
+            response = requests.post("http://www.poliuscorp.com:12350/license", json=self._license_conf)
+            response_code = response.status_code
+            response_status = response.status_code == 200
+            response_text = json.loads(response.text)['response']
+        except requests.exceptions.RequestException as e:
+            response_text = "A connection with the licensing server could not be established"
+            response_code = 404
+            response_status = False    
+        finally:
+            for b in self._blueprints:
+                b.license({'status': response_status, 'code': response_code, 'response': response_text})
 
     def __coins(self):
+        if not self._license['status']:
+            return
+
         print("- Giving coins...")
         query = """
             UPDATE users u
@@ -64,6 +65,9 @@ class Cron:
         self._sql.execute(query)
 
     def __logs(self):
+        if not self._license['status']:
+            return
+
         print("- Cleaning logs...")
         # Get expiration value
         setting = self._sql.execute("SELECT value FROM settings WHERE name = 'LOGS'")

@@ -15,6 +15,9 @@ class Settings:
         self._users = models.admin.users.Users(sql)
         self._settings = models.admin.settings.Settings(sql)
 
+    def license(self, value):
+        self._license = value
+
     def blueprint(self):
         # Init blueprint
         settings_blueprint = Blueprint('settings', __name__, template_folder='settings')
@@ -22,6 +25,10 @@ class Settings:
         @settings_blueprint.route('/admin/settings', methods=['GET','PUT'])
         @jwt_required
         def settings_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 

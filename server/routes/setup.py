@@ -33,19 +33,24 @@ class Setup:
         self._setup_file = "{}/server.conf".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
         self._schema_file = "{}/models/schema.sql".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/models/schema.sql".format(sys._MEIPASS)
         self._logs_folder = "{}/logs".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/logs".format(os.path.dirname(sys.executable))
+        self._blueprints = []
+        self._license = {}
+        
+        # Start Setup
         try:
             with open(self._setup_file) as file_open:
                 self._conf = json.load(file_open)
             sql = models.mysql.mysql()
             sql.connect(self._conf['sql']['hostname'], self._conf['sql']['username'], self._conf['sql']['password'], self._conf['sql']['port'], self._conf['sql']['database'])
-
+            # Check license
+            self._license = self.__check_license(self._conf['license'])
+            # Register blueprints
+            self.__register_blueprints(sql)
             # Init cron
-            cron = Cron(sql, self._conf['license'])
+            cron = Cron(self._license, self._conf['license'], self._blueprints, sql)
             self.__cron_start(cron)
 
-            # Init blueprints
-            self.__register_blueprints(sql)
-        except Exception as e:
+        except Exception:
             self._conf = {}
 
     def blueprint(self):
@@ -72,13 +77,9 @@ class Setup:
             setup_json = request.get_json()
 
             # Part 1: Check License
-            try:
-                response = requests.post("http://www.poliuscorp.com:12350/license", json=setup_json)
-                response_text = json.loads(response.text)['response']
-                return jsonify({"message": response_text}), response.status_code
-            except requests.exceptions.RequestException:
-                return jsonify({"message": "A connection to the licensing server could not be established"}), 401
-
+            self._license = self.__check_license(setup_json)
+            return jsonify({"message": self._license['response']}), self._license['code']
+            
         @setup_blueprint.route('/setup/2', methods=['POST'])
         def setup2():
             # Protect api call once is already configured
@@ -160,7 +161,7 @@ class Setup:
                 json.dump(self._conf, outfile)
 
             # Init cron
-            cron = Cron(sql, self._conf['license'])
+            cron = Cron(self._license, self._conf['license'], self._blueprints, sql)
             self.__cron_start(cron)
 
             # Init blueprints
@@ -182,38 +183,38 @@ class Setup:
                     return False
         return True
 
+    def __check_license(self, license):
+        try:
+            response = requests.post("http://www.poliuscorp.com:12350/license", json=license)
+            response_text = json.loads(response.text)['response']
+            print(response_text)
+            return {"status": response.status_code == 200, "code": response.status_code, "response": response_text}
+        except requests.exceptions.RequestException:
+            return {"status": False, "code": 404, "response": "A connection to the licensing server could not be established"}
+
     def __register_blueprints(self, sql):
         # Init all blueprints
-        login = routes.login.Login(self._app, sql).blueprint()
-        profile = routes.profile.Profile(self._app, sql).blueprint()
-        settings = routes.admin.settings.Settings(self._app, self._conf, sql).blueprint()
-        groups = routes.admin.groups.Groups(self._app, sql).blueprint()
-        users = routes.admin.users.Users(self._app, sql).blueprint()
-        admin_deployments = routes.admin.deployments.Deployments(self._app, sql).blueprint()
-        environments = routes.deployments.settings.environments.Environments(self._app, sql).blueprint()
-        regions = routes.deployments.settings.regions.Regions(self._app, sql).blueprint()
-        servers = routes.deployments.settings.servers.Servers(self._app, sql).blueprint()
-        auxiliary = routes.deployments.settings.auxiliary.Auxiliary(self._app, sql).blueprint()
-        slack = routes.deployments.settings.slack.Slack(self._app, sql).blueprint()
-        deployments = routes.deployments.deployments.Deployments(self._app, sql).blueprint()
-        deployments_basic = routes.deployments.views.basic.Basic(self._app, sql).blueprint()
-        deployments_pro = routes.deployments.views.pro.Pro(self._app, sql).blueprint()
+        login = routes.login.Login(self._app, sql)
+        profile = routes.profile.Profile(self._app, sql)
+        settings = routes.admin.settings.Settings(self._app, self._conf, sql)
+        groups = routes.admin.groups.Groups(self._app, sql)
+        users = routes.admin.users.Users(self._app, sql)
+        admin_deployments = routes.admin.deployments.Deployments(self._app, sql)
+        environments = routes.deployments.settings.environments.Environments(self._app, sql)
+        regions = routes.deployments.settings.regions.Regions(self._app, sql)
+        servers = routes.deployments.settings.servers.Servers(self._app, sql)
+        auxiliary = routes.deployments.settings.auxiliary.Auxiliary(self._app, sql)
+        slack = routes.deployments.settings.slack.Slack(self._app, sql)
+        deployments = routes.deployments.deployments.Deployments(self._app, sql)
+        deployments_basic = routes.deployments.views.basic.Basic(self._app, sql)
+        deployments_pro = routes.deployments.views.pro.Pro(self._app, sql)
 
-        # Instantiate all routes
-        self._app.register_blueprint(login, url_prefix=self._url_prefix)
-        self._app.register_blueprint(profile, url_prefix=self._url_prefix)
-        self._app.register_blueprint(settings, url_prefix=self._url_prefix)
-        self._app.register_blueprint(groups, url_prefix=self._url_prefix)
-        self._app.register_blueprint(users, url_prefix=self._url_prefix)
-        self._app.register_blueprint(admin_deployments, url_prefix=self._url_prefix)
-        self._app.register_blueprint(environments, url_prefix=self._url_prefix)
-        self._app.register_blueprint(regions, url_prefix=self._url_prefix)
-        self._app.register_blueprint(servers, url_prefix=self._url_prefix)
-        self._app.register_blueprint(auxiliary, url_prefix=self._url_prefix)
-        self._app.register_blueprint(slack, url_prefix=self._url_prefix)
-        self._app.register_blueprint(deployments, url_prefix=self._url_prefix)
-        self._app.register_blueprint(deployments_basic, url_prefix=self._url_prefix)
-        self._app.register_blueprint(deployments_pro, url_prefix=self._url_prefix)
+        self._blueprints = [login, profile, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, slack, deployments, deployments_basic, deployments_pro]
+
+        # Register all blueprints
+        for i in self._blueprints:
+            i.license(self._license)
+            self._app.register_blueprint(i.blueprint(), url_prefix=self._url_prefix)
 
     def __cron_start(self, cron):
         # Check integrity

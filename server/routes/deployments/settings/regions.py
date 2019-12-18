@@ -14,6 +14,9 @@ class Regions:
         self._regions = models.deployments.regions.Regions(sql)
         self._servers = models.deployments.servers.Servers(sql)
 
+    def license(self, value):
+        self._license = value
+
     def blueprint(self):
         # Init blueprint
         regions_blueprint = Blueprint('regions', __name__, template_folder='regions')       
@@ -21,6 +24,10 @@ class Regions:
         @regions_blueprint.route('/deployments/regions', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
         def regions_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -43,6 +50,10 @@ class Regions:
         @regions_blueprint.route('/deployments/regions/list', methods=['POST'])
         @jwt_required
         def regions_list_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get User
             user = self._users.get(get_jwt_identity())[0]
 

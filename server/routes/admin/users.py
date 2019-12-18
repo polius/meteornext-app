@@ -11,6 +11,9 @@ class Users:
         self._groups = models.admin.groups.Groups(sql)
         self._users = models.admin.users.Users(sql)
 
+    def license(self, value):
+        self._license = value
+
     def blueprint(self):
         # Init blueprint
         users_blueprint = Blueprint('users', __name__, template_folder='users')
@@ -18,6 +21,10 @@ class Users:
         @users_blueprint.route('/admin/users', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
         def users_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Check user privileges
             is_admin = self._users.is_admin(get_jwt_identity())
             if not is_admin:

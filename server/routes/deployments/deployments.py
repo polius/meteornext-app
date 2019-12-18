@@ -17,6 +17,9 @@ class Deployments:
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._settings = models.admin.settings.Settings(sql)
 
+    def license(self, value):
+        self._license = value
+
     def blueprint(self):
         # Init blueprint
         deployments_blueprint = Blueprint('deployments', __name__, template_folder='deployments')
@@ -24,6 +27,10 @@ class Deployments:
         @deployments_blueprint.route('/deployments', methods=['GET','PUT','DELETE'])
         @jwt_required
         def deployments_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -44,6 +51,10 @@ class Deployments:
         @deployments_blueprint.route('/deployments/results', methods=['GET'])
         @jwt_required
         def deployments_results_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get Request Json URI
             uri = request.args.get('uri')
 

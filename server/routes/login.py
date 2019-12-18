@@ -8,12 +8,20 @@ class Login:
         # Init models
         self._users = models.admin.users.Users(sql)
 
+    def license(self, value):
+        self._license = value
+
     def blueprint(self):
         # Init blueprint
         login_blueprint = Blueprint('login', __name__, template_folder='login')
 
         @login_blueprint.route('/login', methods=['POST'])
         def login_user():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
+            # Check parameters
             if not request.is_json:
                 return jsonify({"message": "Missing JSON in request"}), 400
             login_json = request.get_json()
@@ -22,7 +30,7 @@ class Login:
             user = self._users.get(login_json['username'])
 
             if len(user) == 0 or not bcrypt.checkpw(login_json['password'].encode('utf-8'), user[0]['password'].encode('utf-8')):
-                return jsonify({"message": "Invalid username or password"}), 401
+                return jsonify({"message": "Invalid username or password"}), 400
             else:
                 ret = {
                     'access_token': create_access_token(identity=user[0]['username']),
@@ -37,15 +45,5 @@ class Login:
                     'deployments_edit': user[0]['deployments_edit']
                 }
                 return jsonify({'data': ret}), 200
-
-        # @login_blueprint.route('/refresh', methods=['POST'])
-        # @jwt_refresh_token_required
-        # def refresh():
-        #     ''' refresh token endpoint '''
-        #     current_user = get_jwt_identity()
-        #     ret = {
-        #         'token': create_access_token(identity=current_user)
-        #     }
-        #     return jsonify({'status': True, 'data': ret}), 200
 
         return login_blueprint

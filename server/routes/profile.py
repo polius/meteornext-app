@@ -8,6 +8,9 @@ class Profile:
         # Init models
         self._users = models.admin.users.Users(sql)
 
+    def license(self, value):
+        self._license = value
+
     def blueprint(self):
         # Init blueprint
         profile_blueprint = Blueprint('profile', __name__, template_folder='profile')
@@ -15,6 +18,10 @@ class Profile:
         @profile_blueprint.route('/profile', methods=['GET','PUT'])
         @jwt_required
         def profile_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get User
             user = self._users.get(get_jwt_identity())
 

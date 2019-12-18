@@ -21,6 +21,9 @@ class Pro:
         # Init meteor
         self._meteor = routes.deployments.meteor.Meteor(app, sql)
 
+    def license(self, value):
+        self._license = value
+
     def blueprint(self):
         # Init blueprint
         deployments_pro_blueprint = Blueprint('deployments_pro', __name__, template_folder='deployments_pro')
@@ -28,6 +31,10 @@ class Pro:
         @deployments_pro_blueprint.route('/deployments/pro', methods=['GET','POST','PUT'])
         @jwt_required
         def deployments_pro_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -48,6 +55,10 @@ class Pro:
         @deployments_pro_blueprint.route('/deployments/pro/code', methods=['GET'])
         @jwt_required
         def deployments_pro_code():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -63,6 +74,10 @@ class Pro:
         @deployments_pro_blueprint.route('/deployments/pro/executions', methods=['GET'])
         @jwt_required
         def deployments_pro_executions():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -84,6 +99,10 @@ class Pro:
         @deployments_pro_blueprint.route('/deployments/pro/start', methods=['POST'])
         @jwt_required
         def deployments_pro_start():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -107,6 +126,10 @@ class Pro:
         @deployments_pro_blueprint.route('/deployments/pro/stop', methods=['POST'])
         @jwt_required
         def deployments_pro_stop():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -130,6 +153,10 @@ class Pro:
         @deployments_pro_blueprint.route('/deployments/pro/public', methods=['POST'])
         @jwt_required
         def deployments_pro_public():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 

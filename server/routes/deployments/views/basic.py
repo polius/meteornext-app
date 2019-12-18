@@ -20,6 +20,9 @@ class Basic:
         # Init meteor
         self._meteor = routes.deployments.meteor.Meteor(app, sql)
 
+    def license(self, value):
+        self._license = value
+
     def blueprint(self):
         # Init blueprint
         deployments_basic_blueprint = Blueprint('deployments_basic', __name__, template_folder='deployments_basic')
@@ -27,6 +30,10 @@ class Basic:
         @deployments_basic_blueprint.route('/deployments/basic', methods=['GET','POST','PUT'])
         @jwt_required
         def deployments_basic_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -47,6 +54,10 @@ class Basic:
         @deployments_basic_blueprint.route('/deployments/basic/executions', methods=['GET'])
         @jwt_required
         def deployments_basic_executions():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -68,6 +79,10 @@ class Basic:
         @deployments_basic_blueprint.route('/deployments/basic/start', methods=['POST'])
         @jwt_required
         def deployments_basic_start():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -91,6 +106,10 @@ class Basic:
         @deployments_basic_blueprint.route('/deployments/basic/stop', methods=['POST'])
         @jwt_required
         def deployments_basic_stop():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
@@ -114,6 +133,10 @@ class Basic:
         @deployments_basic_blueprint.route('/deployments/basic/public', methods=['POST'])
         @jwt_required
         def deployments_basic_public():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
