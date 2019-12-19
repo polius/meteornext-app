@@ -68,7 +68,7 @@ class Setup:
         def setup1():
             # Protect api call once is already configured
             if not self.__setup_available():
-                return jsonify({}), 400
+                return jsonify({}), 401
 
             if not request.is_json:
                 return jsonify({"message": "Missing JSON in request"}), 400
@@ -84,7 +84,7 @@ class Setup:
         def setup2():
             # Protect api call once is already configured
             if not self.__setup_available():
-                return jsonify({}), 400
+                return jsonify({}), 401
 
             if not request.is_json:
                 return jsonify({"message": "Missing JSON in request"}), 400
@@ -105,7 +105,7 @@ class Setup:
         def setup3():
             # Protect api call once is already configured
             if not self.__setup_available():
-                return jsonify({}), 400
+                return jsonify({}), 401
 
             if not request.is_json:
                 return jsonify({"message": "Missing JSON in request"}), 400
@@ -160,12 +160,12 @@ class Setup:
             with open(self._setup_file, 'w') as outfile:
                 json.dump(self._conf, outfile)
 
+            # Init blueprints
+            self.__register_blueprints(sql)
+
             # Init cron
             cron = Cron(self._license, self._conf['license'], self._blueprints, sql)
             self.__cron_start(cron)
-
-            # Init blueprints
-            self.__register_blueprints(sql)
 
             # Build return message
             return jsonify({'message': 'Setup Finished Successfully'}), 200

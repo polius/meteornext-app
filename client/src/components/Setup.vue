@@ -122,7 +122,7 @@
       },
       setup1() {
         if (!this.$refs.form1.validate()) {
-          this.notification('Please fill all fields', 'error')
+          this.notification('Please fill all fields', 'warning')
           return
         }
         this.loading = true
@@ -142,7 +142,7 @@
       },
       setup2() {
         if (!this.$refs.form2.validate()) {
-          this.notification('Please fill all fields', 'error')
+          this.notification('Please fill all fields', 'warning')
           return
         }
         this.loading = true
@@ -162,7 +162,7 @@
       },
       setup3() {
         if (!this.$refs.form3.validate()) {
-          this.notification('Please fill all fields', 'error')
+          this.notification('Please fill all fields', 'warning')
           return
         }
         this.notification('Setting up Meteor Next...', 'info')

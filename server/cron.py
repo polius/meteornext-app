@@ -34,11 +34,11 @@ class Cron:
             time.sleep(1)
 
     def __license(self, mode):
-        print("LICENSE")
-        # if mode == 'minute' and self._license['status']:
-        #     return
+        if mode == 'minute' and self._license['status']:
+            return
         if mode == 'hour' and not self._license['status']:
             return
+        # print("- Checking license...")
         try:
             response = requests.post("http://www.poliuscorp.com:12350/license", json=self._license_conf)
             response_code = response.status_code
