@@ -101,7 +101,7 @@ class Setup:
             except Exception as e:
                 return jsonify({'message': str(e)}), 500
 
-        @setup_blueprint.route('/setup/account', methods=['POST'])
+        @setup_blueprint.route('/setup', methods=['POST'])
         def setup_account():
             # Protect api call once is already configured
             if not self.__setup_available():
@@ -118,20 +118,24 @@ class Setup:
             sql.connect(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'])
 
             try:
-                sql.execute('DROP DATABASE IF EXISTS {}'.format(setup_json['sql']['database']))
-                sql.execute('CREATE DATABASE {}'.format(setup_json['sql']['database']))
-                sql.select_database(setup_json['sql']['database'])
-                with open(self._schema_file) as file_open:
-                    queries = file_open.read().split(';')
-                    for q in queries:
-                        if q != '':
-                            sql.execute(q)
+                if setup_json['sql']['recreate']:
+                    # Import SQL Schema
+                    sql.execute('DROP DATABASE IF EXISTS {}'.format(setup_json['sql']['database']))
+                    sql.execute('CREATE DATABASE {}'.format(setup_json['sql']['database']))
+                    sql.select_database(setup_json['sql']['database'])
+                    with open(self._schema_file) as file_open:
+                        queries = file_open.read().split(';')
+                        for q in queries:
+                            if q != '':
+                                sql.execute(q)
 
-                # Create user
-                users = models.admin.users.Users(sql)
-                user = {"username": setup_json['account']['username'], "password": setup_json['account']['password'], "email": "admin@admin.com", "coins": 100, "group": 'Administrator', "admin": 1}
-                user['password'] = bcrypt.hashpw(user['password'].encode('utf8'), bcrypt.gensalt())
-                users.post(user)
+                    # Create user
+                    users = models.admin.users.Users(sql)
+                    user = {"username": setup_json['account']['username'], "password": setup_json['account']['password'], "email": "admin@admin.com", "coins": 100, "group": 'Administrator', "admin": 1}
+                    user['password'] = bcrypt.hashpw(user['password'].encode('utf8'), bcrypt.gensalt())
+                    users.post(user)
+                else:
+                    sql.select_database(setup_json['sql']['database'])
 
                 # Init Logs Local Path
                 settings = models.admin.settings.Settings(sql)

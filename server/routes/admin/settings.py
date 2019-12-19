@@ -53,13 +53,11 @@ class Settings:
         # Init Settings
         settings = {}
 
+        # Get License Settings
+        settings['license'] = self._settings_conf['license']
+
         # Get SQL Settings
         settings['sql'] = self._settings_conf['sql']
-        settings['sql']['path'] = os.path.dirname(os.path.realpath(__file__)) if sys.argv[0].endswith('.py') else os.path.dirname(sys.executable)
-        settings['sql']['path'] += '/settings.json'
-
-        # Get API Settings
-        settings['api'] = self._settings_conf['bind']
 
         # Get Logs Settings
         settings['logs'] = json.loads(self._settings.get()[0]['value'])

@@ -5,28 +5,28 @@
         <v-toolbar-title>SETTINGS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
+          <v-btn text @click="setSetting('license')"><v-icon small style="padding-right:10px">fas fa-plug</v-icon>LICENSE</v-btn>
           <v-btn text @click="setSetting('sql')"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SQL</v-btn>
-          <v-btn text @click="setSetting('api')"><v-icon small style="padding-right:10px">fas fa-plug</v-icon>API</v-btn>
           <v-btn text @click="setSetting('logs')"><v-icon small style="padding-right:10px">fas fa-paper-plane</v-icon>LOGS</v-btn>
         </v-toolbar-items>
       </v-toolbar>
       <v-container fluid grid-list-lg>
         <v-layout row wrap>
+          <!-- LICENSE -->
+          <v-flex v-if="setting_mode == 'license'" xs12 style="margin-top:5px; margin-bottom:5px;">
+            <div class="headline font-weight-regular" style="margin-left:10px;">LICENSE</div>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.email" label="Email" style="margin-left:10px; padding-top:30px;" required :rules="[v => !!v || '']"></v-text-field>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.key" label="Key" style="margin-left:10px; padding-top:0px;" @click:append="show_key = !show_key" :append-icon="show_key ? 'visibility' : 'visibility_off'" :type="show_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
+          </v-flex>
+
           <!-- SQL -->
-          <v-flex v-if="setting_mode == 'sql'" xs12 style="margin-top:5px; margin-bottom:5px;">
+          <v-flex v-else-if="setting_mode == 'sql'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="headline font-weight-regular" style="margin-left:10px;">SQL</div>
-            <div v-if="!loading" class="body-1 font-weight-light font-italic" style="margin-left:10px; margin-top:10px; margin-bottom:25px;">{{ sql.path }}</div>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.hostname" label="Hostname" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.hostname" label="Hostname" style="margin-left:10px; padding-top:30px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.username" label="Username" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.password" label="Password" style="margin-left:10px; padding-top:0px;" @click:append="show_password = !show_password" :append-icon="show_password ? 'visibility' : 'visibility_off'" :type="show_password ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.port" label="Port" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.database" label="Database" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
-          </v-flex>
-
-          <!-- API -->
-          <v-flex v-else-if="setting_mode == 'api'" xs12 style="margin-top:5px; margin-bottom:5px;">
-            <div class="headline font-weight-regular" style="margin-left:10px;">API</div>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="api" label="Bind" style="margin-left:10px; padding-top:20px;" required :rules="[v => !!v || '']"></v-text-field>
           </v-flex>
 
           <!-- LOGS -->
@@ -91,14 +91,15 @@ import axios from 'axios';
 export default {
   data: () => ({
     // Settings
-    setting_mode: 'sql',
+    setting_mode: 'license',
+
+    // LICENSE
+    license: {},
+    show_key: false,
 
     // SQL
     sql: {},
     show_password: false,
-
-    // API
-    api: {},
 
     // Logs
     logs: { local: {}, amazon_s3: {} },
@@ -123,8 +124,8 @@ export default {
         .then((response) => {
           // Get Settings
           var settings = response.data.data
+          this.license = settings['license']
           this.sql = settings['sql']
-          this.api = settings['api']
           this.logs = settings['logs']
 
           // Init Logs Expire

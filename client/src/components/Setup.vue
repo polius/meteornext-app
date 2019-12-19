@@ -11,26 +11,45 @@
                   <div class="display-2" style="margin-top:10px;"><b>Meteor</b> Next</div>
                   <div class="headline" style="margin-top:10px; margin-bottom:20px;">SETUP</div>
                   <v-divider></v-divider>
-                  <v-form ref="form1" v-show="setup_part == 1">
+                  <!-- LICENSE -->
+                  <v-form ref="formLicense" v-show="setup_part == 'license'">
                     <div class="title font-weight-medium" style="margin-top:15px; margin-bottom:10px;">License</div>
-                    <v-text-field filled v-model="license.email" name="email" label="Email" required append-icon="account_circle" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup1()"></v-text-field>
-                    <v-text-field filled v-model="license.key" name="key" label="Key" required append-icon="vpn_key" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup1()"></v-text-field>
+                    <v-text-field filled v-model="license.email" name="email" label="Email" required append-icon="account_circle" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
+                    <v-text-field filled v-model="license.key" name="key" label="Key" required append-icon="vpn_key" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
                   </v-form>
-                  <v-form ref="form2" v-show="setup_part == 2">
+                  <!-- SQL -->
+                  <v-form ref="formSQL" v-show="setup_part == 'sql'">
                     <div class="title font-weight-medium" style="margin-top:15px; margin-bottom:10px;">MySQL Server</div>
-                    <v-text-field filled v-model="sql.hostname" name="hostname" label="Hostname" required append-icon="cloud" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup2()"></v-text-field>
-                    <v-text-field filled v-model="sql.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup2()"></v-text-field>
-                    <v-text-field filled v-model="sql.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup2()"></v-text-field>
-                    <v-text-field filled v-model="sql.port" name="port" label="Port" required append-icon="directions_boat" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup2()"></v-text-field>
-                    <v-text-field filled v-model="sql.database" name="database" label="Database" required append-icon="storage" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup2()"></v-text-field>
+                    <v-text-field filled v-model="sql.hostname" name="hostname" label="Hostname" required append-icon="cloud" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
+                    <v-text-field filled v-model="sql.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
+                    <v-text-field filled v-model="sql.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
+                    <v-text-field filled v-model="sql.port" name="port" label="Port" required append-icon="directions_boat" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
+                    <v-text-field filled v-model="sql.database" name="database" label="Database" required append-icon="storage" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
                   </v-form>
-                  <v-form ref="form3" v-show="setup_part == 3">
-                    <div class="title font-weight-medium" style="margin-top:10px; margin-bottom:10px;">Create Admin Account</div>
-                    <v-text-field filled v-model="account.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup3()"></v-text-field>
-                    <v-text-field filled v-model="account.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup3()"></v-text-field>
+                  <!-- ACCOUNT -->
+                  <v-form ref="formAccount" v-show="setup_part == 'account'">
+                    <div class="title font-weight-medium" style="margin-top:10px; margin-bottom:10px;">Admin Account</div>
+                    <v-text-field filled v-model="account.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
+                    <v-text-field filled v-model="account.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
                   </v-form>
-                  <v-btn v-if="setup_part != 4" x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="setupSubmit()">{{ formButton }}</v-btn>
-                  <v-btn v-else x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()"><b>LOGIN</b></v-btn>
+                  <!-- OVERVIEW -->
+                  <div v-show="setup_part == 'overview'">
+                  <div class="title font-weight-medium" style="margin-top:10px; margin-bottom:10px;">OVERVIEW</div>
+                    <div class="subtitle-1 font-weight-medium" style="margin-top:10px; margin-bottom:10px;">License</div>
+                    <v-text-field readonly dense filled v-model="license.email" name="email" label="Email" required append-icon="account_circle" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field readonly dense filled v-model="license.key" name="key" label="Key" required append-icon="vpn_key" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <div class="subtitle-1 font-weight-medium" style="margin-top:15px; margin-bottom:10px;">MySQL Server</div>
+                    <v-text-field readonly dense filled v-model="sql.hostname" name="hostname" label="Hostname" required append-icon="cloud" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field readonly dense filled v-model="sql.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field readonly dense filled v-model="sql.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field readonly dense filled v-model="sql.port" name="port" label="Port" required append-icon="directions_boat" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field readonly dense filled v-model="sql.database" name="database" label="Database" required append-icon="storage" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <div v-if="sql['recreate']" class="subtitle-1 font-weight-medium" style="margin-top:10px; margin-bottom:10px;">Admin Account</div>
+                    <v-text-field v-if="sql['recreate']" readonly dense filled v-model="account.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field v-if="sql['recreate']" readonly dense filled v-model="account.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                  </div>
+                  <!-- SUBMIT BUTTON -->
+                  <v-btn x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="setup()">{{ buttonText }}</v-btn>
                 </v-card-text>
               </v-card>
             </v-slide-y-transition>
@@ -39,12 +58,12 @@
       </v-container>
     </v-content>
 
-    <v-dialog v-model="dialog" persistent max-width="768px">
+    <v-dialog v-model="setupDialog" persistent max-width="768px">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">Database Already Exists</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="setupDialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -54,8 +73,8 @@
                 <div style="padding-bottom:10px" class="subtitle-1">Are you sure you want to recreate this database?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="success" @click="submitDialog(true)">YES, recreate it</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:10px">Do NOT recreate it</v-btn>
+                  <v-btn :loading="loading" color="success" @click="setupDialogSubmit(true)">YES, recreate it</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="setupDialogSubmit(false)" style="margin-left:10px">Do NOT recreate it</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -80,12 +99,12 @@
       license: { email: '', key: '' },
       sql: { hostname: '', username: '', password: '', port: '3306', database: 'meteor' },
       account: { username: '', password: '' },
-      setup_part: 1,
-      formButton: 'VERIFY',
+      setup_part: 'license',
+      buttonText: 'VERIFY',
       loading: false,
 
       // Setup Dialog
-      dialog: false,
+      setupDialog: false,
 
       // Setup Available
       available: false,
@@ -115,13 +134,15 @@
             if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           })
       },
-      setupSubmit() {
-        if (this.setup_part == 1) this.setup1()
-        else if (this.setup_part == 2) this.setup2()
-        else if (this.setup_part == 3) this.setup3()
+      setup() {
+        if (this.setup_part == 'license') this.setupLicense()
+        else if (this.setup_part == 'sql') this.setupSQL()
+        else if (this.setup_part == 'account') this.setupAccount()
+        else if (this.setup_part == 'overview') this.setupOverview()
+        else if (this.setup_part == 'login') this.login()
       },
-      setup1() {
-        if (!this.$refs.form1.validate()) {
+      setupLicense() {
+        if (!this.$refs.formLicense.validate()) {
           this.notification('Please fill all fields', 'warning')
           return
         }
@@ -130,8 +151,8 @@
         axios.post('/setup/license', payload)
           .then((response) => {
             this.notification(response.data.message, 'success')
-            this.setup_part += 1
-            this.formButton = 'CHECK CONNECTION'
+            this.setup_part = 'sql'
+            this.buttonText = 'CHECK CONNECTION'
           })
           .catch((error) => {
             this.notification(error.response.data.message, 'error')
@@ -140,8 +161,8 @@
             this.loading = false
           })
       },
-      setup2() {
-        if (!this.$refs.form2.validate()) {
+      setupSQL() {
+        if (!this.$refs.formSQL.validate()) {
           this.notification('Please fill all fields', 'warning')
           return
         }
@@ -150,8 +171,8 @@
         axios.post('/setup/sql', payload)
           .then((response) => {
             this.notification('Connection successful', 'success')
-              if (response.data.exists) this.dialog = true
-              else this.submitDialog(false)
+              if (response.data.exists) this.setupDialog = true
+              else this.setupSQLDialog(true)
           })
           .catch(() => {
             this.notification("Can't connect to MySQL server", 'error')
@@ -160,11 +181,21 @@
             this.loading = false
           })
       },
-      setup3() {
-        if (!this.$refs.form3.validate()) {
+      setupDialogSubmit(status) {
+        this.sql['recreate'] = status
+        this.setupDialog = false
+        this.setup_part = (status) ? 'account' : 'overview'
+        this.buttonText = (status) ? 'CONFIRM' : 'SETUP'
+      },
+      setupAccount() {
+        if (!this.$refs.formAccount.validate()) {
           this.notification('Please fill all fields', 'warning')
           return
         }
+        this.setup_part = 'overview'
+        this.buttonText = 'SETUP'
+      },
+      setupOverview() {
         this.notification('Setting up Meteor Next...', 'info')
         this.loading = true
         const payload = {
@@ -172,10 +203,11 @@
           sql: this.sql,
           account: this.account
         }
-        axios.post('/setup/account', JSON.stringify(payload))
+        axios.post('/setup', JSON.stringify(payload))
           .then((response) => {
             this.notification(response.data.message, 'success')
-            this.setup_part += 1
+            this.setup_part = 'login'
+            this.buttonText = 'LOGIN'
           })
           .catch((error) => {
             this.notification(error.response.data.message, 'error')
@@ -186,11 +218,6 @@
       },
       login() {
         this.$router.push('/login')
-      },
-      submitDialog() {
-        this.dialog = false
-        this.setup_part += 1
-        this.formButton = 'CONFIRM'
       },
       notification(message, color) {
         this.snackbarText = message

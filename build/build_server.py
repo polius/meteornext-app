@@ -17,7 +17,7 @@ class build_server:
         self._pwd = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
         
         if len(sys.argv) == 1:
-            # subprocess.call("python3 build_server.py build_ext meteor", shell=True)
+            subprocess.call("python3 build_server.py build_ext meteor", shell=True)
             subprocess.call("python3 build_server.py build_ext server", shell=True)
 
         elif 'meteor' in sys.argv:
