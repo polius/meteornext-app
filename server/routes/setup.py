@@ -64,8 +64,8 @@ class Setup:
             else:
                 return jsonify({}), 401
 
-        @setup_blueprint.route('/setup/1', methods=['POST'])
-        def setup1():
+        @setup_blueprint.route('/setup/license', methods=['POST'])
+        def setup_license():
             # Protect api call once is already configured
             if not self.__setup_available():
                 return jsonify({}), 401
@@ -80,8 +80,8 @@ class Setup:
             self._license = self.__check_license(setup_json)
             return jsonify({"message": self._license['response']}), self._license['code']
             
-        @setup_blueprint.route('/setup/2', methods=['POST'])
-        def setup2():
+        @setup_blueprint.route('/setup/sql', methods=['POST'])
+        def setup_sql():
             # Protect api call once is already configured
             if not self.__setup_available():
                 return jsonify({}), 401
@@ -101,8 +101,8 @@ class Setup:
             except Exception as e:
                 return jsonify({'message': str(e)}), 500
 
-        @setup_blueprint.route('/setup/3', methods=['POST'])
-        def setup3():
+        @setup_blueprint.route('/setup/account', methods=['POST'])
+        def setup_account():
             # Protect api call once is already configured
             if not self.__setup_available():
                 return jsonify({}), 401
@@ -185,9 +185,8 @@ class Setup:
 
     def __check_license(self, license):
         try:
-            response = requests.post("http://www.poliuscorp.com:12350/license", json=license)
+            response = requests.post("http://34.252.139.218:12350/license", json=license, allow_redirects=False)
             response_text = json.loads(response.text)['response']
-            print(response_text)
             return {"status": response.status_code == 200, "code": response.status_code, "response": response_text}
         except requests.exceptions.RequestException:
             return {"status": False, "code": 404, "response": "A connection to the licensing server could not be established"}

@@ -47,7 +47,7 @@ export default  {
           this.$refs.frame.contentWindow.initMeteorNext(response.data)
         })
         .catch((error) => {
-          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.$refs.frame.contentWindow.showError(error.response.data.title, error.response.data.description)
         })
     }

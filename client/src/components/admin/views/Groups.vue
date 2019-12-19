@@ -85,7 +85,7 @@ export default {
           this.items = response.data.data
         })
         .catch((error) => {
-          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },
@@ -122,7 +122,7 @@ export default {
           this.selected = []
         })
         .catch((error) => {
-          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {

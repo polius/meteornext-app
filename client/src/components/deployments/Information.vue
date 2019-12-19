@@ -568,7 +568,7 @@
             }
           })
           .catch((error) => {
-            if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
           })
       },
@@ -750,7 +750,7 @@
             ]
           })
           .catch((error) => {
-            if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
           })
       },
@@ -805,7 +805,7 @@
           this.getDeployment()
         })
         .catch((error) => {
-          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
       },
@@ -824,7 +824,7 @@
           .then(() => {
           })
           .catch((error) => {
-            if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
           })
         }
@@ -880,7 +880,7 @@
           this.information_dialog = false
         })
         .catch((error) => {
-          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
@@ -998,7 +998,7 @@
           else this.notification('Results changed to private', 'info')
         })
         .catch((error) => {
-          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
       },

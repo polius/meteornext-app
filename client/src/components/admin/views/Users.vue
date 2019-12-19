@@ -101,7 +101,7 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },
@@ -151,7 +151,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
@@ -194,7 +194,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
@@ -226,7 +226,7 @@ export default {
           this.selected = []
         })
         .catch((error) => {
-          if (error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
