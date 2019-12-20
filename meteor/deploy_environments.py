@@ -332,7 +332,8 @@ class deploy_environments:
                 command = '{0} --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --logs_path "{5}" --uuid "{6}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], sql['name'], self._ssh_logs_path, self._args.uuid)
                 result = self.__ssh(command)['stdout']
             else:
-                result = self.__local('{0} --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --logs_path "{5}" --uuid "{6}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], sql['name'], self._args.logs_path, self._args.uuid), show_output=False)['stdout']
+                command = '{0} --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --logs_path "{5}" --uuid "{6}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], sql['name'], self._args.logs_path, self._args.uuid)
+                result = self.__local(command)['stdout']
             
             if len(result) == 0:
                 if output:
@@ -402,10 +403,10 @@ class deploy_environments:
                 if progress_array is None:
                     print(line.rstrip())
                 else:
-                    progress_array.append(line)
+                    progress_array.append(self.__decode(line))
 
         # Return Execution Output
-        return { "stdout": client.stdout.readlines(), "stderr": ''.join(str(v) for v in client.stderr.readlines()) }
+        return { "stdout": [self.__decode(i) for i in client.stdout.readlines()], "stderr": ''.join(str(v) for v in client.stderr.readlines()) }
 
     def __ssh(self, command, show_output=False, progress_array=None):
         try:
@@ -431,10 +432,10 @@ class deploy_environments:
                     if progress_array is None:
                         print(line.rstrip())
                     else:
-                        progress_array.append(line)
+                        progress_array.append(self.__decode(line))
 
             # Return Execution Output
-            return { "stdout": stdout.readlines(), "stderr": ''.join(stderr.readlines()) }
+            return { "stdout": [self.__decode(i) for i in stdout.readlines()], "stderr": ''.join(stderr.readlines()) }
 
         except socket.error as e:
             raise Exception("Connection Timeout. Can't establish a SSH connection.")
@@ -494,3 +495,9 @@ class deploy_environments:
         finally:
             if 'sftp' in locals():
                 sftp.close()
+
+    def __decode(self, string):
+        try:
+            return string.decode('utf-8')
+        except Exception:
+            return string

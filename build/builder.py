@@ -58,8 +58,7 @@ class builder:
                 self.menu()
 
             if option in ['1','2','3']:
-                self.__show_header()
-                print("- Distribution Path: '{}/dist/'".format(self._pwd))
+                print("\n- Distribution Path: '{}/dist/'".format(self._pwd))
                 print("- Overall Time: {}".format(time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))))
                 option2 = input("- Build Docker? (y/n): ")
                 if option2 == 'y':
@@ -77,8 +76,7 @@ class builder:
         subprocess.call("docker save meteornext > {}/dist/meteornext.tar".format(self._pwd), shell=True)
         self.clean_docker()
 
-        self.__show_header()
-        print("- Build Path: {}/dist/meteornext.tar".format(self._pwd))
+        print("\n- Build Path: {}/dist/meteornext.tar".format(self._pwd))
         print("- Overall Time: {}".format(time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))))
 
         option = input("- Start container? (y/n): ")

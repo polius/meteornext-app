@@ -82,7 +82,7 @@
           else this.$router.push(this.prevRoute)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.checkSetup()
+          if (error.response === undefined || ![400,401].includes(error.response.status)) this.checkSetup()
           else this.notification(error.response.data.message, 'error') 
         })
         .finally(() => {

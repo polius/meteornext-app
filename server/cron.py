@@ -38,7 +38,6 @@ class Cron:
             return
         if mode == 'hour' and not self._license['status']:
             return
-        # print("- Checking license... | {}".format(mode))
         try:
             response = requests.post("http://34.252.139.218:12350/license", json=self._license_conf, allow_redirects=False)
             response_code = response.status_code

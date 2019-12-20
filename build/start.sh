@@ -20,6 +20,6 @@ EOF
 fi
 
 # nohup ./server >/dev/null 2>&1 &
-nohup ./server > /dev/null 2> error.log &
+nohup ./server > error.log 2> error.log &
 nginx
 /bin/bash
