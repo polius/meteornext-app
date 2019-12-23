@@ -194,12 +194,12 @@ class Meteor:
 class query_execution:
     def __init__(self, query_instance=None):
         self._meteor = query_instance
-        self._queries = {}
+        self._queries = {0}
         self._auxiliary_queries = {{}}
     def before(self, environment, region):
         pass
     def main(self, environment, region, server, database):
-        if len(fnmatch.filter([database], '{}')) > 0:
+        if len('{1}') == 0 or len(fnmatch.filter([database], '{1}')) > 0:
             for i in self._queries.keys():
                 self._meteor.execute(query=self._queries[str(i)], database=database)
     def after(self, environment, region):
@@ -214,7 +214,35 @@ class query_execution:
         self._meteor = query_instance""".format(json.dumps(queries), deployment['databases'])
 
     def __compile_query_execution_inbenta(self, deployment):
+        queries = {}
+        for i, q in enumerate(json.loads(deployment['queries'])):
+            queries[str(i+1)] = q['query']
+
+        self._query_execution = """import fnmatch
+class query_execution:
+    def __init__(self, query_instance=None):
+        self._meteor = query_instance
+        self._queries = {0}
+        self._auxiliary_queries = {{'1': {{"auxiliary_connection": "awseu-sql01", "database": "ilf_admin", "query": "SELECT CONCAT('ilf_', name, '_{1}') AS db_name FROM projects WHERE product IN ({2})"}} }}
+    def before(self, environment, region):
+        self._instances = self._meteor.execute(auxiliary=self._auxiliary_queries['1'])
+    def main(self, environment, region, server, database):
+        if len(self.__searchInListDict(self._instances, 'db_name', database)) > 0:
+            if len('{3}') == 0 or len(fnmatch.filter([database], '{3}')) > 0:
+                for i in self._queries.keys():
+                    self._meteor.execute(query=self._queries[str(i)], database=database)
+    def after(self, environment, region):
         pass
+    def __searchInListDict(self, list_dicts, key_name, value_to_find):
+        return filter(lambda obj: obj[key_name] == value_to_find, list_dicts)
+    @property
+    def queries(self):
+        return self._queries
+    @property
+    def auxiliary_queries(self):
+        return self._auxiliary_queries
+    def set_query(self, query_instance):
+        self._meteor = query_instance""".format(json.dumps(queries), deployment['schema'], str(deployment['products'])[1:-1], deployment['databases'])
 
     def __execute(self, deployment):
         # Build Meteor Parameters

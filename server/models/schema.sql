@@ -172,8 +172,10 @@ CREATE TABLE `deployments_inbenta` (
  `deployment_id` INT UNSIGNED NOT NULL,
  `environment_id` INT(10) UNSIGNED NOT NULL,
  `products` SET('chatbot','km','no-product','search','ticketing') NOT NULL,
+ `schema` VARCHAR(191) NOT NULL,
  `databases` TEXT NULL,
  `queries` TEXT NOT NULL,
+ `method` ENUM('VALIDATE','TEST','DEPLOY') NOT NULL,
  `status` ENUM('CREATED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED') NOT NULL DEFAULT 'CREATED',
  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
  `started` DATETIME NULL,
@@ -184,9 +186,12 @@ CREATE TABLE `deployments_inbenta` (
  `uri` VARCHAR(191) NULL,
  `engine` VARCHAR(191) NULL,
  `public` TINYINT(1) NOT NULL DEFAULT 0,
+ `expired` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `deployment_id` (`deployment_id`),
   KEY `uri` (`uri`),
+  KEY `created` (`created`),
+  KEY `expired` (`expired`),
   FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`),
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

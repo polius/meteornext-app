@@ -48,8 +48,9 @@ class Cron:
             response_code = 404
             response_status = False    
         finally:
+            self._license = {'status': response_status, 'code': response_code, 'response': response_text}
             for b in self._blueprints:
-                b.license({'status': response_status, 'code': response_code, 'response': response_text})
+                b.license(self._license)
 
     def __coins(self):
         if not self._license['status']:

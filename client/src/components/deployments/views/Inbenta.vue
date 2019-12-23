@@ -6,7 +6,9 @@
           <div class="title font-weight-regular" style="margin-left:10px; margin-top:5px;">INBENTA</div>
           <v-form ref="form" style="padding:10px;">
             <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-            <v-select :loading="loading" v-model="products" :items="product_items" label="Products" multiple :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+            <v-select :loading="loading" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+            <v-select :loading="loading" v-model="products" :items="Object.keys(product_items)" label="Products" multiple :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+            <v-select :loading="loading" v-model="schema" :items="schema_items" label="Schema" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
             <v-text-field v-model="databases" label="Databases" hint="(Optional) Separated by commas. Wildcards allowed: % _" style="padding-top:0px;"></v-text-field>
 
             <v-card style="margin-bottom:20px;">
@@ -24,10 +26,32 @@
               </v-data-table>
             </v-card>
 
+            <!-- PARAMETERS -->
+            <div class="subtitle-1 font-weight-regular">METHOD</div>
+            <v-radio-group v-model="method" style="margin-top:10px;">
+              <v-radio value="validate" color="success">
+                <template v-slot:label>
+                  <div class="success--text">VALIDATE</div>
+                </template>
+              </v-radio>
+              <v-radio value="test" color="orange">
+                <template v-slot:label>
+                  <div class="orange--text">TEST</div>
+                </template>
+              </v-radio>
+              <v-radio value="deploy" color="red">
+                <template v-slot:label>
+                  <div class="red--text">DEPLOY</div>
+                </template>
+              </v-radio>
+            </v-radio-group>
+
+            <v-checkbox v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:-10px; margin-bottom:20px;"></v-checkbox>
+
             <v-divider></v-divider>
 
             <div style="margin-top:20px;">
-              <v-btn :loading="loading" color="success" @click="submitDeploy()">START EXECUTION</v-btn>
+              <v-btn :loading="loading" color="success" @click="submitDeploy()">CREATE DEPLOY</v-btn>
               <router-link to="/deployments"><v-btn :disabled="loading" color="error" style="margin-left:10px;">CANCEL</v-btn></router-link>
             </div>
           </v-form>
@@ -76,9 +100,17 @@ export default {
       name: '',
       databases: '',
 
+      // Environment
+      environment: '',
+      environment_items: [],
+
       // Products
-      product_items: ['Chatbot','KM','Search','Ticketing','Legacy'],
+      product_items: {'Chatbot': 'chatbot', 'KM': 'km', 'Search': 'search', 'Ticketing': 'ticketing', 'Legacy': 'no-product'},
       products: [],
+      
+      // Schema
+      schema_items: ['logs_cmpl', 'tmpl_edit', 'tickets'],
+      schema: [],
 
       // Query
       query_headers: [{ text: 'Query', value: 'query' }],
@@ -88,6 +120,7 @@ export default {
       query_mode: '', // new, edit, delete
 
       // Parameters
+      method: 'validate',
       start_execution: false,
 
       // Query Dialog
@@ -104,7 +137,21 @@ export default {
       snackbarText: ''
     }
   },
+  created() {
+    this.getEnvironments()
+  },
   methods: {
+    getEnvironments() {
+      axios.get('/deployments/environments')
+        .then((response) => {
+          for (var i = 0; i < response.data.data.length; ++i) this.environment_items.push(response.data.data[i]['name'])
+          this.loading = false
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+    },
     newQuery() {
       this.query_mode = 'new'
       this.query_item = { query: '' }
@@ -190,12 +237,20 @@ export default {
         return
       }
       this.loading = true
+
+      // Build products list
+      var products_parsed = []
+      for (var i = 0; i < this.products.length; ++i) products_parsed.push(this.product_items[this.products[i]])
+
       // Build parameters
       const payload = {
         name: this.name,
-        products: this.products,
+        environment: this.environment,
+        products: products_parsed,
+        schema: this.schema,
         databases: this.databases,
         queries: JSON.stringify(this.query_items),
+        method: this.method.toUpperCase(),
         start_execution: this.start_execution
       }
       // Add deployment to the DB

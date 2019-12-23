@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import uuid
 import bcrypt
 import requests
 import models.admin.users
@@ -22,6 +23,7 @@ import routes.deployments.settings.slack
 import routes.deployments.deployments
 import routes.deployments.views.basic
 import routes.deployments.views.pro
+import routes.deployments.views.inbenta
 import models.mysql
 import models.admin.settings
 from cron import Cron
@@ -40,6 +42,9 @@ class Setup:
         try:
             with open(self._setup_file) as file_open:
                 self._conf = json.load(file_open)
+            # Set unique hardware id
+            self._conf['license']['uuid'] = str(uuid.getnode())
+            # Init sql connection
             sql = models.mysql.mysql()
             sql.connect(self._conf['sql']['hostname'], self._conf['sql']['username'], self._conf['sql']['password'], self._conf['sql']['port'], self._conf['sql']['database'])
             # Check license
@@ -211,8 +216,9 @@ class Setup:
         deployments = routes.deployments.deployments.Deployments(self._app, sql)
         deployments_basic = routes.deployments.views.basic.Basic(self._app, sql)
         deployments_pro = routes.deployments.views.pro.Pro(self._app, sql)
+        deployments_inbenta = routes.deployments.views.inbenta.Inbenta(self._app, sql)
 
-        self._blueprints = [login, profile, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, slack, deployments, deployments_basic, deployments_pro]
+        self._blueprints = [login, profile, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, slack, deployments, deployments_basic, deployments_pro, deployments_inbenta]
 
         # Register all blueprints
         for i in self._blueprints:
