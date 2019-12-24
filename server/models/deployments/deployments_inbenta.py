@@ -41,7 +41,7 @@ class Deployments_Inbenta:
     def getExecutions(self, deployment_id):
         query = """
             SELECT i.id, e.name AS 'environment', i.method, i.created, i.status, i.started, i.ended
-            FROM deployments_inbenta b
+            FROM deployments_inbenta i
             JOIN environments e ON e.id = i.environment_id
             WHERE i.deployment_id = %s
             ORDER BY i.created DESC;
@@ -75,7 +75,7 @@ class Deployments_Inbenta:
     def getUser(self, execution_id):
         query = """
             SELECT d.user_id
-            FROM deployments_inbenta b
+            FROM deployments_inbenta i
             JOIN deployments d ON d.id = i.deployment_id
             WHERE i.id = %s
         """

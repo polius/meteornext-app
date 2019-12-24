@@ -81,6 +81,9 @@ class Setup:
             # Get Params
             setup_json = request.get_json()
 
+            # Set unique hardware id
+            setup_json['uuid'] = str(uuid.getnode())
+
             # Part 1: Check License
             self._license = self.__check_license(setup_json)
             return jsonify({"message": self._license['response']}), self._license['code']
@@ -171,6 +174,9 @@ class Setup:
 
             # Init blueprints
             self.__register_blueprints(sql)
+
+            # Set unique hardware id
+            self._conf['license']['uuid'] = str(uuid.getnode())
 
             # Init cron
             cron = Cron(self._license, self._conf['license'], self._blueprints, sql)

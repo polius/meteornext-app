@@ -52,6 +52,23 @@ class Deployments:
                         ORDER BY dp.created DESC
                         LIMIT 100
                     ) t2
+                    UNION ALL
+                    SELECT *
+                    FROM
+                    (
+                        SELECT d.id, di.id AS 'execution_id', u.username, d.name, di.environment_id, 'INBENTA' AS 'mode', di.method, di.status, di.created, di.started, di.ended, CONCAT(TIMEDIFF(di.ended, di.started)) AS 'overall'
+                        FROM deployments_inbenta di
+                        JOIN deployments d ON d.id = di.deployment_id AND d.deleted = 0
+                        JOIN users u ON u.id = d.user_id{0}
+                        JOIN groups g ON g.id = u.group_id AND g.deployments_inbenta = 1  
+                        WHERE di.id IN (
+                            SELECT MAX(id)
+                            FROM deployments_inbenta di2
+                            WHERE di2.deployment_id = di.deployment_id
+                        )
+                        ORDER BY di.created DESC
+                        LIMIT 100
+                    ) t3
                 ) d
                 JOIN environments e ON e.id = d.environment_id
                 WHERE 1=1{1}{2}{3}{4}
@@ -85,11 +102,22 @@ class Deployments:
                         FROM deployments_pro dp2
                         WHERE dp2.deployment_id = dp.deployment_id
                     )
+                    UNION
+                    SELECT d.id, di.id AS 'execution_id', d.name, di.environment_id, 'INBENTA' AS 'mode', di.method, di.status, di.created, di.started, di.ended
+                    FROM deployments_inbenta di
+                    JOIN deployments d ON d.id = di.deployment_id AND d.user_id = %s AND d.id = %s AND d.deleted = 0
+                    JOIN users u ON u.id = d.user_id
+                    JOIN groups g ON g.id = u.group_id AND g.deployments_inbenta = 1  
+                    WHERE di.id IN (
+                        SELECT MAX(id)
+                        FROM deployments_inbenta di2
+                        WHERE di2.deployment_id = di.deployment_id
+                    )
                 ) d
                 JOIN environments e ON e.id = d.environment_id
                 ORDER BY id DESC
             """
-            return self._sql.execute(query, (user_id, deployment_id, user_id, deployment_id))    
+            return self._sql.execute(query, (user_id, deployment_id, user_id, deployment_id, user_id, deployment_id))    
         else:
             query = """
                 SELECT d.id, d.execution_id, d.name, e.name AS 'environment', d.mode, d.method, d.status, d.created, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
@@ -116,11 +144,22 @@ class Deployments:
                         FROM deployments_pro dp2
                         WHERE dp2.deployment_id = dp.deployment_id
                     )
+                    UNION
+                    SELECT d.id, di.id AS 'execution_id', d.name, di.environment_id, 'INBENTA' AS 'mode', di.method, di.status, di.created, di.started, di.ended
+                    FROM deployments_inbenta di
+                    JOIN deployments d ON d.id = di.deployment_id AND d.user_id = %s AND d.deleted = 0
+                    JOIN users u ON u.id = d.user_id
+                    JOIN groups g ON g.id = u.group_id AND g.deployments_inbenta = 1  
+                    WHERE di.id IN (
+                        SELECT MAX(id)
+                        FROM deployments_inbenta di2
+                        WHERE di2.deployment_id = di.deployment_id
+                    )
                 ) d
                 JOIN environments e ON e.id = d.environment_id
                 ORDER BY created DESC
             """
-            return self._sql.execute(query, (user_id, user_id))        
+            return self._sql.execute(query, (user_id, user_id, user_id))        
 
     def post(self, user_id, deployment):
         query = "INSERT INTO deployments (name, user_id) VALUES(%s, %s)"
@@ -163,7 +202,11 @@ class Deployments:
                 SELECT deployment_id, id AS 'execution_id', 'pro' AS 'mode', engine, public
                 FROM deployments_pro
                 WHERE uri = %s
+                UNION
+                SELECT deployment_id, id AS 'execution_id', 'inbenta' AS 'mode', engine, public
+                FROM deployments_inbenta
+                WHERE uri = %s
             ) r
             JOIN deployments d ON d.id = r.deployment_id
         """
-        return self._sql.execute(query, (uri, uri))
+        return self._sql.execute(query, (uri, uri, uri))

@@ -207,7 +207,10 @@
                 <div class="title font-weight-regular" style="margin-top:10px; margin-bottom: 25px;">{{ this.deploymentMode }}</div>
                 <v-text-field readonly v-model="information_dialog_data.name" label="Name" style="padding-top:0px;"></v-text-field>
                 <v-select v-if="deploymentMode != 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="[information_dialog_data.environment]" label="Environment" style="padding-top:0px;"></v-select>
-                <v-select v-if="deploymentMode == 'INBENTA'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.product" :items="[information_dialog_data.products]" label="Products" style="padding-top:0px;"></v-select>
+
+                <v-select v-if="deploymentMode == 'INBENTA'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.products" :items="information_dialog_data.products_list" label="Products" multiple style="padding-top:0px;"></v-select>
+                <v-select v-if="deploymentMode == 'INBENTA'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schema" :items="information_dialog_data.schema_list" label="Schema" style="padding-top:0px;"></v-select>
+
                 <v-text-field v-if="deploymentMode != 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" style="padding-top:0px;"></v-text-field>
                 <v-card v-if="deploymentMode != 'PRO'" style="margin-bottom:20px;">
                   <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
@@ -227,8 +230,8 @@
                 <div v-if="deploymentMode == 'PRO'" class="subtitle-1 font-weight-regular" style="margin-top:-5px; margin-bottom:10px;" title="Press ESC when cursor is in the editor to toggle full screen editing">CODE</div>
                 <codemirror v-if="deploymentMode == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
 
-                <div v-if="deploymentMode == 'BASIC' || deploymentMode == 'PRO'" class="subtitle-1 font-weight-regular">METHOD</div>
-                <v-radio-group v-if="deploymentMode == 'BASIC' || deploymentMode == 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" hide-details style="margin-top:10px;">
+                <div class="subtitle-1 font-weight-regular">METHOD</div>
+                <v-radio-group :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" hide-details style="margin-top:10px;">
                   <v-radio value="validate" color="success">
                     <template v-slot:label>
                       <div class="success--text">VALIDATE</div>
@@ -246,7 +249,7 @@
                   </v-radio>
                 </v-radio-group>
 
-                <v-checkbox v-if="(deploymentMode == 'BASIC' || deploymentMode == 'PRO') && information_dialog_mode != 'parameters' && deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
+                <v-checkbox v-if="information_dialog_mode != 'parameters' && deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
                 <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
 
                 <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
@@ -591,7 +594,7 @@
         this.deployment['mode'] = data['mode']
         this.deployment['name'] = data['name']
         this.deployment['environment'] = data['environment']
-        if (this.deployment['mode'] == 'BASIC') {
+        if (this.deployment['mode'] == 'BASIC' || this.deployment['mode'] == 'INBENTA') {
           this.deployment['databases'] = data['databases']
           this.deployment['queries'] = []
           var queries = JSON.parse(data['queries'])
@@ -600,6 +603,18 @@
         }
         else if (this.deployment['mode'] == 'PRO') {
           this.deployment['code'] = data['code']
+        }
+        if (this.deployment['mode'] == 'INBENTA') {
+          this.deployment['products_schema'] = data['products_list']
+          this.deployment['products_list'] = Object.keys(data['products_list'])
+          this.deployment['products'] = []
+          for (const i of data['products'].split(',')) {
+            for (const [key, value] of Object.entries(data['products_list'])) {
+              if (i == value) this.deployment['products'].push(key)
+            }
+          }
+          this.deployment['schema_list'] = data['schema_list']
+          this.deployment['schema'] = data['schema']
         }
         this.deployment['method'] = data['method'].toLowerCase()
         this.deployment['status'] = data['status']
@@ -857,12 +872,17 @@
           start_execution: (this.information_dialog_data.start_execution === undefined) ? false : this.information_dialog_data.start_execution
         }
         // Build different modes
-        if (this.deployment['mode'] == 'BASIC') {
+        if (this.deployment['mode'] == 'BASIC' || this.deployment['mode'] == 'INBENTA') {
           payload['databases'] = this.information_dialog_data.databases
           payload['queries'] = JSON.stringify(this.information_dialog_data.queries)
         }
         else if (this.deployment['mode'] == 'PRO') {
           payload['code'] = this.information_dialog_data.code
+        }
+        if (this.deployment['mode'] == 'INBENTA') {
+          payload['products'] = []
+          for (const i of this.information_dialog_data.products) payload['products'].push(this.deployment['products_schema'][i])
+          payload['schema'] = this.information_dialog_data.schema
         }
         // Add deployment to the DB
         axios.put(path, payload)
@@ -967,16 +987,23 @@
       // SHARE RESULTS
       // -------------------------------------
       resultsClipboard() {
-        const el = document.createElement('textarea')
-        el.value =  this.url + ":8080/results/" + this.deployment['uri']
-        el.setAttribute('readonly', '')
-        el.style.position = 'absolute'
-        el.style.left = '-9999px'
-        document.body.appendChild(el)
-        el.select()
-        document.execCommand('copy')
-        document.body.removeChild(el)
-
+        const el = document.createElement('textarea');    // Create a <textarea> element
+        el.value = this.url + "/results/" + this.deployment['uri']; // Set its value to the string that you want copied
+        el.setAttribute('readonly', '');                // Make it readonly to be tamper-proof
+        el.style.position = 'absolute';                 
+        el.style.left = '-9999px';                      // Move outside the screen to make it invisible
+        document.body.appendChild(el);                  // Append the <textarea> element to the HTML document
+        const selected =            
+          document.getSelection().rangeCount > 0        // Check if there is any content selected previously
+            ? document.getSelection().getRangeAt(0)     // Store selection if found
+            : false;                                    // Mark as false to know no selection existed before
+        el.select();                                    // Select the <textarea> content
+        document.execCommand('copy');                   // Copy - only works as a result of a user action (e.g. click events)
+        document.body.removeChild(el);                  // Remove the <textarea> element
+        if (selected) {                                 // If a selection existed before copying
+          document.getSelection().removeAllRanges();    // Unselect everything on the HTML document
+          document.getSelection().addRange(selected);   // Restore the original selection
+        }
         this.notification('Deployment URL added to the clipboard', 'info')
       },
       resultsShare() {

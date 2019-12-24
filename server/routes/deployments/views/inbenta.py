@@ -174,6 +174,8 @@ class Inbenta:
         
         # Get deployment
         deployment = self._deployments_inbenta.get(request.args['execution_id'])
+        deployment[0]['products_list'] = {"Chatbot": "chatbot", "KM": "km", "Search": "search", "Ticketing": "ticketing", "Legacy": "no-product"} 
+        deployment[0]['schema_list'] = ['logs_cmpl', 'tmpl_edit', 'tickets']
         return jsonify({'data': deployment}), 200
 
     def __post(self, user, data):
