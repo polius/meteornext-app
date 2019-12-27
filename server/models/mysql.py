@@ -21,7 +21,11 @@ class mysql:
         self.__connect(database)
 
     def __connect(self, database=None):
-        # Establish the Connection
+        # Close previous connection
+        if self._connection and self._connection.open:
+            self._connection.close()
+
+        # Establish new connection
         if database is not None:
             self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], port=self._mysql['port'], db=database, charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
         else:

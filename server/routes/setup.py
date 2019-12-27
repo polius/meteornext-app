@@ -142,8 +142,9 @@ class Setup:
                     user = {"username": setup_json['account']['username'], "password": setup_json['account']['password'], "email": "admin@admin.com", "coins": 100, "group": 'Administrator', "admin": 1}
                     user['password'] = bcrypt.hashpw(user['password'].encode('utf8'), bcrypt.gensalt())
                     users.post(user)
-                else:
-                    sql.select_database(setup_json['sql']['database'])
+                
+                # Establish a connection with the selected DB
+                sql.connect(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'], setup_json['sql']['database'])
 
                 # Init Logs Local Path
                 settings = models.admin.settings.Settings(sql)

@@ -9,6 +9,7 @@ import re
 import traceback
 import signal
 import multiprocessing
+import threading
 import json
 import imp
 from multiprocessing.managers import SyncManager
@@ -82,7 +83,6 @@ class deploy:
 
     def __load_query_execution(self, file_path):
         if not os.path.isfile(file_path):
-            print(file_path)
             error_msg = "The 'query_execution.py' has not been found in '{}'".format(file_path)
             self._logger.critical(colored(error_msg, 'red', attrs=['reverse', 'bold']))
             self._progress.error(error_msg)
@@ -131,38 +131,35 @@ class deploy:
 
     def check_remote_execution(self):
         if self._args.env_id is not None:
-            if self._args.env_check_sql is not None:
-                # Check SQL Connection
-                self.validate_sql_connection()
-            else:
-                try:
-                    # Get the Environment to perform the Execution
-                    environment = self._credentials['environments'][self._args.environment]
-                    # Select the valid environment to validate the SQL connections
-                    for env in environment:
-                        if env['region'] == self._args.env_id:
-                            environment = env
-                            break
+            try:
+                # Get the Environment to perform the Execution
+                environment = self._credentials['environments'][self._args.environment]
+                # Select the valid environment to validate the SQL connections
+                for env in environment:
+                    if env['region'] == self._args.env_id:
+                        environment = env
+                        break
 
-                    if self._args.env_compress:
-                        # Compress Execution Logs
-                        compressed_file_name = "{}/logs/{}/execution/{}".format(environment['ssh']['deploy_path'], self._args.uuid, environment['region'])
-                        compressed_location = "{}/logs/{}/execution/".format(environment['ssh']['deploy_path'], self._args.uuid)
-                        if os.path.isdir(compressed_file_name):
-                            shutil.make_archive(compressed_file_name, 'gztar', compressed_location)
-                    else:
-                        # Start the DryRun/Deploy
-                        self.start_query_deploy(environment)
+                if self._args.env_compress:
+                    # Compress Execution Logs
+                    compressed_file_name = "{}/logs/{}/execution/{}".format(environment['ssh']['deploy_path'], self._args.uuid, environment['region'])
+                    compressed_location = "{}/logs/{}/execution/".format(environment['ssh']['deploy_path'], self._args.uuid)
+                    if os.path.isdir(compressed_file_name):
+                        shutil.make_archive(compressed_file_name, 'gztar', compressed_location)
+                else:
+                    # Start the DryRun/Deploy
+                    self.start_query_deploy(environment)
 
-                except KeyboardInterrupt:
-                    sys.exit(2)
+            except KeyboardInterrupt:
+                sys.exit(2)
 
-                except Exception as e:
-                    self._logger.critical(traceback.format_exc())
-                    sys.exit(1)
-     
-            # Exit the Execution
-            sys.exit(0)
+            except Exception as e:
+                self._logger.critical(traceback.format_exc())
+                sys.exit(1)
+            
+            finally:
+                # Exit the Execution
+                sys.exit(0)
 
     def __show_usage(self):
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
@@ -426,8 +423,7 @@ class deploy:
 
         except Exception as e:
             print(traceback.format_exc())
-            self._progress.error(traceback.format_exc())
-            self._logger.critical(colored(e, 'red', attrs=['reverse', 'bold']))
+            print(colored(e, 'red', attrs=['reverse', 'bold']))
             sys.exit()
 
     def __validate_queries(self):
@@ -486,74 +482,60 @@ class deploy:
             deploy_env = deploy_environments(self._logger, self._args, self._credentials)
             deploy_env.generate_app_version()  
 
-            # Start the Validation Process
-            for environment in [self._args.environment]:
-                # Start Environment Validation in Sequential
-                if self._credentials['execution_mode']['parallel'] != 'True':
-                    validation_succeeded = True
-                    for region in self._credentials['environments'][environment]:
-                        deploy_env = deploy_environments(self._logger, self._args, self._credentials, environment, region)
-                        validation_succeeded &= deploy_env.validate()
-                    if not validation_succeeded:
+            # Start Environment Validation in Sequential
+            if self._credentials['execution_mode']['parallel'] != 'True':
+                validation_succeeded = True
+                for region in self._credentials['environments'][self._args.environment]:
+                    deploy_env = deploy_environments(self._logger, self._args, self._credentials, self._args.environment, region)
+                    validation_succeeded &= deploy_env.validate()
+                if not validation_succeeded:
+                    raise Exception()
+
+            # Start Environment Validation in Parallel
+            else:
+                try:
+                    # Init Validation Progress
+                    validation_process = {}
+                    for region in self._credentials['environments'][self._args.environment]:
+                        validation_process[region['region']] = {}
+                    self._progress.track_validation(region=validation_process)
+
+                    # Start Validation
+                    threads = []
+                    for region in self._credentials['environments'][self._args.environment]:
+                        deploy_env = deploy_environments(self._logger, self._args, self._credentials, self._args.environment, region)
+                        t = threading.Thread(target=deploy_env.validate)
+                        t.progress = {}
+                        threads.append(t)
+                        t.start()
+
+                    # Wait all threads
+                    self.__wait_threads(threads)
+
+                    # Track Progress
+                    tracking = True
+                    error = False
+
+                    for t in threads:
+                        # Track progress
+                        progress = {'success': t.progress['success']}
+                        if len(t.progress['progress']) > 0:
+                            progress['errors'] = t.progress['progress']
+                        if 'error' in t.progress:
+                            progress['error'] = t.progress['error']
+                        self._progress.track_validation(region=t.progress['region'], value=progress)
+                        # Check if there are any validation errors
+                        if t.progress['success'] is False:
+                            error = True
+
+                    # If there's a validation error throw an Exception
+                    if error:
                         raise Exception()
 
-                # Start Environment Validation in Parallel
-                else:
-                    manager = SyncManager()
-                    manager.start(self.__mgr_init)
-                    shared_array = manager.list()
-
-                    processes = []
-                    try:
-                        validation_process = {}
-                        for region in self._credentials['environments'][environment]:
-                            validation_process[region['region']] = {}
-                        self._progress.track_validation(region=validation_process)
-
-                        for region in self._credentials['environments'][environment]:    
-                            environment_type = '[LOCAL]' if region['ssh']['enabled'] == 'False' else '[SSH]  '
-                            deploy_env = deploy_environments(self._logger, self._args, self._credentials, environment, region)
-                            p = multiprocessing.Process(target=deploy_env.validate, args=(False, shared_array,))
-                            p.start()
-                            processes.append(p)
-
-                        # Track Progress
-                        tracking = True
-                        error = False
-                        while tracking:
-                            # Check if all processes have finished
-                            if all(not p.is_alive() for p in processes):
-                                tracking = False
-
-                            # Get Overall Environment Validation Status
-                            for data in shared_array:
-                                # Track progress
-                                progress = {'success': data['success']}
-                                if len(data['progress']) > 0:
-                                    progress['errors'] = data['progress']
-                                if 'error' in data:
-                                    progress['error'] = data['error']
-                                self._progress.track_validation(region=data['region'], value=progress)
-                                # Check if there are any validation errors
-                                if data['success'] is False:
-                                    error = True
-
-                            time.sleep(1)
-
-                        # Ensure all processes have finished before proceeding forward
-                        for process in processes:
-                            process.join()
-
-                        # If there's a validation error throw an Exception
-                        if error:
-                            raise Exception()
-
-                    except KeyboardInterrupt:
-                        signal.signal(signal.SIGINT,signal.SIG_IGN)
-                        print(colored("\n--> Ctrl+C received. Stopping the execution...", 'yellow', attrs=['reverse', 'bold']))
-                        for process in processes:
-                            process.join()
-                        raise
+                except KeyboardInterrupt:
+                    print(colored("\n--> Ctrl+C received. Stopping the execution...", 'yellow', attrs=['reverse', 'bold']))
+                    self.__wait_threads(threads)
+                    raise
 
             print(colored("- Regions Validation Passed!", 'green', attrs=['bold', 'reverse']))
 
@@ -565,7 +547,21 @@ class deploy:
             self._progress.error(error_msg[2:])
             self.clean()
             sys.exit()
+
+    def __wait_threads(self, threads):
+        running = True
+        while running:
+            running = False
+            for t in threads:
+                if t.is_alive():
+                    t.join(0.1)
+                    running = True
         
+    def __stop_threads(self, threads):
+        for t in threads:
+            t.alive = False
+        self.__wait_threads(threads)
+
     def validate_sql_connection(self):
         environment = self._credentials['environments'][self._args.environment]
         # Select the valid environment to validate the SQL connections
@@ -606,7 +602,7 @@ class deploy:
             elapsed = str(timedelta(seconds=time.time() - started_time))
             print(colored("> Started: ", 'magenta') + colored(started_datetime, attrs=['bold']) + colored(" > Elapsed: ", 'magenta') + colored(elapsed, attrs=['bold']))
 
-    def __start(self, environment_data=None):
+    def __start(self):
         try:
             # Get Deployment Start Datetime
             started_datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
@@ -663,7 +659,6 @@ class deploy:
                         for data in shared_array:
                             if data['success'] is False:
                                 print(colored("- {}Execution Failed.".format('Test ' if self._args.test else ''), 'red', attrs=['bold', 'reverse']))
-                                # self._progress.track(key='error', value=data['error'])
                                 raise Exception(data['error'])
 
                         # Calculate Progress
@@ -788,29 +783,24 @@ class deploy:
 
         # Start Server Deploy in Parallel
         if self._credentials['execution_mode']['parallel'] == 'True':
-            manager = SyncManager()
-            manager.start(self.__mgr_init)
-            shared_array = manager.list()
-            alive = True
-
-            processes = []
+            threads = []
             try:
                 for server in env['sql']:
                     if self._args.servers is None or (self._args.servers is not None and server['name'] in servers):
-                        p = multiprocessing.Process(target=deploy.execute_main, args=(env['region'], server, shared_array,))
-                        p.start()
-                        processes.append(p)
+                        t = threading.Thread(target=deploy.execute_main, args=(env['region'], server,))
+                        threads.append(t)
+                        t.progress = []
+                        t.start()
 
-                for process in processes:
-                    process.join()
+                # Wait all threads
+                self.__wait_threads(threads)
 
-                if len(shared_array) > 0:
-                    sys.stderr.write(shared_array[0])
+                if len(t.progress) > 0:
+                    sys.stderr.write(t.progress[0])
                     sys.stderr.flush() 
 
             except KeyboardInterrupt:
-                for process in processes:
-                    process.join()
+                self.__stop_threads(threads)
                 raise
 
         # Start Server Deploy in Sequential

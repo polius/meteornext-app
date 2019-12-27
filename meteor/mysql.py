@@ -26,8 +26,10 @@ class mysql:
         self.__connect(database)
 
     def close(self):
-        if self._connection and self._connection.open:
+        try:
             self._connection.close()
+        except Exception:
+            pass
 
     def __connect(self, database=None):
         # Establish the Connection
@@ -79,8 +81,7 @@ class mysql:
                     if show_output:
                         print(colored("--> Rollback not performed. Error: {}".format(e2), 'red'))
                 finally:
-                    if self._connection.open:
-                        self._connection.close()
+                    self.close()
             raise e
 
         except KeyboardInterrupt:
@@ -96,8 +97,7 @@ class mysql:
                     if show_output:
                         print(colored("--> Rollback not performed. Error: {}".format(e), 'red'))
                 finally:
-                    if self._connection.open:
-                        self._connection.close()
+                    self.close()
             raise KeyboardInterrupt("Program Interrupted by User. Rollback successfully performed.")
 
     def get_all_databases(self):

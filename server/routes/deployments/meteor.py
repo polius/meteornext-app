@@ -189,6 +189,7 @@ class Meteor:
         queries = {}
         for i, q in enumerate(json.loads(deployment['queries'])):
             queries[str(i+1)] = q['query']
+        database = deployment['databases'].replace('%','*').replace('_','?').replace('\\?','\\_')
 
         self._query_execution = """import fnmatch
 class query_execution:
@@ -199,7 +200,7 @@ class query_execution:
     def before(self, environment, region):
         pass
     def main(self, environment, region, server, database):
-        if len('{1}') == 0 or len(fnmatch.filter([database], '{1}')) > 0:
+        if len(fnmatch.filter([database], '{1}')) > 0:
             for i in self._queries.keys():
                 self._meteor.execute(query=self._queries[str(i)], database=database)
     def after(self, environment, region):
@@ -211,12 +212,13 @@ class query_execution:
     def auxiliary_queries(self):
         return self._auxiliary_queries
     def set_query(self, query_instance):
-        self._meteor = query_instance""".format(json.dumps(queries), deployment['databases'])
+        self._meteor = query_instance""".format(json.dumps(queries), database)
 
     def __compile_query_execution_inbenta(self, deployment):
         queries = {}
         for i, q in enumerate(json.loads(deployment['queries'])):
             queries[str(i+1)] = q['query']
+        database = deployment['databases'].replace('%','*').replace('_','?').replace('\\?','\\_')
 
         self._query_execution = """import fnmatch
 class query_execution:
@@ -242,23 +244,21 @@ class query_execution:
     def auxiliary_queries(self):
         return self._auxiliary_queries
     def set_query(self, query_instance):
-        self._meteor = query_instance""".format(json.dumps(queries), deployment['schema'], str(deployment['products'])[1:-1], deployment['databases'])
+        self._meteor = query_instance""".format(json.dumps(queries), deployment['schema'], str(deployment['products'])[1:-1], database)
 
     def __execute(self, deployment):
         # Build Meteor Parameters
         meteor_base_path = sys._MEIPASS if self._bin else self._app.root_path
-        meteor_path = "{}/apps/meteor/init".format(meteor_base_path) if self._bin else "python {}/../meteor/meteor.py".format(meteor_base_path)
+        meteor_path = "{}/apps/meteor/init".format(meteor_base_path) if self._bin else "python3 {}/../meteor/meteor.py".format(meteor_base_path)
         environment = deployment['environment']
         execution_method = 'validate all' if deployment['method'].lower() == 'validate' else deployment['method'].lower()
         logs_path = "{}/{}".format(self._logs['local']['path'], self._uuid)
-        query_execution_path = "{}/{}/query_execution.py".format(self._logs['local']['path'], self._uuid)
-        credentials_path = "{}/{}/credentials.json".format(self._logs['local']['path'], self._uuid)
         execution_plan_factor = '--execution_plan_factor "{}"'.format(deployment['epf']) if deployment['epf'] > 0 else ''
         user = deployment['user']
 
         # Build Meteor Command
-        command = '{} --environment "{}" --{} --logs_path "{}" --query_execution_path "{}" --credentials_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}" {} --user "{}"'.format(meteor_path, environment, execution_method, logs_path, query_execution_path, credentials_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor, user)
-        # print(command)
+        command = '{} --environment "{}" --{} --logs_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}" {} --user "{}"'.format(meteor_path, environment, execution_method, logs_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor, user)
+        print(command)
 
         # Execute Meteor
         p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)

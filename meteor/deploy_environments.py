@@ -3,7 +3,8 @@
 import os
 import socket
 import subprocess
-import multiprocessing
+import threading
+import pymysql
 import signal
 import sys
 import time
@@ -12,7 +13,7 @@ import shutil
 import tarfile
 import hashlib
 import paramiko
-from multiprocessing.managers import SyncManager
+from sshtunnel import SSHTunnelForwarder
 from colors import colored
 
 
@@ -27,19 +28,23 @@ class deploy_environments:
 
         self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 
+        self._show_output = self._credentials['execution_mode']['parallel'] == 'False'
+
         # Environment Variables
         self._script_path = sys._MEIPASS if self._bin else os.path.dirname(os.path.realpath(__file__))
         if self._environment_data is not None:
             # Deploy Path
             if self._environment_data['ssh']['enabled'] == 'True':
-                self._bin_path = "{}/init".format(self._environment_data['ssh']['deploy_path']) if self._bin else "python {}/meteor.py".format(self._environment_data['ssh']['deploy_path'])
+                self._bin_path = "{}/init".format(self._environment_data['ssh']['deploy_path']) if self._bin else "python3 {}/meteor.py".format(self._environment_data['ssh']['deploy_path'])
                 self._ssh_logs_path = "{}/logs/{}".format(self._environment_data['ssh']['deploy_path'], self._args.uuid)
             else:
-                self._bin_path = "{}/init".format(sys._MEIPASS) if self._bin else "python {}/meteor.py".format(os.path.dirname(os.path.realpath(__file__)))
+                self._bin_path = "{}/init".format(sys._MEIPASS) if self._bin else "python3 {}/meteor.py".format(os.path.dirname(os.path.realpath(__file__)))
 
-    def validate(self, output=True, shared_array=None):
+    def validate(self):
+        if self._credentials['execution_mode']['parallel'] == 'True':
+            t = threading.current_thread()
         try:
-            if output:
+            if self._show_output:
                 environment_type = '[LOCAL]' if self._environment_data['ssh']['enabled'] == 'False' else '[SSH]'
                 print(colored('{} Region: {}'.format(environment_type, self._environment_data['region']), attrs=['bold']))
             else:
@@ -47,32 +52,32 @@ class deploy_environments:
                 print(colored('--> {} Region \'{}\' Started...'.format(environment_type, self._environment_data['region']), 'yellow'))
 
             if self._environment_data['ssh']['enabled'] == "True":
-                same_version = self.check_version(output)
+                same_version = self.check_version()
                 if same_version:
-                    if output:
+                    if self._show_output:
                         print(colored('- Region Updated.', 'green'))
                 else:
-                    if output:
+                    if self._show_output:
                         print(colored('- Region Outdated. Starting uploading the Meteor Engine...', 'red'))
                     # Install Meteor in all SSH Regions
-                    self.prepare(output)
+                    self.prepare()
                 # Setup User Execution Environment ('credentials.json', 'query_execution.py')
-                self.setup(output)
+                self.setup()
 
             # Check SQL Connection of the Environment [True: All SQL Connections Succeeded | False: Some SQL Connections Failed]
-            connection = self.__check_sql_connection(output)
+            connection = self.__check_sql_connection()
 
             if connection['success'] is True:
                 print(colored('--> {} Region \'{}\' Finished.'.format(environment_type, self._environment_data['region']), 'green'))
             else:
                 print(colored('--> {} Region \'{}\' Failed.'.format(environment_type, self._environment_data['region']), 'red'))
 
-            if shared_array is not None:
-                shared_array.append(connection)
-
+            if self._credentials['execution_mode']['parallel'] == 'True':
+                t.progress = connection
             return connection['success']
 
         except Exception as e:
+            traceback.print_exc()
             if self._environment_data['ssh']['enabled'] == "True":
                 # Handle SSH Error
                 if self._credentials['execution_mode']['parallel'] == 'True':
@@ -89,7 +94,7 @@ class deploy_environments:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 raise
 
-    def check_version(self, output=True):    
+    def check_version(self):    
         # Get SSH Version
         ssh_version = self.__ssh("cat {}/version.txt".format(self._script_path))['stdout']
         if len(ssh_version) == 0:
@@ -119,34 +124,34 @@ class deploy_environments:
             with open('{}/version.txt'.format(self._script_path), 'w') as file_content:
                 file_content.write(version)
 
-    def prepare(self, output=True):
-        if output:
+    def prepare(self):
+        if self._show_output:
             print('- Preparing Deploy...')
         self.__ssh("mkdir -p {0} && chmod 700 {0} && rm -rf {0}/*".format(self._environment_data['ssh']['deploy_path']))
 
-        if output:
+        if self._show_output:
             print('- Creating Deploy...')
         
         if not self._bin:
             self.__local('cd {} && rm -rf meteor.tar.gz && tar -czvf meteor.tar.gz . --exclude "logs" --exclude "*.git*" --exclude "*.pyc" --exclude "web" --exclude "credentials.json" --exclude "query_execution.py"'.format(self._script_path), show_output=False)
 
-        if output:
+        if self._show_output:
             print('- Uploading Deploy...')
 
         compressed_file_path = "{}/../meteor.tar.gz".format(self._script_path) if self._bin else "{}/meteor.tar.gz".format(self._script_path)
         self.__put(compressed_file_path, "{}/meteor.tar.gz".format(self._environment_data['ssh']['deploy_path']))
 
-        if output:
+        if self._show_output:
             print("- Uncompressing Deploy...")
         self.__ssh("cd {} && tar -xvzf meteor.tar.gz -C . && rm -rf meteor.tar.gz".format(self._environment_data['ssh']['deploy_path']))
 
         if not self._bin:
-            if output:
+            if self._show_output:
                 print("- Installing Requirements...")
-            self.__ssh('pip install -r {}/requirements.txt --user'.format(self._environment_data['ssh']['deploy_path']))
+            self.__ssh('python3 -m pip install -r {}/requirements.txt --user'.format(self._environment_data['ssh']['deploy_path']))
 
     def setup(self, output=True):
-        if output:
+        if self._show_output:
             print("- Setting Up New Execution...")
 
         self.__ssh('mkdir -p {}'.format(self._ssh_logs_path))
@@ -267,9 +272,9 @@ class deploy_environments:
 
     def clean_local(self):
         # Delete Uncompressed Deployment Folder
-        if os.path.exists(self._args.logs_path):
-            if os.path.isdir(self._args.logs_path):
-                shutil.rmtree(self._args.logs_path)
+        # if os.path.exists(self._args.logs_path):
+        #     if os.path.isdir(self._args.logs_path):
+        #         shutil.rmtree(self._args.logs_path)
 
         # Delete 'meteor.tar.gz'
         self.__local('rm -rf {}/meteor.tar.gz'.format(self._script_path), show_output=False)
@@ -277,85 +282,73 @@ class deploy_environments:
         # Clean Remaining Processes
         self.sigkill()
 
-    # Handle SIGINT from SyncManager object
-    def mgr_sig_handler(self, signal, frame):
-        pass
-
-    # Initilizer for SyncManager
-    def __mgr_init(self):
-        signal.signal(signal.SIGINT, self.mgr_sig_handler)
-
-    def __check_sql_connection(self, output):
+    def __check_sql_connection(self):
         connection_results = {'region': self._environment_data['region'], 'success': False, 'progress': []}
-        connection_succeeded = True
-
-        if output:
-            print("- Checking SQL Connections...")
+        connection_succeeded = True          
 
         if self._credentials['execution_mode']['parallel'] == "True":
-            # Init SyncManager
-            manager = SyncManager()
-            manager.start(self.__mgr_init)
-            shared_array = manager.list()
-            processes = []
+            threads = []
+            for server in self._environment_data['sql']:
+                t = threading.Thread(target=self.__check_sql_connection_logic, args=(server,))
+                threads.append(t)
+                t.start()
 
-            try:
-                for sql in self._environment_data['sql']:
-                    p = multiprocessing.Process(target=self.__check_sql_connection_logic, args=(sql, output, shared_array))
-                    p.start()
-                    processes.append(p)
-
-                for process in processes:
-                    process.join()
-
-                progress = []
-                for data in shared_array:
-                    connection_succeeded &= data['success']
-                    if data['success'] is False:
-                        print(colored("    [{}/SQL] {} ".format(self._environment_data['region'], data['sql']), attrs=['bold']) + data['error'])
-                        connection_results['progress'].append({'server': data['sql'], 'error': data['error'].replace('"', '\\"')})
-
-            except KeyboardInterrupt:
-                for process in processes:
-                    process.join()
-                raise
+            # Wait threads
+            self.__wait_threads(threads)
+            
+            # Get values
+            for t in threads:
+                connection_succeeded &= t.progress['success']
+                if t.progress['success'] is False:
+                    print(colored("    [{}/SQL] {} ".format(self._environment_data['region'], t.progress['sql']), attrs=['bold']) + t.progress['error'])
+                    connection_results['progress'].append({'server': t.progress['sql'], 'error': t.progress['error'].replace('"', '\\"')})
         else:
-            for sql in self._environment_data['sql']:
-                connection_succeeded &= self.__check_sql_connection_logic(sql, output)
+            print("- Checking SQL Connections...")
+            for server in self._environment_data['sql']:
+                connection_succeeded &= self.__check_sql_connection_logic(server)
 
         connection_results['success'] = connection_succeeded
         return connection_results
 
-    def __check_sql_connection_logic(self, sql, output, shared_array=None):
+    def __wait_threads(self, threads):
+        running = True
+        while running:
+            running = False
+            for t in threads:
+                if t.is_alive():
+                    t.join(0.1)
+                    running = True       
+
+    def __check_sql_connection_logic(self, server):
+        if self._credentials['execution_mode']['parallel'] == 'True':
+            stderr = sys.stderr
+            f = open(os.devnull, 'w')
+            sys.stderr = f
+            t = threading.current_thread()
+
         try:
-            if self._environment_data['ssh']['enabled'] == 'True':
-                command = '{0} --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --logs_path "{5}" --uuid "{6}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], sql['name'], self._ssh_logs_path, self._args.uuid)
-                result = self.__ssh(command)['stdout']
+            region = self._environment_data
+            if region['ssh']['enabled'] == "True":
+                ssh_pkey = paramiko.RSAKey.from_private_key_file(region['ssh']['key'])
+                with SSHTunnelForwarder((region['ssh']['hostname'], 22), ssh_username=region['ssh']['username'], ssh_password=region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=(server['hostname'], 3306)) as tunnel:
+                    conn = pymysql.connect(host='127.0.0.1', user=server['username'], passwd=server['password'], port=tunnel.local_bind_port)
             else:
-                command = '{0} --environment "{1}" {2} --env_id "{3}" --env_check_sql "{4}" --logs_path "{5}" --uuid "{6}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], sql['name'], self._args.logs_path, self._args.uuid)
-                result = self.__local(command)['stdout']
-            
-            if len(result) == 0:
-                if output:
-                    print(colored("✔", 'green') + colored(" [{}]".format(sql['name']), attrs=['bold']) + " Connection Succeeded")
-                if shared_array is not None:
-                    shared_array.append({"region": self._environment_data['region'], "success": True, "sql": sql['name']})
-                return True
+                conn = pymysql.connect(host=server['hostname'], user=server['username'], passwd=server['password'])
+            if self._show_output:
+                print(colored("✔", 'green') + colored(" [{}]".format(server['name']), attrs=['bold']) + " Connection Succeeded")
             else:
-                result = result[0] if type(result) is list else result
-                if output:
-                    self._logger.error(colored("✘", 'red') + colored(" [{}] ".format(sql['name']), attrs=['bold']) + str(result.replace('\n','')))
-                if shared_array is not None:
-                    shared_array.append({"region": self._environment_data['region'], "success": False, "sql": sql['name'], "error": result.replace('\n','')})
-                return False
-
-        except KeyboardInterrupt:
-            if self._credentials['execution_mode']['parallel'] != 'True':
-                raise
-
-        except Exception:
-            if self._credentials['execution_mode']['parallel'] != 'True':
-                raise
+                t.progress = {"region": region['region'], "success": True, "sql": server['name']}
+            return True
+        except Exception as e:
+            traceback.print_exc()
+            if self._show_output:
+                print(colored("✘", 'red') + colored(" [{}] ".format(server['name']), attrs=['bold']) + str(e).replace('\n',''))
+            else:
+                t.progress = {"region": region['region'], "success": False, "sql": server['name'], "error": str(e).replace('\n','')}
+            return False
+        finally:
+            if self._credentials['execution_mode']['parallel'] == 'True':
+                sys.stderr = stderr
 
     def check_processes(self):
         # Check Processes Currently Executing
@@ -401,8 +394,9 @@ class deploy_environments:
         if show_output:
             for line in client.stdout:
                 if progress_array is None:
-                    print(line.rstrip())
+                    print(self.__decode(line.rstrip()))
                 else:
+                    # print(self.__decode(line.rstrip()))
                     progress_array.append(self.__decode(line))
 
         # Return Execution Output
@@ -432,6 +426,7 @@ class deploy_environments:
                     if progress_array is None:
                         print(line.rstrip())
                     else:
+                        # print(self.__decode(line.rstrip()))
                         progress_array.append(self.__decode(line))
 
             # Return Execution Output
@@ -456,7 +451,7 @@ class deploy_environments:
             client.load_system_host_keys()
             client.set_missing_host_key_policy(paramiko.WarningPolicy())
             client.connect(self._environment_data['ssh']['hostname'], port=22, username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'], timeout=10)
-            
+
             # Show Errors Output Again
             sys.stderr = sys_stderr
 

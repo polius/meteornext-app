@@ -18,19 +18,19 @@ class logs:
             os.makedirs(execution_path)
 
         # Copy the 'query_execution.py' file
-        if self._args.query_execution_path is not None and not os.path.exists(self._args.query_execution_path):
-            raise Exception("The imported query_execution.py using the '--query_execution_path' flag does not exists in: {}".format(self._args.query_execution_path))
+        if self._args.logs_path is not None and not os.path.exists(self._args.logs_path + '/query_execution.py'):
+            raise Exception("The imported query_execution.py does not exists in: {}".format(self._args.logs_path + '/query_execution.py'))
 
-        query_execution_file_path = self._SCRIPT_PATH + '/query_execution.py' if self._args.query_execution_path is None else self._args.query_execution_path
+        query_execution_file_path = self._SCRIPT_PATH + '/query_execution.py' if self._args.logs_path is None else self._args.logs_path + '/query_execution.py'
 
         if not os.path.exists(self._args.logs_path + '/query_execution.py') and os.path.isfile(query_execution_file_path):
             shutil.copy(query_execution_file_path, self._args.logs_path + '/query_execution.py')
 
         # Copy the 'credentials.json' file
-        if self._args.credentials_path is not None and not os.path.exists(self._args.credentials_path):
-            raise Exception("The imported credentials.json using the '--credentials_path' flag does not exists in: {}".format(self._args.credentials_path))
+        if self._args.logs_path is not None and not os.path.exists(self._args.logs_path + '/credentials.json'):
+            raise Exception("The imported credentials.json does not exists in: {}".format(self._args.logs_path + '/credentials.json'))
 
-        credentials_file_path = self._SCRIPT_PATH + '/credentials.json' if self._args.credentials_path is None else self._args.credentials_path
+        credentials_file_path = self._SCRIPT_PATH + '/credentials.json' if self._args.logs_path is None else self._args.logs_path + '/credentials.json'
 
         if not os.path.exists(self._args.logs_path + '/credentials.json') and os.path.isfile(credentials_file_path):
             shutil.copy(credentials_file_path, self._args.logs_path + '/credentials.json')

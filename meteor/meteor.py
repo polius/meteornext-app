@@ -100,8 +100,6 @@ class meteor:
 
             ## Additional Commands
             parser.add_argument('--logs_path', required=False, action='store', dest='logs_path', help=argparse.SUPPRESS)
-            parser.add_argument('--query_execution_path', required=False, action='store', dest='query_execution_path', help=argparse.SUPPRESS)
-            parser.add_argument('--credentials_path', required=False, action='store', dest='credentials_path', help=argparse.SUPPRESS)
 
             ## (Additional) Meteor Next Commands
             parser.add_argument('--deployment_id', required=False, action='store', dest='deployment_id', help=argparse.SUPPRESS)
@@ -112,7 +110,6 @@ class meteor:
             # App Internal Commands
             parser.add_argument('--uuid', required=False, action='store', dest='uuid', help=argparse.SUPPRESS)
             parser.add_argument('--env_id', required=False, action='store', dest='env_id', help=argparse.SUPPRESS)
-            parser.add_argument('--env_check_sql', required=False, action='store', dest='env_check_sql', help=argparse.SUPPRESS)
             parser.add_argument('--env_compress', required=False, action='store_true', dest='env_compress', help=argparse.SUPPRESS)
             parser.add_argument('--env_start_deploy', required=False, action='store_true', dest='env_start_deploy', help=argparse.SUPPRESS)
 

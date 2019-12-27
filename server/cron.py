@@ -86,6 +86,11 @@ class Cron:
                     FROM deployments_pro
                     WHERE DATE_ADD(DATE(created), INTERVAL {0} DAY) <= CURRENT_DATE
                     AND expired = 0
+                    UNION ALL
+                    SELECT id, uri, 'inbenta' AS 'mode'
+                    FROM deployments_inbenta
+                    WHERE DATE_ADD(DATE(created), INTERVAL {0} DAY) <= CURRENT_DATE
+                    AND expired = 0
                 """.format(int(setting['local']['expire']))
                 expired = self._sql.execute(query)
 

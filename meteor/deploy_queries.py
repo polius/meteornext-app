@@ -8,6 +8,7 @@ import json
 import time
 import shutil
 import signal
+import threading
 import multiprocessing
 from multiprocessing.managers import SyncManager
 from query import query
@@ -25,6 +26,10 @@ class deploy_queries:
 
         self._query = query(logger, args, credentials, query_template, ENV_NAME, ENV_DATA)
         self._query_execution = imp.load_source('query_execution', "{}/query_execution.py".format(self._args.logs_path)).query_execution(self._query)
+
+        # Store Threading Shared Vars 
+        self._databases = []
+        self._progress = []
 
     def execute_before(self, region):
         try:
@@ -53,8 +58,11 @@ class deploy_queries:
             # Enable CTRL+C events
             signal.signal(signal.SIGINT, signal.default_int_handler)
 
-    def execute_main(self, region, server, shared_array=None):
+    def execute_main(self, region, server):
         try:
+            if self._credentials['execution_mode']['parallel'] == 'True':
+                thread = threading.current_thread()
+
             # Deploy MAIN Queries
             if self._credentials['execution_mode']['parallel'] != 'True':
                 print(colored("--> Executing MAIN Queries ...", "yellow", attrs=['bold','reverse']))
@@ -68,6 +76,7 @@ class deploy_queries:
 
             # Get all Databases in current server
             databases = self._query.sql.get_all_databases()
+            self._databases = databases.copy()
 
             # Create Execution Server Folder (if exists, then delete+create)
             execution_server_folder = "{0}/execution/{1}/{2}/".format(self._args.logs_path, region, server['name'])
@@ -78,45 +87,40 @@ class deploy_queries:
 
             # Deployment in Parallel
             if self._credentials['execution_mode']['parallel'] == 'True':
-                manager = SyncManager()
-                manager.start(self.__mgr_init)
-                thread_shared_array = manager.list()
-                thread_shared_array.extend(databases)
-                progress_array = manager.list()
-                processes = []
-
                 try:
+                    threads = []
                     for i in range(int(self._credentials['execution_mode']['threads'])):
-                        p = multiprocessing.Process(target=self.__execute_main_databases, args=(region, server, thread_shared_array, progress_array))
-                        p.start()
-                        processes.append(p)
+                        t = threading.Thread(target=self.__execute_main_databases, args=(region, server,))
+                        t.alive = True
+                        t.start()
+                        threads.append(t)
 
                     # Track progress
                     tracking = True
                     while tracking:
-                        if all(not p.is_alive() for p in processes):
+                        if all(not t.is_alive() for t in threads):
                             tracking = False
-                        d = len(progress_array)
+                        d = len(self._progress)
                         progress = float(d)/float(len(databases)) * 100
                         print('{{"r":"{}","s":"{}","p":{:.2f},"d":{},"t":{}}}'.format(region, server['name'], progress, d, len(databases)))
-                        if d == len(databases):
+                        if d == len(self._databases):
                             break
                         time.sleep(1)
 
-                    for process in processes:
-                        process.join()
+                    # Wait all threads
+                    self.__wait_threads(threads)
 
-                    if len(thread_shared_array) > 0:
-                        shared_array.append(thread_shared_array[0])
+                    if len(self._databases) > 0:
+                        thread.progress.append(self._databases[0])
 
                 except KeyboardInterrupt:
-                    for process in processes:
-                        process.join()
+                    if self._credentials['execution_mode']['parallel'] == 'True':
+                        self.__stop_threads(threads)
                     raise
 
             # Deploy in Sequential
             else:
-                self.__execute_main_databases(region, server, databases)
+                self.__execute_main_databases(region, server)
 
             # Close SQL Connection
             self._query.close_sql_connection()
@@ -128,47 +132,45 @@ class deploy_queries:
         except Exception as e:
             if self._credentials['execution_mode']['parallel'] == 'True':
                 error_format = re.sub(' +',' ', str(e)).replace('\n', '')
-                shared_array.append(error_format)
+                thread.progress.append(error_format)
             raise       
 
-    def __execute_main_databases(self, region, server, thread_shared_array, progress_array=None):
+    def __execute_main_databases(self, region, server):
+        if self._credentials['execution_mode']['parallel'] == 'True':
+            t = threading.current_thread()
+
         # Set SQL Connection
         self._query.set_sql_connection(server)
         self._query_execution.set_query(self._query)
 
-        # Supress stdout
-        stdout = sys.stdout
-        supress = open('/dev/null', 'w') if progress_array is not None else sys.stdout
+        while len(self._databases) > 0:
+            # Detect Thread KeyboardInterrupt
+            if self._credentials['execution_mode']['parallel'] == 'True' and not t.alive:
+                break
 
-        while len(thread_shared_array) > 0:
             # Pick the next database to perform the execution
             try:
-                database = thread_shared_array.pop(0)
+                database = self._databases.pop(0)
             except IndexError:
                 break
 
             # Perform the execution to the Database
             try:
-                sys.stdout = supress
                 self._query_execution.main(self._args.environment, region, server['name'], database)
-                sys.stdout = stdout
-
-            except (KeyboardInterrupt, Exception):
+            except Exception:
                 # Supress CTRL+C events
                 signal.signal(signal.SIGINT,signal.SIG_IGN)
-                sys.stdout = stdout
                 # Store Logs
                 self.__store_main_logs(region, server, database)
                 # Enable CTRL+C events
                 signal.signal(signal.SIGINT, signal.default_int_handler)
-                # Raise Exception / KeyboardInterrupt
+                # Raise Exception
                 raise
 
             # Store Logs the execution to the Database
             try:
                 self.__store_main_logs(region, server, database)
-
-            except (KeyboardInterrupt, Exception):
+            except Exception:
                 # Supress CTRL+C events
                 signal.signal(signal.SIGINT,signal.SIG_IGN)
                 # Store Logs
@@ -179,11 +181,11 @@ class deploy_queries:
                 raise
 
             # Add database to the progressed list
-            if progress_array is not None:
-                progress_array.append(database)
+            if self._credentials['execution_mode']['parallel'] == 'True':
+                self._progress.append(database)
 
             # Prevent CPU bursting at 100%
-            time.sleep(0.001)
+            # time.sleep(0.001)
 
         # Close SQL Connection
         self._query.close_sql_connection()
@@ -200,7 +202,6 @@ class deploy_queries:
             if (log['meteor_status'] == '0'):
                 # Log Query Error in Parallel
                 if self._credentials['execution_mode']['parallel'] == 'True':
-                    # !!! Add 'd' and 't' ???
                     print('{{"r":"{}","s":"{}","e":"{}"}}'.format(region, server['name'], log['meteor_response']))
                 break
 
@@ -245,3 +246,17 @@ class deploy_queries:
     # Initilizer for SyncManager
     def __mgr_init(self):
         signal.signal(signal.SIGINT, self.__mgr_sig_handler)
+        
+    def __wait_threads(self, threads):
+        running = True
+        while running:
+            running = False
+            for t in threads:
+                if t.is_alive():
+                    t.join(0.1)
+                    running = True
+        
+    def __stop_threads(self, threads):
+        for t in threads:
+            t.alive = False
+        self.__wait_threads(threads)
