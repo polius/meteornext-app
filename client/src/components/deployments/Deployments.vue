@@ -84,7 +84,8 @@ export default {
       { text: 'Status', align:'left', value: 'status' },
       { text: 'Created', align: 'left', value: 'created' },
       { text: 'Started', align: 'left', value: 'started' },
-      { text: 'Ended', align: 'left', value: 'ended' }
+      { text: 'Ended', align: 'left', value: 'ended' },
+      { text: 'Overall', align: 'left', value: 'overall' }
     ],
     items: [],
     selected: [],

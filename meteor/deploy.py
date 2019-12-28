@@ -207,7 +207,7 @@ class deploy:
             log_name = 'deploy' if deploy else 'test'
             if not error:
                 # Get Logs
-                logs = self.__get_logs()     
+                logs = self.__get_logs()
                 # Analyze Logs
                 summary = self.__analyze_log(logs, log_name)       
                 # Compile Logs
@@ -422,8 +422,7 @@ class deploy:
             print(colored("- Credentials Validation Passed!", "green", attrs=['bold', 'reverse']))
 
         except Exception as e:
-            print(traceback.format_exc())
-            print(colored(e, 'red', attrs=['reverse', 'bold']))
+            print(colored(str(e), 'red', attrs=['reverse', 'bold']))
             sys.exit()
 
     def __validate_queries(self):
@@ -534,12 +533,15 @@ class deploy:
 
                 except KeyboardInterrupt:
                     print(colored("\n--> Ctrl+C received. Stopping the execution...", 'yellow', attrs=['reverse', 'bold']))
-                    self.__wait_threads(threads)
+                    if self._credentials['execution_mode']['parallel'] == 'True':
+                        self.__stop_threads(threads)
                     raise
 
             print(colored("- Regions Validation Passed!", 'green', attrs=['bold', 'reverse']))
 
         except Exception as e:
+            if self._credentials['execution_mode']['parallel'] == 'True':
+                self.__stop_threads(threads)
             if len(str(e)) > 0:
                 self._logger.critical(str(e))
             error_msg = "- Regions Not Passed the Environment Validation."
@@ -581,11 +583,12 @@ class deploy:
     
     def __start_countdown(self):
         try:
-            # Countdown
-            countdown_seconds = 1
-            countdown_msg = '--> Starting Test Execution in:' if self._args.test else '--> Starting Deployment in:'
-            countdown_color = '\033[0;31m'
-            self.__countdown(countdown_seconds, countdown_msg, countdown_color)
+            if self._credentials['execution_mode']['parallel'] == 'False':
+                # Countdown
+                countdown_seconds = 1
+                countdown_msg = '--> Starting Test Execution in:' if self._args.test else '--> Starting Deployment in:'
+                countdown_color = '\033[0;31m'
+                self.__countdown(countdown_seconds, countdown_msg, countdown_color)
         except KeyboardInterrupt:
             print("")
             raise
@@ -693,7 +696,6 @@ class deploy:
 
                         for r in self._ENV_DATA[self._ENV_NAME]:
                             environment_type = '[LOCAL]' if r['ssh']['enabled'] == 'False' else '[SSH]  '
-                            # FIX
                             region_total_databases = sum([int(rp['t']) if 't' in rp else 0 for rp in progress[r['region']].values()])
                             region_databases = sum([int(rp['d']) if 'd' in rp else 0 for rp in progress[r['region']].values()])
                             overall_progress = 0 if region_total_databases == 0 else float(region_databases) / float(region_total_databases) * 100
@@ -799,7 +801,7 @@ class deploy:
                     sys.stderr.write(t.progress[0])
                     sys.stderr.flush() 
 
-            except KeyboardInterrupt:
+            except (Exception,KeyboardInterrupt):
                 self.__stop_threads(threads)
                 raise
 
@@ -895,28 +897,25 @@ class deploy:
 
         ## Parallel Mode
         if self._credentials['execution_mode']['parallel'] == 'True':
-            manager = SyncManager()
-            manager.start(self.__mgr_init)
-            shared_array = manager.list()
-
-            processes = []
             try:
+                threads = []
                 for env_data in self._ENV_DATA[self._ENV_NAME]:
                     if env_data['ssh']['enabled'] == 'True':
                         env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
-                        p = multiprocessing.Process(target=env.compress_logs, args=(shared_array,))
-                        p.start()
-                        processes.append(p)
+                        t = threading.Thread(target=env.compress_logs)
+                        threads.append(t)
+                        t.error = []
+                        t.start()
+                
+                # Wait all threads
+                self.__wait_threads(threads)
 
-                for process in processes:
-                    process.join()
+                for t in threads:
+                    if len(t.error) > 0:
+                        raise Exception(colored("--> Error Compressing Logs:\n{}".format(''.join(t.error)), 'red'))
 
-                for data in shared_array:
-                    raise Exception(colored("--> Error Compressing Logs:\n{}".format(''.join(data)), 'red'))
-
-            except KeyboardInterrupt:
-                for process in processes:
-                    process.join()
+            except (Exception,KeyboardInterrupt):
+                self.__stop_threads(threads)
                 raise
 
         ## Sequential Mode
@@ -937,18 +936,20 @@ class deploy:
             manager.start(self.__mgr_init)
             shared_array = manager.list()
 
-            processes = []
+            threads = []
             for env_data in self._ENV_DATA[self._ENV_NAME]:
                 env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
-                p = multiprocessing.Process(target=env.get_logs, args=(shared_array,))
-                p.start()
-                processes.append(p)
+                t = threading.Thread(target=env.get_logs)
+                t.error = []
+                threads.append(t)
+                t.start()
 
-            for process in processes:
-                process.join()
+            # Wait all threads
+            self.__wait_threads(threads)
 
-            for data in shared_array:
-                raise Exception(colored("--> Error Downloading Logs:\n{}".format(''.join(data)), 'red'))
+            for t in threads:
+                if len(t.error) > 0:
+                    raise Exception(colored("--> Error Downloading Logs:\n{}".format(''.join(t.error)), 'red'))
 
         ## Sequential Mode
         else:
@@ -1022,8 +1023,9 @@ class deploy:
             # Return All Logs
             return environment_logs
 
-        except Exception:
-            raise Exception(colored("--> Error Merging Logs:\n{}".format(traceback.format_exc()), 'red'))
+        except Exception as e:
+            print(colored("--> Error Merging Logs:\n{}".format(traceback.format_exc()), 'red'))
+            raise
 
     def clean(self, remote=True):
         print(colored("+==================================================================+", "magenta", attrs=['bold']))

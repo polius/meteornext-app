@@ -82,7 +82,7 @@ class deploy_environments:
                 # Handle SSH Error
                 if self._credentials['execution_mode']['parallel'] == 'True':
                     print(colored("    [{}/SSH] {} ".format(self._environment_data['region'], self._environment_data['ssh']['hostname']), attrs=['bold']) + str(e))
-                    shared_array.append({'region': self._environment_data['region'], 'success': False, 'progress': [], 'error': str(e)})
+                    t.progress.append({'region': self._environment_data['region'], 'success': False, 'progress': [], 'error': str(e)})
                 else:
                     print(colored("✘", 'red') + colored(" [{}] ".format(self._environment_data['ssh']['hostname']), attrs=['bold']) + str(e))
 
@@ -219,18 +219,14 @@ class deploy_environments:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 raise
 
-    def compress_logs(self, shared_array=None):
-        try:
-            output = self.__ssh('{0} --environment "{1}" {2} --env_id "{3}" --env_compress --logs_path "{4}" --uuid "{5}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], self._ssh_logs_path, self._args.uuid))
+    def compress_logs(self):
+        output = self.__ssh('{0} --environment "{1}" {2} --env_id "{3}" --env_compress --logs_path "{4}" --uuid "{5}"'.format(self._bin_path, self._environment_name, self._servers, self._environment_data['region'], self._ssh_logs_path, self._args.uuid))
 
-            if len(output['stderr']) > 0:
-                shared_array.append(output['stderr'])
+        if self._credentials['execution_mode']['parallel'] == 'True' and len(output['stderr']) > 0:
+            t = threading.current_thread()
+            t.error.append(output['stderr'])
 
-        except (KeyboardInterrupt):
-            if self._credentials['execution_mode']['parallel'] != 'True':
-                raise
-
-    def get_logs(self, shared_array=None):
+    def get_logs(self):
         try:
             if self._environment_data['ssh']['enabled'] == 'True':
                 remote_path = "{0}/logs/{1}/execution/{2}.tar.gz".format(self._environment_data['ssh']['deploy_path'], self._args.uuid, self._environment_data['region'])
@@ -252,11 +248,8 @@ class deploy_environments:
                 self._logger.error(colored("--> Error Downloading Logs:\n{}".format(traceback.format_exc()), 'red'))
                 raise
             else:
-                shared_array.append(traceback.format_exc())
-        
-        except KeyboardInterrupt:
-            if self._credentials['execution_mode']['parallel'] != 'True':
-                raise
+                t = threading.current_thread()
+                t.error.append(traceback.format_exc())
 
     def clean_remote(self, remote=True, shared_array=None):
         if remote:
@@ -287,21 +280,25 @@ class deploy_environments:
         connection_succeeded = True          
 
         if self._credentials['execution_mode']['parallel'] == "True":
-            threads = []
-            for server in self._environment_data['sql']:
-                t = threading.Thread(target=self.__check_sql_connection_logic, args=(server,))
-                threads.append(t)
-                t.start()
+            try:
+                threads = []
+                for server in self._environment_data['sql']:
+                    t = threading.Thread(target=self.__check_sql_connection_logic, args=(server,))
+                    threads.append(t)
+                    t.start()
 
-            # Wait threads
-            self.__wait_threads(threads)
-            
-            # Get values
-            for t in threads:
-                connection_succeeded &= t.progress['success']
-                if t.progress['success'] is False:
-                    print(colored("    [{}/SQL] {} ".format(self._environment_data['region'], t.progress['sql']), attrs=['bold']) + t.progress['error'])
-                    connection_results['progress'].append({'server': t.progress['sql'], 'error': t.progress['error'].replace('"', '\\"')})
+                # Wait threads
+                self.__wait_threads(threads)
+                
+                # Get values
+                for t in threads:
+                    connection_succeeded &= t.progress['success']
+                    if t.progress['success'] is False:
+                        print(colored("    [{}/SQL] {} ".format(self._environment_data['region'], t.progress['sql']), attrs=['bold']) + t.progress['error'])
+                        connection_results['progress'].append({'server': t.progress['sql'], 'error': t.progress['error'].replace('"', '\\"')})
+            except (Exception,KeyboardInterrupt):
+                self.__stop_threads(threads)
+                raise
         else:
             print("- Checking SQL Connections...")
             for server in self._environment_data['sql']:
@@ -317,12 +314,19 @@ class deploy_environments:
             for t in threads:
                 if t.is_alive():
                     t.join(0.1)
-                    running = True       
+                    running = True     
+
+    def __stop_threads(self, threads):
+        for t in threads:
+            t.alive = False
+        self.__wait_threads(threads)  
 
     def __check_sql_connection_logic(self, server):
         if self._credentials['execution_mode']['parallel'] == 'True':
+            stdout = sys.stdout
             stderr = sys.stderr
             f = open(os.devnull, 'w')
+            sys.stdout = f
             sys.stderr = f
             t = threading.current_thread()
 
@@ -348,6 +352,7 @@ class deploy_environments:
             return False
         finally:
             if self._credentials['execution_mode']['parallel'] == 'True':
+                sys.stdout = stdout
                 sys.stderr = stderr
 
     def check_processes(self):

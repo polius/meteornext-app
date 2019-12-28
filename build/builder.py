@@ -125,6 +125,8 @@ class builder:
     # Internal Methods #
     ####################
     def __build_server(self):
+        subprocess.call("rm -rf {}/dist/meteornext.tar".format(self._pwd), shell=True)
+        subprocess.call("rm -rf {}/dist/server".format(self._pwd), shell=True)
         subprocess.call("docker rmi meteornextbuild:latest >/dev/null 2>&1", shell=True)
         subprocess.call("docker pull amazonlinux:1", shell=True)
         subprocess.call("docker build -t meteornextbuild:latest - < server.dockerfile", shell=True)
@@ -133,6 +135,8 @@ class builder:
         subprocess.call("docker rmi amazonlinux:1", shell=True)
 
     def __build_client(self):
+        subprocess.call("rm -rf {}/dist/meteornext.tar".format(self._pwd), shell=True)
+        subprocess.call("rm -rf {}/dist/client.tar.gz".format(self._pwd), shell=True)
         subprocess.call("cd {}/client ; npm run build".format(self._pwd), shell=True)
         subprocess.call("mv {0}/client/dist {0}/dist/client".format(self._pwd), shell=True)
         subprocess.call("cd {}/dist/ ; tar -czvf client.tar.gz client ; rm -rf client".format(self._pwd), shell=True)

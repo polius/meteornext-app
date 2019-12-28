@@ -16,16 +16,16 @@ from colors import colored
 
 
 class deploy_queries:
-    def __init__(self, logger, args, credentials, query_template, ENV_NAME=None, ENV_DATA=None):
+    def __init__(self, logger, args, credentials, query_template, environment_name=None, environment_data=None):
         self._logger = logger
         self._args = args
         self._credentials = credentials
         self._query_template = query_template
-        self._environment_name = ENV_NAME
-        self._environment_data = ENV_DATA
+        self._environment_name = environment_name
+        self._environment_data = environment_data
 
-        self._query = query(logger, args, credentials, query_template, ENV_NAME, ENV_DATA)
-        self._query_execution = imp.load_source('query_execution', "{}/query_execution.py".format(self._args.logs_path)).query_execution(self._query)
+        # Init Query Execution Class
+        self._query_execution = imp.load_source('query_execution', "{}/query_execution.py".format(self._args.logs_path)).query_execution()
 
         # Store Threading Shared Vars 
         self._databases = []
@@ -38,9 +38,9 @@ class deploy_queries:
                 print(colored("--> Executing BEFORE Queries ...", "yellow", attrs=['bold','reverse']))
 
             # Start Deploy
-            self._query.clear_execution_log()
-            self._query_execution.before(self._args.environment, region)
-
+            query_instance = query(self._logger, self._args, self._credentials, self._query_template, self._environment_name, self._environment_data)
+            self._query_execution.before(query_instance, self._args.environment, region)
+    
         except KeyboardInterrupt:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 raise
@@ -48,13 +48,10 @@ class deploy_queries:
         finally:
             # Supress CTRL+C events
             signal.signal(signal.SIGINT,signal.SIG_IGN)
-
             # Store Execution Logs
             execution_log_path = "{0}/execution/{1}/{1}_before.json".format(self._args.logs_path, self._environment_data['region'])
-
             with open(execution_log_path, 'w') as outfile:
-                json.dump(self._query.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
-
+                json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
             # Enable CTRL+C events
             signal.signal(signal.SIGINT, signal.default_int_handler)
 
@@ -67,16 +64,16 @@ class deploy_queries:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 print(colored("--> Executing MAIN Queries ...", "yellow", attrs=['bold','reverse']))
 
-            # Set SQL Connection
-            self._query.set_sql_connection(server)
-            self._query_execution.set_query(self._query)
+            # Init SQL Connection
+            query_instance = query(self._logger, self._args, self._credentials, self._query_template, self._environment_name, self._environment_data)
+            query_instance.start_sql_connection(server)
 
-            # Clear Execution Log
-            self._query.clear_execution_log()
-
-            # Get all Databases in current server
-            databases = self._query.sql.get_all_databases()
+            # Get all Databases in current server            
+            databases = query_instance.sql_connection.get_all_databases()
             self._databases = databases.copy()
+
+            # Close SQL Connection
+            query_instance.close_sql_connection()
 
             # Create Execution Server Folder (if exists, then delete+create)
             execution_server_folder = "{0}/execution/{1}/{2}/".format(self._args.logs_path, region, server['name'])
@@ -113,21 +110,13 @@ class deploy_queries:
                     if len(self._databases) > 0:
                         thread.progress.append(self._databases[0])
 
-                except KeyboardInterrupt:
-                    if self._credentials['execution_mode']['parallel'] == 'True':
-                        self.__stop_threads(threads)
+                except (Exception,KeyboardInterrupt):
+                    self.__stop_threads(threads)
                     raise
 
             # Deploy in Sequential
             else:
                 self.__execute_main_databases(region, server)
-
-            # Close SQL Connection
-            self._query.close_sql_connection()
-
-        except KeyboardInterrupt:
-            if self._credentials['execution_mode']['parallel'] != 'True':
-                raise
 
         except Exception as e:
             if self._credentials['execution_mode']['parallel'] == 'True':
@@ -140,8 +129,8 @@ class deploy_queries:
             t = threading.current_thread()
 
         # Set SQL Connection
-        self._query.set_sql_connection(server)
-        self._query_execution.set_query(self._query)
+        query_instance = query(self._logger, self._args, self._credentials, self._query_template, self._environment_name, self._environment_data)
+        query_instance.start_sql_connection(server)
 
         while len(self._databases) > 0:
             # Detect Thread KeyboardInterrupt
@@ -156,12 +145,12 @@ class deploy_queries:
 
             # Perform the execution to the Database
             try:
-                self._query_execution.main(self._args.environment, region, server['name'], database)
+                self._query_execution.main(query_instance, self._args.environment, region, server['name'], database)
             except Exception:
                 # Supress CTRL+C events
                 signal.signal(signal.SIGINT,signal.SIG_IGN)
                 # Store Logs
-                self.__store_main_logs(region, server, database)
+                self.__store_main_logs(region, server, database, query_instance)
                 # Enable CTRL+C events
                 signal.signal(signal.SIGINT, signal.default_int_handler)
                 # Raise Exception
@@ -169,12 +158,12 @@ class deploy_queries:
 
             # Store Logs the execution to the Database
             try:
-                self.__store_main_logs(region, server, database)
+                self.__store_main_logs(region, server, database, query_instance)
             except Exception:
                 # Supress CTRL+C events
                 signal.signal(signal.SIGINT,signal.SIG_IGN)
                 # Store Logs
-                self.__store_main_logs(region, server, database)
+                self.__store_main_logs(region, server, database, query_instance)
                 # Enable CTRL+C events
                 signal.signal(signal.SIGINT, signal.default_int_handler)
                 # Raise Exception / KeyboardInterrupt
@@ -184,21 +173,18 @@ class deploy_queries:
             if self._credentials['execution_mode']['parallel'] == 'True':
                 self._progress.append(database)
 
-            # Prevent CPU bursting at 100%
-            # time.sleep(0.001)
-
         # Close SQL Connection
-        self._query.close_sql_connection()
+        query_instance.close_sql_connection()
 
-    def __store_main_logs(self, region, server, database):
+    def __store_main_logs(self, region, server, database, query_instance):
         # Store Logs
         execution_log_path = "{0}/execution/{1}/{2}/{3}.json".format(self._args.logs_path, self._environment_data['region'], server['name'], database)
-        if len(self._query.execution_log['output']) > 0:
+        if len(query_instance.execution_log['output']) > 0:
             with open(execution_log_path, 'w') as outfile:
-                json.dump(self._query.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
+                json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
 
         # Check Errors
-        for log in self._query.execution_log['output']:
+        for log in query_instance.execution_log['output']:
             if (log['meteor_status'] == '0'):
                 # Log Query Error in Parallel
                 if self._credentials['execution_mode']['parallel'] == 'True':
@@ -206,7 +192,7 @@ class deploy_queries:
                 break
 
         # Clear Log
-        self._query.clear_execution_log()
+        query_instance.clear_execution_log()
 
     def execute_after(self, region):
         try:
@@ -215,8 +201,8 @@ class deploy_queries:
                 print(colored("--> Executing AFTER Queries ...", "yellow", attrs=['bold','reverse']))
 
             # Start Deploy
-            self._query.clear_execution_log()
-            self._query_execution.after(self._args.environment, region)
+            query_instance = query(self._logger, self._args, self._credentials, self._query_template, self._environment_name, self._environment_data)
+            self._query_execution.after(query_instance, self._args.environment, region)
 
         except KeyboardInterrupt:
             if self._credentials['execution_mode']['parallel'] != 'True':
@@ -225,13 +211,10 @@ class deploy_queries:
         finally:
             # Supress CTRL+C events
             signal.signal(signal.SIGINT,signal.SIG_IGN)
-
             # Store Execution Logs
             execution_log_path = "{0}/execution/{1}/{1}_after.json".format(self._args.logs_path, self._environment_data['region'])
-
             with open(execution_log_path, 'w') as outfile:
-                json.dump(self._query.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
-
+                json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
             # Enable CTRL+C events
             signal.signal(signal.SIGINT, signal.default_int_handler)
 

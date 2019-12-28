@@ -7,6 +7,7 @@ RUN yum update -y && \
     python3 -m pip install boto3 && \
     python3 -m pip install requests && \
     python3 -m pip install paramiko && \
+    python3 -m pip install sshtunnel && \
     python3 -m pip install pymysql && \
     python3 -m pip install uuid && \
     python3 -m pip install bcrypt && \

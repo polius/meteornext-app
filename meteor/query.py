@@ -10,14 +10,15 @@ from query_template import query_template
 
 
 class query:
-    def __init__(self, logger, args, credentials, query_template_js, environment_name=None, environment_data=None, sql_connection=None):
+    def __init__(self, logger, args, credentials, query_template_js, environment_name=None, environment_data=None):
         self._logger = logger
         self._args = args
         self._credentials = credentials
         self._query_template = query_template_js
         self._environment_name = environment_name
         self._environment_data = environment_data
-        self._sql_connection = sql_connection
+        self._sql_credentials = None
+        self._sql_connection = None
 
         # Current Server and Database
         self._current_server = None
@@ -26,20 +27,12 @@ class query:
         # Init Query Template Instance
         self._query_template_instance = query_template(self._query_template)
 
-        # Init MySQL
-        if sql_connection is not None:
-            self.__init_mysql()
-
         # Init Execution Log
         self._execution_log = {"output": []}
 
     @property
-    def sql(self):
-        return self._sql
-
-    @property
-    def credentials(self):
-        return self._credentials
+    def sql_connection(self):
+        return self._sql_connection
 
     @property
     def execution_log(self):
@@ -48,16 +41,13 @@ class query:
     def clear_execution_log(self):
         self._execution_log = {"output": []}
 
-    def set_sql_connection(self, server):
-        self._sql_connection = server
-        self.__init_mysql()
+    def start_sql_connection(self, server):
+        self._sql_credentials = server
+        self._sql_connection = mysql(self._logger, self._args, self._credentials)
+        self._sql_connection.connect(server['hostname'], server['username'], server['password'])
 
     def close_sql_connection(self):
-        self._sql.close()
-
-    def __init_mysql(self):
-        self._sql = mysql(self._logger, self._args, self._credentials)
-        self._sql.connect(self._sql_connection.get('hostname'), self._sql_connection.get('username'), self._sql_connection.get('password'), self._sql_connection.get('database'))
+        self._sql_connection.close()
 
     def __parse_query(self, query):
         return query.strip()
@@ -75,13 +65,13 @@ class query:
         database_parsed = ''
         query_parsed = self.__parse_query(query) if auxiliary is None else self.__parse_query(auxiliary['query'])
         query_alias = query_parsed if alias is None else '[ALIAS] {}'.format(alias)
-        server_sql = self._sql_connection['name'] if auxiliary is None else auxiliary['auxiliary_connection']
+        server_sql = self._sql_credentials['name'] if auxiliary is None else auxiliary['auxiliary_connection']
         region = self._environment_data['region']
 
         # SQL Connection and Database
         conn = ''
         if auxiliary is None:
-            conn = self._sql
+            conn = self._sql_connection
             database_parsed = '__GLOBAL__' if database is None else database
         else:
             aux_credentials = self._credentials['auxiliary_connections'][auxiliary['auxiliary_connection']]

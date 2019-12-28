@@ -193,26 +193,17 @@ class Meteor:
 
         self._query_execution = """import fnmatch
 class query_execution:
-    def __init__(self, query_instance=None):
-        self._meteor = query_instance
-        self._queries = {0}
-        self._auxiliary_queries = {{}}
-    def before(self, environment, region):
+    def __init__(self):
+        self.queries = {0}
+        self.auxiliary_queries = {{}}
+    def before(self, meteor, environment, region):
         pass
-    def main(self, environment, region, server, database):
+    def main(self, meteor, environment, region, server, database):
         if len(fnmatch.filter([database], '{1}')) > 0:
-            for i in self._queries.keys():
-                self._meteor.execute(query=self._queries[str(i)], database=database)
-    def after(self, environment, region):
-        pass
-    @property
-    def queries(self):
-        return self._queries
-    @property
-    def auxiliary_queries(self):
-        return self._auxiliary_queries
-    def set_query(self, query_instance):
-        self._meteor = query_instance""".format(json.dumps(queries), database)
+            for i in self.queries.keys():
+                meteor.execute(query=self.queries[str(i)], database=database)
+    def after(self, meteor, environment, region):
+        pass""".format(json.dumps(queries), database)
 
     def __compile_query_execution_inbenta(self, deployment):
         queries = {}
@@ -222,29 +213,20 @@ class query_execution:
 
         self._query_execution = """import fnmatch
 class query_execution:
-    def __init__(self, query_instance=None):
-        self._meteor = query_instance
-        self._queries = {0}
-        self._auxiliary_queries = {{'1': {{"auxiliary_connection": "awseu-sql01", "database": "ilf_admin", "query": "SELECT CONCAT('ilf_', name, '_{1}') AS db_name FROM projects WHERE product IN ({2})"}} }}
-    def before(self, environment, region):
-        self._instances = self._meteor.execute(auxiliary=self._auxiliary_queries['1'])
-    def main(self, environment, region, server, database):
+    def __init__(self):
+        self.queries = {0}
+        self.auxiliary_queries = {{'1': {{"auxiliary_connection": "awseu-sql01", "database": "ilf_admin", "query": "SELECT CONCAT('ilf_', name, '_{1}') AS db_name FROM projects WHERE product IN ({2})"}} }}
+    def before(self, meteor, environment, region):
+        self._instances = meteor.execute(auxiliary=self.auxiliary_queries['1'])
+    def main(self, meteor, environment, region, server, database):
         if len(self.__searchInListDict(self._instances, 'db_name', database)) > 0:
             if len('{3}') == 0 or len(fnmatch.filter([database], '{3}')) > 0:
-                for i in self._queries.keys():
-                    self._meteor.execute(query=self._queries[str(i)], database=database)
-    def after(self, environment, region):
+                for i in self.queries.keys():
+                    meteor.execute(query=self.queries[str(i)], database=database)
+    def after(self, meteor, environment, region):
         pass
     def __searchInListDict(self, list_dicts, key_name, value_to_find):
-        return filter(lambda obj: obj[key_name] == value_to_find, list_dicts)
-    @property
-    def queries(self):
-        return self._queries
-    @property
-    def auxiliary_queries(self):
-        return self._auxiliary_queries
-    def set_query(self, query_instance):
-        self._meteor = query_instance""".format(json.dumps(queries), deployment['schema'], str(deployment['products'])[1:-1], database)
+        return filter(lambda obj: obj[key_name] == value_to_find, list_dicts)""".format(json.dumps(queries), deployment['schema'], str(deployment['products'])[1:-1], database)
 
     def __execute(self, deployment):
         # Build Meteor Parameters
@@ -253,13 +235,12 @@ class query_execution:
         environment = deployment['environment']
         execution_method = 'validate all' if deployment['method'].lower() == 'validate' else deployment['method'].lower()
         logs_path = "{}/{}".format(self._logs['local']['path'], self._uuid)
-        execution_plan_factor = '--execution_plan_factor "{}"'.format(deployment['epf']) if deployment['epf'] > 0 else ''
+        execution_plan_factor = ' --execution_plan_factor "{}"'.format(deployment['epf']) if deployment['epf'] > 0 else ''
         user = deployment['user']
 
         # Build Meteor Command
-        command = '{} --environment "{}" --{} --logs_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}" {} --user "{}"'.format(meteor_path, environment, execution_method, logs_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor, user)
-        print(command)
+        command = '{} --environment "{}" --{} --logs_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}"{} --user "{}"'.format(meteor_path, environment, execution_method, logs_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor, user)
+        # print(command)
 
         # Execute Meteor
         p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)
-        # print(p.pid)

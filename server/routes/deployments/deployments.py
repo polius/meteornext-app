@@ -42,11 +42,11 @@ class Deployments:
             deployment_json = request.get_json()
 
             if request.method == 'GET':
-                return self.get(user['id'])
+                return self.__get(user['id'])
             elif request.method == 'PUT':
-                return self.put(user['id'], deployment_json)
+                return self.__put(user['id'], deployment_json)
             elif request.method == 'DELETE':
-                return self.delete(user['id'], deployment_json)
+                return self.__delete(user['id'], deployment_json)
 
         @deployments_blueprint.route('/deployments/results', methods=['GET'])
         @jwt_required
@@ -104,17 +104,20 @@ class Deployments:
 
         return deployments_blueprint
 
-    def get(self, user_id):
+    ####################
+    # Internal Methods #
+    ####################
+    def __get(self, user_id):
         return jsonify({'data': self._deployments.get(user_id)}), 200
 
-    def put(self, user_id, data):
+    def __put(self, user_id, data):
         if not self._deployments.exist(user_id, data):
             return jsonify({'message': 'This deployment does not exist'}), 400
         else:
             self._deployments.put(user_id, data)
             return jsonify({'message': 'Deployment edited successfully'}), 200
 
-    def delete(self, user_id, data):
+    def __delete(self, user_id, data):
         for deploy in data:
             self._deployments.delete(user_id, deploy)
         return jsonify({'message': 'Selected deployments deleted successfully'}), 200

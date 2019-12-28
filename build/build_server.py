@@ -34,7 +34,7 @@ class build_server:
         build_path = "{}/meteor".format(self._pwd)
         additional_files = ['query_template.json', 'query_execution.py', 'version.txt']
         additional_binaries = []
-        hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3', 'socket']
+        hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3', 'socket', 'sshtunnel']
         binary_name = 'meteor'
         binary_path = '{}/server/apps'.format(self._pwd)
 
