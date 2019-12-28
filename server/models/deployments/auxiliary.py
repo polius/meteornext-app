@@ -15,22 +15,23 @@ class Auxiliary:
 
     def post(self, group_id, auxiliary):
         query = """
-            INSERT INTO auxiliary (name, group_id, hostname, username, password)             
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO auxiliary (name, group_id, hostname, port, username, password)             
+            VALUES (%s, %s, %s, %s, %s, %s)
         """
-        self._sql.execute(query, (auxiliary['name'], group_id, auxiliary['hostname'], auxiliary['username'], auxiliary['password']))
+        self._sql.execute(query, (auxiliary['name'], group_id, auxiliary['hostname'], auxiliary['port'], auxiliary['username'], auxiliary['password']))
 
     def put(self, group_id, auxiliary):
         query = """
             UPDATE auxiliary
             SET name = %s,
                 hostname = %s,
+                port = %s,
                 username = %s,
                 password = %s
             WHERE id = %s
             AND group_id = %s
         """
-        self._sql.execute(query, (auxiliary['name'], auxiliary['hostname'], auxiliary['username'], auxiliary['password'], auxiliary['id'], group_id))
+        self._sql.execute(query, (auxiliary['name'], auxiliary['hostname'], auxiliary['port'], auxiliary['username'], auxiliary['password'], auxiliary['id'], group_id))
 
     def delete(self, group_id, auxiliary_connection):
         query = """

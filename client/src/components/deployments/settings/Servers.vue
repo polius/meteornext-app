@@ -34,6 +34,7 @@
                   <div class="title font-weight-regular">SQL</div>
                   <v-select v-model="item.engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required></v-select>
                   <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="item.port" :rules="[v => !!v || '']" label="Port" required style="padding-top:0px;" ></v-text-field>
                   <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" required style="padding-top:0px;" hide-details></v-text-field>
                 </v-form>
@@ -68,13 +69,14 @@ export default {
       { text: 'Region', align: 'left', value: 'region'},
       { text: 'Engine', align: 'left', value: 'engine' },
       { text: 'Hostname', align: 'left', value: 'hostname'},
+      { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'Password', align: 'left', value: 'password'}
     ],
     items: [],
     selected: [],
     search: '',
-    item: { name: '', environment: '', region: '', engine: '', hostname: '', username: '', password: '' },
+    item: { name: '', environment: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' },
     mode: '',
     loading: true,
     engines_items: ['MySQL', 'PostgreSQL'],
@@ -121,7 +123,7 @@ export default {
     },
     newServer() {
       this.mode = 'new'
-      this.item = { name: '', environment: '', region: '', engine: '', hostname: '', username: '', password: '' }
+      this.item = { name: '', environment: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' }
       this.dialog_title = 'New Server'
       this.dialog = true
     },

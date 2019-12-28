@@ -563,23 +563,6 @@ class deploy:
         for t in threads:
             t.alive = False
         self.__wait_threads(threads)
-
-    def validate_sql_connection(self):
-        environment = self._credentials['environments'][self._args.environment]
-        # Select the valid environment to validate the SQL connections
-        for env in environment:
-            if env['region'] == self._args.env_id:
-                environment = env
-                break
-
-        for sql in environment['sql']:
-            if sql['name'] == self._args.env_check_sql:
-                try:
-                    mysql_conn = mysql(self._logger, self._args, self._credentials)
-                    mysql_conn.connect(sql['hostname'], sql['username'], sql['password'])
-                except Exception as e:
-                    print(str(e))
-                break
     
     def __start_countdown(self):
         try:
@@ -797,9 +780,10 @@ class deploy:
                 # Wait all threads
                 self.__wait_threads(threads)
 
-                if len(t.progress) > 0:
-                    sys.stderr.write(t.progress[0])
-                    sys.stderr.flush() 
+                for t in threads:
+                    if len(t.progress) > 0:
+                        sys.stderr.write(t.progress[0])
+                        sys.stderr.flush() 
 
             except (Exception,KeyboardInterrupt):
                 self.__stop_threads(threads)

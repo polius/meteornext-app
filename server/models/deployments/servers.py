@@ -16,13 +16,13 @@ class Servers:
 
     def post(self, group_id, server):
         query = """
-            INSERT INTO servers (name, region_id, hostname, username, password)             
-            SELECT %s, r.id, %s, %s, %s
+            INSERT INTO servers (name, region_id, hostname, port, username, password)             
+            SELECT %s, r.id, %s, %s, %s, %s
             FROM regions r
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
             WHERE r.name = %s
         """
-        self._sql.execute(query, (server['name'], server['hostname'], server['username'], server['password'], group_id, server['environment'], server['region']))
+        self._sql.execute(query, (server['name'], server['hostname'], server['port'], server['username'], server['password'], group_id, server['environment'], server['region']))
 
     def put(self, group_id, server):
         query = """
@@ -32,11 +32,12 @@ class Servers:
             SET servers.name = %s,
                 servers.region_id = (SELECT r.id FROM regions r JOIN environments e ON e.id = r.environment_id AND e.name = %s WHERE r.name = %s),
                 servers.hostname = %s,
+                servers.port = %s,
                 servers.username = %s,
                 servers.password = %s
             WHERE servers.id = %s
         """
-        self._sql.execute(query, (server['region_id'], group_id, server['environment_id'], server['name'], server['environment'], server['region'], server['hostname'], server['username'], server['password'], server['id']))
+        self._sql.execute(query, (server['region_id'], group_id, server['environment_id'], server['name'], server['environment'], server['region'], server['hostname'], server['port'], server['username'], server['password'], server['id']))
 
     def delete(self, group_id, server):
         query = """

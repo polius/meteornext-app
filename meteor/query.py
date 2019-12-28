@@ -44,7 +44,7 @@ class query:
     def start_sql_connection(self, server):
         self._sql_credentials = server
         self._sql_connection = mysql(self._logger, self._args, self._credentials)
-        self._sql_connection.connect(server['hostname'], server['username'], server['password'])
+        self._sql_connection.connect(server['hostname'], server['port'], server['username'], server['password'])
 
     def close_sql_connection(self):
         self._sql_connection.close()
@@ -76,7 +76,7 @@ class query:
         else:
             aux_credentials = self._credentials['auxiliary_connections'][auxiliary['auxiliary_connection']]
             conn = mysql(self._logger, self._args, self._credentials)
-            conn.connect(aux_credentials['hostname'], aux_credentials['username'], aux_credentials['password'])
+            conn.connect(aux_credentials['hostname'], aux_credentials['port'], aux_credentials['username'], aux_credentials['password'])
             database_parsed = '__GLOBAL__' if auxiliary['database'] is None else auxiliary['database']
 
         # Init a new Row

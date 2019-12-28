@@ -164,9 +164,9 @@ class Setup:
                 "sql":
                 {
                     "hostname": setup_json['sql']['hostname'],
+                    "port": int(setup_json['sql']['port']),
                     "username": setup_json['sql']['username'],
                     "password": setup_json['sql']['password'],
-                    "port": setup_json['sql']['port'],
                     "database": setup_json['sql']['database']
                 }
             }

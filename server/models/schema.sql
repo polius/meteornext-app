@@ -42,8 +42,6 @@ CREATE TABLE `users` (
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-# INSERT INTO `users`(`id`, `username`, `password`, `email`, `coins`, `group_id`, `admin`) VALUES (1, 'admin', '$2b$12$Zxo.RTjV0duMDsGJ.lWlQeya51iXTYvcZXA3Zcr53vIbvYUlS0vYe', 'admin@admin.com', 100, 1, 1);
-
 CREATE TABLE `environments` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -59,6 +57,7 @@ CREATE TABLE `regions` (
   `environment_id` int(10) unsigned NOT NULL,
   `cross_region` tinyint(1) NOT NULL,
   `hostname` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `port` INT UNSIGNED DEFAULT NULL,
   `username` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `password` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `key` text COLLATE utf8mb4_unicode_ci,
@@ -74,6 +73,7 @@ CREATE TABLE `servers` (
   `engine` enum('MySQL','PostgreSQL') COLLATE utf8mb4_unicode_ci NOT NULL,
   `region_id` int(10) unsigned NOT NULL,
   `hostname` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `port` INT UNSIGNED NOT NULL,
   `username` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
@@ -86,6 +86,7 @@ CREATE TABLE `auxiliary` (
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `group_id` int(10) unsigned NOT NULL,
   `hostname` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `port` INT UNSIGNED NOT NULL,
   `username` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),

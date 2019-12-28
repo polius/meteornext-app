@@ -84,6 +84,7 @@ class Meteor:
                                 "username": "" if region['username'] is None else region['username'],
                                 "password": "" if region['password'] is None else region['password'],
                                 "key": "" if region['key'] is None else key_path,
+                                "port": "" if region['port'] is None else region['port'],
                                 "deploy_path": "" if region['deploy_path'] is None else region['deploy_path']
                             },
                             "sql": []
@@ -101,7 +102,8 @@ class Meteor:
                                     "name": server['name'],
                                     "hostname": server['hostname'],
                                     "username": server['username'],
-                                    "password": server['password']
+                                    "password": server['password'],
+                                    "port": server['port']
                                 })
 
                         # Add region data to the credentials
@@ -113,7 +115,8 @@ class Meteor:
             self._credentials['auxiliary_connections'][aux['name']] = {
                 "hostname": aux['hostname'],
                 "username": aux['username'],
-                "password": aux['password']
+                "password": aux['password'],
+                "port": aux['port']
             }
         
         # Compile Logs
@@ -163,9 +166,9 @@ class Meteor:
         self._credentials['meteor_next'] = {
             "enabled": "True",
             "hostname": next_credentials['hostname'],
+            "port": next_credentials['port'],
             "username": next_credentials['username'],
             "password": next_credentials['password'],
-            "port": next_credentials['port'],
             "database": next_credentials['database']
         }
 
@@ -240,7 +243,7 @@ class query_execution:
 
         # Build Meteor Command
         command = '{} --environment "{}" --{} --logs_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}"{} --user "{}"'.format(meteor_path, environment, execution_method, logs_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor, user)
-        # print(command)
+        print(command)
 
         # Execute Meteor
         p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)

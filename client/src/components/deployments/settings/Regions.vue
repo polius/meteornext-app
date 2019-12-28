@@ -46,6 +46,7 @@
                   <div v-if="item.cross_region" style="margin-top:15px;">
                     <div class="title font-weight-regular">SSH</div>
                     <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
+                    <v-text-field v-model="item.port" :rules="[v => !!v || '']" label="Port" style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="item.password" label="Password" style="padding-top:0px;"></v-text-field>
                     <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
@@ -83,6 +84,7 @@ export default {
       { text: 'Environment', align: 'left', value: 'environment' },
       { text: 'Cross Region', align: 'left', value: 'cross_region'},
       { text: 'Hostname', align: 'left', value: 'hostname'},
+      { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'Password', align: 'left', value: 'password'},
       { text: 'Private Key', align: 'left', value: 'key'},
@@ -91,7 +93,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', environment: '', cross_region: false, hostname: '', username: '', password: '', key: '', deploy_path: '' },
+    item: { name: '', environment: '', cross_region: false, hostname: '', port: '', username: '', password: '', key: '', deploy_path: '' },
     mode: '',
     loading: true,
     dialog: false,
@@ -123,7 +125,7 @@ export default {
     },
     newRegion() {
       this.mode = 'new'
-      this.item = { name: '', environment: '', cross_region: false, hostname: '', username: '', password: '', key: '', deploy_path: '' }
+      this.item = { name: '', environment: '', cross_region: false, hostname: '', port: '', username: '', password: '', key: '', deploy_path: '' }
       this.dialog_title = 'New Region'
       this.dialog = true
     },

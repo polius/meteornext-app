@@ -14,7 +14,7 @@ class progress:
     def start(self, pid):
         if self.__enabled():
             # Init the connection
-            self._sql.connect(self._credentials['meteor_next']['hostname'], self._credentials['meteor_next']['username'], self._credentials['meteor_next']['password'], self._credentials['meteor_next']['database'])
+            self._sql.connect(self._credentials['meteor_next']['hostname'], self._credentials['meteor_next']['port'], self._credentials['meteor_next']['username'], self._credentials['meteor_next']['password'], self._credentials['meteor_next']['database'])
             # Track progress
             engine = 'amazon_s3' if self._credentials['s3']['enabled'] == 'True' else 'local'
             query = "UPDATE deployments_{} SET status = 'IN PROGRESS', uri = '{}', engine = '{}', started = '{}', pid = '{}' WHERE id = {}".format(self._args.deployment_mode, self._args.uuid, engine, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), pid, self._args.deployment_id)

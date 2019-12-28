@@ -7,7 +7,7 @@ class Regions:
 
     def get(self, group_id):
         query = """
-            SELECT r.id, r.name, r.environment_id, e.name AS environment, r.cross_region, r.hostname, r.username, r.password, r.key, r.deploy_path
+            SELECT r.*, e.name AS environment
             FROM regions r 
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
         """
@@ -15,12 +15,12 @@ class Regions:
 
     def post(self, group_id, region):
         query = """
-            INSERT INTO regions (name, environment_id, cross_region, hostname, username, password, `key`, deploy_path)             
-            SELECT %s, id, %s , IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s)
+            INSERT INTO regions (name, environment_id, cross_region, hostname, port, username, password, `key`, deploy_path)             
+            SELECT %s, id, %s , IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s)
             FROM environments
             WHERE group_id = %s AND name = %s
         """
-        self._sql.execute(query, (region['name'], region['cross_region'], region['hostname'], region['hostname'], region['username'], region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], group_id, region['environment']))
+        self._sql.execute(query, (region['name'], region['cross_region'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'], region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], group_id, region['environment']))
 
     def put(self, group_id, region):
         query = """
@@ -30,13 +30,14 @@ class Regions:
                 environment_id = (SELECT id FROM environments WHERE name = %s),
                 cross_region = %s,
                 hostname = IF(%s = '', NULL, %s),
+                port = IF(%s = '', NULL, %s),
                 username = IF(%s = '', NULL, %s),
                 password = IF(%s = '', NULL, %s),
                 `key` = IF(%s = '', NULL, %s),
                 deploy_path = IF(%s = '', NULL, %s)
             WHERE regions.id = %s
         """
-        self._sql.execute(query, (group_id, region['name'], region['environment'], region['cross_region'], region['hostname'], region['hostname'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], region['id']))
+        self._sql.execute(query, (group_id, region['name'], region['environment'], region['cross_region'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], region['id']))
 
     def delete(self, group_id, region):
         query = """

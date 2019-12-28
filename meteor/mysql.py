@@ -18,9 +18,9 @@ class mysql:
         self._connection = None
         self._mysql = {}
 
-    def connect(self, hostname, username, password, database=None):
+    def connect(self, hostname, port, username, password, database=None):
         # Store the Credentials
-        self._mysql = {"hostname": hostname, "username": username, "password": password, "database": database}
+        self._mysql = {"hostname": hostname, "port": int(port), "username": username, "password": password, "database": database}
 
         # Init Connection
         self.__connect(database)
@@ -34,9 +34,9 @@ class mysql:
     def __connect(self, database=None):
         # Establish the Connection
         if database is not None:
-            self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], db=database, charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
+            self._connection = pymysql.connect(host=self._mysql['hostname'], port=self._mysql['port'], user=self._mysql['username'], password=self._mysql['password'], db=database, charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
         else:
-            self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
+            self._connection = pymysql.connect(host=self._mysql['hostname'], port=self._mysql['port'], user=self._mysql['username'], password=self._mysql['password'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
 
     def execute(self, query, database_name=None):
         try:

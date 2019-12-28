@@ -31,6 +31,7 @@
                   <!-- SQL -->
                   <div class="title font-weight-regular">SQL</div>
                   <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
+                  <v-text-field v-model="item.port" :rules="[v => !!v || '']" label="Port" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" hide-details></v-text-field>
                 </v-form>
@@ -62,13 +63,14 @@ export default {
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Hostname', align: 'left', value: 'hostname'},
+      { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'Password', align: 'left', value: 'password'}
     ],
     items: [],
     selected: [],
     search: '',
-    item: { name: '', hostname: '', username: '', password: '' },
+    item: { name: '', hostname: '', port: '', username: '', password: '' },
     mode: '',
     loading: true,
     dialog: false,
@@ -97,7 +99,7 @@ export default {
     },
     newAuxiliary() {
       this.mode = 'new'
-      this.item = { name: '', hostname: '', username: '', password: '' }
+      this.item = { name: '', hostname: '', port: '', username: '', password: '' }
       this.dialog_title = 'New Auxiliary Connection'
       this.dialog = true
     },

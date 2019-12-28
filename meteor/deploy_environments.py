@@ -77,19 +77,16 @@ class deploy_environments:
             return connection['success']
 
         except Exception as e:
-            traceback.print_exc()
             if self._environment_data['ssh']['enabled'] == "True":
                 # Handle SSH Error
                 if self._credentials['execution_mode']['parallel'] == 'True':
                     print(colored("    [{}/SSH] {} ".format(self._environment_data['region'], self._environment_data['ssh']['hostname']), attrs=['bold']) + str(e))
-                    t.progress.append({'region': self._environment_data['region'], 'success': False, 'progress': [], 'error': str(e)})
+                    t.progress = {'region': self._environment_data['region'], 'success': False, 'progress': [], 'error': str(e)}
                 else:
                     print(colored("✘", 'red') + colored(" [{}] ".format(self._environment_data['ssh']['hostname']), attrs=['bold']) + str(e))
 
                 print(colored('--> {} Region \'{}\' Failed.'.format(environment_type, self._environment_data['region']), 'red'))
 
-            if self._credentials['execution_mode']['parallel'] != 'True':  
-                raise
         except KeyboardInterrupt:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 raise
@@ -332,12 +329,15 @@ class deploy_environments:
 
         try:
             region = self._environment_data
+            print(region)
             if region['ssh']['enabled'] == "True":
+                print(server['port'])
                 ssh_pkey = paramiko.RSAKey.from_private_key_file(region['ssh']['key'])
-                with SSHTunnelForwarder((region['ssh']['hostname'], 22), ssh_username=region['ssh']['username'], ssh_password=region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=(server['hostname'], 3306)) as tunnel:
-                    conn = pymysql.connect(host='127.0.0.1', user=server['username'], passwd=server['password'], port=tunnel.local_bind_port)
+                
+                with SSHTunnelForwarder((region['ssh']['hostname'], int(region['ssh']['port'])), ssh_username=region['ssh']['username'], ssh_password=region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=(server['hostname'], int(server['port']))) as tunnel:
+                    conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'])
             else:
-                conn = pymysql.connect(host=server['hostname'], user=server['username'], passwd=server['password'])
+                conn = pymysql.connect(host=server['hostname'], port=server['port'], user=server['username'], passwd=server['password'])
             if self._show_output:
                 print(colored("✔", 'green') + colored(" [{}]".format(server['name']), attrs=['bold']) + " Connection Succeeded")
             else:
@@ -417,7 +417,7 @@ class deploy_environments:
             client = paramiko.SSHClient()
             client.load_system_host_keys()
             client.set_missing_host_key_policy(paramiko.WarningPolicy())
-            client.connect(self._environment_data['ssh']['hostname'], port=22, username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'], timeout=10)
+            client.connect(hostname=self._environment_data['ssh']['hostname'], port=int(self._environment_data['ssh']['port']), username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'], timeout=10)
 
             # Show Errors Output Again
             sys.stderr = sys_stderr
@@ -455,7 +455,7 @@ class deploy_environments:
             client = paramiko.SSHClient()
             client.load_system_host_keys()
             client.set_missing_host_key_policy(paramiko.WarningPolicy())
-            client.connect(self._environment_data['ssh']['hostname'], port=22, username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'], timeout=10)
+            client.connect(hostname=self._environment_data['ssh']['hostname'], port=int(self._environment_data['ssh']['port']), username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'], timeout=10)
 
             # Show Errors Output Again
             sys.stderr = sys_stderr
@@ -481,7 +481,7 @@ class deploy_environments:
             client = paramiko.SSHClient()
             client.load_system_host_keys()
             client.set_missing_host_key_policy(paramiko.WarningPolicy())
-            client.connect(self._environment_data['ssh']['hostname'], port=22, username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'], timeout=10)
+            client.connect(hostname=self._environment_data['ssh']['hostname'], port=int(self._environment_data['ssh']['port']), username=self._environment_data['ssh']['username'], password=self._environment_data['ssh']['password'], key_filename=self._environment_data['ssh']['key'], timeout=10)
 
             # Open sftp connection
             sftp = client.open_sftp()
