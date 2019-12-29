@@ -184,6 +184,10 @@ class Inbenta:
         if (user['coins'] - group['coins_execution']) < 0:
             return jsonify({'message': 'Insufficient Coins'}), 400
 
+        # Check logs path permissions
+        if not self.__check_logs_path():
+            return jsonify({'message': 'The local logs path has no write permissions'}), 400
+
         # Create deployment to the DB
         data['id'] = self._deployments.post(user['id'], data)
         data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
@@ -237,6 +241,10 @@ class Inbenta:
             if not (authority[0]['user_id'] != user['id'] and user['admin']) and (user['coins'] - group['coins_execution']) < 0:
                 return jsonify({'message': 'Insufficient Coins'}), 400
 
+            # Check logs path permissions
+            if not self.__check_logs_path():
+                return jsonify({'message': 'The local logs path has no write permissions'}), 400
+
             # Create a new Inbenta Deployment
             data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
             data['execution_id'] = self._deployments_inbenta.post(data)
@@ -266,6 +274,10 @@ class Inbenta:
             return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
 
     def __start(self, user, data):
+        # Check logs path permissions
+        if not self.__check_logs_path():
+            return jsonify({'message': 'The local logs path has no write permissions'}), 400
+
         # Get Deployment
         deployment = self._deployments_inbenta.get(data['execution_id'])[0]
 
@@ -303,3 +315,11 @@ class Inbenta:
             pass
         finally:
             return jsonify({'message': 'Stopping the execution...'}), 200
+
+    def __check_logs_path(self):
+        logs_path = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])['local']['path']
+        while not os.path.exists(logs_path) and logs_path != '/':
+            logs_path = os.path.normpath(os.path.join(logs_path, os.pardir))
+        if os.access(logs_path, os.X_OK | os.W_OK):
+            return True
+        return False

@@ -40,7 +40,7 @@ class Deployments_Inbenta:
 
     def getExecutions(self, deployment_id):
         query = """
-            SELECT i.id, e.name AS 'environment', i.method, i.created, i.status, i.started, i.ended
+            SELECT i.id, e.name AS 'environment', i.method, i.created, i.status, i.started, i.ended, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall'
             FROM deployments_inbenta i
             JOIN environments e ON e.id = i.environment_id
             WHERE i.deployment_id = %s

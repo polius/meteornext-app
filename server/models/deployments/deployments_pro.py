@@ -36,7 +36,7 @@ class Deployments_Pro:
 
     def getExecutions(self, deployment_id):
         query = """
-            SELECT p.id, e.name AS 'environment', p.method, p.created, p.status, p.started, p.ended
+            SELECT p.id, e.name AS 'environment', p.method, p.created, p.status, p.started, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall'
             FROM deployments_pro p
             JOIN environments e ON e.id = p.environment_id
             WHERE p.deployment_id = %s

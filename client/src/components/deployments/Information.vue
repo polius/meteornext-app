@@ -322,6 +322,7 @@
                         </td>
                         <td>{{ props.item.started }}</td>
                         <td>{{ props.item.ended }}</td>
+                        <td>{{ props.item.overall }}</td>
                         <td><v-btn icon small @click="selectExecution(props.item.id)"><v-icon small title="Select execution">fas fa-arrow-right</v-icon></v-btn></td>
                       </tr>
                     </template>
@@ -708,7 +709,10 @@
           }
           
           // Add overall
-          if (Object.entries(this.deployment['progress']['execution'][key]).length === 0) this.execution_data[0][[i]] = "Initiating..."
+          if (Object.entries(this.deployment['progress']['execution'][key]).length === 0) {
+            if ('logs' in this.deployment['progress']) this.execution_data[0][[i]] = "100% (0/0 DBs)"
+            else this.execution_data[0][[i]] = "Initiating..."
+          }
           else this.execution_data[0][[i]] = overall_progress[[i]]['d'] / overall_progress[[i]]['t'] * 100 + '% (' + overall_progress[[i]]['d'] + '/' + overall_progress[[i]]['t'] + ' DBs)'
           i = i+1
         }
@@ -762,6 +766,7 @@
               { text: 'Status', value: 'status' },
               { text: 'Started', value: 'started' },
               { text: 'Ended', value: 'ended' },
+              { text: 'Overall', value: 'overall' },
               { text: 'Actions', value: 'actions' }
             ]
           })
