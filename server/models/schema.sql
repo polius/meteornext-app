@@ -36,6 +36,7 @@ CREATE TABLE `users` (
   `coins` INT UNSIGNED NOT NULL DEFAULT '0',
   `group_id` int(10) unsigned NOT NULL,
   `admin` tinyint(1) NOT NULL DEFAULT '0',
+  `last_login` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   KEY `group_id` (`group_id`),
@@ -197,10 +198,10 @@ CREATE TABLE `deployments_inbenta` (
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE `schedule` (
-  `id` INT UNSIGNED AUTO_INCREMENT,
-  `name` VARCHAR(191) NOT NULL,
-  `executed_at` DATETIME NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE `name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+-- CREATE TABLE `schedule` (
+--   `id` INT UNSIGNED AUTO_INCREMENT,
+--   `name` VARCHAR(191) NOT NULL,
+--   `executed_at` DATETIME NOT NULL,
+--   PRIMARY KEY (`id`),
+--   UNIQUE `name` (`name`)
+-- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

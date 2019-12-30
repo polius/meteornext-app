@@ -111,11 +111,8 @@ class Deployments:
         return jsonify({'data': self._deployments.get(user_id)}), 200
 
     def __put(self, user_id, data):
-        if not self._deployments.exist(user_id, data):
-            return jsonify({'message': 'This deployment does not exist'}), 400
-        else:
-            self._deployments.put(user_id, data)
-            return jsonify({'message': 'Deployment edited successfully'}), 200
+        self._deployments.put(user_id, data)
+        return jsonify({'message': 'Deployment edited successfully'}), 200
 
     def __delete(self, user_id, data):
         for deploy in data:

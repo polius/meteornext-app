@@ -37,7 +37,7 @@ class deploy_environments:
         if self._environment_data is not None:
             # Deploy Path
             if self._environment_data['ssh']['enabled'] == 'True':
-                self._bin_path = "{}/init".format(self._environment_data['ssh']['deploy_path']) if self._bin else "python {}/meteor.py".format(self._environment_data['ssh']['deploy_path'])
+                self._bin_path = "{}/init".format(self._environment_data['ssh']['deploy_path']) if self._bin else "python3 {}/meteor.py".format(self._environment_data['ssh']['deploy_path'])
                 self._ssh_logs_path = "{}/logs/{}".format(self._environment_data['ssh']['deploy_path'], self._args.uuid)
             else:
                 self._bin_path = "{}/init".format(sys._MEIPASS) if self._bin else "python3 {}/meteor.py".format(os.path.dirname(os.path.realpath(__file__)))
@@ -277,9 +277,9 @@ class deploy_environments:
 
     def clean_local(self):
         # Delete Uncompressed Deployment Folder
-        # if os.path.exists(self._args.logs_path):
-        #     if os.path.isdir(self._args.logs_path):
-        #         shutil.rmtree(self._args.logs_path)
+        if os.path.exists(self._args.logs_path):
+            if os.path.isdir(self._args.logs_path):
+                shutil.rmtree(self._args.logs_path)
 
         # Delete 'meteor.tar.gz'
         self.__local('rm -rf {}/meteor.tar.gz'.format(self._script_path), show_output=False)
@@ -299,14 +299,12 @@ class deploy_environments:
 
                 # Wait threads
                 self.__wait_threads(threads)
-                
                 # Get values
                 for t in threads:
                     connection_succeeded &= t.progress['success']
                     if t.progress['success'] is False:
                         print(colored("    [{}/SQL] {} ".format(self._environment_data['region'], t.progress['sql']), attrs=['bold']) + t.progress['error'])
                         connection_results['progress'].append({'server': t.progress['sql'], 'error': t.progress['error'].replace('"', '\\"')})
-
                 # Set return value
                 connection_results['success'] = connection_succeeded
                 thread.connection_results = connection_results
@@ -318,7 +316,7 @@ class deploy_environments:
             for server in self._environment_data['sql']:
                 connection_succeeded &= self.__check_sql_connection_logic(server)
             connection_results['success'] = connection_succeeded
-            return connection_results
+        return connection_results
 
     def __wait_threads(self, threads):
         for t in threads:

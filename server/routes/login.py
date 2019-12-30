@@ -32,6 +32,10 @@ class Login:
             if len(user) == 0 or not bcrypt.checkpw(login_json['password'].encode('utf-8'), user[0]['password'].encode('utf-8')):
                 return jsonify({"message": "Invalid username or password"}), 400
             else:
+                # Update user last_login
+                self._users.put_last_login(login_json['username'])
+
+                # Build return data
                 ret = {
                     'access_token': create_access_token(identity=user[0]['username']),
                     'refresh_token': create_refresh_token(identity=user[0]['username']),

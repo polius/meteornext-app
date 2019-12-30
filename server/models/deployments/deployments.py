@@ -165,13 +165,14 @@ class Deployments:
         query = "INSERT INTO deployments (name, user_id) VALUES(%s, %s)"
         return self._sql.execute(query, (deployment['name'], user_id))
 
-    def put(self, deployment):
+    def put(self, user_id, deployment):
         query = """
             UPDATE deployments
             SET name = %s
-            AND id = %s
+            WHERE id = %s
+            AND user_id = %s
         """
-        self._sql.execute(query, (deployment['name'], deployment['id']))
+        self._sql.execute(query, (deployment['name'], deployment['id'], user_id))
 
     def delete(self, user_id, deployment):
         query = """

@@ -28,7 +28,7 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="padding-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
           <v-btn v-if="show_results" text title="Share Results" @click="shareResults_dialog = true"><v-icon small style="padding-right:10px;">fas fa-link</v-icon>SHARE</v-btn>
-          <v-btn v-else-if="deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && !validation_error) || (deployment['status'] == 'STOPPED' && deployment['uri'] != null)" text title="Show Execution Results" @click="showResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
+          <v-btn v-else-if="deployment['method'] != 'validate' && (deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && !validation_error) || (deployment['status'] == 'STOPPED' && deployment['uri'] != null))" text title="Show Execution Results" @click="showResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
         </v-toolbar-items>
 
         <v-spacer></v-spacer>
@@ -287,7 +287,7 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="select_dialog" max-width="80%">
+    <v-dialog v-model="select_dialog" max-width="90%">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">SELECT EXECUTION</v-toolbar-title>
@@ -308,7 +308,6 @@
                       <tr :style="`background-color:` + selectRow(props.item.id)">
                         <td>{{ props.item.environment }}</td>
                         <td><span :style="'color: ' + getMethodColor(props.item.method.toUpperCase())" style="font-weight:500">{{ props.item.method.toUpperCase() }}</span></td>
-                        <td>{{ props.item.created }}</td>
                         <td>
                           <v-icon v-if="props.item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
                           <v-icon v-else-if="props.item.status == 'QUEUED'" title="Queued" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
@@ -320,6 +319,7 @@
                           <v-icon v-else-if="props.item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
                           <v-icon v-else-if="props.item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:8px;">fas fa-ban</v-icon>
                         </td>
+                        <td>{{ props.item.created }}</td>
                         <td>{{ props.item.started }}</td>
                         <td>{{ props.item.ended }}</td>
                         <td>{{ props.item.overall }}</td>

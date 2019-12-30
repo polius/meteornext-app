@@ -7,10 +7,10 @@ class Users:
 
     def get(self, username=None):
         if username is None:
-            return self._sql.execute("SELECT u.id, u.username, u.email, u.password, u.coins, u.group_id, g.name AS `group`, u.admin FROM users u JOIN groups g ON g.id = u.group_id")
+            return self._sql.execute("SELECT u.id, u.username, u.email, u.password, u.coins, u.group_id, g.name AS `group`, u.admin, u.last_login FROM users u JOIN groups g ON g.id = u.group_id")
         else:
             query = """
-                SELECT u.id, u.username, u.email, u.password, u.coins, u.group_id, g.name AS `group`, u.admin, g.deployments_enable, g.deployments_basic, g.deployments_pro, g.deployments_inbenta, g.deployments_edit
+                SELECT u.id, u.username, u.email, u.password, u.coins, u.group_id, g.name AS `group`, u.admin, u.last_login, g.deployments_enable, g.deployments_basic, g.deployments_pro, g.deployments_inbenta, g.deployments_edit
                 FROM users u 
                 JOIN groups g ON g.id = u.group_id 
                 WHERE u.username = %s
@@ -25,6 +25,9 @@ class Users:
 
     def put_profile(self, user):
         self._sql.execute("UPDATE users SET password = %s, email = %s WHERE username = %s", (user['password'], user['email'], user['username']))
+
+    def put_last_login(self, username):
+        self._sql.execute("UPDATE users SET last_login = NOW() WHERE username = %s", (username))
 
     def delete(self, users):
         for user in users:
