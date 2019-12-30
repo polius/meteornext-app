@@ -9,13 +9,15 @@ import signal
 import sys
 import time
 import traceback
+import warnings
 import shutil
 import tarfile
 import hashlib
 import paramiko
-from sshtunnel import SSHTunnelForwarder
+import sshtunnel
 from colors import colored
 
+warnings.filterwarnings("ignore")
 
 class deploy_environments:
     def __init__(self, logger, args, credentials, environment_name=None, environment_data=None):
@@ -35,7 +37,7 @@ class deploy_environments:
         if self._environment_data is not None:
             # Deploy Path
             if self._environment_data['ssh']['enabled'] == 'True':
-                self._bin_path = "{}/init".format(self._environment_data['ssh']['deploy_path']) if self._bin else "python3 {}/meteor.py".format(self._environment_data['ssh']['deploy_path'])
+                self._bin_path = "{}/init".format(self._environment_data['ssh']['deploy_path']) if self._bin else "python {}/meteor.py".format(self._environment_data['ssh']['deploy_path'])
                 self._ssh_logs_path = "{}/logs/{}".format(self._environment_data['ssh']['deploy_path'], self._args.uuid)
             else:
                 self._bin_path = "{}/init".format(sys._MEIPASS) if self._bin else "python3 {}/meteor.py".format(os.path.dirname(os.path.realpath(__file__)))
@@ -61,11 +63,20 @@ class deploy_environments:
                         print(colored('- Region Outdated. Starting uploading the Meteor Engine...', 'red'))
                     # Install Meteor in all SSH Regions
                     self.prepare()
-                # Setup User Execution Environment ('credentials.json', 'query_execution.py')
-                self.setup()
-
-            # Check SQL Connection of the Environment [True: All SQL Connections Succeeded | False: Some SQL Connections Failed]
-            connection = self.__check_sql_connection()
+                # Setup User Execution Environment ('credentials.json', 'query_execution.py') & Check SQL Connection
+                threads = []
+                if not self._args.validate:
+                    tsetup = threading.Thread(target=self.setup)
+                    tsetup.start()
+                    threads.append(tsetup)
+                tcheck = threading.Thread(target=self.__check_sql_connection)
+                tcheck.start()
+                threads.append(tcheck)
+                self.__wait_threads(threads)
+                connection = tcheck.connection_results
+            else:
+                # Check SQL Connection
+                connection = self.__check_sql_connection()
 
             if connection['success'] is True:
                 print(colored('--> {} Region \'{}\' Finished.'.format(environment_type, self._environment_data['region']), 'green'))
@@ -93,7 +104,7 @@ class deploy_environments:
 
     def check_version(self):    
         # Get SSH Version
-        ssh_version = self.__ssh("cat {}/version.txt".format(self._script_path))['stdout']
+        ssh_version = self.__ssh("cat {}/version.txt".format(self._environment_data['ssh']['deploy_path']))['stdout']
         if len(ssh_version) == 0:
             return False
         else:
@@ -150,9 +161,17 @@ class deploy_environments:
     def setup(self, output=True):
         if self._show_output:
             print("- Setting Up New Execution...")
-
         self.__ssh('mkdir -p {}'.format(self._ssh_logs_path))
+        tcred = threading.Thread(target=self.__setup_credentials)
+        tquer = threading.Thread(target=self.__setup_query_execution)
+        tcred.start()
+        tquer.start()
+        self.__wait_threads([tcred, tquer])
+    
+    def __setup_credentials(self):
         self.__put(self._args.logs_path + '/credentials.json', self._ssh_logs_path + '/credentials.json')
+    
+    def __setup_query_execution(self):
         self.__put(self._args.logs_path + '/query_execution.py', self._ssh_logs_path + '/query_execution.py')
 
     def start(self, shared_array=None, progress_array=None):
@@ -236,10 +255,8 @@ class deploy_environments:
                     # 2. Uncompress Downloaded Logs
                     with tarfile.open(local_path + '.tar.gz') as tar:
                         tar.extractall(path=self._args.logs_path + '/execution')
-
                     # 3. Delete Downloaded Compressed Logs
                     os.remove(local_path + '.tar.gz')
-
         except Exception:
             if self._credentials['execution_mode']['parallel'] != 'True':
                 self._logger.error(colored("--> Error Downloading Logs:\n{}".format(traceback.format_exc()), 'red'))
@@ -248,17 +265,15 @@ class deploy_environments:
                 t = threading.current_thread()
                 t.error.append(traceback.format_exc())
 
-    def clean_remote(self, remote=True, shared_array=None):
+    def clean_remote(self, remote=True):
         if remote:
             # Clean Remote Execution Logs
             environment_logs = "{}/logs/{}/".format(self._environment_data['ssh']['deploy_path'], self._args.uuid)
             output = self.__ssh('rm -rf {0}'.format(environment_logs))
 
-            if len(output['stderr']) > 0:
-                shared_array.append(output['stderr'])
-
-            # Clean Remaining Processes
-            self.sigkill()
+            if len(output['stderr']) > 0 and self._credentials['execution_mode']['parallel'] != 'True':
+                t = threading.current_thread()
+                t.error = output['stderr']
 
     def clean_local(self):
         # Delete Uncompressed Deployment Folder
@@ -269,14 +284,12 @@ class deploy_environments:
         # Delete 'meteor.tar.gz'
         self.__local('rm -rf {}/meteor.tar.gz'.format(self._script_path), show_output=False)
 
-        # Clean Remaining Processes
-        self.sigkill()
-
     def __check_sql_connection(self):
         connection_results = {'region': self._environment_data['region'], 'success': False, 'progress': []}
         connection_succeeded = True          
 
         if self._credentials['execution_mode']['parallel'] == "True":
+            thread = threading.current_thread()
             try:
                 threads = []
                 for server in self._environment_data['sql']:
@@ -293,6 +306,10 @@ class deploy_environments:
                     if t.progress['success'] is False:
                         print(colored("    [{}/SQL] {} ".format(self._environment_data['region'], t.progress['sql']), attrs=['bold']) + t.progress['error'])
                         connection_results['progress'].append({'server': t.progress['sql'], 'error': t.progress['error'].replace('"', '\\"')})
+
+                # Set return value
+                connection_results['success'] = connection_succeeded
+                thread.connection_results = connection_results
             except (Exception,KeyboardInterrupt):
                 self.__stop_threads(threads)
                 raise
@@ -300,18 +317,12 @@ class deploy_environments:
             print("- Checking SQL Connections...")
             for server in self._environment_data['sql']:
                 connection_succeeded &= self.__check_sql_connection_logic(server)
-
-        connection_results['success'] = connection_succeeded
-        return connection_results
+            connection_results['success'] = connection_succeeded
+            return connection_results
 
     def __wait_threads(self, threads):
-        running = True
-        while running:
-            running = False
-            for t in threads:
-                if t.is_alive():
-                    t.join(0.1)
-                    running = True     
+        for t in threads:
+            t.join()
 
     def __stop_threads(self, threads):
         for t in threads:
@@ -320,46 +331,43 @@ class deploy_environments:
 
     def __check_sql_connection_logic(self, server):
         if self._credentials['execution_mode']['parallel'] == 'True':
-            stdout = sys.stdout
-            stderr = sys.stderr
-            f = open(os.devnull, 'w')
-            sys.stdout = f
-            sys.stderr = f
             t = threading.current_thread()
 
-        try:
-            region = self._environment_data
-            print(region)
-            if region['ssh']['enabled'] == "True":
-                print(server['port'])
-                ssh_pkey = paramiko.RSAKey.from_private_key_file(region['ssh']['key'])
-                
-                with SSHTunnelForwarder((region['ssh']['hostname'], int(region['ssh']['port'])), ssh_username=region['ssh']['username'], ssh_password=region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=(server['hostname'], int(server['port']))) as tunnel:
-                    conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'])
-            else:
-                conn = pymysql.connect(host=server['hostname'], port=server['port'], user=server['username'], passwd=server['password'])
-            if self._show_output:
-                print(colored("✔", 'green') + colored(" [{}]".format(server['name']), attrs=['bold']) + " Connection Succeeded")
-            else:
-                t.progress = {"region": region['region'], "success": True, "sql": server['name']}
-            return True
-        except Exception as e:
-            traceback.print_exc()
-            if self._show_output:
-                print(colored("✘", 'red') + colored(" [{}] ".format(server['name']), attrs=['bold']) + str(e).replace('\n',''))
-            else:
-                t.progress = {"region": region['region'], "success": False, "sql": server['name'], "error": str(e).replace('\n','')}
-            return False
-        finally:
-            if self._credentials['execution_mode']['parallel'] == 'True':
-                sys.stdout = stdout
-                sys.stderr = stderr
+        attempts = 5
+        error = None
+
+        for i in range(attempts):
+            try:
+                region = self._environment_data
+                if region['ssh']['enabled'] == "True":
+                    ssh_pkey = paramiko.RSAKey.from_private_key_file(region['ssh']['key'])
+                    sshtunnel.SSH_TIMEOUT = 5.0
+                    sshtunnel.TUNNEL_TIMEOUT = 5.0
+                    with sshtunnel.SSHTunnelForwarder((region['ssh']['hostname'], int(region['ssh']['port'])), ssh_username=region['ssh']['username'], ssh_password=region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=(server['hostname'], int(server['port']))) as tunnel:
+                        conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'])
+                        conn.close()
+                else:
+                    conn = pymysql.connect(host=server['hostname'], port=server['port'], user=server['username'], passwd=server['password'])
+                if self._show_output:
+                    print(colored("✔", 'green') + colored(" [{}]".format(server['name']), attrs=['bold']) + " Connection Succeeded")
+                else:
+                    t.progress = {"region": region['region'], "success": True, "sql": server['name']}
+                return True
+            except Exception as e:
+                error = e
+                time.sleep(1)
+
+        if self._show_output:
+            print(colored("✘", 'red') + colored(" [{}] ".format(server['name']), attrs=['bold']) + str(error).replace('\n',''))
+        else:
+            t.progress = {"region": region['region'], "success": False, "sql": server['name'], "error": str(error).replace('\n','')}
+        return False
 
     def check_processes(self):
         # Check Processes Currently Executing
-        attempts = 99
+        attempts = 5
 
-        for i in range(attempts+1):
+        for i in range(attempts):
             command = "ps -U $USER -u $USER u | grep \"" + str(self._args.uuid) + "\" | grep -v grep | awk '{print $2}' | wc -l"
             
             if self._environment_data['ssh']['enabled'] == 'False':
@@ -371,7 +379,7 @@ class deploy_environments:
 
             if int(count) == 0:
                 break
-            time.sleep(10)
+            time.sleep(2)
 
     def sigint(self):
         command = "ps -U $USER -u $USER u | grep \"" + str(self._args.uuid) + "\" | grep -v grep | awk '{print $2}' | xargs kill -2"

@@ -468,7 +468,7 @@ class deploy:
                 print(colored("- Queries Validation Passed!", 'green', attrs=['bold', 'reverse']))
 
         except Exception as e:
-            self._logger.critical(colored(e, 'red', attrs=['reverse', 'bold']))
+            print(colored(e, 'red', attrs=['reverse', 'bold']))
             raise
 
     def __validate_regions(self):
@@ -551,13 +551,8 @@ class deploy:
             sys.exit()
 
     def __wait_threads(self, threads):
-        running = True
-        while running:
-            running = False
-            for t in threads:
-                if t.is_alive():
-                    t.join(0.1)
-                    running = True
+        for t in threads:
+            t.join()
         
     def __stop_threads(self, threads):
         for t in threads:
@@ -728,7 +723,7 @@ class deploy:
                     # Raise KeyboardInterrupt
                     raise
         finally:
-            self._EXECUTION_TIME = time.time()        
+            self._EXECUTION_TIME = time.time()
 
     #handle SIGINT from SyncManager object
     def mgr_sig_handler(self, signal, frame):
@@ -772,6 +767,7 @@ class deploy:
             try:
                 for server in env['sql']:
                     if self._args.servers is None or (self._args.servers is not None and server['name'] in servers):
+                        deploy = deploy_queries(self._logger, self._args, self._credentials, self._query_template, self._ENV_NAME, env)
                         t = threading.Thread(target=deploy.execute_main, args=(env['region'], server,))
                         threads.append(t)
                         t.progress = []
@@ -1035,6 +1031,9 @@ class deploy:
                 print(status_msg)
                 self._progress.track_tasks(value=status_msg[2:])
 
+                if self._args.validate:
+                    return
+
                 if self._ENV_DATA != {}:
                     if self._credentials['execution_mode']['parallel'] == "True":
                         self.__clean_parallel(region=None, remote=remote)
@@ -1060,29 +1059,33 @@ class deploy:
     
     def __clean_parallel(self, region=None, remote=True):
         try:
-            manager = SyncManager()
-            manager.start(self.__mgr_init)
-            shared_array = manager.list()
-            processes = []
+            threads = []
+            threads_remote = []
             env = self._credentials['environments'][region] if region is not None else self._ENV_DATA[self._ENV_NAME]
 
             for env_data in env:
+                env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                 if (env_data['ssh']['enabled'] == 'True'):
-                    env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
-                    p = multiprocessing.Process(target=env.clean_remote, args=(remote, shared_array,))
-                    p.start()
-                    processes.append(p)
+                    t = threading.Thread(target=env.clean_remote, args=(remote,))
+                    t.error = ''
+                    t.start()
+                    threads.append(t)
+                    threads_remote.append(t)
 
-            for process in processes:
-                process.join()
+                # Clean Remaining Processes
+                t = threading.Thread(target=env.sigkill)
+                t.start()
+                threads.append(t)
 
-            for data in shared_array:
-                raise Exception(data)                
+            # Wait all threads
+            self.__wait_threads(threads)
+
+            for t in threads_remote:
+                if t.error != '':
+                    raise Exception(t.error)
 
         except KeyboardInterrupt:
-            for process in processes:
-                process.join()
-            raise
+            self.__stop_threads(threads)
 
     def slack(self, status, summary, error_msg=None):
         # Send Slack Message if it's enabled

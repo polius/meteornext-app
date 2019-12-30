@@ -97,7 +97,7 @@
     data: () => ({
       // Setup Form
       license: { email: '', key: '' },
-      sql: { hostname: '', username: '', password: '', port: '3306', database: 'meteor' },
+      sql: { hostname: '', username: '', password: '', port: '3306', database: 'meteornext' },
       account: { username: '', password: '' },
       setup_part: 'license',
       buttonText: 'VERIFY',

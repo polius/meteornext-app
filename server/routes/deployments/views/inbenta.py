@@ -1,10 +1,12 @@
 import os
+import json
 import signal
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
 import models.admin.groups
+import models.admin.settings
 import models.deployments.deployments
 import models.deployments.deployments_inbenta
 import routes.deployments.meteor
@@ -14,6 +16,7 @@ class Inbenta:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
+        self._settings = models.admin.settings.Settings(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._deployments_inbenta = models.deployments.deployments_inbenta.Deployments_Inbenta(sql)
 

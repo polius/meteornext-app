@@ -223,7 +223,7 @@
                     </v-toolbar-items>
                   </v-toolbar>
                   <v-divider></v-divider>
-                  <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="query" :show-select="information_dialog_mode != 'parameters'" :hide-default-header="information_dialog_mode == 'parameters'" hide-default-footer class="elevation-1">
+                  <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="query" :show-select="information_dialog_mode != 'parameters'" :hide-default-header="information_dialog_mode == 'parameters'" :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1">
                   </v-data-table>
                 </v-card>
 
@@ -268,12 +268,12 @@
         <v-toolbar-title class="white--text">{{ query_dialog_title }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding: 0px 20px 20px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12 v-if="query_dialog_mode!='delete'">
-                <v-form ref="query_form">
-                  <v-textarea ref="field" rows="1" filled auto-grow v-model="query_dialog_item" label="Query" :rules="[v => !!v || '']" required></v-textarea>
+                <v-form ref="query_form" style="margin-top:15px; margin-bottom:20px;">
+                  <v-textarea ref="field" rows="1" filled auto-grow hide-details v-model="query_dialog_item" label="Query" :rules="[v => !!v || '']" required></v-textarea>
                 </v-form>
               </v-flex>
               <v-flex xs12 style="padding-bottom:10px" v-if="query_dialog_mode=='delete'">
@@ -583,6 +583,7 @@
         this.logs_data = []
         this.tasks_data = []
         this.queries_data = []
+        delete this.deployment.progress.syntax
         delete this.deployment.progress.error
         
         this.validation_error = false

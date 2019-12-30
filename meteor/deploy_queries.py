@@ -70,7 +70,7 @@ class deploy_queries:
 
             # Get all Databases in current server            
             databases = query_instance.sql_connection.get_all_databases()
-            self._databases = databases.copy()
+            self._databases = [i for i in databases]
 
             # Close SQL Connection
             query_instance.close_sql_connection()
@@ -93,19 +93,15 @@ class deploy_queries:
                         threads.append(t)
 
                     # Track progress
-                    tracking = True
-                    while tracking:
-                        if all(not t.is_alive() for t in threads):
-                            tracking = False
-                        d = len(self._progress)
-                        progress = float(d)/float(len(databases)) * 100
-                        print('{{"r":"{}","s":"{}","p":{:.2f},"d":{},"t":{}}}'.format(region, server['name'], progress, d, len(databases)))
-                        if d == len(self._databases):
-                            break
-                        time.sleep(1)
+                    while any(t.is_alive() for t in threads):
+                        t = threading.Thread(target=self.__track_execution_progress, args=(region, server, databases,))
+                        t.start()
 
-                    # Wait all threads
+                    # Ensure all threads have finished
                     self.__wait_threads(threads)
+
+                    # Track again after finishing all threads
+                    self.__track_execution_progress(region, server, databases)
 
                     if len(self._databases) > 0:
                         thread.progress.append(self._databases[0])
@@ -122,7 +118,13 @@ class deploy_queries:
             if self._credentials['execution_mode']['parallel'] == 'True':
                 error_format = re.sub(' +',' ', str(e)).replace('\n', '')
                 thread.progress.append(error_format)
-            raise       
+            raise
+
+    def __track_execution_progress(self, region, server, databases):
+        d = len(self._progress)
+        progress = float(d)/float(len(databases)) * 100
+        print('{{"r":"{}","s":"{}","p":{:.2f},"d":{},"t":{}}}'.format(region, server['name'], progress, d, len(databases)))
+        time.sleep(1)
 
     def __execute_main_databases(self, region, server):
         if self._credentials['execution_mode']['parallel'] == 'True':
@@ -231,14 +233,9 @@ class deploy_queries:
         signal.signal(signal.SIGINT, self.__mgr_sig_handler)
         
     def __wait_threads(self, threads):
-        running = True
-        while running:
-            running = False
-            for t in threads:
-                if t.is_alive():
-                    t.join(0.1)
-                    running = True
-        
+        for t in threads:
+            t.join()
+
     def __stop_threads(self, threads):
         for t in threads:
             t.alive = False

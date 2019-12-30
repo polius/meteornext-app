@@ -22,7 +22,7 @@
                 </v-toolbar-items>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="query" show-select hide-default-footer class="elevation-1">
+              <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="query" show-select :hide-default-footer="query_items.length < 11" class="elevation-1">
               </v-data-table>
             </v-card>
 
