@@ -192,7 +192,7 @@ class Meteor:
         queries = {}
         for i, q in enumerate(json.loads(deployment['queries'])):
             queries[str(i+1)] = q['query']
-        database = deployment['databases'].replace('%','*').replace('_','?').replace('\\?','\\_')
+        databases = [i.strip().replace('%','*').replace('_','?').replace('\\?','_') for i in  deployment['databases'].split(',')]
 
         self._query_execution = """import fnmatch
 class query_execution:
@@ -202,17 +202,18 @@ class query_execution:
     def before(self, meteor, environment, region):
         pass
     def main(self, meteor, environment, region, server, database):
-        if len(fnmatch.filter([database], '{1}')) > 0:
-            for i in self.queries.keys():
-                meteor.execute(query=self.queries[str(i)], database=database)
+        for d in {1}:
+            if len(fnmatch.filter([database], d)) > 0:
+                for i in self.queries.keys():
+                    meteor.execute(query=self.queries[str(i)], database=database)
     def after(self, meteor, environment, region):
-        pass""".format(json.dumps(queries), database)
+        pass""".format(json.dumps(queries), databases)
 
     def __compile_query_execution_inbenta(self, deployment):
         queries = {}
         for i, q in enumerate(json.loads(deployment['queries'])):
             queries[str(i+1)] = q['query']
-        database = deployment['databases'].replace('%','*').replace('_','?').replace('\\?','\\_')
+        databases = [i.strip().replace('%','*').replace('_','?').replace('\\?','_') for i in  deployment['databases'].split(',')]
 
         self._query_execution = """import fnmatch
 class query_execution:
@@ -222,14 +223,15 @@ class query_execution:
     def before(self, meteor, environment, region):
         self._instances = meteor.execute(auxiliary=self.auxiliary_queries['1'])
     def main(self, meteor, environment, region, server, database):
-        if len(self.__searchInListDict(self._instances, 'db_name', database)) > 0:
-            if len('{3}') == 0 or len(fnmatch.filter([database], '{3}')) > 0:
-                for i in self.queries.keys():
-                    meteor.execute(query=self.queries[str(i)], database=database)
+        for d in {3}:
+            if len(self.__searchInListDict(self._instances, 'db_name', database)) > 0:
+                if len(d) == 0 or len(fnmatch.filter([database], d)) > 0:
+                    for i in self.queries.keys():
+                        meteor.execute(query=self.queries[str(i)], database=database)
     def after(self, meteor, environment, region):
         pass
     def __searchInListDict(self, list_dicts, key_name, value_to_find):
-        return filter(lambda obj: obj[key_name] == value_to_find, list_dicts)""".format(json.dumps(queries), deployment['schema'], str(deployment['products'])[1:-1], database)
+        return filter(lambda obj: obj[key_name] == value_to_find, list_dicts)""".format(json.dumps(queries), deployment['schema'], str(deployment['products'])[1:-1], databases)
 
     def __execute(self, deployment):
         # Build Meteor Parameters

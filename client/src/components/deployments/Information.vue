@@ -126,14 +126,24 @@
         </v-card>
 
         <!-- EXECUTION -->
-        <div v-if="execution_data.length > 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">EXECUTION</div>
-        <v-card v-if="execution_data.length > 0" style="margin-top:15px;">
-          <v-data-table :headers="execution_headers" :items="this.index(execution_data)" hide-default-footer>
+        <div v-if="execution_progress.length > 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">EXECUTION</div>
+        <v-card v-if="execution_progress.length > 0" style="margin-top:15px;">
+          <!-- Overall -->
+          <v-data-table :headers="execution_headers" :items="this.index(execution_overall)" hide-default-footer>
             <template v-slot:item="props">
               <tr>
-                <td v-for="item in Object.keys(execution_headers)" :key="item" :style="regionColor(props.item.i, execution_data[props.item.i][item])">
-                  <span v-if="props.item.i == 0"><v-icon small style="margin-right:10px;">{{ regionIcon(execution_data[props.item.i][item]) }}</v-icon><b>{{ execution_data[props.item.i][item] }}</b></span>
-                  <span v-else-if="item in execution_data[props.item.i]" :class="serverColor(execution_data[props.item.i][item]['progress'])"><b>{{ execution_data[props.item.i][item]['server'] }}</b> {{ execution_data[props.item.i][item]['progress'] }}</span>
+                <td v-for="item in Object.keys(execution_headers)" :key="item" :style="regionColor(props.item.i, execution_overall[props.item.i][item]) + `width:50%;`">
+                  <span><v-icon small style="margin-right:10px;">{{ regionIcon(execution_overall[props.item.i][item]) }}</v-icon><b>{{ execution_overall[props.item.i][item] }}</b></span>
+                </td>
+             </tr>
+            </template>
+          </v-data-table>
+          <!-- Servers -->
+          <v-data-table :headers="execution_headers" :items="this.index(execution_progress)" hide-default-header :hide-default-footer="execution_progress.length < 11">
+            <template v-slot:item="props">
+              <tr>
+                <td v-for="item in Object.keys(execution_headers)" :key="item" style="width:50%;">
+                  <span v-if="item in execution_progress[props.item.i]" :class="serverColor(execution_progress[props.item.i][item]['progress'])"><b>{{ execution_progress[props.item.i][item]['server'] }}</b> {{ execution_progress[props.item.i][item]['progress'] }}</span>
                 </td>
              </tr>
             </template>
@@ -463,7 +473,8 @@
 
       // Execution
       execution_headers: [],
-      execution_data: [],
+      execution_overall: [],
+      execution_progress: [],
 
       // Post Execution
       logs_headers: [{ text: 'LOGS', align:'left', value: 'status', sortable: false }],
@@ -579,7 +590,8 @@
       },
       clear() {
         this.validation_data = []
-        this.execution_data = []
+        this.execution_progress = []
+        this.execution_overall = []
         this.logs_data = []
         this.tasks_data = []
         this.queries_data = []
@@ -689,34 +701,42 @@
       parseExecution() {
         if (!('execution' in this.deployment['progress'])) return
         // Init variables
-        this.execution_headers = []
-        this.execution_data = [{}]
+        var execution_headers = []
+        var execution_overall = [{}]
+        var execution_progress = []
         var overall_progress = {}
         var i = 0
 
         // Fill variables
         for (let[key] of Object.entries(this.deployment['progress']['execution']).sort()) {
           overall_progress[[i]] = {"d": 0, "t": 0}
-          this.execution_headers.push({ text: key, align: 'left', value: i, sortable: false})
+          execution_headers.push({ text: key, align: 'left', value: i, sortable: false})
           var j = 0
           for (let [key2, value2] of Object.entries(this.deployment['progress']['execution'][key])) {
             overall_progress[[i]]['d'] += value2['d']
             overall_progress[[i]]['t'] += value2['t']
             var progress = value2['p'] + '% (' + value2['d'] + '/' + value2['t'] + ' DBs)'
 
-            if (j+1 >= this.execution_data.length) this.execution_data.push({[[i]]: {"server": key2, "progress": progress}})
-            else this.execution_data[j+1][i] = {"server": key2, "progress": progress}
+            if (j >= execution_progress.length) execution_progress.push({[[i]]: {"server": key2, "progress": progress}})
+            else execution_progress[j][i] = {"server": key2, "progress": progress}
             j = j+1
           }
           
           // Add overall
           if (Object.entries(this.deployment['progress']['execution'][key]).length === 0) {
-            if ('logs' in this.deployment['progress']) this.execution_data[0][[i]] = "100% (0/0 DBs)"
-            else this.execution_data[0][[i]] = "Initiating..."
+            if ('logs' in this.deployment['progress']) execution_overall[0][[i]] = "100% (0/0 DBs)"
+            else execution_overall[0][[i]] = "Initiating..."
           }
-          else this.execution_data[0][[i]] = overall_progress[[i]]['d'] / overall_progress[[i]]['t'] * 100 + '% (' + overall_progress[[i]]['d'] + '/' + overall_progress[[i]]['t'] + ' DBs)'
+          else execution_overall[0][[i]] = (overall_progress[[i]]['d'] / overall_progress[[i]]['t'] * 100).toFixed(2) + '% (' + overall_progress[[i]]['d'] + '/' + overall_progress[[i]]['t'] + ' DBs)'
           i = i+1
         }
+        // Sort Servers
+        execution_progress.sort((a, b) => (a[0].server > b[0].server) ? 1 : -1)
+
+        // Assign variables
+        this.execution_headers = JSON.parse(JSON.stringify(execution_headers))
+        this.execution_overall = JSON.parse(JSON.stringify(execution_overall))
+        this.execution_progress = JSON.parse(JSON.stringify(execution_progress))
       },
       parseLogs() {
         if (!('logs' in this.deployment['progress'])) return
@@ -1053,9 +1073,8 @@
         else if (mode == 'PRO') return '#22313f'
       },
       regionColor (index, region) {
-        if (index != 0) return ''
-        if (region.startsWith('100%')) return 'background-color: #4caf50'
-        else return 'background-color: #fb8c00'
+        if (region.startsWith('100%')) return 'background-color: #4caf50;'
+        else return 'background-color: #fb8c00;'
       },
       regionIcon (progress) {
         if (progress.startsWith('100%')) return 'fas fa-check'
