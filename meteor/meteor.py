@@ -36,7 +36,7 @@ class meteor:
             # Load the Core
             core = deploy.deploy(self._logger, self._args)
 
-            # Remote Execution - Check SSH Connection
+            # Remote Execution
             core.check_remote_execution()
             
             # Init Core

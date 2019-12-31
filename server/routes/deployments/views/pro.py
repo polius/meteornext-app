@@ -5,6 +5,7 @@ import signal
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import utils
 import models.admin.users
 import models.admin.groups
 import models.admin.settings
@@ -343,8 +344,5 @@ class Pro:
 
     def __check_logs_path(self):
         logs_path = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])['local']['path']
-        while not os.path.exists(logs_path) and logs_path != '/':
-            logs_path = os.path.normpath(os.path.join(logs_path, os.pardir))
-        if os.access(logs_path, os.X_OK | os.W_OK):
-            return True
-        return False
+        u = utils.Utils()
+        return u.check_path(logs_path)

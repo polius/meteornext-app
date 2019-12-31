@@ -54,15 +54,15 @@ class deploy_environments:
                 print(colored('--> {} Region \'{}\' Started...'.format(environment_type, self._environment_data['region']), 'yellow'))
 
             if self._environment_data['ssh']['enabled'] == "True":
-                same_version = self.check_version()
-                if same_version:
-                    if self._show_output:
-                        print(colored('- Region Updated.', 'green'))
-                else:
-                    if self._show_output:
-                        print(colored('- Region Outdated. Starting uploading the Meteor Engine...', 'red'))
-                    # Install Meteor in all SSH Regions
-                    self.prepare()
+                # same_version = self.check_version()
+                # if same_version:
+                #     if self._show_output:
+                #         print(colored('- Region Updated.', 'green'))
+                # else:
+                #     if self._show_output:
+                #         print(colored('- Region Outdated. Starting uploading the Meteor Engine...', 'red'))
+                #     # Install Meteor in all SSH Regions
+                #     self.prepare()
                 # Setup User Execution Environment ('credentials.json', 'query_execution.py') & Check SQL Connection
                 threads = []
                 if not self._args.validate:

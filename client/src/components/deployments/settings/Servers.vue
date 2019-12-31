@@ -32,7 +32,7 @@
                   <v-select v-model="item.region" :disabled="item.environment == ''" :rules="[v => !!v || '']" :items="regions" label="Region" required style="margin-top:0px; padding-top:0px;"></v-select>
                   <!-- SQL -->
                   <div class="title font-weight-regular">SQL</div>
-                  <v-select v-model="item.engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required></v-select>
+                  <v-select v-model="item.engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
                   <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.port" :rules="[v => !!v || '']" label="Port" required style="padding-top:0px;" ></v-text-field>
                   <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
@@ -120,6 +120,12 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
+    },
+    selectEngine(value) {
+      if (this.item['port'] == '') {
+        if (value == 'MySQL') this.item['port'] = '3306'
+        else if (value == 'PostgreSQL') this.item['port'] = '5432'
+      }
     },
     newServer() {
       this.mode = 'new'
