@@ -1,6 +1,7 @@
 from io import StringIO
 import os
 import sys
+import time
 import socket
 import paramiko
 import pymysql
@@ -88,7 +89,6 @@ class Utils:
                 else:
                     conn = pymysql.connect(host=server['hostname'], port=server['port'], user=server['username'], passwd=server['password'])
                 return {"success": True}
-                return True
             except Exception as e:
                 error = e
                 time.sleep(1)

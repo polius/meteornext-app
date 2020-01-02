@@ -59,13 +59,6 @@ let router = new VueRouter({
         }
       ]
     },
-    // {
-    //   path: '/deployment/:id',
-    //   name: 'deployment',
-    //   props: true,
-    //   component: () => import('../components/deployments/Deployment'),
-    //   meta: { requiresAuth: true }
-    // },
     {
       path: '/deployments',
       component: () => import('../components/deployments/Navigation'),
