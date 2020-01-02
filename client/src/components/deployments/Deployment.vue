@@ -557,7 +557,7 @@
     },
     created() {
       const id = this.$route.params.id
-      if (id.length < 2) this.notification('Invalid Deployment Identifier', 'error')
+      if (id === undefined || id.length < 2) this.notification('Invalid Deployment Identifier', 'error')
       else {
         // Init parameters and get deployment
         this.deployment['execution_id'] = id.substring(1, id.length)
@@ -583,7 +583,7 @@
           .then((response) => {
             const data = response.data.data[0]
             this.parseRequest(data)
-            if (this.$router.currentRoute.name == 'deployments.information') {
+            if (this.$router.currentRoute.name == 'deployment') {
               if (data['status'] == 'STARTING' || data['status'] == 'STOPPING' || data['status'] == 'IN PROGRESS') setTimeout(this.getDeployment, 2000)
               else this.start_execution = false
             }
@@ -732,11 +732,15 @@
             if ('logs' in this.deployment['progress']) execution_overall[0][[i]] = "100% (0/0 DBs)"
             else execution_overall[0][[i]] = "Initiating..."
           }
-          else execution_overall[0][[i]] = (overall_progress[[i]]['d'] / overall_progress[[i]]['t'] * 100).toFixed(2) + '% (' + overall_progress[[i]]['d'] + '/' + overall_progress[[i]]['t'] + ' DBs)'
+          else {
+            var execution_total = (overall_progress[[i]]['d'] / overall_progress[[i]]['t'] * 100).toFixed(2)
+            if (execution_total == 100) execution_total = 100
+            execution_overall[0][[i]] = execution_total + '% (' + overall_progress[[i]]['d'] + '/' + overall_progress[[i]]['t'] + ' DBs)'
+          }
           i = i+1
         }
         // Sort Servers
-        execution_progress.sort((a, b) => (a[0].server > b[0].server) ? 1 : -1)
+        // execution_progress.sort((a, b) => (a[0].server > b[0].server) ? 1 : -1)
 
         // Assign variables
         this.execution_headers = JSON.parse(JSON.stringify(execution_headers))

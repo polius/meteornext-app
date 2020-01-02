@@ -47,6 +47,26 @@ let router = new VueRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/deployment',
+      component: () => import('../components/deployments/Navigation'),
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: ':id',
+          name: 'deployment',
+          component: () => import('../components/deployments/Deployment'),
+          meta: { requiresAuth: true }
+        }
+      ]
+    },
+    // {
+    //   path: '/deployment/:id',
+    //   name: 'deployment',
+    //   props: true,
+    //   component: () => import('../components/deployments/Deployment'),
+    //   meta: { requiresAuth: true }
+    // },
+    {
       path: '/deployments',
       component: () => import('../components/deployments/Navigation'),
       meta: { requiresAuth: true },
@@ -55,13 +75,6 @@ let router = new VueRouter({
           path: '',
           name: 'deployments',
           component: () => import('../components/deployments/Deployments'),
-          meta: { requiresAuth: true }
-        },
-        {
-          path: ':id',
-          name: 'deployments.information',
-          props: true,
-          component: () => import('../components/deployments/Information'),
           meta: { requiresAuth: true }
         },
         {

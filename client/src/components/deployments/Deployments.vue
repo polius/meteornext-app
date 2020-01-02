@@ -54,7 +54,7 @@
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn :loading="loading" color="success" @click="deleteDeploySubmit()">Confirm</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:10px;">Cancel</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px;">Cancel</v-btn>
                   </div>
                 </v-form>
               </v-flex>
@@ -158,7 +158,7 @@ export default {
     },
     infoDeploy() {
       const id = this.selected[0]['mode'].substring(0, 1) + this.selected[0]['execution_id']
-      this.$router.push({ name:'deployments.information', params: { id: id, admin: false }})
+      this.$router.push({ name:'deployment', params: { id: id, admin: false }})
     },
     deleteDeploy() {
       this.dialog = true

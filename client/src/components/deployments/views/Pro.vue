@@ -199,7 +199,7 @@ export default {
           // Refresh user coins
           this.$store.dispatch('coins', data['coins'])
           // Redirect page
-          this.$router.push({ name:'deployments.information', params: { executionID: data['execution_id'], deploymentMode: 'PRO' }})
+          this.$router.push({ name:'deployment', params: { id: 'P' + data['execution_id'], admin: false }})
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))

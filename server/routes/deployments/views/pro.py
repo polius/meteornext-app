@@ -15,6 +15,7 @@ import routes.deployments.meteor
 
 class Pro:
     def __init__(self, app, sql):
+        self._app = app
         # Init models
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
@@ -344,5 +345,5 @@ class Pro:
 
     def __check_logs_path(self):
         logs_path = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])['local']['path']
-        u = utils.Utils()
-        return u.check_path(logs_path)
+        u = utils.Utils(self._app)
+        return u.check_local_path(logs_path)

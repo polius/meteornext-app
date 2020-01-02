@@ -73,7 +73,7 @@
                 <v-divider v-if="query_mode=='delete'"></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn color="success" @click="actionConfirm()">Confirm</v-btn>
-                  <v-btn color="error" @click="queryDialog=false" style="margin-left:10px">Cancel</v-btn>
+                  <v-btn color="error" @click="queryDialog=false" style="margin-left:5px">Cancel</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -242,7 +242,7 @@ export default {
           // Refresh user coins
           this.$store.dispatch('coins', data['coins'])
           // Redirect page
-          this.$router.push({ name:'deployments.information', params: { executionID: data['execution_id'], deploymentMode: 'BASIC' }})
+          this.$router.push({ name:'deployment', params: { id: 'B' + data['execution_id'], admin: false }})
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
