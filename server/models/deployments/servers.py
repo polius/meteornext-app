@@ -5,14 +5,24 @@ class Servers:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, group_id):
-        query = """
-            SELECT s.*, e.id AS 'environment_id', e.name AS 'environment', r.name AS 'region' 
-            FROM servers s
-            JOIN regions r ON r.id = s.region_id
-            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
-        """
-        return self._sql.execute(query, (group_id))
+    def get(self, group_id, server_id=None):
+        if server_id is None:
+            query = """
+                SELECT s.*, e.id AS 'environment_id', e.name AS 'environment', r.name AS 'region' 
+                FROM servers s
+                JOIN regions r ON r.id = s.region_id
+                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
+            """
+            return self._sql.execute(query, (group_id))
+        else:
+            query = """
+                SELECT s.*, e.id AS 'environment_id', e.name AS 'environment', r.name AS 'region' 
+                FROM servers s
+                JOIN regions r ON r.id = s.region_id
+                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
+                WHERE s.id = %s
+            """
+            return self._sql.execute(query, (group_id, server_id))
 
     def post(self, group_id, server):
         query = """
@@ -39,7 +49,7 @@ class Servers:
         """
         self._sql.execute(query, (server['region_id'], group_id, server['environment_id'], server['name'], server['environment'], server['region'], server['hostname'], server['port'], server['username'], server['password'], server['id']))
 
-    def delete(self, group_id, server):
+    def delete(self, group_id, server_id):
         query = """
             DELETE s
             FROM servers s
@@ -47,7 +57,7 @@ class Servers:
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
             WHERE s.id = %s
         """
-        self._sql.execute(query, (group_id, server['id']))
+        self._sql.execute(query, (group_id, server_id))
 
     def remove(self, group_id):
         query = """
@@ -82,13 +92,13 @@ class Servers:
             """
             return self._sql.execute(query, (server['region'], group_id, server['environment'], server['name']))[0]['exist'] == 1
 
-    def exist_by_region(self, group_id, region):
+    def exist_by_region(self, group_id, region_id):
         query = """
             SELECT EXISTS ( 
                 SELECT * 
                 FROM servers s
-                JOIN regions r ON r.id = s.region_id AND r.name = %s
+                JOIN regions r ON r.id = s.region_id AND r.id = %s
                 JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
             ) AS exist
         """
-        return self._sql.execute(query, (region['name'], group_id))[0]['exist'] == 1
+        return self._sql.execute(query, (region_id, group_id))[0]['exist'] == 1

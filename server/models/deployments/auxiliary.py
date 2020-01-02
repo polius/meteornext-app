@@ -5,13 +5,22 @@ class Auxiliary:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, group_id):
-        query = """
-            SELECT *
-            FROM auxiliary
-            WHERE group_id = %s
-        """
-        return self._sql.execute(query, (group_id))
+    def get(self, group_id, auxiliary_id=None):
+        if auxiliary_id is None:
+            query = """
+                SELECT *
+                FROM auxiliary
+                WHERE group_id = %s
+            """
+            return self._sql.execute(query, (group_id))
+        else:
+            query = """
+                SELECT *
+                FROM auxiliary
+                WHERE group_id = %s
+                AND id = %s
+            """
+            return self._sql.execute(query, (group_id, auxiliary_id))
 
     def post(self, group_id, auxiliary):
         query = """
@@ -33,13 +42,13 @@ class Auxiliary:
         """
         self._sql.execute(query, (auxiliary['name'], auxiliary['hostname'], auxiliary['port'], auxiliary['username'], auxiliary['password'], auxiliary['id'], group_id))
 
-    def delete(self, group_id, auxiliary_connection):
+    def delete(self, group_id, auxiliary_id):
         query = """
             DELETE FROM auxiliary
-            WHERE name = %s
-            AND group_id = %s
+            WHERE group_id = %s
+            AND id = %s
         """
-        self._sql.execute(query, (auxiliary_connection['name'], group_id))
+        self._sql.execute(query, (group_id, auxiliary_id))
 
     def remove(self, group_id):
         query = """

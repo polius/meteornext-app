@@ -45,19 +45,20 @@
                   <v-switch v-model="item.cross_region" label="Cross Region" hide-details style="margin-top:0px;"></v-switch>
                   <div v-if="item.cross_region" style="margin-top:15px;">
                     <div class="title font-weight-regular">SSH</div>
-                    <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
-                    <v-text-field v-model="item.port" :rules="[v => !!v || '']" label="Port" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.password" label="Password" style="padding-top:0px;"></v-text-field>
-                    <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
-                    <v-text-field v-model="item.deploy_path" :rules="[v => !!v || '']" label="Deploy Path" style="margin-top:10px;" hide-details></v-text-field>
+                    <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
+                    <v-text-field v-model="item.port" :rules="[v => !!v || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                    <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
+                    <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
+                    <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
+                    <v-text-field v-model="item.deploy_path" :rules="[v => !!v || '']" label="Deploy Path" style="margin-top:15px;" append-icon="folder" hide-details></v-text-field>
                   </div>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="success" @click="submitRegion()">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:10px">CANCEL</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">CANCEL</v-btn>
+                  <v-btn v-if="item['cross_region']" :loading="loading" color="info" @click="testConnection()" style="float:right;">Test Connection</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -103,7 +104,7 @@ export default {
     environments: [],
     // Snackbar
     snackbar: false,
-    snackbarTimeout: Number(3000),
+    snackbarTimeout: Number(5000),
     snackbarText: '',
     snackbarColor: ''
   }),
@@ -208,6 +209,7 @@ export default {
           // Edit item in the data table
           this.items.splice(i, 1, this.item)
           this.dialog = false
+          this.selected = []
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -215,13 +217,12 @@ export default {
         })
         .finally(() => {
           this.loading = false
-          this.selected = []
         })
     },
     deleteRegionSubmit() {
       // Get Selected Items
       var payload = []
-      for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i])
+      for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
       // Delete items to the DB
       axios.delete('/deployments/regions', { data: payload })
         .then((response) => {
@@ -246,6 +247,28 @@ export default {
         .finally(() => {
           this.loading = false
           this.dialog = false
+        })
+    },
+    testConnection() {
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
+        return
+      }
+      // Test Connection
+      this.loading = true
+      const payload = JSON.stringify(this.item)
+      axios.post('/deployments/regions/test', payload)
+        .then((response) => {
+          this.notification(response.data.message, 'success')
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loading = false
         })
     },
     notification(message, color) {

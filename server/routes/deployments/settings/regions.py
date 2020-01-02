@@ -70,6 +70,38 @@ class Regions:
             # Return Regions By User Environment
             return jsonify({'data': self._regions.get_by_environment(user['group_id'], data)}), 200
 
+        @regions_blueprint.route('/deployments/regions/test', methods=['POST'])
+        @jwt_required
+        def regions_test_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['deployments_edit']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            region_json = request.get_json()
+
+            # Init Utils Class
+            u = utils.Utils(self._app, region_json)
+
+            # Check SSH Connection
+            try:
+                u.check_ssh()
+            except Exception as e:
+                return jsonify({'message': "Can't connect to the SSH Region"}), 400
+
+            # Check SSH Deploy Path
+            if not u.check_ssh_path():
+                return jsonify({'message': "The user '{}' does not have rwx privileges to the Deploy Path".format(region_json['username'])}), 400
+
+            return jsonify({'message': 'Connection Successful'}), 200
+
         return regions_blueprint
 
     ####################
@@ -83,9 +115,8 @@ class Regions:
             return jsonify({'message': 'This region currently exists'}), 400
         else:
             # Deploy Meteor
-            connection = {'hostname': data['hostname'], 'port': data['port'], 'username': data['username'], 'password': data['password'], 'key': data['key']}
-            u = utils.Utils(self._app, connection)
-            status = u.prepare(data)
+            u = utils.Utils(self._app, data)
+            status = u.prepare()
             if not status['success']:
                 return jsonify({'message': status['error']}), 400
             
@@ -97,12 +128,23 @@ class Regions:
         if self._regions.exist(group_id, data):
             return jsonify({'message': 'This new region name currently exists'}), 400
         else:
-            # Deploy Meteor
-            connection = {'hostname': data['hostname'], 'port': data['port'], 'username': data['username'], 'password': data['password'], 'key': data['key']}
-            u = utils.Utils(self._app, connection)
-            status = u.prepare(data)
-            if not status['success']:
-                return jsonify({'message': status['error']}), 400
+            r = self._regions.get(group_id, data['id'])
+            if r[0]['hostname'] != data['hostname'] or r[0]['port'] != data['port'] or r[0]['deploy_path'] != data['deploy_path']:
+                # Redeploy Meteor
+                ## Check SSH Deploy Path
+                u = utils.Utils(self._app, data)
+                if not u.check_ssh_path():
+                    return jsonify({'message': "The user '{}' does not have rwx privileges to the Deploy Path".format(data['username'])}), 400
+                ## Clean Meteor
+                u = utils.Utils(self._app, r[0])
+                status =  u.unprepare()
+                if not status['success']:
+                    return jsonify({'message': status['error']}), 400
+                # Deploy Meteor
+                u = utils.Utils(self._app, data)
+                status = u.prepare()
+                if not status['success']:
+                    return jsonify({'message': status['error']}), 400
 
             # Edit Region
             self._regions.put(group_id, data)
@@ -112,13 +154,21 @@ class Regions:
         # Check inconsistencies
         for region in data:
             if self._servers.exist_by_region(group_id, region):
-                return jsonify({'message': "The region '" + region['name'] + "' has attached servers"}), 400
+                return jsonify({'message': "This region has attached servers"}), 400
 
         for region in data:
-            # Clean deployed Meteor
-            # u.unprepare(data)
+            r = self._regions.get(group_id, region)
+            if len(r) > 0:
+                # Delete Meteor from region
+                u = utils.Utils(self._app, r[0])
+                status = u.unprepare()
+                if not status['success']:
+                    return jsonify({'message': status['error']}), 400
 
-            self._regions.delete(group_id, region)
+                # Clean deployed Meteor
+                u.unprepare()
+
+                self._regions.delete(group_id, region)
         return jsonify({'message': 'Selected regions deleted successfully'}), 200
 
     def remove(self, group_id):

@@ -30,16 +30,16 @@
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <!-- SQL -->
                   <div class="title font-weight-regular">SQL</div>
-                  <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
-                  <v-text-field v-model="item.port" :rules="[v => !!v || '']" label="Port" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" hide-details></v-text-field>
+                  <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
+                  <v-text-field v-model="item.port" :rules="[v => !!v || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                  <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
+                  <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected auxiliary connections?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="success" @click="submitAuxiliary()">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:10px">CANCEL</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">CANCEL</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -180,6 +180,7 @@ export default {
           // Edit item in the data table
           this.items.splice(i, 1, this.item)
           this.dialog = false
+          this.selected = []
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -187,13 +188,12 @@ export default {
         })
         .finally(() => {
           this.loading = false
-          this.selected = []
         })
     },
     deleteAuxiliarySubmit() {
       // Get Selected Items
       var payload = []
-      for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i])
+      for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
       // Delete items to the DB
       axios.delete('/deployments/auxiliary', { data: payload })
         .then((response) => {

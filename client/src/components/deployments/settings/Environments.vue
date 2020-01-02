@@ -30,7 +30,7 @@
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn :loading="loading" color="success" @click="submitEnvironment()">CONFIRM</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:10px;">CANCEL</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                   </div>
                 </v-form>
               </v-flex>
@@ -164,6 +164,7 @@ export default {
           // Edit item in the data table
           this.items.splice(i, 1, this.item)
           this.dialog = false
+          this.selected = []
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -171,13 +172,12 @@ export default {
         })
         .finally(() => {
           this.loading = false
-          this.selected = []
         })
     },
     deleteEnvironmentSubmit() {
       // Get Selected Items
       var payload = []
-      for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i])
+      for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
       // Delete items to the DB
       axios.delete('/deployments/environments', { data: payload })
         .then((response) => {

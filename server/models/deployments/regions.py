@@ -5,13 +5,22 @@ class Regions:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, group_id):
-        query = """
-            SELECT r.*, e.name AS environment
-            FROM regions r 
-            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
-        """
-        return self._sql.execute(query, (group_id))
+    def get(self, group_id, region_id=None):
+        if region_id is None:
+            query = """
+                SELECT r.*, e.name AS environment
+                FROM regions r 
+                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
+            """
+            return self._sql.execute(query, (group_id))
+        else:
+            query = """
+                SELECT r.*, e.name AS environment
+                FROM regions r 
+                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
+                WHERE r.id = %s
+            """
+            return self._sql.execute(query, (group_id, region_id))
 
     def post(self, group_id, region):
         query = """
@@ -39,14 +48,14 @@ class Regions:
         """
         self._sql.execute(query, (group_id, region['name'], region['environment'], region['cross_region'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], region['id']))
 
-    def delete(self, group_id, region):
+    def delete(self, group_id, region_id):
         query = """
             DELETE r
             FROM regions r
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
             WHERE r.id = %s
         """
-        self._sql.execute(query, (group_id, region['id']))
+        self._sql.execute(query, (group_id, region_id))
 
     def remove(self, group_id):
         query = """
@@ -87,6 +96,15 @@ class Regions:
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
         """
         return self._sql.execute(query, (group_id, environment['name']))
+
+    def get_by_server(self, group_id, server_name):
+        query = """
+            SELECT r.*
+            FROM regions r 
+            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s 
+            WHERE r.name = %s
+        """
+        return self._sql.execute(query, (group_id, server_name))
 
     def exist_by_environment(self, group_id, environment):
         query = """
