@@ -58,16 +58,16 @@ let router = new VueRouter({
           meta: { requiresAuth: true }
         },
         {
-          path: 'new',
-          name: 'deployments.new',
-          component: () => import('../components/deployments/views/Navigation'),
-          meta: { requiresAuth: true }
-        },
-        {
-          path: 'information',
+          path: ':id',
           name: 'deployments.information',
           props: true,
           component: () => import('../components/deployments/Information'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'new',
+          name: 'deployments.new',
+          component: () => import('../components/deployments/views/Navigation'),
           meta: { requiresAuth: true }
         },
         {

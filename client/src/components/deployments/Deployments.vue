@@ -157,7 +157,8 @@ export default {
       this.$router.push({ name:'deployments.new' })
     },
     infoDeploy() {
-      this.$router.push({ name:'deployments.information', params: { executionID: this.selected[0]['execution_id'], deploymentMode: this.selected[0]['mode'] }})
+      const id = this.selected[0]['mode'].substring(0, 1) + this.selected[0]['execution_id']
+      this.$router.push({ name:'deployments.information', params: { id: id, admin: false }})
     },
     deleteDeploy() {
       this.dialog = true

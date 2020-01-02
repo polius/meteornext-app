@@ -214,15 +214,15 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <div class="title font-weight-regular" style="margin-top:10px; margin-bottom: 25px;">{{ this.deploymentMode }}</div>
+                <div class="title font-weight-regular" style="margin-top:10px; margin-bottom: 25px;">{{ this.deployment['mode'] }}</div>
                 <v-text-field readonly v-model="information_dialog_data.name" label="Name" style="padding-top:0px;"></v-text-field>
-                <v-select v-if="deploymentMode != 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="[information_dialog_data.environment]" label="Environment" style="padding-top:0px;"></v-select>
+                <v-select v-if="this.deployment['mode'] != 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="[information_dialog_data.environment]" label="Environment" style="padding-top:0px;"></v-select>
 
-                <v-select v-if="deploymentMode == 'INBENTA'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.products" :items="information_dialog_data.products_list" label="Products" multiple style="padding-top:0px;"></v-select>
-                <v-select v-if="deploymentMode == 'INBENTA'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schema" :items="information_dialog_data.schema_list" label="Schema" style="padding-top:0px;"></v-select>
+                <v-select v-if="this.deployment['mode'] == 'INBENTA'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.products" :items="information_dialog_data.products_list" label="Products" multiple style="padding-top:0px;"></v-select>
+                <v-select v-if="this.deployment['mode'] == 'INBENTA'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schema" :items="information_dialog_data.schema_list" label="Schema" style="padding-top:0px;"></v-select>
 
-                <v-text-field v-if="deploymentMode != 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" style="padding-top:0px;"></v-text-field>
-                <v-card v-if="deploymentMode != 'PRO'" style="margin-bottom:20px;">
+                <v-text-field v-if="this.deployment['mode'] != 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" style="padding-top:0px;"></v-text-field>
+                <v-card v-if="this.deployment['mode'] != 'PRO'" style="margin-bottom:20px;">
                   <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
                     <v-toolbar-title class="white--text">Queries</v-toolbar-title>
                     <v-divider v-if="information_dialog_mode != 'parameters'" class="mx-3" inset vertical></v-divider>
@@ -237,8 +237,8 @@
                   </v-data-table>
                 </v-card>
 
-                <div v-if="deploymentMode == 'PRO'" class="subtitle-1 font-weight-regular" style="margin-top:-5px; margin-bottom:10px;" title="Press ESC when cursor is in the editor to toggle full screen editing">CODE</div>
-                <codemirror v-if="deploymentMode == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
+                <div v-if="this.deployment['mode'] == 'PRO'" class="subtitle-1 font-weight-regular" style="margin-top:-5px; margin-bottom:10px;" title="Press ESC when cursor is in the editor to toggle full screen editing">CODE</div>
+                <codemirror v-if="this.deployment['mode'] == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
 
                 <div class="subtitle-1 font-weight-regular">METHOD</div>
                 <v-radio-group :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" hide-details style="margin-top:10px;">
@@ -550,17 +550,21 @@
 
       url: window.location.host
     }),
-    props: ['executionID', 'deploymentMode'],
+    props: ['admin'],
     components: { 
       codemirror,
       results: Results
     },
     created() {
-      if (typeof this.executionID === "undefined") this.$router.go(-1)
+      const id = this.$route.params.id
+      if (id.length < 2) this.notification('Invalid Deployment Identifier', 'error')
       else {
         // Init parameters and get deployment
-        this.deployment['execution_id'] = this.executionID
-        this.deployment['mode'] = this.deploymentMode
+        this.deployment['execution_id'] = id.substring(1, id.length)
+        var code = id.substring(0, 1)
+        if (code == 'b' || code == 'B') this.deployment['mode'] = 'basic'
+        else if (code == 'p' || code == 'P') this.deployment['mode'] = 'pro'
+        else if (code == 'i' || code == 'I') this.deployment['mode'] = 'inbenta'
         this.getDeployment()
       }
     },
@@ -569,7 +573,8 @@
       // BASE METHODS
       // -------------
       goBack() {
-        this.$router.go(-1)
+        if (this.admin) this.$router.push('/admin/deployments')
+        else this.$router.push('/deployments')
       },
       getDeployment() {
         // Get Deployment Data
