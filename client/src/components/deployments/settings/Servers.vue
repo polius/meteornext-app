@@ -43,7 +43,7 @@
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="success" @click="submitServer()">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">CANCEL</v-btn>
-                  <v-btn :loading="loading" color="info" @click="testConnection()" style="float:right;">Test Connection</v-btn>
+                  <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()" style="float:right;">Test Connection</v-btn>
                 </div>
               </v-flex>
             </v-layout>

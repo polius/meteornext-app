@@ -100,6 +100,7 @@ class Meteor:
                             if server['environment_id'] == environment['id'] and server['region_id'] == region['id']:
                                 region_data['sql'].append({
                                     "name": server['name'],
+                                    "engine": server['engine'],
                                     "hostname": server['hostname'],
                                     "username": server['username'],
                                     "password": server['password'],
@@ -113,6 +114,7 @@ class Meteor:
         self._credentials['auxiliary_connections'] = {}
         for aux in auxiliary:
             self._credentials['auxiliary_connections'][aux['name']] = {
+                "engine": aux['engine'],
                 "hostname": aux['hostname'],
                 "username": aux['username'],
                 "password": aux['password'],

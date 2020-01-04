@@ -4,11 +4,13 @@ import json
 import uuid
 import bcrypt
 import requests
+import threading
 import models.admin.users
 import models.mysql
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity)
 
+import utils
 import routes.login
 import routes.profile
 import routes.admin.settings
@@ -26,6 +28,7 @@ import routes.deployments.views.pro
 import routes.deployments.views.inbenta
 import models.mysql
 import models.admin.settings
+import models.deployments.regions
 from cron import Cron
 
 class Setup:
@@ -104,10 +107,18 @@ class Setup:
             try:
                 sql = models.mysql.mysql()
                 sql.connect(setup_json['hostname'], setup_json['username'], setup_json['password'], setup_json['port'])
+            except Exception as e:
+                return jsonify({'message': "Can't connect to MySQL server"}), 400
+
+            # Check Database Access
+            try:
                 exists = sql.check_db_exists(setup_json['database'])
+                sql.connect(setup_json['hostname'], setup_json['username'], setup_json['password'], setup_json['port'], setup_json['database'])
                 return jsonify({'message': 'Connection Successful', 'exists': exists}), 200
             except Exception as e:
-                return jsonify({'message': str(e)}), 500
+                if "Unknown database " in str(e): 
+                    return jsonify({'message': 'Connection Successful', 'exists': exists}), 200
+                return jsonify({'message': "Access denied for user 'meteor' to database '{}'".format(setup_json['database'])}), 400 
 
         @setup_blueprint.route('/setup', methods=['POST'])
         def setup_account():
@@ -243,3 +254,7 @@ class Setup:
 
         # Start Cron
         cron.start()
+
+    def __searchInListDict(self, list_dicts, key_name, value_to_find):
+        # Search a key value in a list of dictionaries
+        return len(filter(lambda obj: obj[key_name] == value_to_find, list_dicts)) > 0

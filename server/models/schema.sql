@@ -86,6 +86,7 @@ CREATE TABLE `auxiliary` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `group_id` int(10) unsigned NOT NULL,
+  `engine` enum('MySQL','PostgreSQL') COLLATE utf8mb4_unicode_ci NOT NULL,
   `hostname` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `port` INT UNSIGNED NOT NULL,
   `username` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -198,10 +199,11 @@ CREATE TABLE `deployments_inbenta` (
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- CREATE TABLE `schedule` (
+-- CREATE TABLE `tasks` (
 --   `id` INT UNSIGNED AUTO_INCREMENT,
 --   `name` VARCHAR(191) NOT NULL,
 --   `executed_at` DATETIME NOT NULL,
+--   `data` LONGTEXT NOT NULL,
 --   PRIMARY KEY (`id`),
 --   UNIQUE `name` (`name`)
 -- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

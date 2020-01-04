@@ -20,7 +20,7 @@ class Regions:
                 JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
                 WHERE r.id = %s
             """
-            return self._sql.execute(query, (group_id, region_id))
+            return self._sql.execute(query, (group_id, region_id))            
 
     def post(self, group_id, region):
         query = """

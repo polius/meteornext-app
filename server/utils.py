@@ -12,48 +12,32 @@ class Utils:
     def __init__(self, app, connection=None):
         self._app = app
         self._conn = connection
+        # Init variables
+        self._is_binary = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+        self._script_path = "{}/apps".format(sys._MEIPASS) if self._is_binary else "{}/../meteor".format(self._app.root_path)
 
     def prepare(self, force=False):
-        if not self._conn['cross_region']:
-            return {'success': True}
+        # Check Deployment
+        deploy_status = self.check_ssh_deploy()
+        if 'error' in deploy_status:
+            return deploy_status
 
-        # Init variables
-        is_binary = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
-        script_path = "{}/apps/meteor".format(sys._MEIPASS) if is_binary else "{}/../meteor".format(self._app.root_path)
-
-        # Check SSH Connection
-        try:
-            self.check_ssh()
-        except Exception as e:
-            return {'success': False, 'error': "Can't connect to the SSH Region"}
-
-        # Check SSH Path
-        if not self.check_ssh_path():
-            return {'success': False, 'error': "The user '{}' does not have rwx privileges to the Deploy Path".format(self._conn['username'])}        
-
-        # Check if Meteor is already deployed
-        result = self.__ssh("test -d '{}' && printf '1' || printf '0'".format(self._conn['deploy_path']))
-
-        if result['stdout'][0] != '1' or force:
+        if not deploy_status['exists'] or force:
             # Deploy Meteor to the SSH Region
             self.__ssh("mkdir -p {0} && chmod 700 {0} && rm -rf {0}/*".format(self._conn['deploy_path']))
-            if not is_binary:
-                self.__local('cd {} && rm -rf meteor.tar.gz && tar -czvf meteor.tar.gz . --exclude "logs" --exclude "*.git*" --exclude "*.pyc" --exclude "web" --exclude "credentials.json" --exclude "query_execution.py"'.format(script_path))
+            if not self._is_binary:
+                self.__local('cd {} && rm -rf meteor.tar.gz && tar -czvf meteor.tar.gz . --exclude "logs" --exclude "*.git*" --exclude "*.pyc" --exclude "web" --exclude "credentials.json" --exclude "query_execution.py"'.format(self._script_path))
 
             try:
-                self.__put("{}/meteor.tar.gz".format(script_path), "{}/meteor.tar.gz".format(self._conn['deploy_path']))
+                self.__put("{}/meteor.tar.gz".format(self._script_path), "{}/meteor.tar.gz".format(self._conn['deploy_path']))
             except Exception as e:
                 return {'success': False, 'error': str(e)}
             self.__ssh("cd {} && tar -xvzf meteor.tar.gz -C . && rm -rf meteor.tar.gz".format(self._conn['deploy_path']))
-            self.__local('cd {} && rm -rf meteor.tar.gz'.format(script_path))
 
         # Return Success
         return {'success': True}
 
     def unprepare(self):
-        if not self._conn['cross_region']:
-            return {'success': True}
-
         # Check SSH Connection
         try:
             self.check_ssh()
@@ -66,6 +50,36 @@ class Utils:
         # Return Success
         return {'success': True}
 
+    def check_ssh_deploy(self):
+        # Check SSH Connection
+        try:
+            self.check_ssh()
+        except Exception as e:
+            return {'error': "Can't connect to the SSH Region"}
+
+        # Check SSH Path
+        if not self.check_ssh_path():
+            return {'error': "The user '{}' does not have rwx privileges to the Deploy Path".format(self._conn['username'])}        
+
+        # Check if Meteor is already deployed with the same version
+        result = self.__ssh("test -f '{}/version.txt' && printf '1' || printf '0'".format(self._conn['deploy_path']))['stdout'][0]
+        if result == '0':
+            return {'exists': False}
+
+        ssh_version = self.__ssh("cat {}/version.txt".format(self._conn['deploy_path']))['stdout']
+        if len(ssh_version) == 0:
+            return {'exists': False}
+        else:
+            ssh_version = ssh_version[0].replace('\n', '')
+
+        # Get Local Version
+        version_path = "{}/apps/meteor/version.txt".format(sys._MEIPASS) if self._is_binary else "{}/../meteor/version.txt".format(self._app.root_path)
+        with open(version_path) as file_content:
+            local_version = file_content.read().replace('\n', '')
+
+        # Compare Local & SSH Version
+        return {'exists': local_version == ssh_version}
+
     def check_ssh(self):
         pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']))
         client = paramiko.SSHClient()
@@ -74,24 +88,32 @@ class Utils:
         client.connect(hostname=self._conn['hostname'], port=int(self._conn['port']), username=self._conn['username'], password=self._conn['password'], pkey=pkey, timeout=10)
 
     def check_sql(self, server):
-        attempts = 5
+        f = open(os.devnull, 'w')
+        stdout = sys.stdout
+        stderr = sys.stderr
+        sys.stdout = f
+        sys.stderr = f
+
+        attempts = 3
         error = None
 
         for i in range(attempts):
             try:
                 if self._conn:
                     pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']))
-                    sshtunnel.SSH_TIMEOUT = 5.0
-                    sshtunnel.TUNNEL_TIMEOUT = 5.0
-                    with sshtunnel.SSHTunnelForwarder((self._conn['hostname'], int(self._conn['port'])), ssh_username=self._conn['username'], ssh_password=self._conn['password'], ssh_pkey=pkey, remote_bind_address=(server['hostname'], int(server['port']))) as tunnel:
+                    with sshtunnel.SSHTunnelForwarder((self._conn['hostname'], int(self._conn['port'])), ssh_username=self._conn['username'], ssh_password=self._conn['password'], ssh_pkey=pkey, remote_bind_address=(server['hostname'], int(server['port'])), threaded=False) as tunnel:
+                        sys.stdout = f
                         conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'])
                         conn.close()
                 else:
-                    conn = pymysql.connect(host=server['hostname'], port=server['port'], user=server['username'], passwd=server['password'])
+                    conn = pymysql.connect(host=server['hostname'], port=int(server['port']), user=server['username'], passwd=server['password'])
                 return {"success": True}
             except Exception as e:
                 error = e
                 time.sleep(1)
+            finally:
+                sys.stdout = stdout
+                sys.stderr = stderr
 
         raise Exception(error)
 

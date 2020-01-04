@@ -30,7 +30,8 @@
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <!-- SQL -->
                   <div class="title font-weight-regular">SQL</div>
-                  <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
+                  <v-select v-model="item.engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
+                  <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;" append-icon="cloud"></v-text-field>
                   <v-text-field v-model="item.port" :rules="[v => !!v || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                   <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
                   <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
@@ -40,6 +41,7 @@
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="success" @click="submitAuxiliary()">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">CANCEL</v-btn>
+                  <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()" style="float:right;">Test Connection</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -62,6 +64,7 @@ export default {
   data: () => ({
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
+      { text: 'Engine', align: 'left', value: 'engine'},
       { text: 'Hostname', align: 'left', value: 'hostname'},
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
@@ -73,6 +76,7 @@ export default {
     item: { name: '', hostname: '', port: '', username: '', password: '' },
     mode: '',
     loading: true,
+    engines_items: ['MySQL', 'PostgreSQL'],
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
@@ -96,6 +100,12 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
+    },
+    selectEngine(value) {
+      if (this.item['port'] == '') {
+        if (value == 'MySQL') this.item['port'] = '3306'
+        else if (value == 'PostgreSQL') this.item['port'] = '5432'
+      }
     },
     newAuxiliary() {
       this.mode = 'new'
@@ -218,6 +228,28 @@ export default {
         .finally(() => {
           this.loading = false
           this.dialog = false
+        })
+    },
+    testConnection() {
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
+        return
+      }
+      // Test Connection
+      this.loading = true
+      const payload = JSON.stringify(this.item)
+      axios.post('/deployments/auxiliary/test', payload)
+        .then((response) => {
+          this.notification(response.data.message, 'success')
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loading = false
         })
     },
     notification(message, color) {

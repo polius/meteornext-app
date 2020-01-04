@@ -113,29 +113,29 @@ class Regions:
     def __post(self, group_id, data):
         if self._regions.exist(group_id, data):
             return jsonify({'message': 'This region currently exists'}), 400
-        else:
+        elif data['cross_region']:
             # Deploy Meteor
             u = utils.Utils(self._app, data)
             status = u.prepare()
             if not status['success']:
                 return jsonify({'message': status['error']}), 400
-            
-            # Create new Region
-            self._regions.post(group_id, data)
-            return jsonify({'message': 'Region added successfully'}), 200
+
+        # Create new Region
+        self._regions.post(group_id, data)
+        return jsonify({'message': 'Region added successfully'}), 200
 
     def __put(self, group_id, data):
         if self._regions.exist(group_id, data):
             return jsonify({'message': 'This new region name currently exists'}), 400
-        else:
+        elif data['cross_region']:
             r = self._regions.get(group_id, data['id'])
-            if r[0]['hostname'] != data['hostname'] or r[0]['port'] != data['port'] or r[0]['deploy_path'] != data['deploy_path']:
-                # Redeploy Meteor
-                ## Check SSH Deploy Path
-                u = utils.Utils(self._app, data)
-                if not u.check_ssh_path():
-                    return jsonify({'message': "The user '{}' does not have rwx privileges to the Deploy Path".format(data['username'])}), 400
-                ## Clean Meteor
+            u = utils.Utils(self._app, data)
+            deploy_status = u.check_ssh_deploy()
+            if 'error' in deploy_status:
+                return jsonify({'message': deploy_status['error']}), 400
+
+            if (r[0]['hostname'] != data['hostname'] or r[0]['port'] != data['port'] or r[0]['deploy_path'] != data['deploy_path']) or not deploy_status['exists']:
+                # Clean Meteor
                 u = utils.Utils(self._app, r[0])
                 status =  u.unprepare()
                 if not status['success']:
@@ -146,9 +146,9 @@ class Regions:
                 if not status['success']:
                     return jsonify({'message': status['error']}), 400
 
-            # Edit Region
-            self._regions.put(group_id, data)
-            return jsonify({'message': 'Region edited successfully'}), 200
+        # Edit Region
+        self._regions.put(group_id, data)
+        return jsonify({'message': 'Region edited successfully'}), 200
 
     def __delete(self, group_id, data):
         # Check inconsistencies

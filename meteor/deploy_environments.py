@@ -339,8 +339,6 @@ class deploy_environments:
                 region = self._environment_data
                 if region['ssh']['enabled'] == "True":
                     ssh_pkey = paramiko.RSAKey.from_private_key_file(region['ssh']['key'])
-                    sshtunnel.SSH_TIMEOUT = 5.0
-                    sshtunnel.TUNNEL_TIMEOUT = 5.0
                     with sshtunnel.SSHTunnelForwarder((region['ssh']['hostname'], int(region['ssh']['port'])), ssh_username=region['ssh']['username'], ssh_password=region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=(server['hostname'], int(server['port']))) as tunnel:
                         conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'])
                         conn.close()

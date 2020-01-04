@@ -1,11 +1,13 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import utils
 import models.admin.users
 import models.deployments.auxiliary
 
 class Auxiliary:
     def __init__(self, app, sql):
+        self._app = app
         # Init models
         self._users = models.admin.users.Users(sql)
         self._auxiliary = models.deployments.auxiliary.Auxiliary(sql)
@@ -42,6 +44,34 @@ class Auxiliary:
                 return self.put(user['group_id'], auxiliary_json)
             elif request.method == 'DELETE':
                 return self.delete(user['group_id'], auxiliary_json)
+
+        @auxiliary_blueprint.route('/deployments/auxiliary/test', methods=['POST'])
+        @jwt_required
+        def auxiliary_test_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['deployments_edit']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            auxiliary_json = request.get_json()
+
+            # Init Utils Class
+            u = utils.Utils(self._app)
+
+            # Check SQL Connection
+            try:
+                u.check_sql(auxiliary_json)
+            except Exception as e:
+                return jsonify({'message': "Can't connect to the Auxiliary Server"}), 400
+
+            return jsonify({'message': 'Connection Successful'}), 200
 
         return auxiliary_blueprint
 

@@ -174,8 +174,8 @@
               if (response.data.exists) this.setupDialog = true
               else this.setupSQLDialog(true)
           })
-          .catch(() => {
-            this.notification("Can't connect to MySQL server", 'error')
+          .catch((error) => {
+            this.notification(error.response.data.message, 'error')
           })
           .finally(() => {
             this.loading = false
