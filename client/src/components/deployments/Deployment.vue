@@ -132,7 +132,7 @@
           <v-data-table :headers="execution_headers" :items="this.index(execution_overall)" hide-default-footer>
             <template v-slot:item="props">
               <tr>
-                <td v-for="item in Object.keys(execution_headers)" :key="item" :style="regionColor(props.item.i, execution_overall[props.item.i][item]) + `width:50%;`">
+                <td v-for="item in Object.keys(execution_headers)" :key="item" :style="regionColor(props.item.i, execution_overall[props.item.i][item])">
                   <span><v-icon small style="margin-right:10px;">{{ regionIcon(execution_overall[props.item.i][item]) }}</v-icon><b>{{ execution_overall[props.item.i][item] }}</b></span>
                 </td>
              </tr>
@@ -142,7 +142,7 @@
           <v-data-table :headers="execution_headers" :items="this.index(execution_progress)" hide-default-header :hide-default-footer="execution_progress.length < 11">
             <template v-slot:item="props">
               <tr>
-                <td v-for="item in Object.keys(execution_headers)" :key="item" style="width:50%;">
+                <td v-for="item in Object.keys(execution_headers)" :key="item" :style="`width: ${100/execution_headers.length}%`">
                   <span v-if="item in execution_progress[props.item.i]" :class="serverColor(execution_progress[props.item.i][item]['progress'])"><b>{{ execution_progress[props.item.i][item]['server'] }}</b> {{ execution_progress[props.item.i][item]['progress'] }}</span>
                 </td>
              </tr>
@@ -556,22 +556,25 @@
       results: Results
     },
     created() {
-      const id = this.$route.params.id
-      if (id === undefined || id.length < 2) this.notification('Invalid Deployment Identifier', 'error')
-      else {
-        // Init parameters and get deployment
-        this.deployment['execution_id'] = id.substring(1, id.length)
-        var code = id.substring(0, 1)
-        if (code == 'b' || code == 'B') this.deployment['mode'] = 'basic'
-        else if (code == 'p' || code == 'P') this.deployment['mode'] = 'pro'
-        else if (code == 'i' || code == 'I') this.deployment['mode'] = 'inbenta'
-        this.getDeployment()
-      }
+      this.init()
     },
     methods: {
       // -------------
       // BASE METHODS
       // -------------
+      init() {
+        const id = this.$route.params.id
+        if (id === undefined || id.length < 2) this.notification('Invalid Deployment Identifier', 'error')
+        else {
+          // Init parameters and get deployment
+          this.deployment['execution_id'] = id.substring(1, id.length)
+          var code = id.substring(0, 1)
+          if (code == 'b' || code == 'B') this.deployment['mode'] = 'basic'
+          else if (code == 'p' || code == 'P') this.deployment['mode'] = 'pro'
+          else if (code == 'i' || code == 'I') this.deployment['mode'] = 'inbenta'
+          this.getDeployment()
+        }
+      },
       goBack() {
         if (this.admin) this.$router.push('/admin/deployments')
         else this.$router.push('/deployments')
@@ -885,10 +888,11 @@
       // SELECT EXECUTION DIALOG
       // ------------------------
       selectExecution(execution_id) {
-        this.clear()
-        this.deployment['execution_id'] = execution_id
-        this.getDeployment()
         this.select_dialog = false
+        const id = this.deployment['mode'].substring(0, 1) + execution_id
+        this.$router.push({ name:'deployment', params: { id: id, admin: this.admin }})
+        this.clear()
+        this.init()
       },
       // -------------------------------------
       // EDIT

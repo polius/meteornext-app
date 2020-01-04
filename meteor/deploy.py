@@ -40,10 +40,6 @@ class deploy:
         if self._args.env_id is None:
             self._logs.generate()
 
-        # Import 'query_execution.py' file dynamically
-        query_execution_location = "{}/query_execution.py".format(self._args.logs_path)
-        self._query_execution = self.__load_query_execution(query_execution_location)
-
         # Import the 'credentials.json' file dynamically
         credentials_location = '{}/credentials.json'.format(self._args.logs_path)
         self._credentials = self.__load_credentials(credentials_location)
@@ -82,13 +78,21 @@ class deploy:
         os.system('cls' if os.name == 'nt' else 'clear')
 
     def __load_query_execution(self, file_path):
+        # Check if query_execution exists
         if not os.path.isfile(file_path):
             error_msg = "The 'query_execution.py' has not been found in '{}'".format(file_path)
             self._logger.critical(colored(error_msg, 'red', attrs=['reverse', 'bold']))
             self._progress.error(error_msg)
             sys.exit()
 
-        query_execution = imp.load_source('query_execution', file_path)
+        # Check if query_execution is correctly parsed
+        try:
+            query_execution = imp.load_source('query_execution', file_path)
+        except Exception:
+            error = "An error has been detected in Pro Code\n---------------------------------------------------------------\n\n{}".format(traceback.format_exc())
+            self._progress.error(error)
+            sys.exit()
+
         return query_execution.query_execution()
 
     def __load_credentials(self, json_path):
@@ -130,6 +134,13 @@ class deploy:
             self.__init_core()
 
     def check_remote_execution(self):
+        # Import 'query_execution.py' file dynamically
+        try:
+            query_execution_location = "{}/query_execution.py".format(self._args.logs_path)
+            self._query_execution = self.__load_query_execution(query_execution_location)
+        except Exception:
+            pass
+
         if self._args.env_id is not None:
             try:
                 # Get the Environment to perform the Execution
@@ -182,6 +193,10 @@ class deploy:
     def __init_core(self):
         # Register deployment start datetime
         self._progress.start(os.getpid())
+
+        # Import 'query_execution.py' file dynamically
+        query_execution_location = "{}/query_execution.py".format(self._args.logs_path)
+        self._query_execution = self.__load_query_execution(query_execution_location)
 
         # Perform the Validation
         self.__validate()
