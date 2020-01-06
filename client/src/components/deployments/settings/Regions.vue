@@ -58,7 +58,7 @@
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="success" @click="submitRegion()">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">CANCEL</v-btn>
-                  <v-btn v-if="item['cross_region']" :loading="loading" color="info" @click="testConnection()" style="float:right;">Test Connection</v-btn>
+                  <v-btn v-if="item['cross_region'] && mode != 'delete'" :loading="loading" color="info" @click="testConnection()" style="float:right;">Test Connection</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -165,6 +165,7 @@ export default {
         }
       }
       // Add item in the DB
+      this.notification('Adding new Region...', 'info')
       const payload = JSON.stringify(this.item);
       axios.post('/deployments/regions', payload)
         .then((response) => {
@@ -202,6 +203,7 @@ export default {
         }
       }
       // Edit item in the DB
+      this.notification('Modifying Region...', 'info')
       const payload = JSON.stringify(this.item)
       axios.put('/deployments/regions', payload)
         .then((response) => {
@@ -224,6 +226,7 @@ export default {
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
       // Delete items to the DB
+      this.notification('Removing Region...', 'info')
       axios.delete('/deployments/regions', { data: payload })
         .then((response) => {
           this.notification(response.data.message, 'success')
@@ -257,6 +260,7 @@ export default {
         return
       }
       // Test Connection
+      this.notification('Testing Region...', 'info')
       this.loading = true
       const payload = JSON.stringify(this.item)
       axios.post('/deployments/regions/test', payload)

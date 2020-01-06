@@ -15,58 +15,67 @@ class Utils:
         # Init variables
         self._is_binary = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
         self._script_path = "{}/apps".format(sys._MEIPASS) if self._is_binary else "{}/../meteor".format(self._app.root_path)
+        self._client = None
 
-    def prepare(self, force=False):
-        # Check Deployment
-        deploy_status = self.check_ssh_deploy()
-        if 'error' in deploy_status:
-            return deploy_status
+    def prepare(self, deploy=None):
+        try:
+            # Check Deployment
+            if deploy is None:
+                deploy_status = self.__check_ssh_deploy()
+                if 'error' in deploy_status:
+                    return deploy_status
+                deploy = not deploy_status['exists']
 
-        if not deploy_status['exists'] or force:
-            # Deploy Meteor to the SSH Region
-            self.__ssh("mkdir -p {0} && chmod 700 {0} && rm -rf {0}/*".format(self._conn['deploy_path']))
-            if not self._is_binary:
-                self.__local('cd {} && rm -rf meteor.tar.gz && tar -czvf meteor.tar.gz . --exclude "logs" --exclude "*.git*" --exclude "*.pyc" --exclude "web" --exclude "credentials.json" --exclude "query_execution.py"'.format(self._script_path))
+            if deploy:
+                # Deploy Meteor to the SSH Region
+                self.__ssh("mkdir -p {0} && chmod 700 {0} && rm -rf {0}/*".format(self._conn['deploy_path']))
+                if not self._is_binary:
+                    self.__local('cd {} && rm -rf meteor.tar.gz && tar -czvf meteor.tar.gz . --exclude "logs" --exclude "*.git*" --exclude "*.pyc" --exclude "web" --exclude "credentials.json" --exclude "query_execution.py"'.format(self._script_path))
+                try:
+                    self.__put("{}/meteor.tar.gz".format(self._script_path), "{}/meteor.tar.gz".format(self._conn['deploy_path']))
+                except Exception as e:
+                    return {'success': False, 'error': str(e)}
+                self.__ssh("cd {} && tar -xvzf meteor.tar.gz -C . && rm -rf meteor.tar.gz".format(self._conn['deploy_path']))
+            # Return Success
+            return {'success': True}
 
-            try:
-                self.__put("{}/meteor.tar.gz".format(self._script_path), "{}/meteor.tar.gz".format(self._conn['deploy_path']))
-            except Exception as e:
-                return {'success': False, 'error': str(e)}
-            self.__ssh("cd {} && tar -xvzf meteor.tar.gz -C . && rm -rf meteor.tar.gz".format(self._conn['deploy_path']))
-
-        # Return Success
-        return {'success': True}
+        finally:
+            # Close SSH Connection
+            if self._client.get_transport() is not None and self._client.get_transport().is_active():
+                self._client.close()
 
     def unprepare(self):
-        # Check SSH Connection
         try:
-            self.check_ssh()
-        except Exception as e:
-            return {'success': False, 'error': "Can't connect to the SSH Region"}
+            # Remove deployed Meteor
+            try:
+                self.__ssh("rm -rf {}".format(self._conn['deploy_path']))
+            except Exception as e:
+                return {'success': False, 'error': "Can't connect to the SSH Region"}
 
-        # Remove deployed Meteor
-        self.__ssh("rm -rf {}".format(self._conn['deploy_path']))
+            # Return Success
+            return {'success': True}
 
-        # Return Success
-        return {'success': True}
+        finally:
+            # Close SSH Connection
+            if self._client.get_transport() is not None and self._client.get_transport().is_active():
+                self._client.close()
 
     def check_ssh_deploy(self):
-        # Check SSH Connection
+        check = self.__check_ssh_deploy()
+        self._client.close()
+        return check
+
+    def __check_ssh_deploy(self):
+        # Check SSH Path
         try:
-            self.check_ssh()
-        except Exception as e:
+            check = self.__check_ssh_path()
+            if not check:
+                return {'error': "The user '{}' does not have rwx privileges to the Deploy Path".format(self._conn['username'])}     
+        except Exception:
             return {'error': "Can't connect to the SSH Region"}
 
-        # Check SSH Path
-        if not self.check_ssh_path():
-            return {'error': "The user '{}' does not have rwx privileges to the Deploy Path".format(self._conn['username'])}        
-
         # Check if Meteor is already deployed with the same version
-        result = self.__ssh("test -f '{}/version.txt' && printf '1' || printf '0'".format(self._conn['deploy_path']))['stdout'][0]
-        if result == '0':
-            return {'exists': False}
-
-        ssh_version = self.__ssh("cat {}/version.txt".format(self._conn['deploy_path']))['stdout']
+        ssh_version = self.__ssh("cat {}/version.txt 2>/dev/null".format(self._conn['deploy_path']))['stdout']
         if len(ssh_version) == 0:
             return {'exists': False}
         else:
@@ -86,6 +95,7 @@ class Utils:
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.WarningPolicy())
         client.connect(hostname=self._conn['hostname'], port=int(self._conn['port']), username=self._conn['username'], password=self._conn['password'], pkey=pkey, timeout=10)
+        client.close()
 
     def check_sql(self, server):
         f = open(os.devnull, 'w')
@@ -125,14 +135,20 @@ class Utils:
         return False
 
     def check_ssh_path(self):
-        pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']))
-        client = paramiko.SSHClient()
-        client.load_system_host_keys()
-        client.set_missing_host_key_policy(paramiko.WarningPolicy())
-        client.connect(hostname=self._conn['hostname'], port=int(self._conn['port']), username=self._conn['username'], password=self._conn['password'], pkey=pkey, timeout=10)
+        check = self.__check_ssh_path()
+        self._client.close()
+        return check
+
+    def __check_ssh_path(self):
+        if self._client is None:
+            pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']))
+            self._client = paramiko.SSHClient()
+            self._client.load_system_host_keys()
+            self._client.set_missing_host_key_policy(paramiko.WarningPolicy())
+            self._client.connect(hostname=self._conn['hostname'], port=int(self._conn['port']), username=self._conn['username'], password=self._conn['password'], pkey=pkey, timeout=10)
 
         # Open sftp connection
-        sftp = client.open_sftp()
+        sftp = self._client.open_sftp()
 
         path = self._conn['deploy_path']
         while True:
@@ -164,17 +180,18 @@ class Utils:
             sys.stderr = open('/dev/null', 'w')
 
             # Init Paramiko SSH Connection
-            pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']))
-            client = paramiko.SSHClient()
-            client.load_system_host_keys()
-            client.set_missing_host_key_policy(paramiko.WarningPolicy())
-            client.connect(hostname=self._conn['hostname'], port=int(self._conn['port']), username=self._conn['username'], password=self._conn['password'], pkey=pkey, timeout=10)
+            if self._client is None:
+                pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']))
+                self._client = paramiko.SSHClient()
+                self._client.load_system_host_keys()
+                self._client.set_missing_host_key_policy(paramiko.WarningPolicy())
+                self._client.connect(hostname=self._conn['hostname'], port=int(self._conn['port']), username=self._conn['username'], password=self._conn['password'], pkey=pkey, timeout=10)
 
             # Show Errors Output Again
             sys.stderr = sys_stderr
 
             # Paramiko Execute Command
-            stdin, stdout, stderr = client.exec_command(command, get_pty=False)
+            stdin, stdout, stderr = self._client.exec_command(command, get_pty=False)
             stdin.close()
 
             # Return Execution Output
@@ -183,22 +200,18 @@ class Utils:
         except socket.error as e:
             raise Exception("Connection Timeout. Can't establish a SSH connection.")
 
-        finally:
-            # Paramiko Close Connection
-            if client.get_transport() is not None and client.get_transport().is_active():
-                client.close()
-
     def __put(self, local_path, remote_path):
         try:
-            # Init Paramiko Connection
-            pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']))
-            client = paramiko.SSHClient()
-            client.load_system_host_keys()
-            client.set_missing_host_key_policy(paramiko.WarningPolicy())
-            client.connect(hostname=self._conn['hostname'], port=int(self._conn['port']), username=self._conn['username'], password=self._conn['password'], pkey=pkey, timeout=10)
+            if self._client is None:
+                # Init Paramiko Connection
+                pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']))
+                self._client = paramiko.SSHClient()
+                self._client.load_system_host_keys()
+                self._client.set_missing_host_key_policy(paramiko.WarningPolicy())
+                self._client.connect(hostname=self._conn['hostname'], port=int(self._conn['port']), username=self._conn['username'], password=self._conn['password'], pkey=pkey, timeout=10)
 
             # Open sftp connection
-            sftp = client.open_sftp()
+            sftp = self._client.open_sftp()
 
             # Upload File
             sftp.put(local_path, remote_path)
