@@ -132,7 +132,7 @@
           <v-data-table :headers="execution_headers" :items="this.index(execution_overall)" hide-default-footer>
             <template v-slot:item="props">
               <tr>
-                <td v-for="item in Object.keys(execution_headers)" :key="item" :style="regionColor(props.item.i, execution_overall[props.item.i][item])">
+                <td v-for="item in Object.keys(execution_headers)" :key="item" :style="regionColor(props.item.i, execution_overall[props.item.i][item]) + `width: ${100/execution_headers.length}%`">
                   <span><v-icon small style="margin-right:10px;">{{ regionIcon(execution_overall[props.item.i][item]) }}</v-icon><b>{{ execution_overall[props.item.i][item] }}</b></span>
                 </td>
              </tr>

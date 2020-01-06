@@ -215,7 +215,7 @@ class query_execution:
         queries = {}
         for i, q in enumerate(json.loads(deployment['queries'])):
             queries[str(i+1)] = q['query']
-        databases = [i.strip().replace('%','*').replace('_','?').replace('\\?','_') for i in  deployment['databases'].split(',')]
+        databases = [i.strip().replace('%','*').replace('_','?').replace('\\?','_') for i in deployment['databases'].split(',')]
 
         self._query_execution = """import fnmatch
 class query_execution:

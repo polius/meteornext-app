@@ -258,6 +258,7 @@ export default {
         return
       }
       // Test Connection
+      this.notification('Testing Server...', 'info', true)
       this.loading = true
       const payload = JSON.stringify(this.item)
       axios.post('/deployments/servers/test', payload)
@@ -272,10 +273,14 @@ export default {
           this.loading = false
         })
     },
-    notification(message, color) {
-      this.snackbarText = message
-      this.snackbarColor = color 
-      this.snackbar = true
+    notification(message, color, persistent=false) {
+      this.snackbar = false
+      setTimeout(() => {
+        this.snackbarText = message
+        this.snackbarColor = color
+        this.snackbarTimeout = persistent ? Number(0) : Number(5000)
+        this.snackbar = true
+      }, 10)
     }
   },
   watch: {

@@ -165,7 +165,7 @@ export default {
         }
       }
       // Add item in the DB
-      this.notification('Adding new Region...', 'info')
+      this.notification('Adding Region...', 'info', true)
       const payload = JSON.stringify(this.item);
       axios.post('/deployments/regions', payload)
         .then((response) => {
@@ -203,7 +203,7 @@ export default {
         }
       }
       // Edit item in the DB
-      this.notification('Modifying Region...', 'info')
+      this.notification('Editing Region...', 'info', true)
       const payload = JSON.stringify(this.item)
       axios.put('/deployments/regions', payload)
         .then((response) => {
@@ -226,7 +226,7 @@ export default {
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
       // Delete items to the DB
-      this.notification('Removing Region...', 'info')
+      this.notification('Deleting Region...', 'info', true)
       axios.delete('/deployments/regions', { data: payload })
         .then((response) => {
           this.notification(response.data.message, 'success')
@@ -260,7 +260,7 @@ export default {
         return
       }
       // Test Connection
-      this.notification('Testing Region...', 'info')
+      this.notification('Testing Region...', 'info', true)
       this.loading = true
       const payload = JSON.stringify(this.item)
       axios.post('/deployments/regions/test', payload)
@@ -275,10 +275,14 @@ export default {
           this.loading = false
         })
     },
-    notification(message, color) {
-      this.snackbarText = message
-      this.snackbarColor = color 
-      this.snackbar = true
+    notification(message, color, persistent=false) {
+      this.snackbar = false
+      setTimeout(() => {
+        this.snackbarText = message
+        this.snackbarColor = color
+        this.snackbarTimeout = persistent ? Number(0) : Number(5000)
+        this.snackbar = true
+      }, 10)
     }
   },
   watch: {

@@ -238,6 +238,7 @@ export default {
         return
       }
       // Test Connection
+      this.notification('Testing Auxiliary Connection...', 'info', true)
       this.loading = true
       const payload = JSON.stringify(this.item)
       axios.post('/deployments/auxiliary/test', payload)
@@ -252,10 +253,14 @@ export default {
           this.loading = false
         })
     },
-    notification(message, color) {
-      this.snackbarText = message
-      this.snackbarColor = color 
-      this.snackbar = true
+    notification(message, color, persistent=false) {
+      this.snackbar = false
+      setTimeout(() => {
+        this.snackbarText = message
+        this.snackbarColor = color
+        this.snackbarTimeout = persistent ? Number(0) : Number(5000)
+        this.snackbar = true
+      }, 10)
     }
   },
   watch: {
