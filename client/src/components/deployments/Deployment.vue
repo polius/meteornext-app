@@ -603,12 +603,11 @@
         this.logs_data = []
         this.tasks_data = []
         this.queries_data = []
-        delete this.deployment.progress.syntax
-        delete this.deployment.progress.error
-        
         this.validation_error = false
         this.start_execution = false
         this.stop_execution = false
+        if ('progress' in this.deployment && 'syntax' in this.deployment.progress) delete this.deployment.progress.syntax
+        if ('progress' in this.deployment && 'error' in this.deployment.progress) delete this.deployment.progress.error
       },
       parseRequest(data) {
         // Parse Deployment Data
@@ -889,10 +888,12 @@
       // ------------------------
       selectExecution(execution_id) {
         this.select_dialog = false
-        const id = this.deployment['mode'].substring(0, 1) + execution_id
-        this.$router.push({ name:'deployment', params: { id: id, admin: this.admin }})
-        this.clear()
-        this.init()
+        if (this.deployment['execution_id'] != execution_id) {
+          const id = this.deployment['mode'].substring(0, 1) + execution_id
+          this.$router.push({ name:'deployment', params: { id: id, admin: this.admin }})
+          this.clear()
+          this.init()
+        }
       },
       // -------------------------------------
       // EDIT
