@@ -16,7 +16,7 @@ from colors import colored
 
 
 class deploy_queries:
-    def __init__(self, logger, args, credentials, query_template, environment_name=None, environment_data=None):
+    def __init__(self, logger, args, credentials, query_template, environment_name, environment_data, query_execution=None):
         self._logger = logger
         self._args = args
         self._credentials = credentials
@@ -25,11 +25,15 @@ class deploy_queries:
         self._environment_data = environment_data
 
         # Init Query Execution Class
-        self._query_execution = imp.load_source('query_execution', "{}/query_execution.py".format(self._args.logs_path)).query_execution()
+        self._query_execution = imp.load_source('query_execution', "{}/query_execution.py".format(self._args.logs_path)).query_execution() if query_execution is None else query_execution
 
         # Store Threading Shared Vars 
         self._databases = []
         self._progress = []
+
+    @property
+    def query_execution(self):
+        return self._query_execution
 
     def execute_before(self, region):
         try:

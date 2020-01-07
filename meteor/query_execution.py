@@ -42,7 +42,7 @@ class query_execution:
     ########################
     def __searchInListDict(self, list_dicts, key_name, value_to_find):
         # Search a key value in a list of dictionaries
-        return len(filter(lambda obj: obj[key_name] == value_to_find, list_dicts)) > 0
+        return [i for i in list_dicts if i[key_name] == value_to_find]
 
     def __str2dict(self, data):
         # Convert a string representation of a dictionary to a dictionary

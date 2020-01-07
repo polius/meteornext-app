@@ -12,7 +12,6 @@ import multiprocessing
 import threading
 import json
 import imp
-from copy import deepcopy
 from multiprocessing.managers import SyncManager
 from collections import OrderedDict
 from datetime import timedelta
@@ -783,8 +782,8 @@ class deploy:
             try:
                 for server in env['sql']:
                     if self._args.servers is None or (self._args.servers is not None and server['name'] in servers):
-                        deploy2 = deepcopy(deploy)
-                        t = threading.Thread(target=deploy2.execute_main, args=(env['region'], server,))
+                        deploy_parallel = deploy_queries(self._logger, self._args, self._credentials, self._query_template, self._ENV_NAME, env, deploy.query_execution)
+                        t = threading.Thread(target=deploy_parallel.execute_main, args=(env['region'], server,))
                         threads.append(t)
                         t.progress = []
                         t.start()

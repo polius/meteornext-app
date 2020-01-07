@@ -233,7 +233,7 @@ class query_execution:
     def after(self, meteor, environment, region):
         pass
     def __searchInListDict(self, list_dicts, key_name, value_to_find):
-        return filter(lambda obj: obj[key_name] == value_to_find, list_dicts)""".format(json.dumps(queries), deployment['schema'], str(deployment['products'])[1:-1], databases)
+        return [i for i in list_dicts if i[key_name] == value_to_find]""".format(json.dumps(queries), deployment['schema'], str(deployment['products'])[1:-1], databases)
 
     def __execute(self, deployment):
         # Build Meteor Parameters
@@ -247,7 +247,7 @@ class query_execution:
 
         # Build Meteor Command
         command = '{} --environment "{}" --{} --logs_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}"{} --user "{}"'.format(meteor_path, environment, execution_method, logs_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor, user)
-        print(command)
+        # print(command)
 
         # Execute Meteor
         p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)
