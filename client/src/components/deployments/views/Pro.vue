@@ -148,7 +148,7 @@ export default {
 
       // Snackbar
       snackbar: false,
-      snackbarTimeout: Number(3000),
+      snackbarTimeout: Number(5000),
       snackbarColor: '',
       snackbarText: ''
     }

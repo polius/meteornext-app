@@ -211,6 +211,12 @@ class Pro:
         if not self.__check_logs_path():
             return jsonify({'message': 'The local logs path has no write permissions'}), 400
 
+        # Check Code Syntax Errors
+        try:
+            exec(data['code'])
+        except Exception as e:
+            return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400            
+
         # Create deployment to the DB
         data['id'] = self._deployments.post(user['id'], data)
         data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
