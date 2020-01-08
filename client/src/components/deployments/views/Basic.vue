@@ -165,6 +165,8 @@ export default {
     },
     schedule_close() {
       this.scheduleDialog = false
+      if (this.schedule_mode == 'date') this.schedule_datetime.substring(0,10)
+      else if (this.schedule_mode == 'time') this.scheduled_time = this.schedule_datetime.substring(11,16)
       this.schedule_mode = 'date'
     },
     schedule_change() {
@@ -174,10 +176,6 @@ export default {
           this.schedule_date = date.getUTCFullYear() + '-' + ('0' + date.getUTCMonth()+1).slice(-2) + '-' + ('0' + date.getUTCDate()).slice(-2)
           this.schedule_time = ('0' + (date.getUTCHours())).slice(-2) + ':' + ('0' + date.getUTCMinutes()).slice(-2)
           this.schedule_datetime = this.schedule_date + ' ' + this.schedule_time + ' UTC'
-        }
-        else {
-          this.schedule_date = this.schedule_datetime.substring(0,10)
-          this.scheduled_time = this.schedule_datetime.substring(11, 16)
         }
         this.scheduleDialog = true
       }
