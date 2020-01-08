@@ -9,7 +9,15 @@
             <v-select :loading="loading_env" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;" hide-details></v-select>
 
             <!-- CODE -->
-            <div class="subtitle-1 font-weight-regular" style="margin-top:20px; margin-bottom:10px;" title="Press ESC when cursor is in the editor to toggle full screen editing">CODE</div>
+            <div class="subtitle-1 font-weight-regular" style="margin-top:20px; margin-bottom:10px;">
+              CODE
+              <v-tooltip right>
+                <template v-slot:activator="{ on }">
+                  <v-icon small style="margin-left:5px;" v-on="on">fas fa-question-circle</v-icon>
+                </template>
+                <span>Press ESC when cursor is in the editor to toggle full screen editing</span>
+              </v-tooltip>
+            </div>
             <codemirror v-model="code" :options="cmOptions"></codemirror>
 
             <!-- PARAMETERS -->

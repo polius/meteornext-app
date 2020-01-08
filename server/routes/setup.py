@@ -47,9 +47,9 @@ class Setup:
                 self._conf = json.load(file_open)
             # Set unique hardware id
             self._conf['license']['uuid'] = str(uuid.getnode())
-            # Init sql connection
-            sql = models.mysql.mysql()
-            sql.connect(self._conf['sql']['hostname'], self._conf['sql']['username'], self._conf['sql']['password'], self._conf['sql']['port'], self._conf['sql']['database'])
+            # Test sql connection
+            sql = models.mysql.mysql(self._conf['sql']['hostname'], self._conf['sql']['username'], self._conf['sql']['password'], self._conf['sql']['port'], self._conf['sql']['database'])
+            sql.test()
             # Check license
             self._license = self.__check_license(self._conf['license'])
             # Register blueprints
@@ -58,7 +58,7 @@ class Setup:
             cron = Cron(self._license, self._conf['license'], self._blueprints, sql)
             self.__cron_start(cron)
 
-        except Exception:
+        except Exception as e:
             self._conf = {}
 
     def blueprint(self):
@@ -105,15 +105,16 @@ class Setup:
 
             # Part 2: Check SQL Credentials
             try:
-                sql = models.mysql.mysql()
-                sql.connect(setup_json['hostname'], setup_json['username'], setup_json['password'], setup_json['port'])
+                sql = models.mysql.mysql(setup_json['hostname'], setup_json['username'], setup_json['password'], setup_json['port'])
+                sql.test()
             except Exception as e:
                 return jsonify({'message': "Can't connect to MySQL server"}), 400
 
             # Check Database Access
             try:
                 exists = sql.check_db_exists(setup_json['database'])
-                sql.connect(setup_json['hostname'], setup_json['username'], setup_json['password'], setup_json['port'], setup_json['database'])
+                sql = models.mysql.mysql(setup_json['hostname'], setup_json['username'], setup_json['password'], setup_json['port'], setup_json['database'])
+                sql.test()
                 return jsonify({'message': 'Connection Successful', 'exists': exists}), 200
             except Exception as e:
                 if "Unknown database " in str(e): 
@@ -132,16 +133,15 @@ class Setup:
             # Get Params
             setup_json = request.get_json()
 
-            # Part 3: Build Meteor & Create User Admin Account
-            sql = models.mysql.mysql()
-            sql.connect(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'])
-
             try:
+                # Part 3: Build Meteor & Create User Admin Account
                 if setup_json['sql']['recreate']:
+                    sql = models.mysql.mysql(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'])
                     # Import SQL Schema
                     sql.execute('DROP DATABASE IF EXISTS {}'.format(setup_json['sql']['database']))
                     sql.execute('CREATE DATABASE {}'.format(setup_json['sql']['database']))
-                    sql.select_database(setup_json['sql']['database'])
+                    sql = models.mysql.mysql(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'], setup_json['sql']['database'])
+
                     with open(self._schema_file) as file_open:
                         queries = file_open.read().split(';')
                         for q in queries:
@@ -153,9 +153,8 @@ class Setup:
                     user = {"username": setup_json['account']['username'], "password": setup_json['account']['password'], "email": "admin@admin.com", "coins": 100, "group": 'Administrator', "admin": 1}
                     user['password'] = bcrypt.hashpw(user['password'].encode('utf8'), bcrypt.gensalt())
                     users.post(user)
-                
-                # Establish a connection with the selected DB
-                sql.connect(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'], setup_json['sql']['database'])
+                else:
+                    sql = models.mysql.mysql(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'], setup_json['sql']['database'])
 
                 # Init Logs Local Path
                 settings = models.admin.settings.Settings(sql)

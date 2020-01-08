@@ -9,39 +9,29 @@ class OrderedDictCursor(DictCursorMixin, Cursor):
     dict_type = OrderedDict
 
 class mysql:
-    def __init__(self, credentials=None):
-        self._connection = None
-        self._mysql = {"hostname": credentials['hostname'], "username": credentials['username'], "password": credentials['password'], "port": int(credentials['port']), "database": credentials['database']} if credentials else {}
-
-    def connect(self, hostname, username, password, port, database=None):
-        # Store the Credentials
+    def __init__(self, hostname, username, password, port, database=None):
         self._mysql = {"hostname": hostname, "username": username, "password": password, "port": int(port), "database": database}
 
-        # Init Connection
-        self.__connect(database)
+    def test(self):
+        # Init a connection
+        self.__connect()
 
-    def __connect(self, database=None):
-        # Close previous connection
-        if self._connection and self._connection.open:
-            self._connection.close()
-
+    def __connect(self):
         # Establish new connection
-        if database is not None:
-            self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], port=self._mysql['port'], db=database, charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
+        if self._mysql['database'] is not None:
+            connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], port=self._mysql['port'], db=self._mysql['database'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
         else:
-            self._connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], port=self._mysql['port'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
-
-    def select_database(self, database):
-        self._connection.select_db(database)
+            connection = pymysql.connect(host=self._mysql['hostname'], user=self._mysql['username'], password=self._mysql['password'], port=self._mysql['port'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
+        return connection
 
     def execute(self, query, args=None):
         try:
             try:
-                # Check the connection
-                self._connection.ping(reconnect=True)
+                # Open a connection
+                connection = self.__connect()
 
                 # Prepare the cursor
-                with self._connection.cursor(OrderedDictCursor) as cursor:            
+                with connection.cursor(OrderedDictCursor) as cursor:            
                     # Execute the SQL query ignoring warnings
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore")
@@ -51,7 +41,7 @@ class mysql:
                     query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
 
                 # Commit the changes in the database
-                self._connection.commit()
+                connection.commit()
 
                 # Return query results
                 return query_result
@@ -63,26 +53,26 @@ class mysql:
             try:
                 print("Error: {}".format(e))
                 print("--> Rollback Initiated...")
-                self._connection.rollback()
+                connection.rollback()
                 print("--> Rollback successfully performed.")
             except Exception as e2:
                 print("--> Rollback not performed. Error: {}".format(e2))
             finally:
-                if self._connection.open:
-                    self._connection.close()
+                connection.close()
             raise e
 
         except KeyboardInterrupt:
             try:
                 print("\n--> Rollback Initiated...")
-                self._connection.rollback()
+                connection.rollback()
                 print("--> Rollback successfully performed.")
             except Exception as e:
                 print("--> Rollback not performed. Error: {}".format(e))
             finally:
-                if self._connection.open:
-                    self._connection.close()
+                connection.close()
             raise KeyboardInterrupt("Program Interrupted by User. Rollback successfully performed.")
+        finally:
+            connection.close()
 
     def get_all_databases(self):
         query = "SHOW DATABASES"

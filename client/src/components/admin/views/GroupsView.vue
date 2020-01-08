@@ -46,7 +46,15 @@
                 <v-switch v-if="group.deployments_enable" v-model="group.deployments_inbenta" label="INBENTA" color="primary" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
 
                 <v-switch v-model="group.deployments_edit" label="Change Deployment Settings" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
-                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">LIMITS</div>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
+                  LIMITS
+                <v-tooltip right>
+                  <template v-slot:activator="{ on }">
+                    <v-icon small style="margin-left:5px;" v-on="on">fas fa-question-circle</v-icon>
+                  </template>
+                  <span>Execution Plan Factor: Sets the maximum scanned rows allowed</span>
+                </v-tooltip>
+                </div>
                 <v-switch v-model="group_epf_switch" label="Limit Queries Execution" style="margin-top:0px; margin-bottom:25px;" hide-details></v-switch>
                 <v-text-field v-if="group_epf_switch" v-model="group.deployments_execution_plan_factor" label="Execution Plan Factor" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 && v < 100 || 'A number between: 1 - 99']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
@@ -145,7 +153,8 @@
               </v-toolbar>
               <v-divider></v-divider>
               <v-card-text style="padding-bottom:0px;">
-                <v-text-field :loading="loading" :disabled="loading" v-model="slack.webhook" label="Webhook URL" required style="padding-top:0px;"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="slack.channel_name" label="Channel Name"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="slack.webhook_url" label="Webhook URL" style="padding-top:0px;"></v-text-field>
                 <v-switch :disabled="loading" v-model="slack.enabled" label="Enable Notifications" style="margin-top:0px;"></v-switch>
               </v-card-text>
             </v-card>
@@ -410,7 +419,8 @@ export default {
     // | SLACK |
     // +-------+
     slack: {
-      webhook: '',
+      channel_name: '',
+      webhook_url: '',
       enabled: false
     },
 
