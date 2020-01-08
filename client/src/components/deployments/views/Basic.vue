@@ -165,7 +165,7 @@ export default {
     },
     schedule_close() {
       this.scheduleDialog = false
-      if (this.schedule_mode == 'date') this.schedule_datetime.substring(0,10)
+      if (this.schedule_mode == 'date') this.schedule_date = this.schedule_datetime.substring(0,10)
       else if (this.schedule_mode == 'time') this.scheduled_time = this.schedule_datetime.substring(11,16)
       this.schedule_mode = 'date'
     },
