@@ -216,6 +216,7 @@ class query_execution:
         for i, q in enumerate(json.loads(deployment['queries'])):
             queries[str(i+1)] = q['query']
         databases = [i.strip().replace('%','*').replace('_','?').replace('\\?','_') for i in deployment['databases'].split(',')]
+        products = ','.join("'{}'".format(p) for p in deployment['products'])
 
         self._query_execution = """import fnmatch
 class query_execution:
@@ -233,7 +234,7 @@ class query_execution:
     def after(self, meteor, environment, region):
         pass
     def __searchInListDict(self, list_dicts, key_name, value_to_find):
-        return [i for i in list_dicts if i[key_name] == value_to_find]""".format(json.dumps(queries), deployment['schema'], str(deployment['products'])[1:-1], databases)
+        return [i for i in list_dicts if i[key_name] == value_to_find]""".format(json.dumps(queries), deployment['schema'], products, databases)
 
     def __execute(self, deployment):
         # Build Meteor Parameters

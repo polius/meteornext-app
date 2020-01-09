@@ -153,13 +153,13 @@ class Setup:
                     user = {"username": setup_json['account']['username'], "password": setup_json['account']['password'], "email": "admin@admin.com", "coins": 100, "group": 'Administrator', "admin": 1}
                     user['password'] = bcrypt.hashpw(user['password'].encode('utf8'), bcrypt.gensalt())
                     users.post(user)
+
+                    # Init Logs Local Path
+                    settings = models.admin.settings.Settings(sql)
+                    setting = {"name": "LOGS", "value": '{{"amazon_s3":{{"enabled":false}},"local":{{"path":"{}"}}}}'.format(self._logs_folder)}
+                    settings.post(setting)
                 else:
                     sql = models.mysql.mysql(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'], setup_json['sql']['database'])
-
-                # Init Logs Local Path
-                settings = models.admin.settings.Settings(sql)
-                setting = {"name": "LOGS", "value": '{{"amazon_s3":{{"enabled":false}},"local":{{"path":"{}"}}}}'.format(self._logs_folder)}
-                settings.post(setting)
 
             except Exception as e:
                 return jsonify({'message': str(e)}), 500

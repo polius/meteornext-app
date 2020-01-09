@@ -212,6 +212,7 @@ CREATE TABLE `notifications` (
   `type` VARCHAR(191) NOT NULL,
   `data` TEXT NOT NULL,
   `user_id` INT UNSIGNED NOT NULL,
+  `seen` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `type` (`type`),
   KEY `user_id` (`user_id`)
