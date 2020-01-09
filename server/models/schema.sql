@@ -126,6 +126,7 @@ CREATE TABLE `deployments_basic` (
  `method` ENUM('VALIDATE','TEST','DEPLOY') NOT NULL,
  `status` ENUM('CREATED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED') NOT NULL DEFAULT 'CREATED',
  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ `scheduled` DATETIME NULL,
  `started` DATETIME NULL,
  `ended` DATETIME NULL,
  `pid` INT UNSIGNED NULL,
@@ -137,6 +138,7 @@ CREATE TABLE `deployments_basic` (
  `expired` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `deployment_id` (`deployment_id`),
+  KEY `scheduled` (`scheduled`),
   KEY `uri` (`uri`),
   KEY `created` (`created`),
   KEY `expired` (`expired`),
@@ -152,6 +154,7 @@ CREATE TABLE `deployments_pro` (
  `method` ENUM('VALIDATE','TEST','DEPLOY') NOT NULL,
  `status` ENUM('CREATED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED') NOT NULL DEFAULT 'CREATED',
  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ `scheduled` DATETIME NULL,
  `started` DATETIME NULL,
  `ended` DATETIME NULL,
  `pid` INT UNSIGNED NULL,
@@ -163,6 +166,7 @@ CREATE TABLE `deployments_pro` (
  `expired` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY(id),
   KEY `deployment_id` (`deployment_id`),
+  KEY `scheduled` (`scheduled`),
   KEY `uri` (`uri`),
   KEY `created` (`created`),
   KEY `expired` (`expired`),
@@ -181,6 +185,7 @@ CREATE TABLE `deployments_inbenta` (
  `method` ENUM('VALIDATE','TEST','DEPLOY') NOT NULL,
  `status` ENUM('CREATED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED') NOT NULL DEFAULT 'CREATED',
  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ `scheduled` DATETIME NULL,
  `started` DATETIME NULL,
  `ended` DATETIME NULL,
  `pid` INT UNSIGNED NULL,
@@ -192,6 +197,7 @@ CREATE TABLE `deployments_inbenta` (
  `expired` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `deployment_id` (`deployment_id`),
+  KEY `scheduled` (`scheduled`),
   KEY `uri` (`uri`),
   KEY `created` (`created`),
   KEY `expired` (`expired`),
@@ -199,11 +205,14 @@ CREATE TABLE `deployments_inbenta` (
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
--- CREATE TABLE `tasks` (
---   `id` INT UNSIGNED AUTO_INCREMENT,
---   `name` VARCHAR(191) NOT NULL,
---   `executed_at` DATETIME NOT NULL,
---   `data` LONGTEXT NOT NULL,
---   PRIMARY KEY (`id`),
---   UNIQUE `name` (`name`)
--- ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+CREATE TABLE `notifications` (
+  `id` INT UNSIGNED AUTO_INCREMENT,
+  `title` VARCHAR(191) NOT NULL,
+  `icon` VARCHAR(191) NULL,
+  `type` VARCHAR(191) NOT NULL,
+  `data` TEXT NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `type` (`type`),
+  KEY `user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

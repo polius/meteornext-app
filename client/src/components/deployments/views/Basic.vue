@@ -45,7 +45,7 @@
             </v-radio-group>
 
             <v-switch :disabled="loading" v-model="schedule_enabled" @change="schedule_change()" label="Sheduled" color="info" hide-details style="margin-top:-10px;"></v-switch>
-            <v-text-field v-if="schedule_enabled" solo v-model="schedule_datetime" @click="schedule_change()" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
+            <v-text-field v-if="schedule_enabled" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the execution datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
 
             <v-checkbox v-else v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:15px; margin-bottom:20px;"></v-checkbox>
             <v-divider></v-divider>
@@ -62,13 +62,13 @@
     <v-dialog v-model="scheduleDialog" persistent width="290px">
       <v-date-picker v-if="schedule_mode=='date'" v-model="schedule_date" color="info" scrollable>
         <v-spacer></v-spacer>
-        <v-btn text color="primary" @click="schedule_close()">Cancel</v-btn>
-        <v-btn text color="primary" @click="schedule_submit()">OK</v-btn>
+        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="success" @click="schedule_submit()">Confirm</v-btn>
       </v-date-picker>
-      <v-time-picker v-else-if="schedule_mode=='time'" v-model="schedule_time" format="24hr" scrollable>
+      <v-time-picker v-else-if="schedule_mode=='time'" v-model="schedule_time" color="info" format="24hr" scrollable>
         <v-spacer></v-spacer>
-        <v-btn text color="primary" @click="schedule_close()">Cancel</v-btn>
-        <v-btn text color="primary" @click="schedule_submit()">OK</v-btn>
+        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="success" @click="schedule_submit()">Confirm</v-btn>
       </v-time-picker>
     </v-dialog>
 
@@ -166,7 +166,7 @@ export default {
     schedule_close() {
       this.scheduleDialog = false
       if (this.schedule_mode == 'date') this.schedule_date = this.schedule_datetime.substring(0,10)
-      else if (this.schedule_mode == 'time') this.scheduled_time = this.schedule_datetime.substring(11,16)
+      else if (this.schedule_mode == 'time') this.schedule_time = this.schedule_datetime.substring(11,16)
       this.schedule_mode = 'date'
     },
     schedule_change() {

@@ -31,14 +31,14 @@
       <!-- NOTIFICATIONS -->
       <v-tooltip bottom>
         <template v-slot:activator="{ on }">
-          <v-btn icon @click.stop="rightDrawer = !rightDrawer" slot="activator">
+          <v-btn icon @click.stop="rightDrawer = !rightDrawer" title="Notifications" slot="activator">
             <v-badge color="red" overlap>
               <span slot="badge">2</span>
               <v-icon>fas fa-bell</v-icon>
             </v-badge>
           </v-btn>
         </template>
-        <span>2 unread notifications</span>
+        <span></span>
       </v-tooltip>
 
       <!-- PROFILE -->
@@ -62,8 +62,10 @@
     <v-navigation-drawer temporary right v-model="rightDrawer" fixed app>
       <v-toolbar flat class="primary">
         <v-toolbar-title>Notifications</v-toolbar-title>
+        
         <v-spacer></v-spacer>
-        <v-btn icon @click.stop="rightDrawer = false">
+        <v-btn icon title="See all notifications"><v-icon small>fas fa-bars</v-icon></v-btn>
+        <v-btn icon title="Close" @click.stop="rightDrawer = false">
           <v-icon>close</v-icon>
         </v-btn>
       </v-toolbar>
