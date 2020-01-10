@@ -7,9 +7,10 @@ class Deployments_Inbenta:
 
     def get(self, execution_id):
         query = """
-            SELECT d.id, i.id AS 'execution_id', 'INBENTA' AS 'mode', d.name, e.name AS 'environment', i.products, i.schema, i.databases, i.queries, i.method, i.status, i.created, i.started, i.ended, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall', i.error, i.progress, i.uri, i.engine, i.public
+            SELECT d.id, i.id AS 'execution_id', 'INBENTA' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', i.products, i.schema, i.databases, i.queries, i.method, i.status, i.created, i.started, i.ended, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall', i.error, i.progress, i.uri, i.engine, i.public
             FROM deployments_inbenta i
             JOIN deployments d ON d.id = i.deployment_id
+            JOIN releases r ON r.id = d.release_id
             JOIN environments e ON e.id = i.environment_id 
             WHERE i.id = %s
         """

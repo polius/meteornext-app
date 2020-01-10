@@ -107,13 +107,26 @@ CREATE TABLE `slack` (
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE `releases` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(191) NOT NULL,
+  `active` TINYINT(1) NOT NULL DEFAULT 1,
+  `user_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id__name` (`user_id`, `name`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE `deployments` (
   `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(191) NOT NULL,
+  `release_id` INT UNSIGNED NULL,
   `user_id` INT(10) UNSIGNED NOT NULL,
   `deleted` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
+  KEY `release_id` (`release_id`),
   KEY `user_id` (`user_id`),
+  FOREIGN KEY (`release_id`) REFERENCES `releases` (`id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
@@ -206,7 +219,7 @@ CREATE TABLE `deployments_inbenta` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `notifications` (
-  `id` INT UNSIGNED AUTO_INCREMENT,
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `title` VARCHAR(191) NOT NULL,
   `icon` VARCHAR(191) NULL,
   `type` VARCHAR(191) NOT NULL,

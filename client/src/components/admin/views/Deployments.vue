@@ -29,6 +29,15 @@
           <v-icon v-else-if="props.item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
           <v-icon v-else-if="props.item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:8px;">fas fa-ban</v-icon>
         </template>
+        <template v-slot:item.created="props">
+          <span>{{ dateFormat(props.item.created) }}</span>
+        </template>
+        <template v-slot:item.started="props">
+          <span>{{ dateFormat(props.item.started) }}</span>
+        </template>
+        <template v-slot:item.ended="props">
+          <span>{{ dateFormat(props.item.ended) }}</span>
+        </template>
       </v-data-table>
     </v-card>
 
@@ -71,11 +80,13 @@
 
 <script>
 import axios from 'axios';
+import moment from 'moment';
 
 export default {
   data: () => ({
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
+      { text: 'Release', align: 'left', value: 'release' },
       { text: 'Username', align: 'left', value: 'username' },
       { text: 'Environment', align: 'left', value: 'environment' },
       { text: 'Mode', align: 'left', value: 'mode' },
@@ -154,6 +165,9 @@ export default {
       if (method == 'DEPLOY') return '#f44336'
       else if (method == 'TEST') return '#ff9800'
       else if (method == 'VALIDATE') return '#4caf50'
+    },
+    dateFormat(date) {
+      return moment(date).utc().format("YYYY-MM-DD HH:mm:ss") + ' UTC'
     },
     notification(message, color) {
       this.snackbarText = message

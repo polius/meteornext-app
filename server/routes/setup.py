@@ -22,6 +22,7 @@ import routes.deployments.settings.regions
 import routes.deployments.settings.servers
 import routes.deployments.settings.auxiliary
 import routes.deployments.settings.slack
+import routes.deployments.releases
 import routes.deployments.deployments
 import routes.deployments.views.basic
 import routes.deployments.views.pro
@@ -230,12 +231,13 @@ class Setup:
         servers = routes.deployments.settings.servers.Servers(self._app, sql)
         auxiliary = routes.deployments.settings.auxiliary.Auxiliary(self._app, sql)
         slack = routes.deployments.settings.slack.Slack(self._app, sql)
+        releases = routes.deployments.releases.Releases(self._app, sql)
         deployments = routes.deployments.deployments.Deployments(self._app, sql)
         deployments_basic = routes.deployments.views.basic.Basic(self._app, sql)
         deployments_pro = routes.deployments.views.pro.Pro(self._app, sql)
         deployments_inbenta = routes.deployments.views.inbenta.Inbenta(self._app, sql)
 
-        self._blueprints = [login, profile, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, slack, deployments, deployments_basic, deployments_pro, deployments_inbenta]
+        self._blueprints = [login, profile, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, slack, releases, deployments, deployments_basic, deployments_pro, deployments_inbenta]
 
         # Register all blueprints
         for i in self._blueprints:

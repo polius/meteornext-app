@@ -62,6 +62,15 @@
               <v-icon v-else-if="props.item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
               <v-icon v-else-if="props.item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:8px;">fas fa-ban</v-icon>
             </template>
+            <template v-slot:item.created="props">
+              <span>{{ dateFormat(props.item.created) }}</span>
+            </template>
+            <template v-slot:item.started="props">
+              <span>{{ dateFormat(props.item.started) }}</span>
+            </template>
+            <template v-slot:item.ended="props">
+              <span>{{ dateFormat(props.item.ended) }}</span>
+            </template>
           </v-data-table>
         </v-card>
 
@@ -410,6 +419,7 @@
 
 <script>
   import axios from 'axios'
+  import moment from 'moment';
 
   // CODE-MIRROR
   import { codemirror } from 'vue-codemirror'
@@ -455,6 +465,7 @@
       // Information
       information_headers: [
         { text: 'Name', value: 'name', sortable: false },
+        { text: 'Release', align: 'left', value: 'release', sortable: false },
         { text: 'Environment', value: 'environment', sortable: false },
         { text: 'Mode', value: 'mode', sortable: false },
         { text: 'Method', value: 'method', sortable: false },
@@ -550,7 +561,6 @@
 
       url: window.location.host
     }),
-    props: ['admin'],
     components: { 
       codemirror,
       results: Results
@@ -576,8 +586,8 @@
         }
       },
       goBack() {
-        if (this.admin) this.$router.push('/admin/deployments')
-        else this.$router.push('/deployments')
+      if (this.$route.params.admin) this.$router.push('/admin/deployments')
+      else this.$router.push('/deployments')
       },
       getDeployment() {
         // Get Deployment Data
@@ -615,6 +625,7 @@
         this.deployment['deployment_id'] = data['deployment_id']
         this.deployment['mode'] = data['mode']
         this.deployment['name'] = data['name']
+        this.deployment['release'] = data['release']
         this.deployment['environment'] = data['environment']
         if (this.deployment['mode'] == 'BASIC' || this.deployment['mode'] == 'INBENTA') {
           this.deployment['databases'] = data['databases']
@@ -890,7 +901,7 @@
         this.select_dialog = false
         if (this.deployment['execution_id'] != execution_id) {
           const id = this.deployment['mode'].substring(0, 1) + execution_id
-          this.$router.push({ name:'deployment', params: { id: id, admin: this.admin }})
+          this.$router.push({ name:'deployment', params: { id: id, admin: this.$route.params.admin }})
           this.clear()
           this.init()
         }
@@ -1097,6 +1108,9 @@
       serverColor (progress) {
         if (progress.startsWith('100%')) return 'success--text'
         else return 'warning--text'
+      },
+      dateFormat(date) {
+        return moment(date).utc().format("YYYY-MM-DD HH:mm:ss") + ' UTC'
       },
       notification(message, color) {
         this.snackbarText = message

@@ -13,10 +13,18 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
         <template v-slot:item.name="props">
-          <v-edit-dialog :return-value.sync="props.item.name" lazy @open="open(props.item)" @save="save(props.item)"> 
+          <v-edit-dialog :return-value.sync="props.item.name" lazy @open="openName(props.item)" @save="saveName(props.item)"> 
             {{ props.item.name }}
             <template v-slot:input>
-              <v-text-field v-model="inline_editing" label="Environment" single-line></v-text-field>
+              <v-text-field v-model="inline_editing_name" label="Name" single-line hide-details style="margin-bottom:20px;"></v-text-field>
+            </template>
+          </v-edit-dialog>
+        </template>
+        <template v-slot:item.release="props">
+          <v-edit-dialog ref="releaseDialog" :return-value.sync="props.item.release" lazy @open="openRelease(props.item)" @save="saveRelease(props.item)"> 
+            {{ props.item.release }}
+            <template v-slot:input>
+              <v-select v-model="inline_editing_release" :items="releases_items" label="Releases" @change="$refs.releaseDialog.save(inline_editing_release); saveRelease(props.item)" hide-details style="margin-top:10px; margin-bottom:15px;"></v-select>
             </template>
           </v-edit-dialog>
         </template>
@@ -36,6 +44,15 @@
           <v-icon v-else-if="props.item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
           <v-icon v-else-if="props.item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
           <v-icon v-else-if="props.item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:8px;">fas fa-ban</v-icon>
+        </template>
+        <template v-slot:item.created="props">
+          <span>{{ dateFormat(props.item.created) }}</span>
+        </template>
+        <template v-slot:item.started="props">
+          <span>{{ dateFormat(props.item.started) }}</span>
+        </template>
+        <template v-slot:item.ended="props">
+          <span>{{ dateFormat(props.item.ended) }}</span>
         </template>
       </v-data-table>
     </v-card>
@@ -73,11 +90,13 @@
 
 <script>
 import axios from 'axios';
+import moment from 'moment';
 
 export default {
   data: () => ({
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
+      { text: 'Release', align: 'left', value: 'release' },
       { text: 'Environment', align: 'left', value: 'environment' },
       { text: 'Mode', align: 'left', value: 'mode' },
       { text: 'Method', align: 'left', value: 'method' },
@@ -92,8 +111,10 @@ export default {
     search: '',
     loading: true,
 
-    // Inline Editing: Environment Name
-    inline_editing: '',
+    // Inline Editing
+    releases_items: [],
+    inline_editing_name: '',
+    inline_editing_release: '',
 
     // Dialog: Delete Environments
     dialog: false,
@@ -110,8 +131,11 @@ export default {
   methods: {
     getDeployments() {
       axios.get('/deployments')
-        .then((res) => {
-          this.items = res.data.data
+        .then((response) => {
+          // Deployments
+          this.items = response.data.deployments
+          // Releases
+          for (var i = 0; i < response.data.releases.length; ++i) this.releases_items.push(response.data.releases[i]['name'])
           this.loading = false
         })
         .catch((error) => {
@@ -119,19 +143,46 @@ export default {
           else this.notification(error.response.data.message, 'error')
         });
     },
-    open(item) {
-      this.inline_editing = item.name
+    openName(item) {
+      this.inline_editing_name = item.name
     },
-    save(item) {
-      if (this.inline_editing == item.name) {
+    saveName(item) {
+      if (this.inline_editing_name == item.name) {
         this.notification('Deployment edited successfully', 'success')
         return
       }
       this.loading = true
-      // Edit environment name in the DB
+      // Edit release name in the DB
       const payload = {
+        put: 'name',
         id: item.id,
-        name: this.inline_editing
+        name: this.inline_editing_name
+      }
+      axios.put('/deployments', payload)
+        .then((response) => {
+          this.notification(response.data.message, 'success')
+          // Reload Deployments Data
+          this.getDeployments()
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        }) 
+    },
+    openRelease(item) {
+      this.inline_editing_release = item.release
+    },
+    saveRelease(item) {
+      if (this.inline_editing_release == item.release) {
+        this.notification('Deployment edited successfully', 'success')
+        return
+      }
+      this.loading = true
+      // Edit deployment release in the DB
+      const payload = {
+        put: 'release',
+        id: item.id,
+        release: this.inline_editing_release
       }
       axios.put('/deployments', payload)
         .then((response) => {
@@ -152,6 +203,9 @@ export default {
       if (method == 'DEPLOY') return '#f44336'
       else if (method == 'TEST') return '#ff9800'
       else if (method == 'VALIDATE') return '#4caf50'
+    },
+    dateFormat(date) {
+      return moment(date).utc().format("YYYY-MM-DD HH:mm:ss") + ' UTC'
     },
     newDeploy() {
       this.$router.push({ name:'deployments.new' })

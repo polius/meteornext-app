@@ -7,6 +7,7 @@ from flask import Blueprint, jsonify, request, send_from_directory
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
+import models.deployments.releases
 import models.deployments.deployments
 import models.admin.settings
 
@@ -14,6 +15,7 @@ class Deployments:
     def __init__(self, app, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
+        self._releases = models.deployments.releases.Releases(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._settings = models.admin.settings.Settings(sql)
 
@@ -108,10 +110,13 @@ class Deployments:
     # Internal Methods #
     ####################
     def __get(self, user_id):
-        return jsonify({'data': self._deployments.get(user_id)}), 200
+        return jsonify({'deployments': self._deployments.get(user_id), 'releases': self._releases.get(user_id)}), 200
 
     def __put(self, user_id, data):
-        self._deployments.put(user_id, data)
+        if data['put'] == 'name':
+            self._deployments.putName(user_id, data)
+        elif data['put'] == 'release':
+            self._deployments.putRelease(user_id, data)
         return jsonify({'message': 'Deployment edited successfully'}), 200
 
     def __delete(self, user_id, data):
