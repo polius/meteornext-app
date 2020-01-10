@@ -95,9 +95,9 @@
         </v-card>
 
         <!-- VALIDATION -->
-        <div v-if="validation_data.length > 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">VALIDATION</div>
+        <div v-if="validation_data.length > 0 && Object.keys(validation_data[0]).length != 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">VALIDATION</div>
         <!-- validation -->
-        <v-card v-if="validation_data.length > 0" style="margin-top:15px;">
+        <v-card v-if="validation_data.length > 0 && Object.keys(validation_data[0]).length != 0" style="margin-top:15px;">
           <v-data-table :headers="validation_headers" :items="validation_data" hide-default-footer>
             <template v-slot:item="props">
               <tr>
@@ -225,7 +225,7 @@
               <v-flex xs12>
                 <div class="title font-weight-regular" style="margin-top:10px; margin-bottom: 25px;">{{ this.deployment['mode'] }}</div>
                 <v-text-field readonly v-model="information_dialog_data.name" label="Name" style="padding-top:0px;"></v-text-field>
-                <v-select v-if="this.deployment['mode'] != 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="[information_dialog_data.environment]" label="Environment" style="padding-top:0px;"></v-select>
+                <v-select :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="environments" label="Environment" style="padding-top:0px;"></v-select>
 
                 <v-select v-if="this.deployment['mode'] == 'INBENTA'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.products" :items="information_dialog_data.products_list" label="Products" multiple style="padding-top:0px;"></v-select>
                 <v-select v-if="this.deployment['mode'] == 'INBENTA'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schema" :items="information_dialog_data.schema_list" label="Schema" style="padding-top:0px;"></v-select>
@@ -456,6 +456,9 @@
       // Deployment Data
       deployment: {},
 
+      // Environments
+      environments: [],
+
       // Deployment Executions
       executions: {},
 
@@ -594,7 +597,8 @@
         const path = '/deployments/' + this.deployment['mode'].toLowerCase()
         axios.get(path, { params: { execution_id: this.deployment['execution_id'] } })
           .then((response) => {
-            const data = response.data.data[0]
+            const data = response.data.deployment[0]
+            this.environments = response.data.environments
             this.parseRequest(data)
             if (this.$router.currentRoute.name == 'deployment') {
               if (data['status'] == 'STARTING' || data['status'] == 'STOPPING' || data['status'] == 'IN PROGRESS') setTimeout(this.getDeployment, 2000)
@@ -805,8 +809,8 @@
             this.executions['headers'] = [
               { text: 'Environment', value: 'environment' },
               { text: 'Method', value: 'method' },
-              { text: 'Created', value: 'created' },
               { text: 'Status', value: 'status' },
+              { text: 'Created', value: 'created' },
               { text: 'Started', value: 'started' },
               { text: 'Ended', value: 'ended' },
               { text: 'Overall', value: 'overall' },

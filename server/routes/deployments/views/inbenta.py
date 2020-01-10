@@ -8,6 +8,7 @@ import utils
 import models.admin.users
 import models.admin.groups
 import models.admin.settings
+import models.deployments.environments
 import models.deployments.deployments
 import models.deployments.deployments_inbenta
 import routes.deployments.meteor
@@ -19,6 +20,7 @@ class Inbenta:
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
         self._settings = models.admin.settings.Settings(sql)
+        self._environments = models.deployments.environments.Environments(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._deployments_inbenta = models.deployments.deployments_inbenta.Deployments_Inbenta(sql)
 
@@ -181,7 +183,12 @@ class Inbenta:
         deployment = self._deployments_inbenta.get(request.args['execution_id'])
         deployment[0]['products_list'] = {"Chatbot": "chatbot", "KM": "km", "Search": "search", "Ticketing": "ticketing", "Legacy": "no-product"} 
         deployment[0]['schema_list'] = ['logs_cmpl', 'tmpl_edit', 'tickets']
-        return jsonify({'data': deployment}), 200
+
+        # Get environments
+        environments = [i['name'] for i in self._environments.get(user['group_id'])]
+
+        # Return data
+        return jsonify({'deployment': deployment, 'environments': environments}), 200
 
     def __post(self, user, data):
         # Check Coins

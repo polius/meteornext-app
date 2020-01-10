@@ -8,6 +8,7 @@ import utils
 import models.admin.users
 import models.admin.groups
 import models.admin.settings
+import models.deployments.environments
 import models.deployments.deployments
 import models.deployments.deployments_basic
 import routes.deployments.meteor
@@ -19,6 +20,7 @@ class Basic:
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
         self._settings = models.admin.settings.Settings(sql)
+        self._environments = models.deployments.environments.Environments(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._deployments_basic = models.deployments.deployments_basic.Deployments_Basic(sql)
 
@@ -176,10 +178,15 @@ class Basic:
             return jsonify({'message': 'This deployment does not exist'}), 400
         elif authority[0]['user_id'] != user['id'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
-        
+
         # Get deployment
         deployment = self._deployments_basic.get(request.args['execution_id'])
-        return jsonify({'data': deployment}), 200
+
+        # Get environments
+        environments = [i['name'] for i in self._environments.get(user['group_id'])]
+
+        # Return data
+        return jsonify({'deployment': deployment, 'environments': environments}), 200
 
     def __post(self, user, data):
         # Check Coins

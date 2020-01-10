@@ -9,6 +9,7 @@ import utils
 import models.admin.users
 import models.admin.groups
 import models.admin.settings
+import models.deployments.environments
 import models.deployments.deployments
 import models.deployments.deployments_pro
 import routes.deployments.meteor
@@ -20,6 +21,7 @@ class Pro:
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
         self._settings = models.admin.settings.Settings(sql)
+        self._environments = models.deployments.environments.Environments(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._deployments_pro = models.deployments.deployments_pro.Deployments_Pro(sql)
 
@@ -199,7 +201,12 @@ class Pro:
 
         # Get deployment
         deployment = self._deployments_pro.get(request.args['execution_id'])
-        return jsonify({'data': deployment}), 200
+
+        # Get environments
+        environments = [i['name'] for i in self._environments.get(user['group_id'])]
+
+        # Return data
+        return jsonify({'deployment': deployment, 'environments': environments}), 200
 
     def __post(self, user, data):
         # Check Coins
