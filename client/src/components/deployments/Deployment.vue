@@ -8,9 +8,9 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="'status' in deployment" text title="Show Parameters" @click="parameters()"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
           <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="padding-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
-          <v-btn :disabled="deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED') ? 'Edit execution' : 'Re-Deploy with other parameters'" @click="edit()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>{{(deployment['status'] == 'CREATED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
-          <v-divider v-if="start_execution || deployment['status'] == 'STARTING' || deployment['status'] == 'CREATED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" class="mx-3" inset vertical></v-divider>
-          <v-btn :disabled="start_execution" v-if="deployment['status'] == 'CREATED'" text title="Start Execution" @click="start()"><v-icon small style="padding-right:10px">fas fa-play</v-icon>START</v-btn>
+          <v-btn :disabled="deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit execution' : 'Re-Deploy with other parameters'" @click="edit()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
+          <v-divider v-if="start_execution || deployment['status'] == 'STARTING' || deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" class="mx-3" inset vertical></v-divider>
+          <v-btn :disabled="start_execution" v-if="deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED'" text title="Start Execution" @click="start()"><v-icon small style="padding-right:10px">fas fa-play</v-icon>START</v-btn>
           <v-btn :disabled="stop_execution || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING'" v-if="deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' || deployment['status'] == 'IN PROGRESS'" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
         </v-toolbar-items>
         <v-divider v-if="'status' in deployment" class="mx-3" inset vertical></v-divider>
@@ -53,6 +53,7 @@
             </template>
             <template v-slot:item.status="props">
               <v-icon v-if="props.item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
+              <v-icon v-else-if="props.item.status == 'SCHEDULED'" title="Scheduled" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
               <v-icon v-else-if="props.item.status == 'QUEUED'" title="Queued" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
               <v-icon v-else-if="props.item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
               <v-icon v-else-if="props.item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
@@ -64,6 +65,9 @@
             </template>
             <template v-slot:item.created="props">
               <span>{{ dateFormat(props.item.created) }}</span>
+            </template>
+            <template v-slot:item.scheduled="props">
+              <span>{{ dateFormat(props.item.scheduled) }}</span>
             </template>
             <template v-slot:item.started="props">
               <span>{{ dateFormat(props.item.started) }}</span>
@@ -268,7 +272,10 @@
                   </v-radio>
                 </v-radio-group>
 
-                <v-checkbox v-if="information_dialog_mode != 'parameters' && deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
+                <v-switch v-model="schedule_enabled" @change="schedule_change()" label="Sheduled" color="info" hide-details></v-switch>
+                <v-text-field v-if="schedule_enabled" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
+
+                <v-checkbox v-else-if="information_dialog_mode != 'parameters' && deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
                 <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
 
                 <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
@@ -280,6 +287,19 @@
           </v-container>
         </v-card-text>
       </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="scheduleDialog" persistent width="290px">
+      <v-date-picker v-if="schedule_mode=='date'" v-model="schedule_date" color="info" scrollable>
+        <v-spacer></v-spacer>
+        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="success" @click="schedule_submit()">Confirm</v-btn>
+      </v-date-picker>
+      <v-time-picker v-else-if="schedule_mode=='time'" v-model="schedule_time" color="info" format="24hr" scrollable>
+        <v-spacer></v-spacer>
+        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="success" @click="schedule_submit()">Confirm</v-btn>
+      </v-time-picker>
     </v-dialog>
 
     <v-dialog v-model="query_dialog" persistent max-width="600px">
@@ -329,6 +349,7 @@
                         <td><span :style="'color: ' + getMethodColor(props.item.method.toUpperCase())" style="font-weight:500">{{ props.item.method.toUpperCase() }}</span></td>
                         <td>
                           <v-icon v-if="props.item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
+                          <v-icon v-else-if="props.item.status == 'SCHEDULED'" title="Scheduled" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
                           <v-icon v-else-if="props.item.status == 'QUEUED'" title="Queued" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
                           <v-icon v-else-if="props.item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
                           <v-icon v-else-if="props.item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
@@ -521,6 +542,14 @@
       action_dialog_text: '',
       action_dialog_mode: '',
 
+      // Schedule
+      scheduleDialog: false,
+      schedule_enabled: false,
+      schedule_mode: 'date',
+      schedule_date: '',
+      schedule_time: '',
+      schedule_datetime: '',
+
       // Share Results Dialog
       shareResults_dialog: false,
       shareResults_dialog_title: '',
@@ -562,7 +591,8 @@
       snackbarText: '',
       snackbarColor: '',
 
-      url: window.location.host
+      url: window.location.host,
+      loading: false
     }),
     components: { 
       codemirror,
@@ -611,6 +641,18 @@
           })
       },
       clear() {
+        this.information_headers = [
+          { text: 'Name', value: 'name', sortable: false },
+          { text: 'Release', align: 'left', value: 'release', sortable: false },
+          { text: 'Environment', value: 'environment', sortable: false },
+          { text: 'Mode', value: 'mode', sortable: false },
+          { text: 'Method', value: 'method', sortable: false },
+          { text: 'Status', value: 'status', sortable: false },
+          { text: 'Created', value: 'created', sortable: false },
+          { text: 'Started', value: 'started', sortable: false },
+          { text: 'Ended', value: 'ended', sortable: false },
+          { text: 'Overall', value: 'overall', sortable: false },
+        ]
         this.validation_data = []
         this.execution_progress = []
         this.execution_overall = []
@@ -656,6 +698,7 @@
         this.deployment['method'] = data['method'].toLowerCase()
         this.deployment['status'] = data['status']
         this.deployment['created'] = data['created']
+        this.deployment['scheduled'] = data['scheduled']
         this.deployment['started'] = data['started']
         this.deployment['ended'] = data['ended']
         this.deployment['overall'] = data['overall']
@@ -664,6 +707,16 @@
         this.deployment['url'] = data['url']
         this.deployment['engine'] = data['engine']
         this.deployment['public'] = data['public']
+
+        // Parse Scheduled
+        if (this.deployment['scheduled']) {
+          const date = moment(this.deployment['scheduled'])
+          this.schedule_date = date.format("YYYY-MM-DD")
+          this.schedule_time = date.format("HH:mm")
+          this.schedule_datetime = date.format("YYYY-MM-DD HH:mm")
+          this.schedule_enabled = true
+          this.information_headers.splice(7, 0, { text: 'Scheduled', value: 'scheduled', sortable: false })
+        }
 
         // Set Public Values
         this.shareResults_dialog_title = (this.deployment['public']) ? 'The results are public' : 'The results are private'
@@ -832,7 +885,7 @@
         this.information_dialog = true
       },
       edit() {
-        this.information_dialog_mode = (this.deployment['status'] == 'CREATED') ? 'edit' : 're-deploy'
+        this.information_dialog_mode = (this.deployment['status'] == 'CREATED' || this.deployment['status'] == 'SCHEDULED') ? 'edit' : 're-deploy'
         this.cmOptions.readOnly = false
         this.information_dialog_data = JSON.parse(JSON.stringify(this.deployment))
         this.information_dialog = true
@@ -899,6 +952,38 @@
         this.action_dialog = false
       },
       // ------------------------
+      // SCHEDULE
+      // ------------------------
+      schedule_close() {
+        this.scheduleDialog = false
+        if (this.schedule_mode == 'date') this.schedule_date = this.schedule_datetime.substring(0,10)
+        else if (this.schedule_mode == 'time') this.schedule_time = this.schedule_datetime.substring(11,16)
+        this.schedule_mode = 'date'
+      },
+      schedule_change() {
+        if (this.schedule_enabled) {
+          if (this.schedule_datetime == '') {
+            const date = moment()
+            this.schedule_date = date.format("YYYY-MM-DD")
+            this.schedule_time = date.format("HH:mm")
+            this.schedule_datetime = date.format("YYYY-MM-DD HH:mm")
+          }
+          this.scheduleDialog = true
+        }
+        else this.scheduleDialog = false
+      },
+      schedule_submit() {
+        this.schedule_datetime = this.schedule_date + ' ' + this.schedule_time
+
+        if (this.schedule_mode == 'date') {
+          this.schedule_mode = 'time'
+        }
+        else if (this.schedule_mode == 'time') {
+          this.scheduleDialog = false
+          this.schedule_mode = 'date'
+        }
+      },
+      // ------------------------
       // SELECT EXECUTION DIALOG
       // ------------------------
       selectExecution(execution_id) {
@@ -925,8 +1010,12 @@
           environment: this.information_dialog_data.environment,
           mode: this.deployment['mode'].toUpperCase(),
           method: this.information_dialog_data.method.toUpperCase(),
-          start_execution: (this.information_dialog_data.start_execution === undefined) ? false : this.information_dialog_data.start_execution
+          scheduled: '',
+          start_execution: false
         }
+        if (this.schedule_enabled) payload['scheduled'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm")
+        else payload['start_execution'] = (this.information_dialog_data.start_execution === undefined) ? false : this.information_dialog_data.start_execution
+
         // Build different modes
         if (this.deployment['mode'] == 'BASIC' || this.deployment['mode'] == 'INBENTA') {
           payload['databases'] = this.information_dialog_data.databases
@@ -940,7 +1029,9 @@
           for (const i of this.information_dialog_data.products) payload['products'].push(this.deployment['products_schema'][i])
           payload['schema'] = this.information_dialog_data.schema
         }
+        
         // Add deployment to the DB
+        this.loading = true
         axios.put(path, payload)
         .then((response) => {
           const data = response.data.data
@@ -1114,7 +1205,8 @@
         else return 'warning--text'
       },
       dateFormat(date) {
-        return moment(date).utc().format("YYYY-MM-DD HH:mm:ss") + ' UTC'
+        if (date) return moment(date).format("YYYY-MM-DD HH:mm:ss") // + ' UTC'
+        return date
       },
       notification(message, color) {
         this.snackbarText = message

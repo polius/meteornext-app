@@ -36,6 +36,7 @@
         </template>
         <template v-slot:item.status="props">
           <v-icon v-if="props.item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
+          <v-icon v-else-if="props.item.status == 'SCHEDULED'" title="Scheduled" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
           <v-icon v-else-if="props.item.status == 'QUEUED'" title="Queued" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
           <v-icon v-else-if="props.item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
           <v-icon v-else-if="props.item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
@@ -47,6 +48,9 @@
         </template>
         <template v-slot:item.created="props">
           <span>{{ dateFormat(props.item.created) }}</span>
+        </template>
+        <template v-slot:item.scheduled="props">
+          <span>{{ dateFormat(props.item.scheduled) }}</span>
         </template>
         <template v-slot:item.started="props">
           <span>{{ dateFormat(props.item.started) }}</span>
@@ -134,6 +138,7 @@ export default {
         .then((response) => {
           // Deployments
           this.items = response.data.deployments
+          this.parseScheduled()
           // Releases
           for (var i = 0; i < response.data.releases.length; ++i) this.releases_items.push(response.data.releases[i]['name'])
           this.loading = false
@@ -142,6 +147,13 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         });
+    },
+    parseScheduled() {
+      var found = false
+      for (var i = 0; i < this.items.length; ++i) {
+        if (this.items[i]['scheduled']) { found = true; break }
+      }
+      if (found) this.headers.splice(7, 0, { text: 'Scheduled', value: 'scheduled', sortable: false })
     },
     openName(item) {
       this.inline_editing_name = item.name
@@ -205,7 +217,8 @@ export default {
       else if (method == 'VALIDATE') return '#4caf50'
     },
     dateFormat(date) {
-      return moment(date).utc().format("YYYY-MM-DD HH:mm:ss") + ' UTC'
+      if (date) return moment(date).format("YYYY-MM-DD HH:mm:ss") // + ' UTC'
+      return date
     },
     newDeploy() {
       this.$router.push({ name:'deployments.new' })

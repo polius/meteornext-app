@@ -22,7 +22,7 @@ class Deployments:
                     SELECT *
                     FROM
                     (
-                        SELECT d.id, db.id AS 'execution_id', u.username, d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.started, db.ended, CONCAT(TIMEDIFF(db.ended, db.started)) AS 'overall'
+                        SELECT d.id, db.id AS 'execution_id', u.username, d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.scheduled, db.started, db.ended, CONCAT(TIMEDIFF(db.ended, db.started)) AS 'overall'
                         FROM deployments_basic db
                         JOIN deployments d ON d.id = db.deployment_id AND d.deleted = 0
                         JOIN users u ON u.id = d.user_id{0}
@@ -39,7 +39,7 @@ class Deployments:
                     SELECT *
                     FROM
                     (
-                        SELECT d.id, dp.id AS 'execution_id', u.username, d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.started, dp.ended, CONCAT(TIMEDIFF(dp.ended, dp.started)) AS 'overall'
+                        SELECT d.id, dp.id AS 'execution_id', u.username, d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.scheduled, dp.started, dp.ended, CONCAT(TIMEDIFF(dp.ended, dp.started)) AS 'overall'
                         FROM deployments_pro dp
                         JOIN deployments d ON d.id = dp.deployment_id AND d.deleted = 0
                         JOIN users u ON u.id = d.user_id{0}
@@ -56,7 +56,7 @@ class Deployments:
                     SELECT *
                     FROM
                     (
-                        SELECT d.id, di.id AS 'execution_id', u.username, d.name, d.release_id, di.environment_id, 'INBENTA' AS 'mode', di.method, di.status, di.created, di.started, di.ended, CONCAT(TIMEDIFF(di.ended, di.started)) AS 'overall'
+                        SELECT d.id, di.id AS 'execution_id', u.username, d.name, d.release_id, di.environment_id, 'INBENTA' AS 'mode', di.method, di.status, di.created, di.scheduled, di.started, di.ended, CONCAT(TIMEDIFF(di.ended, di.started)) AS 'overall'
                         FROM deployments_inbenta di
                         JOIN deployments d ON d.id = di.deployment_id AND d.deleted = 0
                         JOIN users u ON u.id = d.user_id{0}
@@ -79,10 +79,10 @@ class Deployments:
             return self._sql.execute(query)
         elif deployment_id is not None:
             query = """
-                SELECT d.id, d.execution_id, d.name, e.name AS 'environment', r.name AS 'release', d.mode, d.method, d.status, d.created, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
+                SELECT d.id, d.execution_id, d.name, e.name AS 'environment', r.name AS 'release', d.mode, d.method, d.status, d.created, d.scheduled, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
                 FROM
                 (
-                    SELECT d.id, db.id AS 'execution_id', d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.started, db.ended
+                    SELECT d.id, db.id AS 'execution_id', d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.scheduled, db.started, db.ended
                     FROM deployments_basic db
                     JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s AND d.id = %s AND d.deleted = 0
                     JOIN users u ON u.id = d.user_id
@@ -93,7 +93,7 @@ class Deployments:
                         WHERE db2.deployment_id = db.deployment_id
                     )
                     UNION
-                    SELECT d.id, dp.id AS 'execution_id', d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.started, dp.ended
+                    SELECT d.id, dp.id AS 'execution_id', d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.scheduled, dp.started, dp.ended
                     FROM deployments_pro dp
                     JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s AND d.id = %s AND d.deleted = 0
                     JOIN users u ON u.id = d.user_id
@@ -104,7 +104,7 @@ class Deployments:
                         WHERE dp2.deployment_id = dp.deployment_id
                     )
                     UNION
-                    SELECT d.id, di.id AS 'execution_id', d.name, d.release_id, di.environment_id, 'INBENTA' AS 'mode', di.method, di.status, di.created, di.started, di.ended
+                    SELECT d.id, di.id AS 'execution_id', d.name, d.release_id, di.environment_id, 'INBENTA' AS 'mode', di.method, di.status, di.created, di.scheduled, di.started, di.ended
                     FROM deployments_inbenta di
                     JOIN deployments d ON d.id = di.deployment_id AND d.user_id = %s AND d.id = %s AND d.deleted = 0
                     JOIN users u ON u.id = d.user_id
@@ -123,10 +123,10 @@ class Deployments:
             return self._sql.execute(query, (user_id, deployment_id, user_id, deployment_id, user_id, deployment_id))    
         else:
             query = """
-                SELECT d.id, d.execution_id, d.name, e.name AS 'environment', r.name AS 'release', d.mode, d.method, d.status, d.created, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
+                SELECT d.id, d.execution_id, d.name, e.name AS 'environment', r.name AS 'release', d.mode, d.method, d.status, d.created, d.scheduled, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
                 FROM
                 (
-                    SELECT d.id, db.id AS 'execution_id', d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.started, db.ended
+                    SELECT d.id, db.id AS 'execution_id', d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.scheduled, db.started, db.ended
                     FROM deployments_basic db
                     JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s AND d.deleted = 0
                     JOIN users u ON u.id = d.user_id
@@ -137,7 +137,7 @@ class Deployments:
                         WHERE db2.deployment_id = db.deployment_id
                     )
                     UNION
-                    SELECT d.id, dp.id AS 'execution_id', d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.started, dp.ended
+                    SELECT d.id, dp.id AS 'execution_id', d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.scheduled, dp.started, dp.ended
                     FROM deployments_pro dp
                     JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s AND d.deleted = 0
                     JOIN users u ON u.id = d.user_id
@@ -148,7 +148,7 @@ class Deployments:
                         WHERE dp2.deployment_id = dp.deployment_id
                     )
                     UNION
-                    SELECT d.id, di.id AS 'execution_id', d.name, d.release_id, di.environment_id, 'INBENTA' AS 'mode', di.method, di.status, di.created, di.started, di.ended
+                    SELECT d.id, di.id AS 'execution_id', d.name, d.release_id, di.environment_id, 'INBENTA' AS 'mode', di.method, di.status, di.created, di.scheduled, di.started, di.ended
                     FROM deployments_inbenta di
                     JOIN deployments d ON d.id = di.deployment_id AND d.user_id = %s AND d.deleted = 0
                     JOIN users u ON u.id = d.user_id

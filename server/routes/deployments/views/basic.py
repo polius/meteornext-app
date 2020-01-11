@@ -200,7 +200,10 @@ class Basic:
 
         # Create deployment to the DB
         data['id'] = self._deployments.post(user['id'], data)
-        data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
+        if data['scheduled'] != '':
+            data['status'] = 'SCHEDULED'
+        else:
+            data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
         data['execution_id'] = self._deployments_basic.post(data)
 
         # Consume Coins
@@ -209,7 +212,7 @@ class Basic:
         # Build Response Data
         response = {'execution_id': data['execution_id'], 'coins': user['coins'] - group['coins_execution'] }
 
-        if data['start_execution']:
+        if 'start_execution' in data and data['start_execution']:
             # Get Meteor Additional Parameters
             data['group_id'] = user['group_id']
             data['execution_threads'] = group['deployments_execution_threads']
@@ -235,12 +238,13 @@ class Basic:
         deployment = self._deployments_basic.get(data['execution_id'])[0]
 
         # Proceed editing the deployment 
-        if deployment['status'] == 'CREATED' and not data['start_execution']:
+        if deployment['status'] in ['CREATED','SCHEDULED'] and not data['start_execution']:
             # Check if user has modified any value
             if deployment['environment'] != data['environment'] or \
             deployment['databases'] != data['databases'] or \
             deployment['queries'] != data['queries'] or \
-            deployment['method'] != data['method']:
+            deployment['method'] != data['method'] or \
+            deployment['scheduled'] != data['scheduled']:
                 self._deployments_basic.put(data)
             return jsonify({'message': 'Deployment edited successfully', 'data': {'execution_id': data['execution_id']}}), 200
         else:
@@ -254,7 +258,10 @@ class Basic:
                 return jsonify({'message': 'The local logs path has no write permissions'}), 400
 
             # Create a new Basic Deployment
-            data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
+            if data['scheduled'] != '':
+                data['status'] = 'SCHEDULED'
+            else:
+                data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
             data['execution_id'] = self._deployments_basic.post(data)
 
             # Consume Coins

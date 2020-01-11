@@ -223,20 +223,16 @@ export default {
         })
     },
     changeActive(item) {
-      this.loading = true
       // Add item in the DB
       const payload = JSON.stringify({ id: item.id, active: !item.active })
       axios.put('/deployments/releases', payload)
-        .then((response) => {
-          this.notification(response.data.message, 'success')
+        .then(() => {
+          // this.notification(response.data.message, 'success')
           this.getReleases()
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-        })
-        .finally(() => {
-          this.loading = false
         })
     },
     notification(message, color) {

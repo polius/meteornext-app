@@ -48,7 +48,7 @@
             </v-radio-group>
 
             <v-switch :disabled="loading" v-model="schedule_enabled" @change="schedule_change()" label="Sheduled" color="info" hide-details style="margin-top:-10px;"></v-switch>
-            <v-text-field v-if="schedule_enabled" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the execution datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
+            <v-text-field v-if="schedule_enabled" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
 
             <v-checkbox v-else v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:15px; margin-bottom:20px;"></v-checkbox>
             <v-divider></v-divider>
@@ -75,7 +75,7 @@
       </v-time-picker>
     </v-dialog>
 
-    <v-dialog v-model="queryDialog" persistent max-width="600px">
+    <v-dialog v-model="queryDialog" persistent max-width="768px">
       <v-toolbar color="primary">
         <v-toolbar-title class="white--text">{{ queryDialogTitle }}</v-toolbar-title>
       </v-toolbar>
@@ -109,6 +109,7 @@
 
 <script>
 import axios from 'axios'
+import moment from 'moment'
 
 export default {
   data() {
@@ -189,17 +190,17 @@ export default {
     schedule_change() {
       if (this.schedule_enabled) {
         if (this.schedule_datetime == '') {
-          const date = new Date()
-          this.schedule_date = date.getUTCFullYear() + '-' + ('0' + date.getUTCMonth()+1).slice(-2) + '-' + ('0' + date.getUTCDate()).slice(-2)
-          this.schedule_time = ('0' + (date.getUTCHours())).slice(-2) + ':' + ('0' + date.getUTCMinutes()).slice(-2)
-          this.schedule_datetime = this.schedule_date + ' ' + this.schedule_time + ' UTC'
+          const date = moment()
+          this.schedule_date = date.format("YYYY-MM-DD")
+          this.schedule_time = date.format("HH:mm")
+          this.schedule_datetime = date.format("YYYY-MM-DD HH:mm")
         }
         this.scheduleDialog = true
       }
       else this.scheduleDialog = false
     },
     schedule_submit() {
-      this.schedule_datetime = this.schedule_date + ' ' + this.schedule_time + ' UTC'
+      this.schedule_datetime = this.schedule_date + ' ' + this.schedule_time
 
       if (this.schedule_mode == 'date') {
         this.schedule_mode = 'time'
@@ -295,15 +296,19 @@ export default {
       }
       this.loading = true
       // Build parameters
-      const payload = {
+      var payload = {
         name: this.name,
         release: this.release,
         environment: this.environment,
         databases: this.databases,
         queries: JSON.stringify(this.query_items),
         method: this.method.toUpperCase(),
-        start_execution: this.start_execution
+        scheduled: '',
+        start_execution: false
       }
+      if (this.schedule_enabled) payload['scheduled'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm")
+      else payload['start_execution'] = this.start_execution
+
       // Add deployment to the DB
       axios.post('/deployments/basic', payload)
         .then((response) => {
