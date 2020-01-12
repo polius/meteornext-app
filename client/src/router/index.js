@@ -35,6 +35,12 @@ let router = new VueRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/notifications',
+      name: 'notifications',
+      component: () => import('../components/Notifications'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/results',
       name: 'results',
       component: () => import('../components/deployments/Results'),

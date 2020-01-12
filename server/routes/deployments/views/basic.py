@@ -1,6 +1,7 @@
 import os
 import json
 import signal
+from datetime import datetime
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -215,11 +216,13 @@ class Basic:
             return jsonify({'message': 'The local logs path has no write permissions'}), 400
 
         # Create deployment to the DB
-        data['id'] = self._deployments.post(user['id'], data)
         if data['scheduled'] != '':
             data['status'] = 'SCHEDULED'
+            if datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M') < datetime.now():
+                return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
         else:
             data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
+        data['id'] = self._deployments.post(user['id'], data)
         data['execution_id'] = self._deployments_basic.post(data)
 
         # Consume Coins
@@ -249,6 +252,10 @@ class Basic:
             return jsonify({'message': 'This deployment does not exist'}), 400
         elif authority[0]['user_id'] != user['id'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
+
+        # Check scheduled date
+        if data['scheduled'] != '' and datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M') < datetime.now():
+            return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
 
         # Get current deployment
         deployment = self._deployments_basic.get(data['execution_id'])[0]

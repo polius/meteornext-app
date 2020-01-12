@@ -64,7 +64,7 @@
         <v-toolbar-title>Notifications</v-toolbar-title>
         
         <v-spacer></v-spacer>
-        <v-btn icon title="See all notifications"><v-icon small>fas fa-bars</v-icon></v-btn>
+        <v-btn icon title="See all notifications" @click.stop="notifications()"><v-icon small>fas fa-bars</v-icon></v-btn>
         <v-btn icon title="Close" @click.stop="rightDrawer = false">
           <v-icon>close</v-icon>
         </v-btn>
@@ -119,12 +119,14 @@ export default {
     showTopNavbar() {
       if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/results')) return true
       return false
-      // console.log(this.$router.history.current.path)
-      // console.log(window.location.pathname)
     },
     showBottomNavbar() {
       if (window.location.pathname != '/login' && !window.location.pathname.startsWith('/results') && window.location.pathname != '/deployments/information') return true
       return false
+    },
+    notifications() {
+      if (window.location.pathname != '/notifications') this.$router.push('/notifications')
+      else this.rightDrawer = false
     },
     getCoins() {
 

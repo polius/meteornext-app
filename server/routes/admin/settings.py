@@ -4,11 +4,13 @@ import json
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import utils
 import models.admin.users
 import models.admin.settings
 
 class Settings:
     def __init__(self, app, settings, sql):
+        self._app = app
         self._settings_conf = settings
         self._sql = sql
         # Init models
@@ -66,5 +68,11 @@ class Settings:
         return jsonify({'data': settings}), 200
 
     def put(self, data):
+        # Check logs path permissions
+        u = utils.Utils(self._app)
+        if not u.check_local_path(json.loads(data['value'])['local']['path']):
+            return jsonify({'message': 'The local logs path has no write permissions'}), 400
+
+        # Edit logs settings
         self._settings.post(data)
         return jsonify({'message': 'Changes saved successfully'}), 200

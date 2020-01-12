@@ -1,8 +1,10 @@
 <template>
 <div>
+  <!--
   <div style="background-color: #343F57; padding-top:20px; border-radius: 10px;">
     <apexchart width="100%" height="435" type="area" :options="options" :series="series" style="margin-left:-10px;"></apexchart>
   </div>
+  -->
 </div>
 </template>
 
@@ -32,11 +34,11 @@
 </style>
 
 <script>
-import VueApexCharts from 'vue-apexcharts'
+// import VueApexCharts from 'vue-apexcharts'
 
 export default {
   components: {
-    apexchart: VueApexCharts
+    // apexchart: VueApexCharts
   },
   data: () => ({
     series: [{

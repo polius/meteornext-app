@@ -436,9 +436,6 @@
 .CodeMirror pre {
   padding: 0 14px;
 }
-.v-text-field .v-input__control .v-input__slot {
-  min-height: auto !important;
-}
 </style>
 
 <script>

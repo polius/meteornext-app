@@ -59,7 +59,6 @@ class Cron:
                 b.license(self._license)
 
     def __scheduled_executions(self):
-        print("- Scheduled...")
         # Basic Deployments
         basic = routes.deployments.views.basic.Basic(self._app, self._sql)
         basic.start_scheduled()
