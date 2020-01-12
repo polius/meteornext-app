@@ -171,7 +171,7 @@
               <v-container style="padding:0px!important; margin:0px!important;">
                 <v-layout wrap>
                   <v-flex xs12 style="padding-left:5px; padding-right:5px; padding-bottom:10px;">
-                    <v-textarea :value="deployment['progress']['error']" color="#c6c6c6" auto-grow solo flat readonly hide-details></v-textarea>
+                    <v-textarea :value="deployment['progress']['error']" color="#c6c6c6" auto-grow solo flat readonly hide-details rows="1"></v-textarea>
                   </v-flex>
                 </v-layout>
               </v-container>
@@ -435,6 +435,9 @@
 }
 .CodeMirror pre {
   padding: 0 14px;
+}
+.v-text-field .v-input__control .v-input__slot {
+  min-height: auto !important;
 }
 </style>
 

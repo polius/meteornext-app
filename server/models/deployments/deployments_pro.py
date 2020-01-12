@@ -85,3 +85,28 @@ class Deployments_Pro:
             WHERE id = %s
         """
         return self._sql.execute(query, (execution_id))
+
+    def getScheduled(self):
+        query = """
+            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_plan_factor AS 'epf'
+            FROM deployments_pro p
+            JOIN deployments d ON d.id = p.deployment_id
+            JOIN environments e ON e.id = p.environment_id
+            JOIN users u ON u.id = d.user_id
+            JOIN groups g ON g.id = u.group_id
+            WHERE p.status = 'SCHEDULED'
+            AND NOW() >= p.scheduled
+            AND d.deleted = 0;
+        """
+        return self._sql.execute(query)
+
+    def setError(self, execution_id, error):
+        query = """
+            UPDATE deployments_pro
+            SET status = 'FAILED', 
+            progress = '{"error": "%s"}', 
+            ended = %s, 
+            error = 1 
+            WHERE id = %s
+        """
+        return self._sql.execute(query, (error, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), execution_id))

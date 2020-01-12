@@ -6,8 +6,13 @@ import requests
 import schedule
 import threading
 
+import routes.deployments.views.basic
+import routes.deployments.views.pro
+import routes.deployments.views.inbenta
+
 class Cron:
-    def __init__(self, license, license_conf, blueprints, sql):
+    def __init__(self, app, license, license_conf, blueprints, sql):
+        self._app = app
         self._license = license
         self._license_conf = license_conf
         self._blueprints = blueprints
@@ -19,6 +24,7 @@ class Cron:
     def start(self):
         # Init Crons
         schedule.every(1).minutes.do(self.__license, 'minute')
+        schedule.every(1).minutes.do(self.__scheduled_executions)
         schedule.every().day.at("00:00").do(self.__license, 'day')
         schedule.every().day.at("00:00").do(self.__coins)
         schedule.every().day.at("00:00").do(self.__logs)
@@ -51,6 +57,20 @@ class Cron:
             self._license = {'status': response_status, 'code': response_code, 'response': response_text}
             for b in self._blueprints:
                 b.license(self._license)
+
+    def __scheduled_executions(self):
+        print("- Scheduled...")
+        # Basic Deployments
+        basic = routes.deployments.views.basic.Basic(self._app, self._sql)
+        basic.start_scheduled()
+
+        # Pro Deployments
+        pro = routes.deployments.views.pro.Pro(self._app, self._sql)
+        pro.start_scheduled()
+
+        # Inbenta Deployments
+        inbenta = routes.deployments.views.inbenta.Inbenta(self._app, self._sql)
+        inbenta.start_scheduled()
 
     def __coins(self):
         if not self._license['status']:

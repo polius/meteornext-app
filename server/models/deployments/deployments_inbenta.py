@@ -89,3 +89,28 @@ class Deployments_Inbenta:
             WHERE id = %s
         """
         return self._sql.execute(query, (execution_id))
+
+    def getScheduled(self):
+        query = """
+            SELECT i.id AS 'execution_id', 'INBENTA' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', i.products, i.schema, i.databases, i.queries, i.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_plan_factor AS 'epf'
+            FROM deployments_inbenta i
+            JOIN deployments d ON d.id = i.deployment_id
+            JOIN environments e ON e.id = i.environment_id
+            JOIN users u ON u.id = d.user_id
+            JOIN groups g ON g.id = u.group_id
+            WHERE i.status = 'SCHEDULED'
+            AND NOW() >= i.scheduled
+            AND d.deleted = 0
+        """
+        return self._sql.execute(query)
+
+    def setError(self, execution_id, error):
+        query = """
+            UPDATE deployments_inbenta 
+            SET status = 'FAILED', 
+            progress = '{"error": "%s"}', 
+            ended = %s, 
+            error = 1 
+            WHERE id = %s
+        """
+        return self._sql.execute(query, (error, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), execution_id))

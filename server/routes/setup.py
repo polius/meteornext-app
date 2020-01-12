@@ -56,7 +56,7 @@ class Setup:
             # Register blueprints
             self.__register_blueprints(sql)
             # Init cron
-            cron = Cron(self._license, self._conf['license'], self._blueprints, sql)
+            cron = Cron(self._app, self._license, self._conf['license'], self._blueprints, sql)
             self.__cron_start(cron)
 
         except Exception as e:
@@ -191,7 +191,7 @@ class Setup:
             self._conf['license']['uuid'] = str(uuid.getnode())
 
             # Init cron
-            cron = Cron(self._license, self._conf['license'], self._blueprints, sql)
+            cron = Cron(self._app, self._license, self._conf['license'], self._blueprints, sql)
             self.__cron_start(cron)
 
             # Build return message

@@ -16,7 +16,10 @@ class Users:
                 WHERE u.username = %s
             """
             return self._sql.execute(query, (username))
-    
+
+    def get_by_id(self, user_id):
+        return self._sql.execute("SELECT * FROM users WHERE id = user_id")
+
     def post(self, user):
         self._sql.execute("INSERT INTO users (username, password, email, coins, group_id, admin) SELECT %s, %s, %s, %s, id, %s FROM groups WHERE name = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['group']))
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from datetime import datetime
 
 class Deployments_Basic:
     def __init__(self, sql):
@@ -51,8 +52,7 @@ class Deployments_Basic:
     def startExecution(self, execution_id):
         query = """
             UPDATE deployments_basic
-            SET status = 'STARTING',
-            scheduled = NULL
+            SET status = 'STARTING'
             WHERE id = %s
         """
         return self._sql.execute(query, (execution_id))
@@ -89,3 +89,28 @@ class Deployments_Basic:
             WHERE id = %s
         """
         return self._sql.execute(query, (execution_id))
+
+    def getScheduled(self):
+        query = """
+            SELECT b.id AS 'execution_id', 'BASIC' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', b.databases, b.queries, b.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_plan_factor AS 'epf'
+            FROM deployments_basic b
+            JOIN deployments d ON d.id = b.deployment_id
+            JOIN environments e ON e.id = b.environment_id
+            JOIN users u ON u.id = d.user_id
+            JOIN groups g ON g.id = u.group_id
+            WHERE b.status = 'SCHEDULED'
+            AND NOW() >= b.scheduled
+            AND d.deleted = 0
+        """
+        return self._sql.execute(query)
+
+    def setError(self, execution_id, error):
+        query = """
+            UPDATE deployments_basic 
+            SET status = 'FAILED', 
+            progress = '{{"error": "{}"}}', 
+            ended = %s, 
+            error = 1 
+            WHERE id = %s
+        """.format(error)
+        return self._sql.execute(query, (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), execution_id))

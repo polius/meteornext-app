@@ -188,6 +188,22 @@ class Pro:
 
         return deployments_pro_blueprint
 
+    def start_scheduled(self):
+        # Get all pro scheduled executions
+        scheduled = self._deployments_pro.getScheduled()
+
+        # Check logs path permissions
+        if not self.__check_logs_path():
+            for s in scheduled:
+                self._deployments_pro.setError(s['execution_id'], 'The local logs path has no write permissions')
+        else:
+            for s in scheduled:
+                # Update Execution Status
+                self._deployments_pro.startExecution(s['execution_id'])
+
+                # Start Meteor Execution
+                self._meteor.execute(s)
+
     ####################
     # Internal Methods #
     ####################

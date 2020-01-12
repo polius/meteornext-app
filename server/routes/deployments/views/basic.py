@@ -168,6 +168,22 @@ class Basic:
 
         return deployments_basic_blueprint
 
+    def start_scheduled(self):
+        # Get all basic scheduled executions
+        scheduled = self._deployments_basic.getScheduled()
+
+        # Check logs path permissions
+        if not self.__check_logs_path():
+            for s in scheduled:
+                self._deployments_basic.setError(s['execution_id'], 'The local logs path has no write permissions')
+        else:
+            for s in scheduled:
+                # Update Execution Status
+                self._deployments_basic.startExecution(s['execution_id'])
+
+                # Start Meteor Execution
+                self._meteor.execute(s)
+
     ####################
     # Internal Methods #
     ####################
