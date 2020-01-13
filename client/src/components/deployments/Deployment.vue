@@ -272,7 +272,7 @@
                   </v-radio>
                 </v-radio-group>
 
-                <v-switch v-model="schedule_enabled" @change="schedule_change()" label="Sheduled" color="info" hide-details></v-switch>
+                <v-switch v-model="schedule_enabled" @change="schedule_change()" label="Sheduled" color="info" hide-details :readonly="information_dialog_mode == 'parameters'"></v-switch>
                 <v-text-field v-if="schedule_enabled" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
 
                 <v-checkbox v-else-if="information_dialog_mode != 'parameters' && deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
@@ -619,8 +619,7 @@
         }
       },
       goBack() {
-      if (this.$route.params.admin) this.$router.push('/admin/deployments')
-      else this.$router.push('/deployments')
+        this.router.go(-1)
       },
       getDeployment() {
         // Get Deployment Data
@@ -882,12 +881,14 @@
         this.information_dialog_mode = 'parameters'
         this.cmOptions.readOnly = true
         this.information_dialog_data = JSON.parse(JSON.stringify(this.deployment))
+        this.schedule_enabled = this.deployment['scheduled'] !== null
         this.information_dialog = true
       },
       edit() {
         this.information_dialog_mode = (this.deployment['status'] == 'CREATED' || this.deployment['status'] == 'SCHEDULED') ? 'edit' : 're-deploy'
         this.cmOptions.readOnly = false
         this.information_dialog_data = JSON.parse(JSON.stringify(this.deployment))
+        this.schedule_enabled = this.deployment['scheduled'] !== null
         this.information_dialog = true
       },
       select() {
@@ -961,6 +962,7 @@
         this.schedule_mode = 'date'
       },
       schedule_change() {
+        if (this.information_dialog_mode == 'parameters') return
         if (this.schedule_enabled) {
           if (this.schedule_datetime == '') {
             const date = moment()
@@ -990,7 +992,7 @@
         this.select_dialog = false
         if (this.deployment['execution_id'] != execution_id) {
           const id = this.deployment['mode'].substring(0, 1) + execution_id
-          this.$router.push({ name:'deployment', params: { id: id, admin: this.$route.params.admin }})
+          this.$router.push({ name:'deployment', params: { id: id }})
           this.clear()
           this.init()
         }
@@ -1038,6 +1040,11 @@
           this.notification(response.data.message, 'success')
           // Refresh user coins
           if ('coins' in data) this.$store.dispatch('coins', data['coins'])
+          // Get new deployment
+          if (payload.start_execution) {
+            const id = payload['mode'].substring(0, 1) + data['execution_id']
+            this.$router.push({ name:'deployment', params: { id: id }})
+          }
           // Clear current deployment
           this.clear()
           // Refresh the deployment

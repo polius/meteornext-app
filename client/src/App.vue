@@ -59,7 +59,7 @@
 
     <router-view/>
 
-    <v-navigation-drawer temporary right v-model="rightDrawer" fixed app>
+    <v-navigation-drawer temporary right v-model="rightDrawer" fixed app style="width:350px;">
       <v-toolbar flat class="primary">
         <v-toolbar-title>Notifications</v-toolbar-title>
         

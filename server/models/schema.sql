@@ -220,13 +220,16 @@ CREATE TABLE `deployments_inbenta` (
 
 CREATE TABLE `notifications` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `title` VARCHAR(191) NOT NULL,
+  `name` VARCHAR(191) NOT NULL,
+  `status` ENUM('info','success','error') NOT NULL,
   `icon` VARCHAR(191) NULL,
-  `type` VARCHAR(191) NOT NULL,
+  `category` VARCHAR(191) NOT NULL,
   `data` TEXT NOT NULL,
+  `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `user_id` INT UNSIGNED NOT NULL,
   `seen` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  KEY `type` (`type`),
-  KEY `user_id` (`user_id`)
+  KEY `category` (`category`),
+  KEY `user_id` (`user_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

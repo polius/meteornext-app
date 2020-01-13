@@ -13,6 +13,7 @@ from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_r
 import utils
 import routes.login
 import routes.profile
+import routes.notifications
 import routes.admin.settings
 import routes.admin.groups
 import routes.admin.users
@@ -222,6 +223,7 @@ class Setup:
         # Init all blueprints
         login = routes.login.Login(self._app, sql)
         profile = routes.profile.Profile(self._app, sql)
+        notifications = routes.notifications.Notifications(self._app, sql)
         settings = routes.admin.settings.Settings(self._app, self._conf, sql)
         groups = routes.admin.groups.Groups(self._app, sql)
         users = routes.admin.users.Users(self._app, sql)
@@ -237,7 +239,7 @@ class Setup:
         deployments_pro = routes.deployments.views.pro.Pro(self._app, sql)
         deployments_inbenta = routes.deployments.views.inbenta.Inbenta(self._app, sql)
 
-        self._blueprints = [login, profile, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, slack, releases, deployments, deployments_basic, deployments_pro, deployments_inbenta]
+        self._blueprints = [login, profile, notifications, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, slack, releases, deployments, deployments_basic, deployments_pro, deployments_inbenta]
 
         # Register all blueprints
         for i in self._blueprints:
