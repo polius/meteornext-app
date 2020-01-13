@@ -322,8 +322,12 @@ export default {
         databases: this.databases,
         queries: JSON.stringify(this.query_items),
         method: this.method.toUpperCase(),
-        start_execution: this.start_execution
+        scheduled: '',
+        start_execution: false
       }
+      if (this.schedule_enabled) payload['scheduled'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm")
+      else payload['start_execution'] = this.start_execution
+
       // Add deployment to the DB
       axios.post('/deployments/inbenta', payload)
         .then((response) => {
