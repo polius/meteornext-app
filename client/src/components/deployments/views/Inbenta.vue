@@ -46,8 +46,10 @@
               </v-radio>
             </v-radio-group>
 
-            <v-checkbox v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:-10px; margin-bottom:20px;"></v-checkbox>
+            <v-switch :disabled="loading" v-model="schedule_enabled" @change="schedule_change()" label="Sheduled" color="info" hide-details style="margin-top:-10px;"></v-switch>
+            <v-text-field v-if="schedule_enabled" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
 
+            <v-checkbox v-else v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:15px; margin-bottom:20px;"></v-checkbox>
             <v-divider></v-divider>
 
             <div style="margin-top:20px;">
@@ -58,6 +60,19 @@
         </v-flex>
       </v-layout>
     </v-container>
+
+    <v-dialog v-model="scheduleDialog" persistent width="290px">
+      <v-date-picker v-if="schedule_mode=='date'" v-model="schedule_date" color="info" scrollable>
+        <v-spacer></v-spacer>
+        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="success" @click="schedule_submit()">Confirm</v-btn>
+      </v-date-picker>
+      <v-time-picker v-else-if="schedule_mode=='time'" v-model="schedule_time" color="info" format="24hr" scrollable>
+        <v-spacer></v-spacer>
+        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="success" @click="schedule_submit()">Confirm</v-btn>
+      </v-time-picker>
+    </v-dialog>
 
     <v-dialog v-model="queryDialog" persistent max-width="600px">
       <v-toolbar color="primary">
@@ -93,6 +108,7 @@
 
 <script>
 import axios from 'axios'
+import moment from 'moment'
 
 export default {
   data() {
@@ -123,6 +139,14 @@ export default {
       method: 'validate',
       start_execution: false,
 
+      // Schedule
+      scheduleDialog: false,
+      schedule_enabled: false,
+      schedule_mode: 'date',
+      schedule_date: '',
+      schedule_time: '',
+      schedule_datetime: '',
+
       // Query Dialog
       queryDialog: false,
       queryDialogTitle: '',
@@ -151,6 +175,35 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
+    },
+    schedule_close() {
+      this.scheduleDialog = false
+      if (this.schedule_mode == 'date') this.schedule_date = this.schedule_datetime.substring(0,10)
+      else if (this.schedule_mode == 'time') this.schedule_time = this.schedule_datetime.substring(11,16)
+      this.schedule_mode = 'date'
+    },
+    schedule_change() {
+      if (this.schedule_enabled) {
+        if (this.schedule_datetime == '') {
+          const date = moment()
+          this.schedule_date = date.format("YYYY-MM-DD")
+          this.schedule_time = date.format("HH:mm")
+          this.schedule_datetime = date.format("YYYY-MM-DD HH:mm")
+        }
+        this.scheduleDialog = true
+      }
+      else this.scheduleDialog = false
+    },
+    schedule_submit() {
+      this.schedule_datetime = this.schedule_date + ' ' + this.schedule_time
+
+      if (this.schedule_mode == 'date') {
+        this.schedule_mode = 'time'
+      }
+      else if (this.schedule_mode == 'time') {
+        this.scheduleDialog = false
+        this.schedule_mode = 'date'
+      }
     },
     newQuery() {
       this.query_mode = 'new'
