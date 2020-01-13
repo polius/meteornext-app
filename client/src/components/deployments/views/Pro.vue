@@ -6,6 +6,7 @@
           <div class="title font-weight-regular" style="margin-left:10px; margin-top:5px;">PRO</div>
           <v-form ref="form" style="padding:10px;">
             <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+            <v-select :loading="loading" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
             <v-select :loading="loading_env" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;" hide-details></v-select>
 
             <!-- CODE -->
@@ -151,6 +152,8 @@ export default {
       },
 
       // Parameters
+      release: '',
+      release_items: [],
       method: 'validate',
       start_execution: false,
 
@@ -181,10 +184,22 @@ export default {
     codemirror
   },
   created() {
+    this.getReleases()
     this.getEnvironments()
     this.getCode()
   },
   methods: {
+    getReleases() {
+      axios.get('/deployments/releases/active')
+        .then((response) => {
+          for (var i = 0; i < response.data.data.length; ++i) this.release_items.push(response.data.data[i]['name'])
+          this.loading = false
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+    },
     getEnvironments() {
       axios.get('/deployments/environments')
         .then((response) => {
@@ -247,6 +262,7 @@ export default {
       // Build parameters
       const payload = {
         name: this.name,
+        release: this.release,
         environment: this.environment,
         code: this.code,
         method: this.method.toUpperCase(),
