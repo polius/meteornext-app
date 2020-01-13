@@ -225,7 +225,7 @@ export default {
     changeActive(item) {
       // Add item in the DB
       const payload = JSON.stringify({ id: item.id, active: !item.active })
-      axios.put('/deployments/releases', payload)
+      axios.put('/deployments/releases/active', payload)
         .then(() => {
           // this.notification(response.data.message, 'success')
           this.getReleases()

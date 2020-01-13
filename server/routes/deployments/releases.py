@@ -41,7 +41,7 @@ class Releases:
             elif request.method == 'DELETE':
                 return self.delete(user['id'], release_json)
 
-        @releases_blueprint.route('/deployments/releases/active', methods=['GET'])
+        @releases_blueprint.route('/deployments/releases/active', methods=['GET','PUT'])
         @jwt_required
         def releases_active_method():
             # Check license
@@ -51,8 +51,14 @@ class Releases:
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
-            # Return active releases
-            return jsonify({'data': self._releases.getActive(user['id'])}), 200
+            # Get Request Json
+            release_json = request.get_json()
+
+            if request.method == 'GET':
+                return jsonify({'data': self._releases.getActive(user['id'])}), 200
+            elif request.method == 'PUT':
+                self._releases.putActive(user['id'], release_json)
+                return jsonify({'message': 'Release edited successfully'}), 200
 
         return releases_blueprint
 
@@ -70,17 +76,11 @@ class Releases:
             return jsonify({'message': 'Release added successfully'}), 200
 
     def put(self, user_id, data):
-        # Change 'active' field
-        if 'id' in data:
-            self._releases.putActive(user_id, data)
-        # Change all fields
+        if self._releases.exist(user_id, data):
+            return jsonify({'message': 'This new release currently exists'}), 400
         else:
-            if self._releases.exist(user_id, data):
-                return jsonify({'message': 'This new release currently exists'}), 400
-            else:
-                self._releases.put(user_id, data)
-
-        return jsonify({'message': 'Release edited successfully'}), 200
+            self._releases.put(user_id, data)
+            return jsonify({'message': 'Release edited successfully'}), 200
 
     def delete(self, user_id, data):
         for release in data:
