@@ -106,11 +106,11 @@ class Deployments_Inbenta:
 
     def setError(self, execution_id, error):
         query = """
-            UPDATE deployments_inbenta 
+            UPDATE deployments_basic 
             SET status = 'FAILED', 
-            progress = '{"error": "%s"}', 
+            progress = '{{"error": "{}"}}', 
             ended = %s, 
             error = 1 
             WHERE id = %s
-        """
-        return self._sql.execute(query, (error, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), execution_id))
+        """.format(error)
+        return self._sql.execute(query, (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), execution_id))
