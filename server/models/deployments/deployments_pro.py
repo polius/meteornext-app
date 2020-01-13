@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from datetime import datetime
 
 class Deployments_Pro:
     def __init__(self, sql):
