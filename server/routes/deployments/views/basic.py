@@ -182,7 +182,8 @@ class Basic:
 
         for s in scheduled:
             # Create notifications
-            notification = {'name': 'A scheduled deployment has finished', 'status': s['status'], 'icon': 'fas fa-circle', 'category': 'deployment'}
+            notification = {'name': 'A scheduled deployment has finished', 'icon': 'fas fa-circle', 'category': 'deployment'}
+            notification['status'] = 'ERROR' if s['status'] == 'FAILED' else s['status']
             notification['data'] = '{{"id": "{}", "name": "{}", "mode": "BASIC", "environment": "{}", "overall": "{}"}}'.format(s['id'], s['name'], s['environment'], s['overall'])
             self._notifications.post(s['user_id'], notification)
 

@@ -20,7 +20,7 @@ class Deployments_Scheduled:
         query = """
             SELECT p.id, d.name, d.user_id, r.name AS 'release', e.name AS 'environment', p.status, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall'
             FROM deployments_scheduled s
-            JOIN deployments_pro p ON p.id = s.deployment_id AND s.deployment_mode = 'BASIC' AND p.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
+            JOIN deployments_pro p ON p.id = s.deployment_id AND s.deployment_mode = 'PRO' AND p.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
             JOIN deployments d ON d.id = p.deployment_id
             JOIN releases r ON r.id = d.release_id
             JOIN environments e ON e.id = p.environment_id
@@ -31,7 +31,7 @@ class Deployments_Scheduled:
         query = """
             SELECT i.id, d.name, d.user_id, r.name AS 'release', e.name AS 'environment', i.status, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall'
             FROM deployments_scheduled s
-            JOIN deployments_inbenta i ON i.id = s.deployment_id AND s.deployment_mode = 'BASIC' AND i.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
+            JOIN deployments_inbenta i ON i.id = s.deployment_id AND s.deployment_mode = 'INBENTA' AND i.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
             JOIN deployments d ON d.id = i.deployment_id
             JOIN releases r ON r.id = d.release_id
             JOIN environments e ON e.id = i.environment_id

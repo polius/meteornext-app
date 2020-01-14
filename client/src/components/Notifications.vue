@@ -39,12 +39,12 @@
                 <v-flex xs12>
                   <v-card>
                     <v-toolbar flat dense color="#2e3131">
-                      <v-toolbar-title class="body-1"><v-icon small :color="item['status']" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ this.item['name'] }}</v-toolbar-title>
+                      <v-toolbar-title class="body-1"><v-icon v-if="openDialog" small :color="item.status.toLowerCase()" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ this.item['name'] }}</v-toolbar-title>
                       <v-spacer></v-spacer>
                       <v-btn icon @click="openNotificationSubmit()"><v-icon small title="Go to the resource">fas fa-arrow-right</v-icon></v-btn>
                     </v-toolbar>
                   </v-card>
-                  <div v-if="this.item.category == 'deployments' && 'data' in this.item" style="padding:5px;">
+                  <div v-if="this.item.category == 'deployment'" style="padding:5px;">
                     <div class="headline font-weight-regular" style="margin-top:12px; margin-bottom:12px;">{{ item.data.mode.toUpperCase() }}</div>
                     <v-text-field v-model="item.data.name" readonly label="Name"></v-text-field>
                     <v-text-field v-model="item.data.environment" readonly label="Environment" style="padding-top:0px;"></v-text-field>
@@ -132,11 +132,10 @@ export default {
     },
     openNotification() {
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      // if (this.item.category == 'deployments') this.parseQueries()
       this.openDialog = true
     },
     openNotificationSubmit() {
-      const id = this.selected[0]['mode'].substring(0, 1) + this.selected[0]['id']
+      const id = this.item.data.mode.substring(0, 1) + this.item.data.id
       this.$router.push({ name:'deployment', params: { id: id }})
     },
     editNotification() {

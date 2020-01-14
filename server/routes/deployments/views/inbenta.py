@@ -13,6 +13,7 @@ import models.deployments.environments
 import models.deployments.deployments
 import models.deployments.deployments_inbenta
 import models.deployments.deployments_scheduled
+import models.notifications
 import routes.deployments.meteor
 
 class Inbenta:
@@ -26,6 +27,7 @@ class Inbenta:
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._deployments_inbenta = models.deployments.deployments_inbenta.Deployments_Inbenta(sql)
         self._deployments_scheduled = models.deployments.deployments_scheduled.Deployments_Scheduled(sql)
+        self._notifications = models.notifications.Notifications(sql)
 
         # Init meteor
         self._meteor = routes.deployments.meteor.Meteor(app, sql)
@@ -180,7 +182,8 @@ class Inbenta:
 
         for s in scheduled:
             # Create notifications
-            notification = {'name': 'A scheduled deployment has finished', 'status': s['status'], 'icon': 'fas fa-circle', 'category': 'deployment'}
+            notification = {'name': 'A scheduled deployment has finished', 'icon': 'fas fa-circle', 'category': 'deployment'}
+            notification['status'] = 'ERROR' if s['status'] == 'FAILED' else s['status']
             notification['data'] = '{{"id": "{}", "name": "{}", "mode": "INBENTA", "environment": "{}", "overall": "{}"}}'.format(s['id'], s['name'], s['environment'], s['overall'])
             self._notifications.post(s['user_id'], notification)
 

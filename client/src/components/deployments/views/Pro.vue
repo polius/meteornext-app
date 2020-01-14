@@ -6,7 +6,7 @@
           <div class="title font-weight-regular" style="margin-left:10px; margin-top:5px;">PRO</div>
           <v-form ref="form" style="padding:10px;">
             <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-            <v-select :loading="loading" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+            <v-select :loading="loading_rel" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
             <v-select :loading="loading_env" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;" hide-details></v-select>
 
             <!-- CODE -->
@@ -42,7 +42,7 @@
               </v-radio>
             </v-radio-group>
 
-            <v-switch :disabled="loading" v-model="schedule_enabled" @change="schedule_change()" label="Sheduled" color="info" hide-details style="margin-top:-10px;"></v-switch>
+            <v-switch :disabled="loading_env || loading_code" v-model="schedule_enabled" @change="schedule_change()" label="Sheduled" color="info" hide-details style="margin-top:-10px;"></v-switch>
             <v-text-field v-if="schedule_enabled" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
 
             <v-checkbox v-else v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:15px; margin-bottom:20px;"></v-checkbox>
@@ -173,6 +173,7 @@ export default {
       // Loading Fields
       loading_code: true,
       loading_env: true,
+      loading_rel: true,
 
       // Snackbar
       snackbar: false,
@@ -194,7 +195,7 @@ export default {
       axios.get('/deployments/releases/active')
         .then((response) => {
           for (var i = 0; i < response.data.data.length; ++i) this.release_items.push(response.data.data[i]['name'])
-          this.loading = false
+          this.loading_rel = false
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))

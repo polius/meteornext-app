@@ -14,6 +14,7 @@ import models.deployments.environments
 import models.deployments.deployments
 import models.deployments.deployments_pro
 import models.deployments.deployments_scheduled
+import models.notifications
 import routes.deployments.meteor
 
 class Pro:
@@ -27,6 +28,7 @@ class Pro:
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._deployments_pro = models.deployments.deployments_pro.Deployments_Pro(sql)
         self._deployments_scheduled = models.deployments.deployments_scheduled.Deployments_Scheduled(sql)
+        self._notifications = models.notifications.Notifications(sql)
 
         # Init meteor
         self._meteor = routes.deployments.meteor.Meteor(app, sql)
@@ -200,7 +202,8 @@ class Pro:
 
         for s in scheduled:
             # Create notifications
-            notification = {'name': 'A scheduled deployment has finished', 'status': s['status'], 'icon': 'fas fa-circle', 'category': 'deployment'}
+            notification = {'name': 'A scheduled deployment has finished', 'icon': 'fas fa-circle', 'category': 'deployment'}
+            notification['status'] = 'ERROR' if s['status'] == 'FAILED' else s['status']
             notification['data'] = '{{"id": "{}", "name": "{}", "mode": "PRO", "environment": "{}", "overall": "{}"}}'.format(s['id'], s['name'], s['environment'], s['overall'])
             self._notifications.post(s['user_id'], notification)
 
@@ -303,6 +306,12 @@ class Pro:
         elif authority[0]['user_id'] != user['id'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
+        # Check Code Syntax Errors
+        try:
+            exec(data['code'])
+        except Exception as e:
+            return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400  
+
         # Check scheduled date
         if data['scheduled'] != '' and datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M') < datetime.now():
             return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
@@ -330,7 +339,10 @@ class Pro:
                 return jsonify({'message': 'The local logs path has no write permissions'}), 400
 
             # Create a new Pro Deployment
-            data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
+            if data['scheduled'] != '':
+                data['status'] = 'SCHEDULED'
+            else:
+                data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
             data['execution_id'] = self._deployments_pro.post(data)
 
             # Consume Coins

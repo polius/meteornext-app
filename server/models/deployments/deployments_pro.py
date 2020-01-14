@@ -24,7 +24,7 @@ class Deployments_Pro:
             FROM environments e
             WHERE e.name = %s
         """
-        return self._sql.execute(query, (deployment['id'], deployment['code'], deployment['method'], deployment['status'], deployment['environment'], deployment['scheduled'], deployment['scheduled']))
+        return self._sql.execute(query, (deployment['id'], deployment['code'], deployment['method'], deployment['status'], deployment['scheduled'], deployment['scheduled'], deployment['environment']))
 
     def put(self, deployment):
         query = """

@@ -74,7 +74,7 @@
         <div v-for="notification in notifications" :key="notification['id']">
           <v-list-item @click="removeNotification(notification)">
             <v-list-item-action style="margin-right:10px;">
-              <v-icon small :color="notification['status'].toLowerCase()">{{ notification['icon'] }}</v-icon>
+              <v-icon small :title="notification.status.charAt(0).toUpperCase() + notification.status.slice(1).toLowerCase()" :color="notification['status'].toLowerCase()">{{ notification['icon'] }}</v-icon>
             </v-list-item-action>
             <v-list-item-content>
               <v-list-item-title>{{ notification['name'] }}</v-list-item-title>

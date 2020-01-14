@@ -50,7 +50,7 @@
           <span>{{ dateFormat(props.item.created) }}</span>
         </template>
         <template v-slot:item.scheduled="props">
-          <span>{{ dateFormat(props.item.scheduled) }}</span>
+          <span>{{ props.item.scheduled === null ? '' : dateFormat(props.item.scheduled).slice(0,-3) }}</span>
         </template>
         <template v-slot:item.started="props">
           <span>{{ dateFormat(props.item.started) }}</span>
@@ -149,11 +149,19 @@ export default {
         });
     },
     parseScheduled() {
-      var found = false
-      for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['scheduled']) { found = true; break }
+      // Check if 'Scheduled' column exists in headers
+      var column_found = false
+      for (var h = 0; h < this.headers.length; ++h) {
+        if (this.headers[h]['text'] == 'Scheduled') { column_found = true; break; }
       }
-      if (found) this.headers.splice(7, 0, { text: 'Scheduled', value: 'scheduled', sortable: false })
+      // Check if exists a scheduled deployment
+      var scheduled_found = false
+      for (var i = 0; i < this.items.length; ++i) {
+        if (this.items[i]['scheduled']) { scheduled_found = true; break; }
+      }
+      // Add or remove the 'Scheduled' column in headers
+      if (scheduled_found && !column_found) this.headers.splice(7, 0, { text: 'Scheduled', value: 'scheduled', sortable: false })
+      else if (!scheduled_found && column_found) this.headers.splice(7, 1)
     },
     openName(item) {
       this.inline_editing_name = item.name

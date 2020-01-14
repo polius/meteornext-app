@@ -227,7 +227,7 @@ CREATE TABLE `deployments_scheduled` (
 CREATE TABLE `notifications` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(191) NOT NULL,
-  `status` ENUM('info','success','error') NOT NULL,
+  `status` ENUM('INFO','SUCCESS','WARNING','ERROR') NOT NULL,
   `icon` VARCHAR(191) NULL,
   `category` VARCHAR(191) NOT NULL,
   `data` TEXT NOT NULL,
