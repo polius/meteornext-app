@@ -19,6 +19,7 @@
                 <span>Press ESC when cursor is in the editor to toggle full screen editing</span>
               </v-tooltip>
             </div>
+            <v-progress-linear v-if="loading_code" height="1px" color="warning" indeterminate></v-progress-linear>
             <codemirror v-model="code" :options="cmOptions"></codemirror>
 
             <!-- PARAMETERS -->
@@ -212,6 +213,7 @@ export default {
         })
     },
     getCode() {
+      this.loading_code = true
       axios.get('/deployments/pro/code')
         .then((response) => {
           this.code = response.data.data

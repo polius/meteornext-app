@@ -24,7 +24,7 @@ class Cron:
     def start(self):
         # Init Crons
         schedule.every(1).minutes.do(self.__license, 'minute')
-        schedule.every(1).minutes.do(self.__scheduled_executions)
+        schedule.every(10).seconds.do(self.__scheduled_executions)
         schedule.every().day.at("00:00").do(self.__license, 'day')
         schedule.every().day.at("00:00").do(self.__coins)
         schedule.every().day.at("00:00").do(self.__logs)
@@ -61,14 +61,17 @@ class Cron:
     def __scheduled_executions(self):
         # Basic Deployments
         basic = routes.deployments.views.basic.Basic(self._app, self._sql)
+        basic.check_scheduled()
         basic.start_scheduled()
 
         # Pro Deployments
         pro = routes.deployments.views.pro.Pro(self._app, self._sql)
+        pro.check_scheduled()
         pro.start_scheduled()
 
         # Inbenta Deployments
         inbenta = routes.deployments.views.inbenta.Inbenta(self._app, self._sql)
+        inbenta.check_scheduled()
         inbenta.start_scheduled()
 
     def __coins(self):

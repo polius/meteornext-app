@@ -714,7 +714,12 @@
           this.schedule_time = date.format("HH:mm")
           this.schedule_datetime = date.format("YYYY-MM-DD HH:mm")
           this.schedule_enabled = true
-          this.information_headers.splice(7, 0, { text: 'Scheduled', value: 'scheduled', sortable: false })
+          // Add new 'Scheduled' column if not exist
+          var found = false
+          for (var h = 0; h < this.information_headers.length; ++h) {
+            if (this.information_headers[h]['text'] == 'Scheduled') { found = true; break; }
+          }
+          if (!found) this.information_headers.splice(7, 0, { text: 'Scheduled', value: 'scheduled', sortable: false })
         }
 
         // Set Public Values
@@ -1041,7 +1046,7 @@
           // Refresh user coins
           if ('coins' in data) this.$store.dispatch('coins', data['coins'])
           // Get new deployment
-          if (payload.start_execution) {
+          if (payload.start_execution || (payload.scheduled != '' && this.deployment['status'] != 'SCHEDULED')) {
             const id = payload['mode'].substring(0, 1) + data['execution_id']
             this.$router.push({ name:'deployment', params: { id: id }})
           }

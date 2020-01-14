@@ -37,7 +37,7 @@ class Notifications:
             elif request.method == 'DELETE':
                 return self.delete(user['id'], notifications_json)
 
-        @notifications_blueprint.route('/notifications/unseen', methods=['GET'])
+        @notifications_blueprint.route('/notifications/bar', methods=['GET'])
         @jwt_required
         def notifications_unseen_method():
             # Check license
@@ -48,7 +48,7 @@ class Notifications:
             user = self._users.get(get_jwt_identity())[0]
 
             # Return unseen user notifications
-            return self._notifications.get_unseen(user['id'])
+            return jsonify({'data': self._notifications.get_notification_bar(user['id'])}), 200
 
         return notifications_blueprint
 
@@ -58,15 +58,8 @@ class Notifications:
     def get(self, user_id):
         return jsonify({'data': self._notifications.get(user_id)}), 200
 
-    # def post(self, group_id, data):
-    #     if self._environments.exist(group_id, data):
-    #         return jsonify({'message': 'This environment currently exists'}), 400
-    #     else:
-    #         self._environments.post(group_id, data)
-    #         return jsonify({'message': 'Environment added successfully'}), 200
-
     def put(self, user_id, data):
-        self._notifications.put(group_id, data)
+        self._notifications.put(user_id, data)
         return jsonify({'message': 'Notification edited successfully'}), 200
 
     def delete(self, user_id, data):

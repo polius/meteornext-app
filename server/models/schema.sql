@@ -218,6 +218,12 @@ CREATE TABLE `deployments_inbenta` (
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE `deployments_scheduled` (
+  `deployment_mode` VARCHAR(191) NOT NULL COMMENT 'References [deployments_basic, deployments_pro].mode',
+  `deployment_id` INT UNSIGNED NOT NULL COMMENT 'References [deployments_basic, deployments_pro].id',
+  PRIMARY KEY (`deployment_mode`, `deployment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE `notifications` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(191) NOT NULL,
@@ -225,9 +231,9 @@ CREATE TABLE `notifications` (
   `icon` VARCHAR(191) NULL,
   `category` VARCHAR(191) NOT NULL,
   `data` TEXT NOT NULL,
-  `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `user_id` INT UNSIGNED NOT NULL,
-  `seen` TINYINT(1) NOT NULL DEFAULT 0,
+  `show` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `category` (`category`),
   KEY `user_id` (`user_id`),

@@ -11,17 +11,22 @@
           </v-toolbar-items>
           <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
         </v-toolbar>
-        <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
+        <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
           <template v-slot:item.name="props">
-            <span><v-icon small :color="props.item.status" :title="props.item.status.charAt(0).toUpperCase() + props.item.status.slice(1)" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ props.item.name }}</span>
+            <span><v-icon small :color="props.item.status.toLowerCase()" :title="props.item.status.charAt(0).toUpperCase() + props.item.status.slice(1).toLowerCase()" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ props.item.name }}</span>
           </template>
           <template v-slot:item.date="props">
             <span>{{ dateFormat(props.item.date) }}</span>
           </template>
+          <template v-slot:item.show="props">
+            <v-btn icon small @click="changeSeen(props.item)">
+              <v-icon small :title="props.item.show ? 'Show in the notification bar' : 'Do not show in the notification bar'" :color="props.item.show ? 'success' : 'error'">fas fa-circle</v-icon>
+            </v-btn>
+          </template>
         </v-data-table>
       </v-card>
 
-      <v-dialog v-model="openDialog" max-width="40%">
+      <v-dialog v-model="openDialog" max-width="640px">
         <v-card>
           <v-toolbar flat color="primary">
             <v-toolbar-title class="white--text">NOTIFICATION</v-toolbar-title>
@@ -93,9 +98,11 @@ export default {
     // Data Table
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
-      { text: 'Date', align: 'left', value: 'date' }
+      { text: 'Date', align: 'left', value: 'date' },
+      { text: 'Show', align: 'left', value: 'show' }
     ],
     items: [],
+    item: {},
     selected: [],
     search: '',
     loading: true,
@@ -124,11 +131,16 @@ export default {
         })
     },
     openNotification() {
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      // if (this.item.category == 'deployments') this.parseQueries()
       this.openDialog = true
     },
     openNotificationSubmit() {
       const id = this.selected[0]['mode'].substring(0, 1) + this.selected[0]['id']
       this.$router.push({ name:'deployment', params: { id: id }})
+    },
+    editNotification() {
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
     },
     deleteNotification() {
       this.deleteDialog = true
@@ -164,8 +176,20 @@ export default {
         })
     },
     dateFormat(date) {
-      if (date) return moment(date).format("YYYY-MM-DD HH:mm:ss") // + ' UTC'
+      if (date) return moment(date).local().format('ddd, DD MMM YYYY HH:mm:ss')
       return date
+    },
+    changeSeen(item) {
+      // Add item in the DB
+      const payload = JSON.stringify({ id: item.id })
+      axios.put('/notifications', payload)
+        .then(() => {
+          this.getNotifications()
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
     },
     notification(message, color) {
       this.snackbarText = message

@@ -12,6 +12,8 @@ import models.admin.settings
 import models.deployments.environments
 import models.deployments.deployments
 import models.deployments.deployments_basic
+import models.deployments.deployments_scheduled
+import models.notifications
 import routes.deployments.meteor
 
 class Basic:
@@ -24,6 +26,8 @@ class Basic:
         self._environments = models.deployments.environments.Environments(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._deployments_basic = models.deployments.deployments_basic.Deployments_Basic(sql)
+        self._deployments_scheduled = models.deployments.deployments_scheduled.Deployments_Scheduled(sql)
+        self._notifications = models.notifications.Notifications(sql)
 
         # Init meteor
         self._meteor = routes.deployments.meteor.Meteor(app, sql)
@@ -169,6 +173,23 @@ class Basic:
 
         return deployments_basic_blueprint
 
+    #####################
+    # Scheduled Methods #
+    #####################
+    def check_scheduled(self):
+        # Get all basic pending scheduled executions
+        scheduled = self._deployments_scheduled.getBasic()
+
+        for s in scheduled:
+            # Create notifications
+            notification = {'name': 'A scheduled deployment has finished', 'status': s['status'], 'icon': 'fas fa-circle', 'category': 'deployment'}
+            notification['data'] = '{{"id": "{}", "name": "{}", "mode": "BASIC", "environment": "{}", "overall": "{}"}}'.format(s['id'], s['name'], s['environment'], s['overall'])
+            self._notifications.post(s['user_id'], notification)
+
+            # Clean scheduled deployments
+            scheduled = {'mode': 'BASIC', 'id': s['id']}
+            self._deployments_scheduled.delete(scheduled)
+
     def start_scheduled(self):
         # Get all basic scheduled executions
         scheduled = self._deployments_basic.getScheduled()
@@ -184,6 +205,10 @@ class Basic:
 
                 # Start Meteor Execution
                 self._meteor.execute(s)
+
+                # Add Deployment to be Scheduled Tracked
+                deployment = {"mode": s['mode'], "id": s['execution_id']}
+                self._deployments_scheduled.post(deployment)
 
     ####################
     # Internal Methods #

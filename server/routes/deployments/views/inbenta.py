@@ -12,6 +12,7 @@ import models.admin.settings
 import models.deployments.environments
 import models.deployments.deployments
 import models.deployments.deployments_inbenta
+import models.deployments.deployments_scheduled
 import routes.deployments.meteor
 
 class Inbenta:
@@ -24,6 +25,7 @@ class Inbenta:
         self._environments = models.deployments.environments.Environments(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._deployments_inbenta = models.deployments.deployments_inbenta.Deployments_Inbenta(sql)
+        self._deployments_scheduled = models.deployments.deployments_scheduled.Deployments_Scheduled(sql)
 
         # Init meteor
         self._meteor = routes.deployments.meteor.Meteor(app, sql)
@@ -169,6 +171,23 @@ class Inbenta:
 
         return deployments_inbenta_blueprint
 
+    #####################
+    # Scheduled Methods #
+    #####################
+    def check_scheduled(self):
+        # Get all pro pending scheduled executions
+        scheduled = self._deployments_scheduled.getInbenta()
+
+        for s in scheduled:
+            # Create notifications
+            notification = {'name': 'A scheduled deployment has finished', 'status': s['status'], 'icon': 'fas fa-circle', 'category': 'deployment'}
+            notification['data'] = '{{"id": "{}", "name": "{}", "mode": "INBENTA", "environment": "{}", "overall": "{}"}}'.format(s['id'], s['name'], s['environment'], s['overall'])
+            self._notifications.post(s['user_id'], notification)
+
+            # Clean scheduled deployments
+            scheduled = {'mode': 'INBENTA', 'id': s['id']}
+            self._deployments_scheduled.delete(scheduled)
+
     def start_scheduled(self):
         # Get all inbenta scheduled executions
         scheduled = self._deployments_inbenta.getScheduled()
@@ -184,6 +203,10 @@ class Inbenta:
 
                 # Start Meteor Execution
                 self._meteor.execute(s)
+
+                # Add Deployment to be Scheduled Tracked
+                deployment = {"mode": s['mode'], "id": s['execution_id']}
+                self._deployments_scheduled.post(deployment)
 
     ####################
     # Internal Methods #
@@ -263,14 +286,15 @@ class Inbenta:
         deployment = self._deployments_inbenta.get(data['execution_id'])[0]
 
         # Proceed editing the deployment 
-        if deployment['status'] == 'CREATED' and not data['start_execution']:
+        if deployment['status'] in ['CREATED','SCHEDULED'] and not data['start_execution']:
             # Check if user has modified any value
             if deployment['environment'] != data['environment'] or \
             deployment['products'] != data['products'] or \
             deployment['schema'] != data['schema'] or \
             deployment['databases'] != data['databases'] or \
             deployment['queries'] != data['queries'] or \
-            deployment['method'] != data['method']:
+            deployment['method'] != data['method'] or \
+            deployment['scheduled'] != data['scheduled']:
                 self._deployments_inbenta.put(data)
             return jsonify({'message': 'Deployment edited successfully', 'data': {'execution_id': data['execution_id']}}), 200
         else:
