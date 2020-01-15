@@ -245,6 +245,7 @@ class Basic:
         # Create deployment to the DB
         if data['scheduled'] != '':
             data['status'] = 'SCHEDULED'
+            data['start_execution'] = False
             if datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M') < datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
         else:
@@ -258,7 +259,7 @@ class Basic:
         # Build Response Data
         response = {'execution_id': data['execution_id'], 'coins': user['coins'] - group['coins_execution'] }
 
-        if 'start_execution' in data and data['start_execution']:
+        if data['start_execution']:
             # Get Meteor Additional Parameters
             data['group_id'] = user['group_id']
             data['execution_threads'] = group['deployments_execution_threads']
@@ -281,8 +282,10 @@ class Basic:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
         # Check scheduled date
-        if data['scheduled'] != '' and datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M') < datetime.now():
-            return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
+        if data['scheduled'] != '':
+            data['start_execution'] = False
+            if datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M') < datetime.now():
+                return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
 
         # Get current deployment
         deployment = self._deployments_basic.get(data['execution_id'])[0]

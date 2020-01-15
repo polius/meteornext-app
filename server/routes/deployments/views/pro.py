@@ -271,6 +271,7 @@ class Pro:
         # Create deployment to the DB
         if data['scheduled'] != '':
             data['status'] = 'SCHEDULED'
+            data['start_execution'] = False
             if datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M') < datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
         else:
@@ -314,8 +315,10 @@ class Pro:
             return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400  
 
         # Check scheduled date
-        if data['scheduled'] != '' and datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M') < datetime.now():
-            return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
+        if data['scheduled'] != '':
+            data['start_execution'] = False
+            if datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M') < datetime.now():
+                return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
 
         # Get current deployment
         deployment = self._deployments_pro.get(data['execution_id'])[0]
