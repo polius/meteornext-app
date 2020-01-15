@@ -70,9 +70,10 @@
       </v-toolbar>
       <v-progress-linear v-if="loading" indeterminate></v-progress-linear>
       <v-list :disabled="loading" subheader dense>
-        <v-subheader>New notifications</v-subheader>
+        <v-subheader v-if="notifications.length == 0" class="justify-center">No Notifications</v-subheader>
+        <v-subheader v-else>New notifications</v-subheader>
         <div v-for="notification in notifications" :key="notification['id']">
-          <v-list-item @click="removeNotification(notification)">
+          <v-list-item :title="notification['name']" @click="openNotification(notification)">
             <v-list-item-action style="margin-right:10px;">
               <v-icon small :title="notification.status.charAt(0).toUpperCase() + notification.status.slice(1).toLowerCase()" :color="notification['status'].toLowerCase()">{{ notification['icon'] }}</v-icon>
             </v-list-item-action>
@@ -81,10 +82,15 @@
               <v-list-item-subtitle>{{ parseDate(notification['date']) }}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
-          <v-divider v-if="notifications[notifications.length-1]['id'] != notification['id']"></v-divider>
+          <v-divider></v-divider>
         </div>
+        <v-btn v-if="notifications.length > 0" block large text title="Clear all notifications" @click="clearNotifications()">CLEAR</v-btn>
       </v-list>
     </v-navigation-drawer>
+    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+      {{ snackbarText }}
+      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+    </v-snackbar>
     <!--
       <v-list-item @click="removeNotification()">
         <v-list-item-action>
@@ -124,7 +130,13 @@ export default {
   data: () => ({
     rightDrawer: false,
     notifications: [],
-    loading: false
+    loading: false,
+
+    // Snackbar
+    snackbar: false,
+    snackbarTimeout: Number(3000),
+    snackbarText: '',
+    snackbarColor: ''
   }),
   computed : {
     isLoggedIn : function() { return this.$store.getters.isLoggedIn },
@@ -149,6 +161,38 @@ export default {
     },
     openNotifications() {
       this.rightDrawer = !this.rightDrawer
+    },
+    openNotification(notification) {
+      // Go to the selected resource
+      const data = JSON.parse(notification.data)
+      this.$router.push({ name:'deployment', params: { id: data.mode.substring(0, 1) + data.id }})
+
+      // Remove notification from notifications bar
+      const payload = JSON.stringify({ id: notification.id })
+      axios.put('/notifications', payload)
+        .then(() => {
+          for (var i = 0; i < this.notifications.length; ++i) {
+            if (this.notifications[i]['id'] == notification['id']) {
+              this.notifications.splice(i, 1)
+              break
+            }
+          }
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+    },
+    clearNotifications() {
+      axios.delete('/notifications/clear')
+        .then((response) => {
+          this.notification(response.data.message, 'success')
+          this.getNotifications(false)
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
     },
     notificationsSubmit() {
       if (window.location.pathname != '/notifications') this.$router.push('/notifications')
@@ -175,22 +219,16 @@ export default {
           })
       }
     },
-    removeNotification(notification) {
-      const payload = { id: notification['id'] }
-      axios.put('/notifications', payload)
-        .then(() => {
-          this.getNotifications(false)
-        })
-        .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
-        })
-    },
     getCoins() {
 
     },
     parseDate(date) {
       return moment(date).local().format('ddd, DD MMM YYYY HH:mm:ss')
+    },
+    notification(message, color) {
+      this.snackbarText = message
+      this.snackbarColor = color 
+      this.snackbar = true
     }
   }
 }

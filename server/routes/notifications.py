@@ -39,7 +39,7 @@ class Notifications:
 
         @notifications_blueprint.route('/notifications/bar', methods=['GET'])
         @jwt_required
-        def notifications_unseen_method():
+        def notifications_bar_method():
             # Check license
             if not self._license['status']:
                 return jsonify({"message": self._license['response']}), 401
@@ -49,6 +49,21 @@ class Notifications:
 
             # Return unseen user notifications
             return jsonify({'data': self._notifications.get_notification_bar(user['id'])}), 200
+    
+        @notifications_blueprint.route('/notifications/clear', methods=['DELETE'])
+        @jwt_required
+        def notifications_clear_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+            
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Clear all notifications
+            self._notifications.clear(user['id'])
+
+            return jsonify({'message': 'All notifications have been cleared'}), 200
 
         return notifications_blueprint
 

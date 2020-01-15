@@ -1239,6 +1239,9 @@
           if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
           if (typeof this.$refs.query_form !== 'undefined') this.$refs.query_form.resetValidation()
         })
+      },
+      '$route' () {
+        this.init()
       }
     }
   }
