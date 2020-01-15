@@ -67,7 +67,7 @@
               <span>{{ dateFormat(props.item.created) }}</span>
             </template>
             <template v-slot:item.scheduled="props">
-              <span>{{ dateFormat(props.item.scheduled) }}</span>
+              <span>{{ props.item.scheduled === null ? '' : dateFormat(props.item.scheduled).slice(0,-3) }}</span>
             </template>
             <template v-slot:item.started="props">
               <span>{{ dateFormat(props.item.started) }}</span>
@@ -359,9 +359,9 @@
                           <v-icon v-else-if="props.item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
                           <v-icon v-else-if="props.item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:8px;">fas fa-ban</v-icon>
                         </td>
-                        <td>{{ props.item.created }}</td>
-                        <td>{{ props.item.started }}</td>
-                        <td>{{ props.item.ended }}</td>
+                        <td>{{ dateFormat(props.item.created) }}</td>
+                        <td>{{ dateFormat(props.item.started) }}</td>
+                        <td>{{ dateFormat(props.item.ended) }}</td>
                         <td>{{ props.item.overall }}</td>
                         <td><v-btn icon small @click="selectExecution(props.item.id)"><v-icon small title="Select execution">fas fa-arrow-right</v-icon></v-btn></td>
                       </tr>
@@ -619,7 +619,7 @@
         }
       },
       goBack() {
-        this.router.go(-1)
+        this.$router.go(-1)
       },
       getDeployment() {
         // Get Deployment Data

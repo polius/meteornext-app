@@ -7,7 +7,7 @@ class Deployments_Scheduled:
 
     def getBasic(self):
         query = """
-            SELECT b.id, d.name, d.user_id, r.name AS 'release', e.name AS 'environment', b.status, CONCAT(TIMEDIFF(b.ended, b.started)) AS 'overall'
+            SELECT b.id, d.name, d.user_id, r.name AS 'release', e.name AS 'environment', b.status, b.method, CONCAT(TIMEDIFF(b.ended, b.started)) AS 'overall'
             FROM deployments_scheduled s
             JOIN deployments_basic b ON b.id = s.deployment_id AND s.deployment_mode = 'BASIC' AND b.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
             JOIN deployments d ON d.id = b.deployment_id
@@ -18,7 +18,7 @@ class Deployments_Scheduled:
 
     def getPro(self):
         query = """
-            SELECT p.id, d.name, d.user_id, r.name AS 'release', e.name AS 'environment', p.status, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall'
+            SELECT p.id, d.name, d.user_id, r.name AS 'release', e.name AS 'environment', p.status, p.method, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall'
             FROM deployments_scheduled s
             JOIN deployments_pro p ON p.id = s.deployment_id AND s.deployment_mode = 'PRO' AND p.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
             JOIN deployments d ON d.id = p.deployment_id
@@ -29,7 +29,7 @@ class Deployments_Scheduled:
 
     def getInbenta(self):
         query = """
-            SELECT i.id, d.name, d.user_id, r.name AS 'release', e.name AS 'environment', i.status, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall'
+            SELECT i.id, d.name, d.user_id, r.name AS 'release', e.name AS 'environment', i.status, i.method, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall'
             FROM deployments_scheduled s
             JOIN deployments_inbenta i ON i.id = s.deployment_id AND s.deployment_mode = 'INBENTA' AND i.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
             JOIN deployments d ON d.id = i.deployment_id

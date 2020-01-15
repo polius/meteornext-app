@@ -20,7 +20,7 @@
           </template>
           <template v-slot:item.show="props">
             <v-btn icon small @click="changeSeen(props.item)">
-              <v-icon small :title="props.item.show ? 'Show in the notification bar' : 'Do not show in the notification bar'" :color="props.item.show ? 'success' : 'error'">fas fa-circle</v-icon>
+              <v-icon small :title="props.item.show ? 'Show in the notification bar' : 'Don\'t show in the notification bar'" :color="props.item.show ? 'success' : 'error'">fas fa-circle</v-icon>
             </v-btn>
           </template>
         </v-data-table>
@@ -33,7 +33,7 @@
             <v-spacer></v-spacer>
             <v-btn icon @click="openDialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
           </v-toolbar>
-          <v-card-text style="padding: 15px 20px 20px;">
+          <v-card-text style="padding:15px">
             <v-container style="padding:0px; max-width:100%;">
               <v-layout wrap>
                 <v-flex xs12>
@@ -49,6 +49,13 @@
                     <v-text-field v-model="item.data.name" readonly label="Name"></v-text-field>
                     <v-text-field v-model="item.data.environment" readonly label="Environment" style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="item.data.overall" readonly label="Overall" style="padding-top:0px; margin-bottom:5px;" hide-details></v-text-field>
+                    <v-radio-group v-model="item.data.method" style="margin-top:15px;" readonly hide-details>
+                      <v-radio :value="item.data.method" :color="getDeploymentMethodColor(item)">
+                        <template v-slot:label>
+                          <div :class="`${getDeploymentMethodColor(item)}--text`">{{ item.data.method }}</div>
+                        </template>
+                      </v-radio>
+                    </v-radio-group>
                   </div>
                 </v-flex>
               </v-layout>
@@ -149,6 +156,7 @@ export default {
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
       // Delete items to the DB
+      this.loading = true
       axios.delete('/notifications', { data: payload })
         .then((response) => {
           this.notification(response.data.message, 'success')
@@ -156,7 +164,7 @@ export default {
           while(this.selected.length > 0) {
             var s = this.selected.pop()
             for (var i = 0; i < this.items.length; ++i) {
-              if (this.items[i]['name'] == s['name']) {
+              if (this.items[i]['id'] == s['id']) {
                 // Delete Item
                 this.items.splice(i, 1)
                 break
@@ -174,10 +182,6 @@ export default {
           this.deleteDialog = false
         })
     },
-    dateFormat(date) {
-      if (date) return moment(date).local().format('ddd, DD MMM YYYY HH:mm:ss')
-      return date
-    },
     changeSeen(item) {
       // Add item in the DB
       const payload = JSON.stringify({ id: item.id })
@@ -189,6 +193,16 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
+    },
+    dateFormat(date) {
+      if (date) return moment(date).local().format('ddd, DD MMM YYYY HH:mm:ss')
+      return date
+    },
+    getDeploymentMethodColor(item) {
+      if (item.data.method == 'VALIDATE') return 'success'
+      else if (item.data.method == 'TEST') return 'orange'
+      else if (item.data.method == 'DEPLOY') return 'red'
+      return ''
     },
     notification(message, color) {
       this.snackbarText = message

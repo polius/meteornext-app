@@ -28,7 +28,7 @@
         <v-icon small color="#ffcb05">fas fa-coins</v-icon>
       </v-chip>
 
-      <!-- NOTIFICATIONS -->
+      <!-- NOTIFICATIONS BAR -->
       <div>
         <v-tooltip>
           <template v-slot:activator="{ on }">
@@ -87,34 +87,19 @@
         <v-btn v-if="notifications.length > 0" block large text title="Clear all notifications" @click="clearNotifications()">CLEAR</v-btn>
       </v-list>
     </v-navigation-drawer>
+
+    <!-- NOTIFICATIONS Snackbar -->
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
       {{ snackbarText }}
       <v-btn color="white" text @click="snackbar = false">Close</v-btn>
     </v-snackbar>
-    <!--
-      <v-list-item @click="removeNotification()">
-        <v-list-item-action>
-          <v-icon>person_add</v-icon>
-        </v-list-item-action>
-        <v-list-item-title>
-          12 new users registered
-        </v-list-item-title>
-      </v-list-item>
-      </div>
-      <v-divider></v-divider>
-      <v-list-item>
-        <v-list-item-action>
-          <v-icon>data_usage</v-icon>
-        </v-list-item-action>
-        <v-list-item-title>
-          DB overloaded 80%
-        </v-list-item-title>
-      </v-list-item>
-    -->
 
-    <!-- <v-footer app v-if="isLoggedIn && showBottomNavbar()" style="height:30px;">
+    <!-- FOOTER -->
+    <!--
+    <v-footer app v-if="isLoggedIn && showBottomNavbar()" style="height:30px;">
       <span class="px-3"></span>
-    </v-footer> -->
+    </v-footer>
+    -->
   </v-app>
 </template>
 
@@ -186,8 +171,8 @@ export default {
     clearNotifications() {
       axios.delete('/notifications/clear')
         .then((response) => {
+          this.notifications = []
           this.notification(response.data.message, 'success')
-          this.getNotifications(false)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))

@@ -15,8 +15,8 @@ class Notifications:
     def put(self, user_id, notification):
         self._sql.execute("UPDATE notifications SET `show` = NOT `show` WHERE id = %s AND user_id = %s", (notification['id'], user_id))
 
-    def delete(self, user_id, notification):
-        self._sql.execute("DELETE FROM notifications WHERE id = %s AND user_id = %s", (notification['id'], user_id))
+    def delete(self, user_id, notification_id):
+        self._sql.execute("DELETE FROM notifications WHERE id = %s AND user_id = %s", (notification_id, user_id))
 
     def get_notification_bar(self, user_id):
         return self._sql.execute("SELECT id, name, icon, `status`, category, data, date FROM notifications WHERE `show` = 1 AND user_id = %s ORDER BY id DESC", (user_id))
