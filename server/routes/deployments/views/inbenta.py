@@ -315,7 +315,10 @@ class Inbenta:
                 return jsonify({'message': 'The local logs path has no write permissions'}), 400
 
             # Create a new Inbenta Deployment
-            data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
+            if data['scheduled'] != '':
+                data['status'] = 'SCHEDULED'
+            else:
+                data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
             data['execution_id'] = self._deployments_inbenta.post(data)
 
             # Consume Coins
