@@ -33,7 +33,7 @@
 
         <v-spacer></v-spacer>
         <div v-if="last_updated != ''" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ last_updated }}</b> UTC</div>
-        <v-btn icon @click="goBack()"><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn>
+        <v-btn icon title="Go back" @click="goBack()"><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn>
       </v-toolbar>
 
       <!-- RESULTS -->
