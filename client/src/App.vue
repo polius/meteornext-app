@@ -208,7 +208,7 @@ export default {
 
     },
     parseDate(date) {
-      return moment(date).local().format('ddd, DD MMM YYYY HH:mm:ss')
+      return moment.utc(date).local().format('ddd, DD MMM YYYY HH:mm:ss')
     },
     notification(message, color) {
       this.snackbarText = message

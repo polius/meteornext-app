@@ -225,7 +225,7 @@ export default {
       else if (method == 'VALIDATE') return '#4caf50'
     },
     dateFormat(date) {
-      if (date) return moment(date).format("YYYY-MM-DD HH:mm:ss") // + ' UTC'
+      if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
     },
     newDeploy() {

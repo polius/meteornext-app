@@ -32,7 +32,7 @@
         </v-toolbar-items>
 
         <v-spacer></v-spacer>
-        <div v-if="last_updated != ''" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ last_updated }}</b> UTC</div>
+        <div v-if="last_updated != ''" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
         <v-btn icon title="Go back" @click="goBack()"><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn>
       </v-toolbar>
 
@@ -1219,7 +1219,7 @@
         else return 'warning--text'
       },
       dateFormat(date) {
-        if (date) return moment(date).format("YYYY-MM-DD HH:mm:ss") // + ' UTC'
+        if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
         return date
       },
       notification(message, color) {

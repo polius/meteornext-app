@@ -17,20 +17,20 @@ class progress:
             self._sql.connect(self._credentials['meteor_next']['hostname'], self._credentials['meteor_next']['port'], self._credentials['meteor_next']['username'], self._credentials['meteor_next']['password'], self._credentials['meteor_next']['database'])
             # Track progress
             engine = 'amazon_s3' if self._credentials['s3']['enabled'] == 'True' else 'local'
-            query = "UPDATE deployments_{} SET status = 'IN PROGRESS', uri = '{}', engine = '{}', started = '{}', pid = '{}' WHERE id = {}".format(self._args.deployment_mode, self._args.uuid, engine, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), pid, self._args.deployment_id)
+            query = "UPDATE deployments_{} SET status = 'IN PROGRESS', uri = '{}', engine = '{}', started = '{}', pid = '{}' WHERE id = {}".format(self._args.deployment_mode, self._args.uuid, engine, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), pid, self._args.deployment_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
 
     def end(self, execution_status):
         if self.__enabled():
             status = 'SUCCESS' if execution_status == 1 else 'WARNING' if execution_status == 0 else 'STOPPED'
-            query = "UPDATE deployments_{} SET status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._args.deployment_mode, status, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
+            query = "UPDATE deployments_{} SET status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._args.deployment_mode, status, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
 
     def error(self, error_msg):
         if self.__enabled():
             self._progress['error'] = error_msg.replace('"', '\\"').replace("\n", "\\n")
             progress = json.dumps(self._progress).replace("'", "\\\'")
-            query = "UPDATE deployments_{} SET status = 'FAILED', progress = '{}', ended = '{}', error = 1 WHERE id = {}".format(self._args.deployment_mode, progress, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
+            query = "UPDATE deployments_{} SET status = 'FAILED', progress = '{}', ended = '{}', error = 1 WHERE id = {}".format(self._args.deployment_mode, progress, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._args.deployment_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
 
     def track_syntax(self, value):
@@ -77,7 +77,7 @@ class progress:
             self.__store()
 
     def __store(self):
-        self._progress['updated'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self._progress['updated'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         progress = json.dumps(self._progress).replace("'", "\\\'")
         query = "UPDATE deployments_{} SET progress = '{}' WHERE id = {}".format(self._args.deployment_mode, progress, self._args.deployment_id)
         self._sql.execute(query, self._credentials['meteor_next']['database'])

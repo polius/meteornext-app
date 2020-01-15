@@ -19,12 +19,12 @@ class Deployments_Basic:
 
     def post(self, deployment):
         query = """
-            INSERT INTO deployments_basic (deployment_id, environment_id, `databases`, queries, method, `status`, scheduled)
-            SELECT %s, e.id, %s, %s, %s, %s, IF(%s = '', NULL, %s)
+            INSERT INTO deployments_basic (deployment_id, environment_id, `databases`, queries, method, `status`, created, scheduled)
+            SELECT %s, e.id, %s, %s, %s, %s, %s, IF(%s = '', NULL, %s)
             FROM environments e
             WHERE e.name = %s
         """
-        return self._sql.execute(query, (deployment['id'], deployment['databases'], str(deployment['queries']), deployment['method'], deployment['status'], deployment['scheduled'], deployment['scheduled'], deployment['environment']))
+        return self._sql.execute(query, (deployment['id'], deployment['databases'], str(deployment['queries']), deployment['method'], deployment['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), deployment['scheduled'], deployment['scheduled'], deployment['environment']))
 
     def put(self, deployment):
         query = """
@@ -99,10 +99,10 @@ class Deployments_Basic:
             JOIN users u ON u.id = d.user_id
             JOIN groups g ON g.id = u.group_id
             WHERE b.status = 'SCHEDULED'
-            AND NOW() >= b.scheduled
+            AND %s >= b.scheduled
             AND d.deleted = 0
         """
-        return self._sql.execute(query)
+        return self._sql.execute(query, (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def setError(self, execution_id, error):
         query = """
@@ -113,4 +113,4 @@ class Deployments_Basic:
             error = 1 
             WHERE id = %s
         """.format(error)
-        return self._sql.execute(query, (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), execution_id))
+        return self._sql.execute(query, (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), execution_id))
