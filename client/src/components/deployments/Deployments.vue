@@ -21,10 +21,10 @@
           </v-edit-dialog>
         </template>
         <template v-slot:item.release="props">
-          <v-edit-dialog ref="releaseDialog" :return-value.sync="props.item.release" lazy @open="openRelease(props.item)" @save="saveRelease(props.item)"> 
+          <v-edit-dialog :return-value.sync="props.item.release" large @open="openRelease(props.item)" @save="saveRelease(props.item)"> 
             {{ props.item.release }}
             <template v-slot:input>
-              <v-select v-model="inline_editing_release" :items="releases_items" label="Releases" @change="$refs.releaseDialog.save(inline_editing_release); saveRelease(props.item)" hide-details style="margin-top:10px; margin-bottom:15px;"></v-select>
+              <v-select v-model="inline_editing_release" :items="releases_items" label="Releases" hide-details style="margin-top:15px; margin-bottom:5px;"></v-select>
             </template>
           </v-edit-dialog>
         </template>

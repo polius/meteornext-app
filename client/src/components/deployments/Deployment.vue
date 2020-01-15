@@ -363,7 +363,10 @@
                         <td>{{ dateFormat(props.item.started) }}</td>
                         <td>{{ dateFormat(props.item.ended) }}</td>
                         <td>{{ props.item.overall }}</td>
-                        <td><v-btn icon small @click="selectExecution(props.item.id)"><v-icon small title="Select execution">fas fa-arrow-right</v-icon></v-btn></td>
+                        <td>
+                          <v-btn icon @click="selectExecution(props.item.id)" style="margin-left:-12px;"><v-icon small title="Delete execution" color="error">fas fa-times</v-icon></v-btn>
+                          <v-btn icon @click="deleteExecution(props.item)"><v-icon small title="Select execution" color="warning">fas fa-arrow-right</v-icon></v-btn>
+                        </td>
                       </tr>
                     </template>
                   </v-data-table>
@@ -1001,6 +1004,7 @@
           this.clear()
           this.init()
         }
+        deleteExecution(execution_id)
       },
       // -------------------------------------
       // EDIT
