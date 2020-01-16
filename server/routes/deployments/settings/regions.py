@@ -44,9 +44,9 @@ class Regions:
             if request.method == 'GET':
                 return self.get(user['group_id'])
             elif request.method == 'POST':
-                return self.post(user['group_id'], region_json)
+                return self.post(user['id'], user['group_id'], region_json)
             elif request.method == 'PUT':
-                return self.put(user['group_id'], region_json)
+                return self.put(user['id'], user['group_id'], region_json)
             elif request.method == 'DELETE':
                 return self.delete(user['group_id'], region_json)
 
@@ -107,7 +107,7 @@ class Regions:
     def get(self, group_id):
         return jsonify({'data': {'regions': self._regions.get(group_id), 'environments': self._environments.get(group_id)}}), 200
 
-    def post(self, group_id, data):
+    def post(self, user_id, group_id, data):
         if self._regions.exist(group_id, data):
             return jsonify({'message': 'This region currently exists'}), 400
         elif data['cross_region']:
@@ -118,10 +118,10 @@ class Regions:
                 return jsonify({'message': status['error']}), 400
 
         # Create new Region
-        self._regions.post(group_id, data)
+        self._regions.post(user_id, group_id, data)
         return jsonify({'message': 'Region added successfully'}), 200
 
-    def put(self, group_id, data):
+    def put(self, user_id, group_id, data):
         if self._regions.exist(group_id, data):
             return jsonify({'message': 'This new region name currently exists'}), 400
         elif data['cross_region']:
@@ -143,7 +143,7 @@ class Regions:
                     return jsonify({'message': status['error']}), 400
 
         # Edit Region
-        self._regions.put(group_id, data)
+        self._regions.put(user_id, group_id, data)
         return jsonify({'message': 'Region edited successfully'}), 200
 
     def delete(self, group_id, data):

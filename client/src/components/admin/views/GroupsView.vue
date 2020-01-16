@@ -330,7 +330,15 @@ export default {
     // +--------+
     // | GROUPS |
     // +--------+
-    group: {},
+    group: { 
+      'deployments_enable': false,
+      'deployments_basic': false,
+      'deployments_pro': false,
+      'deployments_inbenta': false,
+      'deployments_edit': false,
+      'deployments_execution_plan_factor': 0,
+      'deployments_execution_threads': 10 
+    },
     group_epf_switch: false,
     toolbar_title: '',
     form_valid: false,

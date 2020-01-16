@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from datetime import datetime
 
 class Regions:
     def __init__(self, sql):
@@ -22,31 +23,33 @@ class Regions:
             """
             return self._sql.execute(query, (group_id, region_id))            
 
-    def post(self, group_id, region):
+    def post(self, user_id, group_id, region):
         query = """
-            INSERT INTO regions (name, environment_id, cross_region, hostname, port, username, password, `key`, deploy_path)             
-            SELECT %s, id, %s , IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s)
+            INSERT INTO regions (name, environment_id, cross_region, hostname, port, username, password, `key`, deploy_path, created_by, created_at)             
+            SELECT %s, id, %s , IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), %s, %s
             FROM environments
             WHERE group_id = %s AND name = %s
         """
-        self._sql.execute(query, (region['name'], region['cross_region'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'], region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], group_id, region['environment']))
+        self._sql.execute(query, (region['name'], region['cross_region'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'], region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, region['environment']))
 
-    def put(self, group_id, region):
+    def put(self, user_id, group_id, region):
         query = """
             UPDATE regions
             JOIN environments e ON e.id = regions.environment_id AND e.group_id = %s
             SET regions.name = %s,
-                environment_id = (SELECT id FROM environments WHERE name = %s),
-                cross_region = %s,
-                hostname = IF(%s = '', NULL, %s),
-                port = IF(%s = '', NULL, %s),
-                username = IF(%s = '', NULL, %s),
-                password = IF(%s = '', NULL, %s),
-                `key` = IF(%s = '', NULL, %s),
-                deploy_path = IF(%s = '', NULL, %s)
+                regions.environment_id = (SELECT id FROM environments WHERE name = %s),
+                regions.cross_region = %s,
+                regions.hostname = IF(%s = '', NULL, %s),
+                regions.port = IF(%s = '', NULL, %s),
+                regions.username = IF(%s = '', NULL, %s),
+                regions.password = IF(%s = '', NULL, %s),
+                regions.`key` = IF(%s = '', NULL, %s),
+                regions.deploy_path = IF(%s = '', NULL, %s),
+                regions.updated_by = %s,
+                regions.updated_at = %s
             WHERE regions.id = %s
         """
-        self._sql.execute(query, (group_id, region['name'], region['environment'], region['cross_region'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], region['id']))
+        self._sql.execute(query, (group_id, region['name'], region['environment'], region['cross_region'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), region['id']))
 
     def delete(self, group_id, region_id):
         query = """

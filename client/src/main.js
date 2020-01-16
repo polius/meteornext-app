@@ -8,8 +8,8 @@ import Axios from 'axios'
 Vue.config.productionTip = false
 
 Vue.prototype.$http = Axios;
-// Vue.prototype.$http.defaults.baseURL = "http://" + window.location.hostname + ":5000/api"
-Vue.prototype.$http.defaults.baseURL = "http://" + window.location.host + "/api"
+// Vue.prototype.$http.defaults.baseURL = window.location.protocol + "//" + window.location.hostname + ":5000/api"
+Vue.prototype.$http.defaults.baseURL = window.location.protocol + "//" + window.location.host + "/api"
 Vue.prototype.$http.defaults.headers.common['Content-type'] = "application/json"
 
 const token = localStorage.getItem('token')

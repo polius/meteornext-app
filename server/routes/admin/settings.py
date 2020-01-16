@@ -44,7 +44,7 @@ class Settings:
             if request.method == 'GET':
                 return self.get()
             elif request.method == 'PUT':
-                return self.put(settings_json)
+                return self.put(user['id'], settings_json)
 
         return settings_blueprint
 
@@ -67,12 +67,12 @@ class Settings:
         # Return Settings
         return jsonify({'data': settings}), 200
 
-    def put(self, data):
+    def put(self, user_id, data):
         # Check logs path permissions
         u = utils.Utils(self._app)
         if not u.check_local_path(json.loads(data['value'])['local']['path']):
             return jsonify({'message': 'The local logs path has no write permissions'}), 400
 
         # Edit logs settings
-        self._settings.post(data)
+        self._settings.post(user_id, data)
         return jsonify({'message': 'Changes saved successfully'}), 200

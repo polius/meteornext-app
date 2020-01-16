@@ -16,6 +16,9 @@
           <v-icon v-if="props.item.admin" small color="success" style="margin-left:8px;">fas fa-check</v-icon>
           <v-icon v-else small color="error" style="margin-left:8px;">fas fa-times</v-icon>
         </template>
+        <template v-slot:item.created_at="props">
+          <span>{{ dateFormat(props.item.created_at) }}</span>
+        </template>
       </v-data-table>
     </v-card>
 
@@ -60,6 +63,7 @@
 
 <script>
 import axios from 'axios';
+import moment from 'moment';
 
 export default {
   data: () => ({
@@ -69,6 +73,7 @@ export default {
       { text: 'Group', align: 'left', value: 'group' },
       { text: 'Email', align: 'left', value: 'email'},
       { text: 'Password', align: 'left', value: 'password'},
+      { text: 'Created', align: 'left', value: 'created_at'},
       { text: 'Coins', align: 'left', value: 'coins'},
       { text: 'Admin', align: 'left', value: 'admin'},
     ],
@@ -138,6 +143,7 @@ export default {
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['username'] == this.item.username) {
           this.notification('This user currently exists', 'error')
+          this.loading = false
           return
         }
       }
@@ -151,6 +157,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
+          this.loading = false
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
@@ -233,6 +240,10 @@ export default {
           this.loading = false
           this.dialog = false
         })
+    },
+    dateFormat(date) {
+      if (date) return moment.utc(date).local().format('ddd, DD MMM YYYY HH:mm:ss')
+      return date
     },
     notification(message, color) {
       this.snackbarText = message

@@ -37,9 +37,11 @@ class Groups:
             if not self._license['status']:
                 return jsonify({"message": self._license['response']}), 401
 
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
             # Check user privileges
-            is_admin = self._users.is_admin(get_jwt_identity())
-            if not is_admin:
+            if not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             group_json = request.get_json()
@@ -47,9 +49,9 @@ class Groups:
             if request.method == 'GET':
                 return self.get()
             elif request.method == 'POST':
-                return self.post(group_json)
+                return self.post(user['id'], group_json)
             elif request.method == 'PUT':
-                return self.put(group_json)
+                return self.put(user['id'], group_json)
             elif request.method == 'DELETE':
                 return self.delete(group_json)
 
@@ -74,7 +76,7 @@ class Groups:
             }
             return jsonify(data), 200
 
-    def post(self, data):
+    def post(self, user_id, data):
         # Get Group
         group = json.loads(data['group'])
 
@@ -83,7 +85,7 @@ class Groups:
             return jsonify({'message': 'This group currently exists'}), 400
 
         # Create group
-        self._groups.post(group)
+        self._groups.post(user_id, group)
 
         # Get group ID
         group_id = self._groups.get(group_name=group['name'])[0]['id']
@@ -91,15 +93,15 @@ class Groups:
         # Add elements
         try:
             for i in data['environments']:
-                self._environments.post(group_id, i)
+                self._environments.post(user_id, group_id, i)
             for i in data['regions']:
-                self._regions.post(group_id, i)
+                self._regions.post(user_id, group_id, i)
             for i in data['servers']:
-                self._servers.post(group_id, i)
+                self._servers.post(user_id, group_id, i)
             for i in data['auxiliary']:
-                self._auxiliary.post(group_id, i)
+                self._auxiliary.post(user_id, group_id, i)
 
-            self._slack.put(group_id, json.loads(data['slack']))        
+            self._slack.put(user_id, group_id, json.loads(data['slack']))        
             return jsonify({'message': 'Group added'}), 200
 
         except Exception:
@@ -107,7 +109,7 @@ class Groups:
             self.delete([group['name']])
             return jsonify({'message': 'An error ocurred adding a group'}), 400
 
-    def put(self, data):
+    def put(self, user_id, data):
         # Get Modified Group
         group = json.loads(data['group'])
 
@@ -127,38 +129,38 @@ class Groups:
         # Apply diff
         # - Groups -
         if len(diff_group['change']) > 0:
-            self._groups.put(diff_group['change'][0])
+            self._groups.put(user_id, diff_group['change'][0])
         
         # - Environments -
         self._environments.delete(group['id'], diff_environments['remove'])
         for i in diff_environments['add']:
-            self._environments.post(group['id'], i)
+            self._environments.post(user_id, group['id'], i)
         for i in diff_environments['change']:
-            self._environments.put(group['id'], i)
+            self._environments.put(user_id, group['id'], i)
 
         # - Regions -
         self._regions.delete(group['id'], diff_regions['remove'])
         for i in diff_regions['add']:
-            self._regions.post(group['id'], i)
+            self._regions.post(user_id, group['id'], i)
         for i in diff_regions['change']:
-            self._regions.put(group['id'], i)
+            self._regions.put(user_id, group['id'], i)
 
         # - Servers -
         self._servers.delete(group['id'], diff_servers['remove'])
         for i in diff_servers['add']:
-            self._servers.post(group['id'], i)
+            self._servers.post(user_id, group['id'], i)
         for i in diff_servers['change']:
-            self._servers.put(group['id'], i)
+            self._servers.put(user_id, group['id'], i)
 
         # - Auxiliary Connections -
         self._auxiliary.delete(group['id'], diff_auxiliary['remove'])
         for i in diff_auxiliary['add']:
-            self._auxiliary.post(group['id'], i)
+            self._auxiliary.post(user_id, group['id'], i)
         for i in diff_auxiliary['change']:
-            self._auxiliary.put(group['id'], i)
+            self._auxiliary.put(user_id, group['id'], i)
 
         # - Slack -
-        self._slack.put(group['id'], json.loads(data['slack']))
+        self._slack.put(user_id, group['id'], json.loads(data['slack']))
 
         return jsonify({'message': 'Group edited'}), 200
 

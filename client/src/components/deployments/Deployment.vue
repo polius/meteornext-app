@@ -417,7 +417,8 @@
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 style="padding-bottom:10px">
-                <v-btn ref="results_url" block text :href="`http://` + url + `/results/` + deployment['uri']" target="_blank" class="text-lowercase title font-weight-light" style="margin-top:25px;">{{ url + `/results/` + deployment['uri'] }}</v-btn>
+                <v-btn ref="results_url" block text :href="url + `/results/` + deployment['uri']" target="_blank" class="text-lowercase title font-weight-light" style="margin-top:25px;">{{url + `/results/` + deployment['uri'] }}</v-btn>
+                <textarea id="clipboard" style="opacity:.01; height:0; position:absolute; z-index:-1;"></textarea>
               </v-flex>
             </v-layout>
           </v-container>
@@ -444,7 +445,7 @@
 
 <script>
   import axios from 'axios'
-  import moment from 'moment';
+  import moment from 'moment'
 
   // CODE-MIRROR
   import { codemirror } from 'vue-codemirror'
@@ -595,7 +596,7 @@
       snackbarText: '',
       snackbarColor: '',
 
-      url: window.location.host,
+      url: window.location.protocol + '//' + window.location.host,
       loading: false
     }),
     components: { 
@@ -1155,23 +1156,10 @@
       // SHARE RESULTS
       // -------------------------------------
       resultsClipboard() {
-        const el = document.createElement('textarea');    // Create a <textarea> element
-        el.value = this.url + "/results/" + this.deployment['uri']; // Set its value to the string that you want copied
-        el.setAttribute('readonly', '');                // Make it readonly to be tamper-proof
-        el.style.position = 'absolute';                 
-        el.style.left = '-9999px';                      // Move outside the screen to make it invisible
-        document.body.appendChild(el);                  // Append the <textarea> element to the HTML document
-        const selected =            
-          document.getSelection().rangeCount > 0        // Check if there is any content selected previously
-            ? document.getSelection().getRangeAt(0)     // Store selection if found
-            : false;                                    // Mark as false to know no selection existed before
-        el.select();                                    // Select the <textarea> content
-        document.execCommand('copy');                   // Copy - only works as a result of a user action (e.g. click events)
-        document.body.removeChild(el);                  // Remove the <textarea> element
-        if (selected) {                                 // If a selection existed before copying
-          document.getSelection().removeAllRanges();    // Unselect everything on the HTML document
-          document.getSelection().addRange(selected);   // Restore the original selection
-        }
+        document.getElementById('clipboard').value = this.url + `/results/` + this.deployment['uri']
+        document.getElementById('clipboard').select()
+        document.execCommand('copy')
+
         this.notification('Deployment URL added to the clipboard', 'info')
       },
       resultsShare() {

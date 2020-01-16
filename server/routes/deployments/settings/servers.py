@@ -43,9 +43,9 @@ class Servers:
             if request.method == 'GET':
                 return self.get(user['group_id'])
             elif request.method == 'POST':
-                return self.post(user['group_id'], server_json)
+                return self.post(user['id'], user['group_id'], server_json)
             elif request.method == 'PUT':
-                return self.put(user['group_id'], server_json)
+                return self.put(user['id'], user['group_id'], server_json)
             elif request.method == 'DELETE':
                 return self.delete(user['group_id'], server_json)
 
@@ -89,18 +89,18 @@ class Servers:
     def get(self, group_id):
         return jsonify({'data': {'servers': self._servers.get(group_id), 'environments': self._environments.get(group_id)}}), 200
 
-    def post(self, group_id, data):
+    def post(self, user_id, group_id, data):
         if self._servers.exist(group_id, data):
             return jsonify({'message': 'This server currently exists'}), 400
         else:
-            self._servers.post(group_id, data)
+            self._servers.post(user_id, group_id, data)
             return jsonify({'message': 'Server added successfully'}), 200
 
-    def put(self, group_id, data):
+    def put(self, user_id, group_id, data):
         if self._servers.exist(group_id, data):
             return jsonify({'message': 'This new server name currently exists'}), 400
         else:
-            self._servers.put(group_id, data)
+            self._servers.put(user_id, group_id, data)
             return jsonify({'message': 'Server edited successfully'}), 200
 
     def delete(self, group_id, data):

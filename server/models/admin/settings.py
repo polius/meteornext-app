@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from datetime import datetime
 
 class Settings:
     def __init__(self, sql):
@@ -20,10 +21,10 @@ class Settings:
             """
             return self._sql.execute(query)
 
-    def post(self, settings):
+    def post(self, user_id, settings):
         query = """
-            INSERT INTO settings (name, value)             
-            VALUES (%s, %s)
+            INSERT INTO settings (name, value, updated_by, updated_at)             
+            VALUES (%s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE value = VALUES(value)
         """
-        self._sql.execute(query, (settings['name'], settings['value']))
+        self._sql.execute(query, (settings['name'], settings['value'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))

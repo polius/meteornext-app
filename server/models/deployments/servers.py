@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from datetime import datetime
 
 class Servers:
     def __init__(self, sql):
@@ -24,17 +25,17 @@ class Servers:
             """
             return self._sql.execute(query, (group_id, server_id))
 
-    def post(self, group_id, server):
+    def post(self, user_id, group_id, server):
         query = """
-            INSERT INTO servers (name, region_id, hostname, port, username, password)             
-            SELECT %s, r.id, %s, %s, %s, %s
+            INSERT INTO servers (name, region_id, hostname, port, username, password, created_by, created_at)             
+            SELECT %s, r.id, %s, %s, %s, %s, %s, %s
             FROM regions r
             JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
             WHERE r.name = %s
         """
-        self._sql.execute(query, (server['name'], server['hostname'], server['port'], server['username'], server['password'], group_id, server['environment'], server['region']))
+        self._sql.execute(query, (server['name'], server['hostname'], server['port'], server['username'], server['password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, server['environment'], server['region']))
 
-    def put(self, group_id, server):
+    def put(self, user_id, group_id, server):
         query = """
             UPDATE servers
             JOIN regions r ON r.id = servers.region_id AND r.id = %s
@@ -44,10 +45,12 @@ class Servers:
                 servers.hostname = %s,
                 servers.port = %s,
                 servers.username = %s,
-                servers.password = %s
+                servers.password = %s,
+                servers.updated_by = %s,
+                servers.updated_at = %s
             WHERE servers.id = %s
         """
-        self._sql.execute(query, (server['region_id'], group_id, server['environment_id'], server['name'], server['environment'], server['region'], server['hostname'], server['port'], server['username'], server['password'], server['id']))
+        self._sql.execute(query, (server['region_id'], group_id, server['environment_id'], server['name'], server['environment'], server['region'], server['hostname'], server['port'], server['username'], server['password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
     def delete(self, group_id, server_id):
         query = """

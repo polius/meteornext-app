@@ -2,6 +2,8 @@ CREATE TABLE `settings` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
 	`value` TEXT NOT NULL,
+  `updated_by` INT UNSIGNED NULL,
+  `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
@@ -22,11 +24,13 @@ CREATE TABLE `groups` (
   `deployments_edit` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_execution_threads` tinyint(255) UNSIGNED NOT NULL DEFAULT '10',
   `deployments_execution_plan_factor` INT UNSIGNED NOT NULL DEFAULT '0',
+  `created_by` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  `updated_by` INT UNSIGNED NULL,
+  `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
-
-INSERT INTO `groups`(`id`, `name`, `description`, `coins_day`, `coins_max`, `coins_execution`, `deployments_enable`, `deployments_basic`, `deployments_pro`, `deployments_inbenta`, `deployments_edit`, `deployments_execution_threads`, `deployments_execution_plan_factor`) VALUES (1, 'Administrator', 'The Admin', 25, 100, 10, 1, 1, 1, 1, 1, 10, 0);
 
 CREATE TABLE `users` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -37,6 +41,10 @@ CREATE TABLE `users` (
   `group_id` int(10) unsigned NOT NULL,
   `admin` tinyint(1) NOT NULL DEFAULT '0',
   `last_login` DATETIME NULL,
+  `created_by` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  `updated_by` INT UNSIGNED NULL,
+  `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   KEY `group_id` (`group_id`),
@@ -47,6 +55,10 @@ CREATE TABLE `environments` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `group_id` int(10) unsigned NOT NULL,
+  `created_by` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  `updated_by` INT UNSIGNED NULL,
+  `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_id` (`group_id`,`name`),
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
@@ -63,6 +75,10 @@ CREATE TABLE `regions` (
   `password` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `key` text COLLATE utf8mb4_unicode_ci,
   `deploy_path` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  `updated_by` INT UNSIGNED NULL,
+  `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `environment_id` (`environment_id`,`name`),
   CONSTRAINT `regions_ibfk_1` FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
@@ -77,6 +93,10 @@ CREATE TABLE `servers` (
   `port` INT UNSIGNED NOT NULL,
   `username` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_by` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  `updated_by` INT UNSIGNED NULL,
+  `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `region_id` (`region_id`,`name`),
   FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`)
@@ -91,6 +111,10 @@ CREATE TABLE `auxiliary` (
   `port` INT UNSIGNED NOT NULL,
   `username` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  `updated_by` INT UNSIGNED NULL,
+  `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_id` (`group_id`,`name`),
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
@@ -102,6 +126,10 @@ CREATE TABLE `slack` (
   `webhook_url` text COLLATE utf8mb4_unicode_ci,
   `enabled` tinyint(1) DEFAULT NULL,
   `group_id` int(10) unsigned NOT NULL,
+  `created_by` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  `updated_by` INT UNSIGNED NULL,
+  `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_id` (`group_id`),
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)

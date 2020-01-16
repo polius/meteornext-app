@@ -37,7 +37,7 @@ class Slack:
             if request.method == 'GET':
                 return self.get(user['group_id'])
             elif request.method == 'PUT':
-                return self.put(user['group_id'], slack_json)
+                return self.put(user['id'], user['group_id'], slack_json)
 
         return slack_blueprint
 
@@ -47,11 +47,11 @@ class Slack:
     def get(self, group_id):
         return jsonify({'data': self._slack.get(group_id)}), 200
 
-    def put(self, group_id, data):
+    def put(self, user_id, group_id, data):
         if not self._slack.exist(group_id):
-            self._slack.post(group_id, data)
+            self._slack.post(user_id, group_id, data)
         else:
-            self._slack.put(group_id, data)
+            self._slack.put(user_id, group_id, data)
         return jsonify({'message': 'Changes saved successfully'}), 200
 
     def delete(self, group_id):

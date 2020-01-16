@@ -12,6 +12,9 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
+        <template v-slot:item.created_at="props">
+          <span>{{ dateFormat(props.item.created_at) }}</span>
+        </template>
       </v-data-table>
     </v-card>
 
@@ -48,6 +51,7 @@
 
 <script>
 import axios from 'axios';
+import moment from 'moment';
 
 export default {
   data: () => ({
@@ -56,7 +60,8 @@ export default {
     // +--------+
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
-      { text: 'Description', align: 'left', value: 'description' }
+      { text: 'Description', align: 'left', value: 'description' },
+      { text: 'Created', align: 'left', value: 'created_at' }
     ],
     items: [],
     selected: [],
@@ -129,6 +134,10 @@ export default {
           this.loading = false
           this.dialog = false
         })
+    },
+    dateFormat(date) {
+      if (date) return moment.utc(date).local().format('ddd, DD MMM YYYY HH:mm:ss')
+      return date
     },
     // SNACKBAR
     notification(message, color) {
