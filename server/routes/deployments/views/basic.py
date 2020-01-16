@@ -347,7 +347,17 @@ class Basic:
             return jsonify({'message': 'The local logs path has no write permissions'}), 400
 
         # Get Deployment
-        deployment = self._deployments_basic.get(data['execution_id'])[0]
+        deployment = self._deployments_basic.get(data['execution_id'])
+
+        # Check if deployment exists
+        if len(deployment) == 0:
+            return jsonify({'message': 'This deployment does not exist.'}), 400
+        else:
+            deployment = deployment[0]
+
+        # Check if Deploy has already started
+        if deployment['status'] not in ['CREATED','SCHEDULED']:
+            return jsonify({'message': ''}), 200
 
         # Get Meteor Additional Parameters
         group = self._groups.get(group_id=user['group_id'])[0]

@@ -59,11 +59,13 @@
 
     <v-dialog v-model="scheduleDialog" persistent width="290px">
       <v-date-picker v-if="schedule_mode=='date'" v-model="schedule_date" color="info" scrollable>
+        <v-btn text color="info" @click="schedule_now()">Now</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
         <v-btn text color="success" @click="schedule_submit()">Confirm</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="schedule_mode=='time'" v-model="schedule_time" color="info" format="24hr" scrollable>
+        <v-btn text color="info" @click="schedule_now()">Now</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
         <v-btn text color="success" @click="schedule_submit()">Confirm</v-btn>
@@ -231,6 +233,11 @@ export default {
       if (this.schedule_mode == 'date') this.schedule_date = this.schedule_datetime.substring(0,10)
       else if (this.schedule_mode == 'time') this.schedule_time = this.schedule_datetime.substring(11,16)
       this.schedule_mode = 'date'
+    },
+    schedule_now() {
+      const date = moment()
+      if (this.schedule_mode == 'date') this.schedule_date = date.format("YYYY-MM-DD")
+      else if (this.schedule_mode == 'time') this.schedule_time = date.format("HH:mm")
     },
     schedule_change() {
       if (this.schedule_enabled) {

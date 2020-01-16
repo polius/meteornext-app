@@ -202,6 +202,9 @@ class Inbenta:
                 self._deployments_inbenta.setError(s['execution_id'], 'The local logs path has no write permissions')
         else:
             for s in scheduled:
+                # Parse Products
+                s['products'] = s['products'].split(',')
+
                 # Update Execution Status
                 self._deployments_inbenta.startExecution(s['execution_id'])
 
@@ -351,7 +354,17 @@ class Inbenta:
             return jsonify({'message': 'The local logs path has no write permissions'}), 400
 
         # Get Deployment
-        deployment = self._deployments_inbenta.get(data['execution_id'])[0]
+        deployment = self._deployments_inbenta.get(data['execution_id'])
+
+        # Check if deployment exists
+        if len(deployment) == 0:
+            return jsonify({'message': 'This deployment does not exist.'}), 400
+        else:
+            deployment = deployment[0]
+
+        # Check if Deploy has already started
+        if deployment['status'] not in ['CREATED','SCHEDULED']:
+            return jsonify({'message': ''}), 200
 
         # Get Meteor Additional Parameters
         group = self._groups.get(group_id=user['group_id'])[0]

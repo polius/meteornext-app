@@ -387,6 +387,10 @@ class Pro:
         else:
             deployment = deployment[0]
 
+        # Check if Deploy has already started
+        if deployment['status'] not in ['CREATED','SCHEDULED']:
+            return jsonify({'message': ''}), 200
+
         # Get Meteor Additional Parameters
         group = self._groups.get(group_id=user['group_id'])[0]
         deployment['group_id'] = user['group_id']
