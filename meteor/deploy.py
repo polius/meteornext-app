@@ -1075,27 +1075,36 @@ class deploy:
     def __clean_parallel(self, region=None, remote=True):
         try:
             threads = []
-            threads_remote = []
             env = self._credentials['environments'][region] if region is not None else self._ENV_DATA[self._ENV_NAME]
 
+            # Clean Logs
             for env_data in env:
-                env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
-                if (env_data['ssh']['enabled'] == 'True'):
+                if env_data['ssh']['enabled'] == 'True':
+                    environment_logs = "{}/logs/{}/".format(env_data['ssh']['deploy_path'], self._args.uuid)
+                    env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                     t = threading.Thread(target=env.clean_remote, args=(remote,))
                     t.error = ''
                     t.start()
                     threads.append(t)
-                    threads_remote.append(t)
 
-                # Clean Remaining Processes
+            self.__wait_threads(threads)
+            
+            for t in threads:
+                if t.error != '':
+                    raise Exception(t.error)
+
+            # Clean Remaining Processes
+            threads = []
+            for env_data in env:
+                env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                 t = threading.Thread(target=env.sigkill)
+                t.error = ''
                 t.start()
                 threads.append(t)
 
-            # Wait all threads
             self.__wait_threads(threads)
 
-            for t in threads_remote:
+            for t in threads:
                 if t.error != '':
                     raise Exception(t.error)
 

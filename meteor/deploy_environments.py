@@ -386,11 +386,16 @@ class deploy_environments:
             self.__ssh(command)
 
     def sigkill(self):
-        command = "ps -U $USER -u $USER u | grep '" + str(self._args.logs_path) + "' | grep '--env_id'  | grep -v grep | awk '{print $2}' | xargs kill -9 2> /dev/null"
+        command = "ps -U $USER -u $USER u | grep '" + str(self._args.logs_path) + "' | grep '\-\-env_id' | grep -v grep | awk '{print $2}' | xargs kill -9 2> /dev/null"
         if self._environment_data and self._environment_data['ssh']['enabled'] == 'True':
-            self.__ssh(command)
+            output = self.__ssh(command)
         else:
-            self.__local(command)
+            output = self.__local(command)
+
+        # Check errors
+        if len(output['stderr']) > 0 and self._credentials['execution_mode']['parallel'] == 'True':
+            t = threading.current_thread()
+            t.error = output['stderr']
 
     ################
     # Core Methods #
