@@ -3,6 +3,7 @@ import sys
 import json
 import uuid
 import bcrypt
+import hashlib
 import requests
 import threading
 import models.admin.groups
@@ -219,9 +220,28 @@ class Setup:
 
     def __check_license(self, license):
         try:
+            # Generate trial
+            license['trial'] = str(uuid.uuid4())
+
+            # Check license
             response = requests.post("http://34.252.139.218:12350/license", json=license, allow_redirects=False)
+            response_code = response.status_code
+            response_status = response.status_code == 200
             response_text = json.loads(response.text)['response']
-            return {"status": response.status_code == 200, "code": response.status_code, "response": response_text}
+            response_trial = json.loads(response.text)['trial']
+
+            # Solve trial
+            trial = ','.join([str(ord(i)) for i in license['trial']])
+            trial = hashlib.sha3_256(trial.encode()).hexdigest()
+
+            # Validate trials
+            if response_trial != trial:
+                response_text = "The license is not valid"
+                response_code = 401
+                response_status = False
+
+            return {"status": response_status, "code": response_code, "response": response_text}
+
         except requests.exceptions.RequestException:
             return {"status": False, "code": 404, "response": "A connection to the licensing server could not be established"}
 

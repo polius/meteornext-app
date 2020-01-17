@@ -1,6 +1,8 @@
 import os
 import json
+import uuid
 import time
+import hashlib
 import shutil
 import requests
 import schedule
@@ -45,10 +47,26 @@ class Cron:
         if mode == 'hour' and not self._license['status']:
             return
         try:
+            # Generate trial
+            self._license_conf['trial'] = str(uuid.uuid4())
+
+            # Check license
             response = requests.post("http://34.252.139.218:12350/license", json=self._license_conf, allow_redirects=False)
             response_code = response.status_code
             response_status = response.status_code == 200
             response_text = json.loads(response.text)['response']
+            response_trial = json.loads(response.text)['trial']
+
+            # Solve trial
+            trial = ','.join([str(ord(i)) for i in self._license_conf['trial']])
+            trial = hashlib.sha3_256(trial.encode()).hexdigest()
+
+            # Validate keys
+            if response_trial != trial:
+                response_text = "The license is not valid"
+                response_code = 401
+                response_status = False
+
         except requests.exceptions.RequestException as e:
             response_text = "A connection with the licensing server could not be established"
             response_code = 404
