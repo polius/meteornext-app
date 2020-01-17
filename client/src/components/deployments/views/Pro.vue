@@ -137,6 +137,7 @@ export default {
         styleActiveLine: true,
         lineNumbers: true,
         tabSize: 4,
+        indentUnit: 4,
         line: true,
         foldGutter: true,
         matchBrackets: true,
@@ -145,8 +146,9 @@ export default {
         theme: 'monokai',
         keyMap: 'sublime',
         extraKeys: {
-          "Tab": function(cm) { 
-            cm.replaceSelection("    " , "end"); 
+          Tab: function(cm) {
+            if (cm.somethingSelected()) cm.indentSelection("add")
+            else cm.replaceSelection("    " , "end")
           },
           "Esc": function(cm) {
             cm.setOption("fullScreen", !cm.getOption("fullScreen"))
@@ -242,7 +244,7 @@ export default {
     schedule_change() {
       if (this.schedule_enabled) {
         if (this.schedule_datetime == '') {
-          const date = moment()
+          const date = moment().add(30, 'minutes')
           this.schedule_date = date.format("YYYY-MM-DD")
           this.schedule_time = date.format("HH:mm")
           this.schedule_datetime = date.format("YYYY-MM-DD HH:mm")

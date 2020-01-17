@@ -1,5 +1,5 @@
 <template>
-  <iframe ref="frame" :src="`http://` + url + `/meteor_viewer/`" @load="loadFrame" v-show="loaded" :style="iframe_style" frameborder="0" scrolling="no"></iframe>
+  <iframe ref="frame" :src="url + `/meteor_viewer/`" @load="loadFrame" v-show="loaded" :style="iframe_style" frameborder="0" scrolling="no"></iframe>
 </template>
 
 <script>
@@ -7,7 +7,7 @@ import axios from 'axios'
 
 export default  {
   data: () => ({
-    url: window.location.host,
+    url: window.location.protocol + '//' + window.location.host,
     loaded: false,
     iframe_src: '',
     iframe_style: 'width:100%; height:'

@@ -271,7 +271,7 @@ class deploy_environments:
             environment_logs = "{}/logs/{}/".format(self._environment_data['ssh']['deploy_path'], self._args.uuid)
             output = self.__ssh('rm -rf {0}'.format(environment_logs))
 
-            if len(output['stderr']) > 0 and self._credentials['execution_mode']['parallel'] != 'True':
+            if len(output['stderr']) > 0 and self._credentials['execution_mode']['parallel'] == 'True':
                 t = threading.current_thread()
                 t.error = output['stderr']
 

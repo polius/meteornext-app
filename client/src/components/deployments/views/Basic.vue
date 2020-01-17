@@ -197,7 +197,7 @@ export default {
     schedule_change() {
       if (this.schedule_enabled) {
         if (this.schedule_datetime == '') {
-          const date = moment()
+          const date = moment().add(30, 'minutes')
           this.schedule_date = date.format("YYYY-MM-DD")
           this.schedule_time = date.format("HH:mm")
           this.schedule_datetime = date.format("YYYY-MM-DD HH:mm")
