@@ -269,7 +269,7 @@ class deploy_environments:
         if remote:
             # Clean Remote Execution Logs
             environment_logs = "{}/logs/{}/".format(self._environment_data['ssh']['deploy_path'], self._args.uuid)
-            output = self.__ssh('rm -rf {0}'.format(environment_logs))
+            output = self.__ssh('rm -rf "{}"'.format(environment_logs))
 
             if len(output['stderr']) > 0 and self._credentials['execution_mode']['parallel'] == 'True':
                 t = threading.current_thread()
@@ -446,7 +446,7 @@ class deploy_environments:
             # Return Execution Output
             return { "stdout": [self.__decode(i) for i in stdout.readlines()], "stderr": ''.join(stderr.readlines()) }
 
-        except socket.error as e:
+        except socket.error:
             raise Exception("Connection Timeout. Can't establish a SSH connection.")
 
         finally:

@@ -185,7 +185,7 @@
             <div v-if="logs_data.length > 0 || tasks_data.length > 0" class="title font-weight-regular" style="padding-top:20px; padding-left:1px;">POST EXECUTION</div>
           </v-flex>
           <v-flex xs4>
-            <div v-if="queries_data.length > 0" class="title font-weight-regular" style="padding-top:20px; padding-left:7px;">QUERIES</div>
+            <div v-if="deployment['ended'] !== null && queries_data.length > 0" class="title font-weight-regular" style="padding-top:20px; padding-left:7px;">QUERIES</div>
           </v-flex>
         </v-layout>
 
@@ -206,7 +206,7 @@
             </v-card>
           </v-flex>
           <!-- queries -->
-          <v-flex v-if="queries_data.length > 0" xs4 style="padding-left:5px;">
+          <v-flex v-if="deployment['ended'] !== null && queries_data.length > 0" xs4 style="padding-left:5px;">
             <v-card>
               <v-data-table :headers="queries_headers" :items="queries_data" hide-default-footer>
               </v-data-table>

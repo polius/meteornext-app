@@ -1027,18 +1027,6 @@ class deploy:
         print(colored("|  CLEAN UP                                                        |", "magenta", attrs=['bold']))
         print(colored("+==================================================================+", "magenta", attrs=['bold']))
 
-        # Clean Local Environment
-        try:
-            status_msg = "- Cleaning Local Environment..."
-            print(status_msg)
-            self._progress.track_tasks(value=status_msg[2:])
-
-            env = deploy_environments(self._logger, self._args, self._credentials)
-            env.clean_local()
-
-        except Exception as e:
-            self._logger.error(colored("--> Encountered an error cleaning Local Environment.\n{}".format(traceback.format_exc()), 'red'))
-
         # Clean Remote Environments
         if remote:
             try:
@@ -1064,6 +1052,18 @@ class deploy:
             except Exception as e:
                 self._logger.error(colored("--> Encountered an error cleaning Remote Environments.\n{}".format(e), 'red'))
 
+        # Clean Local Environment
+        try:
+            status_msg = "- Cleaning Local Environment..."
+            print(status_msg)
+            self._progress.track_tasks(value=status_msg[2:])
+
+            env = deploy_environments(self._logger, self._args, self._credentials)
+            env.clean_local()
+
+        except Exception as e:
+            self._logger.error(colored("--> Encountered an error cleaning Local Environment.\n{}".format(traceback.format_exc()), 'red'))
+
     def __clean_sequential(self, region=None, remote=True):
         env = self._credentials['environments'][region] if region is not None else self._ENV_DATA[self._ENV_NAME]
 
@@ -1075,36 +1075,27 @@ class deploy:
     def __clean_parallel(self, region=None, remote=True):
         try:
             threads = []
+            threads_remote = []
             env = self._credentials['environments'][region] if region is not None else self._ENV_DATA[self._ENV_NAME]
 
-            # Clean Logs
             for env_data in env:
+                env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                 if env_data['ssh']['enabled'] == 'True':
-                    environment_logs = "{}/logs/{}/".format(env_data['ssh']['deploy_path'], self._args.uuid)
-                    env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
                     t = threading.Thread(target=env.clean_remote, args=(remote,))
                     t.error = ''
                     t.start()
                     threads.append(t)
+                    threads_remote.append(t)
 
-            self.__wait_threads(threads)
-            
-            for t in threads:
-                if t.error != '':
-                    raise Exception(t.error)
-
-            # Clean Remaining Processes
-            threads = []
-            for env_data in env:
-                env = deploy_environments(self._logger, self._args, self._credentials, self._ENV_NAME, env_data)
+                # Clean Remaining Processes
                 t = threading.Thread(target=env.sigkill)
-                t.error = ''
                 t.start()
                 threads.append(t)
 
+            # Wait all threads
             self.__wait_threads(threads)
 
-            for t in threads:
+            for t in threads_remote:
                 if t.error != '':
                     raise Exception(t.error)
 
