@@ -626,7 +626,8 @@
         }
       },
       goBack() {
-        this.$router.go(-1)
+        if (this.show_results) this.show_results = false
+        else this.$router.go(-1)
       },
       getDeployment() {
         // Get Deployment Data

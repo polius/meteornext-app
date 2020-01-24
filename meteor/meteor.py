@@ -1,4 +1,3 @@
-# python3 meteor.py --environment RD --test --execution_path "/home/palzina/git/meteor2/test" --execution_id 17 --execution_mode basic --execution_user palzina --execution_threads 10
 import argparse
 
 from core import core

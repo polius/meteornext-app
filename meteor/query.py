@@ -70,7 +70,8 @@ class query:
             database_parsed = '__GLOBAL__' if database is None else database
         else:
             aux_credentials = self._credentials['auxiliary_connections'][auxiliary['auxiliary_connection']]
-            conn = mysql(self._args, aux_credentials)
+            aux_server = {"tunnel": None, "sql": aux_credentials}
+            conn = mysql(self._args, aux_server)
             conn.connect()
             database_parsed = '__GLOBAL__' if auxiliary['database'] is None else auxiliary['database']
 

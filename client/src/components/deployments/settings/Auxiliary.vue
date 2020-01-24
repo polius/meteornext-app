@@ -12,6 +12,10 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
+        <template v-slot:item.ssh_tunnel="props">
+          <v-icon v-if="props.item.ssh_tunnel" small color="success" style="margin-left:20px">fas fa-circle</v-icon>
+          <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>
+        </template>
       </v-data-table>
     </v-card>
 
@@ -30,11 +34,23 @@
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <!-- SQL -->
                   <div class="title font-weight-regular">SQL</div>
-                  <v-select v-model="item.engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
-                  <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;" append-icon="cloud"></v-text-field>
-                  <v-text-field v-model="item.port" :rules="[v => !!v || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
-                  <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
-                  <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
+                  <v-select v-model="item.sql_engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
+                  <v-text-field v-model="item.sql_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;" append-icon="cloud"></v-text-field>
+                  <v-text-field v-model="item.sql_port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                  <v-text-field v-model="item.sql_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
+                  <v-text-field v-model="item.sql_password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
+                  <!-- SSH -->
+                  <!--
+                  <v-switch v-model="item.ssh_tunnel" label="SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
+                  -->
+                  <div v-if="item.ssh_tunnel" style="margin-top:15px;">
+                    <div class="title font-weight-regular">SSH</div>
+                    <v-text-field v-model="item.ssh_hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
+                    <v-text-field v-model="item.ssh_port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                    <v-text-field v-model="item.ssh_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
+                    <v-text-field v-model="item.ssh_password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
+                    <v-textarea v-model="item.ssh_key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
+                  </div>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected auxiliary connections?</div>
                 <v-divider></v-divider>
@@ -64,16 +80,17 @@ export default {
   data: () => ({
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
-      { text: 'Engine', align: 'left', value: 'engine'},
-      { text: 'Hostname', align: 'left', value: 'hostname'},
-      { text: 'Port', align: 'left', value: 'port'},
-      { text: 'Username', align: 'left', value: 'username'},
-      { text: 'Password', align: 'left', value: 'password'}
+      { text: 'Engine', align: 'left', value: 'sql_engine'},
+      { text: 'Hostname', align: 'left', value: 'sql_hostname'},
+      { text: 'Port', align: 'left', value: 'sql_port'},
+      { text: 'Username', align: 'left', value: 'sql_username'},
+      { text: 'Password', align: 'left', value: 'sql_password'}
+      // { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'}
     ],
     items: [],
     selected: [],
     search: '',
-    item: { name: '', hostname: '', port: '', username: '', password: '' },
+    item: { name: '', ssh_tunnel: '', ssh_hostname: '', ssh_port: '', ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_username: '', sql_password: '' },
     mode: '',
     loading: true,
     engines_items: ['MySQL', 'PostgreSQL'],
@@ -109,7 +126,7 @@ export default {
     },
     newAuxiliary() {
       this.mode = 'new'
-      this.item = { name: '', hostname: '', port: '', username: '', password: '' }
+      this.item = { name: '', ssh_tunnel: '', ssh_hostname: '', ssh_port: '', ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_username: '', sql_password: '' }
       this.dialog_title = 'New Auxiliary Connection'
       this.dialog = true
     },

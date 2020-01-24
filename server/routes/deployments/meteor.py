@@ -115,11 +115,11 @@ class Meteor:
         self._credentials['auxiliary_connections'] = {}
         for aux in auxiliary:
             self._credentials['auxiliary_connections'][aux['name']] = {
-                "engine": aux['engine'],
-                "hostname": aux['hostname'],
-                "username": aux['username'],
-                "password": aux['password'],
-                "port": int(aux['port'])
+                "engine": aux['sql_engine'],
+                "hostname": aux['sql_hostname'],
+                "username": aux['sql_username'],
+                "password": aux['sql_password'],
+                "port": int(aux['sql_port'])
             }
         
         # Compile Logs
