@@ -30,7 +30,7 @@ class Regions:
             FROM environments
             WHERE group_id = %s AND name = %s
         """
-        self._sql.execute(query, (region['name'], region['cross_region'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'], region['username'], region['password'], region['password'], region['key'], region['key'], region['cross_region'], region['deploy_path'], region['deploy_path'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, region['environment']))
+        self._sql.execute(query, (region['name'], region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'], region['username'], region['password'], region['password'], region['key'], region['key'], region['cross_region'], region['deploy_path'], region['deploy_path'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, region['environment']))
 
     def put(self, user_id, group_id, region):
         query = """
@@ -50,7 +50,7 @@ class Regions:
                 regions.updated_at = %s
             WHERE regions.id = %s
         """
-        self._sql.execute(query, (group_id, region['name'], region['environment'], region['cross_region'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['cross_region'], region['deploy_path'], region['deploy_path'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), region['id']))
+        self._sql.execute(query, (group_id, region['name'], region['environment'], region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['cross_region'], region['deploy_path'], region['deploy_path'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), region['id']))
 
     def delete(self, group_id, region_id):
         query = """

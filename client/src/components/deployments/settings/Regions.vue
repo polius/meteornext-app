@@ -13,20 +13,20 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:item.ssh_tunnel="props">
-          <v-icon v-if="props.item.ssh_tunnel" small color="success" style="margin-left:28px">fas fa-check</v-icon>
-          <v-icon v-else small color="error" style="margin-left:28px">fas fa-times</v-icon>
+          <v-icon v-if="props.item.ssh_tunnel" small color="success" style="margin-left:20px">fas fa-circle</v-icon>
+          <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>
         </template>
         <template v-slot:item.password="props">
-          <v-icon v-if="props.item.ssh_tunnel && (props.item.password || '').length != 0" small color="success" style="margin-left:20px">fas fa-check</v-icon>
-          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:20px">fas fa-times</v-icon>
+          <v-icon v-if="props.item.ssh_tunnel && (props.item.password || '').length != 0" small color="success" style="margin-left:20px">fas fa-circle</v-icon>
+          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:20px">fas fa-circle</v-icon>
         </template>
         <template v-slot:item.key="props">
-          <v-icon v-if="props.item.ssh_tunnel && (props.item.key || '').length != 0" small color="success" style="margin-left:20px">fas fa-check</v-icon>
-          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:20px">fas fa-times</v-icon>
+          <v-icon v-if="props.item.ssh_tunnel && (props.item.key || '').length != 0" small color="success" style="margin-left:22px">fas fa-circle</v-icon>
+          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:22px">fas fa-circle</v-icon>
         </template>
         <template v-slot:item.cross_region="props">
-          <v-icon v-if="props.item.ssh_tunnel && props.item.cross_region" small color="success" style="margin-left:28px">fas fa-check</v-icon>
-          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:28px">fas fa-times</v-icon>
+          <v-icon v-if="props.item.ssh_tunnel && props.item.cross_region" small color="success" style="margin-left:28px">fas fa-circle</v-icon>
+          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:28px">fas fa-circle</v-icon>
         </template>
       </v-data-table>
     </v-card>
@@ -50,7 +50,7 @@
                   <div v-if="item.ssh_tunnel" style="margin-top:15px;">
                     <div class="title font-weight-regular">SSH</div>
                     <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
-                    <v-text-field v-model="item.port" :rules="[v => !!v || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                    <v-text-field v-model="item.port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                     <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
                     <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
                     <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>

@@ -115,7 +115,7 @@ class Regions:
     def post(self, user_id, group_id, data):
         if self._regions.exist(group_id, data):
             return jsonify({'message': 'This region currently exists'}), 400
-        elif data['ssh_tunnel']:
+        elif data['ssh_tunnel'] and data['cross_region']:
             # Deploy Meteor
             u = utils.Utils(self._app, data)
             status = u.prepare()

@@ -84,7 +84,6 @@ class validation:
         print("+------------------------------------------------------------------+")
         print("| Validating Queries                                               |")
         print("+------------------------------------------------------------------+")
-
         queries_validated = True
         invalid_queries = []
 
@@ -124,7 +123,6 @@ class validation:
         print("+------------------------------------------------------------------+")
         print("| Validating Regions                                               |")
         print("+------------------------------------------------------------------+")
-
         try:
             # Init validation
             progress = {}

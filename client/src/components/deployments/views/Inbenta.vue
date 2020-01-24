@@ -30,7 +30,22 @@
             </v-card>
 
             <!-- PARAMETERS -->
-            <div class="subtitle-1 font-weight-regular">METHOD</div>
+            <div class="subtitle-1 font-weight-regular">
+              METHOD
+              <v-tooltip right>
+                <template v-slot:activator="{ on }">
+                  <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                </template>
+                <span>
+                  <b class="success--text">VALIDATE</b> Tests all server connections
+                  <br>
+                  <b class="orange--text">TEST</b> Executes only SELECT queries
+                  <br>
+                  <b class="red--text">DEPLOY</b> Executes ALL queries
+                </span>
+              </v-tooltip>
+            </div>
+
             <v-radio-group v-model="method" style="margin-top:10px;">
               <v-radio value="validate" color="success">
                 <template v-slot:label>

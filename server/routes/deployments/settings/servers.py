@@ -70,7 +70,7 @@ class Servers:
             r = self._regions.get_by_server(user['group_id'], server_json['region'])
 
             # Init Utils Class
-            connection = r[0] if r[0]['cross_region'] else None
+            connection = r[0] if r[0]['ssh_tunnel'] else None
             u = utils.Utils(self._app, connection)
 
             # Check SQL Connection

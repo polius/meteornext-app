@@ -79,7 +79,7 @@ class Meteor:
                         region_data = {
                             "region": region['name'],
                             "ssh": {
-                                "enabled": True if region['cross_region'] else False,
+                                "enabled": True if region['ssh_tunnel'] else False,
                                 "hostname": "" if region['hostname'] is None else region['hostname'],
                                 "username": "" if region['username'] is None else region['username'],
                                 "password": "" if region['password'] is None else region['password'],
@@ -105,7 +105,7 @@ class Meteor:
                                     "hostname": server['hostname'],
                                     "username": server['username'],
                                     "password": server['password'],
-                                    "port": server['port']
+                                    "port": int(server['port'])
                                 })
 
                         # Add region data to the credentials
@@ -119,7 +119,7 @@ class Meteor:
                 "hostname": aux['hostname'],
                 "username": aux['username'],
                 "password": aux['password'],
-                "port": aux['port']
+                "port": int(aux['port'])
             }
         
         # Compile Logs
@@ -160,7 +160,7 @@ class Meteor:
         self._credentials['meteor_next'] = {
             "enabled": True,
             "hostname": next_credentials['hostname'],
-            "port": next_credentials['port'],
+            "port": int(next_credentials['port']),
             "username": next_credentials['username'],
             "password": next_credentials['password'],
             "database": next_credentials['database']
@@ -243,7 +243,7 @@ class query_execution:
 
         # Build Meteor Command
         command = '{} --environment "{}" --{} --execution_id "{}" --execution_mode "{}" --execution_user "{}" --execution_path "{}" --execution_threads "{}"{}'.format(meteor_path, environment, execution_method, execution_id, execution_mode, execution_user, execution_path, execution_threads, execution_limit)
-        print(command)
+        # print(command)
 
         # Execute Meteor
         p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)

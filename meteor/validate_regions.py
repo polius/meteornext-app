@@ -93,7 +93,7 @@ class validate_regions:
                         conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'])
                         conn.close()
                 else:
-                    conn = pymysql.connect(host=server['hostname'], port=server['port'], user=server['username'], passwd=server['password'])
+                    conn = pymysql.connect(host=server['hostname'], port=int(server['port']), user=server['username'], passwd=server['password'])
                     conn.close()
                 current_thread.progress = {"region": self._region['region'], "sql": server['name'], "success": True}
                 break
