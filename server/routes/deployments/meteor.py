@@ -79,12 +79,13 @@ class Meteor:
                         region_data = {
                             "region": region['name'],
                             "ssh": {
-                                "enabled": "True" if region['cross_region'] == 1 else "False",
+                                "enabled": True if region['cross_region'] else False,
                                 "hostname": "" if region['hostname'] is None else region['hostname'],
                                 "username": "" if region['username'] is None else region['username'],
                                 "password": "" if region['password'] is None else region['password'],
                                 "key": "" if region['key'] is None else key_path,
                                 "port": "" if region['port'] is None else region['port'],
+                                "cross_region": True if region['cross_region'] else False,
                                 "deploy_path": "" if region['deploy_path'] is None else region['deploy_path']
                             },
                             "sql": []
@@ -122,20 +123,17 @@ class Meteor:
             }
         
         # Compile Logs
-        self._credentials['s3'] = {
-            "enabled": "False",
+        self._credentials['amazon_s3'] = {
+            "enabled": False,
             "aws_access_key_id": "",
             "aws_secret_access_key": "",
             "region_name": "",
             "bucket_name": ""
         }
-        self._credentials['web'] = {
-            "public_url": ""
-        }
 
         if 'amazon_s3' in self._logs and self._logs['amazon_s3']['enabled']:
-            self._credentials['s3'] = {
-                "enabled": "True",
+            self._credentials['amazon_s3'] = {
+                "enabled": True,
                 "aws_access_key_id": self._logs['amazon_s3']['aws_access_key'],
                 "aws_secret_access_key": self._logs['amazon_s3']['aws_secret_access_key'],
                 "region_name": self._logs['amazon_s3']['region_name'],
@@ -144,29 +142,23 @@ class Meteor:
 
         # Compile Slack
         self._credentials['slack'] = {
-            "enabled": "False",
+            "enabled": False,
             "channel_name": "",
             "webhook_url": ""
         }
         if len(slack) > 0:
             self._credentials['slack'] = {
-                "enabled": "True" if slack[0]['enabled'] == 1 else 'False',
+                "enabled": True if slack[0]['enabled'] else False,
                 "channel_name": slack[0]['channel_name'],
                 "webhook_url": slack[0]['webhook_url']
-            }        
-
-        # Compile Execution Mode
-        self._credentials['execution_mode'] = {
-            "parallel": "True",
-            "threads": deployment['execution_threads']
-        }
+            }
 
         # Enable Meteor Next
         with open("{}/server.conf".format(self._base_path)) as outfile:
             next_credentials = json.load(outfile)['sql']
 
         self._credentials['meteor_next'] = {
-            "enabled": "True",
+            "enabled": True,
             "hostname": next_credentials['hostname'],
             "port": next_credentials['port'],
             "username": next_credentials['username'],
@@ -241,14 +233,17 @@ class query_execution:
         meteor_base_path = sys._MEIPASS if self._bin else self._app.root_path
         meteor_path = "{}/apps/meteor/init".format(meteor_base_path) if self._bin else "python3 {}/../meteor/meteor.py".format(meteor_base_path)
         environment = deployment['environment']
-        execution_method = 'validate all' if deployment['method'].lower() == 'validate' else deployment['method'].lower()
-        logs_path = "{}/{}".format(self._logs['local']['path'], self._uuid)
-        execution_plan_factor = ' --execution_plan_factor "{}"'.format(deployment['epf']) if deployment['epf'] > 0 else ''
-        user = deployment['user']
+        execution_method = deployment['method'].lower()
+        execution_id = deployment['execution_id']
+        execution_mode = deployment['mode'].lower()
+        execution_user = deployment['user']
+        execution_path = "{}/{}".format(self._logs['local']['path'], self._uuid)
+        execution_threads = deployment['execution_threads']
+        execution_limit = ' --execution_limit "{}"'.format(deployment['execution_limit']) if deployment['execution_limit'] > 0 else ''
 
         # Build Meteor Command
-        command = '{} --environment "{}" --{} --logs_path "{}" --deployment_mode "{}" --deployment_id "{}" --uuid "{}"{} --user "{}"'.format(meteor_path, environment, execution_method, logs_path, deployment['mode'].lower(), deployment['execution_id'], self._uuid, execution_plan_factor, user)
-        # print(command)
+        command = '{} --environment "{}" --{} --execution_id "{}" --execution_mode "{}" --execution_user "{}" --execution_path "{}" --execution_threads "{}"{}'.format(meteor_path, environment, execution_method, execution_id, execution_mode, execution_user, execution_path, execution_threads, execution_limit)
+        print(command)
 
         # Execute Meteor
         p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)

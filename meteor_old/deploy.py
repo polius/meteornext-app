@@ -670,12 +670,11 @@ class deploy:
                                     item = json.loads(''.join(i + '}'))
                                     if 'e' in item:
                                         execution_status = 0
+                                        # track_progress = False
                                         if item['s'] not in progress[item['r']]:
                                             progress[item['r']][item['s']] = { "e": item['e'] }
-                                            track_progress = False
                                         else:
                                             progress[item['r']][item['s']]['e'] = item['e']
-                                            track_progress = False
                                     else:
                                         if item['s'] not in progress[item['r']] or 'e' not in progress[item['r']][item['s']]:
                                             progress[item['r']][item['s']] = { "p": item['p'], "d": item['d'], "t": item['t'] }

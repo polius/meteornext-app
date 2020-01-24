@@ -12,17 +12,21 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
-        <template v-slot:item.cross_region="props">
-          <v-icon v-if="props.item.cross_region" small color="success" style="margin-left:28px">fas fa-check</v-icon>
+        <template v-slot:item.ssh_tunnel="props">
+          <v-icon v-if="props.item.ssh_tunnel" small color="success" style="margin-left:28px">fas fa-check</v-icon>
           <v-icon v-else small color="error" style="margin-left:28px">fas fa-times</v-icon>
         </template>
         <template v-slot:item.password="props">
-          <v-icon v-if="props.item.cross_region && (props.item.password || '').length != 0" small color="success" style="margin-left:20px">fas fa-check</v-icon>
-          <v-icon v-else-if="props.item.cross_region" small color="error" style="margin-left:20px">fas fa-times</v-icon>
+          <v-icon v-if="props.item.ssh_tunnel && (props.item.password || '').length != 0" small color="success" style="margin-left:20px">fas fa-check</v-icon>
+          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:20px">fas fa-times</v-icon>
         </template>
         <template v-slot:item.key="props">
-          <v-icon v-if="props.item.cross_region && (props.item.key || '').length != 0" small color="success" style="margin-left:20px">fas fa-check</v-icon>
-          <v-icon v-else-if="props.item.cross_region" small color="error" style="margin-left:20px">fas fa-times</v-icon>
+          <v-icon v-if="props.item.ssh_tunnel && (props.item.key || '').length != 0" small color="success" style="margin-left:20px">fas fa-check</v-icon>
+          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:20px">fas fa-times</v-icon>
+        </template>
+        <template v-slot:item.cross_region="props">
+          <v-icon v-if="props.item.ssh_tunnel && props.item.cross_region" small color="success" style="margin-left:28px">fas fa-check</v-icon>
+          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:28px">fas fa-times</v-icon>
         </template>
       </v-data-table>
     </v-card>
@@ -42,15 +46,16 @@
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-select v-model="item.environment" :rules="[v => !!v || '']" :items="environments" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
                   <!-- SSH -->
-                  <v-switch v-model="item.cross_region" label="Cross Region" hide-details style="margin-top:0px;"></v-switch>
-                  <div v-if="item.cross_region" style="margin-top:15px;">
+                  <v-switch v-model="item.ssh_tunnel" label="SSH Tunnel" color="info" hide-details style="margin-top:0px;"></v-switch>
+                  <div v-if="item.ssh_tunnel" style="margin-top:15px;">
                     <div class="title font-weight-regular">SSH</div>
                     <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
                     <v-text-field v-model="item.port" :rules="[v => !!v || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                     <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
                     <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
                     <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
-                    <v-text-field v-model="item.deploy_path" :rules="[v => !!v || '']" label="Deploy Path" style="margin-top:15px;" append-icon="folder" hide-details></v-text-field>
+                    <v-switch v-model="item.cross_region" label="Cross Region" color="info" hide-details style="margin-top:15px;"></v-switch>
+                    <v-text-field v-if="item.cross_region" v-model="item.deploy_path" :rules="[v => !!v || '']" label="Deploy Path" style="margin-top:10px;" append-icon="folder" hide-details></v-text-field>
                   </div>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>
@@ -58,7 +63,7 @@
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="success" @click="submitRegion()">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">CANCEL</v-btn>
-                  <v-btn v-if="item['cross_region'] && mode != 'delete'" :loading="loading" color="info" @click="testConnection()" style="float:right;">Test Connection</v-btn>
+                  <v-btn v-if="item['ssh_tunnel'] && mode != 'delete'" :loading="loading" color="info" @click="testConnection()" style="float:right;">Test Connection</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -83,18 +88,19 @@ export default {
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Environment', align: 'left', value: 'environment' },
-      { text: 'Cross Region', align: 'left', value: 'cross_region'},
+      { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'},
       { text: 'Hostname', align: 'left', value: 'hostname'},
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'Password', align: 'left', value: 'password'},
       { text: 'Private Key', align: 'left', value: 'key'},
+      { text: 'Cross Region', align: 'left', value: 'cross_region'},
       { text: 'Deploy Path', align: 'left', value: 'deploy_path'}
     ],
     items: [],
     selected: [],
     search: '',
-    item: { name: '', environment: '', cross_region: false, hostname: '', port: '', username: '', password: '', key: '', deploy_path: '' },
+    item: { name: '', environment: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', cross_region:false, deploy_path: '' },
     mode: '',
     loading: true,
     dialog: false,
@@ -126,7 +132,7 @@ export default {
     },
     newRegion() {
       this.mode = 'new'
-      this.item = { name: '', environment: '', cross_region: false, hostname: '', port: '', username: '', password: '', key: '', deploy_path: '' }
+      this.item = { name: '', environment: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', cross_region: false, deploy_path: '' }
       this.dialog_title = 'New Region'
       this.dialog = true
     },

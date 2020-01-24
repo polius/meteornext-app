@@ -91,7 +91,7 @@ class Deployments_Pro:
 
     def getScheduled(self):
         query = """
-            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_plan_factor AS 'epf'
+            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit'
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id
             JOIN environments e ON e.id = p.environment_id
