@@ -268,7 +268,7 @@ class Inbenta:
             # Get Meteor Additional Parameters
             data['group_id'] = user['group_id']
             data['execution_threads'] = group['deployments_execution_threads']
-            data['epf'] = group['deployments_execution_plan_factor']
+            data['execution_limit'] = group['deployments_execution_limit']
             data['mode'] = 'INBENTA'
             data['user'] = user['username']
 
@@ -338,7 +338,7 @@ class Inbenta:
                 # Get Meteor Additional Parameters
                 data['group_id'] = user['group_id']
                 data['execution_threads'] = group['deployments_execution_threads']
-                data['epf'] = group['deployments_execution_plan_factor']
+                data['execution_limit'] = group['deployments_execution_limit']
                 data['mode'] = 'INBENTA'
                 data['user'] = user['username']
 
@@ -370,7 +370,7 @@ class Inbenta:
         group = self._groups.get(group_id=user['group_id'])[0]
         deployment['group_id'] = user['group_id']
         deployment['execution_threads'] = group['deployments_execution_threads']
-        deployment['epf'] = group['deployments_execution_plan_factor']
+        deployment['execution_limit'] = group['deployments_execution_limit']
         deployment['mode'] = 'INBENTA'
         deployment['user'] = user['username']
 

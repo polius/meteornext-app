@@ -95,7 +95,7 @@ class Deployments_Inbenta:
 
     def getScheduled(self):
         query = """
-            SELECT i.id AS 'execution_id', 'INBENTA' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', i.products, i.schema, i.databases, i.queries, i.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_plan_factor AS 'epf'
+            SELECT i.id AS 'execution_id', 'INBENTA' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', i.products, i.schema, i.databases, i.queries, i.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit'
             FROM deployments_inbenta i
             JOIN deployments d ON d.id = i.deployment_id
             JOIN environments e ON e.id = i.environment_id

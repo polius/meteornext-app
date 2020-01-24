@@ -25,12 +25,12 @@ class Regions:
 
     def post(self, user_id, group_id, region):
         query = """
-            INSERT INTO regions (name, environment_id, cross_region, hostname, port, username, password, `key`, deploy_path, created_by, created_at)             
-            SELECT %s, id, %s , IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), %s, %s
+            INSERT INTO regions (name, environment_id, ssh_tunnel, hostname, port, username, password, `key`, cross_region, deploy_path, created_by, created_at)             
+            SELECT %s, id, %s , IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), %s, IF(%s = '', NULL, %s), %s, %s
             FROM environments
             WHERE group_id = %s AND name = %s
         """
-        self._sql.execute(query, (region['name'], region['cross_region'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'], region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, region['environment']))
+        self._sql.execute(query, (region['name'], region['cross_region'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'], region['username'], region['password'], region['password'], region['key'], region['key'], region['cross_region'], region['deploy_path'], region['deploy_path'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, region['environment']))
 
     def put(self, user_id, group_id, region):
         query = """
@@ -38,18 +38,19 @@ class Regions:
             JOIN environments e ON e.id = regions.environment_id AND e.group_id = %s
             SET regions.name = %s,
                 regions.environment_id = (SELECT id FROM environments WHERE name = %s),
-                regions.cross_region = %s,
+                regions.ssh_tunnel = %s,
                 regions.hostname = IF(%s = '', NULL, %s),
                 regions.port = IF(%s = '', NULL, %s),
                 regions.username = IF(%s = '', NULL, %s),
                 regions.password = IF(%s = '', NULL, %s),
                 regions.`key` = IF(%s = '', NULL, %s),
+                regions.cross_region = %s,
                 regions.deploy_path = IF(%s = '', NULL, %s),
                 regions.updated_by = %s,
                 regions.updated_at = %s
             WHERE regions.id = %s
         """
-        self._sql.execute(query, (group_id, region['name'], region['environment'], region['cross_region'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['deploy_path'], region['deploy_path'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), region['id']))
+        self._sql.execute(query, (group_id, region['name'], region['environment'], region['cross_region'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['cross_region'], region['deploy_path'], region['deploy_path'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), region['id']))
 
     def delete(self, group_id, region_id):
         query = """

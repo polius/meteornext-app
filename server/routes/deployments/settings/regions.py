@@ -90,13 +90,18 @@ class Regions:
             # Init Utils Class
             u = utils.Utils(self._app, region_json)
 
-            # Check SSH Connection & Deploy Path
-            try:
-                if not u.check_ssh_path():
-                    return jsonify({'message': "The user '{}' does not have rwx privileges to the Deploy Path".format(region_json['username'])}), 400
-            except Exception as e:
-                return jsonify({'message': "Can't connect to the SSH Region"}), 400
-
+            if region_json['cross_region']:
+                # Check SSH Connection & Deploy Path
+                try:
+                    if not u.check_ssh_path():
+                        return jsonify({'message': "The user '{}' does not have rwx privileges to the Deploy Path".format(region_json['username'])}), 400
+                except Exception as e:
+                    return jsonify({'message': "Can't connect to the SSH Region"}), 400
+            else:
+                try:
+                    u.check_ssh()
+                except Exception as e:
+                    return jsonify({'message': "Can't connect to the SSH Region"}), 400
             return jsonify({'message': 'Connection Successful'}), 200
 
         return regions_blueprint
@@ -110,7 +115,7 @@ class Regions:
     def post(self, user_id, group_id, data):
         if self._regions.exist(group_id, data):
             return jsonify({'message': 'This region currently exists'}), 400
-        elif data['cross_region']:
+        elif data['ssh_tunnel']:
             # Deploy Meteor
             u = utils.Utils(self._app, data)
             status = u.prepare()
@@ -124,7 +129,7 @@ class Regions:
     def put(self, user_id, group_id, data):
         if self._regions.exist(group_id, data):
             return jsonify({'message': 'This new region name currently exists'}), 400
-        elif data['cross_region']:
+        elif data['ssh_tunnel'] and data['cross_region']:
             u = utils.Utils(self._app, data)
             deploy_status = u.check_ssh_deploy()
             if 'error' in deploy_status:
@@ -153,11 +158,14 @@ class Regions:
                 return jsonify({'message': "This region has attached servers"}), 400
 
         for region in data:
-            r = self._regions.get(group_id, region)
-            if len(r) > 0:
-                # Delete Meteor from region
-                u = utils.Utils(self._app, r[0])
-                u.unprepare()
+            if data['ssh_tunnel'] and data['cross_region']:
+                r = self._regions.get(group_id, region)
+                if len(r) > 0:
+                    # Delete Meteor from region
+                    u = utils.Utils(self._app, r[0])
+                    u.unprepare()
+                    self._regions.delete(group_id, region)
+            else:
                 self._regions.delete(group_id, region)
         return jsonify({'message': 'Selected regions deleted successfully'}), 200
 

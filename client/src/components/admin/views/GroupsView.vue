@@ -52,11 +52,11 @@
                   <template v-slot:activator="{ on }">
                     <v-icon small style="margin-left:5px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
-                  <span>Execution Plan Factor: Sets the maximum scanned rows allowed</span>
+                  <span>Execution Limit: Sets the maximum scanned rows allowed</span>
                 </v-tooltip>
                 </div>
-                <v-switch v-model="group_epf_switch" label="Limit Queries Execution" style="margin-top:0px; margin-bottom:25px;" hide-details></v-switch>
-                <v-text-field v-if="group_epf_switch" v-model="group.deployments_execution_plan_factor" label="Execution Plan Factor" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+                <v-switch v-model="group_execution_limit_switch" label="Limit Queries Execution" style="margin-top:0px; margin-bottom:25px;" hide-details></v-switch>
+                <v-text-field v-if="group_execution_limit_switch" v-model="group.deployments_execution_limit" label="Execution Limit" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 && v < 100 || 'A number between: 1 - 99']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
               </v-card-text>
             </v-card>
@@ -336,10 +336,10 @@ export default {
       'deployments_pro': false,
       'deployments_inbenta': false,
       'deployments_edit': false,
-      'deployments_execution_plan_factor': 0,
+      'deployments_execution_limit': 0,
       'deployments_execution_threads': 10 
     },
-    group_epf_switch: false,
+    group_execution_limit_switch: false,
     toolbar_title: '',
     form_valid: false,
     loading: false,
@@ -455,8 +455,8 @@ export default {
       axios.get('/admin/groups', { params: { groupID: this.groupID } })
         .then((response) => {
           this.group = response.data.group[0]
-          this.group_epf_switch = this.group['deployments_epf'] > 0
-          if (this.group.deployments_epf == 0) this.group.deployments_epf = 1000
+          this.group_execution_limit_switch = this.group['deployments_limit'] > 0
+          if (this.group.deployments_execution_limit == 0) this.group.deployments_execution_limit = 1000
           this.environment_items = response.data.environments.data
           this.region_items = response.data.regions.data.regions
           this.server_items = response.data.servers.data.servers
@@ -513,8 +513,8 @@ export default {
         return
       }
 
-      // Get the Execution Plan Factor
-      this.group['deployments_epf'] = (this.group_epf_switch) ? this.group['deployments_epf'] : 0
+      // Get the Execution Limit
+      this.group['deployments_limit'] = (this.group_execution_limit_switch) ? this.group['deployments_limit'] : 0
 
       // Edit group to the DB
       const payload = {

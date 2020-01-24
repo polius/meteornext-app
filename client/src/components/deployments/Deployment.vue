@@ -637,7 +637,7 @@
             this.environments = response.data.environments
             this.parseRequest(data)
             if (this.$router.currentRoute.name == 'deployment') {
-              if (data['status'] == 'STARTING' || data['status'] == 'STOPPING' || data['status'] == 'IN PROGRESS') setTimeout(this.getDeployment, 2000)
+              if (data['status'] == 'STARTING' || data['status'] == 'STOPPING' || data['status'] == 'IN PROGRESS') setTimeout(this.getDeployment, 1000)
               else this.start_execution = false
             }
           })

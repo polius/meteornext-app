@@ -1,7 +1,9 @@
-import sys
-import time
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import pymysql
 import warnings
+from time import time
+from colors import colored
 from collections import OrderedDict
 from pymysql.cursors import DictCursorMixin, Cursor
 
@@ -9,65 +11,55 @@ class OrderedDictCursor(DictCursorMixin, Cursor):
     dict_type = OrderedDict
 
 class mysql:
-    def __init__(self, args, server):
+    def __init__(self, logger, args, credentials):
+        self._logger = logger
         self._args = args
-        self._server = server
-        self._sql = None
+        self._credentials = credentials
+        self._connection = None
+        self._mysql = {}
 
-    def connect(self):
-        # Close existing connections
-        self.close()
+    def connect(self, hostname, port, username, password, database=None):
+        # Store the Credentials
+        self._mysql = {"hostname": hostname, "port": int(port), "username": username, "password": password, "database": database}
 
-        error = None
-        attempts = 10
-
-        for i in range(attempts):
-            try:
-                if self._server['tunnel'] is None or self._server['tunnel'].tunnel is None:
-                    self._sql = pymysql.connect(host=self._server['sql']['hostname'], port=self._server['sql']['port'], user=self._server['sql']['username'], passwd=self._server['sql']['password'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
-                else:
-                    self._sql = pymysql.connect(host='127.0.0.1', port=self._server['tunnel'].tunnel.local_bind_port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
-                return
-
-            except Exception as e:
-                self.close()
-                error = e
-                time.sleep(1)
-
-        if error is not None:
-            raise error
+        # Init Connection
+        self.__connect(database)
 
     def close(self):
-        # Close SQL Connection
         try:
-            self._sql.close()
+            self._connection.close()
         except Exception:
             pass
+
+    def __connect(self, database=None):
+        # Establish the Connection
+        if database is not None:
+            self._connection = pymysql.connect(host=self._mysql['hostname'], port=self._mysql['port'], user=self._mysql['username'], password=self._mysql['password'], db=database, charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
+        else:
+            self._connection = pymysql.connect(host=self._mysql['hostname'], port=self._mysql['port'], user=self._mysql['username'], password=self._mysql['password'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
 
     def execute(self, query, database_name=None):
         try:
             try:
-                # Check the SQL connection
-                self._sql.ping(reconnect=True)
-
-                # Select the database
+                # Check the connection and select the database
+                self._connection.ping(reconnect=True)
                 if database_name:
-                    self._sql.select_db(database_name)
+                    self._connection.select_db(database_name)
 
                 # Prepare the cursor
-                with self._sql.cursor(OrderedDictCursor) as cursor:            
+                with self._connection.cursor(OrderedDictCursor) as cursor:            
                     # Execute the SQL query ignoring warnings
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore")
-                        start_time = time.time()
+                        start_time = time()
                         cursor.execute(query)
 
                     # Get the query results
                     query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
 
                 # Commit the changes in the database
-                self._sql.commit()
-                end_time = time.time()
+                self._connection.commit()
+                end_time = time()
 
                 # Return query results
                 return { "query_result": query_result, "query_time": "{0:.3f}".format(end_time - start_time) }
@@ -76,20 +68,38 @@ class mysql:
                 raise Exception(error.args[1])
 
         except Exception as e:
-            self.rollback()
+            if self._args.env_start_deploy:
+                show_output = self._credentials['execution_mode']['parallel'] == "False"
+                try:
+                    if show_output:
+                        print(colored("Error: ", 'red', attrs=['bold']) + colored(colored(e, 'red')))
+                        print(colored("--> Rollback Initiated...", 'yellow'))
+                    self._connection.rollback()
+                    if show_output:
+                        print(colored("--> Rollback successfully performed.", 'green'))
+                except Exception as e2:
+                    if show_output:
+                        print(colored("--> Rollback not performed. Error: {}".format(e2), 'red'))
+                finally:
+                    self.close()
             raise e
 
         except KeyboardInterrupt:
-            self.rollback()
-            self.close()
+            if self._args.env_start_deploy:
+                show_output = self._credentials['execution_mode']['parallel'] == "False"
+                try:
+                    if show_output:
+                        print(colored("\n--> Rollback Initiated...", 'yellow'))
+                    self._connection.rollback()
+                    if show_output:
+                        print(colored("--> Rollback successfully performed.", 'green'))
+                except Exception as e:
+                    if show_output:
+                        print(colored("--> Rollback not performed. Error: {}".format(e), 'red'))
+                finally:
+                    self.close()
             raise KeyboardInterrupt("Program Interrupted by User. Rollback successfully performed.")
 
-    def rollback(self):
-        try:
-            self._sql.rollback()
-        except Exception:
-            pass
-                
     def get_all_databases(self):
         query = "SHOW DATABASES"
         result = self.execute(query)['query_result']
