@@ -122,9 +122,7 @@ class Meteor:
                     "username": "" if aux['ssh_username'] is None else aux['ssh_username'],
                     "password": "" if aux['ssh_password'] is None else aux['ssh_password'],
                     "key": "" if aux['ssh_key'] is None else key_path,
-                    "port": "" if aux['ssh_port'] is None else int(aux['ssh_port']),
-                    "cross_region": True if aux['ssh_cross_region'] else False,
-                    "deploy_path": "" if aux['ssh_deploy_path'] is None else aux['ssh_deploy_path']
+                    "port": "" if aux['ssh_port'] is None else int(aux['ssh_port'])
                 },
                 "sql": {
                     "engine": aux['sql_engine'],
