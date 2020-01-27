@@ -27,14 +27,18 @@ class deploy_servers:
         return self._query_execution
 
     def execute_before(self):
-        # Start Deploy
-        query_instance = deploy_queries(self._args, self._imports)
-        self._query_execution.before(query_instance, self._args.environment, self._region['region'])
+        try:
+            # Start Deploy
+            query_instance = deploy_queries(self._args, self._imports, self._region)
+            self._query_execution.before(query_instance, self._args.environment, self._region['region'])
 
-        # Store Execution Logs
-        execution_log_path = "{0}/execution/{1}/{1}_before.json".format(self._args.execution_path, self._region['region'])
-        with open(execution_log_path, 'w') as outfile:
-            json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
+            # Store Execution Logs
+            execution_log_path = "{0}/execution/{1}/{1}_before.json".format(self._args.execution_path, self._region['region'])
+            with open(execution_log_path, 'w') as outfile:
+                json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
+
+        finally:
+            query_instance.close_sql_connection()
 
     def execute_main(self, server):
         try:
@@ -43,10 +47,9 @@ class deploy_servers:
             if not current_thread.alive:
                 return
 
-            # Build SQL Connection
-            server_connection = {"region": self._region['region'], "ssh": self._region['ssh'], "sql": server}
             # Get all server databases
-            conn = connector(server_connection)
+            conn_data = {"ssh": self._region['ssh'], "sql": server}
+            conn = connector(conn_data)
             conn.start()
             databases = conn.get_all_databases()
             self._databases = [i for i in databases]
@@ -64,7 +67,7 @@ class deploy_servers:
                 threads = []
 
                 for i in range(int(self._args.execution_threads)):
-                    t = threading.Thread(target=self.__execute_main_databases, args=(server_connection,))
+                    t = threading.Thread(target=self.__execute_main_databases, args=(server,))
                     t.alive = current_thread.alive
                     t.error = False
                     t.auxiliary = current_thread.auxiliary
@@ -103,7 +106,6 @@ class deploy_servers:
 
     def __track_execution_progress(self, server, databases, threads):
         current_thread = threading.current_thread()
-
         d = len(self._progress)
         progress = float(d)/float(len(databases)) * 100
         item = {"r": self._region['region'], "s": server['name'], "p": float('%.2f' % progress), "d": d, "t": len(databases)}
@@ -113,7 +115,7 @@ class deploy_servers:
         current_thread = threading.current_thread()
 
         # Set SQL Connection
-        query_instance = deploy_queries(self._args, self._imports)
+        query_instance = deploy_queries(self._args, self._imports, self._region)
         query_instance.start_sql_connection(server)
 
         try:
@@ -130,7 +132,7 @@ class deploy_servers:
 
                 # Perform the execution to the Database
                 try:
-                    self._query_execution.main(query_instance, self._args.environment, server['region'], server['sql']['name'], database)
+                    self._query_execution.main(query_instance, self._args.environment, self._region['region'], server['name'], database)
                 except Exception:
                     # Store Logs
                     self.__store_main_logs(server, database, query_instance)
@@ -156,7 +158,7 @@ class deploy_servers:
         current_thread = threading.current_thread()
 
         # Store Logs
-        execution_log_path = "{0}/execution/{1}/{2}/{3}.json".format(self._args.execution_path, server['region'], server['sql']['name'], database)
+        execution_log_path = "{0}/execution/{1}/{2}/{3}.json".format(self._args.execution_path, self._region['region'], server['name'], database)
         if len(query_instance.execution_log['output']) > 0:
             with open(execution_log_path, 'w') as outfile:
                 json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
@@ -171,14 +173,17 @@ class deploy_servers:
         query_instance.clear_execution_log()
 
     def execute_after(self):
-        # Start Deploy
-        query_instance = deploy_queries(self._args, self._imports)
-        self._query_execution.after(query_instance, self._args.environment, self._region['region'])
+        try:
+            # Start Deploy
+            query_instance = deploy_queries(self._args, self._imports, self._region)
+            self._query_execution.after(query_instance, self._args.environment, self._region['region'])
 
-        # Store Execution Logs
-        execution_log_path = "{0}/execution/{1}/{1}_after.json".format(self._args.execution_path, self._region['region'])
-        with open(execution_log_path, 'w') as outfile:
-            json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
+            # Store Execution Logs
+            execution_log_path = "{0}/execution/{1}/{1}_after.json".format(self._args.execution_path, self._region['region'])
+            with open(execution_log_path, 'w') as outfile:
+                json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
+        finally:
+            query_instance.close_sql_connection()
 
     # Parse JSON objects
     def __dtSerializer(self, obj):
