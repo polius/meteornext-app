@@ -121,7 +121,7 @@ class deployment:
                         progress[item['r']][item['s']]['t'] = item['t']
 
             # Print & Track Progress
-            # self.__show_execution_header(started_datetime, started_time)
+            self.__show_execution_header(started_datetime, started_time)
 
             for region in self._credentials['environments'][self._args.environment]:
                 environment_type = '[SSH]  ' if region['ssh']['enabled'] else '[LOCAL]'
