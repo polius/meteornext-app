@@ -253,7 +253,22 @@
                 <div v-if="this.deployment['mode'] == 'PRO'" class="subtitle-1 font-weight-regular" style="margin-top:-5px; margin-bottom:10px;" title="Press ESC when cursor is in the editor to toggle full screen editing">CODE</div>
                 <codemirror v-if="this.deployment['mode'] == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
 
-                <div class="subtitle-1 font-weight-regular">METHOD</div>
+                <div class="subtitle-1 font-weight-regular" style="margin-top:20px;">
+                  METHOD
+                  <v-tooltip right>
+                    <template v-slot:activator="{ on }">
+                      <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                    </template>
+                    <span>
+                      <b class="success--text">VALIDATE</b> Tests all server connections
+                      <br>
+                      <b class="orange--text">TEST</b> A simulation is performed (only SELECTs are executed)
+                      <br>
+                      <b class="red--text">DEPLOY</b> Executes ALL queries
+                    </span>
+                  </v-tooltip>
+                </div>
+
                 <v-radio-group :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" hide-details style="margin-top:10px;">
                   <v-radio value="validate" color="success">
                     <template v-slot:label>
