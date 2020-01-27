@@ -3,7 +3,6 @@ import re
 import time
 import threading
 
-from query import query
 from validate_regions import validate_regions
 
 class validation:
@@ -12,11 +11,7 @@ class validation:
         self._args = args
         self._credentials = imports.credentials
         self._progress = progress
-        self._query_execution = imports.query_execution
         self._time = None
-
-        # Init classes
-        self._query = query(self._args, imports)
 
     @property
     def time(self):
@@ -29,7 +24,6 @@ class validation:
         try:
             self._start_time = time.time()
             self.__validate_credentials()
-            self.__validate_queries()
             self.__validate_regions()
         finally:
             self._time = time.time()
@@ -79,45 +73,6 @@ class validation:
                 raise Exception("[Environment: {}] The server name should be unique. There are two IDs named '{}'".format(self._args.environment, str(list(seen_twice)[0])))
 
         print("- Credentials Validation Passed!")
-
-    def __validate_queries(self):
-        print("+------------------------------------------------------------------+")
-        print("| Validating Queries                                               |")
-        print("+------------------------------------------------------------------+")
-        queries_validated = True
-        invalid_queries = []
-
-        # Validating Environment Queries
-        for q in self._query_execution.queries.values():
-            query_parsed = q.replace('\n', '')
-            query_parsed = re.sub(' +',' ', query_parsed).strip()
-            query_type = self._query.get_query_type(q)
-            if query_type == False:
-                print('[NOT DETECTED] ' + query_parsed)
-                queries_validated &= 0
-                invalid_queries.append(query_parsed)
-                self._progress.track_syntax(q)
-            else:
-                print('[{}] {}'.format(query_type.upper(), query_parsed))
-                queries_validated &= 1
-
-        # Validating Auxiliary Queries
-        for q in self._query_execution.auxiliary_queries.values():
-            query_type = self._query.get_query_type(q['query'])
-            if query_type == False:
-                print('[NOT DETECTED] {}'.format(q['query']))
-                queries_validated &= 0
-                invalid_queries.append(query_parsed)
-            else:
-                print('[{}] {}'.format(query_type.upper(), q['query']))
-                queries_validated &= 1
-
-        # Determine if the queries are validated
-        if not queries_validated:
-            self._progress.error("Queries not valid")
-            raise Exception("- Validation Not Passed. Please review the above queries in the 'query_execution.py' file.")
-        else:
-            print("- Queries Validation Passed!")
 
     def __validate_regions(self):
         print("+------------------------------------------------------------------+")

@@ -1,7 +1,11 @@
+import os
 import sys
 import time
 import pymysql
+import paramiko
 import warnings
+import sshtunnel
+import threading
 from collections import OrderedDict
 from pymysql.cursors import DictCursorMixin, Cursor
 
@@ -9,87 +13,115 @@ class OrderedDictCursor(DictCursorMixin, Cursor):
     dict_type = OrderedDict
 
 class mysql:
-    def __init__(self, args, server):
-        self._args = args
+    def __init__(self, server):
         self._server = server
+        self._tunnel = None
         self._sql = None
 
-    def connect(self):
+    def start(self):
         # Close existing connections
-        self.close()
+        self.stop()
+
+        # Supress Errors Output
+        sys_stderr = sys.stderr
+        sys.stderr = open(os.devnull, 'w')
 
         error = None
-        attempts = 10
+        for i in range(10):
+            # Check if thread is alive
+            if getattr(threading.current_thread(), 'alive', False) and not threading.current_thread().alive:
+                self.stop()
+                return
 
-        for i in range(attempts):
             try:
-                if self._server['tunnel'] is None or self._server['tunnel'].tunnel is None:
-                    self._sql = pymysql.connect(host=self._server['sql']['hostname'], port=self._server['sql']['port'], user=self._server['sql']['username'], passwd=self._server['sql']['password'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
-                else:
-                    self._sql = pymysql.connect(host='127.0.0.1', port=self._server['tunnel'].tunnel.local_bind_port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], charset='utf8mb4', use_unicode=True, cursorclass=pymysql.cursors.DictCursor, autocommit=False)
+                # Start SSH Tunnel
+                if self._server['ssh']['enabled']:
+                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_pkey=paramiko.RSAKey.from_private_key_file(self._server['ssh']['key']), remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']))
+                    self._tunnel.start()
+
+                # Start SQL Connection
+                hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
+                port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
+                database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
+                self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False)
                 return
 
             except Exception as e:
-                self.close()
+                self.stop()
                 error = e
                 time.sleep(1)
 
+            finally:
+                # Show Errors Output Again
+                sys.stderr = sys_stderr
+
+        # Check errors
         if error is not None:
+            self.stop()
             raise error
 
-    def close(self):
-        # Close SQL Connection
+    def stop(self):
         try:
             self._sql.close()
         except Exception:
             pass
 
+        try:
+            self._tunnel.stop()
+        except Exception:
+            pass
+
     def execute(self, query, database_name=None):
         try:
-            try:
-                # Check the SQL connection
-                self._sql.ping(reconnect=True)
+            # Execute the query and return results
+            return self.__execute_query(query, database_name)
 
-                # Select the database
-                if database_name:
-                    self._sql.select_db(database_name)
-
-                # Prepare the cursor
-                with self._sql.cursor(OrderedDictCursor) as cursor:            
-                    # Execute the SQL query ignoring warnings
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("ignore")
-                        start_time = time.time()
-                        cursor.execute(query)
-
-                    # Get the query results
-                    query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
-
-                # Commit the changes in the database
-                self._sql.commit()
-                end_time = time.time()
-
-                # Return query results
-                return { "query_result": query_result, "query_time": "{0:.3f}".format(end_time - start_time) }
-
-            except (pymysql.err.OperationalError, pymysql.ProgrammingError, pymysql.InternalError, pymysql.IntegrityError, TypeError) as error:
-                raise Exception(error.args[1])
+        except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
+            self.rollback()
+            raise Exception(error.args[1])
 
         except Exception as e:
-            self.rollback()
-            raise e
+            print(str(e))
+            # Reconnect SSH + SQL
+            self.start()
+
+            # Retry the query
+            return self.__execute_query(query, database_name)
 
         except KeyboardInterrupt:
             self.rollback()
             self.close()
             raise KeyboardInterrupt("Program Interrupted by User. Rollback successfully performed.")
 
+    def __execute_query(self, query, database_name=None):
+        # Select the database
+        if database_name:
+            self._sql.select_db(database_name)
+
+        # Prepare the cursor
+        with self._sql.cursor(OrderedDictCursor) as cursor:            
+            # Execute the SQL query ignoring warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                start_time = time.time()
+                cursor.execute(query)
+
+            # Get the query results
+            query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
+
+        # Commit the changes in the database
+        self._sql.commit()
+
+        # Return query info
+        query_data = {"query_result": query_result, "query_time": "{0:.3f}".format(time.time() - start_time)}
+        return query_data
+
     def rollback(self):
         try:
             self._sql.rollback()
         except Exception:
             pass
-                
+
     def get_all_databases(self):
         query = "SHOW DATABASES"
         result = self.execute(query)['query_result']

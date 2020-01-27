@@ -75,7 +75,7 @@ class Meteor:
                 self._credentials['environments'][environment['name']] = []
                 for region in regions:
                     if region['environment_id'] == environment['id']:
-                        key_path = "{}/{}/keys/{}".format(self._logs['local']['path'], self._uuid, region['id'])
+                        key_path = "{}/{}/keys/r{}".format(self._logs['local']['path'], self._uuid, region['id'])
                         region_data = {
                             "region": region['name'],
                             "ssh": {
@@ -91,7 +91,7 @@ class Meteor:
                             "sql": []
                         }
 
-                        # Generate key files
+                        # Generate region key files
                         if region['key'] is not None:
                             with open(key_path, 'w') as outfile:
                                 outfile.write(region['key'])
@@ -114,13 +114,32 @@ class Meteor:
         # Compile Auxiliary Connections
         self._credentials['auxiliary_connections'] = {}
         for aux in auxiliary:
+            key_path = "{}/{}/keys/a{}".format(self._logs['local']['path'], self._uuid, aux['id'])
             self._credentials['auxiliary_connections'][aux['name']] = {
-                "engine": aux['sql_engine'],
-                "hostname": aux['sql_hostname'],
-                "username": aux['sql_username'],
-                "password": aux['sql_password'],
-                "port": int(aux['sql_port'])
+                "ssh": {
+                    "enabled": True if aux['ssh_tunnel'] else False,
+                    "hostname": "" if aux['ssh_hostname'] is None else aux['ssh_hostname'],
+                    "username": "" if aux['ssh_username'] is None else aux['ssh_username'],
+                    "password": "" if aux['ssh_password'] is None else aux['ssh_password'],
+                    "key": "" if aux['ssh_key'] is None else key_path,
+                    "port": "" if aux['ssh_port'] is None else int(aux['ssh_port']),
+                    "cross_region": True if aux['ssh_cross_region'] else False,
+                    "deploy_path": "" if aux['ssh_deploy_path'] is None else aux['ssh_deploy_path']
+                },
+                "sql": {
+                    "engine": aux['sql_engine'],
+                    "hostname": aux['sql_hostname'],
+                    "username": aux['sql_username'],
+                    "password": aux['sql_password'],
+                    "port": int(aux['sql_port'])
+                }
             }
+
+            # Generate auxiliary connection key files
+            if aux['ssh_key'] is not None:
+                with open(key_path, 'w') as outfile:
+                    outfile.write(aux['ssh_key'])
+                os.chmod(key_path, 0o600)
         
         # Compile Logs
         self._credentials['amazon_s3'] = {
