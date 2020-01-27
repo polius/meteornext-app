@@ -40,9 +40,7 @@
                   <v-text-field v-model="item.sql_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
                   <v-text-field v-model="item.sql_password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
                   <!-- SSH -->
-                  <!--
                   <v-switch v-model="item.ssh_tunnel" label="SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
-                  -->
                   <div v-if="item.ssh_tunnel" style="margin-top:15px;">
                     <div class="title font-weight-regular">SSH</div>
                     <v-text-field v-model="item.ssh_hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
@@ -84,13 +82,13 @@ export default {
       { text: 'Hostname', align: 'left', value: 'sql_hostname'},
       { text: 'Port', align: 'left', value: 'sql_port'},
       { text: 'Username', align: 'left', value: 'sql_username'},
-      { text: 'Password', align: 'left', value: 'sql_password'}
-      // { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'}
+      { text: 'Password', align: 'left', value: 'sql_password'},
+      { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'}
     ],
     items: [],
     selected: [],
     search: '',
-    item: { name: '', ssh_tunnel: '', ssh_hostname: '', ssh_port: '', ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_username: '', sql_password: '' },
+    item: { name: '', ssh_tunnel: '', ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' },
     mode: '',
     loading: true,
     engines_items: ['MySQL', 'PostgreSQL'],
@@ -119,14 +117,14 @@ export default {
         })
     },
     selectEngine(value) {
-      if (this.item['port'] == '') {
-        if (value == 'MySQL') this.item['port'] = '3306'
-        else if (value == 'PostgreSQL') this.item['port'] = '5432'
+      if (this.item['sql_port'] == '') {
+        if (value == 'MySQL') this.item['sql_port'] = '3306'
+        else if (value == 'PostgreSQL') this.item['sql_port'] = '5432'
       }
     },
     newAuxiliary() {
       this.mode = 'new'
-      this.item = { name: '', ssh_tunnel: '', ssh_hostname: '', ssh_port: '', ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_username: '', sql_password: '' }
+      this.item = { name: '', ssh_tunnel: '', ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' }
       this.dialog_title = 'New Auxiliary Connection'
       this.dialog = true
     },
@@ -168,8 +166,6 @@ export default {
         .then((response) => {
           this.notification(response.data.message, 'success')
           this.getAuxiliary()
-          // Add item in the data table
-          // this.items.push(this.item)
           this.dialog = false
         })
         .catch((error) => {

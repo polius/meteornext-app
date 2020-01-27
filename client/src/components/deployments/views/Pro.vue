@@ -32,7 +32,7 @@
                 <span>
                   <b class="success--text">VALIDATE</b> Tests all server connections
                   <br>
-                  <b class="orange--text">TEST</b> Executes only SELECT queries
+                  <b class="orange--text">TEST</b> A simulation is performed (only SELECTs are executed)
                   <br>
                   <b class="red--text">DEPLOY</b> Executes ALL queries
                 </span>
