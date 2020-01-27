@@ -81,7 +81,6 @@ class mysql:
             raise Exception(error.args[1])
 
         except Exception as e:
-            print(str(e))
             # Reconnect SSH + SQL
             self.start()
 
