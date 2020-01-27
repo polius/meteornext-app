@@ -7,10 +7,11 @@ from query_template import query_template
 from connector import connector
 
 class deploy_queries:
-    def __init__(self, args, imports):
+    def __init__(self, args, imports, region):
         self._args = args
         self._credentials = imports.credentials
         self._query_template = imports.query_template
+        self._region = region
 
         # Store Server Credentials + SQL Connection + List of Auxiliary Connections
         self._server = None
@@ -32,11 +33,18 @@ class deploy_queries:
 
     def start_sql_connection(self, server):
         self._server = server
-        self._sql = connector(server)
+        connection = {'ssh': self._region['ssh'], 'sql': server}
+        self._sql = connector(connection)
         self._sql.start()
 
     def close_sql_connection(self):
-        self._sql.stop()
+        # Close server connection
+        if self._sql:
+            self._sql.stop()
+
+        # Close auxiliary connections
+        for i in self._aux:
+            list(i.values())[0].stop()
 
     def __parse_query(self, query):
         return query.strip()
@@ -53,12 +61,11 @@ class deploy_queries:
         current_thread = threading.current_thread()
 
         # Core Variables
-        database_name = database if auxiliary is None else auxiliary['database']
-        database_parsed = '' if database is None else database
+        database_name = auxiliary['database'] if auxiliary is not None else database if database is not None else ''
         query_parsed = self.__parse_query(query) if auxiliary is None else self.__parse_query(auxiliary['query'])
         query_alias = query_parsed if alias is None else '[ALIAS] {}'.format(alias)
-        server_sql = self._server['sql']['name'] if auxiliary is None else auxiliary['auxiliary_connection']
-        region = self._server['region']
+        server_sql = self._server['name'] if auxiliary is None else auxiliary['auxiliary_connection']
+        region = self._region['region']
 
         # SQL Connection
         if auxiliary is None:
@@ -68,8 +75,7 @@ class deploy_queries:
         else:
             if auxiliary['auxiliary_connection'] not in self._aux:
                 aux = self._credentials['auxiliary_connections'][auxiliary['auxiliary_connection']]
-                server = {"ssh": aux['ssh'], "sql": aux['sql']}
-                conn = connector(server)
+                conn = connector(aux)
                 conn.start()
                 self._aux.append({auxiliary['auxiliary_connection']: conn})
             else:
@@ -77,7 +83,7 @@ class deploy_queries:
 
         # Init a new Row
         date_time = datetime.fromtimestamp(time()).strftime('%Y-%m-%d %H:%M:%S.%f UTC')
-        execution_row = {"meteor_timestamp": date_time, "meteor_environment": self._args.environment, "meteor_region": region, "meteor_server": server_sql, "meteor_database": database_parsed, "meteor_query": query_alias, "meteor_status": "1", "meteor_response": "", "meteor_execution_time": ""}
+        execution_row = {"meteor_timestamp": date_time, "meteor_environment": self._args.environment, "meteor_region": region, "meteor_server": server_sql, "meteor_database": database_name, "meteor_query": query_alias, "meteor_status": "1", "meteor_response": "", "meteor_execution_time": ""}
 
         # Get Query Syntax
         query_syntax = self.get_query_type(query_parsed, show_output=False)
