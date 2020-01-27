@@ -1,194 +1,137 @@
-import os
 import re
-import imp
-import json
-import time
-import shutil
 import threading
+from time import time
+from datetime import datetime
 
-from query import query
-from tunnel import tunnel
+from query_template import query_template
+from connector import connector
 
 class deploy_queries:
-    def __init__(self, args, imports, region, query_execution=None):
+    def __init__(self, args, imports):
         self._args = args
-        self._imports = imports
         self._credentials = imports.credentials
         self._query_template = imports.query_template
-        self._query_execution = imp.load_source('query_execution', "{}/query_execution.py".format(self._args.execution_path)).query_execution() if query_execution is None else query_execution
-        self._region = region
 
-        # Store Threading Shared Vars 
-        self._databases = []
-        self._progress = []
+        # Store Server Credentials + SQL Connection + List of Auxiliary Connections
+        self._server = None
+        self._sql = None
+        self._aux = []
+
+        # Init Query Template Instance
+        self._query_template_instance = query_template(self._query_template)
+
+        # Init Execution Log
+        self._execution_log = {"output": []}
 
     @property
-    def query_execution(self):
-        return self._query_execution
+    def execution_log(self):
+        return self._execution_log
 
-    def execute_before(self):
-        # Start Deploy
-        query_instance = query(self._args, self._imports, self._region)
-        self._query_execution.before(query_instance, self._args.environment, self._region['region'])
+    def clear_execution_log(self):
+        self._execution_log = {"output": []}
 
-        # Store Execution Logs
-        execution_log_path = "{0}/execution/{1}/{1}_before.json".format(self._args.execution_path, self._region['region'])
-        with open(execution_log_path, 'w') as outfile:
-            json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
+    def start_sql_connection(self, server):
+        self._server = server
+        self._sql = connector(server)
+        self._sql.start()
 
-    def execute_main(self, server):
-        try:
-            # Check thread execution status
-            current_thread = threading.current_thread()
-            if not current_thread.alive:
-                return
+    def close_sql_connection(self):
+        self._sql.stop()
 
-            # Open Tunnel
-            tunn = tunnel({"ssh": self._region['ssh'], "sql": server})
-            tunn.open()
+    def __parse_query(self, query):
+        return query.strip()
 
-            # Init SQL Connection
-            query_instance = query(self._args, self._imports, self._region)
-            query_instance.start_sql_connection(server, tunn)
+    def get_query_type(self, query, show_output=True):
+        parsed_query = self.__parse_query(query)
+        for t in self._query_template:
+            if parsed_query.lower().startswith(t["startswith"].lower()) and t["contains"].lower() in parsed_query.lower():
+                return t['type']
+        return False
 
-            # Get all Databases in current server            
-            databases = query_instance.sql_connection.get_all_databases()
-            self._databases = [i for i in databases]
+    def execute(self, query=None, database=None, auxiliary=None, alias=None):
+        # Get Current Thread
+        current_thread = threading.current_thread()
 
-            # Close SQL Connection
-            query_instance.close_sql_connection()
+        # Core Variables
+        database_name = database if auxiliary is None else auxiliary['database']
+        database_parsed = '' if database is None else database
+        query_parsed = self.__parse_query(query) if auxiliary is None else self.__parse_query(auxiliary['query'])
+        query_alias = query_parsed if alias is None else '[ALIAS] {}'.format(alias)
+        server_sql = self._server['sql']['name'] if auxiliary is None else auxiliary['auxiliary_connection']
+        region = self._server['region']
 
-            # Create Execution Server Folder (if exists, then delete+create)
-            execution_server_folder = "{0}/execution/{1}/{2}/".format(self._args.execution_path, self._region['region'], server['name'])
-            if os.path.exists(execution_server_folder):
-                shutil.rmtree(execution_server_folder)
+        # SQL Connection
+        if auxiliary is None:
+            conn = self._sql
 
-            os.mkdir(execution_server_folder)
+        # Auxiliary Connection
+        else:
+            if auxiliary['auxiliary_connection'] not in self._aux:
+                aux = self._credentials['auxiliary_connections'][auxiliary['auxiliary_connection']]
+                server = {"ssh": aux['ssh'], "sql": aux['sql']}
+                conn = connector(server)
+                conn.start()
+                self._aux.append({auxiliary['auxiliary_connection']: conn})
+            else:
+               conn = self._aux[auxiliary['auxiliary_connection']]
 
-            # Deployment in Parallel
+        # Init a new Row
+        date_time = datetime.fromtimestamp(time()).strftime('%Y-%m-%d %H:%M:%S.%f UTC')
+        execution_row = {"meteor_timestamp": date_time, "meteor_environment": self._args.environment, "meteor_region": region, "meteor_server": server_sql, "meteor_database": database_parsed, "meteor_query": query_alias, "meteor_status": "1", "meteor_response": "", "meteor_execution_time": ""}
+
+        # Get Query Syntax
+        query_syntax = self.get_query_type(query_parsed, show_output=False)
+
+        # If Test Run --> Syntax Checks + Execution Checks
+        if not self._args.deploy:
+            # Execution Checks
             try:
-                threads = []
+                self._query_template_instance.validate_execution(query_parsed, conn, database_name)
+                # Write Exception to the Log
+                if query_syntax != 'Select':
+                    self._execution_log['output'].append(execution_row)
 
-                for i in range(int(self._args.execution_threads)):
-                    t = threading.Thread(target=self.__execute_main_databases, args=(server,tunn))
-                    t.alive = current_thread.alive
-                    t.error = False
-                    t.start()
-                    threads.append(t)
+            except Exception as e:
+                # Write Exception to the Log
+                execution_row['meteor_status'] = '0'
+                execution_row['meteor_response'] = self.__parse_error(str(e))
+                self._execution_log['output'].append(execution_row)
+                return
+        
+        # Execute Query (if --deploy or --test with SELECT queries)
+        if self._args.deploy or query_syntax == 'Select':
+            try:
+                # Apply the execution plan factor
+                if self._args.execution_limit and query_syntax == 'Select':
+                    execution_limit = 0
+                    explain = conn.execute('EXPLAIN ' + query_parsed, database_name)['query_result']
 
-                # Track progress
-                while any(t.is_alive() for t in threads):
-                    if not current_thread.alive:
-                        for t in threads:
-                            t.alive = False
-                    self.__track_execution_progress(server, databases, threads)
-                    time.sleep(0.5)
+                    for i in explain:
+                        if i['rows'] > execution_limit:
+                            execution_limit = i['rows']
+  
+                    if execution_limit > int(self._args.execution_limit):
+                        raise Exception('[Execution Limit] The total number of scanned items exceeds the maximum dataset size')
 
-                # Check progress again
-                self.__track_execution_progress(server, databases, threads)
+                # Execute query
+                query_info = conn.execute(query_parsed, database_name)
+                # If the query is executed successfully, then write the query result to the Log
+                execution_row['meteor_output'] = query_info['query_result'] if str(query_info['query_result']) != '()' else '[]'
+                execution_row['meteor_response'] = ""
+                execution_row['meteor_execution_time'] = query_info['query_time']
+                self._execution_log['output'].append(execution_row)
 
-                # Check errors
-                current_thread.error = any(t.error for t in threads)
+                # Return the Execution Result
+                return query_info['query_result']
 
-                # Append existing errors
-                if len(self._databases) > 0:
-                    current_thread.progress.append(self._databases[0])
-
-            except (Exception, KeyboardInterrupt):
-                for t in threads:
-                    t.alive = False
-                for t in threads:
-                    t.join()
-                raise
-
-        except Exception as e:
-            error_format = re.sub(' +',' ', str(e)).replace('\n', '')
-            current_thread.progress.append(error_format)
-            raise
-
-        finally:
-            # Close SSH Tunnel
-            tunn.close()
-
-    def __track_execution_progress(self, server, databases, threads):
-        current_thread = threading.current_thread()
-
-        d = len(self._progress)
-        progress = float(d)/float(len(databases)) * 100
-        item = {"r": self._region['region'], "s": server['name'], "p": float('%.2f' % progress), "d": d, "t": len(databases)}
-        current_thread.progress.append(item)
-
-    def __execute_main_databases(self, server, tunnel):
-        current_thread = threading.current_thread()
-
-        # Set SQL Connection
-        query_instance = query(self._args, self._imports, self._region)
-        query_instance.start_sql_connection(server, tunnel)
-
-        try:
-            while len(self._databases) > 0:
-                # Detect Thread KeyboardInterrupt
-                if not current_thread.alive:
-                    break
-
-                # Pick the next database to perform the execution
-                try:
-                    database = self._databases.pop(0)
-                except IndexError:
-                    break
-
-                # Perform the execution to the Database
-                try:
-                    self._query_execution.main(query_instance, self._args.environment, self._region['region'], server['name'], database)
-                except Exception:
-                    # Store Logs
-                    self.__store_main_logs(server, database, query_instance)
-                    # Raise Exception
+            except (KeyboardInterrupt, Exception) as e:
+                # Write Exception to the Log
+                execution_row['meteor_status'] = '0'
+                execution_row['meteor_response'] = self.__parse_error(str(e))
+                self._execution_log['output'].append(execution_row)
+                # Do not Raise the Exception. Continue with the Deployment
+                if e.__class__ == KeyboardInterrupt:
                     raise
 
-                # Store Logs the execution to the Database
-                try:
-                    self.__store_main_logs(server, database, query_instance)
-                except Exception:
-                    # Store Logs
-                    self.__store_main_logs(server, database, query_instance)
-                    # Raise Exception
-                    raise
-
-                # Add database to the progressed list
-                self._progress.append(database)
-        finally:
-            # Close SQL Connection
-            query_instance.close_sql_connection()
-
-    def __store_main_logs(self, server, database, query_instance):
-        current_thread = threading.current_thread()
-
-        # Store Logs
-        execution_log_path = "{0}/execution/{1}/{2}/{3}.json".format(self._args.execution_path, self._region['region'], server['name'], database)
-        if len(query_instance.execution_log['output']) > 0:
-            with open(execution_log_path, 'w') as outfile:
-                json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
-
-        # Check Errors
-        for log in query_instance.execution_log['output']:
-            if log['meteor_status'] == '0':
-                current_thread.error = True
-                break
-
-        # Clear Log
-        query_instance.clear_execution_log()
-
-    def execute_after(self):
-        # Start Deploy
-        query_instance = query(self._args, self._imports, self._region)
-        self._query_execution.after(query_instance, self._args.environment, self._region['region'])
-
-        # Store Execution Logs
-        execution_log_path = "{0}/execution/{1}/{1}_after.json".format(self._args.execution_path, self._region['region'])
-        with open(execution_log_path, 'w') as outfile:
-            json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
-
-    # Parse JSON objects
-    def __dtSerializer(self, obj):
-        return obj.__str__()
+    def __parse_error(self, error):
+        return re.sub('\s+', ' ', error.replace('\n', ' ')).strip()

@@ -47,9 +47,10 @@ class deployment:
                     threads.append(t)
 
                 # Track Progress
-                t = threading.Thread(target=self.__track_progress, args=(progress, threads, started_datetime, started_time,))
-                t.start()
-                t.join()
+                track = threading.Thread(target=self.__track_progress, args=(progress, threads, started_datetime, started_time,))
+                track.alive = True
+                track.start()
+                track.join()
 
                 # Wait all threads
                 for t in threads:
@@ -69,11 +70,15 @@ class deployment:
                 signal.signal(signal.SIGINT,signal.SIG_IGN)
                 print("\n--> Ctrl+C Received. Stopping All Region Processes...")
 
-                # Stop All Threads
+                # Stop & Wait Tracking Thread
+                track.alive = False
+                track.join()
+
+                # Stop Execution Threads
                 for t in threads:
                     t.alive = False
                 
-                # Wait All Threads
+                # Wait Execution Threads
                 for t in threads:
                     t.join()
 
@@ -88,12 +93,17 @@ class deployment:
             self._time = time.time()
 
     def __track_progress(self, progress, threads, started_datetime, started_time):
+        # Get current thread
         current_thread = threading.current_thread()
-        current_thread.status = 0
 
         tracking = True
         while tracking:
             track_progress = True
+
+            # Check current thread status
+            if not current_thread.alive:
+                return
+
             # Check if all processes have finished
             if all(not t.is_alive() for t in threads):
                 tracking = False
@@ -103,9 +113,6 @@ class deployment:
                 for r in range(len(t.progress)):
                     item = t.progress.pop(0)
 
-                    if 'e' in item:
-                        current_thread.status = 1
-
                     if item['s'] not in progress[item['r']] or 'e' not in progress[item['r']][item['s']]:
                         progress[item['r']][item['s']] = { "p": item['p'], "d": item['d'], "t": item['t'] }
                     else:
@@ -114,7 +121,7 @@ class deployment:
                         progress[item['r']][item['s']]['t'] = item['t']
 
             # Print & Track Progress
-            self.__show_execution_header(started_datetime, started_time)
+            # self.__show_execution_header(started_datetime, started_time)
 
             for region in self._credentials['environments'][self._args.environment]:
                 environment_type = '[SSH]  ' if region['ssh']['enabled'] else '[LOCAL]'

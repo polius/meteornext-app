@@ -2,7 +2,7 @@ import os
 import time
 import threading
 
-from deploy_queries import deploy_queries
+from deploy_servers import deploy_servers
 
 class deploy_regions:
     def __init__(self, args, imports, region):
@@ -24,8 +24,14 @@ class deploy_regions:
         if not os.path.exists(self._args.execution_path + '/execution/' + self._region['region']):
             os.makedirs(self._args.execution_path + '/execution/' + self._region['region'])
 
+        # Init shared auxiliary connections
+        auxiliary_connections = []
+
+        # Init lock between all threads
+        lock = threading.Lock()
+
         # Start the Deploy
-        deploy = deploy_queries(self._args, self._imports, self._region)
+        deploy = deploy_servers(self._args, self._imports, self._region)
 
         # Execute 'BEFORE' Queries Once per Region
         if current_thread.alive:
@@ -35,12 +41,14 @@ class deploy_regions:
         threads = []
         try:
             for server in self._region['sql']:
-                deploy_parallel = deploy_queries(self._args, self._imports, self._region, deploy.query_execution)
+                deploy_parallel = deploy_servers(self._args, self._imports, self._region, deploy.query_execution)
                 t = threading.Thread(target=deploy_parallel.execute_main, args=(server,))
                 threads.append(t)
                 t.alive = current_thread.alive
                 t.error = False
                 t.progress = current_thread.progress
+                t.auxiliary = auxiliary_connections
+                t.lock = lock
                 t.start()
 
             # Wait all threads
