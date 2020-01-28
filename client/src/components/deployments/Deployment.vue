@@ -594,7 +594,7 @@
         matchBrackets: true,
         showCursorWhenSelecting: true,
         mode: 'python',
-        theme: 'monokai',
+        theme: 'one-dark',
         keyMap: 'sublime',
         extraKeys: {
           Tab: function(cm) {
