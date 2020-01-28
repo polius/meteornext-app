@@ -450,11 +450,14 @@
 
 <style>
 .CodeMirror {
-  min-height:450px;
+  min-height: 450px;
   font-size: 14px;
 }
 .CodeMirror pre {
   padding: 0 14px;
+}
+.CodeMirror-scrollbar-filler {
+  background-color: rgb(55, 53, 64);
 }
 </style>
 
