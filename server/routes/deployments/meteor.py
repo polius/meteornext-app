@@ -231,9 +231,14 @@ class query_execution:
 class query_execution:
     def __init__(self):
         self.queries = {0}
-        self.auxiliary_queries = {{'1': {{"auxiliary_connection": "awseu-sql01", "database": "ilf_admin", "query": "SELECT CONCAT('ilf_', name, '_{1}') AS db_name FROM projects WHERE product IN ({2})"}} }}
+        self.auxiliary_queries = {{
+            '1': {{"auxiliary_connection": "awseu-sql01", "database": "ilf_admin", "query": "SELECT CONCAT('ilf_', name, '_{1}') AS db_name FROM projects WHERE product IN ({2})"}},
+            '2': {{"auxiliary_connection": "awseu-rd01", "database": "ilf_admin", "query": "SELECT CONCAT('ilf_', name, '_{1}') AS db_name FROM projects WHERE product IN ({2})"}}
+        }}
     def before(self, meteor, environment, region):
-        self._instances = meteor.execute(auxiliary=self.auxiliary_queries['1'])
+        awseu_sql01 = meteor.execute(auxiliary=self.auxiliary_queries['1'])
+        awseu_rd01 = meteor.execute(auxiliary=self.auxiliary_queries['2'])
+        self._instances = awseu_sql01 + awseu_rd01
     def main(self, meteor, environment, region, server, database):
         for d in {3}:
             if len(self.__searchInListDict(self._instances, 'db_name', database)) > 0:

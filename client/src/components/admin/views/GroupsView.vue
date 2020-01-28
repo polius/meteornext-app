@@ -455,8 +455,7 @@ export default {
       axios.get('/admin/groups', { params: { groupID: this.groupID } })
         .then((response) => {
           this.group = response.data.group[0]
-          this.group_execution_limit_switch = this.group['deployments_limit'] > 0
-          if (this.group.deployments_execution_limit == 0) this.group.deployments_execution_limit = 1000
+          this.group_execution_limit_switch = this.group['deployments_execution_limit'] > 0
           this.environment_items = response.data.environments.data
           this.region_items = response.data.regions.data.regions
           this.server_items = response.data.servers.data.servers
@@ -482,6 +481,8 @@ export default {
         this.loading = false
         return
       }
+      // Assign Deployment Execution Limit
+      if (!this.group_execution_limit_switch) this.group['deployments_execution_limit'] = 0
       // Add group to the DB
       const payload = {
         group: JSON.stringify(this.group),
@@ -512,10 +513,8 @@ export default {
         this.loading = false
         return
       }
-
-      // Get the Execution Limit
-      this.group['deployments_limit'] = (this.group_execution_limit_switch) ? this.group['deployments_limit'] : 0
-
+      // Assign Deployment Execution Limit
+      if (!this.group_execution_limit_switch) this.group['deployments_execution_limit'] = 0
       // Edit group to the DB
       const payload = {
         group: JSON.stringify(this.group),

@@ -112,7 +112,7 @@ import 'codemirror/lib/codemirror.css'
 // language
 import 'codemirror/mode/python/python.js'
 // theme css
-import 'codemirror/theme/monokai.css'
+import 'codemirror/theme/one-dark.css' // monokai.css
 
 // require active-line.js
 import 'codemirror/addon/selection/active-line.js'
@@ -158,7 +158,7 @@ export default {
         matchBrackets: true,
         showCursorWhenSelecting: true,
         mode: 'python',
-        theme: 'monokai',
+        theme: 'one-dark',
         keyMap: 'sublime',
         extraKeys: {
           Tab: function(cm) {
