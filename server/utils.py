@@ -112,7 +112,6 @@ class Utils:
                 if self._conn:
                     pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']))
                     with sshtunnel.SSHTunnelForwarder((self._conn['hostname'], int(self._conn['port'])), ssh_username=self._conn['username'], ssh_password=self._conn['password'], ssh_pkey=pkey, remote_bind_address=(server['hostname'], int(server['port'])), threaded=False) as tunnel:
-                        sys.stdout = f
                         conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'])
                         conn.close()
                 else:
