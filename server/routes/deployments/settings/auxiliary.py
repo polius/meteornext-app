@@ -64,8 +64,8 @@ class Auxiliary:
 
             # Build Auxiliary Data
             ssh = None
-            # if auxiliary_json['ssh_tunnel']:
-            #    ssh = {"hostname": auxiliary_json['ssh_hostname'], "port": auxiliary_json['ssh_port'], "username": auxiliary_json['ssh_username'], "password": auxiliary_json['ssh_password'], "key": auxiliary_json['ssh_key']}
+            if auxiliary_json['ssh_tunnel']:
+               ssh = {"hostname": auxiliary_json['ssh_hostname'], "port": auxiliary_json['ssh_port'], "username": auxiliary_json['ssh_username'], "password": auxiliary_json['ssh_password'], "key": auxiliary_json['ssh_key']}
             sql = {"hostname": auxiliary_json['sql_hostname'], "port": auxiliary_json['sql_port'], "username": auxiliary_json['sql_username'], "password": auxiliary_json['sql_password']}
  
             # Init Utils Class
