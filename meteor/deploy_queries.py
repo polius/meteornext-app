@@ -117,7 +117,7 @@ class deploy_queries:
                             execution_limit = i['rows']
   
                     if execution_limit > int(self._args.execution_limit):
-                        raise Exception('[Execution Limit] The total number of scanned items exceeds the maximum dataset size')
+                        raise Exception('Maximum number of rows [{}] exceeded. Please use LIMIT along with ORDER BY'.format(self._args.execution_limit))
 
                 # Execute query
                 query_info = conn.execute(query_parsed, database_name)

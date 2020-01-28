@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import signal
+import unicodedata
 from datetime import datetime
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
@@ -264,7 +265,7 @@ class Pro:
 
         # Check Code Syntax Errors
         try:
-            exec(data['code'])
+            exec(unicodedata.normalize("NFKD", data['code']))
         except Exception as e:
             return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400         
 
@@ -310,6 +311,7 @@ class Pro:
 
         # Check Code Syntax Errors
         try:
+            data['code'] = unicodedata.normalize("NFKD", data['code'])
             exec(data['code'])
         except Exception as e:
             return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400  
