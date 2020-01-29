@@ -285,6 +285,7 @@ class core:
         print("|  CLEAN                                                           |")
         print("+==================================================================+")
         status_msg = "- Cleaning Environment..."
+        return
         print(status_msg)
         self._progress.track_tasks(value=status_msg[2:])
 

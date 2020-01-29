@@ -154,7 +154,7 @@ class Setup:
 
                     # Create group
                     groups = models.admin.groups.Groups(sql)
-                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "deployments_enable": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_inbenta": 1, "deployments_edit": 1, "deployments_execution_threads": 10, "deployments_execution_plan_factor": 0}
+                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "deployments_enable": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_inbenta": 1, "deployments_edit": 1, "deployments_execution_threads": 10, "deployments_execution_limit": 0}
                     groups.post(0, group)
 
                     # Create user

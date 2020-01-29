@@ -171,8 +171,8 @@
         axios.post('/setup/sql', payload)
           .then((response) => {
             this.notification('Connection successful', 'success')
-              if (response.data.exists) this.setupDialog = true
-              else this.setupSQLDialog(true)
+            if (response.data.exists) this.setupDialog = true
+            else this.setupDialogSubmit(true)
           })
           .catch((error) => {
             this.notification(error.response.data.message, 'error')
