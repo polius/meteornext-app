@@ -288,7 +288,7 @@
                 </v-radio-group>
 
                 <v-switch v-model="schedule_enabled" @change="schedule_change()" label="Sheduled" color="info" hide-details :readonly="information_dialog_mode == 'parameters'"></v-switch>
-                <v-text-field v-if="schedule_enabled" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
+                <v-text-field v-if="schedule_enabled && schedule_datetime != ''" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
 
                 <v-checkbox v-else-if="information_dialog_mode != 'parameters' && deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
                 <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
@@ -988,8 +988,7 @@
       // ------------------------
       schedule_close() {
         this.scheduleDialog = false
-        if (this.schedule_mode == 'date') this.schedule_date = this.schedule_datetime.substring(0,10)
-        else if (this.schedule_mode == 'time') this.schedule_time = this.schedule_datetime.substring(11,16)
+        this.schedule_enabled = this.schedule_datetime != ''
         this.schedule_mode = 'date'
       },
       schedule_now() {
@@ -998,27 +997,24 @@
         else if (this.schedule_mode == 'time') this.schedule_time = date.format("HH:mm")
       },
       schedule_change() {
-        if (this.information_dialog_mode == 'parameters') return
         if (this.schedule_enabled) {
           if (this.schedule_datetime == '') {
             const date = moment().add(30, 'minutes')
             this.schedule_date = date.format("YYYY-MM-DD")
             this.schedule_time = date.format("HH:mm")
-            this.schedule_datetime = date.format("YYYY-MM-DD HH:mm")
           }
           this.scheduleDialog = true
         }
         else this.scheduleDialog = false
       },
       schedule_submit() {
-        this.schedule_datetime = this.schedule_date + ' ' + this.schedule_time
-
         if (this.schedule_mode == 'date') {
           this.schedule_mode = 'time'
         }
         else if (this.schedule_mode == 'time') {
-          this.scheduleDialog = false
+          this.schedule_datetime = this.schedule_date + ' ' + this.schedule_time
           this.schedule_mode = 'date'
+          this.scheduleDialog = false
         }
       },
       // ------------------------
