@@ -88,7 +88,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', ssh_tunnel: '', ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' },
+    item: { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' },
     mode: '',
     loading: true,
     engines_items: ['MySQL', 'PostgreSQL'],
@@ -124,7 +124,7 @@ export default {
     },
     newAuxiliary() {
       this.mode = 'new'
-      this.item = { name: '', ssh_tunnel: '', ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' }
+      this.item = { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' }
       this.dialog_title = 'New Auxiliary Connection'
       this.dialog = true
     },
