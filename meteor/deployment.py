@@ -3,7 +3,6 @@ import time
 import json
 import threading
 import signal
-import traceback
 from datetime import timedelta
 
 from deploy_regions import deploy_regions

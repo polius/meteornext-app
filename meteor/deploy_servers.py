@@ -6,7 +6,6 @@ import json
 import time
 import shutil
 import threading
-import traceback
 import inspect
 
 from connector import connector
@@ -31,6 +30,9 @@ class deploy_servers:
 
     def execute_before(self):
         try:
+            # Get the current thread
+            current_thread = threading.current_thread()
+
             # Start Deploy
             query_instance = deploy_queries(self._args, self._imports, self._region)
             self._query_execution.before(query_instance, self._args.environment, self._region['region'])
@@ -39,6 +41,10 @@ class deploy_servers:
             execution_log_path = "{0}/execution/{1}/{1}_before.json".format(self._args.execution_path, self._region['region'])
             with open(execution_log_path, 'w') as outfile:
                 json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
+
+        except Exception as e:
+            inner_frames = inspect.getinnerframes(e.__traceback__)[-1]
+            current_thread.critical.append("- Error in code: {} (line {})".format(e, inner_frames.lineno))
 
         finally:
             query_instance.close_sql_connection()
@@ -196,6 +202,9 @@ class deploy_servers:
 
     def execute_after(self):
         try:
+            # Get the current thread
+            current_thread = threading.current_thread()
+
             # Start Deploy
             query_instance = deploy_queries(self._args, self._imports, self._region)
             self._query_execution.after(query_instance, self._args.environment, self._region['region'])
@@ -204,6 +213,11 @@ class deploy_servers:
             execution_log_path = "{0}/execution/{1}/{1}_after.json".format(self._args.execution_path, self._region['region'])
             with open(execution_log_path, 'w') as outfile:
                 json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
+
+        except Exception as e:
+            inner_frames = inspect.getinnerframes(e.__traceback__)[-1]
+            current_thread.critical.append("- Error in code: {} (line {})".format(e, inner_frames.lineno))
+
         finally:
             query_instance.close_sql_connection()
 
