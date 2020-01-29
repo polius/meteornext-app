@@ -44,7 +44,9 @@ export default  {
       axios.get('/deployments/results', { params: { uri: this.iframe_src } })
         .then((response) => {
           // Inject Execution Data to Iframe
-          this.$refs.frame.contentWindow.initMeteorNext(response.data)
+          try {
+            this.$refs.frame.contentWindow.initMeteorNext(response.data)
+          } catch (error) { 1==1 }
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
