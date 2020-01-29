@@ -433,7 +433,6 @@
             <v-layout wrap>
               <v-flex xs12 style="padding-bottom:10px">
                 <v-btn ref="results_url" block text :href="url + `/results/` + deployment['uri']" target="_blank" class="text-lowercase title font-weight-light" style="margin-top:25px;">{{url + `/results/` + deployment['uri'] }}</v-btn>
-                <textarea id="clipboard" style="opacity:.01; height:0; position:absolute; z-index:-1;"></textarea>
               </v-flex>
             </v-layout>
           </v-container>
@@ -1173,11 +1172,18 @@
       // SHARE RESULTS
       // -------------------------------------
       resultsClipboard() {
-        document.getElementById('clipboard').value = this.url + `/results/` + this.deployment['uri']
-        document.getElementById('clipboard').select()
+        var textarea = document.createElement('textarea')
+        textarea.textContent = this.url + `/results/` + this.deployment['uri']
+        document.body.appendChild(textarea)
+        var selection = document.getSelection()
+        var range = document.createRange()
+        range.selectNode(textarea)
+        selection.removeAllRanges()
+        selection.addRange(range)
         document.execCommand('copy')
-
-        this.notification('Deployment URL added to the clipboard', 'info')
+        selection.removeAllRanges()
+        document.body.removeChild(textarea)
+        this.notification('Deployment URL added to the clipboard', 'success')
       },
       resultsShare() {
         // Build parameters
