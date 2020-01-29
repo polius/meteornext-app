@@ -1,7 +1,9 @@
 import os
 import time
+import json
 import threading
 import signal
+import traceback
 from datetime import timedelta
 
 from deploy_regions import deploy_regions
@@ -42,6 +44,7 @@ class deployment:
                     t = threading.Thread(target=deploy_region.start)
                     t.alive = True
                     t.error = False
+                    t.critical = []
                     t.progress = []
                     t.start()
                     threads.append(t)
@@ -53,8 +56,22 @@ class deployment:
                 track.join()
 
                 # Wait all threads
+                while any(t.is_alive() for t in threads):
+                    time.sleep(1)
+
+                # Get all existing critical errors in all threads (auxiliary connections related)
+                errors = []
                 for t in threads:
-                    t.join()
+                    for i in t.critical:
+                        if i not in errors:
+                            errors.append(i)
+
+                if len(errors) > 0:
+                    errors_parsed = ''
+                    for i in errors:
+                        errors_parsed += i + '\n'
+                    errors_parsed = errors_parsed[:-1]
+                    raise Exception(errors_parsed)
 
                 # Print Execution Finished
                 if any(t.error for t in threads):
@@ -121,7 +138,7 @@ class deployment:
                         progress[item['r']][item['s']]['t'] = item['t']
 
             # Print & Track Progress
-            self.__show_execution_header(started_datetime, started_time)
+            # self.__show_execution_header(started_datetime, started_time)
 
             for region in self._credentials['environments'][self._args.environment]:
                 environment_type = '[SSH]  ' if region['ssh']['enabled'] else '[LOCAL]'

@@ -43,12 +43,14 @@ class deploy_regions:
                     threads.append(t)
                     t.alive = current_thread.alive
                     t.error = False
+                    t.critical = current_thread.critical
                     t.progress = current_thread.progress
                     t.auxiliary = auxiliary_connections
                     t.start()
 
                 # Wait all threads
                 while any(t.is_alive() for t in threads):
+                    # Check alive
                     if not current_thread.alive:
                         for t in threads:
                             t.alive = False
@@ -63,13 +65,19 @@ class deploy_regions:
 
             except (Exception,KeyboardInterrupt):
                 for t in threads:
+                    t.alive = False
+                for t in threads:
                     t.join()
                 raise
 
             # Execute 'AFTER' Queries Once per Region
             if current_thread.alive:
                 deploy.execute_after()
-        
+
+        except Exception as e:
+            # Stop all threads and store critical error (auxiliary error related)
+            current_thread.critical.append(str(e))
+
         finally:
             # Close existing Auxiliary Connections
             for i in auxiliary_connections:

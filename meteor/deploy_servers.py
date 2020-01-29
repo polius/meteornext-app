@@ -1,10 +1,13 @@
 import os
 import re
 import imp
+import sys
 import json
 import time
 import shutil
 import threading
+import traceback
+import inspect
 
 from connector import connector
 from deploy_queries import deploy_queries
@@ -70,20 +73,34 @@ class deploy_servers:
                     t = threading.Thread(target=self.__execute_main_databases, args=(server,))
                     t.alive = current_thread.alive
                     t.error = False
+                    t.critical = None
                     t.auxiliary = current_thread.auxiliary
                     t.start()
                     threads.append(t)
 
                 # Track progress
-                while any(t.is_alive() for t in threads):
+                while any(t.is_alive() for t in threads):                        
+                    # Check alive
                     if not current_thread.alive:
                         for t in threads:
                             t.alive = False
+                    # Track progress
                     self.__track_execution_progress(server, databases, threads)
                     time.sleep(1)
 
                 # Check progress again
                 self.__track_execution_progress(server, databases, threads)
+
+                # Check critical errors
+                errors = False
+                for t in threads:
+                    if t.critical is not None:
+                        errors = True
+                        if t.critical not in current_thread.critical:
+                            current_thread.critical.append(t.critical)
+                if errors:
+                    for t in threads:
+                        t.alive = False
 
                 # Check errors
                 current_thread.error = any(t.error for t in threads)
@@ -150,6 +167,11 @@ class deploy_servers:
 
                 # Add database to the progressed list
                 self._progress.append(database)
+
+        except Exception as e:
+            inner_frames = inspect.getinnerframes(e.__traceback__)[-1]
+            current_thread.critical = "- Error in code: {} (line {})".format(e, inner_frames.lineno)
+
         finally:
             # Close SQL Connection
             query_instance.close_sql_connection()

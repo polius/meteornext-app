@@ -27,7 +27,7 @@ class mysql:
         sys.stderr = open(os.devnull, 'w')
 
         error = None
-        for i in range(10):
+        for i in range(3):
             # Check if thread is alive
             if getattr(threading.current_thread(), 'alive', False) and not threading.current_thread().alive:
                 self.stop()

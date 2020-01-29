@@ -98,10 +98,9 @@ class core:
             # Display error
             if error.__class__ == Exception:
                 print("+==================================================================+")
-                print("|  ERROR FOUND IN 'query_execution.py'                             |")
+                print("|  ERRORS                                                          |")
                 print("+==================================================================+")
-                print("Showing Error Traceback ...")
-                print(str(error).rstrip())
+                print(error)
 
             # Get Logs
             logs = self.__get_logs()
@@ -285,9 +284,9 @@ class core:
         print("|  CLEAN                                                           |")
         print("+==================================================================+")
         status_msg = "- Cleaning Environment..."
-        return
         print(status_msg)
         self._progress.track_tasks(value=status_msg[2:])
+        return
 
         # Delete Uncompressed Deployment Folder
         if os.path.exists(self._args.execution_path):

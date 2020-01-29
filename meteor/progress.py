@@ -37,7 +37,7 @@ class progress:
     def error(self, error_msg):
         if self.__enabled():
             self._progress['error'] = str(error_msg).replace('"', '\\"').replace("\n", "\\n")
-            progress = json.dumps(self._progress).replace("'", "\\\'")
+            progress = json.dumps(self._progress).replace("'", "\\'")
             query = "UPDATE deployments_{} SET status = 'FAILED', progress = '{}', ended = '{}', error = 1 WHERE id = {}".format(self._args.execution_mode, progress, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._args.execution_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
             self._sql.stop()
