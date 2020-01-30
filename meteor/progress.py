@@ -26,12 +26,14 @@ class progress:
             uri = self._args.execution_path[self._args.execution_path.rfind('/')+1:]
             query = "UPDATE deployments_{} SET status = 'IN PROGRESS', uri = '{}', engine = '{}', started = '{}', pid = '{}' WHERE id = {}".format(self._args.execution_mode, uri, engine, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), pid, self._args.execution_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
+            self._sql.commit()
 
     def end(self, execution_status):
         if self.__enabled():
             status = 'SUCCESS' if execution_status == 0 else 'WARNING' if execution_status == 1 else 'STOPPED'
             query = "UPDATE deployments_{} SET status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._args.execution_mode, status, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._args.execution_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
+            self._sql.commit()
             self._sql.stop()
 
     def error(self, error_msg):
@@ -40,6 +42,7 @@ class progress:
             progress = json.dumps(self._progress).replace("'", "\\'")
             query = "UPDATE deployments_{} SET status = 'FAILED', progress = '{}', ended = '{}', error = 1 WHERE id = {}".format(self._args.execution_mode, progress, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._args.execution_id)
             self._sql.execute(query, self._credentials['meteor_next']['database'])
+            self._sql.commit()
             self._sql.stop()
 
     def track_syntax(self, value):
@@ -87,6 +90,7 @@ class progress:
         progress = json.dumps(self._progress).replace("'", "\\\'")
         query = "UPDATE deployments_{} SET progress = '{}' WHERE id = {}".format(self._args.execution_mode, progress, self._args.execution_id)
         self._sql.execute(query, self._credentials['meteor_next']['database'])
+        self._sql.commit()
 
     def __enabled(self):
         if 'meteor_next' in self._credentials and self._credentials['meteor_next']['enabled']:

@@ -77,7 +77,6 @@ class mysql:
             return self.__execute_query(query, database_name)
 
         except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
-            self.rollback()
             raise Exception(error.args[1])
 
         except Exception as e:
@@ -108,12 +107,15 @@ class mysql:
             # Get the query results
             query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
 
-        # Commit the changes in the database
-        self._sql.commit()
-
         # Return query info
         query_data = {"query_result": query_result, "query_time": "{0:.3f}".format(time.time() - start_time)}
         return query_data
+
+    def begin(self):
+        self._sql.begin()
+
+    def commit(self):
+        self._sql.commit()
 
     def rollback(self):
         try:

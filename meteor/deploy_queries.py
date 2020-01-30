@@ -18,6 +18,9 @@ class deploy_queries:
         self._sql = None
         self._aux = []
 
+        # Store Transaction vars
+        self._transaction = {"enabled": False, "query_error": False}
+
         # Init Query Template Instance
         self._query_template_instance = query_template(self._query_template)
 
@@ -28,8 +31,13 @@ class deploy_queries:
     def execution_log(self):
         return self._execution_log
 
+    @property
+    def transaction(self):
+        return self._transaction
+
     def clear_execution_log(self):
         self._execution_log = {"output": []}
+        self._transaction = {"enabled": False, "query_error": False}
 
     def start_sql_connection(self, server):
         self._server = server
@@ -106,6 +114,7 @@ class deploy_queries:
                     self._execution_log['output'].append(execution_row)
 
             except Exception as e:
+                self._transaction['query_error'] = True
                 # Write Exception to the Log
                 execution_row['meteor_status'] = '0'
                 execution_row['meteor_response'] = self.__parse_error(str(e))
@@ -139,6 +148,7 @@ class deploy_queries:
                 return query_info['query_result']
 
             except (KeyboardInterrupt, Exception) as e:
+                self._transaction['query_error'] = True
                 # Write Exception to the Log
                 execution_row['meteor_status'] = '0'
                 execution_row['meteor_response'] = self.__parse_error(str(e))
@@ -146,6 +156,35 @@ class deploy_queries:
                 # Do not Raise the Exception. Continue with the Deployment
                 if e.__class__ == KeyboardInterrupt:
                     raise
+
+    def start(self):
+        if not self._transaction['enabled']:
+            self._transaction['enabled'] = True
+            # Start server connection transaction
+            if self._sql:
+                self._sql.begin()
+
+            # Start auxiliary connections transaction
+            for i in self._aux:
+                list(i.values())[0].begin()
+
+    def commit(self):
+        # Commit server connection
+        if self._sql:
+            self._sql.commit()
+
+        # Commit auxiliary connections
+        for i in self._aux:
+            list(i.values())[0].commit()
+
+    def rollback(self):
+        # Rollback server connection
+        if self._sql:
+            self._sql.rollback()
+
+        # Rollback auxiliary connections
+        for i in self._aux:
+            list(i.values())[0].rollback()
 
     def __parse_error(self, error):
         return re.sub('\s+', ' ', error.replace('\n', ' ')).strip()

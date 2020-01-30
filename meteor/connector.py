@@ -15,7 +15,13 @@ class connector:
 
     def execute(self, query, database_name=None):
        return self._sql.execute(query, database_name)
-    
+
+    def begin(self):
+        self._sql.begin()
+
+    def commit(self):
+        self._sql.commit()
+
     def rollback(self):
         self._sql.rollback()
 
