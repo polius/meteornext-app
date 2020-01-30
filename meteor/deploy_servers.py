@@ -37,6 +37,14 @@ class deploy_servers:
             query_instance = deploy_queries(self._args, self._imports, self._region)
             self._query_execution.before(query_instance, self._args.environment, self._region['region'])
 
+            # Check transaction
+            if query_instance.transaction['enabled'] and query_instance.transaction['query_error']:
+                query_instance.rollback()
+                for i in query_instance.execution_log['output']:
+                    if i['meteor_status'] == '1':
+                        i['meteor_status'] = '2'
+                        i['meteor_response'] = ''
+
             # Store Execution Logs
             execution_log_path = "{0}/execution/{1}/{1}_before.json".format(self._args.execution_path, self._region['region'])
             with open(execution_log_path, 'w') as outfile:
@@ -47,6 +55,7 @@ class deploy_servers:
             current_thread.critical.append("- Error in code: {} (line {})".format(e, inner_frames.lineno))
 
         finally:
+            query_instance.commit()
             query_instance.close_sql_connection()
 
     def execute_main(self, server):
@@ -179,11 +188,22 @@ class deploy_servers:
             current_thread.critical = "- Error in code: {} (line {})".format(e, inner_frames.lineno)
 
         finally:
+            # Commit SQL Connection
+            query_instance.commit()
+
             # Close SQL Connection
             query_instance.close_sql_connection()
 
     def __store_main_logs(self, server, database, query_instance):
         current_thread = threading.current_thread()
+
+        # Check transaction
+        if query_instance.transaction['enabled'] and query_instance.transaction['query_error']:
+            query_instance.rollback()
+            for i in query_instance.execution_log['output']:
+                if i['meteor_status'] == '1':
+                    i['meteor_status'] = '2'
+                    i['meteor_response'] = ''
 
         # Store Logs
         execution_log_path = "{0}/execution/{1}/{2}/{3}.json".format(self._args.execution_path, self._region['region'], server['name'], database)
@@ -209,6 +229,14 @@ class deploy_servers:
             query_instance = deploy_queries(self._args, self._imports, self._region)
             self._query_execution.after(query_instance, self._args.environment, self._region['region'])
 
+            # Check transaction
+            if query_instance.transaction['enabled'] and query_instance.transaction['query_error']:
+                query_instance.rollback()
+                for i in query_instance.execution_log['output']:
+                    if i['meteor_status'] == '1':
+                        i['meteor_status'] = '2'
+                        i['meteor_response'] = ''
+
             # Store Execution Logs
             execution_log_path = "{0}/execution/{1}/{1}_after.json".format(self._args.execution_path, self._region['region'])
             with open(execution_log_path, 'w') as outfile:
@@ -219,6 +247,7 @@ class deploy_servers:
             current_thread.critical.append("- Error in code: {} (line {})".format(e, inner_frames.lineno))
 
         finally:
+            query_instance.commit()
             query_instance.close_sql_connection()
 
     # Parse JSON objects

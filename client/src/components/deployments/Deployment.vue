@@ -615,8 +615,11 @@
       snackbarText: '',
       snackbarColor: '',
 
+      // Execution URL
       url: window.location.protocol + '//' + window.location.host,
-      loading: false
+
+      // Loading
+      loading: false,
     }),
     components: { 
       codemirror,
@@ -677,6 +680,7 @@
           { text: 'Ended', value: 'ended', sortable: false },
           { text: 'Overall', value: 'overall', sortable: false },
         ]
+        this.executions = {}
         this.validation_data = []
         this.execution_progress = []
         this.execution_overall = []
@@ -781,7 +785,7 @@
           this.parseQueries()
         }
         // Get Executions
-        this.getExecutions()
+        if (Object.keys(this.executions).length === 0) this.getExecutions()
       },
       parseValidation() {
         if (!('validation' in this.deployment['progress'])) return

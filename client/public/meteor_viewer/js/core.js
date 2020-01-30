@@ -173,7 +173,11 @@ function build_columns() {
         headerName: header_name,
         field: COLUMNS[i],
         width: 50,
-        cellClass: function (params) { return params.value === '1' ? 'cell-ok' : 'cell-error'; }
+        cellClass: function (params) { 
+          if (params.value === '0') return 'cell-error';
+          else if (params.value === '1') return 'cell-ok';
+          else if (params.value === '2') return 'cell-warning';
+        }
       });
     }
     else if (COLUMNS[i] == 'meteor_response') {
@@ -192,6 +196,7 @@ function build_columns() {
               }
               else if (INFO['mode'] == 'test') return 'Test succeeded';
             }
+            else if (meteor_status == '2') return 'A rollback has been executed'
             else return params.data.meteor_response;
           }
           else return params.data.meteor_response;
