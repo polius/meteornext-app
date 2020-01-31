@@ -77,26 +77,30 @@
         let password = this.password
         this.$store.dispatch('login', { username, password })
         .then(() => {
-          if (this.$route.query.url !== undefined) this.$router.push({ path: this.$route.query.url })
-          else if (['', '/setup'].includes(this.prevRoute)) this.$router.push('/')
-          else this.$router.push(this.prevRoute)
+          this.login_success()
         })
-        .catch((error) => {
-          if (error.response === undefined || ![400,401].includes(error.response.status)) this.checkSetup()
-          else this.notification(error.response.data.message, 'error') 
-        })
-        .finally(() => {
-          this.loading = false
+        .catch(() => {
+          this.checkSetup()
         })
       },
       checkSetup() {
         axios.get('/setup')
-          .then(() => {
-            this.show_alert = true
+          .then((response) => {
+            if (response.data.setup) this.show_alert = true
+            else this.login_success()
           })
-          .catch(() => {
-            this.notification("Can't establish a connection to the server", 'error') 
+          .catch((error) => {
+            if (error.response.status == 404) this.notification("Can't establish a connection to the server", 'error')
+            else this.notification(error.response.data.message, 'error')
           })
+          .finally(() => {
+            this.loading = false
+          })
+      },
+      login_success() {
+        if (this.$route.query.url !== undefined) this.$router.push({ path: this.$route.query.url })
+        else if (['', '/setup'].includes(this.prevRoute)) this.$router.push('/')
+        else this.$router.push(this.prevRoute)
       },
       setup() {
         this.$router.push('/setup')

@@ -69,7 +69,7 @@ class Settings:
 
     def put(self, user_id, data):
         # Check logs path permissions
-        u = utils.Utils(self._app)
+        u = utils.Utils()
         if not u.check_local_path(json.loads(data['value'])['local']['path']):
             return jsonify({'message': 'The local logs path has no write permissions'}), 400
 

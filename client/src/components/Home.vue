@@ -13,9 +13,22 @@
 </template>
 
 <script>
-  export default {
-    data: () => ({
+import axios from 'axios';
 
-    })
+export default {
+  data: () => ({}),
+  created() {
+    this.checkLogin()
+  },
+  methods: {
+    checkLogin() {
+      axios.get('/login/check')
+        .then(() => {})
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+    }
   }
+}
 </script>

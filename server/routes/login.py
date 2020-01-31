@@ -50,4 +50,9 @@ class Login:
                 }
                 return jsonify({'data': ret}), 200
 
+        @login_blueprint.route('/login/check', methods=['GET'])
+        @jwt_required
+        def login_check():
+            return jsonify({'message': 'OK'}), 200
+
         return login_blueprint

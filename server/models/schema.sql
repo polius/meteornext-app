@@ -74,8 +74,6 @@ CREATE TABLE `regions` (
   `username` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `password` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `key` text COLLATE utf8mb4_unicode_ci,
-  `cross_region` tinyint(1) NOT NULL,
-  `deploy_path` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,

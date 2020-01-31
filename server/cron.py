@@ -20,6 +20,10 @@ class Cron:
         self._blueprints = blueprints
         self._sql = sql
 
+    @property
+    def license(self):
+        return self._license
+
     def KMMLeSdKHFP9hBQCm7Pg9J3VtvjsNeEnuc4nyDV9ZD7QDxQUwaRgyddSZqxhsFP3(self):
         return 'FBfLXedVRQ4Kj4tAZ2EUcYruu8KX8WPYLaxjaCYzxuM3yF89aPXwLxE2AMwWz5Jr'
 
@@ -55,17 +59,18 @@ class Cron:
             response_code = response.status_code
             response_status = response.status_code == 200
             response_text = json.loads(response.text)['response']
-            response_trial = json.loads(response.text)['trial']
 
             # Solve trial
-            trial = ','.join([str(ord(i)) for i in self._license_conf['trial']])
-            trial = hashlib.sha3_256(trial.encode()).hexdigest()
+            if response_status == 200:
+                response_trial = json.loads(response.text)['trial']
+                trial = ','.join([str(ord(i)) for i in self._license_conf['trial']])
+                trial = hashlib.sha3_256(trial.encode()).hexdigest()
 
-            # Validate keys
-            if response_trial != trial:
-                response_text = "The license is not valid"
-                response_code = 401
-                response_status = False
+                # Validate keys
+                if response_trial != trial:
+                    response_text = "The license is not valid"
+                    response_code = 401
+                    response_status = False
 
         except requests.exceptions.RequestException as e:
             response_text = "A connection with the licensing server could not be established"
