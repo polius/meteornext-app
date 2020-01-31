@@ -5,9 +5,7 @@ env/
 __pycache__
 /server/logs/*
 /server/build/*
-/server/apps/*
 server.conf
 *.pyc
 .bash_history
 .cache/
-upx-*
