@@ -68,11 +68,9 @@ class Auxiliary:
                ssh = {"hostname": auxiliary_json['ssh_hostname'], "port": auxiliary_json['ssh_port'], "username": auxiliary_json['ssh_username'], "password": auxiliary_json['ssh_password'], "key": auxiliary_json['ssh_key']}
             sql = {"hostname": auxiliary_json['sql_hostname'], "port": auxiliary_json['sql_port'], "username": auxiliary_json['sql_username'], "password": auxiliary_json['sql_password']}
  
-            # Init Utils Class
-            u = utils.Utils(self._app, ssh)
-
             # Check SQL Connection
             try:
+                u = utils.Utils(ssh)
                 u.check_sql(sql)
             except Exception as e:
                 return jsonify({'message': "Can't connect to the Auxiliary Server"}), 400

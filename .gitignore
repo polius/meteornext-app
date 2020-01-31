@@ -10,3 +10,4 @@ server.conf
 *.pyc
 .bash_history
 .cache/
+upx-*

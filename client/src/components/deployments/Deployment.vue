@@ -617,9 +617,6 @@
 
       // Execution URL
       url: window.location.protocol + '//' + window.location.host,
-
-      // Loading
-      loading: false,
     }),
     components: { 
       codemirror,
@@ -724,6 +721,7 @@
           this.deployment['schema'] = data['schema']
         }
         this.deployment['method'] = data['method'].toLowerCase()
+        if (this.deployment['status'] != data['status']) this.getExecutions()
         this.deployment['status'] = data['status']
         this.deployment['created'] = data['created']
         this.deployment['scheduled'] = data['scheduled']
@@ -784,8 +782,6 @@
           // Parse Queries
           this.parseQueries()
         }
-        // Get Executions
-        if (Object.keys(this.executions).length === 0) this.getExecutions()
       },
       parseValidation() {
         if (!('validation' in this.deployment['progress'])) return
@@ -1068,7 +1064,6 @@
         }
 
         // Add deployment to the DB
-        this.loading = true
         axios.put(path, payload)
         .then((response) => {
           const data = response.data.data
@@ -1091,9 +1086,6 @@
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
-        })
-        .finally(() => {
-          this.loading = false
         })
       },
       // -------------------------------------

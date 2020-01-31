@@ -71,7 +71,7 @@ class Servers:
 
             # Init Utils Class
             connection = r[0] if r[0]['ssh_tunnel'] else None
-            u = utils.Utils(self._app, connection)
+            u = utils.Utils(connection)
 
             # Check SQL Connection
             try:

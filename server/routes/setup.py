@@ -44,6 +44,7 @@ class Setup:
         self._logs_folder = "{}/logs".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/logs".format(os.path.dirname(sys.executable))
         self._blueprints = []
         self._license = {}
+        self._cron = None
         
         # Start Setup
         try:
@@ -59,8 +60,8 @@ class Setup:
             # Register blueprints
             self.__register_blueprints(sql)
             # Init cron
-            cron = Cron(self._app, self._license, self._conf['license'], self._blueprints, sql)
-            self.__cron_start(cron)
+            self._cron = Cron(self._app, self._license, self._conf['license'], self._blueprints, sql)
+            self.__cron_start()
 
         except Exception as e:
             self._conf = {}
@@ -72,9 +73,12 @@ class Setup:
         @setup_blueprint.route('/setup', methods=['GET'])
         def setup():
             if self.__setup_available():
-                return jsonify({}), 200
+                return jsonify({'setup': True}), 200
             else:
-                return jsonify({}), 401
+                lic = self._cron.license
+                if lic['status'] == 200:
+                    return jsonify({'setup': False}), 200
+                return jsonify({"message": lic['response']}), lic['code']
 
         @setup_blueprint.route('/setup/license', methods=['POST'])
         def setup_license():
@@ -199,8 +203,8 @@ class Setup:
             self._conf['license']['uuid'] = str(uuid.getnode())
 
             # Init cron
-            cron = Cron(self._app, self._license, self._conf['license'], self._blueprints, sql)
-            self.__cron_start(cron)
+            self._cron = Cron(self._app, self._license, self._conf['license'], self._blueprints, sql)
+            self.__cron_start()
 
             # Build return message
             return jsonify({'message': 'Setup Finished Successfully'}), 200
@@ -222,23 +226,23 @@ class Setup:
         try:
             # Generate trial
             license['trial'] = str(uuid.uuid4())
-
             # Check license
             response = requests.post("http://34.252.139.218:12350/license", json=license, allow_redirects=False)
             response_code = response.status_code
             response_status = response.status_code == 200
             response_text = json.loads(response.text)['response']
-            response_trial = json.loads(response.text)['trial']
-
+            
             # Solve trial
-            trial = ','.join([str(ord(i)) for i in license['trial']])
-            trial = hashlib.sha3_256(trial.encode()).hexdigest()
+            if response_status == 200:
+                response_trial = json.loads(response.text)['trial']
+                trial = ','.join([str(ord(i)) for i in license['trial']])
+                trial = hashlib.sha3_256(trial.encode()).hexdigest()
 
-            # Validate trials
-            if response_trial != trial:
-                response_text = "The license is not valid"
-                response_code = 401
-                response_status = False
+                # Validate trials
+                if response_trial != trial:
+                    response_text = "The license is not valid"
+                    response_code = 401
+                    response_status = False
 
             return {"status": response_status, "code": response_code, "response": response_text}
 
@@ -272,17 +276,17 @@ class Setup:
             i.license(self._license)
             self._app.register_blueprint(i.blueprint(), url_prefix=self._url_prefix)
 
-    def __cron_start(self, cron):
+    def __cron_start(self):
         # Check integrity
         try:
-            response = cron.KMMLeSdKHFP9hBQCm7Pg9J3VtvjsNeEnuc4nyDV9ZD7QDxQUwaRgyddSZqxhsFP3()
+            response = self._cron.KMMLeSdKHFP9hBQCm7Pg9J3VtvjsNeEnuc4nyDV9ZD7QDxQUwaRgyddSZqxhsFP3()
             if response != 'FBfLXedVRQ4Kj4tAZ2EUcYruu8KX8WPYLaxjaCYzxuM3yF89aPXwLxE2AMwWz5Jr':
                 sys.exit()
         except BaseException:
             sys.exit()
 
         # Start Cron
-        cron.start()
+        self._cron.start()
 
     def __searchInListDict(self, list_dicts, key_name, value_to_find):
         # Search a key value in a list of dictionaries

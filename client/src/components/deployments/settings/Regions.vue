@@ -24,10 +24,6 @@
           <v-icon v-if="props.item.ssh_tunnel && (props.item.key || '').length != 0" small color="success" style="margin-left:22px">fas fa-circle</v-icon>
           <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:22px">fas fa-circle</v-icon>
         </template>
-        <template v-slot:item.cross_region="props">
-          <v-icon v-if="props.item.ssh_tunnel && props.item.cross_region" small color="success" style="margin-left:28px">fas fa-circle</v-icon>
-          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:28px">fas fa-circle</v-icon>
-        </template>
       </v-data-table>
     </v-card>
 
@@ -54,10 +50,6 @@
                     <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
                     <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
                     <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
-                    <!--
-                    <v-switch v-model="item.cross_region" label="Cross Region" color="info" hide-details style="margin-top:15px;"></v-switch>
-                    <v-text-field v-if="item.cross_region" v-model="item.deploy_path" :rules="[v => !!v || '']" label="Deploy Path" style="margin-top:10px;" append-icon="folder" hide-details></v-text-field>
-                    -->
                   </div>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>
@@ -96,13 +88,11 @@ export default {
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'Password', align: 'left', value: 'password'},
       { text: 'Private Key', align: 'left', value: 'key'}
-      // { text: 'Cross Region', align: 'left', value: 'cross_region'},
-      // { text: 'Deploy Path', align: 'left', value: 'deploy_path'}
     ],
     items: [],
     selected: [],
     search: '',
-    item: { name: '', environment: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', cross_region:false, deploy_path: '' },
+    item: { name: '', environment: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '' },
     mode: '',
     loading: true,
     dialog: false,
@@ -134,7 +124,7 @@ export default {
     },
     newRegion() {
       this.mode = 'new'
-      this.item = { name: '', environment: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', cross_region: false, deploy_path: '' }
+      this.item = { name: '', environment: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '' }
       this.dialog_title = 'New Region'
       this.dialog = true
     },
