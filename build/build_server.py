@@ -138,8 +138,8 @@ if __name__ == "__main__":
         os.makedirs(binary_path, exist_ok=True)
 
         # 10) Setup UPX
-        subprocess.call("curl -L https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz --output /root/upx-3.96-amd64_linux.tar.xz", shell=True)
-        subprocess.call("tar xvfJ /root/upx-3.96-amd64_linux.tar.xz -C /root", shell=True)
+        subprocess.call("curl -L https://github.com/upx/upx/releases/download/v3.96/upx-3.96-amd64_linux.tar.xz --output /tmp/upx-3.96-amd64_linux.tar.xz", shell=True)
+        subprocess.call("tar xvfJ /tmp/upx-3.96-amd64_linux.tar.xz -C /tmp", shell=True)
 
         # 11) Build pyinstaller command
         command = "cd '{}'; pyinstaller --clean --distpath '{}'".format(cythonized, binary_path)
@@ -153,7 +153,7 @@ if __name__ == "__main__":
         for b in additional_binaries:
             command += " --add-binary '{}:{}'".format(b[0], b[1])
 
-        command += ' --upx-dir /root/upx-3.96-amd64_linux'
+        command += ' --upx-dir /tmp/upx-3.96-amd64_linux'
         command += ' --onefile'
         command += ' "{}/init.py"'.format(cythonized)
 
