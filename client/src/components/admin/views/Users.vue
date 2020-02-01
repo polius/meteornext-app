@@ -44,7 +44,7 @@
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="success" @click="submitUser()">Confirm</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="submitUser()">Confirm</v-btn>
                   <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
                 </div>
               </v-flex>

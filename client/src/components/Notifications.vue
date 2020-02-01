@@ -77,7 +77,7 @@
                     <div style="padding-bottom:10px" class="subtitle-1">Are you sure you want to delete the selected notifications?</div>
                     <v-divider></v-divider>
                     <div style="margin-top:20px;">
-                      <v-btn :loading="loading" color="success" @click="deleteNotificationSubmit()">CONFIRM</v-btn>
+                      <v-btn :loading="loading" color="#00b16a" @click="deleteNotificationSubmit()">CONFIRM</v-btn>
                       <v-btn :disabled="loading" color="error" @click="deleteDialog=false" style="margin-left:5px;">CANCEL</v-btn>
                     </div>
                   </v-form>

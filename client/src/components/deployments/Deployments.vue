@@ -74,7 +74,7 @@
                   <div class="subtitle-1" style="padding-bottom:10px">Are you sure you want to delete the selected deployments?</div>
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
-                    <v-btn :loading="loading" color="success" @click="deleteDeploySubmit()">Confirm</v-btn>
+                    <v-btn :loading="loading" color="#00b16a" @click="deleteDeploySubmit()">Confirm</v-btn>
                     <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px;">Cancel</v-btn>
                   </div>
                 </v-form>

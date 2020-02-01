@@ -160,7 +160,7 @@
             </v-card>
 
             <div style="margin-top:20px;">
-              <v-btn color="success" @click="submitGroup()">Confirm</v-btn>
+              <v-btn color="#00b16a" @click="submitGroup()">Confirm</v-btn>
               <router-link class="nav-link" to="/admin/groups">
                 <v-btn color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
               </router-link>
@@ -188,7 +188,7 @@
                   <div style="padding-bottom:10px" v-if="environment_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected environments?</div>
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
-                    <v-btn :loading="loading" color="success" @click="submitEnvironment()">Confirm</v-btn>
+                    <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">Confirm</v-btn>
                     <v-btn :disabled="loading" color="error" @click="environment_dialog=false" style="margin-left:10px">Cancel</v-btn>
                   </div>
                 </v-form>
@@ -230,7 +230,7 @@
                 <div style="padding-top:10px; padding-bottom:10px" v-if="region_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="success" @click="submitRegion()">Confirm</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="submitRegion()">Confirm</v-btn>
                   <v-btn :disabled="loading" color="error" @click="region_dialog=false" style="margin-left:10px">Cancel</v-btn>
                 </div>
               </v-flex>
@@ -268,7 +268,7 @@
                 <div style="padding-top:10px; padding-bottom:10px" v-if="server_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected servers?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="success" @click="submitServer()">Confirm</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="submitServer()">Confirm</v-btn>
                   <v-btn :disabled="loading" color="error" @click="server_dialog=false" style="margin-left:10px">Cancel</v-btn>
                 </div>
               </v-flex>
@@ -304,7 +304,7 @@
                 <div style="padding-top:10px; padding-bottom:10px" v-if="auxiliary_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected auxiliary connections?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="success" @click="submitAuxiliary()">Confirm</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="submitAuxiliary()">Confirm</v-btn>
                   <v-btn :disabled="loading" color="error" @click="auxiliary_dialog=false" style="margin-left:10px">Cancel</v-btn>
                 </div>
               </v-flex>

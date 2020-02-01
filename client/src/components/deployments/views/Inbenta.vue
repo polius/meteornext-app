@@ -71,7 +71,7 @@
             <v-divider></v-divider>
 
             <div style="margin-top:20px;">
-              <v-btn :loading="loading" color="success" @click="submitDeploy()">CREATE DEPLOY</v-btn>
+              <v-btn :loading="loading" color="#00b16a" @click="submitDeploy()">CREATE DEPLOY</v-btn>
               <router-link to="/deployments"><v-btn :disabled="loading" color="error" style="margin-left:10px;">CANCEL</v-btn></router-link>
             </div>
           </v-form>
@@ -84,13 +84,13 @@
         <v-btn text color="info" @click="schedule_now()">Now</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
-        <v-btn text color="success" @click="schedule_submit()">Confirm</v-btn>
+        <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="schedule_mode=='time'" v-model="schedule_time" color="info" format="24hr" scrollable>
         <v-btn text color="info" @click="schedule_now()">Now</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
-        <v-btn text color="success" @click="schedule_submit()">Confirm</v-btn>
+        <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
       </v-time-picker>
     </v-dialog>
 
@@ -109,7 +109,7 @@
                 <div style="padding-top:10px; padding-bottom:10px" v-if="query_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected queries?</div>
                 <v-divider v-if="query_mode=='delete'"></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn color="success" @click="actionConfirm()">Confirm</v-btn>
+                  <v-btn color="#00b16a" @click="actionConfirm()">Confirm</v-btn>
                   <v-btn color="error" @click="queryDialog=false" style="margin-left:5px">Cancel</v-btn>
                 </div>
               </v-flex>
