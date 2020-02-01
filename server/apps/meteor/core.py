@@ -157,46 +157,35 @@ class core:
         print("- Total Queries: {}".format(summary['total_queries']))
 
         # Analyze Test Execution Logs 
-        if self._args.test:
-            summary['queries_failed'] = 0
+        summary['meteor_query_error'] = 0
+        summary['meteor_query_success'] = 0
+        summary['meteor_query_rollback'] = 0
 
-            for d in data:
-                # Count Executions Test Failed
-                summary['queries_failed'] += 1 if int(d['meteor_status']) == 0 else 0
+        for d in data:
+            # Count Query Errors
+            summary['meteor_query_error'] += 1 if int(d['meteor_status']) == 0 else 0
+            # Count Query Success
+            summary['meteor_query_success'] += 1 if int(d['meteor_status']) == 1 else 0
+            # Count Query Rollback
+            summary['meteor_query_rollback'] += 1 if int(d['meteor_status']) == 2 else 0
 
-            # Queries Passed the Test Run
-            execution_checks_success_value = 0 if summary['total_queries'] == 0 else round(float(summary['total_queries'] - summary['queries_failed']) / float(summary['total_queries']) * 100, 2)        
-            print("- Queries Succeeded: {} (~{}%)".format(summary['total_queries'] - summary['queries_failed'], float(execution_checks_success_value)))
+        # Queries Succeeded
+        queries_succeeded_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_success']) / float(summary['total_queries']) * 100, 2)
+        print("- Queries Succeeded: {} (~{}%)".format(summary['meteor_query_success'], float(queries_succeeded_value)))
 
-            # Queries Failed the Test Run
-            execution_checks_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_failed']) / float(summary['total_queries']) * 100, 2)        
-            print("- Queries Failed: {} (~{}%)".format(summary['queries_failed'], float(execution_checks_failed_value)))
+        # Queries Failed
+        queries_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_error']) / float(summary['total_queries']) * 100, 2)
+        print("- Queries Failed: {} (~{}%)".format(summary['meteor_query_error'], float(queries_failed_value)))
 
-            # Track progress
-            queries['total'] = summary['total_queries']
-            queries['succeeded'] = {'t': summary['total_queries'] - summary['queries_failed'], 'p': float(execution_checks_success_value)}
-            queries['failed'] = {'t': summary['queries_failed'], 'p': float(execution_checks_failed_value)}
+        # Queries Rollback
+        queries_rollback_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_rollback']) / float(summary['total_queries']) * 100, 2)
+        print("- Queries Rollback: {} (~{}%)".format(summary['meteor_query_rollback'], float(queries_rollback_value)))
 
-        # Analyze Deployment Logs 
-        elif self._args.deploy:
-            summary['meteor_query_error'] = 0
-
-            for d in data:
-                # Count Query Errors
-                summary['meteor_query_error'] += 1 if int(d['meteor_status']) == 0 else 0
-
-            # Queries Succeeded
-            queries_succeeded_value = 0 if summary['total_queries'] == 0 else round(float(int(summary['total_queries']) - int(summary['meteor_query_error'])) / float(summary['total_queries']) * 100, 2)
-            print("- Queries Succeeded: {} (~{}%)".format(int(summary['total_queries']) - int(summary['meteor_query_error']), float(queries_succeeded_value)))
-
-            # Queries Failed
-            queries_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_error']) / float(summary['total_queries']) * 100, 2)
-            print("- Queries Failed: {} (~{}%)".format(summary['meteor_query_error'], float(queries_failed_value)))
-
-            # Track progress
-            queries['total'] = summary['total_queries']
-            queries['succeeded'] = {'t': summary['total_queries'] - summary['meteor_query_error'], 'p': float(queries_succeeded_value)}
-            queries['failed'] = {'t': summary['meteor_query_error'], 'p': float(queries_failed_value)}
+        # Track progress
+        queries['total'] = summary['total_queries']
+        queries['succeeded'] = {'t': summary['meteor_query_success'], 'p': float(queries_succeeded_value)}
+        queries['failed'] = {'t': summary['meteor_query_error'], 'p': float(queries_failed_value)}
+        queries['rollback'] = {'t': summary['meteor_query_rollback'], 'p': float(queries_rollback_value)}
 
         # Write Progress
         self._progress.track_queries(value=queries)

@@ -101,6 +101,10 @@ class deploy_queries:
         date_time = datetime.fromtimestamp(time()).strftime('%Y-%m-%d %H:%M:%S.%f UTC')
         execution_row = {"meteor_timestamp": date_time, "meteor_environment": self._args.environment, "meteor_region": region, "meteor_server": server_sql, "meteor_database": database_name, "meteor_query": query_alias, "meteor_status": "1", "meteor_response": "", "meteor_execution_time": ""}
 
+        # Set query transaction
+        if self._transaction['enabled']:
+            execution_row['transaction'] = True
+
         # Get Query Syntax
         query_syntax = self.get_query_type(query_parsed, show_output=False)
 
@@ -158,26 +162,43 @@ class deploy_queries:
                     raise
 
     def start(self):
-        if not self._transaction['enabled']:
-            self._transaction['enabled'] = True
-            # Start server connection transaction
-            if self._sql:
-                self._sql.begin()
+        # Init transaction
+        self._transaction = {'enabled': True, 'query_error': False}
 
-            # Start auxiliary connections transaction
-            for i in self._aux:
-                list(i.values())[0].begin()
+        # Start server connection transaction
+        if self._sql:
+            self._sql.begin()
+
+        # Start auxiliary connections transaction
+        for i in self._aux:
+            list(i.values())[0].begin()
 
     def commit(self):
-        # Commit server connection
-        if self._sql:
-            self._sql.commit()
+        # Check transaction
+        if self._transaction['enabled'] and self._transaction['query_error']:
+            self.rollback()
 
-        # Commit auxiliary connections
-        for i in self._aux:
-            list(i.values())[0].commit()
+        else:
+            # Commit server connection
+            if self._sql:
+                self._sql.commit()
+
+            # Commit auxiliary connections
+            for i in self._aux:
+                list(i.values())[0].commit()
+
+            # Transaction tasks
+            self._transaction['enabled'] = False
+            for i in self._execution_log['output']:
+                if 'transaction' in i:
+                    del i['transaction']
 
     def rollback(self):
+        for i in self._execution_log['output']:
+            if i['meteor_status'] == '1':
+                i['meteor_status'] = '2'
+                i['meteor_response'] = ''
+
         # Rollback server connection
         if self._sql:
             self._sql.rollback()
@@ -185,6 +206,16 @@ class deploy_queries:
         # Rollback auxiliary connections
         for i in self._aux:
             list(i.values())[0].rollback()
+
+        # Transaction tasks
+        self._transaction['enabled'] = False
+        for i in self._execution_log['output']:
+            if i['meteor_status'] == '1':
+                i['meteor_status'] = '2'
+                i['meteor_response'] = ''
+
+            if 'transaction' in i:
+                del i['transaction']                
 
     def __parse_error(self, error):
         return re.sub('\s+', ' ', error.replace('\n', ' ')).strip()
