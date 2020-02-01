@@ -23,7 +23,7 @@
                     <v-text-field filled v-model="username" name="username" label="Username" required append-icon="person" v-on:keyup.enter="login()" style="margin-top:20px; margin-bottom:20px;" hide-details></v-text-field>
                     <v-text-field filled v-model="password" name="password" label="Password" required append-icon="lock" type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
                   </v-form>
-                  <v-btn x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()"><b>LOGIN</b></v-btn>
+                  <v-btn x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()">LOGIN</v-btn>
                 </v-card-text>
               </v-card>
             </v-slide-y-transition>

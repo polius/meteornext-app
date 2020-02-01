@@ -32,7 +32,7 @@
                 <div style="padding-top:10px; padding-bottom:10px" class="subtitle-1">Are you sure you want to delete the selected groups?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn color="success" @click="deleteGroupSubmit()">Confirm</v-btn>
+                  <v-btn color="#00b16a" @click="deleteGroupSubmit()">Confirm</v-btn>
                   <v-btn color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
                 </div>
               </v-flex>

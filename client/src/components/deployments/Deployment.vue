@@ -303,7 +303,7 @@
                 <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
 
                 <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
-                  <v-btn color="success" @click="editSubmit()">CONFIRM</v-btn>
+                  <v-btn color="#00b16a" @click="editSubmit()">CONFIRM</v-btn>
                   <v-btn color="error" @click="information_dialog = false" style="margin-left:10px;">CANCEL</v-btn>
                 </div>
               </v-flex>
@@ -318,13 +318,13 @@
         <v-btn text color="info" @click="schedule_now()">Now</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
-        <v-btn text color="success" @click="schedule_submit()">Confirm</v-btn>
+        <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="schedule_mode=='time'" v-model="schedule_time" color="info" format="24hr" scrollable>
         <v-btn text color="info" @click="schedule_now()">Now</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
-        <v-btn text color="success" @click="schedule_submit()">Confirm</v-btn>
+        <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
       </v-time-picker>
     </v-dialog>
 
@@ -344,7 +344,7 @@
               <v-flex xs12 style="padding-bottom:10px" v-if="query_dialog_mode=='delete'">
                 <div class="subtitle-1">Are you sure you want to delete the selected queries?</div>
               </v-flex>
-              <v-btn color="success" @click="queryActionConfirm()">Confirm</v-btn>
+              <v-btn color="#00b16a" @click="queryActionConfirm()">Confirm</v-btn>
               <v-btn color="error" @click="query_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
@@ -415,7 +415,7 @@
                 <div class="subtitle-1" style="margin-bottom:10px">{{ action_dialog_text }}</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn color="success" @click="actionSubmit()">Confirm</v-btn>
+                  <v-btn color="#00b16a" @click="actionSubmit()">Confirm</v-btn>
                   <v-btn color="error" @click="action_dialog=false" style="margin-left:10px;">Cancel</v-btn>
                 </div>
               </v-flex>

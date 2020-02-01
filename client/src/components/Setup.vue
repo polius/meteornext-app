@@ -73,7 +73,7 @@
                 <div style="padding-bottom:10px" class="subtitle-1">Are you sure you want to recreate this database?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="success" @click="setupDialogSubmit(true)">YES, recreate it</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="setupDialogSubmit(true)">YES, recreate it</v-btn>
                   <v-btn :disabled="loading" color="error" @click="setupDialogSubmit(false)" style="margin-left:10px">Do NOT recreate it</v-btn>
                 </div>
               </v-flex>

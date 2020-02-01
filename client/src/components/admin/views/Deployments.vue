@@ -61,7 +61,7 @@
                   <v-text-field v-model="search_dialog_data.created_to" label="Created (To)" placeholder="YYYY-MM-DD hh:mm:ss" style="padding-top:0px;"></v-text-field>
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
-                    <v-btn :loading="loading" color="success" @click="searchDeployments()">Confirm</v-btn>
+                    <v-btn :loading="loading" color="#00b16a" @click="searchDeployments()">Confirm</v-btn>
                     <v-btn :disabled="loading" color="error" @click="search_dialog=false" style="margin-left:10px;">Cancel</v-btn>
                   </div>
                 </v-form>
