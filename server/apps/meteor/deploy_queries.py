@@ -194,28 +194,29 @@ class deploy_queries:
                     del i['transaction']
 
     def rollback(self):
-        for i in self._execution_log['output']:
-            if i['meteor_status'] == '1':
-                i['meteor_status'] = '2'
-                i['meteor_response'] = ''
+        if self._transaction['enabled']:
+            for i in self._execution_log['output']:
+                if i['meteor_status'] == '1':
+                    i['meteor_status'] = '2'
+                    i['meteor_response'] = ''
 
-        # Rollback server connection
-        if self._sql:
-            self._sql.rollback()
+            # Rollback server connection
+            if self._sql:
+                self._sql.rollback()
 
-        # Rollback auxiliary connections
-        for i in self._aux:
-            list(i.values())[0].rollback()
+            # Rollback auxiliary connections
+            for i in self._aux:
+                list(i.values())[0].rollback()
 
-        # Transaction tasks
-        self._transaction['enabled'] = False
-        for i in self._execution_log['output']:
-            if i['meteor_status'] == '1':
-                i['meteor_status'] = '2'
-                i['meteor_response'] = ''
+            # Transaction tasks
+            self._transaction['enabled'] = False
+            for i in self._execution_log['output']:
+                if i['meteor_status'] == '1':
+                    i['meteor_status'] = '2'
+                    i['meteor_response'] = ''
 
-            if 'transaction' in i:
-                del i['transaction']                
+                if 'transaction' in i:
+                    del i['transaction']                
 
     def __parse_error(self, error):
         return re.sub('\s+', ' ', error.replace('\n', ' ')).strip()
