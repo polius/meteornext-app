@@ -20,10 +20,10 @@
         <div v-else-if="start_execution || deployment['status'] == 'STARTING'" class="subtitle-1" style="margin-left:5px;">Starting the execution...</div>
         <v-progress-circular v-if="start_execution || (stop_execution && deployment['status'] != 'STOPPED') || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' ||  deployment['status'] == 'IN PROGRESS'" :size="22" indeterminate color="white" width="2" style="margin-left:20px; margin-right:10px;"></v-progress-circular>
 
-        <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="success" style="margin-left:5px; margin-right:15px;">SUCCESS</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="warning" style="margin-left:5px; margin-right:15px;" title="Some queries failed">WARNING</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="error" style="margin-left:5px; margin-right:15px;">FAILED</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'STOPPED'" label color="error" style="margin-left:5px; margin-right:15px;">STOPPED</v-chip>
+        <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="rgb(0, 177, 106)" style="margin-left:5px; margin-right:15px;">SUCCESS</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="rgb(250, 130, 49)" style="margin-left:5px; margin-right:15px;" title="Some queries failed">WARNING</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="rgb(231, 76, 60)" style="margin-left:5px; margin-right:15px;">FAILED</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'STOPPED'" label color="rgb(231, 76, 60)" style="margin-left:5px; margin-right:15px;">STOPPED</v-chip>
 
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="padding-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
@@ -209,6 +209,15 @@
           <v-flex v-if="deployment['ended'] !== null && queries_data.length > 0" xs4 style="padding-left:5px;">
             <v-card>
               <v-data-table :headers="queries_headers" :items="queries_data" hide-default-footer>
+                <template v-slot:item.succeeded="props">
+                  <span class="font-weight-medium" style="color: rgb(0, 177, 106)">{{ props.item.succeeded }}</span>
+                </template>
+                <template v-slot:item.failed="props">
+                  <span class="font-weight-medium" style="color: rgb(231, 76, 60)">{{ props.item.failed }}</span>
+                </template>
+                <template v-slot:item.rollback="props">
+                  <span class="font-weight-medium" style="color: rgb(250, 130, 49)">{{ props.item.rollback }}</span>
+                </template>
               </v-data-table>
             </v-card>
           </v-flex>
@@ -541,7 +550,8 @@
       queries_headers: [
         { text: 'TOTAL', align:'left', value: 'total', sortable: false },
         { text: 'SUCCEEDED', align:'left', value: 'succeeded', sortable: false },
-        { text: 'FAILED', align:'left', value: 'failed', sortable: false }
+        { text: 'FAILED', align:'left', value: 'failed', sortable: false },
+        { text: 'ROLLBACK', align:'left', value: 'rollback', sortable: false }
       ],
       queries_data: [],
       
@@ -875,7 +885,8 @@
         this.queries_data.push({
           total: this.deployment['progress']['queries']['total'],
           succeeded: this.deployment['progress']['queries']['succeeded']['t'] + ' (' + this.deployment['progress']['queries']['succeeded']['p'] + '%)',
-          failed: this.deployment['progress']['queries']['failed']['t'] + ' (' + this.deployment['progress']['queries']['failed']['p'] + '%)'
+          failed: this.deployment['progress']['queries']['failed']['t'] + ' (' + this.deployment['progress']['queries']['failed']['p'] + '%)',
+          rollback: this.deployment['progress']['queries']['rollback']['t'] + ' (' + this.deployment['progress']['queries']['rollback']['p'] + '%)'
         })
       },
       showResults() {
@@ -1222,8 +1233,8 @@
         else if (mode == 'INBENTA') return '#049372'
       },
       regionColor (index, region) {
-        if (region.startsWith('100%')) return 'background-color: #4caf50;'
-        else return 'background-color: #fb8c00;'
+        if (region.startsWith('100%')) return 'background-color: rgb(0, 177, 106);'
+        else return 'background-color: rgb(250, 130, 49);'
       },
       regionIcon (progress) {
         if (progress.startsWith('100%')) return 'fas fa-check'
