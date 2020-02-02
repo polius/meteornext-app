@@ -106,7 +106,7 @@ export default {
     search_dialog: false,
     search_dialog_data: {},
     deployment_modes: ['Basic','Pro','Inbenta'],
-    deployment_status: ['CREATED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED'],
+    deployment_status: ['CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED'],
 
     // Snackbar
     snackbar: false,
@@ -159,8 +159,9 @@ export default {
       this.$router.push({ name:'deployment', params: { id: id }})
     },
     getModeColor (mode) {
-      if (mode == 'BASIC') return '#67809f'
-      else if (mode == 'PRO') return '#22313f'
+      if (mode == 'BASIC') return '#eb974e'
+      else if (mode == 'PRO') return 'rgb(235, 95, 93)'
+      else if (mode == 'INBENTA') return '#049372'
     },
     getMethodColor (method) {
       if (method == 'DEPLOY') return '#f44336'
