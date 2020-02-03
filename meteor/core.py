@@ -6,7 +6,6 @@ import calendar
 import requests
 import re
 import signal
-import threading
 import json
 from collections import OrderedDict
 from datetime import timedelta
