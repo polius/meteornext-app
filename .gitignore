@@ -9,3 +9,4 @@ server.conf
 *.pyc
 .bash_history
 .cache/
+/server/apps

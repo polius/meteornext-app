@@ -1,27 +1,14 @@
-import os
-import sys
 import argparse
-
 from core import core
 
 # Execute Meteor using $ python meteor.py ...
 if __name__ == '__main__':
     from meteor import meteor
-    meteor().start()
+    meteor()
 
 class meteor:
     def __init__(self):
         self._args = self.__init_parser()
-
-    def start(self):
-        core(self._args)
-        
-    def fire(self, args):
-        sys.stdout = open(os.devnull, 'w')
-        sys.stderr = open('/root/error.log', 'a') if hasattr(sys, '_MEIPASS') else sys.stderr
-
-        for key, value in args.items():
-            setattr(self._args, key, value)
         core(self._args)
 
     def __init_parser(self):

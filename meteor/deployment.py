@@ -93,7 +93,7 @@ class deployment:
                 # Stop Execution Threads
                 for t in threads:
                     t.alive = False
-                
+
                 # Wait Execution Threads
                 for t in threads:
                     t.join()

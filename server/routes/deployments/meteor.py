@@ -250,7 +250,7 @@ class query_execution:
     def __execute(self, deployment):
         # Build Meteor Parameters
         meteor_base_path = sys._MEIPASS if self._bin else self._app.root_path
-        meteor_path = "python3 {}/apps/meteor/meteor.py".format(meteor_base_path)
+        meteor_path = "{}/apps/meteor/init".format(meteor_base_path) if self._bin else "python3 {}/../meteor/meteor.py".format(meteor_base_path)
         environment = deployment['environment']
         execution_method = deployment['method'].lower()
         execution_id = deployment['execution_id']
@@ -261,27 +261,8 @@ class query_execution:
         execution_limit = ' --execution_limit "{}"'.format(deployment['execution_limit']) if deployment['execution_limit'] > 0 else ''
 
         # Build Meteor Command
-        # command = '{} --environment "{}" --{} --execution_id "{}" --execution_mode "{}" --execution_user "{}" --execution_path "{}" --execution_threads "{}"{}'.format(meteor_path, environment, execution_method, execution_id, execution_mode, execution_user, execution_path, execution_threads, execution_limit)
+        command = '{} --environment "{}" --{} --execution_id "{}" --execution_mode "{}" --execution_user "{}" --execution_path "{}" --execution_threads "{}"{}'.format(meteor_path, environment, execution_method, execution_id, execution_mode, execution_user, execution_path, execution_threads, execution_limit)
         # print(command)
 
-        # Build Meteor Args
-        args = {
-            'environment': environment,
-            execution_method: True,
-            'execution_id': execution_id,
-            'execution_mode': execution_mode,
-            'execution_user': execution_user,
-            'execution_path': execution_path,
-            'execution_threads': execution_threads,
-        }
-        if deployment['execution_limit'] > 0:
-            args['execution_limit'] = deployment['execution_limit']
-
-        # Import meteor
-        sys.path.append(os.path.join(meteor_base_path,'apps','meteor'))
-        from meteor import meteor
-
         # Execute Meteor
-        m = meteor()
-        p = Process(target=m.fire, args=(args,))
-        p.start()
+        p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)

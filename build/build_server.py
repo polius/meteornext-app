@@ -16,12 +16,48 @@ class build_server:
     def __init__(self):
         # Project Base Path
         self._pwd = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
-        sys.argv.append("build_ext")
 
+        if len(sys.argv) == 1:
+            subprocess.call("python3 build_server.py build_ext meteor", shell=True)
+            subprocess.call("python3 build_server.py build_ext server", shell=True)
+
+        elif 'meteor' in sys.argv:
+            sys.argv.append("build_ext")
+            sys.argv.remove("meteor")
+            self.__build_meteor()
+        elif 'server' in sys.argv:
+            sys.argv.append("build_ext")
+            sys.argv.remove("server")
+            self.__build_server()
+
+    def __build_meteor(self):
+        # Build Meteor Py
+        build_path = "{}/meteor".format(self._pwd)
+        additional_files = ['query_template.json', 'query_execution.py', 'version.txt']
+        additional_binaries = []
+        hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3', 'socket', 'sshtunnel', 'inspect']
+        binary_name = 'meteor'
+        binary_path = '{}/server/apps'.format(self._pwd)
+
+        # Generate app version
+        version = ''
+        files = os.listdir(build_path)
+        for f in files:
+            if not os.path.isdir("{}/{}".format(build_path, f)) and not f.endswith('.pyc') and not f.startswith('.') and not f.endswith('.gz') and f not in ['version.txt', 'query_execution.py', 'credentials.json']:
+                with open("{}/{}".format(build_path, f), 'rb') as file_content:
+                    file_hash = hashlib.sha512(file_content.read()).hexdigest()
+                    version += file_hash
+        with open("{}/version.txt".format(build_path), 'w') as fout:
+            fout.write(version)
+
+        # Start Build
+        self.__start(build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path)
+
+    def __build_server(self):
         # Build Meteor Next Server
         build_path = "{}/server".format(self._pwd)
-        additional_files = ['routes/deployments/query_execution.py', 'models/schema.sql', 'apps/meteor/query_template.json', 'apps/meteor/query_execution.py']
-        hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','paramiko','sshtunnel','unicodedata','imp','inspect','secrets']
+        additional_files = ['routes/deployments/query_execution.py', 'models/schema.sql', 'apps/meteor.tar.gz']
+        hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','socket','paramiko','sshtunnel','unicodedata','secrets']
         additional_binaries = []
         binary_name = 'server'
         binary_path = '{}/dist'.format(self._pwd)
@@ -55,6 +91,7 @@ class build_server:
         # Build ext_modules
         ext_modules = []
         for root, dirs, files in os.walk("{}/build".format(build_path)):
+            dirs[:] = [d for d in dirs if d not in ['apps']]
             for f in files:
                 if f.endswith('.py'):
                     os.rename(os.path.join(root, f), os.path.join(root, f) + 'x')
@@ -73,7 +110,7 @@ class build_server:
                 compiler_directives={'always_allow_keywords': True},
                 force=True
             )
-        )        
+        )
 
     def __pack(self, build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path):
         # 4) Get the cythonized directory path
@@ -84,7 +121,8 @@ class build_server:
         cythonized = "{}/build/build/{}".format(self._pwd, f)
 
         # Create apps folder
-        os.makedirs("{}/apps".format(cythonized), exist_ok=True)
+        if binary_name == 'server':
+            os.makedirs("{}/apps".format(cythonized), exist_ok=True)
 
         # 5) Copy additional files to the cytonized directory path
         for f in additional_files:
@@ -94,7 +132,8 @@ class build_server:
         # 6) Create 'init.py' to invoke cythonized code
         init_file = "{}/init.py".format(cythonized)
         with open(init_file, 'w') as file_open:
-            file_open.write("""# -*- coding: utf-8 -*-
+            if binary_name == 'server':
+                file_open.write("""# -*- coding: utf-8 -*-
 from gunicorn.app.base import Application, Config
 import os
 import sys
@@ -104,22 +143,25 @@ import gunicorn
 from gunicorn import glogging
 from gunicorn.workers import sync
 from app import app
-
 class GUnicornFlaskApplication(Application):
     def __init__(self, app):
         self.usage, self.callable, self.prog, self.app = None, None, None, app
-
     def run(self, **options):
         self.cfg = Config()
         [self.cfg.set(key, value) for key, value in options.items()]
         return Application.run(self)
-
     load = lambda self:self.app
-
 if __name__ == "__main__":
+    # Extract Meteor
+    with tarfile.open("{}/apps/meteor.tar.gz".format(sys._MEIPASS)) as tar:
+        tar.extractall(path="{}/apps/meteor/".format(sys._MEIPASS))
+    # Remove Compressed File
+    os.remove("{}/apps/meteor.tar.gz".format(sys._MEIPASS))
     # Init Gunicorn App
     gunicorn_app = GUnicornFlaskApplication(app)
     gunicorn_app.run(worker_class="gunicorn.workers.sync.SyncWorker", bind='unix:server.sock', capture_output=True, errorlog='error.log')""")
+            else:
+                file_open.write("from {0} import {0}\n{0}()".format(binary_name))
 
         # 7) Build binaries list
         binaries = []
@@ -154,14 +196,23 @@ if __name__ == "__main__":
             command += " --add-binary '{}:{}'".format(b[0], b[1])
 
         command += ' --upx-dir /tmp/upx-3.96-amd64_linux'
-        command += ' --onefile'
+
+        if binary_name == 'server':
+            command += ' --onefile'
+        else:
+            command += ' --onedir'
         command += ' "{}/init.py"'.format(cythonized)
 
         # 12) Pack cythonized project using pyinstaller
         subprocess.call(command, shell=True)
 
-        # 13) Rename pyinstaller file
+        # 13) Rename pyinstaller file
         os.rename('{}/init'.format(binary_path), '{}/{}'.format(binary_path, binary_name))
+
+        # 14) Compress Meteor
+        if binary_name == 'meteor':
+            shutil.make_archive('{}/{}'.format(binary_path, binary_name), 'gztar', '{}/{}'.format(binary_path, binary_name))
+            shutil.rmtree('{}/{}'.format(binary_path, binary_name), ignore_errors=True)
 
     def __clean(self, build_path):
         shutil.rmtree("{}/build/build".format(self._pwd), ignore_errors=True)
