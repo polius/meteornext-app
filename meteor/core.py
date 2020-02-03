@@ -319,19 +319,18 @@ class core:
         if summary is not None:
             # Total Queries
             summary_msg = "- Total Queries: {}".format(summary['total_queries'])
-            
+
             if self._args.test:
-                summary_msg += "\n+----------------+\n| TEST EXECUTION |\n+----------------+"
-                execution_checks_success_value = 0 if summary['total_queries'] == 0 else round(float(summary['total_queries'] - summary['queries_failed']) / float(summary['total_queries']) * 100, 2)
-                summary_msg += "\n- Queries Passed the Test Execution: {0} (~{1}%)".format(summary['total_queries'] - summary['queries_failed'], float(execution_checks_success_value))
-                execution_checks_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['queries_failed']) / float(summary['total_queries']) * 100, 2)
-                summary_msg += "\n- Queries Failed the Test Execution: {0} (~{1}%)".format(summary['queries_failed'], float(execution_checks_failed_value))
+                summary_msg += "\n+------+\n| TEST |\n+------+"
             elif self._args.deploy:
                 summary_msg += "\n+------------+\n| DEPLOYMENT |\n+------------+"
-                queries_succeeded_value = 0 if summary['total_queries'] == 0 else round(float(int(summary['total_queries']) - int(summary['meteor_query_error'])) / float(summary['total_queries']) * 100, 2)
-                summary_msg += "\n- Queries Executed Succeeded: {0} (~{1}%)".format(int(summary['total_queries']) - int(summary['meteor_query_error']), float(queries_succeeded_value))
-                queries_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_error']) / float(summary['total_queries']) * 100, 2)
-                summary_msg += "\n- Queries Executed Failed: {0} (~{1}%)".format(summary['meteor_query_error'], float(queries_failed_value))
+
+            queries_succeeded_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_success']) / float(summary['total_queries']) * 100, 2)
+            summary_msg += "\n- Queries Succeeded: {0} (~{1}%)".format(summary['meteor_query_success'], float(queries_succeeded_value))
+            queries_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_error']) / float(summary['total_queries']) * 100, 2)
+            summary_msg += "\n- Queries Failed: {0} (~{1}%)".format(summary['meteor_query_error'], float(queries_failed_value))
+            queries_rollback_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_rollback']) / float(summary['total_queries']) * 100, 2)
+            summary_msg += "\n- Queries Rollback: {0} (~{1}%)".format(summary['meteor_query_rollback'], float(queries_rollback_value))
         else:
             summary_msg = ''
 
