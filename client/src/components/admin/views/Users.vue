@@ -137,6 +137,7 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
         return
       }
       // Check if new item already exists

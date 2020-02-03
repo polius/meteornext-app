@@ -30,7 +30,7 @@ class Login:
             user = self._users.get(login_json['username'])
 
             if len(user) == 0 or not bcrypt.checkpw(login_json['password'].encode('utf-8'), user[0]['password'].encode('utf-8')):
-                return jsonify({"message": "Invalid username or password"}), 400
+                return jsonify({"message": "Invalid username or password"}), 401
             else:
                 # Update user last_login
                 self._users.put_last_login(login_json['username'])
