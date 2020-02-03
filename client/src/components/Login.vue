@@ -79,11 +79,16 @@
         .then(() => {
           this.login_success()
         })
-        .catch(() => {
-          this.checkSetup()
+        .catch((error) => {
+          if (error.response.status == 401) this.notification(error.response.data.message, 'error')
+          else this.checkSetup()
+        })
+        .finally(() => {
+          this.loading = false
         })
       },
       checkSetup() {
+        this.loading = true
         axios.get('/setup')
           .then((response) => {
             if (response.data.setup) this.show_alert = true
