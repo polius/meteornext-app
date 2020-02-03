@@ -39,17 +39,6 @@ class build_server:
         binary_name = 'meteor'
         binary_path = '{}/server/apps'.format(self._pwd)
 
-        # Generate app version
-        version = ''
-        files = os.listdir(build_path)
-        for f in files:
-            if not os.path.isdir("{}/{}".format(build_path, f)) and not f.endswith('.pyc') and not f.startswith('.') and not f.endswith('.gz') and f not in ['version.txt', 'query_execution.py', 'credentials.json']:
-                with open("{}/{}".format(build_path, f), 'rb') as file_content:
-                    file_hash = hashlib.sha512(file_content.read()).hexdigest()
-                    version += file_hash
-        with open("{}/version.txt".format(build_path), 'w') as fout:
-            fout.write(version)
-
         # Start Build
         self.__start(build_path, additional_files, additional_binaries, hidden_imports, binary_name, binary_path)
 
