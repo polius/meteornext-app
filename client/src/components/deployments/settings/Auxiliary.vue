@@ -38,7 +38,7 @@
                   <v-text-field v-model="item.sql_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;" append-icon="cloud"></v-text-field>
                   <v-text-field v-model="item.sql_port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                   <v-text-field v-model="item.sql_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
-                  <v-text-field v-model="item.sql_password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
+                  <v-text-field v-model="item.sql_password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
                   <!-- SSH -->
                   <v-switch v-model="item.ssh_tunnel" label="SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
                   <div v-if="item.ssh_tunnel" style="margin-top:15px;">

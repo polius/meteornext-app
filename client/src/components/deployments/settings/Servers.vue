@@ -36,7 +36,7 @@
                   <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;" append-icon="cloud"></v-text-field>
                   <v-text-field v-model="item.port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" required style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                   <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;" append-icon="person"></v-text-field>
-                  <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" required style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
+                  <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected servers?</div>
                 <v-divider></v-divider>
