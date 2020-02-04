@@ -25,27 +25,19 @@ class Utils:
         sys.stdout = f
         sys.stderr = f
 
-        attempts = 3
-        error = None
-
-        for i in range(attempts):
-            try:
-                if self._conn:
-                    pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']))
-                    with sshtunnel.SSHTunnelForwarder((self._conn['hostname'], int(self._conn['port'])), ssh_username=self._conn['username'], ssh_password=self._conn['password'], ssh_pkey=pkey, remote_bind_address=(server['hostname'], int(server['port'])), threaded=False) as tunnel:
-                        conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'])
-                        conn.close()
-                else:
-                    conn = pymysql.connect(host=server['hostname'], port=int(server['port']), user=server['username'], passwd=server['password'])
-                return {"success": True}
-            except Exception as e:
-                error = e
-                time.sleep(1)
-            finally:
-                sys.stdout = stdout
-                sys.stderr = stderr
-
-        raise Exception(error)
+        try:
+            if self._conn:
+                pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']))
+                sshtunnel.SSH_TIMEOUT = 10.0
+                with sshtunnel.SSHTunnelForwarder((self._conn['hostname'], int(self._conn['port'])), ssh_username=self._conn['username'], ssh_password=self._conn['password'], ssh_pkey=pkey, remote_bind_address=(server['hostname'], int(server['port'])), threaded=False) as tunnel:
+                    conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'])
+                    conn.close()
+            else:
+                conn = pymysql.connect(host=server['hostname'], port=int(server['port']), user=server['username'], passwd=server['password'])
+            return {"success": True}
+        finally:
+            sys.stdout = stdout
+            sys.stderr = stderr
 
     def check_local_path(self, path):
         while not os.path.exists(path) and path != '/':
