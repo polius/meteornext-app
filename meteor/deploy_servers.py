@@ -46,11 +46,8 @@ class deploy_servers:
                 json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
 
         except Exception as e:
-            if e.__class__.__name__ == 'InterfaceError':
-                current_thread.critical = "- Lost connection to MySQL server [{}] {}".format(server['name'], server['hostname'])
-            else:
-                inner_frames = inspect.getinnerframes(e.__traceback__)[-1]
-                current_thread.critical.append("- Error in code: {} (line {})".format(e, inner_frames.lineno))
+            inner_frames = inspect.getinnerframes(e.__traceback__)[-1]
+            current_thread.critical.append("- Error in code: {} (line {})".format(e, inner_frames.lineno))
 
         finally:
             query_instance.close_sql_connection()
@@ -160,29 +157,21 @@ class deploy_servers:
                     break
 
                 # Perform the execution to the Database
-                try:
-                    self._query_execution.main(query_instance, self._args.environment, self._region['region'], server['name'], database)
-                except Exception:
-                    # Store Logs
-                    self.__store_main_logs(server, database, query_instance)
-                    # Raise Exception
-                    raise
+                self._query_execution.main(query_instance, self._args.environment, self._region['region'], server['name'], database)
 
-                # Store Logs the execution to the Database
-                try:
-                    self.__store_main_logs(server, database, query_instance)
-                except Exception:
-                    # Store Logs
-                    self.__store_main_logs(server, database, query_instance)
-                    # Raise Exception
-                    raise
+                # Store Logs
+                self.__store_main_logs(server, database, query_instance, error=False)
 
                 # Add database to the progressed list
                 self._progress.append(database)
 
         except Exception as e:
+            # Store Logs
+            self.__store_main_logs(server, database, query_instance, error=True)
+
+            # Build error message
             if e.__class__.__name__ == 'InterfaceError':
-                current_thread.critical = "- Lost connection to MySQL server [{}] {}".format(server['name'], server['hostname'])
+                current_thread.critical = "- Lost connection to MySQL server: {} ({})".format(server['name'], server['hostname'])
             else:
                 inner_frames = inspect.getinnerframes(e.__traceback__)[-1]
                 current_thread.critical = "- Error in code: {} (line {})".format(e, inner_frames.lineno)
@@ -191,11 +180,14 @@ class deploy_servers:
             # Close SQL Connection
             query_instance.close_sql_connection()
 
-    def __store_main_logs(self, server, database, query_instance):
+    def __store_main_logs(self, server, database, query_instance, error):
         current_thread = threading.current_thread()
 
-        # Commit queries
-        query_instance.commit()
+        # Commit/Rollback queries
+        if not error:
+            query_instance.commit()
+        else:
+            query_instance.rollback()
 
         # Store Logs
         execution_log_path = "{0}/execution/{1}/{2}/{3}.json".format(self._args.execution_path, self._region['region'], server['name'], database)
@@ -230,11 +222,8 @@ class deploy_servers:
                 json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
 
         except Exception as e:
-            if e.__class__.__name__ == 'InterfaceError':
-                current_thread.critical = "- Lost connection to MySQL server [{}] {}".format(server['name'], server['hostname'])
-            else:
-                inner_frames = inspect.getinnerframes(e.__traceback__)[-1]
-                current_thread.critical.append("- Error in code: {} (line {})".format(e, inner_frames.lineno))
+            inner_frames = inspect.getinnerframes(e.__traceback__)[-1]
+            current_thread.critical.append("- Error in code: {} (line {})".format(e, inner_frames.lineno))
 
         finally:
             query_instance.close_sql_connection()

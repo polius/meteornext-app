@@ -73,6 +73,8 @@ class core:
         except (Exception, KeyboardInterrupt) as e:
             signal.signal(signal.SIGINT,signal.SIG_IGN)
             self.clean()
+            if self._args.deploy or self._args.test:
+                self.slack(status=2, summary=None, error=str(e))
             self.show_execution_time(only_validate=True)
             if e.__class__ == Exception:
                 self._progress.error(e)

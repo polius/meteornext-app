@@ -83,12 +83,14 @@ class validate_regions:
 
         current_thread = threading.current_thread()
         error = None
-        attempts = 5
+        attempts = 3
 
         for i in range(attempts):
             try:
                 if self._region['ssh']['enabled']:
                     ssh_pkey = paramiko.RSAKey.from_private_key_file(self._region['ssh']['key'])
+                    sshtunnel.SSH_TIMEOUT = 10.0
+                    sshtunnel.TUNNEL_TIMEOUT = 10.0
                     with sshtunnel.SSHTunnelForwarder((self._region['ssh']['hostname'], int(self._region['ssh']['port'])), ssh_username=self._region['ssh']['username'], ssh_password=self._region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=(server['hostname'], int(server['port']))) as tunnel:
                         conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'])
                         conn.close()
