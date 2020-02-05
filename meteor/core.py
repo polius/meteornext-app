@@ -358,11 +358,6 @@ class core:
                             "short": False
                         },
                         {
-                            "title": "Summary",
-                            "value": "```{}```".format(summary_msg),
-                            "short": False
-                        },
-                        {
                             "title": "Logs",
                             "value": "```{}```".format(logs_path),
                             "short": False
@@ -382,6 +377,10 @@ class core:
         # Add execution_user to the webhook_data
         if self._args.execution_user is not None:
             webhook_data['attachments'][0]['fields'].insert(0, {"title": "User", "value": "```{}```".format(self._args.execution_user), "short": False})
+        
+        # Add summary to the webhook_data
+        if summary is not None:
+            webhook_data['attachments'][0]['fields'].insert(4, {"title": "Summary", "value": "```{}```".format(summary_msg), "short": False})
 
         # Show Error Message
         if error is not None:
