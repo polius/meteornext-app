@@ -195,11 +195,6 @@ class deploy_queries:
 
     def rollback(self):
         if self._transaction['enabled']:
-            for i in self._execution_log['output']:
-                if i['meteor_status'] == '1':
-                    i['meteor_status'] = '2'
-                    i['meteor_response'] = ''
-
             # Rollback server connection
             if self._sql:
                 self._sql.rollback()
