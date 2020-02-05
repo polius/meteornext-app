@@ -33,7 +33,7 @@ class build_server:
     def __build_meteor(self):
         # Build Meteor Py
         build_path = "{}/meteor".format(self._pwd)
-        additional_files = ['query_template.json', 'query_execution.py', 'version.txt']
+        additional_files = ['query_template.json', 'query_execution.py']
         additional_binaries = []
         hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3', 'socket', 'sshtunnel', 'inspect']
         binary_name = 'meteor'
