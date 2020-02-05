@@ -5,6 +5,7 @@ import sys
 import json
 import uuid
 import subprocess
+import unicodedata
 from time import time
 from datetime import datetime
 from multiprocessing import Process
@@ -194,7 +195,7 @@ class Meteor:
 
         # Store Query Execution
         with open("{}/{}/query_execution.py".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
-            outfile.write(self._query_execution)
+            outfile.write(unicodedata.normalize("NFKD", self._query_execution))
 
     def __compile_query_execution_basic(self, deployment):
         queries = {}
