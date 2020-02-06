@@ -52,7 +52,11 @@
                   <template v-slot:activator="{ on }">
                     <v-icon small style="margin-left:5px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
-                  <span>Execution Limit: Sets the maximum scanned rows allowed</span>
+                  <span>
+                    <b>Execution Limit</b>: Sets the maximum scanned rows allowed
+                    <br>
+                    <b>Execution Threads</b>: Maximum number of spawned threads per server (SQL) 
+                  </span>
                 </v-tooltip>
                 </div>
                 <v-switch v-model="group_execution_limit_switch" label="Limit Queries Execution" style="margin-top:0px; margin-bottom:25px;" hide-details></v-switch>
