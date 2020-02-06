@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
+import pymysql
 from collections import OrderedDict
 
 class query_execution:
@@ -40,9 +41,9 @@ class query_execution:
     ########################
     # User Defined Methods #
     ########################
-    def __searchInListDict(self, list_dicts, key_name, value_to_find):
+    def __search(self, item, key_name, value_name):
         # Search a key value in a list of dictionaries
-        return [i for i in list_dicts if i[key_name] == value_to_find]
+        return [i for i in item if i[key_name] == value_name]
 
     def __str2dict(self, data):
         # Convert a string representation of a dictionary to a dictionary
@@ -50,4 +51,4 @@ class query_execution:
 
     def __dict2str(self, data):
         # Convert a dictionary to a string
-        return json.dumps(data, separators=(',', ':')).encode('unicode_escape').replace("'","\\'")
+        return pymysql.escape_string(json.dumps(data, separators=(',', ':')))

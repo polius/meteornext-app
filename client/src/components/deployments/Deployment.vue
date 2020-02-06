@@ -1037,6 +1037,7 @@
           this.$router.push({ name:'deployment', params: { id: id }})
           this.clear()
           this.init()
+          this.getExecutions()
         }
       },
       // -------------------------------------
