@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import json
-import pymysql
 from collections import OrderedDict
 
 class query_execution:
@@ -51,4 +48,4 @@ class query_execution:
 
     def __dict2str(self, data):
         # Convert a dictionary to a string
-        return pymysql.escape_string(json.dumps(data, separators=(',', ':')))
+        return json.dumps(data, separators=(',', ':'))

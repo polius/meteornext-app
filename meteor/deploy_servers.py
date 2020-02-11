@@ -46,8 +46,15 @@ class deploy_servers:
                 json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
 
         except Exception as e:
-            inner_frames = inspect.getinnerframes(e.__traceback__)[-1]
-            current_thread.critical.append("- Error in code: {} (line {})".format(e, inner_frames.lineno))
+            inner_frames = inspect.getinnerframes(e.__traceback__)
+            found = False
+            for frame in reversed(inner_frames):
+                if frame.filename.endswith('query_execution.py'):
+                    found = True
+                    current_thread.critical = "- Error in code: {} (line {})".format(e, frame.lineno)
+                    break
+            if not found:
+                current_thread.critical = "- An error occurred: {}".format(e)
 
         finally:
             query_instance.close_sql_connection()
@@ -173,8 +180,15 @@ class deploy_servers:
             if e.__class__.__name__ == 'InterfaceError':
                 current_thread.critical = "- Lost connection to MySQL server: {} ({})".format(server['name'], server['hostname'])
             else:
-                inner_frames = inspect.getinnerframes(e.__traceback__)[-1]
-                current_thread.critical = "- Error in code: {} (line {})".format(e, inner_frames.lineno)
+                inner_frames = inspect.getinnerframes(e.__traceback__)
+                found = False
+                for frame in reversed(inner_frames):
+                    if frame.filename.endswith('query_execution.py'):
+                        found = True
+                        current_thread.critical = "- Error in code: {} (line {})".format(e, frame.lineno)
+                        break
+                if not found:
+                    current_thread.critical = "- An error occurred: {}".format(e)
 
         finally:
             # Close SQL Connection
@@ -222,8 +236,15 @@ class deploy_servers:
                 json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
 
         except Exception as e:
-            inner_frames = inspect.getinnerframes(e.__traceback__)[-1]
-            current_thread.critical.append("- Error in code: {} (line {})".format(e, inner_frames.lineno))
+            inner_frames = inspect.getinnerframes(e.__traceback__)
+            found = False
+            for frame in reversed(inner_frames):
+                if frame.filename.endswith('query_execution.py'):
+                    found = True
+                    current_thread.critical = "- Error in code: {} (line {})".format(e, frame.lineno)
+                    break
+            if not found:
+                current_thread.critical = "- An error occurred: {}".format(e)
 
         finally:
             query_instance.close_sql_connection()
