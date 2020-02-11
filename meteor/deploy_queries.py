@@ -54,24 +54,14 @@ class deploy_queries:
         for i in self._aux:
             list(i.values())[0].stop()
 
-    def __parse_query(self, query):
-        return query.strip()
-
-    def get_query_type(self, query, show_output=True):
-        parsed_query = self.__parse_query(query)
-        for t in self._query_template:
-            if parsed_query.lower().startswith(t["startswith"].lower()) and t["contains"].lower() in parsed_query.lower():
-                return t['type']
-        return False
-
-    def execute(self, query=None, database=None, auxiliary=None, alias=None):
+    def execute(self, query=None, params=(), database=None, auxiliary=None, alias=None):
         # Get Current Thread
         current_thread = threading.current_thread()
 
         # Core Variables
         database_name = auxiliary['database'] if auxiliary is not None else database if database is not None else ''
-        query_parsed = self.__parse_query(query) if auxiliary is None else self.__parse_query(auxiliary['query'])
-        query_alias = query_parsed if alias is None else '[ALIAS] {}'.format(alias)
+        query_parsed = query.strip() if auxiliary is None else auxiliary['query'].strip()
+        query_alias = query_parsed % params if alias is None else '[ALIAS] {}'.format(alias)
         server_sql = self._server['name'] if auxiliary is None else auxiliary['auxiliary_connection']
         region = self._region['region']
 
@@ -106,7 +96,7 @@ class deploy_queries:
             execution_row['transaction'] = True
 
         # Get Query Syntax
-        query_syntax = self.get_query_type(query_parsed, show_output=False)
+        query_syntax = self.__get_query_type(query_parsed, show_output=False)
 
         # If Test Run --> Syntax Checks + Execution Checks
         if not self._args.deploy:
@@ -131,7 +121,7 @@ class deploy_queries:
                 # Apply the execution plan factor
                 if self._args.execution_limit and query_syntax == 'Select':
                     execution_limit = 0
-                    explain = conn.execute('EXPLAIN ' + query_parsed, database_name)['query_result']
+                    explain = conn.execute(query='EXPLAIN ' + query_parsed, params=params, database=database_name)['query_result']
 
                     for i in explain:
                         if i['rows'] > execution_limit:
@@ -141,7 +131,7 @@ class deploy_queries:
                         raise Exception('Maximum number of rows [{}] exceeded. Please use LIMIT along with ORDER BY'.format(self._args.execution_limit))
 
                 # Execute query
-                query_info = conn.execute(query_parsed, database_name)
+                query_info = conn.execute(query=query_parsed, params=params, database=database_name)
                 # If the query is executed successfully, then write the query result to the Log
                 execution_row['meteor_output'] = query_info['query_result'] if str(query_info['query_result']) != '()' else '[]'
                 execution_row['meteor_response'] = ""
@@ -161,7 +151,7 @@ class deploy_queries:
                 if e.__class__ == KeyboardInterrupt:
                     raise
 
-    def start(self):
+    def begin(self):
         # Init transaction
         self._transaction = {'enabled': True, 'query_error': False}
 
@@ -211,7 +201,13 @@ class deploy_queries:
                     i['meteor_response'] = ''
 
                 if 'transaction' in i:
-                    del i['transaction']                
+                    del i['transaction']
+
+    def __get_query_type(self, query, show_output=True):
+        for t in self._query_template:
+            if query.strip().lower().startswith(t["startswith"].lower()) and t["contains"].lower() in query.strip().lower():
+                return t['type']
+        return False
 
     def __parse_error(self, error):
         return re.sub('\s+', ' ', error.replace('\n', ' ')).strip()

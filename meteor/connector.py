@@ -13,8 +13,8 @@ class connector:
     def stop(self):
         self._sql.stop()
 
-    def execute(self, query, database_name=None):
-       return self._sql.execute(query, database_name)
+    def execute(self, query, params=(), database=None):
+       return self._sql.execute(query, params, database)
 
     def begin(self):
         self._sql.begin()
