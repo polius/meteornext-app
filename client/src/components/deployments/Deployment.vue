@@ -1035,6 +1035,7 @@
         if (this.deployment['execution_id'] != execution_id) {
           const id = this.deployment['mode'].substring(0, 1) + execution_id
           this.$router.push({ name:'deployment', params: { id: id }})
+          this.show_results = false
           this.clear()
           this.init()
           this.getExecutions()
