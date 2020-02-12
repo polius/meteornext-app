@@ -73,10 +73,10 @@ class mysql:
         except Exception:
             pass
 
-    def execute(self, query, params=(), database=None):
+    def execute(self, query, args=None, database=None):
         try:
             # Execute the query and return results
-            return self.__execute_query(query, params, database)
+            return self.__execute_query(query, args, database)
 
         except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
             raise Exception(error.args[1])
@@ -86,14 +86,14 @@ class mysql:
             self.start()
 
             # Retry the query
-            return self.__execute_query(query, params, database)
+            return self.__execute_query(query, args, database)
 
         except KeyboardInterrupt:
             self.rollback()
             self.close()
             raise KeyboardInterrupt("Program Interrupted by User. Rollback successfully performed.")
 
-    def __execute_query(self, query, params, database):
+    def __execute_query(self, query, args, database):
         # Select the database
         if database:
             self._sql.select_db(database)
@@ -104,7 +104,7 @@ class mysql:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 start_time = time.time()
-                cursor.execute(query, params)
+                cursor.execute(query, args)
 
             # Get the query results
             query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
