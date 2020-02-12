@@ -54,16 +54,21 @@ class deploy_queries:
         for i in self._aux:
             list(i.values())[0].stop()
 
-    def execute(self, query=None, params=(), database=None, auxiliary=None, alias=None):
+    def execute(self, query=None, args=None, database=None, auxiliary=None, alias=None):
         # Get Current Thread
         current_thread = threading.current_thread()
 
         # Core Variables
         database_name = auxiliary['database'] if auxiliary is not None else database if database is not None else ''
         query_parsed = query.strip() if auxiliary is None else auxiliary['query'].strip()
-        query_alias = query_parsed % params if alias is None else '[ALIAS] {}'.format(alias)
         server_sql = self._server['name'] if auxiliary is None else auxiliary['auxiliary_connection']
         region = self._region['region']
+
+        # Query Alias
+        if alias is None:
+            query_alias = query_parsed if args is None else query_parsed % args
+        else:
+            query_alias = '[ALIAS] {}'.format(alias)
 
         # SQL Connection
         if auxiliary is None:
@@ -121,7 +126,7 @@ class deploy_queries:
                 # Apply the execution plan factor
                 if self._args.execution_limit and query_syntax == 'Select':
                     execution_limit = 0
-                    explain = conn.execute(query='EXPLAIN ' + query_parsed, params=params, database=database_name)['query_result']
+                    explain = conn.execute(query='EXPLAIN ' + query_parsed, args=args, database=database_name)['query_result']
 
                     for i in explain:
                         if i['rows'] > execution_limit:
@@ -131,7 +136,7 @@ class deploy_queries:
                         raise Exception('Maximum number of rows [{}] exceeded. Please use LIMIT along with ORDER BY'.format(self._args.execution_limit))
 
                 # Execute query
-                query_info = conn.execute(query=query_parsed, params=params, database=database_name)
+                query_info = conn.execute(query=query_parsed, args=args, database=database_name)
                 # If the query is executed successfully, then write the query result to the Log
                 execution_row['meteor_output'] = query_info['query_result'] if str(query_info['query_result']) != '()' else '[]'
                 execution_row['meteor_response'] = ""
