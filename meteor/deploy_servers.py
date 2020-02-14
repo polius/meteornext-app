@@ -119,9 +119,6 @@ class deploy_servers:
                         errors = True
                         if t.critical not in current_thread.critical:
                             current_thread.critical.append(t.critical)
-                if errors:
-                    for t in threads:
-                        t.alive = False
 
                 # Check errors
                 current_thread.error = any(t.error for t in threads)
@@ -156,8 +153,8 @@ class deploy_servers:
         query_instance = deploy_queries(self._args, self._imports, self._region)
         query_instance.start_sql_connection(server)
 
-        try:
-            while len(self._databases) > 0:
+        while len(self._databases) > 0:
+            try:
                 # Detect Thread KeyboardInterrupt
                 if not current_thread.alive:
                     break
@@ -177,30 +174,26 @@ class deploy_servers:
                 # Store Logs
                 self.__store_main_logs(server, database, query_instance, error=False)
 
-                # Add database to the progressed list
-                self._progress.append(database)
+            except Exception as e:
+                # Store Logs
+                self.__store_main_logs(server, database, query_instance, error=True)
 
-        except Exception as e:
-            # Store Logs
-            self.__store_main_logs(server, database, query_instance, error=True)
+                # Build error message
+                if e.__class__.__name__ == 'InterfaceError':
+                    current_thread.critical = "- Lost connection to MySQL server: {} ({})".format(server['name'], server['hostname'])
+                else:
+                    inner_frames = inspect.getinnerframes(e.__traceback__)
+                    found = False
+                    for frame in reversed(inner_frames):
+                        if frame.filename.endswith('query_execution.py'):
+                            found = True
+                            current_thread.critical = "{} (line {})".format(str(e).capitalize(), frame.lineno)
+                            break
+                    if not found:
+                        current_thread.critical = str(e)
 
-            # Build error message
-            if e.__class__.__name__ == 'InterfaceError':
-                current_thread.critical = "- Lost connection to MySQL server: {} ({})".format(server['name'], server['hostname'])
-            else:
-                inner_frames = inspect.getinnerframes(e.__traceback__)
-                found = False
-                for frame in reversed(inner_frames):
-                    if frame.filename.endswith('query_execution.py'):
-                        found = True
-                        current_thread.critical = "{} (line {})".format(str(e).capitalize(), frame.lineno)
-                        break
-                if not found:
-                    current_thread.critical = str(e)
-
-        finally:
-            # Close SQL Connection
-            query_instance.close_sql_connection()
+        # Close SQL Connection
+        query_instance.close_sql_connection()
 
     def __store_main_logs(self, server, database, query_instance, error):
         current_thread = threading.current_thread()
@@ -222,6 +215,9 @@ class deploy_servers:
             if log['meteor_status'] == '0':
                 current_thread.error = True
                 break
+
+        # Add database to the progressed list
+        self._progress.append(database)
 
         # Clear Log
         query_instance.clear_execution_log()
