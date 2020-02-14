@@ -18,8 +18,8 @@ class deploy_queries:
         self._sql = None
         self._aux = []
 
-        # Store Transaction vars
-        self._transaction = {"enabled": False, "query_error": False}
+        # Store Query Error
+        self._query_error = False
 
         # Init Query Template Instance
         self._query_template_instance = query_template(self._query_template)
@@ -31,13 +31,9 @@ class deploy_queries:
     def execution_log(self):
         return self._execution_log
 
-    @property
-    def transaction(self):
-        return self._transaction
-
     def clear_execution_log(self):
         self._execution_log = {"output": []}
-        self._transaction = {"enabled": False, "query_error": False}
+        self._query_error = False
 
     def start_sql_connection(self, server):
         self._server = server
@@ -97,8 +93,7 @@ class deploy_queries:
         execution_row = {"meteor_timestamp": date_time, "meteor_environment": self._args.environment, "meteor_region": region, "meteor_server": server_sql, "meteor_database": database_name, "meteor_query": query_alias, "meteor_status": "1", "meteor_response": "", "meteor_execution_time": ""}
 
         # Set query transaction
-        if self._transaction['enabled']:
-            execution_row['transaction'] = True
+        execution_row['transaction'] = True
 
         # Get Query Syntax
         query_syntax = self.__get_query_type(query_parsed, show_output=False)
@@ -113,7 +108,7 @@ class deploy_queries:
                     self._execution_log['output'].append(execution_row)
 
             except Exception as e:
-                self._transaction['query_error'] = True
+                self._query_error = True
                 # Write Exception to the Log
                 execution_row['meteor_status'] = '0'
                 execution_row['meteor_response'] = self.__parse_error(str(e))
@@ -147,7 +142,7 @@ class deploy_queries:
                 return query_info['query_result']
 
             except (KeyboardInterrupt, Exception) as e:
-                self._transaction['query_error'] = True
+                self._query_error = True
                 # Write Exception to the Log
                 execution_row['meteor_status'] = '0'
                 execution_row['meteor_response'] = self.__parse_error(str(e))
@@ -157,8 +152,11 @@ class deploy_queries:
                     raise
 
     def begin(self):
-        # Init transaction
-        self._transaction = {'enabled': True, 'query_error': False}
+        # End the current transaction
+        if self._query_error:
+            self.rollback()
+        else:
+            self.commit()
 
         # Start server connection transaction
         if self._sql:
@@ -169,8 +167,8 @@ class deploy_queries:
             list(i.values())[0].begin()
 
     def commit(self):
-        # Check transaction
-        if self._transaction['enabled'] and self._transaction['query_error']:
+        # Check existing query errors
+        if self._query_error:
             self.rollback()
 
         else:
@@ -183,30 +181,28 @@ class deploy_queries:
                 list(i.values())[0].commit()
 
             # Transaction tasks
-            self._transaction['enabled'] = False
             for i in self._execution_log['output']:
                 if 'transaction' in i:
                     del i['transaction']
 
     def rollback(self):
-        if self._transaction['enabled']:
-            # Rollback server connection
-            if self._sql:
-                self._sql.rollback()
+        # Rollback server connection
+        if self._sql:
+            self._sql.rollback()
 
-            # Rollback auxiliary connections
-            for i in self._aux:
-                list(i.values())[0].rollback()
+        # Rollback auxiliary connections
+        for i in self._aux:
+            list(i.values())[0].rollback()
 
-            # Transaction tasks
-            self._transaction['enabled'] = False
-            for i in self._execution_log['output']:
-                if i['meteor_status'] == '1':
-                    i['meteor_status'] = '2'
-                    i['meteor_response'] = ''
+        # Initialize query error
+        self._query_error = False
 
-                if 'transaction' in i:
-                    del i['transaction']
+        # Transaction tasks
+        for i in self._execution_log['output']:
+            if 'transaction' in i and i['meteor_status'] == '1':
+                i['meteor_status'] = '2'
+                i['meteor_response'] = ''
+                del i['transaction']
 
     def __get_query_type(self, query, show_output=True):
         for t in self._query_template:

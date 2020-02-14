@@ -50,6 +50,7 @@ class builder:
         print("- Overall Time: {}".format(time.strftime('%H:%M:%S', time.gmtime(time.time()-start_time))))
 
     def clean_docker(self):
+        subprocess.call("rm -rf {}/.cache".format(self._pwd), shell=True)
         subprocess.call("rm -rf {}/dist/client.tar.gz".format(self._pwd), shell=True)
         subprocess.call("rm -rf {}/dist/server".format(self._pwd), shell=True)
         subprocess.call("docker kill $(docker ps -a -q --filter ancestor=meteornext) >/dev/null 2>&1", shell=True)

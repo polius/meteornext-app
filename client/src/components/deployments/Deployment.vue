@@ -170,7 +170,7 @@
             <v-card-text style="padding:0px;">
               <v-container style="padding:0px!important; margin:0px!important;">
                 <v-layout wrap>
-                  <v-flex xs12 style="padding-left:5px; padding-right:5px; padding-bottom:10px;">
+                  <v-flex xs12 style="padding-left:5px; padding-right:5px;">
                     <v-textarea :value="deployment['progress']['error']" color="#c6c6c6" auto-grow solo flat readonly hide-details rows="1"></v-textarea>
                   </v-flex>
                 </v-layout>
@@ -615,6 +615,28 @@
           },
           "Esc": function(cm) {
             cm.setOption("fullScreen", !cm.getOption("fullScreen"))
+          },
+          "Ctrl-S": function(cm) {
+            var textFileAsBlob = new Blob([cm.getValue()], { type: "text/plain;charset=utf-8" })
+            var downloadLink = document.createElement("a")
+            downloadLink.download = "meteor.py"
+            downloadLink.style.display = "none"
+            if (window.webkitURL != null) downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob)
+            else downloadLink.href = window.URL.createObjectURL(textFileAsBlob)
+            document.body.appendChild(downloadLink)
+            downloadLink.click()
+            document.body.removeChild(downloadLink)
+          },
+          "Cmd-S": function(cm) {
+            var textFileAsBlob = new Blob([cm.getValue()], { type: "text/plain;charset=utf-8" })
+            var downloadLink = document.createElement("a")
+            downloadLink.download = "meteor.py"
+            downloadLink.style.display = "none"
+            if (window.webkitURL != null) downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob)
+            else downloadLink.href = window.URL.createObjectURL(textFileAsBlob)
+            document.body.appendChild(downloadLink)
+            downloadLink.click()
+            document.body.removeChild(downloadLink)
           }
         }
       },

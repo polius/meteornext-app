@@ -170,6 +170,28 @@ export default {
           },
           "Esc": function(cm) {
             cm.setOption("fullScreen", !cm.getOption("fullScreen"))
+          },
+          "Ctrl-S": function(cm) {
+            var textFileAsBlob = new Blob([cm.getValue()], { type: "text/plain;charset=utf-8" })
+            var downloadLink = document.createElement("a")
+            downloadLink.download = "meteor.py"
+            downloadLink.style.display = "none"
+            if (window.webkitURL != null) downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob)
+            else downloadLink.href = window.URL.createObjectURL(textFileAsBlob)
+            document.body.appendChild(downloadLink)
+            downloadLink.click()
+            document.body.removeChild(downloadLink)
+          },
+          "Cmd-S": function(cm) {
+            var textFileAsBlob = new Blob([cm.getValue()], { type: "text/plain;charset=utf-8" })
+            var downloadLink = document.createElement("a")
+            downloadLink.download = "meteor.py"
+            downloadLink.style.display = "none"
+            if (window.webkitURL != null) downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob)
+            else downloadLink.href = window.URL.createObjectURL(textFileAsBlob)
+            document.body.appendChild(downloadLink)
+            downloadLink.click()
+            document.body.removeChild(downloadLink)
           }
         }
       },
@@ -213,6 +235,9 @@ export default {
     this.getCode()
   },
   methods: {
+    saveCode() {
+      
+    },
     getReleases() {
       axios.get('/deployments/releases/active')
         .then((response) => {
