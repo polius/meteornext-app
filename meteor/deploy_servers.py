@@ -35,6 +35,11 @@ class deploy_servers:
 
             # Start Deploy
             query_instance = deploy_queries(self._args, self._imports, self._region)
+
+            # Start Transaction
+            query_instance.begin()
+
+            # Execute Before
             self._query_execution.before(query_instance, self._args.environment, self._region['region'])
 
             # Commit queries
@@ -51,10 +56,10 @@ class deploy_servers:
             for frame in reversed(inner_frames):
                 if frame.filename.endswith('query_execution.py'):
                     found = True
-                    current_thread.critical = "- Error in code: {} (line {})".format(e, frame.lineno)
+                    current_thread.critical = "{} (line {})".format(str(e).capitalize(), frame.lineno)
                     break
             if not found:
-                current_thread.critical = "- An error occurred: {}".format(e)
+                current_thread.critical = str(e)
 
         finally:
             query_instance.close_sql_connection()
@@ -163,6 +168,9 @@ class deploy_servers:
                 except IndexError:
                     break
 
+                # Start Transaction
+                query_instance.begin()
+
                 # Perform the execution to the Database
                 self._query_execution.main(query_instance, self._args.environment, self._region['region'], server['name'], database)
 
@@ -185,10 +193,10 @@ class deploy_servers:
                 for frame in reversed(inner_frames):
                     if frame.filename.endswith('query_execution.py'):
                         found = True
-                        current_thread.critical = "- Error in code: {} (line {})".format(e, frame.lineno)
+                        current_thread.critical = "{} (line {})".format(str(e).capitalize(), frame.lineno)
                         break
                 if not found:
-                    current_thread.critical = "- An error occurred: {}".format(e)
+                    current_thread.critical = str(e)
 
         finally:
             # Close SQL Connection
@@ -198,10 +206,10 @@ class deploy_servers:
         current_thread = threading.current_thread()
 
         # Commit/Rollback queries
-        if not error:
-            query_instance.commit()
-        else:
+        if error:
             query_instance.rollback()
+        else:
+            query_instance.commit()
 
         # Store Logs
         execution_log_path = "{0}/execution/{1}/{2}/{3}.json".format(self._args.execution_path, self._region['region'], server['name'], database)
@@ -225,6 +233,11 @@ class deploy_servers:
 
             # Start Deploy
             query_instance = deploy_queries(self._args, self._imports, self._region)
+
+            # Start Transaction
+            query_instance.begin()
+
+            # Execute After
             self._query_execution.after(query_instance, self._args.environment, self._region['region'])
 
             # Commit queries
@@ -241,10 +254,10 @@ class deploy_servers:
             for frame in reversed(inner_frames):
                 if frame.filename.endswith('query_execution.py'):
                     found = True
-                    current_thread.critical = "- Error in code: {} (line {})".format(e, frame.lineno)
+                    current_thread.critical = "{} (line {})".format(str(e).capitalize(), frame.lineno)
                     break
             if not found:
-                current_thread.critical = "- An error occurred: {}".format(e)
+                current_thread.critical = str(e)
 
         finally:
             query_instance.close_sql_connection()
