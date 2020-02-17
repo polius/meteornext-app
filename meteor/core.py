@@ -67,7 +67,7 @@ class core:
                 signal.signal(signal.SIGINT,signal.SIG_IGN)
                 self.clean()
                 self.show_execution_time(only_validate=True)
-                self._progress.end(execution_status=1)
+                self._progress.end(execution_status=0)
                 sys.exit()
 
         except (Exception, KeyboardInterrupt) as e:
