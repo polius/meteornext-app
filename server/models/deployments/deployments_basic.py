@@ -8,11 +8,18 @@ class Deployments_Basic:
 
     def get(self, execution_id):
         query = """
-            SELECT d.id, b.id AS 'execution_id', 'BASIC' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', b.databases, b.queries, b.method, b.status, b.created, b.scheduled, b.started, b.ended, CONCAT(TIMEDIFF(b.ended, b.started)) AS 'overall', b.error, b.progress, b.uri, b.engine, b.public
+            SELECT d.id, b.id AS 'execution_id', 'BASIC' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', b.databases, b.queries, b.method, b.status, q.queue, b.created, b.scheduled, b.started, b.ended, CONCAT(TIMEDIFF(b.ended, b.started)) AS 'overall', b.error, b.progress, b.uri, b.engine, b.public
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id
             JOIN releases r ON r.id = d.release_id
-            JOIN environments e ON e.id = b.environment_id 
+            JOIN environments e ON e.id = b.environment_id
+            LEFT JOIN
+            (
+                SELECT (@cnt := @cnt + 1) AS queue, deployment_id
+                FROM deployments_basic
+                JOIN (SELECT @cnt := 0) t
+                WHERE status = 'QUEUED'
+            ) q ON q.deployment_id = d.id
             WHERE b.id = %s
         """
         return self._sql.execute(query, (execution_id))
@@ -39,6 +46,14 @@ class Deployments_Basic:
         """
         self._sql.execute(query, (deployment['environment'], deployment['databases'], deployment['queries'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
 
+    def updateStatus(self, deployment_id, status):
+        query = """
+            UPDATE deployments_basic
+            SET `status` = %s
+            WHERE id = %s
+        """
+        self._sql.execute(query, (status, deployment_id))
+
     def getExecutions(self, deployment_id):
         query = """
             SELECT b.id, e.name AS 'environment', b.method, b.status, b.created, b.scheduled, b.started, b.ended, CONCAT(TIMEDIFF(b.ended, b.started)) AS 'overall'
@@ -48,22 +63,6 @@ class Deployments_Basic:
             ORDER BY b.created DESC;
         """
         return self._sql.execute(query, (deployment_id))
-    
-    def startExecution(self, execution_id):
-        query = """
-            UPDATE deployments_basic
-            SET status = 'STARTING'
-            WHERE id = %s
-        """
-        return self._sql.execute(query, (execution_id))
-
-    def stopExecution(self, execution_id):
-        query = """
-            UPDATE deployments_basic
-            SET status = 'STOPPING'
-            WHERE id = %s
-        """
-        return self._sql.execute(query, (execution_id))
 
     def setPublic(self, execution_id, public):
         query = """
@@ -92,7 +91,7 @@ class Deployments_Basic:
 
     def getScheduled(self):
         query = """
-            SELECT b.id AS 'execution_id', 'BASIC' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', b.databases, b.queries, b.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit'
+            SELECT b.id AS 'execution_id', 'BASIC' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', b.databases, b.queries, b.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit', g.deployments_execution_concurrent AS 'concurrent_executions'
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id
             JOIN environments e ON e.id = b.environment_id
@@ -103,6 +102,19 @@ class Deployments_Basic:
             AND d.deleted = 0
         """
         return self._sql.execute(query, (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+
+    def getExecutions(self, execution_ids):
+        query = """
+            SELECT b.id AS 'execution_id', 'BASIC' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', b.databases, b.queries, b.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit'
+            FROM deployments_basic b
+            JOIN deployments d ON d.id = b.deployment_id
+            JOIN environments e ON e.id = b.environment_id
+            JOIN users u ON u.id = d.user_id
+            JOIN groups g ON g.id = u.group_id
+            WHERE d.deleted = 0
+            AND b.id IN(%s)
+        """
+        return self._sql.execute(query, (execution_ids))
 
     def setError(self, execution_id, error):
         query = """

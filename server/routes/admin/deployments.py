@@ -38,7 +38,7 @@ class Deployments:
             # Get Deployments
             return jsonify({'data': self._deployments.get()}), 200
 
-        @admin_deployments_blueprint.route('/admin/deployments/search', methods=['GET'])
+        @admin_deployments_blueprint.route('/admin/deployments/filter', methods=['GET'])
         @jwt_required
         def admin_deployments_search_method():
             # Check license

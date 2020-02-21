@@ -7,8 +7,9 @@
         <v-tab to="/admin/settings"><span class="pl-2 pr-2">Settings</span></v-tab>
         <v-tab to="/admin/users"><span class="pl-2 pr-2">Users</span></v-tab>
         <v-tab to="/admin/groups"><span class="pl-2 pr-2">Groups</span></v-tab>
-        <v-tab to="/admin/queues"><span class="pl-2 pr-2">Queues</span></v-tab>
+        <v-divider class="mx-3" inset vertical></v-divider>
         <v-tab to="/admin/deployments"><span class="pl-2 pr-2">Deployments</span></v-tab>
+        <v-divider class="mx-3" inset vertical></v-divider>
       </v-tabs>
     </div>
     <v-container fluid>
