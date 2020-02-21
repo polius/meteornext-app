@@ -8,11 +8,18 @@ class Deployments_Pro:
 
     def get(self, execution_id):
         query = """
-            SELECT d.id, p.id AS 'execution_id', 'PRO' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', p.code, p.method, p.status, p.created, p.started, p.scheduled, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.uri, p.engine, p.public
+            SELECT d.id, p.id AS 'execution_id', 'PRO' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', p.code, p.method, p.status, q.queue, p.created, p.started, p.scheduled, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.uri, p.engine, p.public
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id
             JOIN releases r ON r.id = d.release_id
-            JOIN environments e ON e.id = p.environment_id 
+            JOIN environments e ON e.id = p.environment_id
+            LEFT JOIN
+            (
+                SELECT (@cnt := @cnt + 1) AS queue, deployment_id
+                FROM deployments_pro
+                JOIN (SELECT @cnt := 0) t
+                WHERE status = 'QUEUED'
+            ) q ON q.deployment_id = d.id
             WHERE p.id = %s
         """
         return self._sql.execute(query, (execution_id))
@@ -32,11 +39,19 @@ class Deployments_Pro:
             SET `environment_id` = (SELECT id FROM environments WHERE name = %s),
                 `code` = %s,
                 `method` = %s,
-                `status` = IF (%s != '', 'SCHEDULED', 'CREATED'),
+                `status` = %s,
                 `scheduled` = IF(%s = '', NULL, %s)
             WHERE id = %s
         """
-        self._sql.execute(query, (deployment['environment'], deployment['code'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
+        self._sql.execute(query, (deployment['environment'], deployment['code'], deployment['method'], deployment['status'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
+
+    def updateStatus(self, deployment_id, status):
+        query = """
+            UPDATE deployments_pro
+            SET `status` = %s
+            WHERE id = %s
+        """
+        self._sql.execute(query, (status, deployment_id))
 
     def getExecutions(self, deployment_id):
         query = """
@@ -47,22 +62,6 @@ class Deployments_Pro:
             ORDER BY p.created DESC;
         """
         return self._sql.execute(query, (deployment_id))
-
-    def startExecution(self, execution_id):
-        query = """
-            UPDATE deployments_pro
-            SET status = 'STARTING'
-            WHERE id = %s
-        """
-        return self._sql.execute(query, (execution_id))
-
-    def stopExecution(self, execution_id):
-        query = """
-            UPDATE deployments_pro
-            SET status = 'STOPPING'
-            WHERE id = %s
-        """
-        return self._sql.execute(query, (execution_id))
 
     def setPublic(self, execution_id, public):
         query = """
@@ -91,7 +90,7 @@ class Deployments_Pro:
 
     def getScheduled(self):
         query = """
-            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit'
+            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit', g.deployments_execution_concurrent AS 'concurrent_executions'
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id
             JOIN environments e ON e.id = p.environment_id
@@ -102,6 +101,19 @@ class Deployments_Pro:
             AND d.deleted = 0;
         """
         return self._sql.execute(query, (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+
+    def getExecutions(self, execution_ids):
+        query = """
+            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit'
+            FROM deployments_pro p
+            JOIN deployments d ON d.id = p.deployment_id
+            JOIN environments e ON e.id = p.environment_id
+            JOIN users u ON u.id = d.user_id
+            JOIN groups g ON g.id = u.group_id
+            WHERE d.deleted = 0
+            AND p.id IN(%s)
+        """
+        return self._sql.execute(query, (execution_ids))
 
     def setError(self, execution_id, error):
         query = """

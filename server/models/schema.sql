@@ -24,6 +24,7 @@ CREATE TABLE `groups` (
   `deployments_edit` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_execution_threads` tinyint(255) UNSIGNED NOT NULL DEFAULT '10',
   `deployments_execution_limit` INT UNSIGNED NOT NULL DEFAULT '0',
+  `deployments_execution_concurrent` INT UNSIGNED NOT NULL DEFAULT '0',
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,
@@ -184,6 +185,7 @@ CREATE TABLE `deployments_basic` (
  `expired` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `deployment_id` (`deployment_id`),
+  KEY `status` (`status`),
   KEY `scheduled` (`scheduled`),
   KEY `uri` (`uri`),
   KEY `created` (`created`),
@@ -212,6 +214,7 @@ CREATE TABLE `deployments_pro` (
  `expired` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY(id),
   KEY `deployment_id` (`deployment_id`),
+  KEY `status` (`status`),
   KEY `scheduled` (`scheduled`),
   KEY `uri` (`uri`),
   KEY `created` (`created`),
@@ -243,6 +246,7 @@ CREATE TABLE `deployments_inbenta` (
  `expired` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `deployment_id` (`deployment_id`),
+  KEY `status` (`status`),
   KEY `scheduled` (`scheduled`),
   KEY `uri` (`uri`),
   KEY `created` (`created`),
@@ -251,7 +255,7 @@ CREATE TABLE `deployments_inbenta` (
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE `deployments_scheduled` (
+CREATE TABLE `deployments_finished` (
   `deployment_mode` VARCHAR(191) NOT NULL COMMENT 'References [deployments_basic, deployments_pro].mode',
   `deployment_id` INT UNSIGNED NOT NULL COMMENT 'References [deployments_basic, deployments_pro].id',
   PRIMARY KEY (`deployment_mode`, `deployment_id`)

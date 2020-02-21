@@ -8,11 +8,18 @@ class Deployments_Inbenta:
 
     def get(self, execution_id):
         query = """
-            SELECT d.id, i.id AS 'execution_id', 'INBENTA' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', i.products, i.schema, i.databases, i.queries, i.method, i.status, i.created, i.scheduled, i.started, i.ended, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall', i.error, i.progress, i.uri, i.engine, i.public
+            SELECT d.id, i.id AS 'execution_id', 'INBENTA' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', i.products, i.schema, i.databases, i.queries, i.method, i.status, q.queue, i.created, i.scheduled, i.started, i.ended, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall', i.error, i.progress, i.uri, i.engine, i.public
             FROM deployments_inbenta i
             JOIN deployments d ON d.id = i.deployment_id
             JOIN releases r ON r.id = d.release_id
-            JOIN environments e ON e.id = i.environment_id 
+            JOIN environments e ON e.id = i.environment_id
+            LEFT JOIN
+            (
+                SELECT (@cnt := @cnt + 1) AS queue, deployment_id
+                FROM deployments_inbenta
+                JOIN (SELECT @cnt := 0) t
+                WHERE status = 'QUEUED'
+            ) q ON q.deployment_id = d.id
             WHERE i.id = %s
         """
         return self._sql.execute(query, (execution_id))
@@ -42,6 +49,14 @@ class Deployments_Inbenta:
         """
         self._sql.execute(query, (deployment['environment'], deployment['products'], deployment['schema'], deployment['databases'], deployment['queries'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
 
+    def updateStatus(self, deployment_id, status):
+        query = """
+            UPDATE deployments_inbenta
+            SET `status` = %s
+            WHERE id = %s
+        """
+        self._sql.execute(query, (status, deployment_id))
+
     def getExecutions(self, deployment_id):
         query = """
             SELECT i.id, e.name AS 'environment', i.method, i.created, i.scheduled, i.status, i.started, i.ended, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall'
@@ -51,22 +66,6 @@ class Deployments_Inbenta:
             ORDER BY i.created DESC;
         """
         return self._sql.execute(query, (deployment_id))
-    
-    def startExecution(self, execution_id):
-        query = """
-            UPDATE deployments_inbenta
-            SET status = 'STARTING'
-            WHERE id = %s
-        """
-        return self._sql.execute(query, (execution_id))
-
-    def stopExecution(self, execution_id):
-        query = """
-            UPDATE deployments_inbenta
-            SET status = 'STOPPING'
-            WHERE id = %s
-        """
-        return self._sql.execute(query, (execution_id))
 
     def setPublic(self, execution_id, public):
         query = """
@@ -95,7 +94,7 @@ class Deployments_Inbenta:
 
     def getScheduled(self):
         query = """
-            SELECT i.id AS 'execution_id', 'INBENTA' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', i.products, i.schema, i.databases, i.queries, i.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit'
+            SELECT i.id AS 'execution_id', 'INBENTA' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', i.products, i.schema, i.databases, i.queries, i.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit', g.deployments_execution_concurrent AS 'concurrent_executions'
             FROM deployments_inbenta i
             JOIN deployments d ON d.id = i.deployment_id
             JOIN environments e ON e.id = i.environment_id
@@ -106,6 +105,19 @@ class Deployments_Inbenta:
             AND d.deleted = 0
         """
         return self._sql.execute(query, (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+
+    def getExecutions(self, execution_ids):
+        query = """
+            SELECT i.id AS 'execution_id', 'INBENTA' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', i.products, i.schema, i.databases, i.queries, i.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit'
+            FROM deployments_inbenta i
+            JOIN deployments d ON d.id = i.deployment_id
+            JOIN environments e ON e.id = i.environment_id
+            JOIN users u ON u.id = d.user_id
+            JOIN groups g ON g.id = u.group_id
+            WHERE d.deleted = 0
+            AND i.id IN(%s)
+        """
+        return self._sql.execute(query, (execution_ids))
 
     def setError(self, execution_id, error):
         query = """

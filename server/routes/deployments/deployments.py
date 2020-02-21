@@ -9,7 +9,12 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 import models.admin.users
 import models.deployments.releases
 import models.deployments.deployments
+import models.deployments.deployments_basic
+import models.deployments.deployments_pro
+import models.deployments.deployments_inbenta
+import models.deployments.deployments_finished
 import models.admin.settings
+import routes.deployments.meteor
 
 class Deployments:
     def __init__(self, app, sql):
@@ -17,7 +22,14 @@ class Deployments:
         self._users = models.admin.users.Users(sql)
         self._releases = models.deployments.releases.Releases(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
+        self._deployments_basic = models.deployments.deployments_basic.Deployments_Basic(sql)
+        self._deployments_pro = models.deployments.deployments_pro.Deployments_Pro(sql)
+        self._deployments_inbenta = models.deployments.deployments_inbenta.Deployments_Inbenta(sql)
+        self._deployments_finished = models.deployments.deployments_finished.Deployments_Finished(sql)
         self._settings = models.admin.settings.Settings(sql)
+
+        # Init meteor
+        self._meteor = routes.deployments.meteor.Meteor(app, sql)
 
     def license(self, value):
         self._license = value
@@ -105,6 +117,42 @@ class Deployments:
                     return jsonify({'title': 'Deployment Expired', 'description': 'This deployment has expired' }), 400
 
         return deployments_blueprint
+
+    ###################
+    # Recurring Tasks #
+    ###################
+    def check_pending(self):
+        # Get all pending executions
+        pending = self._deployments.getPending()
+        executions = {"b":[],"p":[],"i":[]}
+        if len(pending) == 0:
+            return
+        for p in pending[0]['executions'].split(','):
+            executions[p[0]] = p[1:]
+        
+        # Basic Executions
+        if len(executions['b']) > 0:
+            basic = self._deployments_basic.getExecutions(','.join(str(i) for i in executions['b']))
+            for b in basic:
+                self._deployments_basic.updateStatus(b['execution_id'], 'STARTING')
+                self._meteor.execute(b)
+                self._deployments_finished.post({"mode": b['mode'], "id": b['execution_id']})
+
+        # Pro Executions
+        if len(executions['p']) > 0:
+            pro = self._deployments_pro.getExecutions(','.join(str(i) for i in executions['p']))
+            for p in pro:
+                self._deployments_pro.updateStatus(p['execution_id'], 'STARTING')
+                self._meteor.execute(p)
+                self._deployments_finished.post({"mode": p['mode'], "id": p['execution_id']})
+
+        # Inbenta Executions
+        if len(executions['i']) > 0:
+            inbenta = self._deployments_inbenta.getExecutions(','.join(str(i) for i in executions['i']))
+            for i in inbenta:
+                self._deployments_inbenta.updateStatus(i['execution_id'], 'STARTING')
+                self._meteor.execute(i)
+                self._deployments_finished.post({"mode": i['mode'], "id": i['execution_id']})
 
     ####################
     # Internal Methods #

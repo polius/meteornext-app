@@ -102,7 +102,7 @@ class deploy_queries:
         if not self._args.deploy:
             # Execution Checks
             try:
-                self._query_template_instance.validate_execution(query_parsed, conn, database_name)
+                self._query_template_instance.validate_execution(query_parsed, args, conn, database_name)
                 # Write Exception to the Log
                 if query_syntax != 'Select':
                     self._execution_log['output'].append(execution_row)

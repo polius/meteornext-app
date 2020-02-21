@@ -14,7 +14,7 @@ import models.admin.settings
 import models.deployments.environments
 import models.deployments.deployments
 import models.deployments.deployments_pro
-import models.deployments.deployments_scheduled
+import models.deployments.deployments_finished
 import models.notifications
 import routes.deployments.meteor
 
@@ -28,7 +28,7 @@ class Pro:
         self._environments = models.deployments.environments.Environments(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._deployments_pro = models.deployments.deployments_pro.Deployments_Pro(sql)
-        self._deployments_scheduled = models.deployments.deployments_scheduled.Deployments_Scheduled(sql)
+        self._deployments_finished = models.deployments.deployments_finished.Deployments_Finished(sql)
         self._notifications = models.notifications.Notifications(sql)
 
         # Init meteor
@@ -194,26 +194,26 @@ class Pro:
 
         return deployments_pro_blueprint
 
-    #####################
-    # Scheduled Methods #
-    #####################
-    def check_scheduled(self):
-        # Get all pro pending scheduled executions
-        scheduled = self._deployments_scheduled.getPro()
+    ###################
+    # Recurring Tasks #
+    ###################
+    def check_finished(self):
+        # Get all pro finished executions
+        finished = self._deployments_finished.getPro()
 
-        for s in scheduled:
+        for f in finished:
             # Create notifications
             notification = {'icon': 'fas fa-circle', 'category': 'deployment'}
-            notification['name'] = '{} has finished'.format(s['name'])
-            notification['status'] = 'ERROR' if s['status'] == 'FAILED' else s['status']
-            notification['data'] = '{{"id": "{}", "name": "{}", "mode": "PRO", "environment": "{}", "method": "{}", "overall": "{}"}}'.format(s['id'], s['name'], s['environment'], s['method'], s['overall'])
-            self._notifications.post(s['user_id'], notification)
+            notification['name'] = '{} has finished'.format(f['name'])
+            notification['status'] = 'ERROR' if f['status'] == 'FAILED' else f['status']
+            notification['data'] = '{{"id": "{}", "name": "{}", "mode": "PRO", "environment": "{}", "method": "{}", "overall": "{}"}}'.format(f['id'], f['name'], f['environment'], f['method'], f['overall'])
+            self._notifications.post(f['user_id'], notification)
 
-            # Clean scheduled deployments
-            scheduled = {'mode': 'PRO', 'id': s['id']}
-            self._deployments_scheduled.delete(scheduled)
+            # Clean finished deployments
+            finished_deployment = {'mode': 'PRO', 'id': f['id']}
+            self._deployments_finished.delete(finished_deployment)
 
-    def start_scheduled(self):
+    def check_scheduled(self):
         # Get all pro scheduled executions
         scheduled = self._deployments_pro.getScheduled()
 
@@ -224,14 +224,15 @@ class Pro:
         else:
             for s in scheduled:
                 # Update Execution Status
-                self._deployments_pro.startExecution(s['execution_id'])
+                status = 'STARTING' if s['concurrent_executions'] == 0 else 'QUEUED'
+                self._deployments_pro.updateStatus(s['execution_id'], status)
 
                 # Start Meteor Execution
-                self._meteor.execute(s)
-
-                # Add Deployment to be Scheduled Tracked
-                deployment = {"mode": s['mode'], "id": s['execution_id']}
-                self._deployments_scheduled.post(deployment)
+                if s['concurrent_executions'] == 0:
+                    self._meteor.execute(s)
+                    # Add Deployment to be Tracked
+                    deployment = {"mode": s['mode'], "id": s['execution_id']}
+                    self._deployments_finished.post(deployment)
 
     ####################
     # Internal Methods #
@@ -275,8 +276,10 @@ class Pro:
             data['start_execution'] = False
             if datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M') < datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
+        elif data['start_execution']:
+            data['status'] = 'QUEUED' if group['deployments_execution_concurrent'] != 0 else 'STARTING'
         else:
-            data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
+            data['status'] = 'CREATED'
         data['id'] = self._deployments.post(user['id'], data)
         data['execution_id'] = self._deployments_pro.post(data)
 
@@ -286,7 +289,7 @@ class Pro:
         # Build Response Data
         response = {'execution_id': data['execution_id'], 'coins': user['coins'] - group['coins_execution'] }
 
-        if data['start_execution']:
+        if data['start_execution'] and group['deployments_execution_concurrent'] == 0:
             # Get Meteor Additional Parameters
             data['group_id'] = user['group_id']
             data['execution_threads'] = group['deployments_execution_threads']
@@ -325,6 +328,7 @@ class Pro:
         # Get current deployment
         deployment = self._deployments_pro.get(data['execution_id'])[0]
 
+        # Proceed editing the deployment 
         if deployment['status'] in ['CREATED','SCHEDULED'] and not data['start_execution']:
             # Check if user has modified any value
             if deployment['environment'] != data['environment'] or \
@@ -344,11 +348,15 @@ class Pro:
             if not self.__check_logs_path():
                 return jsonify({'message': 'The local logs path has no write permissions'}), 400
 
-            # Create a new Pro Deployment
+            # Set Deployment Status
             if data['scheduled'] != '':
                 data['status'] = 'SCHEDULED'
+            elif data['start_execution']:
+                data['status'] = 'QUEUED' if group['deployments_execution_concurrent'] != 0 else 'STARTING'
             else:
-                data['status'] = 'STARTING' if data['start_execution'] else 'CREATED'
+                data['status'] = 'CREATED'
+
+            # Create a new Pro Deployment
             data['execution_id'] = self._deployments_pro.post(data)
 
             # Consume Coins
@@ -361,7 +369,7 @@ class Pro:
             # Build Response Data
             response = {'execution_id': data['execution_id'], 'coins': coins }
 
-            if data['start_execution']:
+            if data['start_execution'] and group['deployments_execution_concurrent'] == 0:
                 # Get Meteor Additional Parameters
                 data['group_id'] = user['group_id']
                 data['execution_threads'] = group['deployments_execution_threads']
@@ -390,6 +398,9 @@ class Pro:
             deployment = deployment[0]
 
         # Check if Deploy has already started
+        if deployment['status'] == 'QUEUED':
+            return jsonify({'message': 'Queued deployments cannot be started.'}), 400
+
         if deployment['status'] not in ['CREATED','SCHEDULED']:
             return jsonify({'message': ''}), 200
 
@@ -402,10 +413,12 @@ class Pro:
         deployment['user'] = user['username']
 
         # Update Execution Status
-        self._deployments_pro.startExecution(deployment['execution_id'])
+        status = 'STARTING' if group['deployments_execution_concurrent'] == 0 else 'QUEUED'
+        self._deployments_pro.updateStatus(deployment['execution_id'], status)
 
         # Start Meteor Execution
-        self._meteor.execute(deployment)
+        if group['deployments_execution_concurrent'] == 0:
+            self._meteor.execute(deployment)
 
         # Build Response Data
         response = {'execution_id': data['execution_id']}
@@ -418,7 +431,7 @@ class Pro:
         deployment = self._deployments_pro.getPid(data['execution_id'])[0]
 
         # Update Execution Status
-        self._deployments_pro.stopExecution(data['execution_id'])
+        self._deployments_basic.updateStatus(data['execution_id'], 'STOPPING')
 
         # Stop the execution
         try:

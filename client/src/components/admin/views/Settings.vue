@@ -15,14 +15,14 @@
           <!-- LICENSE -->
           <v-flex v-if="setting_mode == 'license'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="headline font-weight-regular" style="margin-left:10px;">LICENSE</div>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.email" label="Email" style="margin-left:10px; padding-top:30px;" required :rules="[v => !!v || '']"></v-text-field>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.email" label="Email" style="margin-left:10px; padding-top:25px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.key" label="Key" style="margin-left:10px; padding-top:0px;" @click:append="show_key = !show_key" :append-icon="show_key ? 'visibility' : 'visibility_off'" :type="show_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
           </v-flex>
 
           <!-- SQL -->
           <v-flex v-else-if="setting_mode == 'sql'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="headline font-weight-regular" style="margin-left:10px;">SQL</div>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.hostname" label="Hostname" style="margin-left:10px; padding-top:30px;" required :rules="[v => !!v || '']"></v-text-field>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.hostname" label="Hostname" style="margin-left:10px; padding-top:25px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.username" label="Username" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.password" label="Password" style="margin-left:10px; padding-top:0px;" @click:append="show_password = !show_password" :append-icon="show_password ? 'visibility' : 'visibility_off'" :type="show_password ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.port" label="Port" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>

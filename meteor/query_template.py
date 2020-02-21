@@ -5,8 +5,8 @@ class query_template:
     def __init__(self, query_template):
         self._query_template = query_template
 
-    def validate_execution(self, query_raw, connection, database_name=None):
-        query_string = query_raw.replace('`','')
+    def validate_execution(self, query_raw, args, connection, database_name=None):
+        query_string = query_raw.replace('`','') % args if args is None else query_raw.replace('`','')
         query_lower = query_string.lower()
 
         for t in self._query_template:
@@ -17,16 +17,16 @@ class query_template:
 
                 elif t["type"].startswith("Row_Level"):
                     if t["type"] == "Row_Level.Insert":
-                        connection.execute('EXPLAIN ' + query_raw, database_name)
+                        connection.execute('EXPLAIN ' + query_raw, args, database_name)
 
                     elif t["type"] == "Row_Level.Replace":
-                        connection.execute('EXPLAIN ' + query_raw, database_name)
+                        connection.execute('EXPLAIN ' + query_raw, args, database_name)
 
                     elif t["type"] == "Row_Level.Update":
-                        connection.execute('EXPLAIN ' + query_raw, database_name)
+                        connection.execute('EXPLAIN ' + query_raw, args, database_name)
 
                     elif t["type"] == "Row_Level.Delete":
-                        connection.execute('EXPLAIN ' + query_raw, database_name)
+                        connection.execute('EXPLAIN ' + query_raw, args, database_name)
 
                     break
 

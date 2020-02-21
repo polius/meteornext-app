@@ -4,7 +4,7 @@
       <v-toolbar flat color="primary">
         <v-toolbar-title class="white--text">{{ toolbar_title }}</v-toolbar-title>
         <v-spacer></v-spacer>
-        <router-link class="nav-link" to="/admin/groups"><v-btn icon><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
+        <v-btn icon title="Go back" @click="goBack()" style="margin-right:-5px;"><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn>
       </v-toolbar>
       <v-card-text>
         <v-flex>
@@ -53,15 +53,17 @@
                     <v-icon small style="margin-left:5px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
                   <span>
-                    <b>Execution Limit</b>: Sets the maximum scanned rows allowed
+                    <b>Execution Threads</b>: Maximum number of spawned threads per server.
                     <br>
-                    <b>Execution Threads</b>: Maximum number of spawned threads per server (SQL) 
+                    <b>Execution Limit</b>: Sets the maximum scanned rows allowed.
+                    <br>
+                    <b>Concurrent Executions</b>: Sets the maximum concurrent executions.
                   </span>
                 </v-tooltip>
                 </div>
-                <v-switch v-model="group_execution_limit_switch" label="Limit Queries Execution" style="margin-top:0px; margin-bottom:25px;" hide-details></v-switch>
-                <v-text-field v-if="group_execution_limit_switch" v-model="group.deployments_execution_limit" label="Execution Limit" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
-                <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 && v < 100 || 'A number between: 1 - 99']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 && v < 100 || '']" required style="margin-top:25px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_limit" label="Execution Limit" :rules="[v => !isNaN(parseFloat(v)) && isFinite(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_concurrent" label="Concurrent Executions" :rules="[v => !isNaN(parseFloat(v)) && isFinite(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -340,10 +342,10 @@ export default {
       'deployments_pro': false,
       'deployments_inbenta': false,
       'deployments_edit': false,
+      'deployments_execution_threads': 10,
       'deployments_execution_limit': 0,
-      'deployments_execution_threads': 10 
+      'deployments_execution_concurrent': 0
     },
-    group_execution_limit_switch: false,
     toolbar_title: '',
     form_valid: false,
     loading: false,
@@ -459,7 +461,6 @@ export default {
       axios.get('/admin/groups', { params: { groupID: this.groupID } })
         .then((response) => {
           this.group = response.data.group[0]
-          this.group_execution_limit_switch = this.group['deployments_execution_limit'] > 0
           this.environment_items = response.data.environments.data
           this.region_items = response.data.regions.data.regions
           this.server_items = response.data.servers.data.servers
@@ -485,8 +486,6 @@ export default {
         this.loading = false
         return
       }
-      // Assign Deployment Execution Limit
-      if (!this.group_execution_limit_switch) this.group['deployments_execution_limit'] = 0
       // Add group to the DB
       const payload = {
         group: JSON.stringify(this.group),
@@ -517,8 +516,6 @@ export default {
         this.loading = false
         return
       }
-      // Assign Deployment Execution Limit
-      if (!this.group_execution_limit_switch) this.group['deployments_execution_limit'] = 0
       // Edit group to the DB
       const payload = {
         group: JSON.stringify(this.group),
@@ -541,6 +538,9 @@ export default {
         .finally(() => {
           this.loading = false
         })
+    },
+    goBack() {
+      this.$router.go(-1)
     },
     // +--------------+
     // | ENVIRONMENTS |

@@ -10,7 +10,7 @@ class Notifications:
         return self._sql.execute("SELECT * FROM notifications WHERE user_id = %s ORDER BY id DESC", (user_id))
 
     def post(self, user_id, notification):
-        query = "INSERT INTO notifications (name, `status`, icon, category, data, `date`, user_id, `show`) VALUES (%s, %s, %s, %s, %s, %s, %s, 1)"
+        query = "INSERT IGNORE INTO notifications (name, `status`, icon, category, data, `date`, user_id, `show`) VALUES (%s, %s, %s, %s, %s, %s, %s, 1)"
         self._sql.execute(query, (notification['name'], notification['status'], notification['icon'], notification['category'], notification['data'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_id))
 
     def put(self, user_id, notification):

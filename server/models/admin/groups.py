@@ -16,10 +16,10 @@ class Groups:
 
     def post(self, user_id, group):
         query = """
-            INSERT INTO groups (name, description, coins_day, coins_max, coins_execution, deployments_enable, deployments_basic, deployments_pro, deployments_inbenta, deployments_edit, deployments_execution_threads, deployments_execution_limit, created_by, created_at) 
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO groups (name, description, coins_day, coins_max, coins_execution, deployments_enable, deployments_basic, deployments_pro, deployments_inbenta, deployments_edit, deployments_execution_threads, deployments_execution_limit, deployments_execution_concurrent, created_by, created_at) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['deployments_enable'], group['deployments_basic'], group['deployments_pro'], group['deployments_inbenta'], group['deployments_edit'], group['deployments_execution_threads'], group['deployments_execution_limit'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['deployments_enable'], group['deployments_basic'], group['deployments_pro'], group['deployments_inbenta'], group['deployments_edit'], group['deployments_execution_threads'], group['deployments_execution_limit'], group['deployments_execution_concurrent'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user_id, group):
         query = """
@@ -36,11 +36,12 @@ class Groups:
             deployments_edit = %s,
             deployments_execution_threads = %s,
             deployments_execution_limit = %s,
+            deployments_execution_concurrent = %s,
             updated_by = %s,
             updated_at = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['deployments_enable'], group['deployments_basic'], group['deployments_pro'], group['deployments_inbenta'], group['deployments_edit'], group['deployments_execution_threads'], group['deployments_execution_limit'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group['id']))
+        self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['deployments_enable'], group['deployments_basic'], group['deployments_pro'], group['deployments_inbenta'], group['deployments_edit'], group['deployments_execution_threads'], group['deployments_execution_limit'], group['deployments_execution_concurrent'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group['id']))
 
     def delete(self, group):
         self._sql.execute("DELETE FROM groups WHERE name = %s", (group))

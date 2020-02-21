@@ -5,8 +5,7 @@
         <v-toolbar-title>DEPLOYMENTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-          <v-btn text @click="refreshDeployment()"><v-icon small style="padding-right:10px">fas fa-sync</v-icon>REFRESH</v-btn>
-          <v-btn text @click="search_dialog = true"><v-icon small style="padding-right:10px">fas fa-search</v-icon>SEARCH</v-btn>
+          <v-btn text @click="filter_dialog = true"><v-icon small style="padding-right:10px">fas fa-search</v-icon>FILTER</v-btn>
           <v-btn text v-if="selected.length == 1" @click="infoDeployment()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
@@ -42,27 +41,30 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="search_dialog" persistent max-width="768px">
+    <v-dialog v-model="filter_dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">Search Deployments</v-toolbar-title>
+          <v-toolbar-title class="white--text">Filter Deployments</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="search_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="filter_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 0px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
-                  <v-text-field v-model="search_dialog_data.username" label="Username"></v-text-field>
-                  <v-select v-model="search_dialog_data.mode" :items="deployment_modes" multiple label="Mode" required style="padding-top:0px;"></v-select>
-                  <v-select v-model="search_dialog_data.status" :items="deployment_status" multiple label="Status" required style="padding-top:0px;"></v-select>
-                  <v-text-field v-model="search_dialog_data.created_from" label="Created (From)" placeholder="YYYY-MM-DD hh:mm:ss" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="search_dialog_data.created_to" label="Created (To)" placeholder="YYYY-MM-DD hh:mm:ss" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="filter_dialog_data.name" label="Name"></v-text-field>
+                  <v-text-field v-model="filter_dialog_data.release" label="Release" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="filter_dialog_data.username" label="Username" style="padding-top:0px;"></v-text-field>
+                  <v-select v-model="filter_dialog_data.mode" :items="deployment_modes" multiple label="Mode" style="padding-top:0px;"></v-select>
+                  <v-select v-model="filter_dialog_data.status" :items="deployment_status" multiple label="Status" style="padding-top:0px;"></v-select>
+                  <v-text-field v-model="filter_dialog_data.created_from" label="Created (From)" placeholder="YYYY-MM-DD hh:mm:ss" @click="picker_change('created_from')" readonly style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="filter_dialog_data.created_to" label="Created (To)" placeholder="YYYY-MM-DD hh:mm:ss" @click="picker_change('created_to')" readonly style="padding-top:0px;"></v-text-field>
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
-                    <v-btn :loading="loading" color="#00b16a" @click="searchDeployments()">Confirm</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="search_dialog=false" style="margin-left:10px;">Cancel</v-btn>
+                    <v-btn :loading="loading" color="#00b16a" @click="filterDeployments()">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="closeFilter()" style="margin-left:10px;">Cancel</v-btn>
+                    <v-btn v-if="filter_applied" :disabled="loading" color="info" @click="clearFilter()" style="float:right;">Remove Filter</v-btn>
                   </div>
                 </v-form>
               </v-flex>
@@ -70,6 +72,21 @@
           </v-container>
         </v-card-text>
       </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="pickerDialog" persistent width="290px">
+      <v-date-picker v-if="picker_mode=='date'" v-model="picker_date" color="info" scrollable>
+        <v-btn text color="info" @click="picker_now()">Now</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn text color="error" @click="picker_close()">Cancel</v-btn>
+        <v-btn text color="#00b16a" @click="picker_submit()">Confirm</v-btn>
+      </v-date-picker>
+      <v-time-picker v-else-if="picker_mode=='time'" v-model="picker_time" color="info" format="24hr" scrollable>
+        <v-btn text color="info" @click="picker_now()">Now</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn text color="error" @click="picker_close()">Cancel</v-btn>
+        <v-btn text color="#00b16a" @click="picker_submit()">Confirm</v-btn>
+      </v-time-picker>
     </v-dialog>
 
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
@@ -102,11 +119,21 @@ export default {
     search: '',
     loading: true,
 
-    // Search Dialog
-    search_dialog: false,
-    search_dialog_data: {},
+    // Filter Dialog
+    filter_dialog: false,
+    filter_dialog_data: {},
     deployment_modes: ['Basic','Pro','Inbenta'],
     deployment_status: ['CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED'],
+
+    // Date / Time Picker
+    pickerDialog: false,
+    picker_mode: 'date',
+    picker_component: '',
+    picker_date: '',
+    picker_time: '',
+
+    // Filter
+    filter_applied: false,
 
     // Snackbar
     snackbar: false,
@@ -129,34 +156,75 @@ export default {
           else this.notification(error.response.data.message, 'error')
         });
     },
-    searchDeployments() {
-      // Parse Search Filter
-      if (this.search_dialog_data.username == '') delete this.search_dialog_data.username
-      if (this.search_dialog_data.mode == '') delete this.search_dialog_data.mode
-      if (this.search_dialog_data.status == '') delete this.search_dialog_data.status
-      if (this.search_dialog_data.created_from == '') delete this.search_dialog_data.created_from
-      if (this.search_dialog_data.created_to == '') delete this.search_dialog_data.created_to
+    filterDeployments() {
+      // Parse Filter
+      if (this.filter_dialog_data.name == '') delete this.filter_dialog_data.name
+      if (this.filter_dialog_data.release == '') delete this.filter_dialog_data.release
+      if (this.filter_dialog_data.username == '') delete this.filter_dialog_data.username
+      if (this.filter_dialog_data.mode == '') delete this.filter_dialog_data.mode
+      if (this.filter_dialog_data.status == '') delete this.filter_dialog_data.status
+      if (this.filter_dialog_data.created_from == '') delete this.filter_dialog_data.created_from
+      if (this.filter_dialog_data.created_to == '') delete this.filter_dialog_data.created_to
+      // Set filter var
+      this.filter_applied = Object.keys(this.filter_dialog_data).length > 0
       // Enable Loading
       this.loading = true
       // Get Deployment Data
-      axios.get('/admin/deployments/search', { params: { data: this.search_dialog_data }})
+      axios.get('/admin/deployments/filter', { params: { data: this.filter_dialog_data }})
         .then((response) => {
           this.items = response.data.data
           this.loading = false
-          this.search_dialog = false
+          this.filter_dialog = false
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },
-    refreshDeployment() {
+    closeFilter() {
+      this.filter_dialog = false
+      if (!this.filter_applied) this.filter_dialog_data = {}
+    },
+    clearFilter() {
       this.loading = true
+      this.filter_applied = false
+      this.filter_dialog_data = {}
+      this.filter_dialog = false
       this.getDeployments()
     },
     infoDeployment() {
       const id = this.selected[0]['mode'].substring(0, 1) + this.selected[0]['execution_id']
       this.$router.push({ name:'deployment', params: { id: id }})
+    },
+    picker_close() {
+      this.pickerDialog = false
+      this.picker_mode = 'date'
+    },
+    picker_init(datetime='') {
+      var date = moment()
+      if (datetime) date = moment(datetime)
+      this.picker_date = date.format("YYYY-MM-DD")
+      this.picker_time = date.format("HH:mm")
+    },
+    picker_now() {
+      const date = moment()
+      if (this.picker_mode == 'date') this.picker_date = date.format("YYYY-MM-DD")
+      else if (this.picker_mode == 'time') this.picker_time = date.format("HH:mm")
+    },
+    picker_change(component) {
+      this.picker_component = component
+      if (component == 'created_from') this.picker_init(this.filter_dialog_data.created_from)
+      else if (component == 'created_to') this.picker_init(this.filter_dialog_data.created_to)
+      this.pickerDialog = true
+    },
+    picker_submit() {
+      if (this.picker_mode == 'date') this.picker_mode = 'time'
+      else if (this.picker_mode == 'time') {
+        if (this.picker_component == 'created_from') this.filter_dialog_data.created_from = this.picker_date + ' ' + this.picker_time
+        else if (this.picker_component == 'created_to') this.filter_dialog_data.created_to = this.picker_date + ' ' + this.picker_time
+        this.pickerDialog = false
+        this.picker_mode = 'date'
+      }
     },
     getModeColor (mode) {
       if (mode == 'BASIC') return '#eb974e'
