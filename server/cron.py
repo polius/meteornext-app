@@ -31,7 +31,7 @@ class Cron:
     def start(self):
         # Init Crons
         schedule.every(1).minutes.do(self.__license, 'minute')
-        schedule.every(10).seconds.do(self.__executions)
+        schedule.every(30).seconds.do(self.__executions)
         schedule.every().day.at("00:00").do(self.__license, 'day')
         schedule.every().day.at("00:00").do(self.__coins)
         schedule.every().day.at("00:00").do(self.__logs)
@@ -100,7 +100,7 @@ class Cron:
 
         # Deployments
         deployments = routes.deployments.deployments.Deployments(self._app, self._sql)
-        deployments.check_pending()
+        deployments.check_queued()
 
     def __coins(self):
         if not self._license['status']:

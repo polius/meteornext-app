@@ -102,7 +102,7 @@ class Deployments_Pro:
         """
         return self._sql.execute(query, (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
-    def getExecutions(self, execution_ids):
+    def getExecutionsN(self, execution_ids):
         query = """
             SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit'
             FROM deployments_pro p

@@ -12,6 +12,7 @@ import models.deployments.deployments
 import models.deployments.deployments_basic
 import models.deployments.deployments_pro
 import models.deployments.deployments_inbenta
+import models.deployments.deployments_queued
 import models.deployments.deployments_finished
 import models.admin.settings
 import routes.deployments.meteor
@@ -25,6 +26,7 @@ class Deployments:
         self._deployments_basic = models.deployments.deployments_basic.Deployments_Basic(sql)
         self._deployments_pro = models.deployments.deployments_pro.Deployments_Pro(sql)
         self._deployments_inbenta = models.deployments.deployments_inbenta.Deployments_Inbenta(sql)
+        self._deployments_queued = models.deployments.deployments_queued.Deployments_Queued(sql)
         self._deployments_finished = models.deployments.deployments_finished.Deployments_Finished(sql)
         self._settings = models.admin.settings.Settings(sql)
 
@@ -121,38 +123,63 @@ class Deployments:
     ###################
     # Recurring Tasks #
     ###################
-    def check_pending(self):
-        # Get all pending executions
-        pending = self._deployments.getPending()
-        executions = {"b":[],"p":[],"i":[]}
-        if len(pending) == 0:
+    def check_queued(self):
+        # Notify finished queue deployments and remove it from queue
+        finished = self._deployments_queued.getFinished()
+        ids = ''
+        for i in finished:
+            ids += '{},'.format(i['id'])
+            self._deployments_finished.post({"mode": i['execution_mode'], "id": i['execution_id']})
+        if len(finished) > 0:
+            ids = ids[:-1]
+            self._deployments_queued.delete(ids)
+
+        # Populate new queued deployments
+        self._deployments_queued.build()
+
+        # Build dictionary of executions
+        executions_raw = self._deployments_queued.getNext()
+        executions = {'basic':{},'pro':{},'inbenta':{}}
+        if len(executions_raw) == 0:
             return
-        for p in pending[0]['executions'].split(','):
-            executions[p[0]] = p[1:]
-        
-        # Basic Executions
-        if len(executions['b']) > 0:
-            basic = self._deployments_basic.getExecutions(','.join(str(i) for i in executions['b']))
+
+        for i in [i for i in executions_raw if i['executions'].split('|')[2] == 'QUEUED']:
+            execution = i['executions'].split('|')
+            executions[execution[0]][int(execution[1])] = None
+
+        if executions['basic']:
+            basic = self._deployments_basic.getExecutionsN(','.join(str(i) for i in executions['basic'].keys()))
             for b in basic:
-                self._deployments_basic.updateStatus(b['execution_id'], 'STARTING')
-                self._meteor.execute(b)
-                self._deployments_finished.post({"mode": b['mode'], "id": b['execution_id']})
-
-        # Pro Executions
-        if len(executions['p']) > 0:
-            pro = self._deployments_pro.getExecutions(','.join(str(i) for i in executions['p']))
+                for e in executions['basic'].keys():
+                    if b['execution_id'] == e:
+                        executions['basic'][e] = b
+                        break
+        if executions['pro']:
+            pro = self._deployments_pro.getExecutionsN(','.join(str(i) for i in executions['pro'].keys()))
             for p in pro:
-                self._deployments_pro.updateStatus(p['execution_id'], 'STARTING')
-                self._meteor.execute(p)
-                self._deployments_finished.post({"mode": p['mode'], "id": p['execution_id']})
-
-        # Inbenta Executions
-        if len(executions['i']) > 0:
-            inbenta = self._deployments_inbenta.getExecutions(','.join(str(i) for i in executions['i']))
+                for e in executions['pro'].keys():
+                    if p['execution_id'] == e:
+                        executions['pro'][e] = p
+                        break
+        if executions['inbenta']:
+            inbenta = self._deployments_inbenta.getExecutionsN(','.join(str(i) for i in executions['inbenta'].keys()))
             for i in inbenta:
-                self._deployments_inbenta.updateStatus(i['execution_id'], 'STARTING')
-                self._meteor.execute(i)
-                self._deployments_finished.post({"mode": i['mode'], "id": i['execution_id']})
+                for e in executions['inbenta'].keys():
+                    if i['execution_id'] == e:
+                        executions['inbenta'][e] = i
+                        break
+
+        # Start Queued Executions
+        for i in [i for i in executions_raw if i['executions'].split('|')[2] == 'QUEUED']:
+            execution = i['executions'].split('|')
+            deployment = executions[execution[0]][int(execution[1])]
+            if execution[0] == 'basic':
+                self._deployments_basic.updateStatus(execution[1], 'STARTING')
+            elif execution[0] == 'pro':
+                self._deployments_pro.updateStatus(execution[1], 'STARTING')
+            elif execution[0] == 'inbenta':
+                self._deployments_inbenta.updateStatus(execution[1], 'STARTING')
+            self._meteor.execute(deployment)
 
     ####################
     # Internal Methods #
