@@ -259,25 +259,6 @@ class Deployments:
         """
         return self._sql.execute(query, (uri, uri, uri))
 
-    def getPending(self):
-        query = """
-            SELECT SUBSTRING_INDEX(GROUP_CONCAT(CONCAT(q.mode, q.execution_id) SEPARATOR ','), ',', g.deployments_execution_concurrent) AS 'executions'
-            FROM
-            (
-                SELECT deployment_id, id AS execution_id, 'b' AS 'mode', created FROM deployments_basic WHERE status = 'QUEUED'
-                UNION
-                SELECT deployment_id, id AS execution_id, 'p' AS 'mode', created FROM deployments_pro WHERE status = 'QUEUED'
-                UNION
-                SELECT deployment_id, id AS execution_id, 'i' AS 'mode', created FROM deployments_inbenta WHERE status = 'QUEUED'
-                ORDER BY created
-            ) q
-            JOIN deployments d ON d.id = q.deployment_id
-            JOIN users u ON u.id = d.user_id
-            JOIN groups g ON g.id = u.group_id
-            GROUP BY u.group_id;
-        """
-        return self._sql.execute(query)
-
     def removeRelease(self, release_id):
         query = """
             UPDATE deployments 

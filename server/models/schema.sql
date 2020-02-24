@@ -255,6 +255,14 @@ CREATE TABLE `deployments_inbenta` (
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE `deployments_queued` (
+  `id` BIGINT UNSIGNED AUTO_INCREMENT,
+  `execution_mode` VARCHAR(191) NOT NULL COMMENT 'References [deployments_basic, deployments_pro].mode',
+  `execution_id` INT UNSIGNED NOT NULL COMMENT 'References [deployments_basic, deployments_pro].id',
+  PRIMARY KEY (`id`),
+  UNIQUE uniq (`deployment_mode`, `deployment_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE `deployments_finished` (
   `deployment_mode` VARCHAR(191) NOT NULL COMMENT 'References [deployments_basic, deployments_pro].mode',
   `deployment_id` INT UNSIGNED NOT NULL COMMENT 'References [deployments_basic, deployments_pro].id',

@@ -106,7 +106,7 @@ class Deployments_Inbenta:
         """
         return self._sql.execute(query, (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
-    def getExecutions(self, execution_ids):
+    def getExecutionsN(self, execution_ids):
         query = """
             SELECT i.id AS 'execution_id', 'INBENTA' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', i.products, i.schema, i.databases, i.queries, i.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit'
             FROM deployments_inbenta i

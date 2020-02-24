@@ -12,6 +12,7 @@ import models.admin.settings
 import models.deployments.environments
 import models.deployments.deployments
 import models.deployments.deployments_basic
+import models.deployments.deployments_queued
 import models.deployments.deployments_finished
 import models.notifications
 import routes.deployments.meteor
@@ -26,6 +27,7 @@ class Basic:
         self._environments = models.deployments.environments.Environments(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._deployments_basic = models.deployments.deployments_basic.Deployments_Basic(sql)
+        self._deployments_queued = models.deployments.deployments_queued.Deployments_Queued(sql)
         self._deployments_finished = models.deployments.deployments_finished.Deployments_Finished(sql)
         self._notifications = models.notifications.Notifications(sql)
 
