@@ -94,7 +94,7 @@
       </v-time-picker>
     </v-dialog>
 
-    <v-dialog v-model="queryDialog" persistent max-width="600px">
+    <v-dialog v-model="queryDialog" persistent max-width="896px">
       <v-toolbar color="primary">
         <v-toolbar-title class="white--text">{{ queryDialogTitle }}</v-toolbar-title>
       </v-toolbar>
@@ -104,7 +104,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="query_form" v-if="query_mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
-                  <v-textarea ref="field" rows="1" filled auto-grow hide-details v-model="query_item.query" label="Query" :rules="[v => !!v || '']" required></v-textarea>
+                  <v-textarea ref="field" rows="1" filled auto-grow hide-details v-model="query_item" label="Query" :rules="[v => !!v || '']" required></v-textarea>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="query_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected queries?</div>
                 <v-divider v-if="query_mode=='delete'"></v-divider>
@@ -151,7 +151,7 @@ export default {
       // Query
       query_headers: [{ text: 'Query', value: 'query' }],
       query_items: [],
-      query_item: { query: '' },
+      query_item: '',
       query_selected: [],
       query_mode: '', // new, edit, delete
 
@@ -243,13 +243,13 @@ export default {
     },
     newQuery() {
       this.query_mode = 'new'
-      this.query_item = { query: '' }
+      this.query_item = ''
       this.queryDialogTitle = 'New Query'
       this.queryDialog = true
     },
     editQuery () {
       this.query_mode = 'edit'
-      this.query_item = { query: this.query_selected[0]['query'] }
+      this.query_item = this.query_selected[0]['query']
       this.queryDialogTitle = 'Edit Query'
       this.queryDialog = true
     },
@@ -270,33 +270,40 @@ export default {
         this.notification('Please fill the required fields', 'error')
         return
       }
-      // Check if new item already exists
-      for (var i = 0; i < this.query_items.length; ++i) {
-        if (this.query_items[i]['query'] == this.query_item.query) {
-          this.notification('Query currently exists', 'error')
-          return
-        }
+
+      // Parse Queries
+      var queries = this.parseQueries()
+
+      // Add queries into the data table
+      for (var q = 0; q < queries.length; ++q) {
+        if (queries[q]['query'] != ';') this.query_items.push(queries[q])
       }
-      // Add item in the data table
-      this.query_items.push(this.query_item)
+      
+      // Post-tasks
       this.query_selected = []
       this.queryDialog = false
       this.notification('Query added successfully', 'success')
     },
     editQueryConfirm() {
+      // Check if all fields are filled
+      if (!this.$refs.query_form.validate()) {
+        this.notification('Please fill the required fields', 'error')
+        return
+      }
+
+      // Parse Queries
+      if (this.parseQueries().length > 1) {
+        this.notification('Multiple queries detected', 'error')
+        return
+      }
+
       // Get Item Position
       for (var i = 0; i < this.query_items.length; ++i) {
         if (this.query_items[i]['query'] == this.query_selected[0]['query']) break
       }
-      // Check if edited item already exists
-      for (var j = 0; j < this.query_items.length; ++j) {
-        if (this.query_items[j]['query'] == this.query_item.query && this.query_item.query != this.query_selected[0]['query']) {
-          this.notification('Query currently exists', 'error')
-          return
-        }
-      }
+
       // Edit item in the data table
-      this.query_items.splice(i, 1, this.query_item)
+      this.query_items.splice(i, 1, {"id": this.query_items[i]['id'], "query": this.query_item})
       this.query_selected = []
       this.queryDialog = false
       this.notification('Query edited successfully', 'success')
@@ -314,6 +321,31 @@ export default {
       }
       this.notification('Selected queries removed successfully', 'success')
       this.queryDialog = false
+    },
+    parseQueries() {
+      // Build multi-queries
+      var id = (this.query_items.length == 0) ? 1: this.query_items[this.query_items.length-1]['id']+1
+      var queries = []
+      var start = 0;
+      var chars = []
+      for (var i = 0; i < this.query_item.length; ++i) {
+        if (this.query_item[i] == ';' && chars.length == 0) {
+          queries.push({"id": id, "query": this.query_item.substring(start, i+1).trim()})
+          id += 1
+          start = i+1
+        }
+        else if (this.query_item[i] == "\"") {
+          if (chars[chars.length-1] == '"') chars.pop()
+          else chars.push("\"")
+        }
+        else if (this.query_item[i] == "'") {
+          if (chars[chars.length-1] == "'") chars.pop()
+          else chars.push("'")
+        }
+      }
+      if (start < i) queries.push({"id": id, "query": this.query_item.substring(start, i).trim()})
+      // Return parsed queries
+      return queries
     },
     submitDeploy() {
       // Check if all fields are filled
