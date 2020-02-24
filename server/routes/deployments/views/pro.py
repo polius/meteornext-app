@@ -325,6 +325,14 @@ class Pro:
             if datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M') < datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
 
+        # Set Deployment Status
+        if data['scheduled'] != '':
+            data['status'] = 'SCHEDULED'
+        elif data['start_execution']:
+            data['status'] = 'QUEUED' if group['deployments_execution_concurrent'] != 0 else 'STARTING'
+        else:
+            data['status'] = 'CREATED'
+
         # Get current deployment
         deployment = self._deployments_pro.get(data['execution_id'])[0]
 
@@ -334,7 +342,7 @@ class Pro:
             if deployment['environment'] != data['environment'] or \
             deployment['code'] != data['code'] or \
             deployment['method'] != data['method'] or \
-            deployment['scheduled'] != data['scheduled']:
+            (deployment['scheduled'] != data['scheduled'] and data['scheduled'] != ''):
                 self._deployments_pro.put(data)
             return jsonify({'message': 'Deployment edited successfully', 'data': {'execution_id': data['execution_id']}}), 200
 
@@ -347,14 +355,6 @@ class Pro:
             # Check logs path permissions
             if not self.__check_logs_path():
                 return jsonify({'message': 'The local logs path has no write permissions'}), 400
-
-            # Set Deployment Status
-            if data['scheduled'] != '':
-                data['status'] = 'SCHEDULED'
-            elif data['start_execution']:
-                data['status'] = 'QUEUED' if group['deployments_execution_concurrent'] != 0 else 'STARTING'
-            else:
-                data['status'] = 'CREATED'
 
             # Create a new Pro Deployment
             data['execution_id'] = self._deployments_pro.post(data)
