@@ -40,12 +40,12 @@
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
-                <v-switch v-model="group.deployments_enable" label="Perform Deployments" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
-                <v-switch v-if="group.deployments_enable" v-model="group.deployments_basic" label="BASIC" color="primary" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
-                <v-switch v-if="group.deployments_enable" v-model="group.deployments_pro" label="PRO" color="primary" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
-                <v-switch v-if="group.deployments_enable" v-model="group.deployments_inbenta" label="INBENTA" color="primary" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-model="group.deployments_enable" label="Perform Deployments" color="info" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-if="group.deployments_enable" v-model="group.deployments_basic" label="BASIC" color="#eb974e" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-if="group.deployments_enable" v-model="group.deployments_pro" label="PRO" color="rgb(235, 95, 93)" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-if="group.deployments_enable" v-model="group.deployments_inbenta" label="INBENTA" color="#049372" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
 
-                <v-switch v-model="group.deployments_edit" label="Change Deployment Settings" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-model="group.deployments_edit" label="Change Deployment Settings" color="info" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
                   LIMITS
                 <v-tooltip right>
@@ -161,7 +161,7 @@
               <v-card-text style="padding-bottom:0px;">
                 <v-text-field :loading="loading" :disabled="loading" v-model="slack.channel_name" label="Channel Name"></v-text-field>
                 <v-text-field :loading="loading" :disabled="loading" v-model="slack.webhook_url" label="Webhook URL" style="padding-top:0px;"></v-text-field>
-                <v-switch :disabled="loading" v-model="slack.enabled" label="Enable Notifications" style="margin-top:0px;"></v-switch>
+                <v-switch :disabled="loading" v-model="slack.enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
               </v-card-text>
             </v-card>
 
@@ -224,7 +224,7 @@
                   <v-text-field ref="region_focus" v-model="region_item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-select v-model="region_item.environment" :items="environments" :rules="[v => !!v || '']" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
                   <!-- SSH -->
-                  <v-switch v-model="region_item.cross_region" label="Cross Region" style="margin-top:0px;" hide-details></v-switch>
+                  <v-switch v-model="region_item.cross_region" label="Cross Region" color="info" style="margin-top:0px;" hide-details></v-switch>
                   <div v-if="region_item.cross_region">
                     <div class="title font-weight-regular">SSH</div>
                     <v-text-field v-model="region_item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
