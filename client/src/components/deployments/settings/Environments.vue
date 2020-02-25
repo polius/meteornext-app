@@ -125,7 +125,7 @@ export default {
       const payload = JSON.stringify(this.item)
       axios.post('/deployments/environments', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           this.getEnvironments()
           this.dialog = false
         })
@@ -160,7 +160,7 @@ export default {
       const payload = JSON.stringify(this.item)
       axios.put('/deployments/environments', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
           this.items.splice(i, 1, this.item)
           this.dialog = false
@@ -181,7 +181,7 @@ export default {
       // Delete items to the DB
       axios.delete('/deployments/environments', { data: payload })
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Delete items from the data table
           while(this.selected.length > 0) {
             var s = this.selected.pop()

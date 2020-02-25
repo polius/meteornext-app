@@ -150,7 +150,7 @@
         const payload = JSON.stringify(this.license)
         axios.post('/setup/license', payload)
           .then((response) => {
-            this.notification(response.data.message, 'success')
+            this.notification(response.data.message, '#00b16a')
             this.setup_part = 'sql'
             this.buttonText = 'CHECK CONNECTION'
           })
@@ -170,7 +170,7 @@
         const payload = JSON.stringify(this.sql)
         axios.post('/setup/sql', payload)
           .then((response) => {
-            this.notification('Connection successful', 'success')
+            this.notification('Connection successful', '#00b16a')
             if (response.data.exists) this.setupDialog = true
             else this.setupDialogSubmit(true)
           })
@@ -205,7 +205,7 @@
         }
         axios.post('/setup', JSON.stringify(payload))
           .then((response) => {
-            this.notification(response.data.message, 'success')
+            this.notification(response.data.message, '#00b16a')
             this.setup_part = 'login'
             this.buttonText = 'LOGIN'
           })

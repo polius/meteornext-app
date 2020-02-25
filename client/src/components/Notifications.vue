@@ -20,7 +20,7 @@
           </template>
           <template v-slot:item.show="props">
             <v-btn icon small @click="changeSeen(props.item)">
-              <v-icon small :title="props.item.show ? 'Show in the notification bar' : 'Don\'t show in the notification bar'" :color="props.item.show ? 'success' : 'error'">fas fa-circle</v-icon>
+              <v-icon small :title="props.item.show ? 'Show in the notification bar' : 'Don\'t show in the notification bar'" :color="props.item.show ? '#00b16a' : 'error'">fas fa-circle</v-icon>
             </v-btn>
           </template>
         </v-data-table>
@@ -159,7 +159,7 @@ export default {
       this.loading = true
       axios.delete('/notifications', { data: payload })
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Delete items from the data table
           while(this.selected.length > 0) {
             var s = this.selected.pop()
@@ -199,7 +199,7 @@ export default {
       return date
     },
     getDeploymentMethodColor(item) {
-      if (item.data.method == 'VALIDATE') return 'success'
+      if (item.data.method == 'VALIDATE') return '#00b16a'
       else if (item.data.method == 'TEST') return 'orange'
       else if (item.data.method == 'DEPLOY') return 'red'
       return ''

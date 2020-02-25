@@ -171,7 +171,7 @@ export default {
       const payload = JSON.stringify(this.item);
       axios.post('/deployments/servers', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           this.getServers()
           this.dialog = false
         })
@@ -206,7 +206,7 @@ export default {
       const payload = JSON.stringify(this.item)
       axios.put('/deployments/servers', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
           this.items.splice(i, 1, this.item)
           this.dialog = false
@@ -227,7 +227,7 @@ export default {
       // Delete items to the DB
       axios.delete('/deployments/servers', { data: payload })
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Delete items from the data table
           while(this.selected.length > 0) {
             var s = this.selected.pop()
@@ -263,7 +263,7 @@ export default {
       const payload = JSON.stringify(this.item)
       axios.post('/deployments/servers/test', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))

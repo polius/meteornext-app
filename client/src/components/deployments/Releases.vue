@@ -14,7 +14,7 @@
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
         <template v-slot:item.active="props">
           <v-btn icon small @click="changeActive(props.item)">
-            <v-icon v-if="props.item.active" small title="Active" color="success">fas fa-circle</v-icon>
+            <v-icon v-if="props.item.active" small title="Active" color="#00b16a">fas fa-circle</v-icon>
             <v-icon v-else small title="Inactive" color="error">fas fa-circle</v-icon>
           </v-btn>
         </template>
@@ -142,7 +142,7 @@ export default {
       const payload = JSON.stringify({ name: this.name, active: this.active })
       axios.post('/deployments/releases', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           this.getReleases()
           this.dialog = false
         })
@@ -178,7 +178,7 @@ export default {
       const payload = JSON.stringify(item)
       axios.put('/deployments/releases', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
           this.items.splice(i, 1, item)
           this.dialog = false
@@ -199,7 +199,7 @@ export default {
       // Delete items to the DB
       axios.delete('/deployments/releases', { data: payload })
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Delete items from the data table
           while(this.selected.length > 0) {
             var s = this.selected.pop()
@@ -227,7 +227,6 @@ export default {
       const payload = JSON.stringify({ id: item.id, active: !item.active })
       axios.put('/deployments/releases/active', payload)
         .then(() => {
-          // this.notification(response.data.message, 'success')
           this.getReleases()
         })
         .catch((error) => {

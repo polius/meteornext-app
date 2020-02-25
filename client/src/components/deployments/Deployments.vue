@@ -168,7 +168,7 @@ export default {
     },
     saveName(item) {
       if (this.inline_editing_name == item.name) {
-        this.notification('Deployment edited successfully', 'success')
+        this.notification('Deployment edited successfully', '#00b16a')
         return
       }
       this.loading = true
@@ -180,7 +180,7 @@ export default {
       }
       axios.put('/deployments', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Reload Deployments Data
           this.getDeployments()
         })
@@ -194,7 +194,7 @@ export default {
     },
     saveRelease(item) {
       if (this.inline_editing_release == item.release) {
-        this.notification('Deployment edited successfully', 'success')
+        this.notification('Deployment edited successfully', '#00b16a')
         return
       }
       this.loading = true
@@ -206,7 +206,7 @@ export default {
       }
       axios.put('/deployments', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Reload Deployments Data
           this.getDeployments()
         })
@@ -246,7 +246,7 @@ export default {
       // Delete items to the DB
       axios.delete('/deployments', { data: payload })
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Reload Deployments Data
           this.getDeployments()
           this.selected = []
