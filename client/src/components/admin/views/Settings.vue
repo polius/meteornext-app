@@ -47,8 +47,7 @@
               <v-card-text style="padding-top:5px; padding-bottom:0px;">
                 <v-form ref="form" style="padding:5px 5px 0px 5px;">
                   <v-text-field :loading="loading" :disabled="loading" v-model="logs.local.path" label="Absolute Path" required :rules="[v => !!v || '', v => v.startsWith('/') || '']" hide-details></v-text-field>
-                  <v-switch :loading="loading" :disabled="loading" v-model="logs_expire" label="Expire Logs" style="margin-top:15px; padding-bottom:15px;" hide-details ></v-switch>
-                  <v-text-field v-if="logs_expire" :loading="loading" :disabled="loading" v-model="logs.local.expire" label="Log Retention Days" required :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 || '']" style="margin-top:-5px;"></v-text-field>
+                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.local.expire" label="Log Retention Days" :rules="[v => !v || (!isNaN(parseFloat(v)) && isFinite(v) && v > 0) || '']" style="margin-top:15px;"></v-text-field>
                 </v-form>
               </v-card-text>
             </v-card>
@@ -68,7 +67,7 @@
                   <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
                   <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.region_name" label="Region Name" style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
                   <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.bucket_name" label="Bucket Name" style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
-                  <v-switch :loading="loading" :disabled="loading" v-model="logs.amazon_s3.enabled" label="Upload Logs to Amazon S3" style="margin-top:0px;"></v-switch>
+                  <v-switch :loading="loading" :disabled="loading" v-model="logs.amazon_s3.enabled" label="Upload Logs to Amazon S3" color="info" style="margin-top:0px;"></v-switch>
                 </v-form>
               </v-card-text>
             </v-card>
@@ -104,7 +103,6 @@ export default {
     // Logs
     logs: { local: {}, amazon_s3: {} },
     logs_mode: 'local',
-    logs_expire: false,
 
     // Loading
     loading: true,
@@ -128,9 +126,6 @@ export default {
           this.sql = settings['sql']
           this.logs = settings['logs']
 
-          // Init Logs Expire
-          if ('expire' in this.logs.local) this.logs_expire = true
-
           // Disable Loading
           this.loading = false
         })
@@ -153,7 +148,7 @@ export default {
       // Parse local absolute path
       this.logs.local.path = (this.logs.local.path.endsWith('/')) ? this.logs.local.path.slice(0, -1) : this.logs.local.path
       // Parse local expiration
-      if (!this.logs_expire) delete this.logs.local.expire
+      if (this.logs.local.expire.length == 0) delete this.logs.local.expire
       // Parse amazon_s3 enable
       this.logs.amazon_s3.enabled = ('enabled' in this.logs.amazon_s3) ? this.logs.amazon_s3.enabled : false
       // Construct path & payload

@@ -10,7 +10,7 @@
             <v-form style="padding:0px 10px 10px 10px;">
               <v-text-field :loading="loading" :disabled="loading" v-model="channel_name" label="Channel Name"></v-text-field>
               <v-text-field :loading="loading" :disabled="loading" v-model="webhook_url" label="Webhook URL" style="padding-top:0px;"></v-text-field>
-              <v-switch :disabled="loading" v-model="enabled" label="Enable Notifications" style="margin-top:0px;"></v-switch>
+              <v-switch :disabled="loading" v-model="enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
               <v-divider style="margin-top:-5px;"></v-divider>
               <div style="margin-top:20px;">
                 <v-btn :loading="loading" color="primary" style="margin-left:0px;" @click="saveSlack()">SAVE</v-btn>
