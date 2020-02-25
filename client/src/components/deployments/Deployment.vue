@@ -17,8 +17,9 @@
         
         <div v-if="(stop_execution && deployment['status'] != 'STOPPED') || deployment['status'] == 'STOPPING'" class="subtitle-1" style="margin-left:5px;">Stopping the execution...</div>
         <div v-else-if="(start_execution && deployment['status'] == 'IN PROGRESS') || deployment['status'] == 'IN PROGRESS'" class="subtitle-1" style="margin-left:5px;">Execution in progress...</div>
+        <div v-else-if="deployment['status'] == 'QUEUED'" class="subtitle-1" style="margin-left:5px;">Queue Position: <b>{{ information_items[0]['queue'] }}</b></div>
         <div v-else-if="start_execution || deployment['status'] == 'STARTING'" class="subtitle-1" style="margin-left:5px;">Starting the execution...</div>
-        <v-progress-circular v-if="start_execution || (stop_execution && deployment['status'] != 'STOPPED') || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' ||  deployment['status'] == 'IN PROGRESS'" :size="22" indeterminate color="white" width="2" style="margin-left:20px; margin-right:10px;"></v-progress-circular>
+        <v-progress-circular v-if="start_execution || (stop_execution && deployment['status'] != 'STOPPED') || deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' ||  deployment['status'] == 'IN PROGRESS'" :size="22" indeterminate color="white" width="2" style="margin-left:20px; margin-right:10px;"></v-progress-circular>
 
         <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="rgb(0, 177, 106)" style="margin-left:5px; margin-right:15px;">SUCCESS</v-chip>
         <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="rgb(250, 130, 49)" style="margin-left:5px; margin-right:15px;" title="Some queries failed">WARNING</v-chip>
@@ -760,12 +761,12 @@
         this.deployment['scheduled'] = data['scheduled']
         this.deployment['started'] = data['started']
         this.deployment['ended'] = data['ended']
-        this.deployment['overall'] = data['overall']
         this.deployment['error'] = data['error']
         this.deployment['uri'] = data['uri']
         this.deployment['url'] = data['url']
         this.deployment['engine'] = data['engine']
         this.deployment['public'] = data['public']
+        this.deployment['overall'] = data['overall']
 
         // Parse Scheduled
         if (this.deployment['scheduled']) {
@@ -799,6 +800,12 @@
 
           // Parse Last Updated
           this.last_updated = this.deployment['progress']['updated']
+
+          // Calculate real-time overall
+          if (data['overall'] == null && this.deployment['ended'] == null) {
+            var diff = moment.utc(this.last_updated).diff(moment(this.deployment['started']))
+            this.deployment['overall'] = moment.utc(diff).format("HH:mm:ss")   
+          }
 
           // Parse Validation
           this.parseValidation()
