@@ -1,5 +1,6 @@
 import os
 import json
+import botocore
 import boto3
 import tarfile
 import shutil
@@ -96,7 +97,7 @@ class Deployments:
                 execution_results = '{}/{}'.format(logs['local']['path'], uri)
                 # Check if exists
                 if not os.path.exists(execution_results + '.js') and not os.path.exists(execution_results + '.tar.gz'):
-                    return jsonify({'title': 'Deployment Expired', 'description': 'This deployment has expired' }), 400
+                    return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists' }), 400
                 elif not os.path.exists(execution_results + '.js'):
                     tf = tarfile.open("{}.tar.gz".format(execution_results), mode="r")
                     tf.extract("./meteor.js", path=execution_results)
@@ -106,17 +107,24 @@ class Deployments:
                 return send_from_directory(logs['local']['path'], uri + '.js')
 
             elif results['engine'] == 'amazon_s3':
+                # Check Amazon S3 credentials are setup
+                if 'aws_access_key' not in logs['amazon_s3']:
+                    return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the provided Amazon S3 credentials' }), 400
                 session = boto3.Session(
                     aws_access_key_id=logs['amazon_s3']['aws_access_key'],
                     aws_secret_access_key=logs['amazon_s3']['aws_secret_access_key'],
                     region_name=logs['amazon_s3']['region_name']
                 )
-                s3 = session.resource('s3')
                 try:
+                    s3 = session.resource('s3')
                     obj = s3.meta.client.get_object(Bucket=logs['amazon_s3']['bucket_name'], Key='results/{}.js'.format(uri))
                     return jsonify(obj['Body'].read().decode('utf-8')), 200
+                except botocore.exceptions.ClientError as e:
+                    if e.response['Error']['Code'] == 'NoSuchKey':
+                        return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists in Amazon S3' }), 400
+                    return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the provided Amazon S3 credentials' }), 400
                 except Exception:
-                    return jsonify({'title': 'Deployment Expired', 'description': 'This deployment has expired' }), 400
+                    return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the provided Amazon S3 credentials' }), 400
 
         return deployments_blueprint
 
