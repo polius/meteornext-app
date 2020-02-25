@@ -13,7 +13,7 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="username" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:item.admin="props">
-          <v-icon v-if="props.item.admin" small color="success" style="margin-left:8px;">fas fa-check</v-icon>
+          <v-icon v-if="props.item.admin" small color="#00b16a" style="margin-left:8px;">fas fa-check</v-icon>
           <v-icon v-else small color="error" style="margin-left:8px;">fas fa-times</v-icon>
         </template>
         <template v-slot:item.created_at="props">
@@ -152,7 +152,7 @@ export default {
       const payload = JSON.stringify(this.item);
       axios.post('/admin/users', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Retrieve again the users list
           this.getUsers()
           this.dialog = false
@@ -195,7 +195,7 @@ export default {
       }
       axios.put('/admin/users', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
           this.items.splice(i, 1, this.item)
           this.selected[0] = this.item
@@ -219,7 +219,7 @@ export default {
       // Delete items to the DB
       axios.delete('/admin/users', { data: payload })
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Delete items from the data table
           while(this.selected.length > 0) {
             var s = this.selected.pop()

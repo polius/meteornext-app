@@ -107,7 +107,7 @@
               <tr>
                 <td v-for="item in Object.keys(validation_data[0])" :key="item">
                   <span v-if="validation_data[0][item] == 'VALIDATING'" class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{ validation_data[0][item] }}</b></span>
-                  <span v-else-if="validation_data[0][item] == 'SUCCEEDED'" class="success--text"><v-icon small color="success" style="margin-right:10px;">fas fa-check</v-icon><b>{{ validation_data[0][item] }}</b></span>
+                  <span v-else-if="validation_data[0][item] == 'SUCCEEDED'" style="color:#00b16a;"><v-icon small color="#00b16a" style="margin-right:10px;">fas fa-check</v-icon><b>{{ validation_data[0][item] }}</b></span>
                   <span v-else-if="validation_data[0][item] == 'FAILED'" class="error--text"><v-icon small color="error" style="margin-right:10px;">fas fa-times</v-icon><b>{{ validation_data[0][item] }}</b></span>
                 </td>
               </tr>
@@ -156,7 +156,7 @@
             <template v-slot:item="props">
               <tr>
                 <td v-for="item in Object.keys(execution_headers)" :key="item" :style="`width: ${100/execution_headers.length}%`">
-                  <span v-if="item in execution_progress[props.item.i]" :class="serverColor(execution_progress[props.item.i][item]['progress'])"><b>{{ execution_progress[props.item.i][item]['server'] }}</b> {{ execution_progress[props.item.i][item]['progress'] }}</span>
+                  <span v-if="item in execution_progress[props.item.i]" :style="serverColor(execution_progress[props.item.i][item]['progress'])"><b>{{ execution_progress[props.item.i][item]['server'] }}</b> {{ execution_progress[props.item.i][item]['progress'] }}</span>
                 </td>
              </tr>
             </template>
@@ -269,7 +269,7 @@
                       <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
                     <span>
-                      <b class="success--text">VALIDATE</b> Tests all server connections
+                      <b style="color:#00b16a;">VALIDATE</b> Tests all server connections
                       <br>
                       <b class="orange--text">TEST</b> A simulation is performed (only SELECTs are executed)
                       <br>
@@ -279,9 +279,9 @@
                 </div>
 
                 <v-radio-group :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" hide-details style="margin-top:10px;">
-                  <v-radio value="validate" color="success">
+                  <v-radio value="validate" color="#00b16a">
                     <template v-slot:label>
-                      <div class="success--text">VALIDATE</div>
+                      <div style="color:#00b16a;">VALIDATE</div>
                     </template>
                   </v-radio>
                   <v-radio value="test" color="orange">
@@ -987,7 +987,7 @@
         }
         axios.post(path, payload)
         .then((response) => {
-          if (response.data.message != '') this.notification(response.data.message, 'success')
+          if (response.data.message != '') this.notification(response.data.message, '#00b16a')
           this.getDeployment()
         })
         .catch((error) => {
@@ -1082,7 +1082,7 @@
           scheduled: '',
           start_execution: false
         }
-        if (this.schedule_enabled) payload['scheduled'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm")
+        if (this.schedule_enabled) payload['scheduled'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm") + ':00'
         else payload['start_execution'] = (this.information_dialog_data.start_execution === undefined) ? false : this.information_dialog_data.start_execution
 
         // Build different modes
@@ -1103,7 +1103,7 @@
         axios.put(path, payload)
         .then((response) => {
           const data = response.data.data
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Refresh user coins
           if ('coins' in data) this.$store.dispatch('coins', data['coins'])
           // Get new deployment
@@ -1166,7 +1166,7 @@
         this.information_dialog_data.queries.push({'query': this.query_dialog_item})
         this.information_dialog_query_selected = []
         this.query_dialog = false
-        this.notification('Query added successfully', 'success')
+        this.notification('Query added successfully', '#00b16a')
       },
       editQueryConfirm() {
         // Get Item Position
@@ -1184,7 +1184,7 @@
         this.information_dialog_data.queries.splice(i, 1, {'query': this.query_dialog_item})
         this.information_dialog_query_selected = []
         this.query_dialog = false
-        this.notification('Query edited successfully', 'success')
+        this.notification('Query edited successfully', '#00b16a')
       },
       deleteQueryConfirm() {
         while(this.information_dialog_query_selected.length > 0) {
@@ -1197,7 +1197,7 @@
             }
           }
         }
-        this.notification('Selected queries removed successfully', 'success')
+        this.notification('Selected queries removed successfully', '#00b16a')
         this.query_dialog = false
       },
       // -------------------------------------
@@ -1215,7 +1215,7 @@
         document.execCommand('copy')
         selection.removeAllRanges()
         document.body.removeChild(textarea)
-        this.notification('Deployment URL added to the clipboard', 'success')
+        this.notification('Deployment URL added to the clipboard', '#00b16a')
       },
       resultsShare() {
         // Build parameters
@@ -1266,8 +1266,8 @@
         else return 'fas fa-spinner'  
       },
       serverColor (progress) {
-        if (progress.startsWith('100%')) return 'success--text'
-        else return 'warning--text'
+        if (progress.startsWith('100%')) return 'color: #00b16a;'
+        else return 'color: rgb(250, 130, 49);'
       },
       dateFormat(date) {
         if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")

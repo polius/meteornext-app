@@ -99,15 +99,15 @@
               <v-divider></v-divider>
               <v-data-table v-model="region_selected" :headers="region_headers" :items="region_items" :search="region_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" :hide-default-header="region_items.length == 0" hide-default-footer show-select class="elevation-1">
                 <template v-slot:item.cross_region="props">
-                  <v-icon v-if="props.item.cross_region" small color="success" style="margin-left:28px">fas fa-check</v-icon>
+                  <v-icon v-if="props.item.cross_region" small color="#00b16a" style="margin-left:28px">fas fa-check</v-icon>
                   <v-icon v-else small color="error" style="margin-left:28px">fas fa-times</v-icon>
                 </template>
                 <template v-slot:item.password="props">
-                  <v-icon v-if="props.item.cross_region && (props.item.password || '').length != 0" small color="success" style="margin-left:20px">fas fa-check</v-icon>
+                  <v-icon v-if="props.item.cross_region && (props.item.password || '').length != 0" small color="#00b16a" style="margin-left:20px">fas fa-check</v-icon>
                   <v-icon v-else-if="props.item.cross_region" small color="error" style="margin-left:20px">fas fa-times</v-icon>
                 </template>
                 <template v-slot:item.key="props">
-                  <v-icon v-if="props.item.cross_region && (props.item.key || '').length != 0" small color="success" style="margin-left:20px">fas fa-check</v-icon>
+                  <v-icon v-if="props.item.cross_region && (props.item.key || '').length != 0" small color="#00b16a" style="margin-left:20px">fas fa-check</v-icon>
                   <v-icon v-else-if="props.item.cross_region" small color="error" style="margin-left:20px">fas fa-times</v-icon>
                 </template>
                 <template v-slot:no-results>
@@ -497,7 +497,7 @@ export default {
       }
       axios.post('/admin/groups', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Add item in the data table
           this.$router.push({ name: 'admin.groups' })
         })
@@ -527,7 +527,7 @@ export default {
       }
       axios.put('/admin/groups', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Add item in the data table
           this.$router.push({ name: 'admin.groups' })
         })

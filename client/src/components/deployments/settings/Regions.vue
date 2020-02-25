@@ -13,15 +13,15 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:item.ssh_tunnel="props">
-          <v-icon v-if="props.item.ssh_tunnel" small color="success" style="margin-left:20px">fas fa-circle</v-icon>
+          <v-icon v-if="props.item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
           <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>
         </template>
         <template v-slot:item.password="props">
-          <v-icon v-if="props.item.ssh_tunnel && (props.item.password || '').length != 0" small color="success" style="margin-left:20px">fas fa-circle</v-icon>
+          <v-icon v-if="props.item.ssh_tunnel && (props.item.password || '').length != 0" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
           <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:20px">fas fa-circle</v-icon>
         </template>
         <template v-slot:item.key="props">
-          <v-icon v-if="props.item.ssh_tunnel && (props.item.key || '').length != 0" small color="success" style="margin-left:22px">fas fa-circle</v-icon>
+          <v-icon v-if="props.item.ssh_tunnel && (props.item.key || '').length != 0" small color="#00b16a" style="margin-left:22px">fas fa-circle</v-icon>
           <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:22px">fas fa-circle</v-icon>
         </template>
       </v-data-table>
@@ -165,7 +165,7 @@ export default {
       const payload = JSON.stringify(this.item);
       axios.post('/deployments/regions', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           this.getRegions()
           this.dialog = false
         })
@@ -201,7 +201,7 @@ export default {
       const payload = JSON.stringify(this.item)
       axios.put('/deployments/regions', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
           this.items.splice(i, 1, this.item)
           this.dialog = false
@@ -223,7 +223,7 @@ export default {
       this.notification('Deleting Region...', 'info', true)
       axios.delete('/deployments/regions', { data: payload })
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Delete items from the data table
           while(this.selected.length > 0) {
             var s = this.selected.pop()
@@ -259,7 +259,7 @@ export default {
       const payload = JSON.stringify(this.item)
       axios.post('/deployments/regions/test', payload)
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))

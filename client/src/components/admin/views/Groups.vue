@@ -112,7 +112,7 @@ export default {
       // Delete items to the DB
       axios.delete('/admin/groups', { data: payload })
         .then((response) => {
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Delete items from the data table
           while(this.selected.length > 0) {
             var s = this.selected.pop()

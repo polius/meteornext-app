@@ -30,7 +30,7 @@
                   <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
                 </template>
                 <span>
-                  <b class="success--text">VALIDATE</b> Tests all server connections
+                  <b style="color:#00b16a;">VALIDATE</b> Tests all server connections
                   <br>
                   <b class="orange--text">TEST</b> A simulation is performed (only SELECTs are executed)
                   <br>
@@ -40,9 +40,9 @@
             </div>
 
             <v-radio-group v-model="method" style="margin-top:10px;">
-              <v-radio value="validate" color="success">
+              <v-radio value="validate" color="#00b16a">
                 <template v-slot:label>
-                  <div class="success--text">VALIDATE</div>
+                  <div style="color:#00b16a;">VALIDATE</div>
                 </template>
               </v-radio>
               <v-radio value="test" color="orange">
@@ -321,14 +321,14 @@ export default {
         scheduled: '',
         start_execution: false
       }
-      if (this.schedule_enabled) payload['scheduled'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm")
+      if (this.schedule_enabled) payload['scheduled'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm") + ':00'
       else payload['start_execution'] = this.start_execution
 
       // Add deployment to the DB
       axios.post('/deployments/pro', payload)
         .then((response) => {
           const data = response.data.data
-          this.notification(response.data.message, 'success')
+          this.notification(response.data.message, '#00b16a')
           // Refresh user coins
           this.$store.dispatch('coins', data['coins'])
           // Redirect page
