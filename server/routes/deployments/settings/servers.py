@@ -67,10 +67,10 @@ class Servers:
             server_json = request.get_json()
 
             # Get Server Region
-            r = self._regions.get_by_server(user['group_id'], server_json['region'])
+            r = server_json['region'] if type(server_json['region']) is dict else self._regions.get_by_server(user['group_id'], server_json['region'])[0]
 
             # Init Utils Class
-            connection = r[0] if r[0]['ssh_tunnel'] else None
+            connection = r if r['ssh_tunnel'] else None
             u = utils.Utils(connection)
 
             # Check SQL Connection
