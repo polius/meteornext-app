@@ -61,9 +61,9 @@
                   </span>
                 </v-tooltip>
                 </div>
-                <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 && v < 100 || '']" required style="margin-top:25px; padding-top:0px;"></v-text-field>
-                <v-text-field v-model="group.deployments_execution_limit" label="Execution Limit" :rules="[v => !isNaN(parseFloat(v)) && isFinite(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
-                <v-text-field v-model="group.deployments_execution_concurrent" label="Concurrent Executions" :rules="[v => !isNaN(parseFloat(v)) && isFinite(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 && v <= 1000 || '']" required style="margin-top:25px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_limit" label="Execution Limit" :rules="[v => !v || !isNaN(parseFloat(v)) && isFinite(v) && v > 0 || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_concurrent" label="Concurrent Executions" :rules="[v => !v || !isNaN(parseFloat(v)) && isFinite(v) && v > 0 || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -343,8 +343,8 @@ export default {
       'deployments_inbenta': false,
       'deployments_edit': false,
       'deployments_execution_threads': 10,
-      'deployments_execution_limit': 0,
-      'deployments_execution_concurrent': 0
+      'deployments_execution_limit': null,
+      'deployments_execution_concurrent': null
     },
     toolbar_title: '',
     form_valid: false,
@@ -516,6 +516,12 @@ export default {
         this.loading = false
         return
       }
+      // Parse group 'deployments_execution_limit'
+      if (this.group.deployments_execution_limit) parseInt(this.group.deployments_execution_limit)
+      else this.group.deployments_execution_limit = null
+      // Parse group 'deployments_execution_concurrent'
+      if (this.group.deployments_execution_concurrent) parseInt(this.group.deployments_execution_concurrent)
+      else this.group.deployments_execution_concurrent = null
       // Edit group to the DB
       const payload = {
         group: JSON.stringify(this.group),

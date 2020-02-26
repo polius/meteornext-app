@@ -148,7 +148,8 @@ export default {
       // Parse local absolute path
       this.logs.local.path = (this.logs.local.path.endsWith('/')) ? this.logs.local.path.slice(0, -1) : this.logs.local.path
       // Parse local expiration
-      if (this.logs.local.expire.length == 0) delete this.logs.local.expire
+      if (this.logs.local.expire) this.logs.local.expire = parseInt(this.logs.local.expire)
+      else delete this.logs.local.expire
       // Parse amazon_s3 enable
       this.logs.amazon_s3.enabled = ('enabled' in this.logs.amazon_s3) ? this.logs.amazon_s3.enabled : false
       // Construct path & payload
