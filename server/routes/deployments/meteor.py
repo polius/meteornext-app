@@ -259,7 +259,7 @@ class query_execution:
         execution_user = deployment['user']
         execution_path = "{}/{}".format(self._logs['local']['path'], self._uuid)
         execution_threads = deployment['execution_threads']
-        execution_limit = ' --execution_limit "{}"'.format(deployment['execution_limit']) if deployment['execution_limit'] > 0 else ''
+        execution_limit = ' --execution_limit "{}"'.format(deployment['execution_limit']) if deployment['execution_limit'] else ''
 
         # Build Meteor Command
         command = '{} --environment "{}" --{} --execution_id "{}" --execution_mode "{}" --execution_user "{}" --execution_path "{}" --execution_threads "{}"{}'.format(meteor_path, environment, execution_method, execution_id, execution_mode, execution_user, execution_path, execution_threads, execution_limit)

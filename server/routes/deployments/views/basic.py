@@ -252,7 +252,7 @@ class Basic:
             if datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
         elif data['start_execution']:
-            data['status'] = 'QUEUED' if group['deployments_execution_concurrent'] != 0 else 'STARTING'
+            data['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
         else:
             data['status'] = 'CREATED'
         data['id'] = self._deployments.post(user['id'], data)
@@ -264,7 +264,7 @@ class Basic:
         # Build Response Data
         response = {'execution_id': data['execution_id'], 'coins': user['coins'] - group['coins_execution'] }
 
-        if data['start_execution'] and group['deployments_execution_concurrent'] == 0:
+        if data['start_execution'] and not group['deployments_execution_concurrent']:
             # Get Meteor Additional Parameters
             data['group_id'] = user['group_id']
             data['execution_threads'] = group['deployments_execution_threads']
@@ -319,7 +319,7 @@ class Basic:
             if data['scheduled'] != '':
                 data['status'] = 'SCHEDULED'
             elif data['start_execution']:
-                data['status'] = 'QUEUED' if group['deployments_execution_concurrent'] != 0 else 'STARTING'
+                data['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
             else:
                 data['status'] = 'CREATED'
 
@@ -336,7 +336,7 @@ class Basic:
             # Build Response Data
             response = {'execution_id': data['execution_id'], 'coins': coins }
 
-            if data['start_execution'] and group['deployments_execution_concurrent'] == 0:
+            if data['start_execution'] and not group['deployments_execution_concurrent']:
                 # Get Meteor Additional Parameters
                 data['group_id'] = user['group_id']
                 data['execution_threads'] = group['deployments_execution_threads']
@@ -380,11 +380,11 @@ class Basic:
         deployment['user'] = user['username']
 
         # Update Execution Status
-        status = 'STARTING' if group['deployments_execution_concurrent'] == 0 else 'QUEUED'
+        status = 'STARTING' if not group['deployments_execution_concurrent'] else 'QUEUED'
         self._deployments_basic.updateStatus(deployment['execution_id'], status)
 
         # Start Meteor Execution
-        if group['deployments_execution_concurrent'] == 0:
+        if not group['deployments_execution_concurrent']:
             self._meteor.execute(deployment)
 
         # Build Response Data
