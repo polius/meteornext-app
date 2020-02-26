@@ -337,16 +337,17 @@
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
             <v-layout wrap>
-              <v-flex xs12 v-if="query_dialog_mode!='delete'">
-                <v-form ref="query_form" style="margin-top:15px; margin-bottom:20px;">
+              <v-flex xs12>
+                <v-form ref="query_form" v-if="query_dialog_mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
                   <v-textarea ref="field" rows="1" filled auto-grow hide-details v-model="query_dialog_item" label="Query" :rules="[v => !!v || '']" required></v-textarea>
                 </v-form>
+                <div style="padding-top:10px; padding-bottom:10px" v-if="query_dialog_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected queries?</div>
+                <v-divider v-if="query_dialog_mode=='delete'"></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn color="#00b16a" @click="queryActionConfirm()">Confirm</v-btn>
+                  <v-btn color="error" @click="query_dialog=false" style="margin-left:10px">Cancel</v-btn>
+                </div>
               </v-flex>
-              <v-flex xs12 style="padding-bottom:10px" v-if="query_dialog_mode=='delete'">
-                <div class="subtitle-1">Are you sure you want to delete the selected queries?</div>
-              </v-flex>
-              <v-btn color="#00b16a" @click="queryActionConfirm()">Confirm</v-btn>
-              <v-btn color="error" @click="query_dialog=false" style="margin-left:10px">Cancel</v-btn>
             </v-layout>
           </v-container>
         </v-card-text>
