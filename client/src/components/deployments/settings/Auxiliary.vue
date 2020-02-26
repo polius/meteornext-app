@@ -36,7 +36,7 @@
                   <div class="title font-weight-regular">SQL</div>
                   <v-select v-model="item.sql_engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
                   <v-text-field v-model="item.sql_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;" append-icon="cloud"></v-text-field>
-                  <v-text-field v-model="item.sql_port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                  <v-text-field v-model="item.sql_port" :rules="[v => !v && v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                   <v-text-field v-model="item.sql_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
                   <v-text-field v-model="item.sql_password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
                   <!-- SSH -->
@@ -44,7 +44,7 @@
                   <div v-if="item.ssh_tunnel" style="margin-top:15px;">
                     <div class="title font-weight-regular">SSH</div>
                     <v-text-field v-model="item.ssh_hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
-                    <v-text-field v-model="item.ssh_port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                    <v-text-field v-model="item.ssh_port" :rules="[v => !v && v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                     <v-text-field v-model="item.ssh_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
                     <v-text-field v-model="item.ssh_password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
                     <v-textarea v-model="item.ssh_key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>

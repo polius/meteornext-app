@@ -34,7 +34,7 @@
                   <div class="title font-weight-regular">SQL</div>
                   <v-select v-model="item.engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
                   <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;" append-icon="cloud"></v-text-field>
-                  <v-text-field v-model="item.port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" required style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                  <v-text-field v-model="item.port" :rules="[v => !v && v == parseInt(v) || '']" label="Port" required style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                   <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;" append-icon="person"></v-text-field>
                   <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
                 </v-form>
