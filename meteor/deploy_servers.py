@@ -56,10 +56,10 @@ class deploy_servers:
             for frame in reversed(inner_frames):
                 if frame.filename.endswith('query_execution.py'):
                     found = True
-                    current_thread.critical = "{} (line {})".format(str(e).capitalize(), frame.lineno)
+                    current_thread.critical.append("{} (line {})".format(str(e).capitalize(), frame.lineno))
                     break
             if not found:
-                current_thread.critical = str(e)
+                current_thread.critical.append(str(e))
 
         finally:
             query_instance.close_sql_connection()
@@ -94,7 +94,7 @@ class deploy_servers:
                     t = threading.Thread(target=self.__execute_main_databases, args=(server,))
                     t.alive = current_thread.alive
                     t.error = False
-                    t.critical = None
+                    t.critical = []
                     t.auxiliary = current_thread.auxiliary
                     t.start()
                     threads.append(t)
@@ -115,10 +115,11 @@ class deploy_servers:
                 # Check critical errors
                 errors = False
                 for t in threads:
-                    if t.critical is not None:
+                    if len(t.critical) > 0:
                         errors = True
-                        if t.critical not in current_thread.critical:
-                            current_thread.critical.append(t.critical)
+                        for i in t.critical:
+                            if i not in current_thread.critical:
+                                current_thread.critical.append(i)
 
                 # Check errors
                 current_thread.error = any(t.error for t in threads)
@@ -187,10 +188,10 @@ class deploy_servers:
                     for frame in reversed(inner_frames):
                         if frame.filename.endswith('query_execution.py'):
                             found = True
-                            current_thread.critical = "{} (line {})".format(str(e).capitalize(), frame.lineno)
+                            current_thread.critical.append("{} (line {})".format(str(e).capitalize(), frame.lineno))
                             break
                     if not found:
-                        current_thread.critical = str(e)
+                        current_thread.critical.append(str(e))
 
         # Close SQL Connection
         query_instance.close_sql_connection()
@@ -250,10 +251,10 @@ class deploy_servers:
             for frame in reversed(inner_frames):
                 if frame.filename.endswith('query_execution.py'):
                     found = True
-                    current_thread.critical = "{} (line {})".format(str(e).capitalize(), frame.lineno)
+                    current_thread.critical.append("{} (line {})".format(str(e).capitalize(), frame.lineno))
                     break
             if not found:
-                current_thread.critical = str(e)
+                current_thread.critical.append(str(e))
 
         finally:
             query_instance.close_sql_connection()

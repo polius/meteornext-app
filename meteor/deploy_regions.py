@@ -34,6 +34,10 @@ class deploy_regions:
             if current_thread.alive:
                 deploy.execute_before()
 
+            # Stop Execution if the 'before' method ended with a critical error
+            if len(current_thread.critical) > 0:
+                return
+
             # Start Server Deploy in Parallel
             threads = []
             try:
