@@ -16,9 +16,9 @@
           
             <!-- COINS -->
             <div class="title font-weight-regular white--text" style="margin-bottom:5px;">COINS</div>
-            <v-text-field v-model="group.coins_day" label="Coins per day" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v >= 0 || '']" required></v-text-field>
-            <v-text-field v-model="group.coins_max" label="Maximum coins" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
-            <v-text-field v-model="group.coins_execution" label="Coins per execution" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+            <v-text-field v-model="group.coins_day" label="Coins per day" :rules="[v => !v && v == parseInt(v) && v >= 0 || '']" required></v-text-field>
+            <v-text-field v-model="group.coins_max" label="Maximum coins" :rules="[v => !v && v == parseInt(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+            <v-text-field v-model="group.coins_execution" label="Coins per execution" :rules="[v => !v && v == parseInt(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
 
             <!-- DEPLOYMENTS -->
             <div>
@@ -61,9 +61,9 @@
                   </span>
                 </v-tooltip>
                 </div>
-                <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => !!v || '', v => !isNaN(parseFloat(v)) && isFinite(v) && v > 0 && v <= 1000 || '']" required style="margin-top:25px; padding-top:0px;"></v-text-field>
-                <v-text-field v-model="group.deployments_execution_limit" label="Execution Limit" :rules="[v => !v || !isNaN(parseFloat(v)) && isFinite(v) && v > 0 || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
-                <v-text-field v-model="group.deployments_execution_concurrent" label="Concurrent Executions" :rules="[v => !v || !isNaN(parseFloat(v)) && isFinite(v) && v > 0 || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => !v && v == parseInt(v) && v > 0 || '']" required style="margin-top:25px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_limit" label="Execution Limit" :rules="[v => !v && v == parseInt(v) && v > 0 || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_concurrent" label="Concurrent Executions" :rules="[v => !v && v == parseInt(v) && v > 0 || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -227,7 +227,7 @@
                   <div v-if="region_item.ssh_tunnel" style="margin-top:15px;">
                     <div class="title font-weight-regular">SSH</div>
                     <v-text-field v-model="region_item.hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
-                    <v-text-field v-model="region_item.port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                    <v-text-field v-model="region_item.port" :rules="[v => !v && v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                     <v-text-field v-model="region_item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
                     <v-text-field v-model="region_item.password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
                     <v-textarea v-model="region_item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
@@ -270,7 +270,7 @@
                   <div class="title font-weight-regular">SQL</div>
                   <v-select v-model="server_item.engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
                   <v-text-field v-model="server_item.hostname" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;" append-icon="cloud"></v-text-field>
-                  <v-text-field v-model="server_item.port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" required style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                  <v-text-field v-model="server_item.port" :rules="[v => !v && v == parseInt(v) || '']" label="Port" required style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                   <v-text-field v-model="server_item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;" append-icon="person"></v-text-field>
                   <v-text-field v-model="server_item.password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
                 </v-form>
@@ -309,7 +309,7 @@
                   <div class="title font-weight-regular">SQL</div>
                   <v-select v-model="auxiliary_item.sql_engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
                   <v-text-field v-model="auxiliary_item.sql_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;" append-icon="cloud"></v-text-field>
-                  <v-text-field v-model="auxiliary_item.sql_port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                  <v-text-field v-model="auxiliary_item.sql_port" :rules="[v => !v && v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                   <v-text-field v-model="auxiliary_item.sql_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
                   <v-text-field v-model="auxiliary_item.sql_password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
                   <!-- SSH -->
@@ -317,7 +317,7 @@
                   <div v-if="auxiliary_item.ssh_tunnel" style="margin-top:15px;">
                     <div class="title font-weight-regular">SSH</div>
                     <v-text-field v-model="auxiliary_item.ssh_hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
-                    <v-text-field v-model="auxiliary_item.ssh_port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                    <v-text-field v-model="auxiliary_item.ssh_port" :rules="[v => !v && v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                     <v-text-field v-model="auxiliary_item.ssh_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
                     <v-text-field v-model="auxiliary_item.ssh_password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
                     <v-textarea v-model="auxiliary_item.ssh_key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
@@ -510,6 +510,9 @@ export default {
         this.loading = false
         return
       }
+      // Parse nullable values
+      if (!this.group.deployments_execution_limit) this.group.deployments_execution_limit = null
+      if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
       // Add group to the DB
       const payload = {
         group: JSON.stringify(this.group),
@@ -540,12 +543,9 @@ export default {
         this.loading = false
         return
       }
-      // Parse group 'deployments_execution_limit'
-      if (this.group.deployments_execution_limit) parseInt(this.group.deployments_execution_limit)
-      else this.group.deployments_execution_limit = null
-      // Parse group 'deployments_execution_concurrent'
-      if (this.group.deployments_execution_concurrent) parseInt(this.group.deployments_execution_concurrent)
-      else this.group.deployments_execution_concurrent = null
+      // Parse nullable values
+      if (!this.group.deployments_execution_limit) this.group.deployments_execution_limit = null
+      if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
       // Edit group to the DB
       const payload = {
         group: JSON.stringify(this.group),
