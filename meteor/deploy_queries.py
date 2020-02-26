@@ -75,14 +75,14 @@ class deploy_queries:
             if auxiliary['auxiliary_connection'] not in self._aux:
                 # Check if the auxiliary connection exists
                 if auxiliary['auxiliary_connection'] not in self._credentials['auxiliary_connections']:
-                    raise Exception("- Auxiliary Connection [{}]: This connection name does not exist".format(auxiliary['auxiliary_connection']))
+                    raise Exception("The auxiliary connection '{}' does not exist".format(auxiliary['auxiliary_connection']))
                 # Start connecting to the auxiliary connection
                 try:
                     aux = self._credentials['auxiliary_connections'][auxiliary['auxiliary_connection']]
                     conn = connector(aux)
                     conn.start()
                 except Exception as e:
-                    raise Exception("- Auxiliary Connection [{}]: {}".format(auxiliary['auxiliary_connection'], e.args[1]))
+                    raise Exception("Auxiliary Connection [{}]: {}".format(auxiliary['auxiliary_connection'], e.args[1]))
 
                 self._aux.append({auxiliary['auxiliary_connection']: conn})
             else:
