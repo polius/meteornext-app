@@ -141,7 +141,7 @@ class Cron:
                     FROM deployments_inbenta
                     WHERE DATE_ADD(DATE(created), INTERVAL {0} DAY) <= CURRENT_DATE
                     AND expired = 0
-                """.format(int(setting['local']['expire']))
+                """.format(setting['local']['expire'])
                 expired = self._sql.execute(query)
 
                 # Expire deployments
