@@ -124,7 +124,7 @@ class Regions:
         # Check inconsistencies
         for region in data:
             if self._servers.exist_by_region(group_id, region):
-                return jsonify({'message': "This region has attached servers"}), 400
+                return jsonify({'message': "The selected regions have servers created"}), 400
 
         for region in data:
             self._regions.delete(group_id, region)

@@ -71,7 +71,7 @@ class Environments:
         # Check inconsistencies
         for environment in data:
             if self._regions.exist_by_environment(group_id, environment):
-                return jsonify({'message': "The environment '" + environment['name'] + "' has attached regions"}), 400
+                return jsonify({'message': "The selected environments have regions created"}), 400
 
         for environment in data:
             self._environments.delete(group_id, environment)
