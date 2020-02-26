@@ -113,7 +113,7 @@ class Regions:
             SELECT EXISTS ( 
                 SELECT * 
                 FROM regions r
-                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
+                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.id = %s
             ) AS exist
         """
-        return self._sql.execute(query, (group_id, environment['name']))[0]['exist'] == 1
+        return self._sql.execute(query, (group_id, environment))[0]['exist'] == 1

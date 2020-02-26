@@ -16,7 +16,7 @@ class Environments:
         self._sql.execute("UPDATE environments SET name = %s, updated_by = %s, updated_at = %s WHERE id = %s AND group_id = %s", (environment['name'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), environment['id'], group_id))
 
     def delete(self, group_id, environment):
-        self._sql.execute("DELETE FROM environments WHERE id = %s AND group_id = %s", (environment['id'], group_id))
+        self._sql.execute("DELETE FROM environments WHERE id = %s AND group_id = %s", (environment, group_id))
 
     def remove(self, group_id):
         self._sql.execute("DELETE FROM environments WHERE group_id = %s", (group_id))
