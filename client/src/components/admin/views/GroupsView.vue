@@ -98,22 +98,17 @@
               </v-toolbar>
               <v-divider></v-divider>
               <v-data-table v-model="region_selected" :headers="region_headers" :items="region_items" :search="region_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" :hide-default-header="region_items.length == 0" hide-default-footer show-select class="elevation-1">
-                <template v-slot:item.cross_region="props">
-                  <v-icon v-if="props.item.cross_region" small color="#00b16a" style="margin-left:28px">fas fa-check</v-icon>
-                  <v-icon v-else small color="error" style="margin-left:28px">fas fa-times</v-icon>
+                <template v-slot:item.ssh_tunnel="props">
+                  <v-icon v-if="props.item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
+                  <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>
                 </template>
                 <template v-slot:item.password="props">
-                  <v-icon v-if="props.item.cross_region && (props.item.password || '').length != 0" small color="#00b16a" style="margin-left:20px">fas fa-check</v-icon>
-                  <v-icon v-else-if="props.item.cross_region" small color="error" style="margin-left:20px">fas fa-times</v-icon>
+                  <v-icon v-if="props.item.ssh_tunnel && (props.item.password || '').length != 0" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
+                  <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:20px">fas fa-circle</v-icon>
                 </template>
                 <template v-slot:item.key="props">
-                  <v-icon v-if="props.item.cross_region && (props.item.key || '').length != 0" small color="#00b16a" style="margin-left:20px">fas fa-check</v-icon>
-                  <v-icon v-else-if="props.item.cross_region" small color="error" style="margin-left:20px">fas fa-times</v-icon>
-                </template>
-                <template v-slot:no-results>
-                  <v-alert :value="true" color="error" icon="warning" style="margin-top:15px;">
-                    Your search for "{{ search }}" found no results.
-                  </v-alert>
+                  <v-icon v-if="props.item.ssh_tunnel && (props.item.key || '').length != 0" small color="#00b16a" style="margin-left:22px">fas fa-circle</v-icon>
+                  <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:22px">fas fa-circle</v-icon>
                 </template>
               </v-data-table>
             </v-card>
@@ -149,6 +144,10 @@
               </v-toolbar>
               <v-divider></v-divider>
               <v-data-table v-model="auxiliary_selected" :headers="auxiliary_headers" :items="auxiliary_items" :search="auxiliary_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" :hide-default-header="auxiliary_items.length == 0" hide-default-footer show-select class="elevation-1">
+                <template v-slot:item.ssh_tunnel="props">
+                  <v-icon v-if="props.item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
+                  <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>
+                </template>
               </v-data-table>
             </v-card>
 
@@ -159,7 +158,7 @@
               </v-toolbar>
               <v-divider></v-divider>
               <v-card-text style="padding-bottom:0px;">
-                <v-text-field :loading="loading" :disabled="loading" v-model="slack.channel_name" label="Channel Name"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="slack.channel_name" label="Channel Name" style="padding-top:5px;"></v-text-field>
                 <v-text-field :loading="loading" :disabled="loading" v-model="slack.webhook_url" label="Webhook URL" style="padding-top:0px;"></v-text-field>
                 <v-switch :disabled="loading" v-model="slack.enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
               </v-card-text>
@@ -190,12 +189,12 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="environment_form" style="margin-top:15px; margin-bottom:20px;" v-model="environment_dialog_valid">
-                  <v-text-field ref="environment_focus" v-if="environment_mode!='delete'" v-on:keydown.enter.prevent="submitEnvironment()" v-model="environment_item.name" :rules="[v => !!v || '']" label="Environment Name" required></v-text-field>
+                  <v-text-field ref="environment_focus" v-if="environment_mode!='delete'" v-on:keydown.enter.prevent="submitEnvironment()" v-model="environment_item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <div style="padding-bottom:10px" v-if="environment_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected environments?</div>
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">Confirm</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="environment_dialog=false" style="margin-left:10px">Cancel</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="environment_dialog=false" style="margin-left:5px">Cancel</v-btn>
                   </div>
                 </v-form>
               </v-flex>
@@ -222,22 +221,24 @@
                   <!-- METADATA -->
                   <div class="title font-weight-regular">Metadata</div>
                   <v-text-field ref="region_focus" v-model="region_item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <v-select v-model="region_item.environment" :items="environments" :rules="[v => !!v || '']" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
+                  <v-select v-model="region_item.environment" :rules="[v => !!v || '']" :items="environments" label="Environment" required style="margin-top:0px; padding-top:0px;"></v-select>
                   <!-- SSH -->
-                  <v-switch v-model="region_item.cross_region" label="Cross Region" color="info" style="margin-top:0px;" hide-details></v-switch>
-                  <div v-if="region_item.cross_region">
+                  <v-switch v-model="region_item.ssh_tunnel" label="SSH Tunnel" color="info" hide-details style="margin-top:0px;"></v-switch>
+                  <div v-if="region_item.ssh_tunnel" style="margin-top:15px;">
                     <div class="title font-weight-regular">SSH</div>
-                    <v-text-field v-model="region_item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
-                    <v-text-field v-model="region_item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="region_item.password" label="Password" style="padding-top:0px;"></v-text-field>
-                    <v-textarea v-model="region_item.key" label="Private Key" style="padding-top:0px;"></v-textarea>
+                    <v-text-field v-model="region_item.hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
+                    <v-text-field v-model="region_item.port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                    <v-text-field v-model="region_item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
+                    <v-text-field v-model="region_item.password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
+                    <v-textarea v-model="region_item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
                   </div>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="region_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitRegion()">Confirm</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="region_dialog=false" style="margin-left:10px">Cancel</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="submitRegion()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="region_dialog=false" style="margin-left:5px">CANCEL</v-btn>
+                  <v-btn v-if="region_item.ssh_tunnel && region_mode != 'delete'" :loading="loading" color="info" @click="testRegionConnection()" style="float:right;">Test Connection</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -263,19 +264,22 @@
                   <!-- METADATA -->
                   <div class="title font-weight-regular">Metadata</div>
                   <v-text-field ref="server_focus" v-model="server_item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <v-select v-model="server_item.environment" :items="environments" :rules="[v => !!v || '']" label="Environment" v-on:change="refreshRegions()" required style="margin-top:0px; padding-top:0px;"></v-select>
-                  <v-select v-model="server_item.region" :items="regions" :rules="[v => !!v || '']" label="Region" required style="margin-top:0px; padding-top:0px;"></v-select>
+                  <v-select v-model="server_item.environment" :rules="[v => !!v || '']" :items="environments" label="Environment" v-on:change="refreshRegions()" required style="margin-top:0px; padding-top:0px;"></v-select>
+                  <v-select v-model="server_item.region" :disabled="server_item.environment == ''" :rules="[v => !!v || '']" :items="regions" label="Region" required style="margin-top:0px; padding-top:0px;"></v-select>
                   <!-- SQL -->
-                  <div class="title font-weight-regular" style="padding-top:10px;">SQL</div>
-                  <v-text-field v-model="server_item.hostname" :rules="[v => !!v || '']" label="Hostname" required></v-text-field>
-                  <v-text-field v-model="server_item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" required></v-text-field>
-                  <v-text-field v-model="server_item.password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" required hide-details></v-text-field>
+                  <div class="title font-weight-regular">SQL</div>
+                  <v-select v-model="server_item.engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
+                  <v-text-field v-model="server_item.hostname" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;" append-icon="cloud"></v-text-field>
+                  <v-text-field v-model="server_item.port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" required style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                  <v-text-field v-model="server_item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;" append-icon="person"></v-text-field>
+                  <v-text-field v-model="server_item.password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="server_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected servers?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitServer()">Confirm</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="server_dialog=false" style="margin-left:10px">Cancel</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="submitServer()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="server_dialog=false" style="margin-left:5px">CANCEL</v-btn>
+                  <v-btn v-if="server_mode != 'delete'" :loading="loading" color="info" @click="testServerConnection()" style="float:right;">Test Connection</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -302,16 +306,29 @@
                   <div class="title font-weight-regular">Metadata</div>
                   <v-text-field ref="auxiliary_focus" v-model="auxiliary_item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <!-- SQL -->
-                  <div class="title font-weight-regular" style="padding-top:10px;">SQL</div>
-                  <v-text-field v-model="auxiliary_item.hostname" :rules="[v => !!v || '']" label="Hostname"></v-text-field>
-                  <v-text-field v-model="auxiliary_item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="auxiliary_item.password" :rules="[v => !!v || '']" label="Password" style="padding-top:0px;" hide-details></v-text-field>
+                  <div class="title font-weight-regular">SQL</div>
+                  <v-select v-model="auxiliary_item.sql_engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
+                  <v-text-field v-model="auxiliary_item.sql_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;" append-icon="cloud"></v-text-field>
+                  <v-text-field v-model="auxiliary_item.sql_port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                  <v-text-field v-model="auxiliary_item.sql_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
+                  <v-text-field v-model="auxiliary_item.sql_password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
+                  <!-- SSH -->
+                  <v-switch v-model="auxiliary_item.ssh_tunnel" label="SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
+                  <div v-if="auxiliary_item.ssh_tunnel" style="margin-top:15px;">
+                    <div class="title font-weight-regular">SSH</div>
+                    <v-text-field v-model="auxiliary_item.ssh_hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
+                    <v-text-field v-model="auxiliary_item.ssh_port" :rules="[v => !!v && !isNaN(parseFloat(v)) && isFinite(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                    <v-text-field v-model="auxiliary_item.ssh_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
+                    <v-text-field v-model="auxiliary_item.ssh_password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
+                    <v-textarea v-model="auxiliary_item.ssh_key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
+                  </div>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="auxiliary_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected auxiliary connections?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitAuxiliary()">Confirm</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="auxiliary_dialog=false" style="margin-left:10px">Cancel</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="submitAuxiliary()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="auxiliary_dialog=false" style="margin-left:5px">CANCEL</v-btn>
+                  <v-btn v-if="auxiliary_mode != 'delete'" :loading="loading" color="info" @click="testAuxiliaryConnection()" style="float:right;">Test Connection</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -349,6 +366,7 @@ export default {
     toolbar_title: '',
     form_valid: false,
     loading: false,
+    engines_items: ['MySQL', 'PostgreSQL'],
 
     // +------+
     // | TABS |
@@ -375,8 +393,9 @@ export default {
     region_headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Environment', align: 'left', value: 'environment' },
-      { text: 'Cross Region', align: 'left', value: 'cross_region'},
+      { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'},
       { text: 'Hostname', align: 'left', value: 'hostname'},
+      { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'Password', align: 'left', value: 'password'},
       { text: 'Private Key', align: 'left', value: 'key'}
@@ -384,7 +403,7 @@ export default {
     region_items: [],
     region_selected: [],
     region_search: '',
-    region_item: { name: '', environment: '', cross_region: false, hostname: '', username: '', password: '', key: '' },
+    region_item: { name: '', environment: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '' },
     region_mode: '',
     region_dialog: false,
     region_dialog_title: '',
@@ -398,14 +417,16 @@ export default {
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Environment', align: 'left', value: 'environment'},
       { text: 'Region', align: 'left', value: 'region'},
+      { text: 'Engine', align: 'left', value: 'engine' },
       { text: 'Hostname', align: 'left', value: 'hostname'},
+      { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'Password', align: 'left', value: 'password'}
     ],
     server_items: [],
     server_selected: [],
     server_search: '',
-    server_item: { name: '', environment: '', region: '', hostname: '', username: '', password: '' },
+    server_item: { name: '', environment: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' },
     server_mode: '',
     server_dialog: false,
     server_dialog_title: '',
@@ -416,14 +437,17 @@ export default {
     // +-----------------------+
     auxiliary_headers: [
       { text: 'Name', align: 'left', value: 'name' },
-      { text: 'Hostname', align: 'left', value: 'hostname'},
-      { text: 'Username', align: 'left', value: 'username'},
-      { text: 'Password', align: 'left', value: 'password'}
+      { text: 'Engine', align: 'left', value: 'sql_engine'},
+      { text: 'Hostname', align: 'left', value: 'sql_hostname'},
+      { text: 'Port', align: 'left', value: 'sql_port'},
+      { text: 'Username', align: 'left', value: 'sql_username'},
+      { text: 'Password', align: 'left', value: 'sql_password'},
+      { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'}
     ],
     auxiliary_items: [],
     auxiliary_selected: [],
     auxiliary_search: '',
-    auxiliary_item: { name: '', hostname: '', username: '', password: '' },
+    auxiliary_item: { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' },
     auxiliary_mode: '',
     auxiliary_dialog: false,
     auxiliary_dialog_title: '',
@@ -548,6 +572,20 @@ export default {
     goBack() {
       this.$router.go(-1)
     },
+    selectEngine(value) {
+      if (this.server_dialog) {
+        if (this.server_item['port'] == '') {
+          if (value == 'MySQL') this.server_item['port'] = '3306'
+          else if (value == 'PostgreSQL') this.server_item['port'] = '5432'
+        }
+      } 
+      else if (this.auxiliary_dialog) {
+        if (this.auxiliary_item['sql_port'] == '') {
+          if (value == 'MySQL') this.auxiliary_item['sql_port'] = '3306'
+          else if (value == 'PostgreSQL') this.auxiliary_item['sql_port'] = '5432'
+        }
+      }
+    },
     // +--------------+
     // | ENVIRONMENTS |
     // +--------------+
@@ -647,7 +685,7 @@ export default {
     // +---------+
     newRegion() {
       this.region_mode = 'new'
-      this.region_item = { name: '', environment: '', cross_region: false, hostname: '', username: '', password: '', key: '' }
+      this.region_item = { name: '', environment: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '' }
       this.region_dialog_title = 'New Region'
       this.region_dialog = true
     },
@@ -738,12 +776,35 @@ export default {
         }
       }
     },
+    testRegionConnection() {
+      // Check if all fields are filled
+      if (!this.$refs.region_form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
+        return
+      }
+      // Test Connection
+      this.notification('Testing Region...', 'info')
+      this.loading = true
+      const payload = JSON.stringify(this.region_item)
+      axios.post('/deployments/regions/test', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    },
     // +---------+
     // | SERVERS |
     // +---------+
     newServer() {
       this.server_mode = 'new'
-      this.server_item = { name: '', environment: '', region: '', hostname: '', username: '', password: '' }
+      this.server_item = { name: '', environment: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' }
       this.server_dialog_title = 'New Server'
       this.server_dialog = true
     },
@@ -815,12 +876,42 @@ export default {
       }
       this.server_dialog = false
     },
+    testServerConnection() {
+      this.notification('Testing Server...', 'info')
+      this.loading = true
+      // Check if all fields are filled
+      if (!this.$refs.server_form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
+        return
+      }
+      // Get Region
+      for (var i = 0; i < this.region_items.length; ++i) {
+        if (this.region_items[i]['name'] == this.server_item['region']) {
+          this.server_item['region'] = this.region_items[i]
+          break
+        }
+      }
+      // Test Connection
+      const payload = JSON.stringify(this.server_item)
+      axios.post('/deployments/servers/test', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    },
     // +-----------------------+
     // | AUXILIARY CONNECTIONS |
     // +-----------------------+
     newAuxiliary() {
       this.auxiliary_mode = 'new'
-      this.auxiliary_item = { name: '', hostname: '', username: '', password: '' }
+      this.auxiliary_item = { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' }
       this.auxiliary_dialog_title = 'New Auxiliary Connection'
       this.auxiliary_dialog = true
     },
@@ -892,6 +983,29 @@ export default {
       }
       this.auxiliary_selected = []
       this.auxiliary_dialog = false
+    },
+    testAuxiliaryConnection() {
+      // Check if all fields are filled
+      if (!this.$refs.auxiliary_form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
+        return
+      }
+      // Test Connection
+      this.notification('Testing Auxiliary Connection...', 'info')
+      this.loading = true
+      const payload = JSON.stringify(this.auxiliary_item)
+      axios.post('/deployments/auxiliary/test', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loading = false
+        })
     },
     // SNACKBAR
     notification(message, color) {

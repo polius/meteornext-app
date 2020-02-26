@@ -345,7 +345,7 @@
                 <v-divider v-if="query_dialog_mode=='delete'"></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn color="#00b16a" @click="queryActionConfirm()">Confirm</v-btn>
-                  <v-btn color="error" @click="query_dialog=false" style="margin-left:10px">Cancel</v-btn>
+                  <v-btn color="error" @click="query_dialog=false" style="margin-left:5px">Cancel</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -418,7 +418,7 @@
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn color="#00b16a" @click="actionSubmit()">Confirm</v-btn>
-                  <v-btn color="error" @click="action_dialog=false" style="margin-left:10px;">Cancel</v-btn>
+                  <v-btn color="error" @click="action_dialog=false" style="margin-left:5px;">Cancel</v-btn>
                 </div>
               </v-flex>
             </v-layout>
