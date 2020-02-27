@@ -32,11 +32,7 @@ export default {
     }
   },
   computed : {
-    deployments_enable : function(){ return this.$store.getters.deployments_enable },
-    deployments_edit : function(){ return this.$store.getters.deployments_edit },
-  },
-  created() {
-    if (!this.deployments_enable || !this.deployments_edit) this.$router.push('/')  
+    deployments_edit : function() { return this.$store.getters.deployments_edit }
   }
 }
 </script>

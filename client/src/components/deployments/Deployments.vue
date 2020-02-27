@@ -130,7 +130,8 @@ export default {
     snackbarColor: ''
   }),
   created() {
-    this.getDeployments()
+    if (!this.deployments_enable) this.$router.push('/')
+    else this.getDeployments()
   },
   methods: {
     getDeployments() {
@@ -265,6 +266,9 @@ export default {
       this.snackbarColor = color 
       this.snackbar = true
     }
+  },
+  computed : {
+    deployments_enable : function() { return this.$store.getters.deployments_enable }
   }
 }
 </script>
