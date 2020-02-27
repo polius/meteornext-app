@@ -18,7 +18,8 @@ class deploy_queries:
         self._sql = None
         self._aux = []
 
-        # Store Query Error
+        # Store Transaction & Query Error
+        self._transaction = False
         self._query_error = False
 
         # Init Query Template Instance
@@ -93,7 +94,8 @@ class deploy_queries:
         execution_row = {"meteor_timestamp": date_time, "meteor_environment": self._args.environment, "meteor_region": region, "meteor_server": server_sql, "meteor_database": database_name, "meteor_query": query_alias, "meteor_status": "1", "meteor_response": "", "meteor_execution_time": ""}
 
         # Set query transaction
-        execution_row['transaction'] = True
+        if self._transaction:
+            execution_row['transaction'] = True
 
         # Get Query Syntax
         query_syntax = self.__get_query_type(query_parsed, show_output=False)
@@ -158,6 +160,9 @@ class deploy_queries:
         else:
             self.commit()
 
+        # Start a new transaction
+        self._transaction = True
+
         # Start server connection transaction
         if self._sql:
             self._sql.begin()
@@ -168,7 +173,7 @@ class deploy_queries:
 
     def commit(self):
         # Check existing query errors
-        if self._query_error:
+        if self._transaction and self._query_error:
             self.rollback()
 
         else:

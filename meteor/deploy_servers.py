@@ -36,9 +36,6 @@ class deploy_servers:
             # Start Deploy
             query_instance = deploy_queries(self._args, self._imports, self._region)
 
-            # Start Transaction
-            query_instance.begin()
-
             # Execute Before
             self._query_execution.before(query_instance, self._args.environment, self._region['region'])
 
@@ -166,9 +163,6 @@ class deploy_servers:
                 except IndexError:
                     break
 
-                # Start Transaction
-                query_instance.begin()
-
                 # Perform the execution to the Database
                 self._query_execution.main(query_instance, self._args.environment, self._region['region'], server['name'], database)
 
@@ -230,9 +224,6 @@ class deploy_servers:
 
             # Start Deploy
             query_instance = deploy_queries(self._args, self._imports, self._region)
-
-            # Start Transaction
-            query_instance.begin()
 
             # Execute After
             self._query_execution.after(query_instance, self._args.environment, self._region['region'])
