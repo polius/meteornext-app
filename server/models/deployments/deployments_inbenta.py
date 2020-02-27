@@ -31,8 +31,9 @@ class Deployments_Inbenta:
             SELECT %s, e.id, %s, %s, %s, %s, %s, %s, %s, IF(%s = '', NULL, %s)
             FROM environments e
             WHERE e.name = %s
+            AND e.group_id = %s
         """
-        return self._sql.execute(query, (deployment['id'], products, deployment['schema'], deployment['databases'], str(deployment['queries']), deployment['method'], deployment['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), deployment['scheduled'], deployment['scheduled'], deployment['environment']))
+        return self._sql.execute(query, (deployment['id'], products, deployment['schema'], deployment['databases'], str(deployment['queries']), deployment['method'], deployment['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), deployment['scheduled'], deployment['scheduled'], deployment['environment'], deployment['group_id']))
 
     def put(self, deployment):
         query = """

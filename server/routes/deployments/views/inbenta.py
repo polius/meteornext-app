@@ -245,16 +245,18 @@ class Inbenta:
         if not self.__check_logs_path():
             return jsonify({'message': 'The local logs path has no write permissions'}), 400
 
-        # Create deployment to the DB
+        # Set Deployment Status
         if data['scheduled'] != '':
             data['status'] = 'SCHEDULED'
             data['start_execution'] = False
             if datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
-        elif data['start_execution']:
             data['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
         else:
             data['status'] = 'CREATED'
+        
+        # Create a new Inbenta Deployment
+        data['group_id'] = group['id']
         data['id'] = self._deployments.post(user['id'], data)
         data['execution_id'] = self._deployments_inbenta.post(data)
 
@@ -326,6 +328,7 @@ class Inbenta:
                 data['status'] = 'CREATED'
 
             # Create a new Inbenta Deployment
+            data['group_id'] = group['id']
             data['execution_id'] = self._deployments_inbenta.post(data)
 
             # Consume Coins
