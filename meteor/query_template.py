@@ -6,7 +6,7 @@ class query_template:
         self._query_template = query_template
 
     def validate_execution(self, query_raw, args, connection, database_name=None):
-        query_string = query_raw.replace('`','') % args if args is None else query_raw.replace('`','')
+        query_string = query_raw.replace('`','') % args if args else query_raw.replace('`','')
         query_lower = query_string.lower()
 
         for t in self._query_template:
