@@ -61,7 +61,7 @@ class Slack:
             webhook_data = {
                 "attachments": [
                     {
-                        "text": "This is a test message sent by Meteor Next",
+                        "text": "This is a test message.",
                         "color": 'good',
                         "ts": calendar.timegm(time.gmtime())
                     }
