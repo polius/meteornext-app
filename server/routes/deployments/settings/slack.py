@@ -1,3 +1,7 @@
+import json
+import time
+import calendar
+import requests
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -38,6 +42,41 @@ class Slack:
                 return self.get(user['group_id'])
             elif request.method == 'PUT':
                 return self.put(user['id'], user['group_id'], slack_json)
+
+        @slack_blueprint.route('/deployments/slack/test', methods=['GET'])
+        @jwt_required
+        def slack_test_method():
+            # Check license
+            if not self._license['status']:
+                return jsonify({"message": self._license['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['deployments_edit']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Build Slack Message
+            webhook_data = {
+                "attachments": [
+                    {
+                        "text": "This is a test message sent by Meteor Next",
+                        "color": 'good',
+                        "ts": calendar.timegm(time.gmtime())
+                    }
+                ]
+            }
+
+            # Send Slack Message
+            try:
+                response = requests.post(request.args['webhook_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
+                if response.status_code != 200:
+                    raise Exception()
+            except Exception as e:
+                return jsonify({'message': "Slack message could not be sent. Invalid Webhook URL"}), 400
+            else:
+                return jsonify({'message': "Slack message successfully sent"}), 200
 
         return slack_blueprint
 

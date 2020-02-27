@@ -7,13 +7,14 @@
       <v-container fluid grid-list-lg>
         <v-layout row wrap>
           <v-flex xs12>
-            <v-form style="padding:0px 10px 10px 10px;">
-              <v-text-field :loading="loading" :disabled="loading" v-model="channel_name" label="Channel Name"></v-text-field>
-              <v-text-field :loading="loading" :disabled="loading" v-model="webhook_url" label="Webhook URL" style="padding-top:0px;"></v-text-field>
+            <v-form ref="form" style="padding:0px 10px 10px 10px;">
+              <v-text-field :loading="loading" :disabled="loading" v-model="channel_name" label="Channel Name" :rules="[v => enabled ? v.length > 0 : true || '']"></v-text-field>
+              <v-text-field :loading="loading" :disabled="loading" v-model="webhook_url" label="Webhook URL" :rules="[v => enabled ? v.length > 0 && (v.startsWith('http://') || v.startsWith('https://')) : true || '']" style="padding-top:0px;"></v-text-field>
               <v-switch :disabled="loading" v-model="enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
               <v-divider style="margin-top:-5px;"></v-divider>
               <div style="margin-top:20px;">
-                <v-btn :loading="loading" color="primary" style="margin-left:0px;" @click="saveSlack()">SAVE</v-btn>
+                <v-btn :loading="loading" color="#00b16a" style="margin-left:0px;" @click="saveSlack()">SAVE</v-btn>
+                <v-btn :loading="loading" color="info" style="margin-left:10px;" @click="testSlack()">TEST</v-btn>
               </div>
             </v-form>
           </v-flex>
@@ -65,6 +66,12 @@ export default {
         })
     },
     saveSlack() {
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
+        return
+      }
       // Disable the fields while updating fields to the DB
       this.loading = true
       // Edit item in the DB
@@ -74,6 +81,26 @@ export default {
         enabled: this.enabled
       }
       axios.put('/deployments/slack', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    },
+    testSlack() {
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
+        return
+      }
+      // Test Slack Webhook URL
+      axios.get('/deployments/slack/test', { params: { webhook_url: this.webhook_url } })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
         })

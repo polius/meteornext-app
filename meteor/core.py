@@ -392,12 +392,15 @@ class core:
             webhook_data["attachments"][0]["fields"].insert(1, error_data)
 
         # Show the Webhook Response
-        response = requests.post(webhook_url, data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
-        if response.status_code == 200:
-            response = "- Slack Webhook Response: {0} [{1}]".format(str(response.text).upper(), str(response.status_code))
-        else:
-            response = "- Slack Webhook Response: {0} [{1}]".format(str(response.text).upper(), str(response.status_code))        
-        print(response)
+        try:
+            response = requests.post(webhook_url, data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
+            if response.status_code != 200:
+                raise Exception()
+            
+        except Exception as e:
+            response = "Slack message could not be sent. Invalid Webhook URL."
+            self._progress.track_tasks(value=response)
+            print(response)
 
     def show_execution_time(self, only_validate=False):
         print("+==================================================================+")

@@ -16,9 +16,9 @@
           
             <!-- COINS -->
             <div class="title font-weight-regular white--text" style="margin-bottom:5px;">COINS</div>
-            <v-text-field v-model="group.coins_day" label="Coins per day" :rules="[v => !v && v == parseInt(v) && v >= 0 || '']" required></v-text-field>
-            <v-text-field v-model="group.coins_max" label="Maximum coins" :rules="[v => !v && v == parseInt(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
-            <v-text-field v-model="group.coins_execution" label="Coins per execution" :rules="[v => !v && v == parseInt(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+            <v-text-field v-model="group.coins_day" label="Coins per day" :rules="[v => v == parseInt(v) && v >= 0 || '']" required></v-text-field>
+            <v-text-field v-model="group.coins_max" label="Maximum coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+            <v-text-field v-model="group.coins_execution" label="Coins per execution" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
 
             <!-- DEPLOYMENTS -->
             <div>
@@ -61,9 +61,9 @@
                   </span>
                 </v-tooltip>
                 </div>
-                <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => !v && v == parseInt(v) && v > 0 || '']" required style="margin-top:25px; padding-top:0px;"></v-text-field>
-                <v-text-field v-model="group.deployments_execution_limit" label="Execution Limit" :rules="[v => !v && v == parseInt(v) && v > 0 || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
-                <v-text-field v-model="group.deployments_execution_concurrent" label="Concurrent Executions" :rules="[v => !v && v == parseInt(v) && v > 0 || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => v == parseInt(v) && v > 0 || '']" required style="margin-top:25px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_limit" label="Execution Limit" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_concurrent" label="Concurrent Executions" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -158,9 +158,12 @@
               </v-toolbar>
               <v-divider></v-divider>
               <v-card-text style="padding-bottom:0px;">
-                <v-text-field :loading="loading" :disabled="loading" v-model="slack.channel_name" label="Channel Name" style="padding-top:5px;"></v-text-field>
-                <v-text-field :loading="loading" :disabled="loading" v-model="slack.webhook_url" label="Webhook URL" style="padding-top:0px;"></v-text-field>
-                <v-switch :disabled="loading" v-model="slack.enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
+                <v-form ref="slack_form">
+                  <v-text-field :loading="loading" :disabled="loading" v-model="slack.channel_name" label="Channel Name" :rules="[v => slack.enabled ? v.length > 0 : true || '']" style="padding-top:5px;"></v-text-field>
+                  <v-text-field :loading="loading" :disabled="loading" v-model="slack.webhook_url" label="Webhook URL" :rules="[v => slack.enabled ? v.length > 0 && (v.startsWith('http://') || v.startsWith('https://')) : true || '']" style="padding-top:0px;"></v-text-field>
+                  <v-switch :disabled="loading" v-model="slack.enabled" label="Enable Notifications" color="info" style="margin-top:0px;" hide-details></v-switch>
+                  <v-btn :loading="loading" color="info" @click="testSlack()" style="margin-top:20px; margin-bottom:15px;">TEST</v-btn>
+                </v-form>
               </v-card-text>
             </v-card>
 
@@ -227,7 +230,7 @@
                   <div v-if="region_item.ssh_tunnel" style="margin-top:15px;">
                     <div class="title font-weight-regular">SSH</div>
                     <v-text-field v-model="region_item.hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
-                    <v-text-field v-model="region_item.port" :rules="[v => !v && v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                    <v-text-field v-model="region_item.port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                     <v-text-field v-model="region_item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
                     <v-text-field v-model="region_item.password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
                     <v-textarea v-model="region_item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
@@ -270,7 +273,7 @@
                   <div class="title font-weight-regular">SQL</div>
                   <v-select v-model="server_item.engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
                   <v-text-field v-model="server_item.hostname" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;" append-icon="cloud"></v-text-field>
-                  <v-text-field v-model="server_item.port" :rules="[v => !v && v == parseInt(v) || '']" label="Port" required style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                  <v-text-field v-model="server_item.port" :rules="[v => v == parseInt(v) || '']" label="Port" required style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                   <v-text-field v-model="server_item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;" append-icon="person"></v-text-field>
                   <v-text-field v-model="server_item.password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
                 </v-form>
@@ -309,7 +312,7 @@
                   <div class="title font-weight-regular">SQL</div>
                   <v-select v-model="auxiliary_item.sql_engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
                   <v-text-field v-model="auxiliary_item.sql_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;" append-icon="cloud"></v-text-field>
-                  <v-text-field v-model="auxiliary_item.sql_port" :rules="[v => !v && v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                  <v-text-field v-model="auxiliary_item.sql_port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                   <v-text-field v-model="auxiliary_item.sql_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
                   <v-text-field v-model="auxiliary_item.sql_password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
                   <!-- SSH -->
@@ -317,7 +320,7 @@
                   <div v-if="auxiliary_item.ssh_tunnel" style="margin-top:15px;">
                     <div class="title font-weight-regular">SSH</div>
                     <v-text-field v-model="auxiliary_item.ssh_hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
-                    <v-text-field v-model="auxiliary_item.ssh_port" :rules="[v => !v && v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                    <v-text-field v-model="auxiliary_item.ssh_port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                     <v-text-field v-model="auxiliary_item.ssh_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
                     <v-text-field v-model="auxiliary_item.ssh_password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
                     <v-textarea v-model="auxiliary_item.ssh_key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
@@ -996,6 +999,29 @@ export default {
       this.loading = true
       const payload = JSON.stringify(this.auxiliary_item)
       axios.post('/deployments/auxiliary/test', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    },
+    // +-------+
+    // | SLACK |
+    // +-------+
+    testSlack() {
+      // Check if all fields are filled
+      if (!this.$refs.slack_form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
+        return
+      }
+      // Test Slack Webhook URL
+      axios.get('/deployments/slack/test', { params: { webhook_url: this.slack.webhook_url } })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
         })
