@@ -260,7 +260,7 @@ CREATE TABLE `deployments_queued` (
   `execution_mode` VARCHAR(191) NOT NULL COMMENT 'References [deployments_basic, deployments_pro].mode',
   `execution_id` INT UNSIGNED NOT NULL COMMENT 'References [deployments_basic, deployments_pro].id',
   PRIMARY KEY (`id`),
-  UNIQUE uniq (`deployment_mode`, `deployment_id`)
+  UNIQUE uniq (`execution_mode`, `execution_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `deployments_finished` (
