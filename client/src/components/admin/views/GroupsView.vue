@@ -889,8 +889,15 @@ export default {
         this.loading = false
         return
       }
+      // Build Payload
+      var payload = JSON.parse(JSON.stringify(this.server_item))
+      for (var i = 0; i < this.region_items.length; ++i) {
+        if (this.region_items[i]['name'] == this.server_item['region']) {
+          payload['region'] = this.region_items[i]
+          break
+        }
+      }
       // Test Connection
-      const payload = JSON.stringify(this.server_item)
       axios.post('/deployments/servers/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
