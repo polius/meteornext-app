@@ -172,6 +172,9 @@ class deploy_queries:
             list(i.values())[0].begin()
 
     def commit(self):
+        # End current transaction
+        self._transaction = False
+
         # Check existing query errors
         if self._transaction and self._query_error:
             self.rollback()
@@ -191,6 +194,9 @@ class deploy_queries:
                     del i['transaction']
 
     def rollback(self):
+        # End current transaction
+        self._transaction = False
+
         # Rollback server connection
         if self._sql:
             self._sql.rollback()
