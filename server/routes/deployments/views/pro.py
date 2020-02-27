@@ -270,7 +270,7 @@ class Pro:
         except Exception as e:
             return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400         
 
-        # Create deployment to the DB
+        # Set Deployment Status
         if data['scheduled'] != '':
             data['status'] = 'SCHEDULED'
             data['start_execution'] = False
@@ -280,6 +280,9 @@ class Pro:
             data['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
         else:
             data['status'] = 'CREATED'
+
+        # Create deployment to the DB
+        data['group_id'] = group['id']
         data['id'] = self._deployments.post(user['id'], data)
         data['execution_id'] = self._deployments_pro.post(data)
 
@@ -357,6 +360,7 @@ class Pro:
                 data['status'] = 'CREATED'
 
             # Create a new Pro Deployment
+            data['group_id'] = group['id']
             data['execution_id'] = self._deployments_pro.post(data)
 
             # Consume Coins

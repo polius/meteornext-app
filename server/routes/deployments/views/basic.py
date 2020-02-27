@@ -245,7 +245,7 @@ class Basic:
         if not self.__check_logs_path():
             return jsonify({'message': 'The local logs path has no write permissions'}), 400
 
-        # Create deployment to the DB
+        # Set Deployment Status
         if data['scheduled'] != '':
             data['status'] = 'SCHEDULED'
             data['start_execution'] = False
@@ -255,6 +255,9 @@ class Basic:
             data['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
         else:
             data['status'] = 'CREATED'
+
+        # Create deployment to the DB
+        data['group_id'] = group['id']
         data['id'] = self._deployments.post(user['id'], data)
         data['execution_id'] = self._deployments_basic.post(data)
 
@@ -323,7 +326,8 @@ class Basic:
             else:
                 data['status'] = 'CREATED'
 
-            # Create a new Basic Deployment            
+            # Create a new Basic Deployment
+            data['group_id'] = group['id']
             data['execution_id'] = self._deployments_basic.post(data)
 
             # Consume Coins
