@@ -814,6 +814,7 @@ export default {
     editServer() {
       this.server_mode = 'edit'
       this.server_item = JSON.parse(JSON.stringify(this.server_selected[0]))
+      this.refreshRegions()
       this.server_dialog_title = 'Edit Server'
       this.server_dialog = true
     },
@@ -887,13 +888,6 @@ export default {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
         this.loading = false
         return
-      }
-      // Get Region
-      for (var i = 0; i < this.region_items.length; ++i) {
-        if (this.region_items[i]['name'] == this.server_item['region']) {
-          this.server_item['region'] = this.region_items[i]
-          break
-        }
       }
       // Test Connection
       const payload = JSON.stringify(this.server_item)
