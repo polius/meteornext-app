@@ -7,15 +7,15 @@
 
       <!-- DEPLOYMENTS -->
       <v-divider class="mx-3" inset vertical></v-divider>
-      <router-link v-if="deployments_enable" class="nav-link" to="/deployments">
+      <router-link v-if="deployments_enable" class="nav-link" to="/deployments" style="margin-right:10px;">
         <v-btn color="#e74c3c"><v-icon small style="padding-right:10px">fas fa-meteor</v-icon>Deployments</v-btn>
       </router-link>
       <!-- MONITORING -->
-      <router-link class="nav-link" to="/monitoring" style="margin-left:10px;">
+      <router-link class="nav-link" to="/monitoring" style="margin-right:10px;">
         <v-btn color="#fa8231"><v-icon small style="padding-right:10px">fas fa-desktop</v-icon>Monitoring</v-btn>
       </router-link>
       <!-- VALIDATION -->
-      <router-link class="nav-link" to="/utils" style="margin-left:10px;">
+      <router-link class="nav-link" to="/utils">
         <v-btn color="#00b16a"><v-icon small style="padding-right:10px">fas fa-database</v-icon>Utils</v-btn>
       </router-link>      
       <!-- #446cb3 -->
