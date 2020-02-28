@@ -54,6 +54,7 @@ class Settings:
     def get(self):
         # Init Settings
         settings = {}
+        s = self._settings.get()
 
         # Get License Settings
         settings['license'] = self._settings_conf['license']
@@ -61,17 +62,25 @@ class Settings:
         # Get SQL Settings
         settings['sql'] = self._settings_conf['sql']
 
-        # Get Logs Settings
-        settings['logs'] = json.loads(self._settings.get()[0]['value'])
+        # Get Logs & Security Settings
+        settings['logs'] = {}
+        settings['security'] = {}
+        for i in s:
+            if i['name'] in ['LOGS', 'SECURITY']:
+                settings[i['name'].lower()] = json.loads(i['value'])
 
         # Return Settings
         return jsonify({'data': settings}), 200
 
     def put(self, user_id, data):
         # Check logs path permissions
-        u = utils.Utils()
-        if not u.check_local_path(json.loads(data['value'])['local']['path']):
-            return jsonify({'message': 'The local logs path has no write permissions'}), 400
+        if data['name'] == 'logs':
+            u = utils.Utils()
+            if not u.check_local_path(json.loads(data['value'])['local']['path']):
+                return jsonify({'message': 'The local logs path has no write permissions'}), 400
+        
+        # Convert Setting name to uppercase
+        data['name'] = data['name'].upper()
 
         # Edit logs settings
         self._settings.post(user_id, data)
