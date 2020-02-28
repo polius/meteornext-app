@@ -9,7 +9,7 @@ export default new Vuex.Store({
     username: localStorage.getItem('username') || '',
     token: localStorage.getItem('token') || '',
     coins: localStorage.getItem('coins') || 0,
-    admin: localStorage.getItem('admin') == '1' ? true : false,
+    admin: localStorage.getItem('admin') || 0,
     deployments_enable: localStorage.getItem('deployments_enable') == '1' ? true : false,
     deployments_basic: localStorage.getItem('deployments_basic') == '1' ? true : false,
     deployments_pro: localStorage.getItem('deployments_pro') == '1' ? true : false,
