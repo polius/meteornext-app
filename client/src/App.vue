@@ -17,7 +17,7 @@
       <!-- VALIDATION -->
       <router-link class="nav-link" to="/utils">
         <v-btn color="#00b16a"><v-icon small style="padding-right:10px">fas fa-database</v-icon>Utils</v-btn>
-      </router-link>      
+      </router-link>
       <!-- #446cb3 -->
       <v-spacer></v-spacer>
 
