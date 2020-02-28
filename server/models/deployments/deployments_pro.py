@@ -12,7 +12,7 @@ class Deployments_Pro:
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id
             JOIN releases r ON r.id = d.release_id
-            JOIN environments e ON e.id = p.environment_id
+            LEFT JOIN environments e ON e.id = p.environment_id
             LEFT JOIN
             (
                 SELECT (@cnt := @cnt + 1) AS queue, deployment_id
@@ -58,7 +58,7 @@ class Deployments_Pro:
         query = """
             SELECT p.id, e.name AS 'environment', p.method, p.created, p.status, p.started, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall'
             FROM deployments_pro p
-            JOIN environments e ON e.id = p.environment_id
+            LEFT JOIN environments e ON e.id = p.environment_id
             WHERE p.deployment_id = %s
             ORDER BY p.created DESC;
         """

@@ -12,7 +12,7 @@ class Deployments_Inbenta:
             FROM deployments_inbenta i
             JOIN deployments d ON d.id = i.deployment_id
             JOIN releases r ON r.id = d.release_id
-            JOIN environments e ON e.id = i.environment_id
+            LEFT JOIN environments e ON e.id = i.environment_id
             LEFT JOIN
             (
                 SELECT (@cnt := @cnt + 1) AS queue, deployment_id
@@ -62,7 +62,7 @@ class Deployments_Inbenta:
         query = """
             SELECT i.id, e.name AS 'environment', i.method, i.created, i.scheduled, i.status, i.started, i.ended, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall'
             FROM deployments_inbenta i
-            JOIN environments e ON e.id = i.environment_id
+            LEFT JOIN environments e ON e.id = i.environment_id
             WHERE i.deployment_id = %s
             ORDER BY i.created DESC;
         """

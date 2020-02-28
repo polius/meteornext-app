@@ -13,8 +13,8 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="username" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:item.admin="props">
-          <v-icon v-if="props.item.admin" small color="#00b16a" style="margin-left:8px;">fas fa-check</v-icon>
-          <v-icon v-else small color="error" style="margin-left:8px;">fas fa-times</v-icon>
+          <v-icon v-if="props.item.admin" small color="#00b16a" style="margin-left:8px;">fas fa-circle</v-icon>
+          <v-icon v-else small color="error" style="margin-left:8px;">fas fa-circle</v-icon>
         </template>
         <template v-slot:item.created_at="props">
           <span>{{ dateFormat(props.item.created_at) }}</span>
