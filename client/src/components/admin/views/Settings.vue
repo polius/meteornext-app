@@ -81,7 +81,7 @@
           <v-flex v-else-if="setting_mode == 'security'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="headline font-weight-regular" style="margin-left:10px;">SECURITY</div>
             <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">Restrict access to the <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">Administration</span> panel only to a specific IP address or domain</div>
-            <v-text-field :loading="loading" :disabled="loading" v-model="security.url" label="Administration URL" style="margin-left:10px; margin-top:10px;" required :rules="[v => v ? this.validURL(v) : true || '' ]"></v-text-field>
+            <v-text-field :loading="loading" :disabled="loading" v-model="security.url" label="Administration URL" :placeholder="security.current" style="margin-left:10px; margin-top:12px;" required :rules="[v => v ? this.validURL(v) : true || '' ]"></v-text-field>
             <v-btn :loading="loading" color="#00b16a" style="margin-left:10px;" @click="saveSecurity()">SAVE</v-btn>
           </v-flex>
 
@@ -186,6 +186,11 @@ export default {
         })
     },
     saveSecurity() {
+      // Parse URL value
+      this.security.url = (this.security.url.endsWith('/')) ? this.security.url.slice(0, -1) : this.security.url
+      // Delete current url value
+      delete this.security.current
+      // Build payload
       this.loading = true
       const payload = { 
         name: 'security',

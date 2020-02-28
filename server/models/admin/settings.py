@@ -8,17 +8,10 @@ class Settings:
 
     def get(self, setting_name=None):
         if setting_name:
-            query = """
-                SELECT name, value
-                FROM settings
-                WHERE name = %s
-            """
-            return self._sql.execute(query, (setting_name))
+            query = "SELECT name, value FROM settings WHERE name = %s"
+            return self._sql.execute(query, (setting_name.upper()))
         else:
-            query = """
-                SELECT name, value
-                FROM settings
-            """
+            query = "SELECT name, value FROM settings"
             return self._sql.execute(query)
 
     def post(self, user_id, settings):

@@ -3,10 +3,14 @@ import models.admin.users
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity)
 
+import routes.admin.settings
+
 class Login:
     def __init__(self, app, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
+        # Init routes
+        self._settings = routes.admin.settings.Settings(app, sql)
 
     def license(self, value):
         self._license = value
@@ -25,7 +29,10 @@ class Login:
             if not request.is_json:
                 return jsonify({"message": "Missing JSON in request"}), 400
             login_json = request.get_json()
-            
+
+            # Check Settings - Security (Administration URL)
+            valid_url = self._settings.check_url()
+
             # Get User from Database
             user = self._users.get(login_json['username'])
 
@@ -41,7 +48,7 @@ class Login:
                     'refresh_token': create_refresh_token(identity=user[0]['username']),
                     'username': user[0]['username'],
                     'coins': user[0]['coins'],
-                    'admin': user[0]['admin'],
+                    'admin': user[0]['admin'] and valid_url,
                     'deployments_enable': user[0]['deployments_enable'],
                     'deployments_basic': user[0]['deployments_basic'],
                     'deployments_pro': user[0]['deployments_pro'],
