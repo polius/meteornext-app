@@ -9,6 +9,7 @@ import routes.deployments.settings.regions
 import routes.deployments.settings.servers
 import routes.deployments.settings.auxiliary
 import routes.deployments.settings.slack
+import routes.admin.settings
 
 class Groups:
     def __init__(self, app, sql):
@@ -22,6 +23,7 @@ class Groups:
         self._servers = routes.deployments.settings.servers.Servers(app, sql)
         self._auxiliary = routes.deployments.settings.auxiliary.Auxiliary(app, sql)
         self._slack = routes.deployments.settings.slack.Slack(app, sql)
+        self._settings = routes.admin.settings.Settings(app, sql)
 
     def license(self, value):
         self._license = value
@@ -36,6 +38,10 @@ class Groups:
             # Check license
             if not self._license['status']:
                 return jsonify({"message": self._license['response']}), 401
+
+            # Check Settings - Security (Administration URL)
+            if not self._settings.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]

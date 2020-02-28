@@ -254,7 +254,7 @@ class Setup:
         login = routes.login.Login(self._app, sql)
         profile = routes.profile.Profile(self._app, sql)
         notifications = routes.notifications.Notifications(self._app, sql)
-        settings = routes.admin.settings.Settings(self._app, self._conf, sql)
+        settings = routes.admin.settings.Settings(self._app, sql, self._conf)
         groups = routes.admin.groups.Groups(self._app, sql)
         users = routes.admin.users.Users(self._app, sql)
         admin_deployments = routes.admin.deployments.Deployments(self._app, sql)

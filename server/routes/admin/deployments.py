@@ -7,12 +7,15 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
 import models.deployments.deployments
+import routes.admin.settings
 
 class Deployments:
     def __init__(self, app, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
+        # Init routes
+        self._settings = routes.admin.settings.Settings(app, sql)
 
     def license(self, value):
         self._license = value
@@ -27,6 +30,10 @@ class Deployments:
             # Check license
             if not self._license['status']:
                 return jsonify({"message": self._license['response']}), 401
+
+            # Check Settings - Security (Administration URL)
+            if not self._settings.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]

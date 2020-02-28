@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import json
 from flask import Blueprint, jsonify, request
@@ -9,10 +10,10 @@ import models.admin.users
 import models.admin.settings
 
 class Settings:
-    def __init__(self, app, settings, sql):
+    def __init__(self, app, sql, settings=None):
         self._app = app
-        self._settings_conf = settings
         self._sql = sql
+        self._settings_conf = settings
         # Init models
         self._users = models.admin.users.Users(sql)
         self._settings = models.admin.settings.Settings(sql)
@@ -30,6 +31,10 @@ class Settings:
             # Check license
             if not self._license['status']:
                 return jsonify({"message": self._license['response']}), 401
+
+            # Check Security (Administration URL)
+            if not self.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
@@ -69,6 +74,12 @@ class Settings:
             if i['name'] in ['LOGS', 'SECURITY']:
                 settings[i['name'].lower()] = json.loads(i['value'])
 
+        # Get current Domain URL from Security
+        regex = '(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*'
+        r = re.search(regex, request.url_root)
+        ip = r['host'] + ':' + r['port'] if len(r['port']) > 0 else r['host']
+        settings['security']['current'] = ip
+
         # Return Settings
         return jsonify({'data': settings}), 200
 
@@ -85,3 +96,18 @@ class Settings:
         # Edit logs settings
         self._settings.post(user_id, data)
         return jsonify({'message': 'Changes saved successfully'}), 200
+
+    def check_url(self):
+        security = self._settings.get(setting_name='security')
+        if len(security) > 0 and json.loads(security[0]['value'])['url'] != '':
+            regex = '(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*'
+            # Current URL
+            r = re.search(regex, request.url_root)
+            current_url = r['host'] + ':' + r['port'] if len(r['port']) > 0 else r['host']
+            # Administration URL
+            r = re.search(regex, json.loads(security[0]['value'])['url'])
+            admin_url = r['host'] + ':' + r['port'] if len(r['port']) > 0 else r['host']
+            # Check URLs
+            if current_url != admin_url:
+                return False
+        return True
