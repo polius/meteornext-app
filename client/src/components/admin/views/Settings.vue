@@ -5,9 +5,11 @@
         <v-toolbar-title>SETTINGS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-          <v-btn text @click="setSetting('license')"><v-icon small style="padding-right:10px">fas fa-plug</v-icon>LICENSE</v-btn>
+          <v-btn text @click="setSetting('license')"><v-icon small style="padding-right:10px">fas fa-certificate</v-icon>LICENSE</v-btn>
           <v-btn text @click="setSetting('sql')"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SQL</v-btn>
-          <v-btn text @click="setSetting('logs')"><v-icon small style="padding-right:10px">fas fa-paper-plane</v-icon>LOGS</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn text @click="setSetting('logs')"><v-icon small style="padding-right:10px">fas fa-scroll</v-icon>LOGS</v-btn>
+          <v-btn text @click="setSetting('security')"><v-icon small style="padding-right:10px">fas fa-shield-alt</v-icon>SECURITY</v-btn>
         </v-toolbar-items>
       </v-toolbar>
       <v-container fluid grid-list-lg>
@@ -15,6 +17,7 @@
           <!-- LICENSE -->
           <v-flex v-if="setting_mode == 'license'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="headline font-weight-regular" style="margin-left:10px;">LICENSE</div>
+            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">This copy of Meteor Next is <span class="body-1 font-weight-medium" style="color:#00b16a;">LICENSED</span></div>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.email" label="Email" style="margin-left:10px; padding-top:25px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.key" label="Key" style="margin-left:10px; padding-top:0px;" @click:append="show_key = !show_key" :append-icon="show_key ? 'visibility' : 'visibility_off'" :type="show_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
           </v-flex>
@@ -22,6 +25,7 @@
           <!-- SQL -->
           <v-flex v-else-if="setting_mode == 'sql'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="headline font-weight-regular" style="margin-left:10px;">SQL</div>
+            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">The SQL credentials where Meteor Next is stored</div>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.hostname" label="Hostname" style="margin-left:10px; padding-top:25px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.username" label="Username" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.password" label="Password" style="margin-left:10px; padding-top:0px;" @click:append="show_password = !show_password" :append-icon="show_password ? 'visibility' : 'visibility_off'" :type="show_password ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
@@ -45,9 +49,9 @@
               </v-toolbar>
               <v-divider></v-divider>
               <v-card-text style="padding-top:5px; padding-bottom:0px;">
-                <v-form ref="form" style="padding:5px 5px 0px 5px;">
+                <v-form ref="logs_form" style="padding:5px 5px 0px 5px;">
                   <v-text-field :loading="loading" :disabled="loading" v-model="logs.local.path" label="Absolute Path" required :rules="[v => !!v || '', v => v.startsWith('/') || '']" hide-details></v-text-field>
-                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.local.expire" label="Log Retention Days" :rules="[v => !v && v == parseInt(v) && v > 0 || '']" style="margin-top:15px;"></v-text-field>
+                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.local.expire" label="Log Retention Days" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:15px;"></v-text-field>
                 </v-form>
               </v-card-text>
             </v-card>
@@ -62,7 +66,7 @@
               </v-toolbar>
               <v-divider></v-divider>
               <v-card-text style="padding-top: 5px; padding-bottom:0px;">
-                <v-form ref="form" style="padding:5px 5px 0px 5px;">
+                <v-form ref="logs_form" style="padding:5px 5px 0px 5px;">
                   <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.aws_access_key" label="AWS Access Key" :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
                   <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
                   <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.region_name" label="Region Name" style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
@@ -71,6 +75,14 @@
                 </v-form>
               </v-card-text>
             </v-card>
+          </v-flex>
+
+          <!-- SECURITY -->
+          <v-flex v-else-if="setting_mode == 'security'" xs12 style="margin-top:5px; margin-bottom:5px;">
+            <div class="headline font-weight-regular" style="margin-left:10px;">SECURITY</div>
+            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">Restrict access to the <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">Administration</span> panel only to a specific IP address or domain</div>
+            <v-text-field :loading="loading" :disabled="loading" v-model="security.url" label="Administration URL" style="margin-left:10px; margin-top:10px;" required :rules="[v => v ? this.validURL(v) : true || '' ]"></v-text-field>
+            <v-btn :loading="loading" color="#00b16a" style="margin-left:10px;" @click="saveSecurity()">SAVE</v-btn>
           </v-flex>
 
         </v-layout>
@@ -104,6 +116,9 @@ export default {
     logs: { local: {}, amazon_s3: {} },
     logs_mode: 'local',
 
+    // Security
+    security: {},
+
     // Loading
     loading: true,
 
@@ -125,6 +140,7 @@ export default {
           this.license = settings['license']
           this.sql = settings['sql']
           this.logs = settings['logs']
+          this.security = settings['security']
 
           // Disable Loading
           this.loading = false
@@ -139,7 +155,7 @@ export default {
     },
     saveLogs() {
       // Check if all fields are filled
-      if (!this.$refs.form.validate()) {
+      if (!this.$refs.logs_form.validate()) {
         this.notification('Please fill the required fields', 'error')
         return
       }
@@ -148,8 +164,7 @@ export default {
       // Parse local absolute path
       this.logs.local.path = (this.logs.local.path.endsWith('/')) ? this.logs.local.path.slice(0, -1) : this.logs.local.path
       // Parse local expiration
-      if (this.logs.local.expire) this.logs.local.expire = parseInt(this.logs.local.expire)
-      else delete this.logs.local.expire
+      if (!this.logs.local.expire) this.logs.local.expire = null
       // Parse amazon_s3 enable
       this.logs.amazon_s3.enabled = ('enabled' in this.logs.amazon_s3) ? this.logs.amazon_s3.enabled : false
       // Construct path & payload
@@ -169,6 +184,34 @@ export default {
         .finally(() => {
           this.loading = false
         })
+    },
+    saveSecurity() {
+      this.loading = true
+      const payload = { 
+        name: 'security',
+        value: JSON.stringify(this.security)
+      }
+      // Update Security values to the DB
+      axios.put('/admin/settings', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    },
+    validURL(str) {
+      var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+        '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+        '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+        '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+      return !!pattern.test(str);
     },
     notification(message, color) {
       this.snackbarText = message

@@ -125,7 +125,7 @@ class Cron:
         # Check expiration is active
         if len(setting) > 0:
             setting = json.loads(setting[0]['value'])
-            if 'expire' in setting['local']:
+            if 'expire' in setting['local'] and setting['local']['expire'] is not None:
                 query = """
                     SELECT id, uri, 'basic' AS 'mode'
                     FROM deployments_basic
