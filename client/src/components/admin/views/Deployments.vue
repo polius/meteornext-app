@@ -60,6 +60,7 @@
                   <v-select v-model="filter_dialog_data.status" :items="deployment_status" multiple label="Status" style="padding-top:0px;"></v-select>
                   <v-text-field v-model="filter_dialog_data.created_from" label="Created (From)" placeholder="YYYY-MM-DD hh:mm:ss" @click="picker_change('created_from')" readonly style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="filter_dialog_data.created_to" label="Created (To)" placeholder="YYYY-MM-DD hh:mm:ss" @click="picker_change('created_to')" readonly style="padding-top:0px;"></v-text-field>
+                  <v-checkbox v-model="filter_dialog_data.deleted" label="Show deleted deployments" color="primary" style="margin-top:0px; padding-top:0px; margin-bottom:15px;" hide-details></v-checkbox>
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn :loading="loading" color="#00b16a" @click="filterDeployments()">Confirm</v-btn>

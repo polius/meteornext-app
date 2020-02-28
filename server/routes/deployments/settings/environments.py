@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
+import models.deployments.deployments
 import models.deployments.environments
 import models.deployments.regions
 
@@ -9,6 +10,7 @@ class Environments:
     def __init__(self, app, sql):
         # Init models
         self._users = models.admin.users.Users(sql)
+        self._deployments = models.deployments.deployments.Deployments(sql)
         self._environments = models.deployments.environments.Environments(sql)
         self._regions = models.deployments.regions.Regions(sql)
 
@@ -72,6 +74,12 @@ class Environments:
         for environment in data:
             if self._regions.exist_by_environment(group_id, environment):
                 return jsonify({'message': "The selected environments have regions created"}), 400
+
+        exist = True
+        for environment in data:
+            exist &= not self._deployments.existByEnvironment(environment)
+        if not exist:
+            return jsonify({'message': "The selected environments have related deployments"}), 400
 
         for environment in data:
             self._environments.delete(group_id, environment)
