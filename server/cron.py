@@ -52,23 +52,23 @@ class Cron:
         if mode == 'hour' and not self._license['status']:
             return
         try:
-            # Generate trial
-            self._license_conf['trial'] = str(uuid.uuid4())
+            # Generate challenge
+            self._license_conf['challenge'] = str(uuid.uuid4())
 
             # Check license
-            response = requests.post("http://34.252.139.218:12350/license", json=self._license_conf, allow_redirects=False)
+            response = requests.post("https://license.meteor2.io/", json=self._license_conf, allow_redirects=False)
             response_code = response.status_code
             response_status = response.status_code == 200
             response_text = json.loads(response.text)['response']
 
-            # Solve trial
+            # Solve challenge
             if response_status == 200:
-                response_trial = json.loads(response.text)['trial']
-                trial = ','.join([str(ord(i)) for i in self._license_conf['trial']])
-                trial = hashlib.sha3_256(trial.encode()).hexdigest()
+                response_challenge = json.loads(response.text)['challenge']
+                challenge = ','.join([str(ord(i)) for i in self._license_conf['challenge']])
+                challenge = hashlib.sha3_256(challenge.encode()).hexdigest()
 
                 # Validate keys
-                if response_trial != trial:
+                if response_challenge != challenge:
                     response_text = "The license is not valid"
                     response_code = 401
                     response_status = False

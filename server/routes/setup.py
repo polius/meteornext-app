@@ -224,22 +224,23 @@ class Setup:
 
     def __check_license(self, license):
         try:
-            # Generate trial
-            license['trial'] = str(uuid.uuid4())
+            # Generate challenge
+            license['challenge'] = str(uuid.uuid4())
+
             # Check license
-            response = requests.post("http://34.252.139.218:12350/license", json=license, allow_redirects=False)
+            response = requests.post("https://license.meteor2.io/", json=license, allow_redirects=False)
             response_code = response.status_code
             response_status = response.status_code == 200
             response_text = json.loads(response.text)['response']
-            
-            # Solve trial
-            if response_status == 200:
-                response_trial = json.loads(response.text)['trial']
-                trial = ','.join([str(ord(i)) for i in license['trial']])
-                trial = hashlib.sha3_256(trial.encode()).hexdigest()
 
-                # Validate trials
-                if response_trial != trial:
+            # Solve challenge
+            if response_status == 200:
+                response_challenge = json.loads(response.text)['challenge']
+                challenge = ','.join([str(ord(i)) for i in license['challenge']])
+                challenge = hashlib.sha3_256(challenge.encode()).hexdigest()
+
+                # Validate challenge
+                if response_challenge != challenge:
                     response_text = "The license is not valid"
                     response_code = 401
                     response_status = False
