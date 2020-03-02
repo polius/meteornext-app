@@ -1,5 +1,5 @@
 <template>
-  <v-app dark>
+  <v-app>
     <v-app-bar clipped-left app absolute v-show="isLoggedIn && showTopNavbar()">
       <router-link class="nav-link white--text" to="/" style="text-decoration:none;">
         <v-toolbar-title>Meteor Next</v-toolbar-title>
@@ -31,7 +31,7 @@
       <!-- NOTIFICATIONS BAR -->
       <div>
         <v-tooltip>
-          <template v-slot:activator="{ on }">
+          <template v-slot:activator="">
             <v-btn icon @click.stop="openNotifications()" title="Notifications">
               <v-badge v-if="notifications.length > 0" color="red" overlap>
                 <span slot="badge">{{ notifications.length }}</span>

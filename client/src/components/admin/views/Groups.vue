@@ -77,6 +77,9 @@ export default {
     snackbarColor: ''
   }),
   created() {
+    // Check Notification
+    if (this.$route.params.msg) this.notification(this.$route.params.msg, this.$route.params.color)
+    // Get Groups
     this.getGroups()
   },
   methods: {
