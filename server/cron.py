@@ -73,7 +73,7 @@ class Cron:
                     response_code = 401
                     response_status = False
 
-        except requests.exceptions.RequestException as e:
+        except Exception:
             response_text = "A connection with the licensing server could not be established"
             response_code = 404
             response_status = False    
