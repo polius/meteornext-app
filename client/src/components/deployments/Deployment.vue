@@ -104,7 +104,7 @@
         <!-- validation -->
         <v-card v-if="validation_data.length > 0 && Object.keys(validation_data[0]).length != 0" style="margin-top:15px;">
           <v-data-table :headers="validation_headers" :items="validation_data" hide-default-footer>
-            <template v-slot:item="props">
+            <template v-slot:item="">
               <tr>
                 <td v-for="item in Object.keys(validation_data[0])" :key="item">
                   <span v-if="validation_data[0][item] == 'VALIDATING'" class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{ validation_data[0][item] }}</b></span>
@@ -182,8 +182,11 @@
 
         <!-- After Execution Headers -->
         <v-layout row wrap style="margin:0px;">
-          <v-flex xs8>
-            <div v-if="logs_data.length > 0 || tasks_data.length > 0" class="title font-weight-regular" style="padding-top:20px; padding-left:1px;">POST EXECUTION</div>
+          <v-flex v-if="logs_data.length > 0 && tasks_data.length > 0" xs8>
+            <div class="title font-weight-regular" style="padding-top:20px; padding-left:1px;">POST EXECUTION</div>
+          </v-flex>
+          <v-flex v-else xs4>
+            <div class="title font-weight-regular" style="padding-top:20px; padding-left:1px;">POST EXECUTION</div>
           </v-flex>
           <v-flex xs4>
             <div v-if="deployment['ended'] !== null && queries_data.length > 0" class="title font-weight-regular" style="padding-top:20px; padding-left:7px;">QUERIES</div>
@@ -658,6 +661,10 @@
     },
     created() {
       this.init()
+    },
+    mounted() {
+      // Check Notification
+      setTimeout(this.checkNotifications, 300)
     },
     methods: {
       // -------------
@@ -1285,6 +1292,9 @@
         this.snackbarText = message
         this.snackbarColor = color 
         this.snackbar = true
+      },
+      checkNotifications() {
+        if (this.$route.params.msg) this.notification(this.$route.params.msg, this.$route.params.color)
       },
       index (data) {
         return data.map((item, index) => ({

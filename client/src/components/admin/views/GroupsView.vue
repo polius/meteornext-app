@@ -526,9 +526,7 @@ export default {
       }
       axios.post('/admin/groups', payload)
         .then((response) => {
-          this.notification(response.data.message, '#00b16a')
-          // Add item in the data table
-          this.$router.push({ name: 'admin.groups' })
+          this.$router.push({ name: 'admin.groups', params: { msg: response.data.message, color: '#00b16a' }})
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -559,8 +557,6 @@ export default {
       }
       axios.put('/admin/groups', payload)
         .then((response) => {
-          // this.notification(response.data.message, '#00b16a')
-          // Add item in the data table
           this.$router.push({ name: 'admin.groups', params: { msg: response.data.message, color: '#00b16a' }})
         })
         .catch((error) => {

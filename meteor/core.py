@@ -199,11 +199,15 @@ class core:
         print("|  LOGS                                                            |")
         print("+==================================================================+")
 
-        # Merging Logs
+        # If current environment has no regions / servers
         try:
             execution_logs_path = self._args.execution_path + "/execution/"
             region_items = os.listdir(execution_logs_path)
+        except FileNotFoundError:
+            return []
 
+        # Merging Logs
+        try:
             for region_item in region_items:
                 if os.path.isdir(execution_logs_path + region_item):
                     status_msg = "- Merging '{}'...".format(region_item)

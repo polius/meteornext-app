@@ -77,10 +77,12 @@ export default {
     snackbarColor: ''
   }),
   created() {
-    // Check Notification
-    if (this.$route.params.msg) this.notification(this.$route.params.msg, this.$route.params.color)
     // Get Groups
     this.getGroups()
+  },
+  mounted() {
+    // Check Notification
+    setTimeout(this.checkNotifications, 300)
   },
   methods: {
     // +--------+
@@ -148,6 +150,9 @@ export default {
       this.snackbarColor = color 
       this.snackbar = true
     },
+    checkNotifications() {
+      if (this.$route.params.msg) this.notification(this.$route.params.msg, this.$route.params.color)
+    }
   }
 }
 </script> 
