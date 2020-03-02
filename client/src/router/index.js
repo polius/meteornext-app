@@ -122,7 +122,7 @@ let router = new VueRouter({
     },
     {
       path: '/monitoring',
-      meta: { requiresAuth: true, requiresAdmin: false },
+      meta: { requiresAuth: true },
       component: () => import('../components/monitoring/Navigation'),
       children: [
         {
@@ -147,50 +147,50 @@ let router = new VueRouter({
     },
     {
       path: '/utils',
-      meta: { requiresAuth: true, requiresAdmin: false },
+      meta: { requiresAuth: true },
       component: () => import('../components/utils/Navigation')
     },
     {
       path: '/admin',
       component: () => import('../components/admin/Navigation'),
-      meta: { requiresAuth: true },
+      meta: {requiresAdmin: true },
       children: [
         {
           path: '',
           name: 'admin',
           component: () => import('../components/admin/Admin'),
-          meta: { requiresAuth: true }
+          meta: { requiresAdmin: true }
         },
         {
           path: 'settings',
           name: 'admin.settings',
           component: () => import('../components/admin/views/Settings'),
-          meta: { requiresAuth: true }
+          meta: { requiresAdmin: true }
         },
         {
           path: 'users',
           name: 'admin.users',
           component: () => import('../components/admin/views/Users'),
-          meta: { requiresAuth: true }
+          meta: { requiresAdmin: true }
         },
         {
           path: 'groups',
           name: 'admin.groups',
           component: () => import('../components/admin/views/Groups'),
-          meta: { requiresAuth: true }
+          meta: { requiresAdmin: true }
         },
         {
           path: 'groups/view',
           name: 'admin.groups.view',
           props: true,
           component: () => import('../components/admin/views/GroupsView'),
-          meta: { requiresAuth: true }
+          meta: { requiresAdmin: true }
         },
         {
           path: 'deployments',
           name: 'admin.deployments',
           component: () => import('../components/admin/views/Deployments'),
-          meta: { requiresAuth: true }
+          meta: { requiresAdmin: true }
         }
       ]
     }
@@ -203,7 +203,11 @@ router.beforeEach((to, from, next) => {
     if (store.getters.isLoggedIn) next()
     else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
     else next({ path: '/login' })
-  } 
+  }
+  else if (to.matched.some(record => record.meta.requiresAdmin)) {
+    if (store.getters.admin) next()
+    else next({ path: '/login' })
+  }
   else next()
 })
 

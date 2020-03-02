@@ -247,7 +247,7 @@ class Setup:
 
             return {"status": response_status, "code": response_code, "response": response_text}
 
-        except requests.exceptions.RequestException:
+        except Exception:
             return {"status": False, "code": 404, "response": "A connection to the licensing server could not be established"}
 
     def __register_blueprints(self, sql):
