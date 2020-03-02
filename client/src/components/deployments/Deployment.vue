@@ -185,7 +185,7 @@
           <v-flex v-if="logs_data.length > 0 && tasks_data.length > 0" xs8>
             <div class="title font-weight-regular" style="padding-top:20px; padding-left:1px;">POST EXECUTION</div>
           </v-flex>
-          <v-flex v-else xs4>
+          <v-flex v-else-if="(logs_data.length > 0 && tasks_data.length == 0) || (logs_data.length == 0 && tasks_data.length > 0)" xs4>
             <div class="title font-weight-regular" style="padding-top:20px; padding-left:1px;">POST EXECUTION</div>
           </v-flex>
           <v-flex xs4>
