@@ -44,8 +44,7 @@
                 <v-switch v-if="group.deployments_enable" v-model="group.deployments_basic" label="BASIC" color="#eb974e" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
                 <v-switch v-if="group.deployments_enable" v-model="group.deployments_pro" label="PRO" color="rgb(235, 95, 93)" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
                 <v-switch v-if="group.deployments_enable" v-model="group.deployments_inbenta" label="INBENTA" color="#049372" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
-
-                <v-switch v-model="group.deployments_edit" label="Change Deployment Settings" color="info" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-if="group.deployments_enable" v-model="group.deployments_edit" label="Change Deployment Settings" color="info" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
                   LIMITS
                 <v-tooltip right>
