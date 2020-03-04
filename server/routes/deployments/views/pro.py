@@ -436,7 +436,7 @@ class Pro:
         deployment = self._deployments_pro.getPid(data['execution_id'])[0]
 
         # Update Execution Status
-        self._deployments_basic.updateStatus(data['execution_id'], 'STOPPING')
+        self._deployments_pro.updateStatus(data['execution_id'], 'STOPPING')
 
         # Stop the execution
         try:
