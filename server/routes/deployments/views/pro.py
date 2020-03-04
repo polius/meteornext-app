@@ -320,7 +320,6 @@ class Pro:
         try:
             data['code'] = unicodedata.normalize("NFKD", data['code'])
             exec(data['code'])
-            unicodedata.normalize("NFKD", self._query_execution)
         except Exception as e:
             return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400  
 
