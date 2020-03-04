@@ -195,7 +195,7 @@ class Meteor:
 
         # Store Query Execution
         with open("{}/{}/query_execution.py".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
-            outfile.write(unicodedata.normalize("NFKD", self._query_execution))
+            outfile.write(self._query_execution.encode('utf-8','ignore').decode('utf-8'))
 
     def __compile_query_execution_basic(self, deployment):
         queries = {}

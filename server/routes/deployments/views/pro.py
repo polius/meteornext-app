@@ -266,7 +266,8 @@ class Pro:
 
         # Check Code Syntax Errors
         try:
-            exec(unicodedata.normalize("NFKD", data['code']))
+            data['code'] = unicodedata.normalize("NFKD", data['code'])
+            exec(data['code'])
         except Exception as e:
             return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400         
 
@@ -319,6 +320,7 @@ class Pro:
         try:
             data['code'] = unicodedata.normalize("NFKD", data['code'])
             exec(data['code'])
+            unicodedata.normalize("NFKD", self._query_execution)
         except Exception as e:
             return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400  
 
