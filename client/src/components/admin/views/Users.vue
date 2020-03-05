@@ -75,7 +75,6 @@ export default {
       { text: 'Username', align: 'left', value: 'username' },
       { text: 'Group', align: 'left', value: 'group' },
       { text: 'Email', align: 'left', value: 'email'},
-      { text: 'Password', align: 'left', value: 'password'},
       { text: 'Created', align: 'left', value: 'created_at'},
       { text: 'Last login', align: 'left', value: 'last_login'},
       { text: 'Coins', align: 'left', value: 'coins'},
