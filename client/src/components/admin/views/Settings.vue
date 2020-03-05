@@ -20,6 +20,7 @@
             <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">This copy of Meteor Next is <span class="body-1 font-weight-medium" style="color:#00b16a;">LICENSED</span></div>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.email" label="Email" style="margin-left:10px; padding-top:25px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.key" label="Key" style="margin-left:10px; padding-top:0px;" @click:append="show_key = !show_key" :append-icon="show_key ? 'visibility' : 'visibility_off'" :type="show_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.expiration" label="Expiration" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
           </v-flex>
 
           <!-- SQL -->
