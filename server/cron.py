@@ -1,10 +1,6 @@
 import os
 import json
-import uuid
 import time
-import hashlib
-import shutil
-import requests
 import schedule
 import threading
 
@@ -18,9 +14,6 @@ class Cron:
         self._app = app
         self._license = license
         self._sql = sql
-
-    def KMMLeSdKHFP9hBQCm7Pg9J3VtvjsNeEnuc4nyDV9ZD7QDxQUwaRgyddSZqxhsFP3(self):
-        return 'FBfLXedVRQ4Kj4tAZ2EUcYruu8KX8WPYLaxjaCYzxuM3yF89aPXwLxE2AMwWz5Jr'
 
     def start(self):
         # Init Crons

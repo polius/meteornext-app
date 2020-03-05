@@ -63,7 +63,7 @@ class Setup:
             self.__register_blueprints(sql)
             # Init cron
             self._cron = Cron(self._app, self._license, self._blueprints, sql)
-            self.__cron_start()
+            self._cron.start()
 
         except Exception:
             self._conf = {}
@@ -75,12 +75,6 @@ class Setup:
         @setup_blueprint.route('/setup', methods=['GET'])
         def setup():
             return jsonify({'setup': self.__setup_available()}), 200
-            # if self.__setup_available():
-            #     return jsonify({'setup': True}), 200
-            # else:
-            #     if self._license.status['code'] == 200:
-            #         return jsonify({'setup': False}), 200
-            #     return jsonify({"message": self._license.status['response']}), self._license.status['code']
 
         @setup_blueprint.route('/setup/license', methods=['POST'])
         def setup_license():
@@ -207,7 +201,7 @@ class Setup:
 
             # Init cron
             self._cron = Cron(self._app, self._license, self._blueprints, sql)
-            self.__cron_start()
+            self._cron.start()
 
             # Build return message
             return jsonify({'message': 'Setup Finished Successfully'}), 200
@@ -250,22 +244,6 @@ class Setup:
         # Register all blueprints
         for i in self._blueprints:
             self._app.register_blueprint(i.blueprint(), url_prefix=self._url_prefix)
-
-    def __cron_start(self):
-        # Check integrity
-        try:
-            response = self._cron.KMMLeSdKHFP9hBQCm7Pg9J3VtvjsNeEnuc4nyDV9ZD7QDxQUwaRgyddSZqxhsFP3()
-            if response != 'FBfLXedVRQ4Kj4tAZ2EUcYruu8KX8WPYLaxjaCYzxuM3yF89aPXwLxE2AMwWz5Jr':
-                sys.exit()
-        except BaseException:
-            sys.exit()
-
-        # Start Cron
-        self._cron.start()
-
-    def __searchInListDict(self, list_dicts, key_name, value_to_find):
-        # Search a key value in a list of dictionaries
-        return len(filter(lambda obj: obj[key_name] == value_to_find, list_dicts)) > 0
 
 class License:
     def __init__(self, license):
@@ -324,6 +302,5 @@ class License:
                     response_code = 401
 
             self._license_status = {"code": response_code, "response": response_text, "date": date}
-        except Exception as e:
-            print(str(e))
+        except Exception:
             self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}
