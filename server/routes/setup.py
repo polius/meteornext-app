@@ -249,7 +249,7 @@ class License:
     def __init__(self, license):
         self._license_params = license
         self._license_status = {} 
-        self._license_timeout = 1  # Minutes
+        self._license_timeout = 60  # Minutes
         self._last_login_date = str(datetime.utcnow())
         self._next_check = None
         self._next_check2 = None
