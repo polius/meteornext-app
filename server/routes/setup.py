@@ -249,8 +249,10 @@ class License:
     def __init__(self, license):
         self._license_params = license
         self._license_status = {} 
+        self._license_timeout = 1  # Minutes
         self._last_login_date = str(datetime.utcnow())
-        self._next_check = str(datetime.utcnow() + timedelta(hours=1))
+        self._next_check = None
+        self._next_check2 = None
 
     @property
     def status(self):
@@ -262,16 +264,14 @@ class License:
 
     def validated(self):
         current_utc = str(datetime.utcnow())
-
-        # Check license if its expired
-        if not self._license_status or self._license_status['code'] != 200:
+        # Check if first time
+        if not self._license_status:
             self.__check()
         # Check license if time was changed
         elif current_utc <= self._last_login_date or current_utc <= self._license_status['date']:
             self.__check()
         # Check next validation
-        elif current_utc > str(datetime.strptime(self._license_status['date'], '%Y-%m-%d %H:%M:%S.%f') + timedelta(hours=1)) or current_utc > self._next_check:
-            self._next_check = str(datetime.utcnow() + timedelta(hours=1))
+        elif current_utc > self._next_check or current_utc > self._next_check2:
             self.__check()
 
         # Store last login date
@@ -287,11 +287,10 @@ class License:
             response = requests.post("https://license.meteor2.io/", json=self._license_params, allow_redirects=False)
             response_code = response.status_code
             response_text = json.loads(response.text)['response']
-            date = None
+            date = json.loads(response.text)['date']
 
             # Solve challenge
             if response_code == 200:
-                date = json.loads(response.text)['date']
                 response_challenge = json.loads(response.text)['challenge']
                 challenge = ','.join([str(ord(i)) for i in self._license_params['challenge']])
                 challenge = hashlib.sha3_256(challenge.encode()).hexdigest()
@@ -303,4 +302,8 @@ class License:
 
             self._license_status = {"code": response_code, "response": response_text, "date": date}
         except Exception:
-            self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}
+            self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established", "date": date}
+        finally:
+            minutes = self._license_timeout if self._license_status['code'] == 200 else 1
+            self._next_check = str(datetime.utcnow() + timedelta(minutes=minutes))
+            self._next_check2 = str(datetime.strptime(self._license_status['date'], '%Y-%m-%d %H:%M:%S.%f') + timedelta(minutes=minutes))
