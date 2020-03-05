@@ -98,8 +98,8 @@
 
     <!-- FOOTER -->
     <!--
-    <v-footer app v-if="isLoggedIn && showBottomNavbar()" style="height:30px;">
-      <span class="px-3"></span>
+    <v-footer app v-if="isLoggedIn && showBottomNavbar()" style="height:50px;">
+      <span class="px-3" style="text-align:center; margin-left:auto; margin-right:auto;"> Copyright © 2020 Meteor Next</span>
     </v-footer>
     -->
   </v-app>
