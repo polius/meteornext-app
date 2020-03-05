@@ -19,7 +19,8 @@ import models.admin.settings
 import routes.deployments.meteor
 
 class Deployments:
-    def __init__(self, app, sql):
+    def __init__(self, app, sql, license):
+        self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
         self._releases = models.deployments.releases.Releases(sql)
@@ -34,9 +35,6 @@ class Deployments:
         # Init meteor
         self._meteor = routes.deployments.meteor.Meteor(app, sql)
 
-    def license(self, value):
-        self._license = value
-
     def blueprint(self):
         # Init blueprint
         deployments_blueprint = Blueprint('deployments', __name__, template_folder='deployments')
@@ -45,8 +43,8 @@ class Deployments:
         @jwt_required
         def deployments_method():
             # Check license
-            if not self._license['status']:
-                return jsonify({"message": self._license['response']}), 401
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
@@ -69,8 +67,8 @@ class Deployments:
         @jwt_required
         def deployments_results_method():
             # Check license
-            if not self._license['status']:
-                return jsonify({"message": self._license['response']}), 401
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
 
             # Get Request Json URI
             uri = request.args.get('uri')

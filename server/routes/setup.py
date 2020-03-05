@@ -9,6 +9,7 @@ import threading
 import models.admin.groups
 import models.admin.users
 import models.mysql
+from datetime import datetime, timedelta
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity)
 
@@ -43,7 +44,7 @@ class Setup:
         self._schema_file = "{}/models/schema.sql".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/models/schema.sql".format(sys._MEIPASS)
         self._logs_folder = "{}/logs".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/logs".format(os.path.dirname(sys.executable))
         self._blueprints = []
-        self._license = {}
+        self._license = None
         self._cron = None
         
         # Start Setup
@@ -55,15 +56,16 @@ class Setup:
             # Test sql connection
             sql = models.mysql.mysql(self._conf['sql']['hostname'], self._conf['sql']['username'], self._conf['sql']['password'], self._conf['sql']['port'], self._conf['sql']['database'])
             sql.test()
-            # Check license
-            self._license = self.__check_license(self._conf['license'])
+            # Init license
+            self._license = License(self._conf['license'])
+            self._license.validated()
             # Register blueprints
             self.__register_blueprints(sql)
             # Init cron
-            self._cron = Cron(self._app, self._license, self._conf['license'], self._blueprints, sql)
+            self._cron = Cron(self._app, self._license, self._blueprints, sql)
             self.__cron_start()
 
-        except Exception as e:
+        except Exception:
             self._conf = {}
 
     def blueprint(self):
@@ -72,13 +74,13 @@ class Setup:
 
         @setup_blueprint.route('/setup', methods=['GET'])
         def setup():
-            if self.__setup_available():
-                return jsonify({'setup': True}), 200
-            else:
-                lic = self._cron.license
-                if lic['status'] == 200:
-                    return jsonify({'setup': False}), 200
-                return jsonify({"message": lic['response']}), lic['code']
+            return jsonify({'setup': self.__setup_available()}), 200
+            # if self.__setup_available():
+            #     return jsonify({'setup': True}), 200
+            # else:
+            #     if self._license.status['code'] == 200:
+            #         return jsonify({'setup': False}), 200
+            #     return jsonify({"message": self._license.status['response']}), self._license.status['code']
 
         @setup_blueprint.route('/setup/license', methods=['POST'])
         def setup_license():
@@ -96,8 +98,9 @@ class Setup:
             setup_json['uuid'] = str(uuid.getnode())
 
             # Part 1: Check License
-            self._license = self.__check_license(setup_json)
-            return jsonify({"message": self._license['response']}), self._license['code']
+            self._license = License(setup_json)
+            self._license.validated()
+            return jsonify({"message": self._license.status['response']}), self._license.status['code']
             
         @setup_blueprint.route('/setup/sql', methods=['POST'])
         def setup_sql():
@@ -203,7 +206,7 @@ class Setup:
             self._conf['license']['uuid'] = str(uuid.getnode())
 
             # Init cron
-            self._cron = Cron(self._app, self._license, self._conf['license'], self._blueprints, sql)
+            self._cron = Cron(self._app, self._license, self._blueprints, sql)
             self.__cron_start()
 
             # Build return message
@@ -222,59 +225,30 @@ class Setup:
                     return False
         return True
 
-    def __check_license(self, license):
-        try:
-            # Generate challenge
-            license['challenge'] = str(uuid.uuid4())
-
-            # Check license
-            response = requests.post("https://license.meteor2.io/", json=license, allow_redirects=False)
-            response_code = response.status_code
-            response_status = response.status_code == 200
-            response_text = json.loads(response.text)['response']
-
-            # Solve challenge
-            if response_status == 200:
-                response_challenge = json.loads(response.text)['challenge']
-                challenge = ','.join([str(ord(i)) for i in license['challenge']])
-                challenge = hashlib.sha3_256(challenge.encode()).hexdigest()
-
-                # Validate challenge
-                if response_challenge != challenge:
-                    response_text = "The license is not valid"
-                    response_code = 401
-                    response_status = False
-
-            return {"status": response_status, "code": response_code, "response": response_text}
-
-        except Exception:
-            return {"status": False, "code": 404, "response": "A connection to the licensing server could not be established"}
-
     def __register_blueprints(self, sql):
         # Init all blueprints
-        login = routes.login.Login(self._app, sql)
-        profile = routes.profile.Profile(self._app, sql)
-        notifications = routes.notifications.Notifications(self._app, sql)
-        settings = routes.admin.settings.Settings(self._app, sql, self._conf)
-        groups = routes.admin.groups.Groups(self._app, sql)
-        users = routes.admin.users.Users(self._app, sql)
-        admin_deployments = routes.admin.deployments.Deployments(self._app, sql)
-        environments = routes.deployments.settings.environments.Environments(self._app, sql)
-        regions = routes.deployments.settings.regions.Regions(self._app, sql)
-        servers = routes.deployments.settings.servers.Servers(self._app, sql)
-        auxiliary = routes.deployments.settings.auxiliary.Auxiliary(self._app, sql)
-        slack = routes.deployments.settings.slack.Slack(self._app, sql)
-        releases = routes.deployments.releases.Releases(self._app, sql)
-        deployments = routes.deployments.deployments.Deployments(self._app, sql)
-        deployments_basic = routes.deployments.views.basic.Basic(self._app, sql)
-        deployments_pro = routes.deployments.views.pro.Pro(self._app, sql)
-        deployments_inbenta = routes.deployments.views.inbenta.Inbenta(self._app, sql)
+        login = routes.login.Login(self._app, sql, self._license)
+        profile = routes.profile.Profile(self._app, sql, self._license)
+        notifications = routes.notifications.Notifications(self._app, sql, self._license)
+        settings = routes.admin.settings.Settings(self._app, sql, self._license, self._conf)
+        groups = routes.admin.groups.Groups(self._app, sql, self._license)
+        users = routes.admin.users.Users(self._app, sql, self._license)
+        admin_deployments = routes.admin.deployments.Deployments(self._app, sql, self._license)
+        environments = routes.deployments.settings.environments.Environments(self._app, sql, self._license)
+        regions = routes.deployments.settings.regions.Regions(self._app, sql, self._license)
+        servers = routes.deployments.settings.servers.Servers(self._app, sql, self._license)
+        auxiliary = routes.deployments.settings.auxiliary.Auxiliary(self._app, sql, self._license)
+        slack = routes.deployments.settings.slack.Slack(self._app, sql, self._license)
+        releases = routes.deployments.releases.Releases(self._app, sql, self._license)
+        deployments = routes.deployments.deployments.Deployments(self._app, sql, self._license)
+        deployments_basic = routes.deployments.views.basic.Basic(self._app, sql, self._license)
+        deployments_pro = routes.deployments.views.pro.Pro(self._app, sql, self._license)
+        deployments_inbenta = routes.deployments.views.inbenta.Inbenta(self._app, sql, self._license)
 
         self._blueprints = [login, profile, notifications, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, slack, releases, deployments, deployments_basic, deployments_pro, deployments_inbenta]
 
         # Register all blueprints
         for i in self._blueprints:
-            i.license(self._license)
             self._app.register_blueprint(i.blueprint(), url_prefix=self._url_prefix)
 
     def __cron_start(self):
@@ -292,3 +266,64 @@ class Setup:
     def __searchInListDict(self, list_dicts, key_name, value_to_find):
         # Search a key value in a list of dictionaries
         return len(filter(lambda obj: obj[key_name] == value_to_find, list_dicts)) > 0
+
+class License:
+    def __init__(self, license):
+        self._license_params = license
+        self._license_status = {} 
+        self._last_login_date = str(datetime.utcnow())
+        self._next_check = str(datetime.utcnow() + timedelta(hours=1))
+
+    @property
+    def status(self):
+        return self._license_status
+
+    @property
+    def validated(self):
+        return self._license_status and self._license_status['code'] == 200
+
+    def validated(self):
+        current_utc = str(datetime.utcnow())
+
+        # Check license if its expired
+        if not self._license_status or self._license_status['code'] != 200:
+            self.__check()
+        # Check license if time was changed
+        elif current_utc <= self._last_login_date or current_utc <= self._license_status['date']:
+            self.__check()
+        # Check next validation
+        elif current_utc > str(datetime.strptime(self._license_status['date'], '%Y-%m-%d %H:%M:%S.%f') + timedelta(hours=1)) or current_utc > self._next_check:
+            self._next_check = str(datetime.utcnow() + timedelta(hours=1))
+            self.__check()
+
+        # Store last login date
+        self._last_login_date = current_utc
+        return self._license_status['code'] == 200
+
+    def __check(self):
+        try:
+            # Generate challenge
+            self._license_params['challenge'] = str(uuid.uuid4())
+
+            # Check license
+            response = requests.post("https://license.meteor2.io/", json=self._license_params, allow_redirects=False)
+            response_code = response.status_code
+            response_text = json.loads(response.text)['response']
+            date = None
+
+            # Solve challenge
+            if response_code == 200:
+                date = json.loads(response.text)['date']
+                response_challenge = json.loads(response.text)['challenge']
+                challenge = ','.join([str(ord(i)) for i in self._license_params['challenge']])
+                challenge = hashlib.sha3_256(challenge.encode()).hexdigest()
+
+                # Validate challenge
+                if response_challenge != challenge:
+                    response_text = "The license is not valid"
+                    response_code = 401
+
+            self._license_status = {"code": response_code, "response": response_text, "date": date}
+        except Exception as e:
+            print(str(e))
+            self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}

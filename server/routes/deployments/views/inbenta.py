@@ -17,8 +17,9 @@ import models.notifications
 import routes.deployments.meteor
 
 class Inbenta:
-    def __init__(self, app, sql):
+    def __init__(self, app, sql, license):
         self._app = app
+        self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
@@ -32,9 +33,6 @@ class Inbenta:
         # Init meteor
         self._meteor = routes.deployments.meteor.Meteor(app, sql)
 
-    def license(self, value):
-        self._license = value
-
     def blueprint(self):
         # Init blueprint
         deployments_inbenta_blueprint = Blueprint('deployments_inbenta', __name__, template_folder='deployments_inbenta')
@@ -43,8 +41,8 @@ class Inbenta:
         @jwt_required
         def deployments_inbenta_method():
             # Check license
-            if not self._license['status']:
-                return jsonify({"message": self._license['response']}), 401
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
@@ -67,8 +65,8 @@ class Inbenta:
         @jwt_required
         def deployments_inbenta_executions():
             # Check license
-            if not self._license['status']:
-                return jsonify({"message": self._license['response']}), 401
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
@@ -92,8 +90,8 @@ class Inbenta:
         @jwt_required
         def deployments_inbenta_start():
             # Check license
-            if not self._license['status']:
-                return jsonify({"message": self._license['response']}), 401
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
@@ -119,8 +117,8 @@ class Inbenta:
         @jwt_required
         def deployments_inbenta_stop():
             # Check license
-            if not self._license['status']:
-                return jsonify({"message": self._license['response']}), 401
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
@@ -146,8 +144,8 @@ class Inbenta:
         @jwt_required
         def deployments_inbenta_public():
             # Check license
-            if not self._license['status']:
-                return jsonify({"message": self._license['response']}), 401
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]

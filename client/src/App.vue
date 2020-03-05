@@ -31,8 +31,8 @@
       <!-- NOTIFICATIONS BAR -->
       <div>
         <v-tooltip>
-          <template v-slot:activator="">
-            <v-btn icon @click.stop="openNotifications()" title="Notifications">
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" icon @click.stop="openNotifications()" title="Notifications">
               <v-badge v-if="notifications.length > 0" color="red" overlap>
                 <span slot="badge">{{ notifications.length }}</span>
                 <v-icon>fas fa-bell</v-icon>

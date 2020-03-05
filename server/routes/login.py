@@ -6,14 +6,13 @@ from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_r
 import routes.admin.settings
 
 class Login:
-    def __init__(self, app, sql):
+    def __init__(self, app, sql, license):
+        self._app = app
+        self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
         # Init routes
-        self._settings = routes.admin.settings.Settings(app, sql)
-
-    def license(self, value):
-        self._license = value
+        self._settings = routes.admin.settings.Settings(app, sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -22,8 +21,8 @@ class Login:
         @login_blueprint.route('/login', methods=['POST'])
         def login_user():
             # Check license
-            if not self._license['status']:
-                return jsonify({"message": self._license['response']}), 401
+            if not self._license.validated():
+                return jsonify({"message": self._license.status['response']}), 401
 
             # Check parameters
             if not request.is_json:

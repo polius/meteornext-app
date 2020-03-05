@@ -7,15 +7,13 @@ import models.admin.users
 import routes.admin.settings
 
 class Users:
-    def __init__(self, app, sql):
+    def __init__(self, app, sql, license):
+        self._license = license
         # Init models
         self._groups = models.admin.groups.Groups(sql)
         self._users = models.admin.users.Users(sql)
         # Init routes
-        self._settings = routes.admin.settings.Settings(app, sql)
-
-    def license(self, value):
-        self._license = value
+        self._settings = routes.admin.settings.Settings(app, sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -25,8 +23,8 @@ class Users:
         @jwt_required
         def users_method():
             # Check license
-            if not self._license['status']:
-                return jsonify({"message": self._license['response']}), 401
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
 
             # Check Settings - Security (Administration URL)
             if not self._settings.check_url():

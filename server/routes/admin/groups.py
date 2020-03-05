@@ -12,21 +12,19 @@ import routes.deployments.settings.slack
 import routes.admin.settings
 
 class Groups:
-    def __init__(self, app, sql):
+    def __init__(self, app, sql, license):
+        self._license = license
         # Init models
         self._groups = models.admin.groups.Groups(sql)
         self._users = models.admin.users.Users(sql)
 
         # Init routes
-        self._environments = routes.deployments.settings.environments.Environments(app, sql)
-        self._regions = routes.deployments.settings.regions.Regions(app, sql)
-        self._servers = routes.deployments.settings.servers.Servers(app, sql)
-        self._auxiliary = routes.deployments.settings.auxiliary.Auxiliary(app, sql)
-        self._slack = routes.deployments.settings.slack.Slack(app, sql)
-        self._settings = routes.admin.settings.Settings(app, sql)
-
-    def license(self, value):
-        self._license = value
+        self._environments = routes.deployments.settings.environments.Environments(app, sql, license)
+        self._regions = routes.deployments.settings.regions.Regions(app, sql, license)
+        self._servers = routes.deployments.settings.servers.Servers(app, sql, license)
+        self._auxiliary = routes.deployments.settings.auxiliary.Auxiliary(app, sql, license)
+        self._slack = routes.deployments.settings.slack.Slack(app, sql, license)
+        self._settings = routes.admin.settings.Settings(app, sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -36,8 +34,8 @@ class Groups:
         @jwt_required
         def groups_method():
             # Check license
-            if not self._license['status']:
-                return jsonify({"message": self._license['response']}), 401
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
 
             # Check Settings - Security (Administration URL)
             if not self._settings.check_url():
