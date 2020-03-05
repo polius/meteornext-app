@@ -5,13 +5,11 @@ import models.admin.users
 import models.notifications
 
 class Notifications:
-    def __init__(self, app, sql):
+    def __init__(self, app, sql, license):
+        self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
         self._notifications = models.notifications.Notifications(sql)
-
-    def license(self, value):
-        self._license = value
 
     def blueprint(self):
         # Init blueprint
@@ -21,8 +19,8 @@ class Notifications:
         @jwt_required
         def notifications_method():
             # Check license
-            if not self._license['status']:
-                return jsonify({"message": self._license['response']}), 401
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
@@ -41,8 +39,8 @@ class Notifications:
         @jwt_required
         def notifications_bar_method():
             # Check license
-            if not self._license['status']:
-                return jsonify({"message": self._license['response']}), 401
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
             
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
@@ -54,8 +52,8 @@ class Notifications:
         @jwt_required
         def notifications_clear_method():
             # Check license
-            if not self._license['status']:
-                return jsonify({"message": self._license['response']}), 401
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
             
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
