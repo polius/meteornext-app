@@ -61,6 +61,7 @@ class Settings:
 
         # Get License Settings
         settings['license'] = self._settings_conf['license']
+        settings['license']['expiration'] = self._license.status['expiration']
 
         # Get SQL Settings
         settings['sql'] = self._settings_conf['sql']

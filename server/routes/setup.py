@@ -288,6 +288,7 @@ class License:
             response_code = response.status_code
             response_text = json.loads(response.text)['response']
             date = json.loads(response.text)['date']
+            expiration = None if 'expiration' not in json.loads(response.text) else json.loads(response.text)['expiration']
 
             # Solve challenge
             if response_code == 200:
@@ -300,9 +301,9 @@ class License:
                     response_text = "The license is not valid"
                     response_code = 401
 
-            self._license_status = {"code": response_code, "response": response_text, "date": date}
+            self._license_status = {"code": response_code, "response": response_text, "date": date, "expiration": expiration}
         except Exception:
-            self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established", "date": date}
+            self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established", "date": date, "expiration": expiration}
         finally:
             minutes = self._license_timeout if self._license_status['code'] == 200 else 1
             self._next_check = str(datetime.utcnow() + timedelta(minutes=minutes))
