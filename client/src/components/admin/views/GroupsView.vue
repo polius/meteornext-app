@@ -79,7 +79,7 @@
                 <v-text-field v-model="environment_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" hide-default-footer show-select class="elevation-1">
+              <v-data-table v-model="environment_selected" :headers="environment_headers" :items="environment_items" :search="environment_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" :hide-default-header="environment_items.length == 0" :hide-default-footer="environment_items.length < 11" show-select class="elevation-1">
               </v-data-table>
             </v-card>
 
@@ -96,7 +96,7 @@
                 <v-text-field v-model="region_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="region_selected" :headers="region_headers" :items="region_items" :search="region_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" :hide-default-header="region_items.length == 0" hide-default-footer show-select class="elevation-1">
+              <v-data-table v-model="region_selected" :headers="region_headers" :items="region_items" :search="region_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" :hide-default-header="region_items.length == 0" :hide-default-footer="region_items.length < 11" show-select class="elevation-1">
                 <template v-slot:item.ssh_tunnel="props">
                   <v-icon v-if="props.item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
                   <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>
@@ -125,7 +125,7 @@
               <v-text-field v-model="server_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
             </v-toolbar>
             <v-divider></v-divider>
-            <v-data-table v-model="server_selected" :headers="server_headers" :items="server_items" :search="server_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" :hide-default-header="server_items.length == 0" hide-default-footer show-select class="elevation-1">
+            <v-data-table v-model="server_selected" :headers="server_headers" :items="server_items" :search="server_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" :hide-default-header="server_items.length == 0" :hide-default-footer="server_items.length < 11" show-select class="elevation-1">
             </v-data-table>
             </v-card>
 
@@ -142,7 +142,7 @@
                 <v-text-field v-model="auxiliary_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="auxiliary_selected" :headers="auxiliary_headers" :items="auxiliary_items" :search="auxiliary_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" :hide-default-header="auxiliary_items.length == 0" hide-default-footer show-select class="elevation-1">
+              <v-data-table v-model="auxiliary_selected" :headers="auxiliary_headers" :items="auxiliary_items" :search="auxiliary_search" :loading="loading" loading-text="Loading... Please wait" item-key="name" :hide-default-header="auxiliary_items.length == 0" :hide-default-footer="auxiliary_items.length < 11" show-select class="elevation-1">
                 <template v-slot:item.ssh_tunnel="props">
                   <v-icon v-if="props.item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
                   <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>

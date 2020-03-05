@@ -19,6 +19,9 @@
         <template v-slot:item.created_at="props">
           <span>{{ dateFormat(props.item.created_at) }}</span>
         </template>
+        <template v-slot:item.last_login="props">
+          <span>{{ dateFormat(props.item.last_login) }}</span>
+        </template>
       </v-data-table>
     </v-card>
 
@@ -74,6 +77,7 @@ export default {
       { text: 'Email', align: 'left', value: 'email'},
       { text: 'Password', align: 'left', value: 'password'},
       { text: 'Created', align: 'left', value: 'created_at'},
+      { text: 'Last login', align: 'left', value: 'last_login'},
       { text: 'Coins', align: 'left', value: 'coins'},
       { text: 'Admin', align: 'left', value: 'admin'},
     ],
