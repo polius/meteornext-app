@@ -10,7 +10,7 @@ import routes.setup
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.config['JWT_SECRET_KEY'] = secrets.token_urlsafe(nbytes=64)
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(days=1)  # days = 1 | hours = 8
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=12)
 jwt = JWTManager(app)
 
 # Instantiate & Register Settings Blueprint

@@ -128,7 +128,7 @@ export default {
   }),
   computed : {
     isLoggedIn : function() { return this.$store.getters.isLoggedIn },
-    admin : function() { return this.$store.getters.admin },
+    admin : function() { return this.$store.getters.admin == 0 ? false : this.$store.getters.admin },
     coins : function() { return this.$store.getters.coins },
     deployments_enable : function() { return this.$store.getters.deployments_enable }
   },
