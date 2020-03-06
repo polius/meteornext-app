@@ -84,7 +84,7 @@ class Deployments:
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
-            if not results['public'] and int(results['user_id']) != user['id']:
+            if not results['public'] and int(results['user_id']) != user['id'] and not user['admin']:
                 return jsonify({'title': 'Authorized Access Only', 'description': 'The URL provided is private' }), 400
 
             # Get Logs Settings
