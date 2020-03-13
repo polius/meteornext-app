@@ -1,19 +1,19 @@
 import os
 import time
-import json
-import threading
 import signal
+import threading
+import traceback
 from datetime import timedelta
 
 from deploy_regions import deploy_regions
+from region import Region
 
 class deployment:
     def __init__(self, args, imports, progress):
         # Init vars
         self._args = args
         self._imports = imports
-        self._credentials = imports.credentials
-        self._query_template = imports.query_template
+        self._config = imports.config
         self._progress = progress
         self._time = None
 
@@ -30,125 +30,94 @@ class deployment:
             # Show Header
             self.__show_execution_header(started_datetime, started_time)
 
-            try:
-                # Init Deploy Progress
-                progress = {}
-                for region in self._credentials['environments'][self._args.environment]:
-                    progress[region['region']] = {}
+            # Init Progress dictionary
+            progress = {i['name']: {} for i in self._config['regions']}
 
-                # Start Deployment
-                threads = []
-                for region in self._credentials['environments'][self._args.environment]:
-                    deploy_region = deploy_regions(self._args, self._imports, region)
-                    t = threading.Thread(target=deploy_region.start)
-                    t.alive = True
-                    t.error = False
-                    t.critical = []
-                    t.progress = []
-                    t.start()
-                    threads.append(t)
+            # Start Deployment
+            threads = []
+            for region in self._config['regions']:
+                r = Region(self._args, region)
+                t = threading.Thread(target=r.deploy)
+                threads.append(t)
+                t.start()
 
-                # Track Progress
-                track = threading.Thread(target=self.__track_progress, args=(progress, threads, started_datetime, started_time,))
-                track.alive = True
-                track.start()
-                track.join()
+            while any(t.is_alive() for t in threads):
+                self.__track_overall(progress, started_datetime, started_time)
+                time.sleep(1)
 
-                # Wait all threads
-                while any(t.is_alive() for t in threads):
-                    time.sleep(1)
+            # Print Execution Finished
+            queries_failed = False
+            for i in progress.values():
+                for j in i.values():
+                    if j['e']:
+                        queries_failed = True
+    
+            # Print status
+            if queries_failed:
+                print("- {}Execution Finished. Some queries failed".format('Test ' if self._args.test else ''))
+            else:
+                print("- {}Execution Finished Successfully".format('Test ' if self._args.test else ''))
 
-                # Get all existing critical errors in all threads (auxiliary connections related)
-                errors = []
-                for t in threads:
-                    for i in t.critical:
-                        if i not in errors:
-                            errors.append(i)
+            # Return status
+            return 1 if queries_failed else 0
 
-                if len(errors) > 0:
-                    errors_parsed = ''
-                    for i in errors:
-                        errors_parsed += i + '\n'
-                    errors_parsed = errors_parsed[:-1]
-                    raise Exception(errors_parsed)
+        except KeyboardInterrupt:
+            # Supress CTRL+C events
+            signal.signal(signal.SIGINT,signal.SIG_IGN)
+            print("--> Ctrl+C Received. Interrupting all regions...")
 
-                # Print Execution Finished
-                if any(t.error for t in threads):
-                    print("- {}Execution Finished. Some queries failed".format('Test ' if self._args.test else ''))
-                else:
-                    print("- {}Execution Finished Successfully".format('Test ' if self._args.test else ''))
+            # Interrupt Deployments
+            int_threads = []
+            for region in self._config['regions']:
+                r = Region(self._args, region)
+                t = threading.Thread(target=r.sigint())
+                int_threads.append(t)
+                t.start()
+            for t in int_threads:
+                t.join()
 
-                # Return Execution Status
-                return any(t.error for t in threads)
+            # Wait all deployments to be interrupted
+            for t in threads:
+                t.join()
 
-            except KeyboardInterrupt:
-                # Supress CTRL+C events
-                signal.signal(signal.SIGINT,signal.SIG_IGN)
-                print("\n--> Ctrl+C Received. Stopping All Region Processes...")
+            print("--> {}Execution Interrupted Successfully".format('Test ' if self._args.test else ''))   
 
-                # Stop & Wait Tracking Thread
-                track.alive = False
-                track.join()
+            # Enable CTRL+C events
+            signal.signal(signal.SIGINT, signal.default_int_handler)
 
-                # Stop Execution Threads
-                for t in threads:
-                    t.alive = False
+            # Raise KeyboardInterrupt
+            raise
 
-                # Wait Execution Threads
-                for t in threads:
-                    t.join()
-
-                print("- {}Execution Interrupted".format('Test ' if self._args.test else ''))   
-
-                # Enable CTRL+C events
-                signal.signal(signal.SIGINT, signal.default_int_handler)
-
-                # Raise KeyboardInterrupt
-                raise
         finally:
             self._time = time.time()
 
-    def __track_progress(self, progress, threads, started_datetime, started_time):
-        # Get current thread
-        current_thread = threading.current_thread()
+    def __track_overall(self, progress, started_datetime, started_time):
+        # Start tracking all regions
+        threads = []
+        for region in self._imports.config['regions']:
+            # Get progress
+            r = Region(self._args, region)
+            t = threading.Thread(target=r.get_progress)
+            t.region = region['name']
+            t.progress = {}
+            threads.append(t)
+            t.start()
 
-        tracking = True
-        while tracking:
-            track_progress = True
+        # Wait tracking to finish in all regions
+        for t in threads:
+            t.join()
+            if len(t.progress.keys()) > 0:
+                progress[t.region] = t.progress
 
-            # Check current thread status
-            if not current_thread.alive:
-                return
-
-            # Check if all processes have finished
-            if all(not t.is_alive() for t in threads):
-                tracking = False
-
-            # Calculate Progress
-            for t in threads:
-                for r in range(len(t.progress)):
-                    item = t.progress.pop(0)
-
-                    if item['s'] not in progress[item['r']] or 'e' not in progress[item['r']][item['s']]:
-                        progress[item['r']][item['s']] = { "p": item['p'], "d": item['d'], "t": item['t'] }
-                    else:
-                        progress[item['r']][item['s']]['p'] = item['p']
-                        progress[item['r']][item['s']]['d'] = item['d']
-                        progress[item['r']][item['s']]['t'] = item['t']
-
-            # Print & Track Progress
-            # self.__show_execution_header(started_datetime, started_time)
-
-            for region in self._credentials['environments'][self._args.environment]:
-                environment_type = '[SSH]  ' if region['ssh']['enabled'] else '[LOCAL]'
-                region_total_databases = sum([int(rp['t']) if 't' in rp else 0 for rp in progress[region['region']].values()])
-                region_databases = sum([int(rp['d']) if 'd' in rp else 0 for rp in progress[region['region']].values()])
-                overall_progress = 0 if region_total_databases == 0 else float(region_databases) / float(region_total_databases) * 100
-                print("--> {} Region '{}': {:.2f}% ({}/{} DBs)".format(environment_type, region['region'], overall_progress, region_databases, region_total_databases))
-
-            if track_progress:
-                self._progress.track_execution(value=progress)
-            time.sleep(1)
+        # Compute progress
+        self.__show_execution_header(started_datetime, started_time)
+        for region in self._imports.config['regions']:
+            environment_type = '[SSH]  ' if region['ssh']['enabled'] else '[LOCAL]'
+            region_total_databases = sum([int(rp['t']) if 't' in rp else 0 for rp in progress[region['name']].values()])
+            region_databases = sum([int(rp['d']) if 'd' in rp else 0 for rp in progress[region['name']].values()])
+            overall_progress = 0 if region_total_databases == 0 else float(region_databases) / float(region_total_databases) * 100
+            print("--> {} Region '{}': {:.2f}% ({}/{} DBs)".format(environment_type, region['name'], overall_progress, region_databases, region_total_databases))
+            self._progress.track_execution(value=progress)
 
     def __show_execution_header(self, started_datetime, started_time):
         # Clean Console
@@ -161,3 +130,18 @@ class deployment:
         # Show Execution Status
         elapsed = str(timedelta(seconds=time.time() - started_time))
         print("> Started: {} > Elapsed: {}".format(started_datetime, elapsed))
+
+    ##########
+    # REMOTE #
+    ##########
+    def deploy(self):
+        region = [i for i in self._config['regions'] if i['name'] == self._args.region]
+        if len(region) > 0:
+            deploy_region = deploy_regions(self._args, self._imports, region[0])
+            deploy_region.start()
+
+    def compress(self):
+        region = [i for i in self._config['regions'] if i['name'] == self._args.region]
+        if len(region) > 0:
+            r = Region(self._args, region[0])
+            r.compress_logs()

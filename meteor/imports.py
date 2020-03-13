@@ -8,36 +8,25 @@ from collections import OrderedDict
 class imports:
     def __init__(self, args):
         self._args = args
-        self._SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__)) 
-
-        # Import files
-        self._credentials = self.__load_credentials()
-        self._query_template = self.__load_query_template()
-        self._query_execution = self.__load_query_execution()
-
-    ###########
-    # Getters #
-    ###########
-    @property
-    def credentials(self):
-        return self._credentials
+        self._config = self.__load_config()
+        self._blueprint = self.__load_blueprint()
 
     @property
-    def query_template(self):
-        return self._query_template
+    def config(self):
+        return self._config
 
     @property
-    def query_execution(self):
-        return self._query_execution
+    def blueprint(self):
+        return self._blueprint
 
     ####################
     # Internal Methods #
     ####################
-    def __load_credentials(self):
+    def __load_config(self):
         try:
-            file_path = '{}/credentials.json'.format(self._args.execution_path)
+            file_path = '{}/config.json'.format(self._args.path)
             if not os.path.isfile(file_path):
-                print("The 'credentials.json' file has not been found in '{}'".format(file_path))
+                print("The 'config.json' file has not been found in '{}'".format(file_path))
                 sys.exit()
 
             with open(file_path) as data_file:
@@ -45,33 +34,14 @@ class imports:
                 return data
 
         except Exception:
-            print("The 'credentials.json' file has syntax errors. Please check if it's a valid JSON.")
+            print("The 'config.json' file has syntax errors. Please check if it's a valid JSON.")
             sys.exit()
 
-    def __load_query_execution(self):
-        file_path = "{}/query_execution.py".format(self._args.execution_path)
-        # Check if query_execution exists
-        if not os.path.isfile(file_path):
-            error_msg = "The 'query_execution.py' has not been found in '{}'".format(file_path)
-            print(error_msg)
-            self._progress.error(error_msg)
-            sys.exit()
-
-        # Check if query_execution is correctly parsed
+    def __load_blueprint(self):
         try:
-            query_execution = imp.load_source('query_execution', file_path).query_execution()
-            return query_execution
+            file_path = "{}/blueprint.py".format(self._args.path)
+            blueprint = imp.load_source('blueprint', file_path).blueprint()
+            return blueprint
         except Exception:
-            print("An error has been detected in Pro Code\n\n{}".format(traceback.format_exc()))
-            sys.exit()
-
-    def __load_query_template(self):
-        try:
-            file_path = '{}/query_template.json'.format(self._SCRIPT_PATH)
-            with open(file_path) as data_file:
-                data = json.load(data_file, object_pairs_hook=OrderedDict)
-                return data
-
-        except Exception:
-            print("The 'query_template.json' file has syntax errors. Please check if it's a valid JSON.")
+            print("The 'blueprint.py' has syntax errors.\n\n{}".format(traceback.format_exc()))
             sys.exit()

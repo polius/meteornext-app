@@ -8,7 +8,7 @@ class logs:
 
     def compile(self, logs, summary_raw, exception=None):
         try:
-            with open("{}/meteor.js".format(self._args.path), 'w') as write_file:
+            with open(self._args.execution_path + '/meteor.js', 'w') as write_file:
                 # Write Parsed Data
                 write_file.write('var DATA = {};\n'.format(json.dumps(logs, separators=(',', ':'))))
                 # Write Sorted Displayed Columns
@@ -30,13 +30,13 @@ class logs:
 
     def __compress(self):
         # Delete temp file
-        blueprint_pyc = "{}/blueprint.pyc".format(self._args.path)
-        if os.path.exists(blueprint_pyc):
-            os.remove(blueprint_pyc)
+        query_execution_pyc = self._args.execution_path + '/query_execution.pyc'
+        if os.path.exists(query_execution_pyc):
+            os.remove(query_execution_pyc)
 
-        pycache = "{}/__pycache__".format(self._args.path)
+        pycache = self._args.execution_path + '/__pycache__'
         if os.path.exists(pycache):
             shutil.rmtree(pycache)
 
         # Tar Gz Deploy Folder
-        shutil.make_archive(self._args.path, 'gztar', self._args.path)
+        shutil.make_archive(self._args.execution_path, 'gztar', self._args.execution_path)

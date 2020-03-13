@@ -3,33 +3,33 @@ import boto3
 class amazon_s3:
     def __init__(self, args, imports, progress):
         self._args = args
-        self._config = imports.config
+        self._credentials = imports.credentials
         self._progress = progress
 
-        if self._config['amazon_s3']['enabled']:
+        if self._credentials['amazon_s3']['enabled']:
             session = boto3.Session(
-                aws_access_key_id=self._config['amazon_s3']['aws_access_key_id'],
-                aws_secret_access_key=self._config['amazon_s3']['aws_secret_access_key'],
-                region_name=self._config['amazon_s3']['region_name']
+                aws_access_key_id=self._credentials['amazon_s3']['aws_access_key_id'],
+                aws_secret_access_key=self._credentials['amazon_s3']['aws_secret_access_key'],
+                region_name=self._credentials['amazon_s3']['region_name']
             )
             self._amazon_s3 = session.resource('s3')
 
     def upload_logs(self):
         # Upload Logs to S3
-        if self._config['amazon_s3']['enabled']:
+        if self._credentials['amazon_s3']['enabled']:
             print("+==================================================================+")
             print("|  AMAZON S3                                                       |")
             print("+==================================================================+")
             try:
                 # Upload Logs to S3
-                status_msg = "- Uploading Logs to S3 Bucket '{}'...".format(self._config['amazon_s3']['bucket_name'])
+                status_msg = "- Uploading Logs to S3 Bucket '{}'...".format(self._credentials['amazon_s3']['bucket_name'])
                 print(status_msg)
                 self._progress.track_tasks("Uploading Results to Amazon S3...")
                 execution_name = self._args.execution_path[self._args.execution_path.rfind('/')+1:]
 
                 # 1. Upload Compressed Logs Folder to '/logs'
                 file_path = "{}.tar.gz".format(self._args.execution_path)
-                bucket_name = self._config['amazon_s3']['bucket_name']
+                bucket_name = self._credentials['amazon_s3']['bucket_name']
                 s3_path = "logs/{}.tar.gz".format(execution_name)
                 self._amazon_s3.meta.client.upload_file(file_path, bucket_name, s3_path)
 

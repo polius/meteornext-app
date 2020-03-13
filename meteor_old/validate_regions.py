@@ -5,18 +5,15 @@ import paramiko
 import sshtunnel
 import threading
 
-from region import Region
-
 class validate_regions:
     def __init__(self, args, credentials, region):
         self._args = args
         self._credentials = credentials
         self._region = region
-        self._Region = Region(args, region)
 
     def validate(self):
         region_type = '[SSH]  ' if self._region['ssh']['enabled'] else '[LOCAL]'
-        print("--> {} Region '{}' Started...".format(region_type, self._region['name']))
+        print("--> {} Region '{}' Started...".format(region_type, self._region['region']))
 
         # Get current thread 
         current_thread = threading.current_thread()
@@ -26,13 +23,12 @@ class validate_regions:
             try:
                 self.__validate_ssh()
             except Exception as e:
-                print(str(e))
-                current_thread.progress = {'region': self._region['name'], 'success': False, 'error': str(e)}
-                print("--> {} Region '{}' Failed.".format(region_type, self._region['name']))
+                current_thread.progress = {'region': self._region['region'], 'success': False, 'error': str(e)}
+                print("--> {} Region '{}' Failed.".format(region_type, self._region['region']))
                 return
 
         # SQL Validation
-        progress = {'region': self._region['name'], 'errors': []}
+        progress = {'region': self._region['region'], 'errors': []}
         threads = []
         for server in self._region['sql']:
             t = threading.Thread(target=self.__validate_sql, args=(server,))
@@ -49,7 +45,7 @@ class validate_regions:
         for t in threads:
             connection_succeeded &= t.progress['success']
             if t.progress['success'] == False:
-                print("    [{}/SQL] {} {}".format(self._region['name'], t.progress['sql'], t.progress['error']))
+                print("    [{}/SQL] {} {}".format(self._region['region'], t.progress['sql'], t.progress['error']))
                 progress['errors'].append({'server': t.progress['sql'], 'error': t.progress['error'].replace('"', '\\"')})
 
         # In case of no errors, remove the 'errors' key
@@ -58,16 +54,16 @@ class validate_regions:
 
         # Print status
         if connection_succeeded:
-            print("--> {} Region '{}' Finished.".format(region_type, self._region['name']))
+            print("--> {} Region '{}' Finished.".format(region_type, self._region['region']))
         else:
-            print("--> {} Region '{}' Failed.".format(region_type, self._region['name']))
+            print("--> {} Region '{}' Failed.".format(region_type, self._region['region']))
 
         # Return validation status
         progress['success'] = connection_succeeded
         current_thread.progress = progress
 
     def __validate_ssh(self):
-        # Validate SSH Connection
+        # Supress Errors Output
         sys_stderr = sys.stderr
         sys.stderr = open('/dev/null', 'w')
         try:
@@ -77,13 +73,8 @@ class validate_regions:
             client.connect(hostname=self._region['ssh']['hostname'], port=int(self._region['ssh']['port']), username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'], timeout=10)
             client.close()
         finally:
+            # Show Errors Output Again
             sys.stderr = sys_stderr
-
-        # Validate SSH Meteor Version
-        if self._region['ssh']['enabled']:
-            check = self._Region.check_version()
-            if not check:
-                self._Region.upload_binary()
 
     def __validate_sql(self, server):
         # Supress Errors Output
@@ -106,7 +97,7 @@ class validate_regions:
                 else:
                     conn = pymysql.connect(host=server['hostname'], port=int(server['port']), user=server['username'], passwd=server['password'])
                     conn.close()
-                current_thread.progress = {"region": self._region['name'], "sql": server['name'], "success": True}
+                current_thread.progress = {"region": self._region['region'], "sql": server['name'], "success": True}
                 break
 
             except Exception as e:
@@ -117,4 +108,4 @@ class validate_regions:
         sys.stderr = sys_stderr
 
         if error is not None:
-            current_thread.progress = {"region": self._region['name'], "sql": server['name'], "success": False, "error": str(error).replace('\n','')}
+            current_thread.progress = {"region": self._region['region'], "sql": server['name'], "success": False, "error": str(error).replace('\n','')}

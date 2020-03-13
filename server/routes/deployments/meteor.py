@@ -30,9 +30,9 @@ class Meteor:
         self._auxiliary = models.deployments.auxiliary.Auxiliary(sql)
         self._slack = models.deployments.slack.Slack(sql)
 
-        # Init Meteor Credentials
-        self._query_execution = ''
-        self._credentials = {}
+        # Init Meteor Config
+        self._blueprint = ''
+        self._config = {}
 
         # Retrieve Meteor Logs Path
         self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
@@ -53,31 +53,31 @@ class Meteor:
             os.makedirs('{}/{}/keys'.format(self._logs['local']['path'], self._uuid))
 
         # Compile Meteor Files
-        self.__compile_credentials(deployment)
-        self.__compile_query_execution(deployment)
+        self.__compile_config(deployment)
+        self.__compile_blueprint(deployment)
 
         # Execute Meteor
         self.__execute(deployment)
 
-    def __compile_credentials(self, deployment):
+    def __compile_config(self, deployment):
         # Get Data
-        environments = self._environments.get(deployment['group_id'])
+        environments = self._regions.get(deployment['group_id'])
         regions = self._regions.get(deployment['group_id'])
         servers = self._servers.get(deployment['group_id'])
         auxiliary = self._auxiliary.get(deployment['group_id'])
         slack = self._slack.get(deployment['group_id'])
     
-        # Compile [Environments, Regions, Servers]
-        self._credentials['environments'] = {}
+        # Compile Regions
+        self._config['regions'] = []
 
         for environment in environments:
             if environment['name'] == deployment['environment']:
-                self._credentials['environments'][environment['name']] = []
                 for region in regions:
                     if region['environment_id'] == environment['id']:
+                        # Compile SSH
                         key_path = "{}/{}/keys/r{}".format(self._logs['local']['path'], self._uuid, region['id'])
                         region_data = {
-                            "region": region['name'],
+                            "name": region['name'],
                             "ssh": {
                                 "enabled": True if region['ssh_tunnel'] else False,
                                 "hostname": "" if region['hostname'] is None else region['hostname'],
@@ -95,8 +95,9 @@ class Meteor:
                                 outfile.write(region['key'])
                             os.chmod(key_path, 0o600)
 
+                        # Compile SQL
                         for server in servers:
-                            if server['environment_id'] == environment['id'] and server['region_id'] == region['id']:
+                            if server['region_id'] == region['id']:
                                 region_data['sql'].append({
                                     "name": server['name'],
                                     "engine": server['engine'],
@@ -107,13 +108,14 @@ class Meteor:
                                 })
 
                         # Add region data to the credentials
-                        self._credentials['environments'][environment['name']].append(region_data)
+                        self._config['regions'].append(region_data)
+                break
 
         # Compile Auxiliary Connections
-        self._credentials['auxiliary_connections'] = {}
+        self._config['auxiliary_connections'] = {}
         for aux in auxiliary:
             key_path = "{}/{}/keys/a{}".format(self._logs['local']['path'], self._uuid, aux['id'])
-            self._credentials['auxiliary_connections'][aux['name']] = {
+            self._config['auxiliary_connections'][aux['name']] = {
                 "ssh": {
                     "enabled": True if aux['ssh_tunnel'] else False,
                     "hostname": "" if aux['ssh_hostname'] is None else aux['ssh_hostname'],
@@ -138,7 +140,7 @@ class Meteor:
                 os.chmod(key_path, 0o600)
         
         # Compile Logs
-        self._credentials['amazon_s3'] = {
+        self._config['amazon_s3'] = {
             "enabled": False,
             "aws_access_key_id": "",
             "aws_secret_access_key": "",
@@ -147,7 +149,7 @@ class Meteor:
         }
 
         if 'amazon_s3' in self._logs and self._logs['amazon_s3']['enabled']:
-            self._credentials['amazon_s3'] = {
+            self._config['amazon_s3'] = {
                 "enabled": True,
                 "aws_access_key_id": self._logs['amazon_s3']['aws_access_key'],
                 "aws_secret_access_key": self._logs['amazon_s3']['aws_secret_access_key'],
@@ -156,13 +158,13 @@ class Meteor:
             }
 
         # Compile Slack
-        self._credentials['slack'] = {
+        self._config['slack'] = {
             "enabled": False,
             "channel_name": "",
             "webhook_url": ""
         }
         if len(slack) > 0:
-            self._credentials['slack'] = {
+            self._config['slack'] = {
                 "enabled": True if slack[0]['enabled'] else False,
                 "channel_name": slack[0]['channel_name'],
                 "webhook_url": slack[0]['webhook_url']
@@ -172,7 +174,8 @@ class Meteor:
         with open("{}/server.conf".format(self._base_path)) as outfile:
             next_credentials = json.load(outfile)['sql']
 
-        self._credentials['meteor_next'] = {
+        # Compile Meteor Next Credentials
+        self._config['meteor_next'] = {
             "enabled": True,
             "hostname": next_credentials['hostname'],
             "port": int(next_credentials['port']),
@@ -181,30 +184,40 @@ class Meteor:
             "database": next_credentials['database']
         }
 
-        # Store Credentials
-        with open("{}/{}/credentials.json".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
-            json.dump(self._credentials, outfile)
+        # Compile Meteor Next Params
+        self._config['params'] = {
+            "id": deployment['execution_id'],
+            "mode": deployment['mode'].lower(),
+            "user": deployment['user'],
+            "threads": deployment['execution_threads'],
+            "limit": deployment['execution_limit'],
+            "environment": deployment['environment']
+        }
 
-    def __compile_query_execution(self, deployment):
+        # Store Config
+        with open("{}/{}/config.json".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
+            json.dump(self._config, outfile)
+
+    def __compile_blueprint(self, deployment):
         if deployment['mode'] == 'BASIC':
-            self.__compile_query_execution_basic(deployment)
+            self.__compile_blueprint_basic(deployment)
         elif deployment['mode'] == 'PRO':
-            self._query_execution = deployment['code']
+            self._blueprint = deployment['code']
         elif deployment['mode'] == 'INBENTA':
-            self.__compile_query_execution_inbenta(deployment)
+            self.__compile_blueprint_inbenta(deployment)
 
         # Store Query Execution
-        with open("{}/{}/query_execution.py".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
-            outfile.write(self._query_execution.encode('utf-8','ignore').decode('utf-8'))
+        with open("{}/{}/blueprint.py".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
+            outfile.write(self._blueprint.encode('utf-8','ignore').decode('utf-8'))
 
-    def __compile_query_execution_basic(self, deployment):
+    def __compile_blueprint_basic(self, deployment):
         queries = {}
         for i, q in enumerate(json.loads(deployment['queries'])):
             queries[str(i+1)] = q['query']
         databases = [i.strip().replace('%','*').replace('_','?').replace('\\?','_') for i in  deployment['databases'].split(',')]
 
-        self._query_execution = """import fnmatch
-class query_execution:
+        self._blueprint = """import fnmatch
+class blueprint:
     def __init__(self):
         self.queries = {0}
         self.auxiliary_queries = {{}}
@@ -218,15 +231,15 @@ class query_execution:
     def after(self, meteor, environment, region):
         pass""".format(json.dumps(queries), databases)
 
-    def __compile_query_execution_inbenta(self, deployment):
+    def __compile_blueprint_inbenta(self, deployment):
         queries = {}
         for i, q in enumerate(json.loads(deployment['queries'])):
             queries[str(i+1)] = q['query']
         databases = [i.strip().replace('%','*').replace('_','?').replace('\\?','_') for i in deployment['databases'].split(',')]
         products = ','.join("'{}'".format(p) for p in deployment['products'])
 
-        self._query_execution = """import fnmatch
-class query_execution:
+        self._blueprint = """import fnmatch
+class blueprint:
     def __init__(self):
         self.queries = {0}
         self.auxiliary_queries = {{
@@ -252,18 +265,12 @@ class query_execution:
         # Build Meteor Parameters
         meteor_base_path = sys._MEIPASS if self._bin else self._app.root_path
         meteor_path = "{}/apps/meteor/init".format(meteor_base_path) if self._bin else "python3 {}/../meteor/meteor.py".format(meteor_base_path)
-        environment = deployment['environment']
-        execution_method = deployment['method'].lower()
-        execution_id = deployment['execution_id']
-        execution_mode = deployment['mode'].lower()
-        execution_user = deployment['user']
         execution_path = "{}/{}".format(self._logs['local']['path'], self._uuid)
-        execution_threads = deployment['execution_threads']
-        execution_limit = ' --execution_limit "{}"'.format(deployment['execution_limit']) if deployment['execution_limit'] else ''
+        execution_method = deployment['method'].lower()
 
         # Build Meteor Command
-        command = '{} --environment "{}" --{} --execution_id "{}" --execution_mode "{}" --execution_user "{}" --execution_path "{}" --execution_threads "{}"{}'.format(meteor_path, environment, execution_method, execution_id, execution_mode, execution_user, execution_path, execution_threads, execution_limit)
-        # print(command)
+        command = '{} --path "{}" --{}'.format(meteor_path, execution_path, execution_method)
+        print(command)
 
         # Execute Meteor
-        p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)
+        # p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)

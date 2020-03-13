@@ -9,7 +9,8 @@ from connector import connector
 class deploy_queries:
     def __init__(self, args, imports, region):
         self._args = args
-        self._imports = imports
+        self._credentials = imports.credentials
+        self._query_template = imports.query_template
         self._region = region
 
         # Store Server Credentials + SQL Connection + List of Auxiliary Connections
@@ -21,8 +22,8 @@ class deploy_queries:
         self._transaction = False
         self._query_error = False
 
-        # Init Query Template
-        self._query_template = query_template()
+        # Init Query Template Instance
+        self._query_template_instance = query_template(self._query_template)
 
         # Init Execution Log
         self._execution_log = {"output": []}
@@ -58,7 +59,7 @@ class deploy_queries:
         database_name = auxiliary['database'] if auxiliary is not None else database if database is not None else ''
         query_parsed = query.strip() if auxiliary is None else auxiliary['query'].strip()
         server_sql = self._server['name'] if auxiliary is None else auxiliary['auxiliary_connection']
-        region = self._region['name']
+        region = self._region['region']
 
         # Query Alias
         if alias is None:
@@ -74,11 +75,11 @@ class deploy_queries:
         else:
             if auxiliary['auxiliary_connection'] not in self._aux:
                 # Check if the auxiliary connection exists
-                if auxiliary['auxiliary_connection'] not in self._imports.config['auxiliary_connections']:
+                if auxiliary['auxiliary_connection'] not in self._credentials['auxiliary_connections']:
                     raise Exception("The auxiliary connection '{}' does not exist".format(auxiliary['auxiliary_connection']))
                 # Start connecting to the auxiliary connection
                 try:
-                    aux = self._imports.config['auxiliary_connections'][auxiliary['auxiliary_connection']]
+                    aux = self._credentials['auxiliary_connections'][auxiliary['auxiliary_connection']]
                     conn = connector(aux)
                     conn.start()
                 except Exception as e:
@@ -90,7 +91,7 @@ class deploy_queries:
 
         # Init a new Row
         date_time = datetime.fromtimestamp(time()).strftime('%Y-%m-%d %H:%M:%S.%f UTC')
-        execution_row = {"meteor_timestamp": date_time, "meteor_environment": self._imports.config['params']['environment'], "meteor_region": region, "meteor_server": server_sql, "meteor_database": database_name, "meteor_query": query_alias, "meteor_status": "1", "meteor_response": "", "meteor_execution_time": ""}
+        execution_row = {"meteor_timestamp": date_time, "meteor_environment": self._args.environment, "meteor_region": region, "meteor_server": server_sql, "meteor_database": database_name, "meteor_query": query_alias, "meteor_status": "1", "meteor_response": "", "meteor_execution_time": ""}
 
         # Set query transaction
         if self._transaction:
@@ -103,7 +104,7 @@ class deploy_queries:
         if not self._args.deploy:
             # Execution Checks
             try:
-                self._query_template.validate_execution(query_parsed, args, conn, database_name)
+                self._query_template_instance.validate_execution(query_parsed, args, conn, database_name)
                 # Write Exception to the Log
                 if query_syntax != 'Select':
                     self._execution_log['output'].append(execution_row)
@@ -120,7 +121,7 @@ class deploy_queries:
         if self._args.deploy or query_syntax == 'Select':
             try:
                 # Apply the execution plan factor
-                if self._imports.config['params']['limit'] and query_syntax == 'Select':
+                if self._args.execution_limit and query_syntax == 'Select':
                     execution_limit = 0
                     explain = conn.execute(query='EXPLAIN ' + query_parsed, args=args, database=database_name)['query_result']
 
@@ -128,8 +129,8 @@ class deploy_queries:
                         if i['rows'] > execution_limit:
                             execution_limit = i['rows']
   
-                    if execution_limit > int(self._imports.config['params']['limit']):
-                        raise Exception('Maximum number of rows [{}] exceeded. Please use LIMIT along with ORDER BY'.format(self._imports.config['params']['limit']))
+                    if execution_limit > int(self._args.execution_limit):
+                        raise Exception('Maximum number of rows [{}] exceeded. Please use LIMIT along with ORDER BY'.format(self._args.execution_limit))
 
                 # Execute query
                 query_info = conn.execute(query=query_parsed, args=args, database=database_name)
@@ -215,7 +216,7 @@ class deploy_queries:
                 del i['transaction']
 
     def __get_query_type(self, query, show_output=True):
-        for t in self._query_template.query_template:
+        for t in self._query_template:
             if query.strip().lower().startswith(t["startswith"].lower()) and t["contains"].lower() in query.strip().lower():
                 return t['type']
         return False

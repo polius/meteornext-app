@@ -7,7 +7,6 @@ import requests
 import re
 import signal
 import json
-import threading
 from collections import OrderedDict
 from datetime import timedelta
 
@@ -17,7 +16,6 @@ from logs import logs
 from amazon_s3 import amazon_s3
 from validation import validation
 from deployment import deployment
-from region import Region
 
 class core:
     def __init__(self, args):
@@ -25,6 +23,9 @@ class core:
 
         # Execution Time
         self._start_time = time.time()
+
+        # Execution Threads
+        self._args.execution_threads = 1 if self._args.execution_threads is None else self._args.execution_threads
 
         # Init Classes
         self._imports = imports(self._args)
@@ -34,19 +35,8 @@ class core:
         self._validation = validation(self._args, self._imports, self._progress)
         self._deployment = deployment(self._args, self._imports, self._progress)
 
-        if self._args.region:
-            self.__remote()
-        else:
-            self.__start()
-
-    ##########
-    # REMOTE #
-    ##########
-    def __remote(self):
-        if self._args.compress:
-            self._deployment.compress()
-        else:
-            self._deployment.deploy()
+        # Start Meteor Core
+        self.__start()
 
     #############
     # INIT CORE #
@@ -209,65 +199,50 @@ class core:
         print("|  LOGS                                                            |")
         print("+==================================================================+")
 
-        # Download Logs
-        ssh_regions = [i for i in self._imports.config['regions'] if i['ssh']['enabled']]
-        if len(ssh_regions) > 0:
-            status_msg = "- Downloading Logs from SSH hosts..."
-            print(status_msg)
-            self._progress.track_logs(value=status_msg[2:])
-            threads = []
-            for region in ssh_regions:
-                r = Region(self._args, region)
-                t = threading.Thread(target=r.get_logs)
-                threads.append(t)
-                t.start()
-            for t in threads:
-                t.join()
-
         # If current environment has no regions / servers
         try:
-            execution_logs_path = "{}/execution".format(self._args.path)
+            execution_logs_path = self._args.execution_path + "/execution/"
             region_items = os.listdir(execution_logs_path)
         except FileNotFoundError:
             return []
 
-        # Merge Logs
+        # Merging Logs
         try:
             for region_item in region_items:
-                if os.path.isdir("{}/{}".format(execution_logs_path, region_item)):
+                if os.path.isdir(execution_logs_path + region_item):
                     status_msg = "- Merging '{}'...".format(region_item)
                     print(status_msg)
                     self._progress.track_logs(value=status_msg[2:])
 
-                    server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
+                    server_items = os.listdir(execution_logs_path + region_item)
 
                     # Merging Server Logs
                     for server_item in server_items:
-                        if os.path.isdir("{}/{}/{}".format(execution_logs_path, region_item, server_item)):
+                        if os.path.isdir(execution_logs_path + region_item + '/' + server_item):
                             # print("-- Merging '{}'...".format(server_item))
-                            server_files = os.listdir("{}/{}/{}".format(execution_logs_path, region_item, server_item))
+                            server_files = os.listdir(execution_logs_path + region_item + '/' + server_item)
                             server_logs = []
                             for server_file in server_files:
                                 # Merging Database Logs
-                                with open("{}/{}/{}/{}".format(execution_logs_path, region_item, server_item, server_file)) as database_log:
+                                with open(execution_logs_path + region_item + '/' + server_item + '/' + server_file) as database_log:
                                     json_decoded = json.load(database_log, strict=False, object_pairs_hook=OrderedDict)
                                     server_logs.extend(json_decoded['output'])
 
                             # Write Server File
-                            with open("{}/{}/{}.json".format(execution_logs_path, region_item, server_item), 'w') as f:
+                            with open(execution_logs_path + region_item + '/' + server_item + '.json', 'w') as f:
                                 json.dump({"output": server_logs}, f, separators=(',', ':'))
 
                     # Merging Region Logs
                     region_logs = []
-                    server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
+                    server_items = os.listdir(execution_logs_path + region_item)
                     for server_item in server_items:
-                        if os.path.isfile("{}/{}/{}".format(execution_logs_path, region_item, server_item)) and server_item != 'progress.json':
-                            with open("{}/{}/{}".format(execution_logs_path, region_item, server_item)) as server_log:
+                        if os.path.isfile(execution_logs_path + region_item + '/' + server_item):
+                            with open(execution_logs_path + region_item + '/' + server_item) as server_log:
                                 json_decoded = json.load(server_log, strict=False, object_pairs_hook=OrderedDict)
                                 region_logs.extend(json_decoded['output'])
 
                     # Write Region Logs
-                    with open("{}/{}.json".format(execution_logs_path, region_item), 'w') as f:
+                    with open(execution_logs_path + region_item + '.json', 'w') as f:
                         json.dump({"output": region_logs}, f, separators=(',', ':'))
 
             # Merging Environment Logs
@@ -278,18 +253,18 @@ class core:
 
             region_items = os.listdir(execution_logs_path)
             for region_item in region_items:
-                if os.path.isfile("{}/{}".format(execution_logs_path, region_item)):
-                    with open("{}/{}".format(execution_logs_path, region_item)) as f:
+                if os.path.isfile(execution_logs_path + region_item):
+                    with open(execution_logs_path + region_item) as f:
                         json_decoded = json.load(f, strict=False, object_pairs_hook=OrderedDict)
                         environment_logs.extend(json_decoded['output'])
 
             # Write Environment Log
-            with open("{}/meteor.js".format(self._args.path), 'w') as f:
+            with open(self._args.execution_path + '/meteor.js', 'w') as f:
                 json.dump({"output": environment_logs}, f, separators=(',', ':'))
 
             # Compress Execution Logs and Delete Uncompressed Folder
-            shutil.make_archive("{}/execution".format(self._args.path), 'gztar', "{}/execution".format(self._args.path))
-            shutil.rmtree("{}/execution".format(self._args.path))
+            shutil.make_archive(self._args.execution_path + '/execution', 'gztar', self._args.execution_path + '/execution')
+            shutil.rmtree(self._args.execution_path + '/execution')
 
             # Return All Logs
             return environment_logs
@@ -302,41 +277,28 @@ class core:
         print("+==================================================================+")
         print("|  CLEAN                                                           |")
         print("+==================================================================+")
-        status_msg = "- Cleaning Temporary Files..."
+        status_msg = "- Cleaning Environment..."
         print(status_msg)
         self._progress.track_tasks(value=status_msg[2:])
-
-        # Delete SSH Deployment Logs
-        ssh_regions = [i for i in self._imports.config['regions'] if i['ssh']['enabled']]
-        if len(ssh_regions) > 0:           
-            threads = []
-            for region in ssh_regions:
-                r = Region(self._args, region)
-                t = threading.Thread(target=r.clean)
-                threads.append(t)
-                t.start()
-            for t in threads:
-                t.join()
-
         # Delete Uncompressed Deployment Folder
-        if os.path.exists(self._args.path):
-            if os.path.isdir(self._args.path):
-                shutil.rmtree(self._args.path)
+        if os.path.exists(self._args.execution_path):
+            if os.path.isdir(self._args.execution_path):
+                shutil.rmtree(self._args.execution_path)
 
     def slack(self, status, summary, error=None):
         # Send Slack Message if it's enabled
-        if not self._imports.config['slack']['enabled']:
+        if not self._imports.credentials['slack']['enabled']:
             return
 
         print("+==================================================================+")
         print("|  SLACK                                                           |")
         print("+==================================================================+")
-        status_msg = "- Sending Slack to '#{}'...".format(self._imports.config['slack']['channel_name'])
+        status_msg = "- Sending Slack to '#{}'...".format(self._imports.credentials['slack']['channel_name'])
         print(status_msg)
         self._progress.track_tasks(value=status_msg[2:])
 
         # Get Webhook Data
-        webhook_url = self._imports.config['slack']['webhook_url']
+        webhook_url = self._imports.credentials['slack']['webhook_url']
 
         # Execution
         execution_text = 'Deployment' if self._args.deploy else 'Test'
@@ -345,7 +307,7 @@ class core:
         status_color = 'good' if status == 0 else 'warning' if status == 1 else 'danger'
 
         # Logs
-        logs_path = "{}.tar.gz".format(self._args.path)
+        logs_path = "{}.tar.gz".format(self._args.execution_path)
         
         # Current Time
         current_time = calendar.timegm(time.gmtime())
@@ -469,5 +431,5 @@ class core:
         print("+==================================================================+")
         print("|  OUTPUT                                                          |")
         print("+==================================================================+")
-        logs_path = "{}.tar.gz".format(self._args.path)
+        logs_path = "{}.tar.gz".format(self._args.execution_path)
         print("- Logs: {}".format(logs_path))
