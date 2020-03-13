@@ -5,7 +5,7 @@ from connector import connector
 class progress:
     def __init__(self, args, imports):
         self._args = args
-        self._config = imports.config
+        self._credentials = imports.credentials
         self._progress = {}
         self._sql = None
 
@@ -14,7 +14,7 @@ class progress:
 
     def __init(self):
         ssh = {"enabled": False}
-        sql = {"engine": "MySQL", "hostname": self._config['meteor_next']['hostname'], "port": self._config['meteor_next']['port'], "username": self._config['meteor_next']['username'], "password": self._config['meteor_next']['password'], "database": self._config['meteor_next']['database']}
+        sql = {"engine": "MySQL", "hostname": self._credentials['meteor_next']['hostname'], "port": self._credentials['meteor_next']['port'], "username": self._credentials['meteor_next']['username'], "password": self._credentials['meteor_next']['password'], "database": self._credentials['meteor_next']['database']}
         self._sql = connector({"ssh": ssh, "sql": sql})
 
     def start(self, pid):
@@ -22,17 +22,17 @@ class progress:
             # Init the connection
             self._sql.start()
             # Track progress
-            engine = 'amazon_s3' if self._config['amazon_s3']['enabled'] else 'local'
-            uri = self._args.path[self._args.path.rfind('/')+1:]
-            query = "UPDATE deployments_{} SET status = 'IN PROGRESS', uri = '{}', engine = '{}', started = '{}', pid = '{}' WHERE id = {}".format(self._config['params']['mode'], uri, engine, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), pid, self._config['params']['id'])
-            self._sql.execute(query=query, database=self._config['meteor_next']['database'])
+            engine = 'amazon_s3' if self._credentials['amazon_s3']['enabled'] else 'local'
+            uri = self._args.execution_path[self._args.execution_path.rfind('/')+1:]
+            query = "UPDATE deployments_{} SET status = 'IN PROGRESS', uri = '{}', engine = '{}', started = '{}', pid = '{}' WHERE id = {}".format(self._args.execution_mode, uri, engine, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), pid, self._args.execution_id)
+            self._sql.execute(query=query, database=self._credentials['meteor_next']['database'])
             self._sql.commit()
 
     def end(self, execution_status):
         if self.__enabled():
             status = 'SUCCESS' if execution_status == 0 else 'WARNING' if execution_status == 1 else 'STOPPED'
-            query = "UPDATE deployments_{} SET status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._config['params']['mode'], status, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._config['params']['id'])
-            self._sql.execute(query=query, database=self._config['meteor_next']['database'])
+            query = "UPDATE deployments_{} SET status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._args.execution_mode, status, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._args.execution_id)
+            self._sql.execute(query=query, database=self._credentials['meteor_next']['database'])
             self._sql.commit()
             self._sql.stop()
 
@@ -40,8 +40,8 @@ class progress:
         if self.__enabled():
             self._progress['error'] = str(error_msg).replace('"', '\\"').replace("\n", "\\n")
             progress = json.dumps(self._progress).replace("'", "\\'")
-            query = "UPDATE deployments_{} SET status = 'FAILED', progress = '{}', ended = '{}', error = 1 WHERE id = {}".format(self._config['params']['mode'], progress, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._config['params']['id'])
-            self._sql.execute(query=query, database=self._config['meteor_next']['database'])
+            query = "UPDATE deployments_{} SET status = 'FAILED', progress = '{}', ended = '{}', error = 1 WHERE id = {}".format(self._args.execution_mode, progress, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._args.execution_id)
+            self._sql.execute(query=query, database=self._credentials['meteor_next']['database'])
             self._sql.commit()
             self._sql.stop()
 
@@ -88,12 +88,12 @@ class progress:
     def __store(self):
         self._progress['updated'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         progress = json.dumps(self._progress).replace("'", "\\\'")
-        query = "UPDATE deployments_{} SET progress = '{}' WHERE id = {}".format(self._config['params']['mode'], progress, self._config['params']['id'])
-        self._sql.execute(query=query, database=self._config['meteor_next']['database'])
+        query = "UPDATE deployments_{} SET progress = '{}' WHERE id = {}".format(self._args.execution_mode, progress, self._args.execution_id)
+        self._sql.execute(query=query, database=self._credentials['meteor_next']['database'])
         self._sql.commit()
 
     def __enabled(self):
-        if 'meteor_next' in self._config and self._config['meteor_next']['enabled']:
+        if 'meteor_next' in self._credentials and self._credentials['meteor_next']['enabled']:
             return True
         else:
             return False

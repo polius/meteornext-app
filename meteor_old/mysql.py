@@ -4,6 +4,7 @@ import time
 import pymysql
 import paramiko
 import warnings
+import sshtunnel
 import threading
 from collections import OrderedDict
 from pymysql.cursors import DictCursorMixin, Cursor
@@ -14,6 +15,7 @@ class OrderedDictCursor(DictCursorMixin, Cursor):
 class mysql:
     def __init__(self, server):
         self._server = server
+        self._tunnel = None
         self._sql = None
 
     def start(self):
@@ -32,9 +34,18 @@ class mysql:
                 return
 
             try:
+                # Start SSH Tunnel
+                if self._server['ssh']['enabled']:
+                    sshtunnel.SSH_TIMEOUT = 10.0
+                    sshtunnel.TUNNEL_TIMEOUT = 10.0
+                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_pkey=paramiko.RSAKey.from_private_key_file(self._server['ssh']['key']), remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']))
+                    self._tunnel.start()
+
                 # Start SQL Connection
+                hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
+                port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-                self._sql = pymysql.connect(host=self._server['sql']['hostname'], port=self._server['sql']['port'], user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False)
+                self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False)
                 return
 
             except Exception as e:
@@ -54,6 +65,11 @@ class mysql:
     def stop(self):
         try:
             self._sql.close()
+        except Exception:
+            pass
+
+        try:
+            self._tunnel.stop()
         except Exception:
             pass
 

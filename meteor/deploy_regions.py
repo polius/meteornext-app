@@ -1,88 +1,94 @@
 import os
+import sys
+import json
 import time
+import shutil
+import signal
+import paramiko
 import threading
+import subprocess
 
+from region import Region
 from deploy_servers import deploy_servers
 
 class deploy_regions:
     def __init__(self, args, imports, region):
         self._args = args
         self._imports = imports
-        self._credentials = imports.credentials
-        self._query_template = imports.query_template
         self._region = region
+        # Init Region Class
+        self._Region = Region(args, region)        
 
     def start(self):
-        # Check thread execution status
-        current_thread = threading.current_thread()
-        if not current_thread.alive:
-            return
-        
-        environment_type = '[SSH]' if self._region['ssh']['enabled'] else '[LOCAL]'
-
-        # Create Execution Folders
-        if not os.path.exists(self._args.execution_path + '/execution/' + self._region['region']):
-            os.makedirs(self._args.execution_path + '/execution/' + self._region['region'])
-
-        # Init shared auxiliary connections
-        auxiliary_connections = []
-
-        # Start the Deploy
         try:
-            # Execute 'BEFORE' Queries Once per Region
-            deploy = deploy_servers(self._args, self._imports, self._region)
-            if current_thread.alive:
-                deploy.execute_before()
+            # Create Execution Folder
+            if not os.path.exists("{}/execution/{}".format(self._args.path, self._args.region)):
+                os.makedirs("{}/execution/{}".format(self._args.path, self._args.region))
 
-            # Stop Execution if the 'before' method ended with a critical error
-            if len(current_thread.critical) > 0:
+            # Start Deployment
+            deploy_server = deploy_servers(self._args, self._imports, self._region)
+            deploy = threading.Thread(target=deploy_server.start)
+            deploy.alive = True
+            deploy.error = False
+            deploy.critical = []
+            deploy.progress = []
+            deploy.start()
+
+            # Track Progress
+            track = threading.Thread(target=self.__track_progress, args=(deploy,))
+            track.alive = True
+            track.start()
+            track.join()
+
+            # Wait all threads
+            deploy.join()
+
+        except KeyboardInterrupt:
+            # Supress CTRL+C events
+            signal.signal(signal.SIGINT,signal.SIG_IGN)
+
+            # Stop Execution Threads
+            deploy.alive = False
+
+            # Wait Execution Threads
+            deploy.join()
+
+            # Enable CTRL+C events
+            signal.signal(signal.SIGINT, signal.default_int_handler)
+
+    def __track_progress(self, deploy):
+        progress = {}
+        current_thread = threading.current_thread()
+        tracking = True
+        while tracking:
+            track_progress = True
+
+            # Check current thread status
+            if not current_thread.alive:
                 return
 
-            # Start Server Deploy in Parallel
-            threads = []
-            try:
-                for server in self._region['sql']:
-                    deploy_parallel = deploy_servers(self._args, self._imports, self._region, deploy.query_execution)
-                    t = threading.Thread(target=deploy_parallel.execute_main, args=(server,))
-                    threads.append(t)
-                    t.alive = current_thread.alive
-                    t.error = False
-                    t.critical = current_thread.critical
-                    t.progress = current_thread.progress
-                    t.auxiliary = auxiliary_connections
-                    t.start()
+            # Check if all processes have finished
+            if not deploy.is_alive():
+                tracking = False
 
-                # Wait all threads
-                while any(t.is_alive() for t in threads):
-                    # Check alive
-                    if not current_thread.alive:
-                        for t in threads:
-                            t.alive = False
-                    time.sleep(0.5)
+            # Parse critical errors
+            critical_errors = []
+            for i in deploy.critical:
+                if i not in critical_errors:
+                    critical_errors.append(i)
 
-                # Ensure all threads are finished
-                for t in threads:
-                    t.join()
+            # Calculate Progress
+            for r in range(len(deploy.progress)):
+                item = deploy.progress.pop(0)
+                progress[item['s']] = { "p": item['p'], "d": item['d'], "t": item['t'], "e": deploy.error, "c": critical_errors }
 
-                # Check errors
-                current_thread.error = any(t.error for t in threads)
+            # Write Progress
+            with open("{}/execution/{}/progress.json".format(self._args.path, self._region['name']), 'w') as outfile:
+                json.dump(progress, outfile, default=self.__dtSerializer, separators=(',', ':'))
 
-            except (Exception,KeyboardInterrupt):
-                for t in threads:
-                    t.alive = False
-                for t in threads:
-                    t.join()
-                raise
+            # Sleep for 1 second
+            time.sleep(1)
 
-            # Execute 'AFTER' Queries Once per Region
-            if current_thread.alive:
-                deploy.execute_after()
-
-        except Exception as e:
-            # Stop all threads and store critical error (auxiliary error related)
-            current_thread.critical.append(str(e))
-
-        finally:
-            # Close existing Auxiliary Connections
-            for i in auxiliary_connections:
-                i.stop()
+    # Parse JSON objects
+    def __dtSerializer(self, obj):
+        return obj.__str__()

@@ -1,7 +1,7 @@
 import json
 from collections import OrderedDict
 
-class query_execution:
+class blueprint:
     def __init__(self):
         #####################################################################
         # Usage: meteor.execute(query=self.queries['1'], database=database) #

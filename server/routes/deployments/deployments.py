@@ -146,7 +146,7 @@ class Deployments:
         # Build dictionary of executions
         executions_raw = self._deployments_queued.getNext()
         executions = {'basic':{},'pro':{},'inbenta':{}}
-        if len(executions_raw) == 0:
+        if len(executions_raw) == 1 and executions_raw[0]['executions'] is None:
             return
 
         for i in [i for i in executions_raw if i['executions'].split('|')[2] == 'QUEUED']:
