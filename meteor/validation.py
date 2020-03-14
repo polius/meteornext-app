@@ -1,7 +1,9 @@
 import os
 import re
+import sys
 import time
 import threading
+import hashlib
 
 from validate_regions import validate_regions
 
@@ -35,10 +37,23 @@ class validation:
                 progress[region['name']] = {}
             self._progress.track_validation(progress)
 
+            # Generate App Version
+            if not (getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')):
+                local_path = os.path.dirname(os.path.realpath(__file__))
+                version = ''
+                files = os.listdir(local_path)
+                for f in files:
+                    if not os.path.isdir("{}/{}".format(local_path, f)) and not f.endswith('.pyc') and not f.startswith('.') and not f.endswith('.gz') and f not in ['version.txt', 'blueprint.py', 'config.json']:
+                        with open("{}/{}".format(local_path, f), 'rb') as file_content:
+                            file_hash = hashlib.sha512(file_content.read()).hexdigest()
+                            version += file_hash
+                with open('{}/version.txt'.format(local_path), 'w') as file_content:
+                    file_content.write(version)
+
             # Start validation
             threads = []
             for region in self._config['regions']:
-                validate_region = validate_regions(self._args, self._config, region)
+                validate_region = validate_regions(self._args, region)
                 t = threading.Thread(target=validate_region.validate)
                 t.progress = {}
                 threads.append(t)

@@ -14,25 +14,21 @@ class Region:
         self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
         self._local_path = os.path.dirname(os.path.realpath(__file__)) if not self._bin else sys._MEIPASS
         self._remote_path = "$HOME/.meteor" if region['ssh']['enabled'] else None
-
         # Get UUID from path
         self._uuid = self._args.path[self._args.path.rfind('/')+1:]
 
-    def check_version(self):    
+    def check_version(self):
         # Get SSH Version
         ssh_version = self.__ssh("cat {}/bin/version.txt".format(self._remote_path))
-
         if len(ssh_version) == 0:
             return False
-        else:
-            ssh_version = ssh_version[0].replace('\n', '')
 
         # Get Local Version
         with open("{}/version.txt".format(self._local_path)) as file_content:
-            local_version = file_content.read().replace('\n', '')
+            local_version = file_content.read()
 
         # Compare Local & SSH Version
-        return local_version != ssh_version
+        return local_version == ssh_version
 
     def upload_binary(self):
         # Get Remote Home Path
@@ -40,7 +36,9 @@ class Region:
 
         # Upload Binary
         if self._bin:
-            pass
+            self.__ssh("rm -rf {0}/bin && mkdir -p {0}/bin".format(self._remote_path))
+            self.__put("{}.tar.gz".format(self._local_path), "{}/.meteor/bin/meteor.tar.gz".format(home))
+            self.__ssh("tar -xvzf {0}/bin/meteor.tar.gz -C {0}/bin && rm -rf {0}/bin/meteor.tar.gz".format(self._remote_path))
         else:
             # Compress Meteor files
             shutil.make_archive(self._local_path, 'gztar', self._local_path)
@@ -55,7 +53,8 @@ class Region:
         home = self.__ssh("echo $HOME")
 
         # 1. Compress Logs
-        self.__ssh('python3 {0}/bin/meteor.py --path "{0}/logs/{1}" --region "{2}" --compress'.format(self._remote_path, self._uuid, self._region['name']))
+        binary_path = "{}/bin/init".format(self._remote_path) if self._bin else "python3 {}/bin/meteor.py".format(self._remote_path)
+        self.__ssh('{} --path "{}/logs/{}" --region "{}" --compress'.format(binary_path, self._remote_path, self._uuid, self._region['name']))
 
         # 2. Download Compressed Logs
         remote_path = "{}/.meteor/logs/{}/execution/{}.tar.gz".format(home, self._uuid, self._region['name'])
@@ -108,17 +107,22 @@ class Region:
     def deploy(self):
         # Deploy new execution
         mode = 'validate' if self._args.validate else 'test' if self._args.test else 'deploy'
+        
         if self._region['ssh']['enabled']:
-            # Get home
             home = self.__ssh("echo $HOME")
+            binary_path = "{}/bin/init".format(self._remote_path) if self._bin else "python3 {}/bin/meteor.py".format(self._remote_path)
+
             # Upload execution
             self.__ssh('mkdir -p {}/logs/{}'.format(self._remote_path, self._uuid))
             self.__put("{}/config.json".format(self._args.path), "{}/.meteor/logs/{}/config.json".format(home, self._uuid))
             self.__put("{}/blueprint.py".format(self._args.path), "{}/.meteor/logs/{}/blueprint.py".format(home, self._uuid))
+
             # Start execution
-            self.__ssh('python3 {0}/bin/meteor.py --path "{0}/logs/{1}" --{2} --region "{3}"'.format(self._remote_path, self._uuid, mode, self._region['name']))
+            self.__ssh('{} --path "{}/logs/{}" --{} --region "{}"'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']))
         else:
-            self.__local('python3 {}/meteor.py --path "{}" --{} --region "{}"'.format(self._local_path, self._args.path, mode, self._region['name']))
+            binary_path = "{}/init".format(self._local_path) if self._bin else "python3 {}/meteor.py".format(self._local_path)
+            # Start execution
+            self.__local('{} --path "{}" --{} --region "{}"'.format(binary_path, self._args.path, mode, self._region['name']))
 
     def compress_logs(self):
         compressed_dir = "{}/execution/{}".format(self._args.path, self._region['name'])

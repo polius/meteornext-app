@@ -10,3 +10,4 @@ server.conf
 .bash_history
 .cache/
 /server/apps
+/meteor/version.txt

@@ -61,7 +61,7 @@ class Meteor:
 
     def __compile_config(self, deployment):
         # Get Data
-        environments = self._regions.get(deployment['group_id'])
+        environments = self._environments.get(deployment['group_id'])
         regions = self._regions.get(deployment['group_id'])
         servers = self._servers.get(deployment['group_id'])
         auxiliary = self._auxiliary.get(deployment['group_id'])
@@ -270,7 +270,7 @@ class blueprint:
 
         # Build Meteor Command
         command = '{} --path "{}" --{}'.format(meteor_path, execution_path, execution_method)
-        print(command)
+        # print(command)
 
         # Execute Meteor
-        # p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)
+        p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)

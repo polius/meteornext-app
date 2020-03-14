@@ -31,9 +31,20 @@ class build_server:
             self.__build_server()
 
     def __build_meteor(self):
+        # Generate App Version
+        version = ''
+        files = os.listdir("{}/meteor".format(self._pwd))
+        for f in files:
+            if not os.path.isdir("{}/meteor/{}".format(self._pwd, f)) and not f.endswith('.pyc') and not f.startswith('.') and not f.endswith('.gz') and f not in ['version.txt', 'blueprint.py', 'config.json']:
+                with open("{}/meteor/{}".format(self._pwd, f), 'rb') as file_content:
+                    file_hash = hashlib.sha512(file_content.read()).hexdigest()
+                    version += file_hash
+        with open('{}/meteor/version.txt'.format(self._pwd), 'w') as file_content:
+            file_content.write(version)
+
         # Build Meteor Py
         build_path = "{}/meteor".format(self._pwd)
-        additional_files = ['query_template.json', 'query_execution.py']
+        additional_files = ['version.txt']
         additional_binaries = []
         hidden_imports = ['json', 'pymysql','uuid', 'requests', 'imp', 'paramiko', 'boto3', 'socket', 'sshtunnel', 'inspect']
         binary_name = 'meteor'
@@ -45,7 +56,7 @@ class build_server:
     def __build_server(self):
         # Build Meteor Next Server
         build_path = "{}/server".format(self._pwd)
-        additional_files = ['routes/deployments/query_execution.py', 'models/schema.sql', 'apps/meteor.tar.gz']
+        additional_files = ['routes/deployments/blueprint.py', 'models/schema.sql', 'apps/meteor.tar.gz']
         hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','socket','paramiko','sshtunnel','unicodedata','secrets']
         additional_binaries = []
         binary_name = 'server'
@@ -144,8 +155,6 @@ if __name__ == "__main__":
     # Extract Meteor
     with tarfile.open("{}/apps/meteor.tar.gz".format(sys._MEIPASS)) as tar:
         tar.extractall(path="{}/apps/meteor/".format(sys._MEIPASS))
-    # Remove Compressed File
-    os.remove("{}/apps/meteor.tar.gz".format(sys._MEIPASS))
     # Init Gunicorn App
     gunicorn_app = GUnicornFlaskApplication(app)
     gunicorn_app.run(worker_class="gunicorn.workers.sync.SyncWorker", bind='unix:server.sock', capture_output=True, errorlog='error.log')""")
