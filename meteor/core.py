@@ -302,7 +302,7 @@ class core:
         print("+==================================================================+")
         print("|  CLEAN                                                           |")
         print("+==================================================================+")
-        status_msg = "- Cleaning Temporary Files..."
+        status_msg = "- Cleaning Regions..."
         print(status_msg)
         self._progress.track_tasks(value=status_msg[2:])
 
@@ -390,7 +390,7 @@ class core:
                         },
                         {
                             "title": "Environment",
-                            "value": "```{}```".format(self._args.environment),
+                            "value": "```{}```".format(self._imports.config['params']['environment']),
                             "short": False
                         },
                         {
@@ -416,8 +416,8 @@ class core:
         }
 
         # Add execution_user to the webhook_data
-        if self._args.execution_user is not None:
-            webhook_data['attachments'][0]['fields'].insert(0, {"title": "User", "value": "```{}```".format(self._args.execution_user), "short": False})
+        if self._config.params['user'] is not None:
+            webhook_data['attachments'][0]['fields'].insert(0, {"title": "User", "value": "```{}```".format(self._config.params['user']), "short": False})
         
         # Add summary to the webhook_data
         if summary is not None:

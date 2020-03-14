@@ -25,16 +25,16 @@ class amazon_s3:
                 status_msg = "- Uploading Logs to S3 Bucket '{}'...".format(self._config['amazon_s3']['bucket_name'])
                 print(status_msg)
                 self._progress.track_tasks("Uploading Results to Amazon S3...")
-                execution_name = self._args.execution_path[self._args.execution_path.rfind('/')+1:]
+                execution_name = self._args.path[self._args.path.rfind('/')+1:]
 
                 # 1. Upload Compressed Logs Folder to '/logs'
-                file_path = "{}.tar.gz".format(self._args.execution_path)
+                file_path = "{}.tar.gz".format(self._args.path)
                 bucket_name = self._config['amazon_s3']['bucket_name']
                 s3_path = "logs/{}.tar.gz".format(execution_name)
                 self._amazon_s3.meta.client.upload_file(file_path, bucket_name, s3_path)
 
                 # 2. Upload Results File to '/results'
-                file_path = "{}/meteor.js".format(self._args.execution_path)
+                file_path = "{}/meteor.js".format(self._args.path)
                 s3_path = "results/{}.js".format(execution_name)
                 self._amazon_s3.meta.client.upload_file(file_path, bucket_name, s3_path)
 

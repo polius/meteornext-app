@@ -8,9 +8,8 @@ import threading
 from region import Region
 
 class validate_regions:
-    def __init__(self, args, credentials, region):
+    def __init__(self, args, region):
         self._args = args
-        self._credentials = credentials
         self._region = region
         self._Region = Region(args, region)
 
@@ -26,9 +25,9 @@ class validate_regions:
             try:
                 self.__validate_ssh()
             except Exception as e:
-                print(str(e))
                 current_thread.progress = {'region': self._region['name'], 'success': False, 'error': str(e)}
                 print("--> {} Region '{}' Failed.".format(region_type, self._region['name']))
+                print(str(e))
                 return
 
         # SQL Validation

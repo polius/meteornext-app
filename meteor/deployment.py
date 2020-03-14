@@ -30,6 +30,10 @@ class deployment:
             # Show Header
             self.__show_execution_header(started_datetime, started_time)
 
+            # Create Execution Folder
+            if not os.path.exists("{}/execution".format(self._args.path)):
+                os.makedirs("{}/execution".format(self._args.path))
+
             # Init Progress dictionary
             progress = {i['name']: {} for i in self._config['regions']}
 
