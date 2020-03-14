@@ -811,7 +811,7 @@
 
           // Calculate real-time overall
           if (data['overall'] == null && this.deployment['ended'] == null) {
-            var diff = moment.utc(this.last_updated).diff(moment(this.deployment['started']))
+            var diff = moment.utc().diff(moment(this.deployment['started']))
             this.deployment['overall'] = moment.utc(diff).format("HH:mm:ss")   
           }
 
