@@ -45,9 +45,11 @@ class deployment:
                 threads.append(t)
                 t.start()
 
+            # Track Overall Progress
             while any(t.is_alive() for t in threads):
                 self.__track_overall(progress, started_datetime, started_time)
                 time.sleep(1)
+            self.__track_overall(progress, started_datetime, started_time)
 
             # Print Execution Finished
             queries_failed = False

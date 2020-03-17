@@ -140,8 +140,8 @@
         </v-card>
 
         <!-- EXECUTION -->
-        <div v-if="execution_progress.length > 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">EXECUTION</div>
-        <v-card v-if="execution_progress.length > 0" style="margin-top:15px;">
+        <div v-if="execution_headers.length > 0" class="title font-weight-regular" style="padding-top:15px; padding-left:1px;">EXECUTION</div>
+        <v-card v-if="execution_headers.length > 0" style="margin-top:15px;">
           <!-- Overall -->
           <v-data-table :headers="execution_headers" :items="this.index(execution_overall)" hide-default-footer>
             <template v-slot:item="props">
@@ -153,7 +153,7 @@
             </template>
           </v-data-table>
           <!-- Servers -->
-          <v-data-table :headers="execution_headers" :items="this.index(execution_progress)" hide-default-header :hide-default-footer="execution_progress.length < 11">
+          <v-data-table v-if="execution_progress.length > 0" :headers="execution_headers" :items="this.index(execution_progress)" hide-default-header :hide-default-footer="execution_progress.length < 11">
             <template v-slot:item="props">
               <tr>
                 <td v-for="item in Object.keys(execution_headers)" :key="item" :style="`width: ${100/execution_headers.length}%`">
@@ -559,7 +559,7 @@
         { text: 'ROLLBACK', align:'left', value: 'rollback', sortable: false }
       ],
       queries_data: [],
-      
+
       // Dialogs
       // - Information -
       information_dialog: false,
@@ -720,6 +720,7 @@
         ]
         this.executions = {}
         this.validation_data = []
+        this.execution_headers = []
         this.execution_progress = []
         this.execution_overall = []
         this.logs_data = []
@@ -851,7 +852,6 @@
         }
       },
       parseExecution() {
-        if (!('execution' in this.deployment['progress'])) return
         // Init variables
         var execution_headers = []
         var execution_overall = [{}]
@@ -859,7 +859,25 @@
         var overall_progress = {}
         var i = 0
 
-        // Fill variables
+        // Init Execution Headers (if hasn't started yet)
+        if (!('execution' in this.deployment['progress']) && this.deployment['method'] != 'validate') {
+          if (this.validation_data.length > 0) {
+            var succeeded = true
+            for (let i = 0; i < Object.values(this.validation_data[0]).length; ++i ) { 
+              succeeded &= (Object.values(this.validation_data[0])[i] == 'SUCCEEDED')
+            }
+            if (succeeded) {
+              this.execution_headers = JSON.parse(JSON.stringify(this.validation_headers))
+              for (let i = 0; i < this.execution_headers.length; ++i) {
+                execution_overall[0][[i]] = "Initiating..."
+              }
+            }
+            this.execution_overall = JSON.parse(JSON.stringify(execution_overall))
+          }
+          return
+        }
+
+        // Init Execution Progress (if has started)
         for (let[key] of Object.entries(this.deployment['progress']['execution']).sort()) {
           overall_progress[[i]] = {"d": 0, "t": 0}
           execution_headers.push({ text: key, align: 'left', value: i, sortable: false})

@@ -101,11 +101,11 @@ class deploy_blueprint:
                         for t in threads:
                             t.alive = False
                     # Track progress
-                    self.__track_execution_progress(server, databases, threads)
+                    self.__track_execution_progress(server, databases)
                     time.sleep(1)
 
                 # Check progress again
-                self.__track_execution_progress(server, databases, threads)
+                self.__track_execution_progress(server, databases)
 
                 # Check critical errors
                 errors = False
@@ -135,7 +135,7 @@ class deploy_blueprint:
             current_thread.progress.append(error_format)
             raise
 
-    def __track_execution_progress(self, server, databases, threads):
+    def __track_execution_progress(self, server, databases):
         current_thread = threading.current_thread()
         d = len(self._progress)
         progress = float(d)/float(len(databases)) * 100
