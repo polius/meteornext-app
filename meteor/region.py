@@ -154,6 +154,8 @@ class Region:
             client.load_system_host_keys()
             client.set_missing_host_key_policy(paramiko.WarningPolicy())
             client.connect(self._region['ssh']['hostname'], port=self._region['ssh']['port'], username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'])
+            transport = client.get_transport()
+            transport.set_keepalive(30)
 
             # Show Errors Output Again
             sys.stderr = sys_stderr

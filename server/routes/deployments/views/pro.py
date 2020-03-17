@@ -79,7 +79,7 @@ class Pro:
 
             # Retrieve code
             code_path = os.path.dirname(os.path.realpath(__file__))
-            with open('{}/../query_execution.py'.format(code_path)) as file_open:
+            with open('{}/../blueprint.py'.format(code_path)) as file_open:
                 return jsonify({'data': file_open.read()}), 200
 
         @deployments_pro_blueprint.route('/deployments/pro/executions', methods=['GET'])

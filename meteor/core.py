@@ -352,7 +352,7 @@ class core:
 
         # Queries
         queries = "```"
-        for query in self._imports.query_execution.queries.values():
+        for query in self._imports.blueprint.queries.values():
             queries += re.sub(' +', ' ', query.replace("\t", " ")).strip().replace("\n ", "\n") + '\n'
         queries = queries[:1990] + '...```' if len(queries) > 1990 else queries + '```'
 
@@ -416,8 +416,8 @@ class core:
         }
 
         # Add execution_user to the webhook_data
-        if self._config.params['user'] is not None:
-            webhook_data['attachments'][0]['fields'].insert(0, {"title": "User", "value": "```{}```".format(self._config.params['user']), "short": False})
+        if self._imports.config['params']['user'] is not None:
+            webhook_data['attachments'][0]['fields'].insert(0, {"title": "User", "value": "```{}```".format(self._imports.config['params']['user']), "short": False})
         
         # Add summary to the webhook_data
         if summary is not None:
