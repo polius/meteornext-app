@@ -59,27 +59,11 @@ class validation:
                 threads.append(t)
                 t.start()
 
-            # Wait all threads
-            for t in threads:
-                t.join()
-
             # Track Progress
-            tracking = True
-            error = False
-
-            for t in threads:
-                # Build progress dictionary
-                progress[t.progress['region']] = { "success": t.progress['success'] }
-                # Check SSH error
-                if 'error' in t.progress:
-                    error = True
-                    progress[t.progress['region']]['error'] = t.progress['error']
-                # Check SQL errors
-                if 'errors' in t.progress:
-                    error = True
-                    progress[t.progress['region']]['errors'] = t.progress['errors']
-
-            self._progress.track_validation(progress)
+            while any(t.is_alive() for t in threads):    
+                error = self.__track_regions(threads, progress)
+                time.sleep(1)
+            error = self.__track_regions(threads, progress)
 
             # Check validation errors
             if error:
@@ -94,3 +78,21 @@ class validation:
             for t in threads:
                 t.join()
             raise
+
+    def __track_regions(self, threads, progress):
+        error = False
+        for t in threads:
+            # Build progress dictionary
+            if 'success' in t.progress:
+                progress[t.progress['region']] = { "success": t.progress['success'] }
+            # Check SSH error
+            if 'error' in t.progress:
+                error = True
+                progress[t.progress['region']]['error'] = t.progress['error']
+            # Check SQL errors
+            if 'errors' in t.progress:
+                error = True
+                progress[t.progress['region']]['errors'] = t.progress['errors']
+
+        self._progress.track_validation(progress)
+        return error
