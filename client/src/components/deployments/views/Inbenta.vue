@@ -361,6 +361,7 @@ export default {
 
       // Build products list
       var products_parsed = []
+      if (this.products.length == 0) this.products = ['Chatbot', 'KM', 'Search', 'Ticketing', 'Legacy']
       for (var i = 0; i < this.products.length; ++i) products_parsed.push(this.product_items[this.products[i]])
 
       // Build parameters
