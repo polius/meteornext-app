@@ -288,8 +288,8 @@ class core:
                 json.dump({"output": environment_logs}, f, separators=(',', ':'))
 
             # Compress Execution Logs and Delete Uncompressed Folder
-            # shutil.make_archive("{}/execution".format(self._args.path), 'gztar', "{}/execution".format(self._args.path))
-            # shutil.rmtree("{}/execution".format(self._args.path))
+            shutil.make_archive("{}/execution".format(self._args.path), 'gztar', "{}/execution".format(self._args.path))
+            shutil.rmtree("{}/execution".format(self._args.path))
 
             # Return All Logs
             return environment_logs
@@ -305,7 +305,7 @@ class core:
         status_msg = "- Cleaning Regions..."
         print(status_msg)
         self._progress.track_tasks(value=status_msg[2:])
-        return
+
         # Delete SSH Deployment Logs
         ssh_regions = [i for i in self._imports.config['regions'] if i['ssh']['enabled']]
         if len(ssh_regions) > 0:           
@@ -317,7 +317,7 @@ class core:
                 t.start()
             for t in threads:
                 t.join()
-        return
+
         # Delete Uncompressed Deployment Folder
         if os.path.exists(self._args.path):
             if os.path.isdir(self._args.path):

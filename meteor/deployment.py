@@ -2,7 +2,6 @@ import os
 import time
 import signal
 import threading
-import traceback
 from datetime import timedelta
 
 from deploy_regions import deploy_regions
@@ -58,16 +57,17 @@ class deployment:
                     for i in progress[region['name']]['errors']:
                         if i not in errors:
                             errors.append(i)
-            errors_parsed = ''
-            for i in errors:
-                errors_parsed += i + '\n'
-            errors_parsed = errors_parsed[:-1]
-            raise Exception(errors_parsed)
+            if len(errors) > 0:
+                errors_parsed = ''
+                for i in errors:
+                    errors_parsed += i + '\n'
+                errors_parsed = errors_parsed[:-1]
+                raise Exception(errors_parsed)
 
             # Print Execution Finished
             queries_failed = False
             for i in progress.values():
-                for j in i.values():
+                for j in i['progress'].values():
                     if j['e']:
                         queries_failed = True
     
@@ -126,18 +126,24 @@ class deployment:
         errors = []
         for t in threads:
             t.join()
-            progress[t.region] = t.progress
+            if len(t.progress.keys()) > 0:
+                progress[t.region] = t.progress
 
         # Compute progress
         self.__show_execution_header(started_datetime, started_time)
         for region in self._imports.config['regions']:
-            environment_type = '[SSH]  ' if region['ssh']['enabled'] else '[LOCAL]'
-            region_total_databases = sum([int(rp['t']) if 't' in rp else 0 for rp in progress[region['name']]['progress'].values()])
-            region_databases = sum([int(rp['d']) if 'd' in rp else 0 for rp in progress[region['name']]['progress'].values()])
-            overall_progress = 0 if region_total_databases == 0 else float(region_databases) / float(region_total_databases) * 100
-            print("--> {} Region '{}': {:.2f}% ({}/{} DBs)".format(environment_type, region['name'], overall_progress, region_databases, region_total_databases))
-            if 'progress' in t.progress and len(t.progress['progress'].keys()) > 0:
-                self._progress.track_execution(value=progress['progress'])
+            if region['name'] in progress.keys() and 'progress' in progress[region['name']]:
+                environment_type = '[SSH]  ' if region['ssh']['enabled'] else '[LOCAL]'
+                region_total_databases = sum([int(rp['t']) if 't' in rp else 0 for rp in progress[region['name']]['progress'].values()])
+                region_databases = sum([int(rp['d']) if 'd' in rp else 0 for rp in progress[region['name']]['progress'].values()])
+                overall_progress = 0 if region_total_databases == 0 else float(region_databases) / float(region_total_databases) * 100
+                print("--> {} Region '{}': {:.2f}% ({}/{} DBs)".format(environment_type, region['name'], overall_progress, region_databases, region_total_databases))
+
+        # Track execution process
+        track = {}
+        for k, v in progress.items():
+            track[k] = v['progress'] if 'progress' in v else {}
+        self._progress.track_execution(value=track)
 
     def __show_execution_header(self, started_datetime, started_time):
         # Clean Console
