@@ -57,7 +57,7 @@ class deploy_regions:
             signal.signal(signal.SIGINT, signal.default_int_handler)
 
     def __track_progress(self, deploy):
-        progress = {}
+        progress = {"progress": {}}
         current_thread = threading.current_thread()
         tracking = True
         while tracking:
@@ -71,16 +71,14 @@ class deploy_regions:
             if not deploy.is_alive():
                 tracking = False
 
-            # Parse critical errors
-            critical_errors = []
-            for i in deploy.critical:
-                if i not in critical_errors:
-                    critical_errors.append(i)
-
             # Calculate Progress
             for r in range(len(deploy.progress)):
                 item = deploy.progress.pop(0)
-                progress[item['s']] = { "p": item['p'], "d": item['d'], "t": item['t'], "e": deploy.error, "c": critical_errors }
+                progress['progress'][item['s']] = { "p": item['p'], "d": item['d'], "t": item['t'], "e": deploy.error }
+
+            # Get Errors
+            if len(deploy.critical) > 0:
+                progress['errors'] = deploy.critical
 
             # Write Progress
             with open("{}/execution/{}/progress.json".format(self._args.path, self._region['name']), 'w') as outfile:
