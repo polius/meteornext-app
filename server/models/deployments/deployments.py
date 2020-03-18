@@ -29,7 +29,6 @@ class Deployments:
                         FROM deployments_basic db
                         JOIN deployments d ON d.id = db.deployment_id AND d.deleted = {7}
                         JOIN users u ON u.id = d.user_id{0}
-                        JOIN groups g ON g.id = u.group_id AND g.deployments_basic = 1 
                         WHERE db.id IN (
                             SELECT MAX(id)
                             FROM deployments_basic db2
@@ -46,7 +45,6 @@ class Deployments:
                         FROM deployments_pro dp
                         JOIN deployments d ON d.id = dp.deployment_id AND d.deleted = {7}
                         JOIN users u ON u.id = d.user_id{0}
-                        JOIN groups g ON g.id = u.group_id AND g.deployments_pro = 1  
                         WHERE dp.id IN (
                             SELECT MAX(id)
                             FROM deployments_pro dp2
@@ -63,7 +61,6 @@ class Deployments:
                         FROM deployments_inbenta di
                         JOIN deployments d ON d.id = di.deployment_id AND d.deleted = {7}
                         JOIN users u ON u.id = d.user_id{0}
-                        JOIN groups g ON g.id = u.group_id AND g.deployments_inbenta = 1  
                         WHERE di.id IN (
                             SELECT MAX(id)
                             FROM deployments_inbenta di2
