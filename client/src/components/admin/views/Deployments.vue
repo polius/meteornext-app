@@ -238,7 +238,8 @@ export default {
       else if (method == 'VALIDATE') return '#4caf50'
     },
     dateFormat(date) {
-      return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
+      if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
+      return date
     },
     notification(message, color) {
       this.snackbarText = message
