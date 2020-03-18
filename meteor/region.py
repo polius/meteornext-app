@@ -73,9 +73,9 @@ class Region:
         current_thread = threading.current_thread()
 
         if self._region['ssh']['enabled']:
-            progress = self.__ssh("cat {}/logs/{}/execution/{}/progress.json".format(self._remote_path, self._uuid, self._region['name']))
+            progress = self.__ssh("cat {}/logs/{}/execution/{}/progress.json 2>/dev/null".format(self._remote_path, self._uuid, self._region['name']))
         else:
-            progress = self.__local("cat {}/execution/{}/progress.json".format(self._args.path, self._region['name']))
+            progress = self.__local("cat {}/execution/{}/progress.json 2>/dev/null".format(self._args.path, self._region['name']))
         current_thread.progress = json.loads(progress) if len(progress) > 0 else {}
 
     def clean(self):
@@ -118,13 +118,13 @@ class Region:
             self.__put("{}/blueprint.py".format(self._args.path), "{}/.meteor/logs/{}/blueprint.py".format(home, self._uuid))
 
             # Start execution
-            self.__ssh('nohup {} --path "{}/logs/{}" --{} --region "{}" </dev/null >/dev/null 2>&1 &'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']))
-            # self.__ssh('{} --path "{}/logs/{}" --{} --region "{}"'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']))
+            # self.__ssh('nohup {} --path "{}/logs/{}" --{} --region "{}" </dev/null >/dev/null 2>&1 &'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']))
+            self.__ssh('{} --path "{}/logs/{}" --{} --region "{}"'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']))
         else:
             binary_path = "{}/init".format(self._local_path) if self._bin else "python3 {}/meteor.py".format(self._local_path)
             # Start execution
-            self.__local('nohup {} --path "{}" --{} --region "{}" </dev/null >/dev/null 2>&1 &'.format(binary_path, self._args.path, mode, self._region['name']))
-            # self.__local('{} --path "{}" --{} --region "{}"'.format(binary_path, self._args.path, mode, self._region['name']))
+            # self.__local('nohup {} --path "{}" --{} --region "{}" </dev/null >/dev/null 2>&1 &'.format(binary_path, self._args.path, mode, self._region['name']))
+            self.__local('{} --path "{}" --{} --region "{}"'.format(binary_path, self._args.path, mode, self._region['name']))
 
         # Wait deploy to finish
         while self.check_processes() > 0:
