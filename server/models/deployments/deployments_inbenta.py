@@ -36,6 +36,7 @@ class Deployments_Inbenta:
         return self._sql.execute(query, (deployment['id'], products, deployment['schema'], deployment['databases'], str(deployment['queries']), deployment['method'], deployment['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), deployment['scheduled'], deployment['scheduled'], deployment['environment'], deployment['group_id']))
 
     def put(self, deployment):
+        products = str(deployment['products'])[1:-1].replace("'", "").replace(" ", "")
         query = """
             UPDATE deployments_inbenta
             SET `environment_id` = (SELECT id FROM environments WHERE name = %s),
@@ -48,7 +49,7 @@ class Deployments_Inbenta:
                 `scheduled` = IF(%s = '', NULL, %s)
             WHERE id = %s
         """
-        self._sql.execute(query, (deployment['environment'], deployment['products'], deployment['schema'], deployment['databases'], deployment['queries'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
+        self._sql.execute(query, (deployment['environment'], products, deployment['schema'], deployment['databases'], deployment['queries'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
 
     def updateStatus(self, deployment_id, status):
         query = """

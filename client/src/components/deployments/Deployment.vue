@@ -860,8 +860,8 @@
         var i = 0
 
         // Init Execution Headers (if hasn't started yet)
-        if (!('execution' in this.deployment['progress']) && this.deployment['method'] != 'validate') {
-          if (this.validation_data.length > 0) {
+        if (!('execution' in this.deployment['progress'])) {
+          if (this.deployment['method'] != 'validate' && this.validation_data.length > 0) {
             var succeeded = true
             for (let i = 0; i < Object.values(this.validation_data[0]).length; ++i ) { 
               succeeded &= (Object.values(this.validation_data[0])[i] == 'SUCCEEDED')
@@ -1128,6 +1128,7 @@
         }
         if (this.deployment['mode'] == 'INBENTA') {
           payload['products'] = []
+          if (this.information_dialog_data.products.length == 0) this.information_dialog_data.products = ['Chatbot', 'KM', 'Search', 'Ticketing', 'Legacy']
           for (const i of this.information_dialog_data.products) payload['products'].push(this.deployment['products_schema'][i])
           payload['schema'] = this.information_dialog_data.schema
         }
