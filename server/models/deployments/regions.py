@@ -37,7 +37,7 @@ class Regions:
             UPDATE regions
             JOIN environments e ON e.id = regions.environment_id AND e.group_id = %s
             SET regions.name = %s,
-                regions.environment_id = (SELECT id FROM environments WHERE name = %s),
+                regions.environment_id = (SELECT id FROM environments WHERE name = %s AND group_id = %s),
                 regions.ssh_tunnel = %s,
                 regions.hostname = IF(%s = '', NULL, %s),
                 regions.port = IF(%s = '', NULL, %s),
@@ -48,7 +48,7 @@ class Regions:
                 regions.updated_at = %s
             WHERE regions.id = %s
         """
-        self._sql.execute(query, (group_id, region['name'], region['environment'], region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), region['id']))
+        self._sql.execute(query, (group_id, region['name'], group_id, region['environment'], region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), region['id']))
 
     def delete(self, group_id, region_id):
         query = """

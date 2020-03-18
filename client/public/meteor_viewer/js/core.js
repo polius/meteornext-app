@@ -227,7 +227,7 @@ function build_columns() {
         field: COLUMNS[i],
         width: 200,
         valueGetter: function execution_output_ValueGetter(params) {
-          var execution_output = JSON.stringify(params.data.meteor_output);
+          var execution_output = (typeof params.data.meteor_output === 'object') ? JSON.stringify(params.data.meteor_output) : params.data.meteor_output
           if (execution_output == '""') execution_output = '';
           else if (execution_output == '"[]"') execution_output = '[]';
           return execution_output;
