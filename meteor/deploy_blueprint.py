@@ -45,7 +45,7 @@ class deploy_blueprint:
             with open(execution_log_path, 'w') as outfile:
                 json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
 
-        except Exception as e:
+        except Exception as e:            
             inner_frames = inspect.getinnerframes(e.__traceback__)
             found = False
             for frame in reversed(inner_frames):

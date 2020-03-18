@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import time
 import paramiko
 import threading
 import subprocess
@@ -55,7 +56,6 @@ class Region:
         # 1. Compress Logs
         binary_path = "{}/bin/init".format(self._remote_path) if self._bin else "python3 {}/bin/meteor.py".format(self._remote_path)
         self.__ssh('{} --path "{}/logs/{}" --region "{}" --compress'.format(binary_path, self._remote_path, self._uuid, self._region['name']))
-
         # 2. Download Compressed Logs
         remote_path = "{}/.meteor/logs/{}/execution/{}.tar.gz".format(home, self._uuid, self._region['name'])
         local_path = "{}/execution/{}.tar.gz".format(self._args.path, self._region['name'])
@@ -83,9 +83,9 @@ class Region:
 
     def check_processes(self):
         # Check Processes Currently Executing
-        command = "ps -U $USER -u $USER u | grep '{}' | grep -v grep | awk '{{print $2}}' | wc -l".format(self._uuid)
+        command = "ps -U $USER -u $USER u | grep '{}' | grep '\-\-region' | grep -v grep | awk '{{print $2}}' | wc -l".format(self._uuid)
         count = self.__ssh(command)  if self._region['ssh']['enabled'] else self.__local(command)
-        return count
+        return int(count)
 
     def sigint(self):
         command = "ps -U $USER -u $USER u | grep '{}' | grep -v grep | awk '{{print $2}}' | xargs kill -2 2> /dev/null".format(self._uuid)
@@ -118,11 +118,17 @@ class Region:
             self.__put("{}/blueprint.py".format(self._args.path), "{}/.meteor/logs/{}/blueprint.py".format(home, self._uuid))
 
             # Start execution
-            self.__ssh('{} --path "{}/logs/{}" --{} --region "{}"'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']))
+            self.__ssh('nohup {} --path "{}/logs/{}" --{} --region "{}" </dev/null >/dev/null 2>&1 &'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']))
+            # self.__ssh('{} --path "{}/logs/{}" --{} --region "{}"'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']))
         else:
             binary_path = "{}/init".format(self._local_path) if self._bin else "python3 {}/meteor.py".format(self._local_path)
             # Start execution
-            self.__local('{} --path "{}" --{} --region "{}"'.format(binary_path, self._args.path, mode, self._region['name']))
+            self.__local('nohup {} --path "{}" --{} --region "{}" </dev/null >/dev/null 2>&1 &'.format(binary_path, self._args.path, mode, self._region['name']))
+            # self.__local('{} --path "{}" --{} --region "{}"'.format(binary_path, self._args.path, mode, self._region['name']))
+
+        # Wait deploy to finish
+        while self.check_processes() > 0:
+            time.sleep(1)
 
     def compress_logs(self):
         compressed_dir = "{}/execution/{}".format(self._args.path, self._region['name'])

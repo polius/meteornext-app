@@ -51,6 +51,19 @@ class deployment:
                 time.sleep(1)
             self.__track_overall(progress, started_datetime, started_time)
 
+            # Check Critical Errors
+            errors = []
+            for region in self._config['regions']:
+                if 'errors' in progress[region['name']]:
+                    for i in progress[region['name']]['errors']:
+                        if i not in errors:
+                            errors.append(i)
+            errors_parsed = ''
+            for i in errors:
+                errors_parsed += i + '\n'
+            errors_parsed = errors_parsed[:-1]
+            raise Exception(errors_parsed)
+
             # Print Execution Finished
             queries_failed = False
             for i in progress.values():
@@ -110,20 +123,21 @@ class deployment:
             t.start()
 
         # Wait tracking to finish in all regions
+        errors = []
         for t in threads:
             t.join()
-            if len(t.progress.keys()) > 0:
-                progress[t.region] = t.progress
+            progress[t.region] = t.progress
 
         # Compute progress
         self.__show_execution_header(started_datetime, started_time)
         for region in self._imports.config['regions']:
             environment_type = '[SSH]  ' if region['ssh']['enabled'] else '[LOCAL]'
-            region_total_databases = sum([int(rp['t']) if 't' in rp else 0 for rp in progress[region['name']].values()])
-            region_databases = sum([int(rp['d']) if 'd' in rp else 0 for rp in progress[region['name']].values()])
+            region_total_databases = sum([int(rp['t']) if 't' in rp else 0 for rp in progress[region['name']]['progress'].values()])
+            region_databases = sum([int(rp['d']) if 'd' in rp else 0 for rp in progress[region['name']]['progress'].values()])
             overall_progress = 0 if region_total_databases == 0 else float(region_databases) / float(region_total_databases) * 100
             print("--> {} Region '{}': {:.2f}% ({}/{} DBs)".format(environment_type, region['name'], overall_progress, region_databases, region_total_databases))
-            self._progress.track_execution(value=progress)
+            if 'progress' in t.progress and len(t.progress['progress'].keys()) > 0:
+                self._progress.track_execution(value=progress['progress'])
 
     def __show_execution_header(self, started_datetime, started_time):
         # Clean Console
