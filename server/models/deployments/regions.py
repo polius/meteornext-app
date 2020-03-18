@@ -48,7 +48,7 @@ class Regions:
                 regions.updated_at = %s
             WHERE regions.id = %s
         """
-        self._sql.execute(query, (group_id, region['name'], group_id, region['environment'], region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), region['id']))
+        self._sql.execute(query, (group_id, region['name'], region['environment'], group_id, region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), region['id']))
 
     def delete(self, group_id, region_id):
         query = """
