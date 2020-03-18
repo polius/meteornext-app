@@ -141,7 +141,7 @@ export default {
         })
     },
     dateFormat(date) {
-      if (date) return moment.utc(date).local().format('ddd, DD MMM YYYY HH:mm:ss')
+      if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
     },
     // SNACKBAR
