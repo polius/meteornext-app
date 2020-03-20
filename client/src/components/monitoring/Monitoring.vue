@@ -5,14 +5,17 @@
         <v-hover>
           <v-card slot-scope="{ hover }" :class="`elevation-${hover ? 12 : 2}`">
             <v-img height="10px" :class="item.color"></v-img>
-            <v-card-title primary-title style="padding-bottom:5px;">
-              <p class="title text-xs-center">{{item.title}}</p>
+            <v-card-title primary-title style="padding-bottom:10px;">
+              <p class="text-xs-center" style="margin-bottom:0px;">
+                <span class="title">{{item.title}}</span>
+                <br>
+                <span class="body-2">{{item.region}}</span>
+              </p>
             </v-card-title>
             <v-divider></v-divider>
-            <v-card-text>
-              <p class="subheading">Hostname: </p>
-              <p class="subheading">Uptime: </p>
-              <p class="subheading">Connections: </p>
+            <v-card-text style="padding-bottom:1px;">
+              <p class="font-weight-medium">Hostname<pre>127.0.0.1</pre></p>
+              <p class="font-weight-medium">Connections<pre>23</pre></p>
             </v-card-text>
           </v-card>
         </v-hover>
@@ -26,26 +29,10 @@
     data() {
       return {
         links: [
-          {
-            id: '1',
-            title: 'Templates EU',
-            color: 'teal'
-          },
-          {
-            id: '2',
-            title: 'Templates US',
-            color: 'red'
-          },
-          {
-            id: '3',
-            title: 'Templates JP',
-            color: 'orange'
-          },
-          {
-            id: '4',
-            title: 'Aurora Apps',
-            color: 'teal'
-          }      
+          { id: '1', title: 'Templates EU', region: 'AWS-EU', color: 'teal' },
+          { id: '2', title: 'Templates US', region: 'AWS-US', color: 'red' },
+          { id: '3', title: 'Templates JP', region: 'AWS-JP', color: 'orange' },
+          { id: '4', title: 'Aurora Apps', region: 'AWS-EU', color: 'teal' }      
         ]
       }
     }

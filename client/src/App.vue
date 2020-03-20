@@ -4,9 +4,9 @@
       <router-link class="nav-link white--text" to="/" style="text-decoration:none;">
         <v-toolbar-title>Meteor Next</v-toolbar-title>
       </router-link>
+      <v-divider class="mx-3" inset vertical></v-divider>
 
       <!-- DEPLOYMENTS -->
-      <v-divider class="mx-3" inset vertical></v-divider>
       <router-link v-if="deployments_enable" class="nav-link" to="/deployments" style="margin-right:10px;">
         <v-btn color="#e74c3c"><v-icon small style="padding-right:10px">fas fa-meteor</v-icon>Deployments</v-btn>
       </router-link>
@@ -14,11 +14,15 @@
       <router-link class="nav-link" to="/monitoring" style="margin-right:10px;">
         <v-btn color="#fa8231"><v-icon small style="padding-right:10px">fas fa-desktop</v-icon>Monitoring</v-btn>
       </router-link>
-      <!-- VALIDATION -->
-      <router-link class="nav-link" to="/utils">
+      <!-- UTILS -->
+      <router-link class="nav-link" to="/utils" style="margin-right:10px;">
         <v-btn color="#00b16a"><v-icon small style="padding-right:10px">fas fa-database</v-icon>Utils</v-btn>
       </router-link>
-      <!-- #446cb3 -->
+      <!-- JOBS -->
+      <router-link class="nav-link" to="/jobs">
+        <v-btn color="#8e44ad"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>Jobs</v-btn>
+      </router-link>
+
       <v-spacer></v-spacer>
 
       <!-- COINS -->

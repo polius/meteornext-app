@@ -151,6 +151,11 @@ let router = new VueRouter({
       component: () => import('../components/utils/Navigation')
     },
     {
+      path: '/jobs',
+      meta: { requiresAuth: true },
+      component: () => import('../components/jobs/Navigation')
+    },
+    {
       path: '/admin',
       component: () => import('../components/admin/Navigation'),
       meta: {requiresAdmin: true },
