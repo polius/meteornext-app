@@ -18,9 +18,9 @@
       <router-link class="nav-link" to="/utils" style="margin-right:10px;">
         <v-btn color="#00b16a"><v-icon small style="padding-right:10px">fas fa-database</v-icon>Utils</v-btn>
       </router-link>
-      <!-- JOBS -->
-      <router-link class="nav-link" to="/jobs">
-        <v-btn color="#8e44ad"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>Jobs</v-btn>
+      <!-- CLIENT -->
+      <router-link class="nav-link" to="/client">
+        <v-btn color="#8e44ad"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>Client</v-btn>
       </router-link>
 
       <v-spacer></v-spacer>
