@@ -53,6 +53,11 @@
         <v-btn icon><v-icon>fas fa-user</v-icon></v-btn>
       </router-link>
 
+      <!-- INVENTORY -->
+      <router-link v-if="admin" title="Inventory" class="nav-link" to="/inventory">
+        <v-btn icon><v-icon>fas fa-layer-group</v-icon></v-btn>
+      </router-link>
+
       <!-- ADMINISTRATION -->
       <router-link v-if="admin" title="Administration" class="nav-link" to="/admin">
         <v-btn icon><v-icon>fas fa-ankh</v-icon></v-btn>

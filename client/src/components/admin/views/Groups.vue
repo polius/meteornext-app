@@ -1,6 +1,10 @@
 <template>
   <div>
-    <v-card>
+    <div v-if="this.$route.params.id !== undefined">
+      <router-view/>
+    </div>
+    <div v-else>
+      <v-card>
       <v-toolbar flat color="primary">
         <v-toolbar-title class="white--text">GROUPS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
@@ -46,6 +50,7 @@
       {{ snackbarText }}
       <v-btn color="white" text @click="snackbar = false">Close</v-btn>
     </v-snackbar>
+    </div>
   </div>
 </template>
 
@@ -100,10 +105,10 @@ export default {
         })
     },
     newGroup() {
-      this.$router.push({ name: 'admin.groups.view', params: { groupID: '' } })
+      this.$router.push({ name:'admin.group', params: { id: 'new'} })
     },
     editGroup() {
-      this.$router.push({ name: 'admin.groups.view', params: { groupID: this.selected[0]['id'] } })
+      this.$router.push({ name:'admin.group', params: { id: this.selected[0]['id'] }})
     },
     deleteGroup() {
       this.dialog = true

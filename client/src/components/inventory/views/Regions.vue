@@ -2,19 +2,27 @@
   <div>
     <v-card>
       <v-toolbar flat color="primary">
-        <v-toolbar-title class="white--text">AUXILIARY CONNECTIONS</v-toolbar-title>
+        <v-toolbar-title class="white--text">REGIONS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text @click="newAuxiliary()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editAuxiliary()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn v-if="selected.length > 0" text @click="deleteAuxiliary()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn text @click="newRegion()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="editRegion()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn v-if="selected.length > 0" text @click="deleteRegion()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:item.ssh_tunnel="props">
           <v-icon v-if="props.item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
           <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>
+        </template>
+        <template v-slot:item.password="props">
+          <v-icon v-if="props.item.ssh_tunnel && (props.item.password || '').length != 0" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
+          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:20px">fas fa-circle</v-icon>
+        </template>
+        <template v-slot:item.key="props">
+          <v-icon v-if="props.item.ssh_tunnel && (props.item.key || '').length != 0" small color="#00b16a" style="margin-left:22px">fas fa-circle</v-icon>
+          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:22px">fas fa-circle</v-icon>
         </template>
       </v-data-table>
     </v-card>
@@ -28,34 +36,26 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
                   <!-- METADATA -->
-                  <div class="title font-weight-regular">Metadata</div>
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <!-- SQL -->
-                  <div class="title font-weight-regular">SQL</div>
-                  <v-select v-model="item.sql_engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
-                  <v-text-field v-model="item.sql_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;" append-icon="cloud"></v-text-field>
-                  <v-text-field v-model="item.sql_port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
-                  <v-text-field v-model="item.sql_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
-                  <v-text-field v-model="item.sql_password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
                   <!-- SSH -->
-                  <v-switch v-model="item.ssh_tunnel" label="SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
+                  <v-switch v-model="item.ssh_tunnel" label="SSH Tunnel" color="info" hide-details style="margin-top:0px;"></v-switch>
                   <div v-if="item.ssh_tunnel" style="margin-top:15px;">
                     <div class="title font-weight-regular">SSH</div>
-                    <v-text-field v-model="item.ssh_hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
-                    <v-text-field v-model="item.ssh_port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
-                    <v-text-field v-model="item.ssh_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
-                    <v-text-field v-model="item.ssh_password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
-                    <v-textarea v-model="item.ssh_key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
+                    <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
+                    <v-text-field v-model="item.port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
+                    <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
+                    <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
+                    <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
                   </div>
                 </v-form>
-                <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected auxiliary connections?</div>
+                <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitAuxiliary()">CONFIRM</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="submitRegion()">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">CANCEL</v-btn>
-                  <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()" style="float:right;">Test Connection</v-btn>
+                  <v-btn v-if="item['ssh_tunnel'] && mode != 'delete'" :loading="loading" color="info" @click="testConnection()" style="float:right;">Test Connection</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -76,39 +76,40 @@ import axios from 'axios';
 
 export default {
   data: () => ({
+    // Data Table
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
-      { text: 'Engine', align: 'left', value: 'sql_engine'},
-      { text: 'Hostname', align: 'left', value: 'sql_hostname'},
-      { text: 'Port', align: 'left', value: 'sql_port'},
-      { text: 'Username', align: 'left', value: 'sql_username'},
-      { text: 'Password', align: 'left', value: 'sql_password'},
-      { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'}
+      { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'},
+      { text: 'Hostname', align: 'left', value: 'hostname'},
+      { text: 'Port', align: 'left', value: 'port'},
+      { text: 'Username', align: 'left', value: 'username'},
+      { text: 'Password', align: 'left', value: 'password'},
+      { text: 'Private Key', align: 'left', value: 'key'}
     ],
     items: [],
     selected: [],
     search: '',
-    item: { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' },
+    item: { name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '' },
     mode: '',
     loading: true,
-    engines_items: ['MySQL', 'PostgreSQL'],
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
+
     // Snackbar
     snackbar: false,
-    snackbarTimeout: Number(3000),
+    snackbarTimeout: Number(5000),
     snackbarText: '',
     snackbarColor: ''
   }),
   created() {
-    this.getAuxiliary()
+    this.getRegions()
   },
   methods: {
-    getAuxiliary() {
-      axios.get('/deployments/auxiliary')
+    getRegions() {
+      axios.get('/deployments/regions')
         .then((response) => {
-          this.items = response.data.data
+          this.items = response.data.data.regions
           this.loading = false
         })
         .catch((error) => {
@@ -116,56 +117,43 @@ export default {
           else this.notification(error.response.data.message, 'error')
         })
     },
-    selectEngine(value) {
-      if (this.item['sql_port'] == '') {
-        if (value == 'MySQL') this.item['sql_port'] = '3306'
-        else if (value == 'PostgreSQL') this.item['sql_port'] = '5432'
-      }
-    },
-    newAuxiliary() {
+    newRegion() {
       this.mode = 'new'
-      this.item = { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' }
-      this.dialog_title = 'New Auxiliary Connection'
+      this.item = { name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '' }
+      this.dialog_title = 'New Region'
       this.dialog = true
     },
-    editAuxiliary() {
+    editRegion() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.dialog_title = 'Edit Auxiliary Connection'
+      this.dialog_title = 'Edit Region'
       this.dialog = true
     },
-    deleteAuxiliary() {
+    deleteRegion() {
       this.mode = 'delete'
-      this.dialog_title = 'Delete Auxiliary Connection'
+      this.dialog_title = 'Delete Region'
       this.dialog = true
     },
-    submitAuxiliary() {
+    submitRegion() {
       this.loading = true
-      if (this.mode == 'new') this.newAuxiliarySubmit()
-      else if (this.mode == 'edit') this.editAuxiliarySubmit()
-      else if (this.mode == 'delete') this.deleteAuxiliarySubmit()
+      if (this.mode == 'new') this.newRegionSubmit()
+      else if (this.mode == 'edit') this.editRegionSubmit()
+      else if (this.mode == 'delete') this.deleteRegionSubmit()
     },
-    newAuxiliarySubmit() {
+    newRegionSubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
         this.loading = false
         return
       }
-      // Check if new item already exists
-      for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['name'] == this.item.name) {
-          this.notification('This auxiliary connection currently exists', 'error')
-          this.loading = false
-          return
-        }
-      }
       // Add item in the DB
+      this.notification('Adding Region...', 'info', true)
       const payload = JSON.stringify(this.item);
-      axios.post('/deployments/auxiliary', payload)
+      axios.post('/deployments/regions', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          this.getAuxiliary()
+          this.getRegions()
           this.dialog = false
         })
         .catch((error) => {
@@ -176,7 +164,7 @@ export default {
           this.loading = false
         })
     },
-    editAuxiliarySubmit() {
+    editRegionSubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
@@ -187,17 +175,10 @@ export default {
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['name'] == this.selected[0]['name']) break
       }
-      // Check if edited item already exists
-      for (var j = 0; j < this.items.length; ++j) {
-        if (this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
-          this.notification('This auxiliary connection currently exists', 'error')
-          this.loading = false
-          return
-        }
-      }
       // Edit item in the DB
+      this.notification('Editing Region...', 'info', true)
       const payload = JSON.stringify(this.item)
-      axios.put('/deployments/auxiliary', payload)
+      axios.put('/deployments/regions', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
@@ -213,12 +194,13 @@ export default {
           this.loading = false
         })
     },
-    deleteAuxiliarySubmit() {
+    deleteRegionSubmit() {
       // Get Selected Items
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
       // Delete items to the DB
-      axios.delete('/deployments/auxiliary', { data: payload })
+      this.notification('Deleting Region...', 'info', true)
+      axios.delete('/deployments/regions', { data: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Delete items from the data table
@@ -232,7 +214,7 @@ export default {
               }
             }
           }
-           this.selected = []
+          this.selected = []
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -251,10 +233,10 @@ export default {
         return
       }
       // Test Connection
-      this.notification('Testing Auxiliary Connection...', 'info', true)
+      this.notification('Testing Region...', 'info', true)
       this.loading = true
       const payload = JSON.stringify(this.item)
-      axios.post('/deployments/auxiliary/test', payload)
+      axios.post('/deployments/regions/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
         })
@@ -286,4 +268,4 @@ export default {
     }
   }
 }
-</script>
+</script> 

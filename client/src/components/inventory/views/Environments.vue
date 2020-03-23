@@ -15,24 +15,40 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="dialog" persistent max-width="768px">
+    <v-dialog v-model="dialog" persistent max-width="896px">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
         </v-toolbar>
-        <v-card-text style="padding: 0px 20px 0px;">
+        <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
+                <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
                   <v-text-field v-if="mode!='delete'" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  
+                  <v-card v-if="mode!='delete'">
+                    <v-toolbar flat dense color="#2e3131">
+                      <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
+                      <v-divider class="mx-3" inset vertical></v-divider>
+                      <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
+                    </v-toolbar>
+                    <v-card-text style="padding: 10px;">
+                      <v-treeview :items="treeviewItems" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                        <template v-slot:prepend="{ item }">
+                          <v-icon v-if="!item.children" small>fas fa-database</v-icon>
+                        </template>
+                      </v-treeview>
+                    </v-card-text>
+                  </v-card>
+
                   <div style="padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected environments?</div>
-                  <v-divider></v-divider>
-                  <div style="margin-top:20px;">
-                    <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px;">CANCEL</v-btn>
-                  </div>
                 </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                </div>
               </v-flex>
             </v-layout>
           </v-container>
@@ -62,6 +78,9 @@ export default {
     loading: true,
     dialog: false,
     dialog_title: '',
+    // Treeview
+    treeviewItems: [{ name: 'AWS-EU', children: [{ name: 'sql-eu-01' }, { name: 'sql-eu-02' }]}, { name: 'AWS-US', children: [{ name: 'sql-us-01' }, { name: 'sql-us-02' }]}],
+    treeviewSearch: '',
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
