@@ -41,26 +41,44 @@ let router = new VueRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/results',
-      name: 'results',
-      component: () => import('../components/deployments/Results'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/results/:uri',
-      name: 'results_uri',
-      component: () => import('../components/deployments/Results'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/deployment',
-      component: () => import('../components/deployments/Navigation'),
+      path: '/inventory',
+      component: () => import('../components/inventory/Navigation'),
       meta: { requiresAuth: true },
       children: [
         {
-          path: ':id',
-          name: 'deployment',
-          component: () => import('../components/deployments/Deployment'),
+          path: '',
+          name: 'inventory',
+          component: () => import('../components/inventory/Inventory'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'environments',
+          name: 'inventory.environments',
+          component: () => import('../components/inventory/views/Environments'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'regions',
+          name: 'inventory.regions',
+          component: () => import('../components/inventory/views/Regions'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'servers',
+          name: 'inventory.servers',
+          component: () => import('../components/inventory/views/Servers'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'auxiliary',
+          name: 'inventory.auxiliary',
+          component: () => import('../components/inventory/views/Auxiliary'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'slack',
+          name: 'inventory.slack',
+          component: () => import('../components/inventory/views/Slack'),
           meta: { requiresAuth: true }
         }
       ]
@@ -87,35 +105,30 @@ let router = new VueRouter({
           name: 'deployments.new',
           component: () => import('../components/deployments/views/Navigation'),
           meta: { requiresAuth: true }
-        },
+        }
+      ]
+    },
+    {
+      path: '/results',
+      name: 'results',
+      component: () => import('../components/deployments/Results'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/results/:uri',
+      name: 'results_uri',
+      component: () => import('../components/deployments/Results'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/deployment',
+      component: () => import('../components/deployments/Navigation'),
+      meta: { requiresAuth: true },
+      children: [
         {
-          path: 'environments',
-          name: 'deployments.environments',
-          component: () => import('../components/deployments/settings/Environments'),
-          meta: { requiresAuth: true }
-        },
-        {
-          path: 'regions',
-          name: 'deployments.regions',
-          component: () => import('../components/deployments/settings/Regions'),
-          meta: { requiresAuth: true }
-        },
-        {
-          path: 'servers',
-          name: 'deployments.servers',
-          component: () => import('../components/deployments/settings/Servers'),
-          meta: { requiresAuth: true }
-        },
-        {
-          path: 'auxiliary',
-          name: 'deployments.auxiliary',
-          component: () => import('../components/deployments/settings/Auxiliary'),
-          meta: { requiresAuth: true }
-        },
-        {
-          path: 'slack',
-          name: 'deployments.slack',
-          component: () => import('../components/deployments/settings/Slack'),
+          path: ':id',
+          name: 'deployment',
+          component: () => import('../components/deployments/Deployment'),
           meta: { requiresAuth: true }
         }
       ]
@@ -182,13 +195,20 @@ let router = new VueRouter({
           path: 'groups',
           name: 'admin.groups',
           component: () => import('../components/admin/views/Groups'),
-          meta: { requiresAdmin: true }
+          meta: { requiresAdmin: true },
+          children: [
+            {
+              path: ':id',
+              name: 'admin.group',
+              component: () => import('../components/admin/views/Group'),
+              meta: { requiresAuth: true }
+            }
+          ]
         },
         {
-          path: 'groups/view',
-          name: 'admin.groups.view',
-          props: true,
-          component: () => import('../components/admin/views/GroupsView'),
+          path: 'inventory',
+          name: 'admin.inventory',
+          component: () => import('../components/admin/views/Inventory'),
           meta: { requiresAdmin: true }
         },
         {

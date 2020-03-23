@@ -68,7 +68,7 @@ CREATE TABLE `environments` (
 CREATE TABLE `regions` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `environment_id` int(10) unsigned NOT NULL,
+  `group_id` int(10) unsigned NOT NULL,
   `ssh_tunnel` tinyint(1) NOT NULL,
   `hostname` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `port` INT UNSIGNED DEFAULT NULL,
@@ -80,8 +80,8 @@ CREATE TABLE `regions` (
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `environment_id` (`environment_id`,`name`),
-  CONSTRAINT `regions_ibfk_1` FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
+  UNIQUE KEY `group_id` (`group_id`,`name`),
+  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `servers` (
@@ -100,6 +100,13 @@ CREATE TABLE `servers` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `region_id` (`region_id`,`name`),
   FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `environment_servers` (
+  `environment_id` int(10) unsigned NOT NULL,
+  `server_id` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`environment_id`, `server_id`),
+  INDEX `server_id` (`server_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `auxiliary` (

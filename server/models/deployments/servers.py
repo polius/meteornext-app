@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 from datetime import datetime
 
 class Servers:
@@ -9,18 +7,16 @@ class Servers:
     def get(self, group_id, server_id=None):
         if server_id is None:
             query = """
-                SELECT s.*, e.id AS 'environment_id', e.name AS 'environment', r.name AS 'region' 
+                SELECT s.*, r.name AS 'region' 
                 FROM servers s
-                JOIN regions r ON r.id = s.region_id
-                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
+                JOIN regions r ON r.id = s.region_id AND r.group_id = %s
             """
             return self._sql.execute(query, (group_id))
         else:
             query = """
-                SELECT s.*, e.id AS 'environment_id', e.name AS 'environment', r.name AS 'region' 
+                SELECT s.*, r.name AS 'region' 
                 FROM servers s
-                JOIN regions r ON r.id = s.region_id
-                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
+                JOIN regions r ON r.id = s.region_id AND r.group_id = %s
                 WHERE s.id = %s
             """
             return self._sql.execute(query, (group_id, server_id))
@@ -28,12 +24,12 @@ class Servers:
     def post(self, user_id, group_id, server):
         query = """
             INSERT INTO servers (name, region_id, hostname, port, username, password, created_by, created_at)             
-            SELECT %s, r.id, %s, %s, %s, %s, %s, %s
-            FROM regions r
-            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
-            WHERE r.name = %s
+            SELECT %s, id, %s, %s, %s, %s, %s, %s
+            FROM regions
+            WHERE group_id = %s
+            AND name = %s
         """
-        self._sql.execute(query, (server['name'], server['hostname'], server['port'], server['username'], server['password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, server['environment'], server['region']))
+        self._sql.execute(query, (server['name'], server['hostname'], server['port'], server['username'], server['password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, server['region']))
 
     def put(self, user_id, group_id, server):
         query = """
@@ -56,8 +52,7 @@ class Servers:
         query = """
             DELETE s
             FROM servers s
-            JOIN regions r ON r.id = s.region_id
-            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
+            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
             WHERE s.id = %s
         """
         self._sql.execute(query, (group_id, server_id))
@@ -66,8 +61,7 @@ class Servers:
         query = """
             DELETE s
             FROM servers s
-            JOIN regions r ON r.id = s.region_id
-            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
+            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
         """
         self._sql.execute(query, (group_id))
 
@@ -77,31 +71,28 @@ class Servers:
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM servers s
-                    JOIN regions r ON r.id = s.region_id AND r.name = %s
-                    JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
+                    JOIN regions r ON r.id = s.region_id AND r.name = %s AND r.group_id = %s
                     WHERE s.name = %s AND s.id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['region'], group_id, server['environment'], server['name'], server['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['region'], group_id, server['name'], server['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM servers s
-                    JOIN regions r ON r.id = s.region_id AND r.name = %s
-                    JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.name = %s
+                    JOIN regions r ON r.id = s.region_id AND r.name = %s AND r.group_id = %s
                     WHERE s.name = %s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['region'], group_id, server['environment'], server['name']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['region'], group_id, server['name']))[0]['exist'] == 1
 
     def exist_by_region(self, group_id, region_id):
         query = """
             SELECT EXISTS ( 
                 SELECT * 
                 FROM servers s
-                JOIN regions r ON r.id = s.region_id AND r.id = %s
-                JOIN environments e ON e.id = r.environment_id AND e.group_id = %s
+                JOIN regions r ON r.id = s.region_id AND r.id = %s AND r.group_id = %s
             ) AS exist
         """
         return self._sql.execute(query, (region_id, group_id))[0]['exist'] == 1

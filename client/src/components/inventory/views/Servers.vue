@@ -24,12 +24,10 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
                   <!-- METADATA -->
-                  <div class="title font-weight-regular">Metadata</div>
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <v-select v-model="item.environment" :rules="[v => !!v || '']" :items="environments" label="Environment" v-on:change="getRegions()" required style="margin-top:0px; padding-top:0px;"></v-select>
-                  <v-select v-model="item.region" :disabled="item.environment == ''" :rules="[v => !!v || '']" :items="regions" label="Region" required style="margin-top:0px; padding-top:0px;"></v-select>
+                  <v-select v-model="item.region" :rules="[v => !!v || '']" :items="regions" label="Region" required style="margin-top:0px; padding-top:0px;"></v-select>
                   <!-- SQL -->
                   <div class="title font-weight-regular">SQL</div>
                   <v-select v-model="item.engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
@@ -66,7 +64,6 @@ export default {
   data: () => ({
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
-      { text: 'Environment', align: 'left', value: 'environment'},
       { text: 'Region', align: 'left', value: 'region'},
       { text: 'Engine', align: 'left', value: 'engine' },
       { text: 'Hostname', align: 'left', value: 'hostname'},
@@ -77,7 +74,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', environment: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' },
+    item: { name: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' },
     mode: '',
     loading: true,
     engines_items: ['MySQL', 'PostgreSQL'],
@@ -85,8 +82,7 @@ export default {
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
-    // Environments & Regions
-    environments: [],
+    // Regions
     regions: [],
     // Snackbar
     snackbar: false,
@@ -102,7 +98,6 @@ export default {
       axios.get('/deployments/servers')
         .then((response) => {
           this.items = response.data.data.servers
-          for (var i = 0; i < response.data.data.environments.length; ++i) this.environments.push(response.data.data.environments[i]['name'])
           this.loading = false
         })
         .catch((error) => {
@@ -112,8 +107,7 @@ export default {
     },
     getRegions() {
       this.regions = []
-      const payload = {"name": this.item.environment}
-      axios.post('/deployments/regions/list', payload)
+      axios.get('/deployments/regions/list')
         .then((response) => {
           for (var i = 0; i < response.data.data.length; ++i) this.regions.push(response.data.data[i]['name'])
         })
@@ -130,7 +124,7 @@ export default {
     },
     newServer() {
       this.mode = 'new'
-      this.item = { name: '', environment: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' }
+      this.item = { name: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' }
       this.dialog_title = 'New Server'
       this.dialog = true
     },
@@ -161,7 +155,7 @@ export default {
       }
       // Check if new item already exists
       for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['environment'] == this.item.environment && this.items[i]['region'] == this.item.region && this.items[i]['name'] == this.item.name) {
+        if (this.items[i]['region'] == this.item.region && this.items[i]['name'] == this.item.name) {
           this.notification('This server currently exists', 'error')
           this.loading = false
           return
@@ -192,11 +186,11 @@ export default {
       }
       // Get Item Position
       for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['environment'] == this.selected[0]['environment'] && this.items[i]['region'] == this.selected[0]['region'] && this.items[i]['name'] == this.selected[0]['name']) break
+        if (this.items[i]['region'] == this.selected[0]['region'] && this.items[i]['name'] == this.selected[0]['name']) break
       }
       // Check if edited item already exists
       for (var j = 0; j < this.items.length; ++j) {
-        if (this.items[j]['environment'] == this.item.environment && this.items[j]['region'] == this.item.region && this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
+        if (this.items[j]['region'] == this.item.region && this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
           this.notification('This server currently exists', 'error')
           this.loading = false
           return

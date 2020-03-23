@@ -4,10 +4,6 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.groups
 import models.admin.users
-import routes.deployments.settings.environments
-import routes.deployments.settings.regions
-import routes.deployments.settings.servers
-import routes.deployments.settings.auxiliary
 import routes.deployments.settings.slack
 import routes.admin.settings
 
@@ -70,15 +66,7 @@ class Groups:
         else:
             # Get group ID
             groupID = request.args['groupID'] if group_id is None else group_id
-            data = {
-                'group': self._groups.get(group_id=groupID),
-                'environments': self._environments.get(groupID)[0].get_json(),
-                'regions': self._regions.get(groupID)[0].get_json(),
-                'servers': self._servers.get(groupID)[0].get_json(),
-                'auxiliary': self._auxiliary.get(groupID)[0].get_json(),
-                'slack': self._slack.get(groupID)[0].get_json()
-            }
-            return jsonify(data), 200
+            return jsonify({'data': self._groups.get(group_id=groupID)}), 200
 
     def post(self, user_id, data):
         # Get Group
@@ -90,28 +78,7 @@ class Groups:
 
         # Create group
         self._groups.post(user_id, group)
-
-        # Get group ID
-        group_id = self._groups.get(group_name=group['name'])[0]['id']
-
-        # Add elements
-        try:
-            for i in data['environments']:
-                self._environments.post(user_id, group_id, i)
-            for i in data['regions']:
-                self._regions.post(user_id, group_id, i)
-            for i in data['servers']:
-                self._servers.post(user_id, group_id, i)
-            for i in data['auxiliary']:
-                self._auxiliary.post(user_id, group_id, i)
-
-            self._slack.put(user_id, group_id, json.loads(data['slack']))        
-            return jsonify({'message': 'Group added'}), 200
-
-        except Exception:
-            # Rollback
-            self.delete([group['name']])
-            return jsonify({'message': 'An error ocurred adding a group'}), 400
+        return jsonify({'message': 'Group added'}), 200
 
     def put(self, user_id, data):
         # Get Modified Group
@@ -125,49 +92,10 @@ class Groups:
 
         # Calculate diff
         diff_group = self.__diff(current['group'], [group])
-        diff_environments = self.__diff(current['environments']['data'], data['environments'])
-        diff_regions = self.__diff(current['regions']['data']['regions'], data['regions'])
-        diff_servers = self.__diff(current['servers']['data']['servers'], data['servers'])
-        diff_auxiliary = self.__diff(current['auxiliary']['data'], data['auxiliary'])
 
         # Apply diff
-        # - Groups -
         if len(diff_group['change']) > 0:
             self._groups.put(user_id, diff_group['change'][0])
-        
-        # Delete (Auxiliary, Servers, Regions, Environments)
-        self._auxiliary.delete(group['id'], [i['id'] for i in diff_auxiliary['remove']])
-        self._servers.delete(group['id'], [i['id'] for i in diff_servers['remove']])
-        self._regions.delete(group['id'], [i['id'] for i in diff_regions['remove']])
-        self._environments.delete(group['id'], [i['id'] for i in diff_environments['remove']])
-
-        # Add / Update
-        # - Environments -
-        for i in diff_environments['add']:
-            self._environments.post(user_id, group['id'], i)
-        for i in diff_environments['change']:
-            self._environments.put(user_id, group['id'], i)
-
-        # - Regions -
-        for i in diff_regions['add']:
-            self._regions.post(user_id, group['id'], i)
-        for i in diff_regions['change']:
-            self._regions.put(user_id, group['id'], i)
-
-        # - Servers -
-        for i in diff_servers['add']:
-            self._servers.post(user_id, group['id'], i)
-        for i in diff_servers['change']:
-            self._servers.put(user_id, group['id'], i)
-
-        # - Auxiliary Connections -
-        for i in diff_auxiliary['add']:
-            self._auxiliary.post(user_id, group['id'], i)
-        for i in diff_auxiliary['change']:
-            self._auxiliary.put(user_id, group['id'], i)
-
-        # - Slack -
-        self._slack.put(user_id, group['id'], json.loads(data['slack']))
 
         return jsonify({'message': 'Group edited'}), 200
 

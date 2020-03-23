@@ -48,7 +48,7 @@ class Regions:
             elif request.method == 'DELETE':
                 return self.delete(user['group_id'], region_json)
 
-        @regions_blueprint.route('/deployments/regions/list', methods=['POST'])
+        @regions_blueprint.route('/deployments/regions/list', methods=['GET'])
         @jwt_required
         def regions_list_method():
             # Check license
@@ -62,11 +62,8 @@ class Regions:
             if not user['deployments_edit']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            data = request.get_json()
-
             # Return Regions By User Environment
-            return jsonify({'data': self._regions.get_by_environment(user['group_id'], data)}), 200
+            return jsonify({'data': self._regions.get(user['group_id'])}), 200
 
         @regions_blueprint.route('/deployments/regions/test', methods=['POST'])
         @jwt_required
