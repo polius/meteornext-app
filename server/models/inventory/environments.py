@@ -45,7 +45,7 @@ class Environments:
         values = ''
         for region in environment['servers']:
             for server in region['children']:
-                values += '(%s, %s),' % (environment_id, server['id'])        
+                values += '(%s, %s),' % (environment['id'], server['id'])
         self._sql.execute("INSERT INTO environment_servers (environment_id, server_id) VALUES {}".format(values[:-1]))
 
     def delete(self, group_id, environment):
