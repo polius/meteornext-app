@@ -108,6 +108,7 @@ export default {
         })
     },
     getEnvironment() {
+      this.loading = true
       axios.get('/inventory/environments', { params: { environment_id: this.selected[0]['id'] } })
         .then((response) => {
           this.treeviewSelected = this.parseTreeView(response.data.servers)
@@ -213,7 +214,7 @@ export default {
         }
       }
       // Edit item in the DB
-      const payload = JSON.stringify({ name: this.environment_name, servers: this.treeviewSelected })
+      const payload = JSON.stringify({ id: this.selected[0]['id'], name: this.environment_name, servers: this.treeviewSelected })
       axios.put('/inventory/environments', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
