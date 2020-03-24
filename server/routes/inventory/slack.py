@@ -6,20 +6,20 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
-import models.deployments.slack
+import models.inventory.slack
 
 class Slack:
     def __init__(self, app, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._slack = models.deployments.slack.Slack(sql)
+        self._slack = models.inventory.slack.Slack(sql)
 
     def blueprint(self):
         # Init blueprint
         slack_blueprint = Blueprint('slack', __name__, template_folder='slack')
 
-        @slack_blueprint.route('/deployments/slack', methods=['GET','PUT'])
+        @slack_blueprint.route('/inventory/slack', methods=['GET','PUT'])
         @jwt_required
         def slack_method():
             # Check license
@@ -41,7 +41,7 @@ class Slack:
             elif request.method == 'PUT':
                 return self.put(user['id'], user['group_id'], slack_json)
 
-        @slack_blueprint.route('/deployments/slack/test', methods=['GET'])
+        @slack_blueprint.route('/inventory/slack/test', methods=['GET'])
         @jwt_required
         def slack_test_method():
             # Check license

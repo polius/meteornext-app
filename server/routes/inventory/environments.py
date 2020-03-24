@@ -3,8 +3,8 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
 import models.deployments.deployments
-import models.deployments.environments
-import models.deployments.regions
+import models.inventory.environments
+import models.inventory.regions
 
 class Environments:
     def __init__(self, app, sql, license):
@@ -12,14 +12,14 @@ class Environments:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
-        self._environments = models.deployments.environments.Environments(sql)
-        self._regions = models.deployments.regions.Regions(sql)
+        self._environments = models.inventory.environments.Environments(sql)
+        self._regions = models.inventory.regions.Regions(sql)
 
     def blueprint(self):
         # Init blueprint
         environments_blueprint = Blueprint('environments', __name__, template_folder='environments')
 
-        @environments_blueprint.route('/deployments/environments', methods=['GET','POST','PUT','DELETE'])
+        @environments_blueprint.route('/inventory/environments', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
         def environments_method():
             # Check license
@@ -51,7 +51,10 @@ class Environments:
     # Internal Methods #
     ####################
     def get(self, group_id):
-        return jsonify({'data': self._environments.get(group_id)}), 200
+        if 'environment_id' in request.args:
+            return jsonify({'environments': self._environments.get(group_id, request.args['environment_id']), 'servers': self._environments.get_servers(group_id, request.args['environment_id'])}), 200
+        else:
+            return jsonify({'environments': self._environments.get(group_id), 'servers': self._environments.get_servers(group_id)}), 200
 
     def post(self, user_id, group_id, data):
         if self._environments.exist(group_id, data):

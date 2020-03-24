@@ -9,7 +9,7 @@ import utils
 import models.admin.users
 import models.admin.groups
 import models.admin.settings
-import models.deployments.environments
+import models.inventory.environments
 import models.deployments.deployments
 import models.deployments.deployments_basic
 import models.deployments.deployments_queued
@@ -25,7 +25,7 @@ class Basic:
         self._users = models.admin.users.Users(sql)
         self._groups = models.admin.groups.Groups(sql)
         self._settings = models.admin.settings.Settings(sql)
-        self._environments = models.deployments.environments.Environments(sql)
+        self._environments = models.inventory.environments.Environments(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._deployments_basic = models.deployments.deployments_basic.Deployments_Basic(sql)
         self._deployments_queued = models.deployments.deployments_queued.Deployments_Queued(sql)

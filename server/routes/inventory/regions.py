@@ -4,9 +4,8 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import utils
 import models.admin.users
-import models.deployments.environments
-import models.deployments.regions
-import models.deployments.servers
+import models.inventory.regions
+import models.inventory.servers
 
 class Regions:
     def __init__(self, app, sql, license):
@@ -14,15 +13,14 @@ class Regions:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._environments = models.deployments.environments.Environments(sql)
-        self._regions = models.deployments.regions.Regions(sql)
-        self._servers = models.deployments.servers.Servers(sql)
+        self._regions = models.inventory.regions.Regions(sql)
+        self._servers = models.inventory.servers.Servers(sql)
 
     def blueprint(self):
         # Init blueprint
         regions_blueprint = Blueprint('regions', __name__, template_folder='regions')       
 
-        @regions_blueprint.route('/deployments/regions', methods=['GET','POST','PUT','DELETE'])
+        @regions_blueprint.route('/inventory/regions', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
         def regions_method():
             # Check license
@@ -48,24 +46,7 @@ class Regions:
             elif request.method == 'DELETE':
                 return self.delete(user['group_id'], region_json)
 
-        @regions_blueprint.route('/deployments/regions/list', methods=['GET'])
-        @jwt_required
-        def regions_list_method():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Get User
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if not user['deployments_edit']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Return Regions By User Environment
-            return jsonify({'data': self._regions.get(user['group_id'])}), 200
-
-        @regions_blueprint.route('/deployments/regions/test', methods=['POST'])
+        @regions_blueprint.route('/inventory/regions/test', methods=['POST'])
         @jwt_required
         def regions_test_method():
             # Check license
@@ -97,7 +78,7 @@ class Regions:
     # Internal Methods #
     ####################
     def get(self, group_id):
-        return jsonify({'data': {'regions': self._regions.get(group_id), 'environments': self._environments.get(group_id)}}), 200
+        return jsonify({'data': self._regions.get(group_id)}), 200
 
     def post(self, user_id, group_id, data):
         if self._regions.exist(group_id, data):
@@ -119,7 +100,7 @@ class Regions:
         # Check inconsistencies
         for region in data:
             if self._servers.exist_by_region(group_id, region):
-                return jsonify({'message': "The selected regions have servers created"}), 400
+                return jsonify({'message': "The selected regions have servers"}), 400
 
         for region in data:
             self._regions.delete(group_id, region)

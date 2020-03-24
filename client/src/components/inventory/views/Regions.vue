@@ -107,9 +107,9 @@ export default {
   },
   methods: {
     getRegions() {
-      axios.get('/deployments/regions')
+      axios.get('/inventory/regions')
         .then((response) => {
-          this.items = response.data.data.regions
+          this.items = response.data.data
           this.loading = false
         })
         .catch((error) => {
@@ -150,7 +150,7 @@ export default {
       // Add item in the DB
       this.notification('Adding Region...', 'info', true)
       const payload = JSON.stringify(this.item);
-      axios.post('/deployments/regions', payload)
+      axios.post('/inventory/regions', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getRegions()
@@ -178,7 +178,7 @@ export default {
       // Edit item in the DB
       this.notification('Editing Region...', 'info', true)
       const payload = JSON.stringify(this.item)
-      axios.put('/deployments/regions', payload)
+      axios.put('/inventory/regions', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
@@ -200,7 +200,7 @@ export default {
       for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
       // Delete items to the DB
       this.notification('Deleting Region...', 'info', true)
-      axios.delete('/deployments/regions', { data: payload })
+      axios.delete('/inventory/regions', { data: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Delete items from the data table
@@ -236,7 +236,7 @@ export default {
       this.notification('Testing Region...', 'info', true)
       this.loading = true
       const payload = JSON.stringify(this.item)
-      axios.post('/deployments/regions/test', payload)
+      axios.post('/inventory/regions/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
         })

@@ -21,11 +21,11 @@ import routes.admin.settings
 import routes.admin.groups
 import routes.admin.users
 import routes.admin.deployments
-import routes.deployments.settings.environments
-import routes.deployments.settings.regions
-import routes.deployments.settings.servers
-import routes.deployments.settings.auxiliary
-import routes.deployments.settings.slack
+import routes.inventory.environments
+import routes.inventory.regions
+import routes.inventory.servers
+import routes.inventory.auxiliary
+import routes.inventory.slack
 import routes.deployments.releases
 import routes.deployments.deployments
 import routes.deployments.views.basic
@@ -33,7 +33,6 @@ import routes.deployments.views.pro
 import routes.deployments.views.inbenta
 import models.mysql
 import models.admin.settings
-import models.deployments.regions
 from cron import Cron
 
 class Setup:
@@ -228,11 +227,11 @@ class Setup:
         groups = routes.admin.groups.Groups(self._app, sql, self._license)
         users = routes.admin.users.Users(self._app, sql, self._license)
         admin_deployments = routes.admin.deployments.Deployments(self._app, sql, self._license)
-        environments = routes.deployments.settings.environments.Environments(self._app, sql, self._license)
-        regions = routes.deployments.settings.regions.Regions(self._app, sql, self._license)
-        servers = routes.deployments.settings.servers.Servers(self._app, sql, self._license)
-        auxiliary = routes.deployments.settings.auxiliary.Auxiliary(self._app, sql, self._license)
-        slack = routes.deployments.settings.slack.Slack(self._app, sql, self._license)
+        environments = routes.inventory.environments.Environments(self._app, sql, self._license)
+        regions = routes.inventory.regions.Regions(self._app, sql, self._license)
+        servers = routes.inventory.servers.Servers(self._app, sql, self._license)
+        auxiliary = routes.inventory.auxiliary.Auxiliary(self._app, sql, self._license)
+        slack = routes.inventory.slack.Slack(self._app, sql, self._license)
         releases = routes.deployments.releases.Releases(self._app, sql, self._license)
         deployments = routes.deployments.deployments.Deployments(self._app, sql, self._license)
         deployments_basic = routes.deployments.views.basic.Basic(self._app, sql, self._license)

@@ -61,7 +61,7 @@ CREATE TABLE `environments` (
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `group_id` (`group_id`,`name`),
+  UNIQUE KEY `group_id__name` (`group_id`,`name`),
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
@@ -80,7 +80,7 @@ CREATE TABLE `regions` (
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `group_id` (`group_id`,`name`),
+  UNIQUE KEY `group_id__name` (`group_id`,`name`),
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
@@ -98,7 +98,7 @@ CREATE TABLE `servers` (
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `region_id` (`region_id`,`name`),
+  UNIQUE KEY `region_id__name` (`region_id`,`name`),
   FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
@@ -129,7 +129,7 @@ CREATE TABLE `auxiliary` (
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `group_id` (`group_id`,`name`),
+  UNIQUE KEY `group_id__name` (`group_id`,`name`),
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 

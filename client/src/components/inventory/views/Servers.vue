@@ -92,12 +92,13 @@ export default {
   }),
   created() {
     this.getServers()
+    this.getRegions()
   },
   methods: {
     getServers() {
-      axios.get('/deployments/servers')
+      axios.get('/inventory/servers')
         .then((response) => {
-          this.items = response.data.data.servers
+          this.items = response.data.data
           this.loading = false
         })
         .catch((error) => {
@@ -107,7 +108,7 @@ export default {
     },
     getRegions() {
       this.regions = []
-      axios.get('/deployments/regions/list')
+      axios.get('/inventory/regions')
         .then((response) => {
           for (var i = 0; i < response.data.data.length; ++i) this.regions.push(response.data.data[i]['name'])
         })
@@ -163,7 +164,7 @@ export default {
       }
       // Add item in the DB
       const payload = JSON.stringify(this.item);
-      axios.post('/deployments/servers', payload)
+      axios.post('/inventory/servers', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getServers()
@@ -198,7 +199,7 @@ export default {
       }
       // Edit item in the DB
       const payload = JSON.stringify(this.item)
-      axios.put('/deployments/servers', payload)
+      axios.put('/inventory/servers', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
@@ -219,7 +220,7 @@ export default {
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
       // Delete items to the DB
-      axios.delete('/deployments/servers', { data: payload })
+      axios.delete('/inventory/servers', { data: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Delete items from the data table
@@ -255,7 +256,7 @@ export default {
       this.notification('Testing Server...', 'info', true)
       this.loading = true
       const payload = JSON.stringify(this.item)
-      axios.post('/deployments/servers/test', payload)
+      axios.post('/inventory/servers/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
         })

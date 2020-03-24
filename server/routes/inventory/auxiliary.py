@@ -3,7 +3,7 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import utils
 import models.admin.users
-import models.deployments.auxiliary
+import models.inventory.auxiliary
 
 class Auxiliary:
     def __init__(self, app, sql, license):
@@ -11,13 +11,13 @@ class Auxiliary:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._auxiliary = models.deployments.auxiliary.Auxiliary(sql)
+        self._auxiliary = models.inventory.auxiliary.Auxiliary(sql)
 
     def blueprint(self):
         # Init blueprint
         auxiliary_blueprint = Blueprint('auxiliary', __name__, template_folder='auxiliary')
 
-        @auxiliary_blueprint.route('/deployments/auxiliary', methods=['GET','POST','PUT','DELETE'])
+        @auxiliary_blueprint.route('/inventory/auxiliary', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
         def auxiliary_method():
             # Check license
@@ -43,7 +43,7 @@ class Auxiliary:
             elif request.method == 'DELETE':
                 return self.delete(user['group_id'], auxiliary_json)
 
-        @auxiliary_blueprint.route('/deployments/auxiliary/test', methods=['POST'])
+        @auxiliary_blueprint.route('/inventory/auxiliary/test', methods=['POST'])
         @jwt_required
         def auxiliary_test_method():
             # Check license
