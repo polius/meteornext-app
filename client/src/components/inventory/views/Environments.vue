@@ -25,7 +25,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
-                  <v-text-field v-if="mode!='delete'" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  <v-text-field v-if="mode!='delete'" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="environment_name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   
                   <v-card v-if="mode!='delete'">
                     <v-toolbar flat dense color="#2e3131">
@@ -34,7 +34,7 @@
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
-                      <v-treeview :items="treeviewItems" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                      <v-treeview loading :active.sync="treeviewSelected" :open-all="mode=='edit'" selection-type="independent" :items="treeviewItems" :search="treeviewSearch" hoverable open-on-click multiple-active return-object activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -69,17 +69,21 @@ import axios from 'axios'
 export default {
   data: () => ({
     // Data Table
-    headers: [{ text: 'Name', align: 'left', value: 'name' }],
+    headers: [
+      { text: 'Name', align: 'left', value: 'name' },
+      { text: 'Servers', align: 'left', value: 'servers' }
+    ],
     items: [],
     selected: [],
     search: '',
-    item: { name: '' },
     mode: '',
     loading: true,
     dialog: false,
     dialog_title: '',
-    // Treeview
-    treeviewItems: [{ name: 'AWS-EU', children: [{ name: 'sql-eu-01' }, { name: 'sql-eu-02' }]}, { name: 'AWS-US', children: [{ name: 'sql-us-01' }, { name: 'sql-us-02' }]}],
+    // Dialog items
+    environment_name: '',
+    treeviewItems: [],
+    treeviewSelected: [],
     treeviewSearch: '',
     // Snackbar
     snackbar: false,
@@ -92,9 +96,10 @@ export default {
   },
   methods: {
     getEnvironments() {
-      axios.get('/deployments/environments')
+      axios.get('/inventory/environments')
         .then((response) => {
-          this.items = response.data.data
+          this.items = response.data.environments
+          this.treeviewItems = this.parseTreeView(response.data.servers)
           this.loading = false
         })
         .catch((error) => {
@@ -102,15 +107,47 @@ export default {
           else this.notification(error.response.data.message, 'error')
         })
     },
+    getEnvironment() {
+      axios.get('/inventory/environments', { params: { environment_id: this.selected[0]['id'] } })
+        .then((response) => {
+          this.treeviewSelected = this.parseTreeView(response.data.servers)
+          this.loading = false
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+    },
+    parseTreeView(servers) {
+      var treeview = []
+      var regions = []
+      // Fill regions
+      for (let i = 0; i < servers.length; ++i) {
+        if (!regions.includes(servers[i]['region_name'])) regions.push({ id: servers[i]['region_id'], name: servers[i]['region_name'] })
+      }
+      // Fill treeview
+      for (let i = 0; i < regions.length; ++i) {
+        let region = { id: regions[i]['id'], name: regions[i]['name'], children: []}
+        for (let j = 0; j < servers.length; ++j) {
+          if (regions[i]['name'] == servers[j]['region_name']) {
+            region['children'].push({ id: servers[j]['server_id'], name: servers[j]['server_name'] })
+          }
+        }
+        if (region['children'].length == 0) delete region['children']
+        treeview.push(region)
+      }
+      return treeview
+    },
     newEnvironment() {
       this.mode = 'new'
-      this.item = { name: '' }
+      this.environment_name = ''
       this.dialog_title = 'New Environment'
       this.dialog = true
     },
     editEnvironment() {
+      this.getEnvironment()
       this.mode = 'edit'
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.environment_name = this.selected[0]['name']
       this.dialog_title = 'Edit Environment'
       this.dialog = true
     },
@@ -134,15 +171,15 @@ export default {
       }
       // Check if new item already exists
       for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['name'] == this.item.name) {
+        if (this.items[i]['name'] == this.environment_name) {
           this.notification('This environment currently exists', 'error')
           this.loading = false
           return
         }
       }
       // Add item in the DB
-      const payload = JSON.stringify(this.item)
-      axios.post('/deployments/environments', payload)
+      const payload = JSON.stringify({ name: this.environment_name, servers: this.treeviewSelected })
+      axios.post('/inventory/environments', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getEnvironments()
@@ -169,19 +206,19 @@ export default {
       }
       // Check if edited item already exists
       for (var j = 0; j < this.items.length; ++j) {
-        if (this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
+        if (this.items[j]['name'] == this.environment_name && this.environment_name != this.selected[0]['name']) {
           this.notification('This environment currently exists', 'error')
           this.loading = false
           return
         }
       }
       // Edit item in the DB
-      const payload = JSON.stringify(this.item)
-      axios.put('/deployments/environments', payload)
+      const payload = JSON.stringify({ name: this.environment_name, servers: this.treeviewSelected })
+      axios.put('/inventory/environments', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
-          this.items.splice(i, 1, this.item)
+          this.items.splice(i, 1, {'name': this.environment_name })
           this.dialog = false
           this.selected = []
         })
@@ -198,7 +235,7 @@ export default {
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
       // Delete items to the DB
-      axios.delete('/deployments/environments', { data: payload })
+      axios.delete('/inventory/environments', { data: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Delete items from the data table

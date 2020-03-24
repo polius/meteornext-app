@@ -31,7 +31,7 @@
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-tab><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>UTILS</span></v-tab>
                 <v-divider class="mx-3" inset vertical></v-divider>
-                <v-tab><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>JOBS</span></v-tab>    
+                <v-tab><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>CLIENT</span></v-tab>    
               </v-tabs>
             </div>
 
@@ -101,14 +101,14 @@
               </v-card-text>
             </v-card>
 
-            <!-- JOBS -->
+            <!-- CLIENT -->
             <v-card v-if="tabs==4" style="margin-bottom:10px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
-                <v-toolbar-title class="white--text">JOBS</v-toolbar-title>
+                <v-toolbar-title class="white--text">CLIENT</v-toolbar-title>
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
-                <v-switch label="Access Jobs" color="info" style="margin-top:0px;"></v-switch>
+                <v-switch label="Access Client" color="info" style="margin-top:0px;"></v-switch>
               </v-card-text>
             </v-card>
 
@@ -181,12 +181,13 @@ export default {
     getGroup() {
       axios.get('/admin/groups', { params: { groupID: this.group['id'] } })
         .then((response) => {
-          this.group = response.data.group[0]
+          this.group = response.data.data
           this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
         })
     },
     submitGroup() {

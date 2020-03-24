@@ -4,7 +4,11 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.groups
 import models.admin.users
-import routes.deployments.settings.slack
+import routes.inventory.environments
+import routes.inventory.regions
+import routes.inventory.servers
+import routes.inventory.auxiliary
+import routes.inventory.slack
 import routes.admin.settings
 
 class Groups:
@@ -15,11 +19,11 @@ class Groups:
         self._users = models.admin.users.Users(sql)
 
         # Init routes
-        self._environments = routes.deployments.settings.environments.Environments(app, sql, license)
-        self._regions = routes.deployments.settings.regions.Regions(app, sql, license)
-        self._servers = routes.deployments.settings.servers.Servers(app, sql, license)
-        self._auxiliary = routes.deployments.settings.auxiliary.Auxiliary(app, sql, license)
-        self._slack = routes.deployments.settings.slack.Slack(app, sql, license)
+        self._environments = routes.inventory.environments.Environments(app, sql, license)
+        self._regions = routes.inventory.regions.Regions(app, sql, license)
+        self._servers = routes.inventory.servers.Servers(app, sql, license)
+        self._auxiliary = routes.inventory.auxiliary.Auxiliary(app, sql, license)
+        self._slack = routes.inventory.slack.Slack(app, sql, license)
         self._settings = routes.admin.settings.Settings(app, sql, license)
 
     def blueprint(self):

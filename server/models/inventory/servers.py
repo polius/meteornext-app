@@ -34,10 +34,9 @@ class Servers:
     def put(self, user_id, group_id, server):
         query = """
             UPDATE servers
-            JOIN regions r ON r.id = servers.region_id AND r.id = %s
-            JOIN environments e ON e.id = r.environment_id AND e.group_id = %s AND e.id = %s
+            JOIN regions r ON r.id = servers.region_id AND r.id = %s AND r.group_id = %s
             SET servers.name = %s,
-                servers.region_id = (SELECT r.id FROM regions r JOIN environments e ON e.id = r.environment_id AND e.name = %s AND e.group_id = %s WHERE r.name = %s),
+                servers.region_id = (SELECT id FROM regions WHERE group_id = %s AND name = %s),
                 servers.hostname = %s,
                 servers.port = %s,
                 servers.username = %s,
@@ -46,7 +45,7 @@ class Servers:
                 servers.updated_at = %s
             WHERE servers.id = %s
         """
-        self._sql.execute(query, (server['region_id'], group_id, server['environment_id'], server['name'], server['environment'], group_id, server['region'], server['hostname'], server['port'], server['username'], server['password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
+        self._sql.execute(query, (server['region_id'], group_id, server['name'], group_id, server['region'], server['hostname'], server['port'], server['username'], server['password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
     def delete(self, group_id, server_id):
         query = """

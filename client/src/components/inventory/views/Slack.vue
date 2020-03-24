@@ -51,7 +51,7 @@ export default {
   },
   methods: {
     getSlack() {
-      axios.get('/deployments/slack')
+      axios.get('/inventory/slack')
         .then((response) => {
           if (response.data.data.length > 0) {
             this.channel_name = response.data.data[0]['channel_name']
@@ -80,7 +80,7 @@ export default {
         webhook_url: this.webhook_url,
         enabled: this.enabled
       }
-      axios.put('/deployments/slack', payload)
+      axios.put('/inventory/slack', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
         })
@@ -100,7 +100,7 @@ export default {
         return
       }
       // Test Slack Webhook URL
-      axios.get('/deployments/slack/test', { params: { webhook_url: this.webhook_url } })
+      axios.get('/inventory/slack/test', { params: { webhook_url: this.webhook_url } })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
         })

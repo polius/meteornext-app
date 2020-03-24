@@ -3,9 +3,8 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import utils
 import models.admin.users
-import models.deployments.environments
-import models.deployments.regions
-import models.deployments.servers
+import models.inventory.regions
+import models.inventory.servers
 
 class Servers:
     def __init__(self, app, sql, license):
@@ -13,15 +12,14 @@ class Servers:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._environments = models.deployments.environments.Environments(sql)
-        self._regions = models.deployments.regions.Regions(sql)
-        self._servers = models.deployments.servers.Servers(sql)
+        self._regions = models.inventory.regions.Regions(sql)
+        self._servers = models.inventory.servers.Servers(sql)
 
     def blueprint(self):
         # Init blueprint
         servers_blueprint = Blueprint('servers', __name__, template_folder='servers')
 
-        @servers_blueprint.route('/deployments/servers', methods=['GET','POST','PUT','DELETE'])
+        @servers_blueprint.route('/inventory/servers', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
         def servers_method():
             # Check license
@@ -47,7 +45,7 @@ class Servers:
             elif request.method == 'DELETE':
                 return self.delete(user['group_id'], server_json)
 
-        @servers_blueprint.route('/deployments/servers/test', methods=['POST'])
+        @servers_blueprint.route('/inventory/servers/test', methods=['POST'])
         @jwt_required
         def servers_test_method():
             # Check license
@@ -85,7 +83,7 @@ class Servers:
     # Internal Methods #
     ####################
     def get(self, group_id):
-        return jsonify({'data': {'servers': self._servers.get(group_id), 'environments': self._environments.get(group_id)}}), 200
+        return jsonify({'data': self._servers.get(group_id)}), 200
 
     def post(self, user_id, group_id, data):
         if self._servers.exist(group_id, data):

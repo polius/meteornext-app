@@ -12,11 +12,11 @@ from multiprocessing import Process
 
 import models.mysql
 import models.admin.settings
-import models.deployments.environments
-import models.deployments.regions
-import models.deployments.servers
-import models.deployments.auxiliary
-import models.deployments.slack
+import models.inventory.environments
+import models.inventory.regions
+import models.inventory.servers
+import models.inventory.auxiliary
+import models.inventory.slack
 
 class Meteor:
     def __init__(self, app, sql):
@@ -24,11 +24,11 @@ class Meteor:
 
         # Init models
         self._settings = models.admin.settings.Settings(sql)
-        self._environments = models.deployments.environments.Environments(sql)
-        self._regions = models.deployments.regions.Regions(sql)
-        self._servers = models.deployments.servers.Servers(sql)
-        self._auxiliary = models.deployments.auxiliary.Auxiliary(sql)
-        self._slack = models.deployments.slack.Slack(sql)
+        self._environments = models.inventory.environments.Environments(sql)
+        self._regions = models.inventory.regions.Regions(sql)
+        self._servers = models.inventory.servers.Servers(sql)
+        self._auxiliary = models.inventory.auxiliary.Auxiliary(sql)
+        self._slack = models.inventory.slack.Slack(sql)
 
         # Init Meteor Config
         self._blueprint = ''
