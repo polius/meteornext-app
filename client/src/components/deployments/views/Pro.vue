@@ -235,9 +235,6 @@ export default {
     this.getCode()
   },
   methods: {
-    saveCode() {
-      
-    },
     getReleases() {
       axios.get('/deployments/releases/active')
         .then((response) => {
@@ -250,7 +247,7 @@ export default {
         })
     },
     getEnvironments() {
-      axios.get('/deployments/environments')
+      axios.get('/inventory/environments/list')
         .then((response) => {
           for (var i = 0; i < response.data.data.length; ++i) this.environment_items.push(response.data.data[i]['name'])
           this.loading_env = false
