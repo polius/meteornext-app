@@ -4,21 +4,24 @@ class Environments:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, group_id):
-        query = """
-            SELECT * 
-            FROM environments
-            WHERE group_id = %s
-        """
-        return self._sql.execute(query, (group_id))
+    def get(self, group_id=None):
+        if group_id:
+            query = """
+                SELECT * 
+                FROM environments
+                WHERE group_id = %s
+            """
+            return self._sql.execute(query, (group_id))
+        else:
+            query = "SELECT * FROM environments"
+            return self._sql.execute(query)
 
     def post(self, user_id, group_id, environment):
         environment_id = self._sql.execute("INSERT INTO environments (name, group_id, created_by, created_at) VALUES (%s, %s, %s, %s)", (environment['name'], group_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
         if len(environment['servers']) > 0:
             values = ''
-            for region in environment['servers']:
-                for server in region['children']:
-                    values += '(%s, %s),' % (environment_id, server['id'])        
+            for server in environment['servers']:
+                values += '(%s, %s),' % (environment_id, server)
             self._sql.execute("INSERT INTO environment_servers (environment_id, server_id) VALUES {}".format(values[:-1]))
 
     def put(self, user_id, group_id, environment):
@@ -36,9 +39,8 @@ class Environments:
         # Fill environment servers
         if len(environment['servers']) > 0:
             values = ''
-            for region in environment['servers']:
-                for server in region['children']:
-                    values += '(%s, %s),' % (environment['id'], server['id'])
+            for server in environment['servers']:
+                values += '(%s, %s),' % (environment['id'], server)
             self._sql.execute("INSERT INTO environment_servers (environment_id, server_id) VALUES {}".format(values[:-1]))
 
     def delete(self, group_id, environment):

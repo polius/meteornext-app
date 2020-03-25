@@ -48,6 +48,17 @@ class Servers:
         self._sql.execute(query, (server['region_id'], group_id, server['name'], group_id, server['region'], server['hostname'], server['port'], server['username'], server['password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
     def delete(self, group_id, server_id):
+        # Delete from 'environment_servers'
+        query = """
+            DELETE es
+            FROM environment_servers es
+            JOIN servers s ON s.id = es.server_id
+            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            WHERE s.id = %s
+        """
+        self._sql.execute(query, (group_id, server_id))
+
+        # Delete from 'servers'
         query = """
             DELETE s
             FROM servers s
@@ -95,3 +106,13 @@ class Servers:
             ) AS exist
         """
         return self._sql.execute(query, (region_id, group_id))[0]['exist'] == 1
+
+    def exist_in_environment(self, group_id, server_id):
+        query = """
+            SELECT DISTINCT s.name AS 'server_name', e.name AS 'environment_name'
+            FROM environment_servers es
+            JOIN environments e ON e.id = es.environment_id
+            JOIN servers s ON s.id = es.server_id AND s.id = %s
+            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+        """
+        return self._sql.execute(query, (server_id, group_id))

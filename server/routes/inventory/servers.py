@@ -100,6 +100,12 @@ class Servers:
             return jsonify({'message': 'Server edited successfully'}), 200
 
     def delete(self, group_id, data):
+        # Check inconsistencies
+        for environment in data:
+            exist = self._servers.exist_in_environment(group_id, environment)
+            if len(exist) > 0:
+                return jsonify({'message': "The server '{}' is included in the environment '{}'".format(exist[0]['server_name'], exist[0]['environment_name'])}), 400
+
         for server in data:
             self._servers.delete(group_id, server)
         return jsonify({'message': 'Selected servers deleted successfully'}), 200

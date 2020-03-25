@@ -14,7 +14,7 @@
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:item.servers="props">
           <div v-for="item in props.item.servers" :key="item.region + '|' + item.server" style="margin-left:0px; padding-left:0px;">
-            <v-chip :color="item.color" style="margin-left:0px;"><span class="font-weight-medium" style="padding-right:5px;">{{ item.server }}</span> ({{ item.region }})</v-chip>
+            <v-chip :color="item.color" style="margin-left:0px;"><span class="font-weight-medium" style="padding-right:4px;">{{ item.server }}</span> - {{ item.region }}</v-chip>
           </div>
         </template>
       </v-data-table>
@@ -39,7 +39,7 @@
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
-                      <v-treeview v-show="!loadingTreeView" :active.sync="treeviewSelected" selection-type="leaf" open-all :items="treeviewItems" :search="treeviewSearch" hoverable open-on-click multiple-active return-object activatable transition>
+                      <v-treeview v-model="treeviewSelected" :active.sync="treeviewSelected" selection-type="leaf" open-all :items="treeviewItems" :search="treeviewSearch" hoverable open-on-click multiple-active return-object activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -84,7 +84,6 @@ export default {
     search: '',
     mode: '',
     loading: true,
-    loadingTreeView: false,
     dialog: false,
     dialog_title: '',
     // Dialog items
@@ -192,13 +191,10 @@ export default {
       this.environment_name = this.selected[0]['name']
       this.dialog_title = 'Edit Environment'
       this.dialog = true
-      this.treeviewSelected = []
-      this.loadingTreeView = true
-      setTimeout(this.updateSelected, 10);
+      setTimeout(this.updateSelected, 1);
     },
     updateSelected() {
       this.treeviewSelected = (Object.keys(this.environment_servers) == 0) ? [] : this.environment_servers[this.selected[0]['id']]
-      this.loadingTreeView = false
     },
     deleteEnvironment() {
       this.mode = 'delete'
@@ -226,8 +222,12 @@ export default {
           return
         }
       }
+      // Build servers array
+      var server_list = []
+      for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i]['id'])
+
       // Add item in the DB
-      const payload = JSON.stringify({ name: this.environment_name, servers: this.treeviewSelected })
+      const payload = JSON.stringify({ name: this.environment_name, servers: server_list })
       axios.post('/inventory/environments', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -261,8 +261,12 @@ export default {
           return
         }
       }
+      // Build servers array
+      var server_list = []
+      for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i]['id'])
+
       // Edit item in the DB
-      const payload = JSON.stringify({ id: this.selected[0]['id'], name: this.environment_name, servers: this.treeviewSelected })
+      const payload = JSON.stringify({ id: this.selected[0]['id'], name: this.environment_name, servers: server_list })
       axios.put('/inventory/environments', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
