@@ -86,10 +86,6 @@ class Environments:
 
     def delete(self, group_id, data):
         # Check inconsistencies
-        for environment in data:
-            if self._regions.exist_by_environment(group_id, environment):
-                return jsonify({'message': "The selected environments have regions created"}), 400
-
         exist = True
         for environment in data:
             exist &= not self._deployments.existByEnvironment(environment)

@@ -269,11 +269,15 @@ class Deployments:
         query = """
             SELECT EXISTS (
                 SELECT *
-                FROM deployments d
-                LEFT JOIN deployments_basic b ON b.deployment_id = d.id AND b.environment_id = %(environment_id)s
-                LEFT JOIN deployments_pro p ON p.deployment_id = d.id AND p.environment_id = %(environment_id)s
-                LEFT JOIN deployments_inbenta i ON i.deployment_id = d.id AND i.environment_id = %(environment_id)s
-                WHERE d.deleted = 0
+                FROM
+                (
+                    SELECT deployment_id FROM deployments_basic WHERE environment_id = %(environment_id)s
+                    UNION
+                    SELECT deployment_id FROM deployments_pro WHERE environment_id = %(environment_id)s
+                    UNION
+                    SELECT deployment_id FROM deployments_inbenta WHERE environment_id = %(environment_id)s
+                ) t
+                JOIN deployments d ON d.id = t. deployment_id AND d.deleted = 0
             ) AS 'exist';
         """
         return self._sql.execute(query, ({'environment_id': environment_id}))[0]['exist']
