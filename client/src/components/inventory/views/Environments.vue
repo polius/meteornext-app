@@ -12,6 +12,11 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
+        <template v-slot:item.servers="props">
+          <div v-for="item in props.item.servers" :key="item.region + '|' + item.server" style="margin-left:0px; padding-left:0px;">
+            <v-chip :color="item.color" style="margin-left:0px;"><span class="font-weight-medium" style="padding-right:5px;">{{ item.server }}</span> ({{ item.region }})</v-chip>
+          </div>
+        </template>
       </v-data-table>
     </v-card>
 
@@ -34,7 +39,7 @@
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
-                      <v-treeview loading :active.sync="treeviewSelected" :open-all="mode=='edit'" selection-type="independent" :items="treeviewItems" :search="treeviewSearch" hoverable open-on-click multiple-active return-object activatable transition>
+                      <v-treeview v-show="!loadingTreeView" :active.sync="treeviewSelected" selection-type="leaf" open-all :items="treeviewItems" :search="treeviewSearch" hoverable open-on-click multiple-active return-object activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -70,6 +75,7 @@ export default {
   data: () => ({
     // Data Table
     headers: [
+      { text: 'Id', align: ' d-none', value: 'id' },
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Servers', align: 'left', value: 'servers' }
     ],
@@ -78,10 +84,12 @@ export default {
     search: '',
     mode: '',
     loading: true,
+    loadingTreeView: false,
     dialog: false,
     dialog_title: '',
     // Dialog items
     environment_name: '',
+    environment_servers: {},
     treeviewItems: [],
     treeviewSelected: [],
     treeviewSearch: '',
@@ -98,8 +106,9 @@ export default {
     getEnvironments() {
       axios.get('/inventory/environments')
         .then((response) => {
-          this.items = response.data.environments
-          this.treeviewItems = this.parseTreeView(response.data.servers)
+          this.environment_servers = this.parseEnvironmentServers(response.data.environment_servers)
+          this.items = this.parseEnvironments(response.data.environments)
+          this.treeviewItems = this.parseServers(response.data.servers)
           this.loading = false
         })
         .catch((error) => {
@@ -107,19 +116,32 @@ export default {
           else this.notification(error.response.data.message, 'error')
         })
     },
-    getEnvironment() {
-      this.loading = true
-      axios.get('/inventory/environments', { params: { environment_id: this.selected[0]['id'] } })
-        .then((response) => {
-          this.treeviewSelected = this.parseTreeView(response.data.servers)
-          this.loading = false
-        })
-        .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
-        })
+    parseEnvironments(environments) {
+      var data = []
+      var regions = []
+      var colors = ['#eb5f5d', '#fa8231', '#00b16a', '#8e44ad', '#3a539b', '#2196f3']
+      
+      for (let i = 0; i < environments.length; ++i) {
+        let row = {}
+        row['id'] = environments[i]['id']
+        row['name'] = environments[i]['name']
+        row['servers'] = []
+        if (environments[i]['id'] in this.environment_servers) {
+          for (let j = 0; j < this.environment_servers[environments[i]['id']].length; ++j) {
+            for (let k = 0; k < this.environment_servers[environments[i]['id']][j]['children'].length; ++k) {
+              let region_name = this.environment_servers[environments[i]['id']][j]['name']
+              let server_name = this.environment_servers[environments[i]['id']][j]['children'][k]['name']
+              if (!(region_name in regions)) regions.push(region_name)
+              let color_next = regions.indexOf(region_name) < colors.length ? colors[regions.indexOf(region_name)] : ''
+              row['servers'].push({ region: region_name, server: server_name, color: color_next })
+            }
+          }
+        }
+        data.push(row)
+      }
+      return data
     },
-    parseTreeView(servers) {
+    parseServers(servers) {
       var treeview = []
       var regions = []
       // Fill regions
@@ -139,18 +161,44 @@ export default {
       }
       return treeview
     },
+    parseEnvironmentServers(environment_servers) {
+      var data = {}
+      
+      for (let i = 0; i < environment_servers.length; ++i) {
+        if (environment_servers[i]['environment_id'] in data) {
+          let found = false 
+          for (let j = 0; j < data[environment_servers[i]['environment_id']]; ++j) {
+            if (data[environment_servers[i]['environment_id']][j]['id'] == environment_servers[i]['region_id']) {
+              data[environment_servers[i]['environment_id']][j]['children'].push({ id: environment_servers[i]['server_id'], name: environment_servers[i]['server_name'] })
+              found = true
+              break
+            }
+          }
+          if (!found) data[environment_servers[i]['environment_id']].push({ id: environment_servers[i]['region_id'], name: environment_servers[i]['region_name'], children: [{ id: environment_servers[i]['server_id'], name: environment_servers[i]['server_name'] }] })
+        }
+        else data[environment_servers[i]['environment_id']] = [{ id: environment_servers[i]['region_id'], name: environment_servers[i]['region_name'], children: [{ id: environment_servers[i]['server_id'], name: environment_servers[i]['server_name'] }] }]
+      }
+      return data
+    },
     newEnvironment() {
       this.mode = 'new'
       this.environment_name = ''
+      this.treeviewSelected = []
       this.dialog_title = 'New Environment'
       this.dialog = true
     },
     editEnvironment() {
-      this.getEnvironment()
       this.mode = 'edit'
       this.environment_name = this.selected[0]['name']
       this.dialog_title = 'Edit Environment'
       this.dialog = true
+      this.treeviewSelected = []
+      this.loadingTreeView = true
+      setTimeout(this.updateSelected, 10);
+    },
+    updateSelected() {
+      this.treeviewSelected = (Object.keys(this.environment_servers) == 0) ? [] : this.environment_servers[this.selected[0]['id']]
+      this.loadingTreeView = false
     },
     deleteEnvironment() {
       this.mode = 'delete'
@@ -219,9 +267,10 @@ export default {
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
-          this.items.splice(i, 1, {'name': this.environment_name })
+          this.getEnvironments()
           this.dialog = false
           this.selected = []
+          this.treeviewSelected = []
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -239,17 +288,7 @@ export default {
       axios.delete('/inventory/environments', { data: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          // Delete items from the data table
-          while(this.selected.length > 0) {
-            var s = this.selected.pop()
-            for (var i = 0; i < this.items.length; ++i) {
-              if (this.items[i]['name'] == s['name']) {
-                // Delete Item
-                this.items.splice(i, 1)
-                break
-              }
-            }
-          }
+          this.getEnvironments()
           this.selected = []
         })
         .catch((error) => {

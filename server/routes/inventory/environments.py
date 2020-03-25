@@ -45,16 +45,30 @@ class Environments:
             elif request.method == 'DELETE':
                 return self.delete(user['group_id'], environment_json)
 
+        @environments_blueprint.route('/inventory/environments/list', methods=['GET'])
+        @jwt_required
+        def environments_list_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['deployments_edit'] and request.method != 'GET':
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+            
+            # Get environments list
+            return jsonify({'data': self._environments.get(user['group_id'])})
+
         return environments_blueprint
 
     ####################
     # Internal Methods #
     ####################
     def get(self, group_id):
-        if 'environment_id' in request.args:
-            return jsonify({'environments': self._environments.get(group_id, request.args['environment_id']), 'servers': self._environments.get_servers(group_id, request.args['environment_id'])}), 200
-        else:
-            return jsonify({'environments': self._environments.get(group_id), 'servers': self._environments.get_servers(group_id)}), 200
+        return jsonify({'environments': self._environments.get(group_id), 'environment_servers': self._environments.get_environment_servers(group_id), 'servers': self._environments.get_servers(group_id)}), 200
 
     def post(self, user_id, group_id, data):
         if self._environments.exist(group_id, data):
