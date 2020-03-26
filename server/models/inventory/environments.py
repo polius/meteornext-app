@@ -91,3 +91,12 @@ class Environments:
             JOIN regions r ON r.id = s.region_id
         """
         return self._sql.execute(query, (group_id))
+
+    def get_by_name(self, group_id, environment_name):
+        query = """
+            SELECT *
+            FROM environments
+            WHERE group_id = %s
+            AND name = %s
+        """
+        return self._sql.execute(query, (group_id, environment_name))

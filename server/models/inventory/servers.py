@@ -116,3 +116,12 @@ class Servers:
             JOIN regions r ON r.id = s.region_id AND r.group_id = %s
         """
         return self._sql.execute(query, (server_id, group_id))
+
+    def get_by_environment(self, group_id, environment_name):
+        query = """
+            SELECT s.*
+            FROM servers s
+            JOIN environment_servers es ON es.server_id = s.id
+            JOIN environments e ON e.id = es.environment_id AND e.group_id = %s AND e.name = %s
+        """
+        return self._sql.execute(query, (group_id, environment_name))

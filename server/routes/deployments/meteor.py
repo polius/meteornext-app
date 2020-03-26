@@ -61,55 +61,54 @@ class Meteor:
 
     def __compile_config(self, deployment):
         # Get Data
-        environments = self._environments.get(deployment['group_id'])
-        regions = self._regions.get(deployment['group_id'])
-        servers = self._servers.get(deployment['group_id'])
+        environment = self._environments.get_by_name(deployment['group_id'], deployment['environment'])
+        regions = self._regions.get_by_environment(deployment['group_id'], deployment['environment'])
+        servers = self._servers.get_by_environment(deployment['group_id'], deployment['environment'])
         auxiliary = self._auxiliary.get(deployment['group_id'])
         slack = self._slack.get(deployment['group_id'])
+
+        if len(environment) == 0:
+            return
     
         # Compile Regions
         self._config['regions'] = []
 
-        for environment in environments:
-            if environment['name'] == deployment['environment']:
-                for region in regions:
-                    if region['environment_id'] == environment['id']:
-                        # Compile SSH
-                        key_path = "{}/{}/keys/r{}".format(self._logs['local']['path'], self._uuid, region['id'])
-                        region_data = {
-                            "name": region['name'],
-                            "ssh": {
-                                "enabled": True if region['ssh_tunnel'] else False,
-                                "hostname": "" if region['hostname'] is None else region['hostname'],
-                                "username": "" if region['username'] is None else region['username'],
-                                "password": "" if region['password'] is None else region['password'],
-                                "key": "" if region['key'] is None else key_path,
-                                "port": "" if region['port'] is None else region['port']
-                            },
-                            "sql": []
-                        }
+        for region in regions:
+            # Compile SSH
+            key_path = "{}/{}/keys/r{}".format(self._logs['local']['path'], self._uuid, region['id'])
+            region_data = {
+                "name": region['name'],
+                "ssh": {
+                    "enabled": True if region['ssh_tunnel'] else False,
+                    "hostname": "" if region['hostname'] is None else region['hostname'],
+                    "username": "" if region['username'] is None else region['username'],
+                    "password": "" if region['password'] is None else region['password'],
+                    "key": "" if region['key'] is None else key_path,
+                    "port": "" if region['port'] is None else region['port']
+                },
+                "sql": []
+            }
 
-                        # Generate region key files
-                        if region['key'] is not None:
-                            with open(key_path, 'w') as outfile:
-                                outfile.write(region['key'])
-                            os.chmod(key_path, 0o600)
+            # Generate region key files
+            if region['key'] is not None:
+                with open(key_path, 'w') as outfile:
+                    outfile.write(region['key'])
+                os.chmod(key_path, 0o600)
 
-                        # Compile SQL
-                        for server in servers:
-                            if server['region_id'] == region['id']:
-                                region_data['sql'].append({
-                                    "name": server['name'],
-                                    "engine": server['engine'],
-                                    "hostname": server['hostname'],
-                                    "username": server['username'],
-                                    "password": server['password'],
-                                    "port": int(server['port'])
-                                })
+            # Compile SQL
+            for server in servers:
+                if server['region_id'] == region['id']:
+                    region_data['sql'].append({
+                        "name": server['name'],
+                        "engine": server['engine'],
+                        "hostname": server['hostname'],
+                        "username": server['username'],
+                        "password": server['password'],
+                        "port": int(server['port'])
+                    })
 
-                        # Add region data to the credentials
-                        self._config['regions'].append(region_data)
-                break
+            # Add region data to the credentials
+            self._config['regions'].append(region_data)
 
         # Compile Auxiliary Connections
         self._config['auxiliary_connections'] = {}
