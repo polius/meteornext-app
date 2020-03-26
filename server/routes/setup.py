@@ -154,19 +154,19 @@ class Setup:
 
                     # Create group
                     groups = models.admin.groups.Groups(sql)
-                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "deployments_enable": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_inbenta": 1, "deployments_edit": 1, "deployments_execution_threads": 10, "deployments_execution_limit": 0}
-                    groups.post(0, group)
+                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enable": 1, "deployments_enable": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_inbenta": 1, "deployments_execution_threads": 10, "deployments_execution_limit": None, "deployments_execution_concurrent": None}
+                    groups.post(1, group)
 
                     # Create user
                     users = models.admin.users.Users(sql)
                     user = {"username": setup_json['account']['username'], "password": setup_json['account']['password'], "email": "admin@admin.com", "coins": 100, "group": 'Administrator', "admin": 1}
                     user['password'] = bcrypt.hashpw(user['password'].encode('utf8'), bcrypt.gensalt())
-                    users.post(0, user)
+                    users.post(1, user)
 
                     # Init Logs Local Path
                     settings = models.admin.settings.Settings(sql)
                     setting = {"name": "LOGS", "value": '{{"amazon_s3":{{"enabled":false}},"local":{{"path":"{}"}}}}'.format(self._logs_folder)}
-                    settings.post(0, setting)
+                    settings.post(1, setting)
                 else:
                     sql = models.mysql.mysql(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'], setup_json['sql']['database'])
 
