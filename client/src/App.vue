@@ -54,7 +54,7 @@
       </router-link>
 
       <!-- INVENTORY -->
-      <router-link v-if="admin" title="Inventory" class="nav-link" to="/inventory">
+      <router-link v-if="inventory_enable" title="Inventory" class="nav-link" to="/inventory">
         <v-btn icon><v-icon>fas fa-layer-group</v-icon></v-btn>
       </router-link>
 
@@ -139,7 +139,8 @@ export default {
     isLoggedIn : function() { return this.$store.getters.isLoggedIn },
     admin : function() { return this.$store.getters.admin == 0 ? false : this.$store.getters.admin },
     coins : function() { return this.$store.getters.coins },
-    deployments_enable : function() { return this.$store.getters.deployments_enable }
+    deployments_enable : function() { return this.$store.getters.deployments_enable },
+    inventory_enable : function() { return this.$store.getters.inventory_enable }
   },
   created() {
     this.getNotifications(true)

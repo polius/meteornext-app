@@ -88,19 +88,12 @@ class Groups:
         # Get Modified Group
         group = json.loads(data['group'])
 
-        # Get Current Group
-        current = self.get(group['id'])[0].get_json()
-
-        if group['name'] != current['group'][0]['name'] and self._groups.exist(group):
+        # Check if group currently exists
+        if self._groups.exist(group):
             return jsonify({'message': 'This group currently exists'}), 400
 
-        # Calculate diff
-        diff_group = self.__diff(current['group'], [group])
-
-        # Apply diff
-        if len(diff_group['change']) > 0:
-            self._groups.put(user_id, diff_group['change'][0])
-
+        # Update group
+        self._groups.put(user_id, group)
         return jsonify({'message': 'Group edited'}), 200
 
     def delete(self, data):
@@ -116,20 +109,3 @@ class Groups:
             self._environments.remove(group_id)
             self._groups.delete(group)
         return jsonify({'message': 'Selected groups deleted'}), 200
-
-    def __diff(self, dict_list1, dict_list2):
-        diff = {'add': [], 'change': [], 'remove': []}
-
-        for i in dict_list2:
-            if 'id' not in i:
-                diff['add'].append(i)
-            else:
-                match = [j for j in dict_list1 if i['id'] == j['id']]
-                if len(match) > 0 and match[0] != i:
-                    diff['change'].append(i)
-
-        for i in dict_list1:
-            match = any([1 for j in dict_list2 if 'id' in j and i['id'] == j['id']])
-            if not match and not any([1 for j in diff['change'] if i['id'] == j['id']]):
-                diff['remove'].append(i)
-        return diff
