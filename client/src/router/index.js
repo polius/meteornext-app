@@ -161,7 +161,33 @@ let router = new VueRouter({
     {
       path: '/utils',
       meta: { requiresAuth: true },
-      component: () => import('../components/utils/Navigation')
+      component: () => import('../components/utils/Navigation'),
+      children: [
+        {
+          path: '',
+          name: 'utils',
+          component: () => import('../components/utils/Utils'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'compare',
+          name: 'utils.compare',
+          component: () => import('../components/utils/views/Compare'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'manage',
+          name: 'utils.manage',
+          component: () => import('../components/utils/views/Manage'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'restore',
+          name: 'utils.restore',
+          component: () => import('../components/utils/views/Restore'),
+          meta: { requiresAuth: true }
+        }
+      ]
     },
     {
       path: '/client',
