@@ -13,7 +13,7 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:item.servers="props">
-          <div v-for="item in props.item.servers" :key="item.region + '|' + item.server" style="margin-left:0px; padding-left:0px;">
+          <div v-for="item in props.item.servers" :key="item.region + '|' + item.server" style="margin-left:0px; padding-left:0px; float:left; margin-right:5px;">
             <v-chip :color="item.color" style="margin-left:0px;"><span class="font-weight-medium" style="padding-right:4px;">{{ item.server }}</span> - {{ item.region }}</v-chip>
           </div>
         </template>
@@ -39,7 +39,7 @@
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
-                      <v-treeview v-model="treeviewSelected" :active.sync="treeviewSelected" selection-type="leaf" open-all :items="treeviewItems" :search="treeviewSearch" hoverable open-on-click multiple-active return-object activatable transition>
+                      <v-treeview :active.sync="treeviewSelected" item-key="id" open-all :items="treeviewItems" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -105,9 +105,9 @@ export default {
     getEnvironments() {
       axios.get('/inventory/environments')
         .then((response) => {
+          this.treeviewItems = this.parseTreeView(response.data.servers)
           this.environment_servers = this.parseEnvironmentServers(response.data.environment_servers)
           this.items = this.parseEnvironments(response.data.environments)
-          this.treeviewItems = this.parseServers(response.data.servers)
           this.loading = false
         })
         .catch((error) => {
@@ -115,11 +115,51 @@ export default {
           else this.notification(error.response.data.message, 'error')
         })
     },
+    parseTreeView(servers) {
+      var treeview = []
+      var regions = []
+      // Fill regions
+      for (let i = 0; i < servers.length; ++i) {
+        if (!regions.includes(servers[i]['name'])) regions.push({ id: servers[i]['region_id'], name: servers[i]['region_name'] })
+      }
+      // Sort regions ASC by name
+      regions.sort(function(a,b) { 
+        if (a.name < b.name) return -1 
+        else if (a.name > b.name) return 1
+        return 0
+      })
+
+      // Fill treeview
+      for (let i = 0; i < regions.length; ++i) {
+        let region = { id: regions[i]['id'], name: regions[i]['name'], children: []}
+        for (let j = 0; j < servers.length; ++j) {
+          if (regions[i]['name'] == servers[j]['region_name']) {
+            region['children'].push({ id: regions[i]['id'] + '|' + servers[j]['server_id'], name: servers[j]['server_name'] })
+          }
+        }
+        if (region['children'].length == 0) delete region['children']
+        else {
+          // Sort servers ASC by name
+          region['children'].sort(function(a,b) { 
+            if (a.name < b.name) return -1 
+            else if (a.name > b.name) return 1
+            return 0
+          })
+        }
+        treeview.push(region)
+      }
+      return treeview
+    },
     parseEnvironments(environments) {
       var data = []
       var regions = []
       var colors = ['#eb5f5d', '#fa8231', '#00b16a', '#8e44ad', '#3a539b', '#2196f3']
+
+      // Fill regions
+      for (let i = 0; i < this.treeviewItems.length; ++i) regions.push(this.treeviewItems[i]['name'])
+      regions.sort()
       
+      // Parse Environments
       for (let i = 0; i < environments.length; ++i) {
         let row = {}
         row['id'] = environments[i]['id']
@@ -130,35 +170,25 @@ export default {
             for (let k = 0; k < this.environment_servers[environments[i]['id']][j]['children'].length; ++k) {
               let region_name = this.environment_servers[environments[i]['id']][j]['name']
               let server_name = this.environment_servers[environments[i]['id']][j]['children'][k]['name']
-              if (!(region_name in regions)) regions.push(region_name)
               let color_next = regions.indexOf(region_name) < colors.length ? colors[regions.indexOf(region_name)] : ''
               row['servers'].push({ region: region_name, server: server_name, color: color_next })
             }
           }
         }
+        // Sort servers ASC by region_name
+        row['servers'].sort(function(a,b) { 
+          if (a.region < b.region) return -1
+          else if (a.region > b.region) return 1
+          else {
+            if (a.server < b.server) return -1
+            else if (a.server > b.server) return 1
+            else return 0
+          }
+        })
+        // Add row to array
         data.push(row)
       }
       return data
-    },
-    parseServers(servers) {
-      var treeview = []
-      var regions = []
-      // Fill regions
-      for (let i = 0; i < servers.length; ++i) {
-        if (!regions.includes(servers[i]['region_name'])) regions.push({ id: servers[i]['region_id'], name: servers[i]['region_name'] })
-      }
-      // Fill treeview
-      for (let i = 0; i < regions.length; ++i) {
-        let region = { id: regions[i]['id'], name: regions[i]['name'], children: []}
-        for (let j = 0; j < servers.length; ++j) {
-          if (regions[i]['name'] == servers[j]['region_name']) {
-            region['children'].push({ id: servers[j]['server_id'], name: servers[j]['server_name'] })
-          }
-        }
-        if (region['children'].length == 0) delete region['children']
-        treeview.push(region)
-      }
-      return treeview
     },
     parseEnvironmentServers(environment_servers) {
       var data = {}
@@ -194,7 +224,16 @@ export default {
       setTimeout(this.updateSelected, 1);
     },
     updateSelected() {
-      this.treeviewSelected = (Object.keys(this.environment_servers) == 0) ? [] : this.environment_servers[this.selected[0]['id']]
+      var treeviewSelected = []
+      if (Object.keys(this.environment_servers) == 0) this.treeviewSelected = []
+      else {
+        for (let i = 0; i < this.environment_servers[this.selected[0]['id']].length; ++i) {
+          for (let j = 0; j < this.environment_servers[this.selected[0]['id']][i]['children'].length; ++j) {
+            treeviewSelected.push(this.environment_servers[this.selected[0]['id']][i]['id'] + '|' + this.environment_servers[this.selected[0]['id']][i]['children'][j]['id'])
+          }
+        }
+        this.treeviewSelected = [...treeviewSelected]
+      }
     },
     deleteEnvironment() {
       this.mode = 'delete'
@@ -224,7 +263,7 @@ export default {
       }
       // Build servers array
       var server_list = []
-      for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i]['id'])
+      for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i].substring(this.treeviewSelected[i].indexOf('|')+1, this.treeviewSelected[i].length))
 
       // Add item in the DB
       const payload = JSON.stringify({ name: this.environment_name, servers: server_list })
@@ -263,7 +302,7 @@ export default {
       }
       // Build servers array
       var server_list = []
-      for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i]['id'])
+      for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i].substring(this.treeviewSelected[i].indexOf('|')+1, this.treeviewSelected[i].length))
 
       // Edit item in the DB
       const payload = JSON.stringify({ id: this.selected[0]['id'], name: this.environment_name, servers: server_list })
