@@ -85,9 +85,10 @@ export default {
     // Get Groups
     this.getGroups()
   },
-  mounted() {
-    // Check Notification
-    setTimeout(this.checkNotifications, 300)
+  updated() {
+    // Check Notifications
+    if (this.$route.params.msg) this.notification(this.$route.params.msg, this.$route.params.color)
+    this.$route.params.msg = null
   },
   methods: {
     // +--------+
@@ -154,9 +155,6 @@ export default {
       this.snackbarText = message
       this.snackbarColor = color 
       this.snackbar = true
-    },
-    checkNotifications() {
-      if (this.$route.params.msg) this.notification(this.$route.params.msg, this.$route.params.color)
     }
   }
 }

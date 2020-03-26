@@ -42,7 +42,7 @@
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
-                <v-switch label="Access Inventory" color="info" style="margin-top:0px;"></v-switch>
+                <v-switch v-model="group.inventory_enable" label="Access Inventory" color="info" style="margin-top:0px;"></v-switch>
               </v-card-text>
             </v-card>
 
@@ -140,6 +140,7 @@ export default {
     // | GROUPS |
     // +--------+
     group: { 
+      'inventory_enable': false,
       'deployments_enable': false,
       'deployments_basic': false,
       'deployments_pro': false,
@@ -181,13 +182,15 @@ export default {
     getGroup() {
       axios.get('/admin/groups', { params: { groupID: this.group['id'] } })
         .then((response) => {
-          this.group = response.data.data
-          this.loading = false
+          if (response.data.data.length == 0) this.$router.push('/admin/groups')
+          else {
+            this.group = response.data.data[0]
+            this.loading = false
+          }
         })
         .catch((error) => {
-          console.log(error)
-          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          // else this.notification(error.response.data.message, 'error')
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
         })
     },
     submitGroup() {

@@ -30,7 +30,7 @@ class Slack:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['deployments_edit']:
+            if not user['inventory_enable']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -52,7 +52,7 @@ class Slack:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['deployments_edit']:
+            if not user['inventory_enable']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Build Slack Message

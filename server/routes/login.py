@@ -48,11 +48,11 @@ class Login:
                     'username': user[0]['username'],
                     'coins': user[0]['coins'],
                     'admin': user[0]['admin'] and valid_url,
+                    'inventory_enable': user[0]['inventory_enable'],
                     'deployments_enable': user[0]['deployments_enable'],
                     'deployments_basic': user[0]['deployments_basic'],
                     'deployments_pro': user[0]['deployments_pro'],
-                    'deployments_inbenta': user[0]['deployments_inbenta'],
-                    'deployments_edit': user[0]['deployments_edit']
+                    'deployments_inbenta': user[0]['deployments_inbenta']
                 }
                 return jsonify({'data': ret}), 200
 
