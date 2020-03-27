@@ -13,8 +13,8 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:item.servers="props">
-          <div v-for="item in props.item.servers" :key="item.region + '|' + item.server" style="margin-left:0px; padding-left:0px; float:left; margin-right:5px;">
-            <v-chip :color="item.color" style="margin-left:0px;"><span class="font-weight-medium" style="padding-right:4px;">{{ item.server }}</span> - {{ item.region }}</v-chip>
+          <div v-for="item in props.item.servers" :key="item.region + '|' + item.server" style="margin-left:0px; padding-left:0px; float:left; margin-right:5px; padding-top:5px; padding-bottom:5px;">
+            <v-chip outlined :color="item.color" style="margin-left:0px;"><span class="font-weight-bold" style="padding-right:4px;">{{ item.server }}</span> - {{ item.region }}</v-chip>
           </div>
         </template>
       </v-data-table>
@@ -120,7 +120,12 @@ export default {
       var regions = []
       // Fill regions
       for (let i = 0; i < servers.length; ++i) {
-        if (!regions.includes(servers[i]['name'])) regions.push({ id: servers[i]['region_id'], name: servers[i]['region_name'] })
+        let found = false
+        for (let j = 0; j < regions.length; ++j) {
+          found = (servers[i]['region_id'] == regions[j]['id'])
+          if (found) break
+        }
+        if (!found) regions.push({ id: servers[i]['region_id'], name: servers[i]['region_name'] })
       }
       // Sort regions ASC by name
       regions.sort(function(a,b) { 
@@ -153,7 +158,7 @@ export default {
     parseEnvironments(environments) {
       var data = []
       var regions = []
-      var colors = ['#eb5f5d', '#fa8231', '#00b16a', '#8e44ad', '#3a539b', '#2196f3']
+      var colors = ['#eb5f5d', '#fa8231', '#00b16a', '#9c59b6', '#2196f3']
 
       // Fill regions
       for (let i = 0; i < this.treeviewItems.length; ++i) regions.push(this.treeviewItems[i]['name'])
