@@ -99,7 +99,6 @@ class Deployments_Pro:
             JOIN groups g ON g.id = u.group_id
             WHERE p.status = 'SCHEDULED'
             AND %s >= p.scheduled
-            AND d.deleted = 0;
         """
         return self._sql.execute(query, (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
@@ -111,8 +110,7 @@ class Deployments_Pro:
             JOIN environments e ON e.id = p.environment_id
             JOIN users u ON u.id = d.user_id
             JOIN groups g ON g.id = u.group_id
-            WHERE d.deleted = 0
-            AND p.id IN(%s)
+            WHERE p.id IN(%s)
         """
         return self._sql.execute(query, (execution_ids))
 

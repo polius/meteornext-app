@@ -163,7 +163,6 @@ CREATE TABLE `deployments` (
   `name` VARCHAR(191) NOT NULL,
   `release_id` INT UNSIGNED NULL,
   `user_id` INT(10) UNSIGNED NOT NULL,
-  `deleted` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `release_id` (`release_id`),
   KEY `user_id` (`user_id`),

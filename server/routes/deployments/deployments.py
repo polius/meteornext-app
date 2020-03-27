@@ -39,7 +39,7 @@ class Deployments:
         # Init blueprint
         deployments_blueprint = Blueprint('deployments', __name__, template_folder='deployments')
 
-        @deployments_blueprint.route('/deployments', methods=['GET','PUT','DELETE'])
+        @deployments_blueprint.route('/deployments', methods=['GET','PUT'])
         @jwt_required
         def deployments_method():
             # Check license
@@ -60,8 +60,6 @@ class Deployments:
                 return self.__get(user['id'])
             elif request.method == 'PUT':
                 return self.__put(user['id'], deployment_json)
-            elif request.method == 'DELETE':
-                return self.__delete(user['id'], deployment_json)
 
         @deployments_blueprint.route('/deployments/results', methods=['GET'])
         @jwt_required
@@ -199,8 +197,3 @@ class Deployments:
         elif data['put'] == 'release':
             self._deployments.putRelease(user_id, data)
         return jsonify({'message': 'Deployment edited successfully'}), 200
-
-    def __delete(self, user_id, data):
-        for deploy in data:
-            self._deployments.delete(user_id, deploy)
-        return jsonify({'message': 'Selected deployments deleted successfully'}), 200

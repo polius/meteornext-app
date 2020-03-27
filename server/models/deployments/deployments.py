@@ -15,19 +15,16 @@ class Deployments:
             search_status = " AND d.status IN ({})".format(",".join("'{}'".format(i) for i in search['status'])) if search and 'status' in search else ''
             search_created_from = " AND d.created >= '{}'".format(search['created_from']) if search and 'created_from' in search else ''
             search_created_to = " AND d.created <= '{}'".format(search['created_to']) if search and 'created_to' in search else ''
-            search_deleted = search['deleted'] if search and 'deleted' in search else 0
 
             # Build Query
             query = """
                 SELECT *, e.name AS 'environment', r.name AS 'release'
                 FROM
                 (
-                    SELECT *
-                    FROM
                     (
                         SELECT d.id, db.id AS 'execution_id', u.username, d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.scheduled, db.started, db.ended, CONCAT(TIMEDIFF(db.ended, db.started)) AS 'overall'
                         FROM deployments_basic db
-                        JOIN deployments d ON d.id = db.deployment_id AND d.deleted = {7}
+                        JOIN deployments d ON d.id = db.deployment_id
                         JOIN users u ON u.id = d.user_id{0}
                         WHERE db.id IN (
                             SELECT MAX(id)
@@ -36,14 +33,12 @@ class Deployments:
                         )
                         ORDER BY db.created DESC
                         LIMIT 1000
-                    ) t1
+                    )
                     UNION ALL
-                    SELECT *
-                    FROM
                     (
                         SELECT d.id, dp.id AS 'execution_id', u.username, d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.scheduled, dp.started, dp.ended, CONCAT(TIMEDIFF(dp.ended, dp.started)) AS 'overall'
                         FROM deployments_pro dp
-                        JOIN deployments d ON d.id = dp.deployment_id AND d.deleted = {7}
+                        JOIN deployments d ON d.id = dp.deployment_id
                         JOIN users u ON u.id = d.user_id{0}
                         WHERE dp.id IN (
                             SELECT MAX(id)
@@ -52,14 +47,12 @@ class Deployments:
                         )
                         ORDER BY dp.created DESC
                         LIMIT 1000
-                    ) t2
+                    )
                     UNION ALL
-                    SELECT *
-                    FROM
                     (
                         SELECT d.id, di.id AS 'execution_id', u.username, d.name, d.release_id, di.environment_id, 'INBENTA' AS 'mode', di.method, di.status, di.created, di.scheduled, di.started, di.ended, CONCAT(TIMEDIFF(di.ended, di.started)) AS 'overall'
                         FROM deployments_inbenta di
-                        JOIN deployments d ON d.id = di.deployment_id AND d.deleted = {7}
+                        JOIN deployments d ON d.id = di.deployment_id
                         JOIN users u ON u.id = d.user_id{0}
                         WHERE di.id IN (
                             SELECT MAX(id)
@@ -68,14 +61,14 @@ class Deployments:
                         )
                         ORDER BY di.created DESC
                         LIMIT 1000
-                    ) t3
+                    )
                 ) d
                 LEFT JOIN environments e ON e.id = d.environment_id
                 LEFT JOIN releases r ON r.id = d.release_id
                 WHERE 1=1{1}{2}{3}{4}{5}{6}
                 ORDER BY d.created DESC
-                LIMIT 100
-            """.format(search_username, search_name, search_release, search_mode, search_status, search_created_from, search_created_to, search_deleted)
+                LIMIT 1000
+            """.format(search_username, search_name, search_release, search_mode, search_status, search_created_from, search_created_to)
             results = self._sql.execute(query)
         elif deployment_id is not None:
             query = """
@@ -84,7 +77,7 @@ class Deployments:
                 (
                     SELECT d.id, db.id AS 'execution_id', d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.scheduled, db.started, db.ended
                     FROM deployments_basic db
-                    JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s AND d.id = %s AND d.deleted = 0
+                    JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s AND d.id = %s
                     JOIN users u ON u.id = d.user_id
                     JOIN groups g ON g.id = u.group_id AND g.deployments_basic = 1  
                     WHERE db.id IN (
@@ -92,10 +85,10 @@ class Deployments:
                         FROM deployments_basic db2
                         WHERE db2.deployment_id = db.deployment_id
                     )
-                    UNION
+                    UNION ALL
                     SELECT d.id, dp.id AS 'execution_id', d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.scheduled, dp.started, dp.ended
                     FROM deployments_pro dp
-                    JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s AND d.id = %s AND d.deleted = 0
+                    JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s AND d.id = %s
                     JOIN users u ON u.id = d.user_id
                     JOIN groups g ON g.id = u.group_id AND g.deployments_pro = 1  
                     WHERE dp.id IN (
@@ -103,10 +96,10 @@ class Deployments:
                         FROM deployments_pro dp2
                         WHERE dp2.deployment_id = dp.deployment_id
                     )
-                    UNION
+                    UNION ALL
                     SELECT d.id, di.id AS 'execution_id', d.name, d.release_id, di.environment_id, 'INBENTA' AS 'mode', di.method, di.status, di.created, di.scheduled, di.started, di.ended
                     FROM deployments_inbenta di
-                    JOIN deployments d ON d.id = di.deployment_id AND d.user_id = %s AND d.id = %s AND d.deleted = 0
+                    JOIN deployments d ON d.id = di.deployment_id AND d.user_id = %s AND d.id = %s
                     JOIN users u ON u.id = d.user_id
                     JOIN groups g ON g.id = u.group_id AND g.deployments_inbenta = 1  
                     WHERE di.id IN (
@@ -126,64 +119,77 @@ class Deployments:
                 SELECT d.id, d.execution_id, d.name, e.name AS 'environment', r.name AS 'release', d.mode, d.method, d.status, d.queue, d.created, d.scheduled, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
                 FROM
                 (
-                    SELECT d.id, db.id AS 'execution_id', d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, q.queue, db.created, db.scheduled, db.started, db.ended
-                    FROM deployments_basic db
-                    JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s AND d.deleted = 0
-                    JOIN users u ON u.id = d.user_id
-                    JOIN groups g ON g.id = u.group_id AND g.deployments_basic = 1 
-                    LEFT JOIN
                     (
-                        SELECT (@cnt := @cnt + 1) AS queue, deployment_id
-                        FROM deployments_basic
-                        JOIN (SELECT @cnt := 0) t
-                        WHERE status = 'QUEUED'
-                    ) q ON q.deployment_id = d.id
-                    WHERE db.id IN (
-                        SELECT MAX(id)
-                        FROM deployments_basic db2
-                        WHERE db2.deployment_id = db.deployment_id
+                        SELECT d.id, db.id AS 'execution_id', d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, q.queue, db.created, db.scheduled, db.started, db.ended
+                        FROM deployments_basic db
+                        JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %s
+                        JOIN users u ON u.id = d.user_id
+                        JOIN groups g ON g.id = u.group_id AND g.deployments_basic = 1 
+                        LEFT JOIN
+                        (
+                            SELECT (@cnt := @cnt + 1) AS queue, deployment_id
+                            FROM deployments_basic
+                            JOIN (SELECT @cnt := 0) t
+                            WHERE status = 'QUEUED'
+                        ) q ON q.deployment_id = d.id
+                        WHERE db.id IN (
+                            SELECT MAX(id)
+                            FROM deployments_basic db2
+                            WHERE db2.deployment_id = db.deployment_id
+                        )
+                        ORDER BY db.created DESC
+                        LIMIT 1000
                     )
-                    UNION
-                    SELECT d.id, dp.id AS 'execution_id', d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, q.queue, dp.created, dp.scheduled, dp.started, dp.ended
-                    FROM deployments_pro dp
-                    JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s AND d.deleted = 0
-                    JOIN users u ON u.id = d.user_id
-                    JOIN groups g ON g.id = u.group_id AND g.deployments_pro = 1  
-                    LEFT JOIN
+                    UNION ALL
                     (
-                        SELECT (@cnt := @cnt + 1) AS queue, deployment_id
-                        FROM deployments_pro
-                        JOIN (SELECT @cnt := 0) t
-                        WHERE status = 'QUEUED'
-                    ) q ON q.deployment_id = d.id
-                    WHERE dp.id IN (
-                        SELECT MAX(id)
-                        FROM deployments_pro dp2
-                        WHERE dp2.deployment_id = dp.deployment_id
+                        SELECT d.id, dp.id AS 'execution_id', d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, q.queue, dp.created, dp.scheduled, dp.started, dp.ended
+                        FROM deployments_pro dp
+                        JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %s
+                        JOIN users u ON u.id = d.user_id
+                        JOIN groups g ON g.id = u.group_id AND g.deployments_pro = 1  
+                        LEFT JOIN
+                        (
+                            SELECT (@cnt := @cnt + 1) AS queue, deployment_id
+                            FROM deployments_pro
+                            JOIN (SELECT @cnt := 0) t
+                            WHERE status = 'QUEUED'
+                        ) q ON q.deployment_id = d.id
+                        WHERE dp.id IN (
+                            SELECT MAX(id)
+                            FROM deployments_pro dp2
+                            WHERE dp2.deployment_id = dp.deployment_id
+                        )
+                        ORDER BY dp.created DESC
+                        LIMIT 1000
                     )
-                    UNION
-                    SELECT d.id, di.id AS 'execution_id', d.name, d.release_id, di.environment_id, 'INBENTA' AS 'mode', di.method, di.status, q.queue, di.created, di.scheduled, di.started, di.ended
-                    FROM deployments_inbenta di
-                    JOIN deployments d ON d.id = di.deployment_id AND d.user_id = %s AND d.deleted = 0
-                    JOIN users u ON u.id = d.user_id
-                    JOIN groups g ON g.id = u.group_id AND g.deployments_inbenta = 1  
-                    LEFT JOIN
+                    UNION ALL
                     (
-                        SELECT (@cnt := @cnt + 1) AS queue, deployment_id
-                        FROM deployments_inbenta
-                        JOIN (SELECT @cnt := 0) t
-                        WHERE status = 'QUEUED'
-                    ) q ON q.deployment_id = d.id
-                    WHERE di.id IN (
-                        SELECT MAX(id)
-                        FROM deployments_inbenta di2
-                        WHERE di2.deployment_id = di.deployment_id
+                        SELECT d.id, di.id AS 'execution_id', d.name, d.release_id, di.environment_id, 'INBENTA' AS 'mode', di.method, di.status, q.queue, di.created, di.scheduled, di.started, di.ended
+                        FROM deployments_inbenta di
+                        JOIN deployments d ON d.id = di.deployment_id AND d.user_id = %s
+                        JOIN users u ON u.id = d.user_id
+                        JOIN groups g ON g.id = u.group_id AND g.deployments_inbenta = 1  
+                        LEFT JOIN
+                        (
+                            SELECT (@cnt := @cnt + 1) AS queue, deployment_id
+                            FROM deployments_inbenta
+                            JOIN (SELECT @cnt := 0) t
+                            WHERE status = 'QUEUED'
+                        ) q ON q.deployment_id = d.id
+                        WHERE di.id IN (
+                            SELECT MAX(id)
+                            FROM deployments_inbenta di2
+                            WHERE di2.deployment_id = di.deployment_id
+                        )
+                        ORDER BY di.created DESC
+                        LIMIT 1000
                     )
                 ) d
                 LEFT JOIN environments e ON e.id = d.environment_id
                 LEFT JOIN releases r ON r.id = d.release_id
                 WHERE r.active = 1 OR r.active IS NULL
                 ORDER BY created DESC
+                LIMIT 1000
             """
             results = self._sql.execute(query, (user_id, user_id, user_id))
 
@@ -218,15 +224,6 @@ class Deployments:
             AND releases.user_id = %s
         """
         self._sql.execute(query, (deployment['id'], user_id, deployment['release'], user_id))
-
-    def delete(self, user_id, deployment):
-        query = """
-            UPDATE deployments
-            SET deleted = 1
-            WHERE id = %s
-            AND user_id = %s 
-        """
-        self._sql.execute(query, (deployment, user_id))
 
     def getUser(self, deployment_id):
         query = """
@@ -277,7 +274,7 @@ class Deployments:
                     UNION
                     SELECT deployment_id FROM deployments_inbenta WHERE environment_id = %(environment_id)s
                 ) t
-                JOIN deployments d ON d.id = t. deployment_id AND d.deleted = 0
+                JOIN deployments d ON d.id = t. deployment_id
             ) AS 'exist';
         """
         return self._sql.execute(query, ({'environment_id': environment_id}))[0]['exist']
