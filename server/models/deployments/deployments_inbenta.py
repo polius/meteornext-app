@@ -104,7 +104,6 @@ class Deployments_Inbenta:
             JOIN groups g ON g.id = u.group_id
             WHERE i.status = 'SCHEDULED'
             AND %s >= i.scheduled
-            AND d.deleted = 0
         """
         return self._sql.execute(query, (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
@@ -116,8 +115,7 @@ class Deployments_Inbenta:
             JOIN environments e ON e.id = i.environment_id
             JOIN users u ON u.id = d.user_id
             JOIN groups g ON g.id = u.group_id
-            WHERE d.deleted = 0
-            AND i.id IN(%s)
+            WHERE i.id IN(%s)
         """
         return self._sql.execute(query, (execution_ids))
 
