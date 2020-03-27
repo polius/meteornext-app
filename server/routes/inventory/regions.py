@@ -31,7 +31,7 @@ class Regions:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['inventory_enable']:
+            if not user['inventory_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -57,7 +57,7 @@ class Regions:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['inventory_enable']:
+            if not user['inventory_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json

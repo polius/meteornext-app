@@ -7,19 +7,19 @@
       <v-divider class="mx-3" inset vertical></v-divider>
 
       <!-- DEPLOYMENTS -->
-      <router-link v-if="deployments_enable" class="nav-link" to="/deployments" style="margin-right:10px;">
+      <router-link v-if="deployments_enabled" class="nav-link" to="/deployments" style="margin-right:10px;">
         <v-btn color="#e74c3c"><v-icon small style="padding-right:10px">fas fa-meteor</v-icon>Deployments</v-btn>
       </router-link>
       <!-- MONITORING -->
-      <router-link class="nav-link" to="/monitoring" style="margin-right:10px;">
+      <router-link v-if="monitoring_enabled" class="nav-link" to="/monitoring" style="margin-right:10px;">
         <v-btn color="#fa8231"><v-icon small style="padding-right:10px">fas fa-desktop</v-icon>Monitoring</v-btn>
       </router-link>
       <!-- UTILS -->
-      <router-link class="nav-link" to="/utils" style="margin-right:10px;">
+      <router-link v-if="utils_enabled" class="nav-link" to="/utils" style="margin-right:10px;">
         <v-btn color="#00b16a"><v-icon small style="padding-right:10px">fas fa-database</v-icon>Utils</v-btn>
       </router-link>
       <!-- CLIENT -->
-      <router-link class="nav-link" to="/client">
+      <router-link v-if="client_enabled" class="nav-link" to="/client">
         <v-btn color="#8e44ad"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>Client</v-btn>
       </router-link>
 
@@ -54,7 +54,7 @@
       </router-link>
 
       <!-- INVENTORY -->
-      <router-link v-if="inventory_enable" title="Inventory" class="nav-link" to="/inventory">
+      <router-link v-if="inventory_enabled" title="Inventory" class="nav-link" to="/inventory">
         <v-btn icon><v-icon>fas fa-layer-group</v-icon></v-btn>
       </router-link>
 
@@ -139,8 +139,11 @@ export default {
     isLoggedIn : function() { return this.$store.getters.isLoggedIn },
     admin : function() { return this.$store.getters.admin == 0 ? false : this.$store.getters.admin },
     coins : function() { return this.$store.getters.coins },
-    deployments_enable : function() { return this.$store.getters.deployments_enable },
-    inventory_enable : function() { return this.$store.getters.inventory_enable }
+    inventory_enabled : function() { return this.$store.getters.inventory_enabled },
+    deployments_enabled : function() { return this.$store.getters.deployments_enabled },
+    monitoring_enabled : function() { return this.$store.getters.monitoring_enabled },
+    utils_enabled : function() { return this.$store.getters.utils_enabled },
+    client_enabled : function() { return this.$store.getters.client_enabled }
   },
   created() {
     this.getNotifications(true)
