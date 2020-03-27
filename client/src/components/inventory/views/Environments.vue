@@ -13,8 +13,8 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:item.servers="props">
-          <div v-for="item in props.item.servers" :key="item.region + '|' + item.server" style="margin-left:0px; padding-left:0px; float:left; margin-right:5px; padding-top:5px; padding-bottom:5px;">
-            <v-chip outlined :color="item.color" style="margin-left:0px;"><span class="font-weight-bold" style="padding-right:4px;">{{ item.server }}</span> - {{ item.region }}</v-chip>
+          <div v-for="item in props.item.servers" :key="item.region + '|' + item.server" style="margin-left:0px; padding-left:0px; float:left; margin-right:5px; padding-top:3px; padding-bottom:3px;">
+            <v-chip outlined :color="item.color" style="margin-left:0px;"><span class="font-weight-medium" style="padding-right:4px;">{{ item.server }}</span> - {{ item.region }}</v-chip>
           </div>
         </template>
       </v-data-table>
@@ -67,6 +67,13 @@
     </v-snackbar>
   </div>
 </template>
+
+<style>
+td {
+  padding-top:5px!important;
+  padding-bottom:5px!important;
+}
+</style>
 
 <script>
 import axios from 'axios'
