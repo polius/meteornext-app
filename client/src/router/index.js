@@ -18,15 +18,13 @@ let router = new VueRouter({
       path: '/setup',
       name: 'setup',
       props: true,
-      component: () => import('../components/Setup'),
-      meta: { requiresAuth: false }
+      component: () => import('../components/Setup')
     },
     {
       path: '/login',
       name: 'login',
       props: true,
-      component: () => import('../components/Login'),
-      meta: { requiresAuth: false }
+      component: () => import('../components/Login')
     },
     {
       path: '/profile',
@@ -43,68 +41,68 @@ let router = new VueRouter({
     {
       path: '/inventory',
       component: () => import('../components/inventory/Navigation'),
-      meta: { requiresAuth: true, requiresInventory: true },
+      meta: { requiresInventory: true },
       children: [
         {
           path: '',
           name: 'inventory',
           component: () => import('../components/inventory/Inventory'),
-          meta: { requiresAuth: true, requiresInventory: true }
+          meta: { requiresInventory: true }
         },
         {
           path: 'environments',
           name: 'inventory.environments',
           component: () => import('../components/inventory/views/Environments'),
-          meta: { requiresAuth: true, requiresInventory: true }
+          meta: { requiresInventory: true }
         },
         {
           path: 'regions',
           name: 'inventory.regions',
           component: () => import('../components/inventory/views/Regions'),
-          meta: { requiresAuth: true, requiresInventory: true }
+          meta: { requiresInventory: true }
         },
         {
           path: 'servers',
           name: 'inventory.servers',
           component: () => import('../components/inventory/views/Servers'),
-          meta: { requiresAuth: true, requiresInventory: true }
+          meta: { requiresInventory: true }
         },
         {
           path: 'auxiliary',
           name: 'inventory.auxiliary',
           component: () => import('../components/inventory/views/Auxiliary'),
-          meta: { requiresAuth: true, requiresInventory: true }
+          meta: { requiresInventory: true }
         },
         {
           path: 'slack',
           name: 'inventory.slack',
           component: () => import('../components/inventory/views/Slack'),
-          meta: { requiresAuth: true, requiresInventory: true }
+          meta: { requiresInventory: true }
         }
       ]
     },
     {
       path: '/deployments',
       component: () => import('../components/deployments/Navigation'),
-      meta: { requiresAuth: true, requiresDeployments: true },
+      meta: { requiresDeployments: true },
       children: [
         {
           path: '',
           name: 'deployments',
           component: () => import('../components/deployments/Deployments'),
-          meta: { requiresAuth: true, requiresDeployments: true }
+          meta: { requiresDeployments: true }
         },
         {
           path: 'releases',
           name: 'deployments.releases',
           component: () => import('../components/deployments/Releases'),
-          meta: { requiresAuth: true, requiresDeployments: true }
+          meta: { requiresDeployments: true }
         },
         {
           path: 'new',
           name: 'deployments.new',
           component: () => import('../components/deployments/views/Navigation'),
-          meta: { requiresAuth: true, requiresDeployments: true }
+          meta: { requiresDeployments: true }
         }
       ]
     },
@@ -135,69 +133,69 @@ let router = new VueRouter({
     },
     {
       path: '/monitoring',
-      meta: { requiresAuth: true },
+      meta: { requiresMonitoring: true },
       component: () => import('../components/monitoring/Navigation'),
       children: [
         {
           path: '',
           name: 'monitoring',
           component: () => import('../components/monitoring/Monitoring'),
-          meta: { requiresAuth: true }
+          meta: { requiresMonitoring: true }
         },
         {
           path: 'processlist',
           name: 'monitoring.processlist',
           component: () => import('../components/monitoring/views/Processlist'),
-          meta: { requiresAuth: true }
+          meta: { requiresMonitoring: true }
         },
         {
           path: 'queries',
           name: 'monitoring.queries',
           component: () => import('../components/monitoring/views/Queries'),
-          meta: { requiresAuth: true }
+          meta: { requiresMonitoring: true }
         }
       ]
     },
     {
       path: '/utils',
-      meta: { requiresAuth: true },
+      meta: { requiresUtils: true },
       component: () => import('../components/utils/Navigation'),
       children: [
         {
           path: '',
           name: 'utils',
           component: () => import('../components/utils/Utils'),
-          meta: { requiresAuth: true }
+          meta: { requiresUtils: true }
         },
         {
           path: 'compare',
           name: 'utils.compare',
           component: () => import('../components/utils/views/Compare'),
-          meta: { requiresAuth: true }
+          meta: { requiresUtils: true }
         },
         {
           path: 'manage',
           name: 'utils.manage',
           component: () => import('../components/utils/views/Manage'),
-          meta: { requiresAuth: true }
+          meta: { requiresUtils: true }
         },
         {
           path: 'restore',
           name: 'utils.restore',
           component: () => import('../components/utils/views/Restore'),
-          meta: { requiresAuth: true }
+          meta: { requiresUtils: true }
         }
       ]
     },
     {
       path: '/client',
-      meta: { requiresAuth: true },
+      meta: { requiresClient: true },
       component: () => import('../components/client/Navigation')
     },
     {
       path: '/admin',
       component: () => import('../components/admin/Navigation'),
-      meta: {requiresAdmin: true },
+      meta: { requiresAdmin: true },
       children: [
         {
           path: '',
@@ -227,7 +225,7 @@ let router = new VueRouter({
               path: ':id',
               name: 'admin.group',
               component: () => import('../components/admin/views/Group'),
-              meta: { requiresAuth: true }
+              meta: { requiresAdmin: true }
             }
           ]
         },
@@ -250,21 +248,39 @@ let router = new VueRouter({
 
 router.beforeEach((to, from, next) => {
   if (to.path == '/login' && store.getters.isLoggedIn) next('/')
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (store.getters.isLoggedIn) next()
+  else if (to.matched.some(record => record.meta.requiresAdmin)) {
+    if (store.getters.isLoggedIn && store.getters.admin) next()
     else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
     else next({ path: '/login' })
   }
-  else if (to.matched.some(record => record.meta.requiresAdmin)) {
-    if (store.getters.isLoggedIn && store.getters.admin) next()
-    else next({ path: '/login' })
-  }
   else if (to.matched.some(record => record.meta.requiresInventory)) {
-    if (store.getters.isLoggedIn && store.getters.inventory_enable) next()
+    if (store.getters.isLoggedIn && store.getters.inventory_enabled) next()
+    else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
     else next({ path: '/login' })
   }
   else if (to.matched.some(record => record.meta.requiresDeployments)) {
-    if (store.getters.isLoggedIn && store.getters.deployments_enable) next()
+    if (store.getters.isLoggedIn && store.getters.deployments_enabled) next()
+    else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
+    else next({ path: '/login' })
+  }
+  else if (to.matched.some(record => record.meta.requiresMonitoring)) {
+    if (store.getters.isLoggedIn && store.getters.monitoring_enabled) next()
+    else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
+    else next({ path: '/login' })
+  }
+  else if (to.matched.some(record => record.meta.requiresUtils)) {
+    if (store.getters.isLoggedIn && store.getters.utils_enabled) next()
+    else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
+    else next({ path: '/login' })
+  }
+  else if (to.matched.some(record => record.meta.requiresClient)) {
+    if (store.getters.isLoggedIn && store.getters.client_enabled) next()
+    else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
+    else next({ path: '/login' })
+  }
+  else if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (store.getters.isLoggedIn) next()
+    else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
     else next({ path: '/login' })
   }
   else next()

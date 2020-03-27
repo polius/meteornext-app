@@ -11,7 +11,7 @@ class Users:
             return self._sql.execute("SELECT u.id, u.username, u.email, u.password, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.last_login FROM users u JOIN groups g ON g.id = u.group_id ORDER BY u.last_login DESC, u.username ASC")
         else:
             query = """
-                SELECT u.id, u.username, u.email, u.password, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.last_login, g.inventory_enable, g.deployments_enable, g.deployments_basic, g.deployments_pro, g.deployments_inbenta
+                SELECT u.id, u.username, u.email, u.password, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.last_login, g.inventory_enabled, g.deployments_enabled, g.deployments_basic, g.deployments_pro, g.deployments_inbenta, g.monitoring_enabled, g.utils_enabled, g.client_enabled
                 FROM users u 
                 JOIN groups g ON g.id = u.group_id 
                 WHERE u.username = %s

@@ -42,7 +42,7 @@
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
-                <v-switch v-model="group.inventory_enable" label="Access Inventory" color="info" style="margin-top:0px;"></v-switch>
+                <v-switch v-model="group.inventory_enabled" label="Access Inventory" color="info" style="margin-top:0px;"></v-switch>
               </v-card-text>
             </v-card>
 
@@ -53,10 +53,10 @@
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
-                <v-switch v-model="group.deployments_enable" label="Perform Deployments" color="info" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
-                <v-switch v-if="group.deployments_enable" v-model="group.deployments_basic" label="BASIC" color="#eb974e" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
-                <v-switch v-if="group.deployments_enable" v-model="group.deployments_pro" label="PRO" color="rgb(235, 95, 93)" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
-                <v-switch v-if="group.deployments_enable" v-model="group.deployments_inbenta" label="INBENTA" color="#049372" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-model="group.deployments_enabled" label="Perform Deployments" color="info" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-if="group.deployments_enabled" v-model="group.deployments_basic" label="BASIC" color="#eb974e" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-if="group.deployments_enabled" v-model="group.deployments_pro" label="PRO" color="rgb(235, 95, 93)" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
+                <v-switch v-if="group.deployments_enabled" v-model="group.deployments_inbenta" label="INBENTA" color="#049372" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
                   LIMITS
                 <v-tooltip right>
@@ -86,7 +86,7 @@
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
-                <v-switch label="Access Monitoring" color="info" style="margin-top:0px;"></v-switch>
+                <v-switch v-model="group.monitoring_enabled" label="Access Monitoring" color="info" style="margin-top:0px;"></v-switch>
               </v-card-text>
             </v-card>
 
@@ -97,7 +97,7 @@
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
-                <v-switch label="Access Utils" color="info" style="margin-top:0px;"></v-switch>
+                <v-switch v-model="group.utils_enabled" label="Access Utils" color="info" style="margin-top:0px;"></v-switch>
               </v-card-text>
             </v-card>
 
@@ -108,7 +108,7 @@
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
-                <v-switch label="Access Client" color="info" style="margin-top:0px;"></v-switch>
+                <v-switch v-model="group.client_enabled" label="Access Client" color="info" style="margin-top:0px;"></v-switch>
               </v-card-text>
             </v-card>
 
@@ -140,14 +140,17 @@ export default {
     // | GROUPS |
     // +--------+
     group: { 
-      'inventory_enable': false,
-      'deployments_enable': false,
+      'inventory_enabled': false,
+      'deployments_enabled': false,
       'deployments_basic': false,
       'deployments_pro': false,
       'deployments_inbenta': false,
       'deployments_execution_threads': 10,
       'deployments_execution_limit': null,
-      'deployments_execution_concurrent': null
+      'deployments_execution_concurrent': null,
+      'monitoring_enabled': false,
+      'utils_enabled': false,
+      'client_enabled': false
     },
     toolbar_title: '',
     form_valid: false,
