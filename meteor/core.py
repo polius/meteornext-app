@@ -345,8 +345,9 @@ class core:
         status_color = 'good' if status == 0 else 'warning' if status == 1 else 'danger'
 
         # Logs
-        logs_path = "{}.tar.gz".format(self._args.path)
-        
+        logs_information = "{}/deployment/{}{}".format(self._imports.config['params']['url'], self._imports.config['params']['mode'][0].upper(), self._imports.config['params']['id'])
+        logs_results = "{}/results/{}".format(self._imports.config['params']['url'], self._args.path[self._args.path.rfind('/')+1:])
+
         # Current Time
         current_time = calendar.timegm(time.gmtime())
 
@@ -384,13 +385,13 @@ class core:
                     "text": "",
                     "fields": [
                         {
-                            "title": "Execution",
-                            "value": "```{}```".format(execution_text),
+                            "title": "Environment",
+                            "value": "```{}```".format(self._imports.config['params']['environment']),
                             "short": False
                         },
                         {
-                            "title": "Environment",
-                            "value": "```{}```".format(self._imports.config['params']['environment']),
+                            "title": "Mode",
+                            "value": "```{}```".format(execution_text),
                             "short": False
                         },
                         {
@@ -399,8 +400,13 @@ class core:
                             "short": False
                         },
                         {
+                            "title": "Information",
+                            "value": "```{}```".format(logs_information),
+                            "short": False
+                        },
+                        {
                             "title": "Logs",
-                            "value": "```{}```".format(logs_path),
+                            "value": "```{}```".format(logs_results),
                             "short": False
                         },
                         {
@@ -425,12 +431,13 @@ class core:
 
         # Show Error Message
         if error is not None:
+            error = error[2:] if error.startswith('- ') else error
             error_data = {
                 "title": "Error",
                 "value": "```{}```".format(error),
                 "short": False
             }
-            webhook_data["attachments"][0]["fields"].insert(1, error_data)
+            webhook_data["attachments"][0]["fields"].insert(0, error_data)
 
         # Show the Webhook Response
         try:

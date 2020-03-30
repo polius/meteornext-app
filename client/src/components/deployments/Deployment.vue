@@ -259,7 +259,7 @@
                     </v-toolbar-items>
                   </v-toolbar>
                   <v-divider></v-divider>
-                  <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="query" :show-select="information_dialog_mode != 'parameters'" :hide-default-header="information_dialog_mode == 'parameters'" :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1">
+                  <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="id" :show-select="information_dialog_mode != 'parameters'" :hide-default-header="information_dialog_mode == 'parameters'" :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1">
                   </v-data-table>
                 </v-card>
 
@@ -1016,7 +1016,8 @@
         // Build parameters
         const path = '/deployments/' + this.deployment['mode'].toLowerCase() +  '/start'
         const payload = {
-          execution_id: this.deployment['execution_id']
+          execution_id: this.deployment['execution_id'],
+          url: window.location.protocol + '//' + window.location.host
         }
         axios.post(path, payload)
         .then((response) => {
@@ -1113,7 +1114,8 @@
           mode: this.deployment['mode'].toUpperCase(),
           method: this.information_dialog_data.method.toUpperCase(),
           scheduled: '',
-          start_execution: false
+          start_execution: false,
+          url: window.location.protocol + '//' + window.location.host
         }
         if (this.schedule_enabled) payload['scheduled'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm") + ':00'
         else payload['start_execution'] = (this.information_dialog_data.start_execution === undefined) ? false : this.information_dialog_data.start_execution
@@ -1189,33 +1191,34 @@
           this.notification('Please fill the required fields', 'error')
           return
         }
-        // Check if new item already exists
-        for (var i = 0; i < this.information_dialog_data.queries.length; ++i) {
-          if (this.information_dialog_data.queries[i]['query'] == this.query_dialog_item) {
-            this.notification('Query currently exists', 'error')
-            return
-          }
+
+        // Parse Queries
+        var queries = this.parseQueriesFormat()
+
+        // Add queries into the data table
+        for (var q = 0; q < queries.length; ++q) {
+          if (queries[q]['query'] != ';') this.information_dialog_data.queries.push(queries[q])
         }
-        // Add item in the data table
-        this.information_dialog_data.queries.push({'query': this.query_dialog_item})
+
+        // Post-tasks
         this.information_dialog_query_selected = []
         this.query_dialog = false
         this.notification('Query added successfully', '#00b16a')
       },
       editQueryConfirm() {
+        // Parse Queries
+        if (this.parseQueriesFormat().length > 1) {
+          this.notification('Multiple queries detected', 'error')
+          return
+        }
+
         // Get Item Position
         for (var i = 0; i < this.information_dialog_data.queries.length; ++i) {
-          if (this.information_dialog_data.queries[i]['query'] == this.information_dialog_query_selected[0]['query']) break
+          if (this.information_dialog_data.queries[i]['id'] == this.information_dialog_query_selected[0]['id']) break
         }
-        // Check if edited item already exists
-        for (var j = 0; j < this.information_dialog_data.queries.length; ++j) {
-          if (this.information_dialog_data.queries[j]['query'] == this.query_dialog_item && this.query_dialog_item != this.information_dialog_query_selected[0]['query']) {
-            this.notification('Query currently exists', 'error')
-            return
-          }
-        }
+
         // Edit item in the data table
-        this.information_dialog_data.queries.splice(i, 1, {'query': this.query_dialog_item})
+        this.information_dialog_data.queries.splice(i, 1, {"id": this.query_dialog_item[i]['id'], "query": this.query_dialog_item})
         this.information_dialog_query_selected = []
         this.query_dialog = false
         this.notification('Query edited successfully', '#00b16a')
@@ -1224,7 +1227,7 @@
         while(this.information_dialog_query_selected.length > 0) {
           var s = this.information_dialog_query_selected.pop()
           for (var i = 0; i < this.information_dialog_data.queries.length; ++i) {
-            if (this.information_dialog_data.queries[i]['query'] == s['query']) {
+            if (this.information_dialog_data.queries[i]['id'] == s['id']) {
               // Delete Item
               this.information_dialog_data.queries.splice(i, 1)
               break
@@ -1233,6 +1236,31 @@
         }
         this.notification('Selected queries removed successfully', '#00b16a')
         this.query_dialog = false
+      },
+      parseQueriesFormat() {
+        // Build multi-queries
+        var id = (this.information_dialog_data.queries.length == 0) ? 1: this.information_dialog_data.queries[this.information_dialog_data.queries.length-1]['id']+1
+        var queries = []
+        var start = 0;
+        var chars = []
+        for (var i = 0; i < this.query_dialog_item.length; ++i) {
+          if (this.query_dialog_item[i] == ';' && chars.length == 0) {
+            queries.push({"id": id, "query": this.query_dialog_item.substring(start, i+1).trim()})
+            id += 1
+            start = i+1
+          }
+          else if (this.query_dialog_item[i] == "\"") {
+            if (chars[chars.length-1] == '"') chars.pop()
+            else chars.push("\"")
+          }
+          else if (this.query_dialog_item[i] == "'") {
+            if (chars[chars.length-1] == "'") chars.pop()
+            else chars.push("'")
+          }
+        }
+        if (start < i) queries.push({"id": id, "query": this.query_dialog_item.substring(start, i).trim()})
+        // Return parsed queries
+        return queries
       },
       // -------------------------------------
       // SHARE RESULTS

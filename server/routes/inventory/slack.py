@@ -59,7 +59,7 @@ class Slack:
             webhook_data = {
                 "attachments": [
                     {
-                        "text": "This is a test message.",
+                        "text": "Yay, It works!",
                         "color": 'good',
                         "ts": calendar.timegm(time.gmtime())
                     }

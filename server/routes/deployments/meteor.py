@@ -190,7 +190,8 @@ class Meteor:
             "user": deployment['user'],
             "threads": deployment['execution_threads'],
             "limit": deployment['execution_limit'],
-            "environment": deployment['environment']
+            "environment": deployment['environment'],
+            "url": deployment['url']
         }
 
         # Store Config
