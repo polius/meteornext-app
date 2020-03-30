@@ -361,14 +361,7 @@ class core:
         overall_time = str(timedelta(seconds=time.time() - self._start_time))
 
         if summary is not None:
-            # Total Queries
             summary_msg = "- Total Queries: {}".format(summary['total_queries'])
-
-            if self._args.test:
-                summary_msg += "\n+------+\n| TEST |\n+------+"
-            elif self._args.deploy:
-                summary_msg += "\n+------------+\n| DEPLOYMENT |\n+------------+"
-
             queries_succeeded_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_success']) / float(summary['total_queries']) * 100, 2)
             summary_msg += "\n- Queries Succeeded: {0} (~{1}%)".format(summary['meteor_query_success'], float(queries_succeeded_value))
             queries_failed_value = 0 if summary['total_queries'] == 0 else round(float(summary['meteor_query_error']) / float(summary['total_queries']) * 100, 2)
