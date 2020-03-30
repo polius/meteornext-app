@@ -316,7 +316,8 @@ export default {
         code: this.code,
         method: this.method.toUpperCase(),
         scheduled: '',
-        start_execution: false
+        start_execution: false,
+        url: window.location.protocol + '//' + window.location.host
       }
       if (this.schedule_enabled) payload['scheduled'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm") + ':00'
       else payload['start_execution'] = this.start_execution

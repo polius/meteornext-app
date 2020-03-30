@@ -287,7 +287,7 @@ export default {
 
       // Get Item Position
       for (var i = 0; i < this.query_items.length; ++i) {
-        if (this.query_items[i]['query'] == this.query_selected[0]['query']) break
+        if (this.query_items[i]['id'] == this.query_selected[0]['id']) break
       }
 
       // Edit item in the data table
@@ -300,7 +300,7 @@ export default {
       while(this.query_selected.length > 0) {
         var s = this.query_selected.pop()
         for (var i = 0; i < this.query_items.length; ++i) {
-          if (this.query_items[i]['query'] == s['query']) {
+          if (this.query_items[i]['id'] == s['id']) {
             // Delete Item
             this.query_items.splice(i, 1)
             break
@@ -355,7 +355,8 @@ export default {
         queries: JSON.stringify(this.query_items),
         method: this.method.toUpperCase(),
         scheduled: '',
-        start_execution: false
+        start_execution: false,
+        url: window.location.protocol + '//' + window.location.host
       }
       if (this.schedule_enabled) payload['scheduled'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm") + ':00'
       else payload['start_execution'] = this.start_execution

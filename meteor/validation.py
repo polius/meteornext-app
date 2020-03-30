@@ -67,7 +67,7 @@ class validation:
 
             # Check validation errors
             if error:
-                error_msg = "- Regions Not Passed the Environment Validation."
+                error_msg = "- Regions Not Passed the Environment Validation"
                 self._progress.error(error_msg[2:])
                 raise Exception(error_msg)
             

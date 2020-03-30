@@ -414,6 +414,7 @@ class Pro:
         deployment['execution_limit'] = group['deployments_execution_limit']
         deployment['mode'] = 'PRO'
         deployment['user'] = user['username']
+        deployment['url'] = data['url']
 
         # Update Execution Status
         status = 'STARTING' if not group['deployments_execution_concurrent'] else 'QUEUED'
