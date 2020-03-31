@@ -96,6 +96,11 @@ CREATE TABLE `servers` (
   `port` INT UNSIGNED NOT NULL,
   `username` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `aws_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+  `aws_instance_identifier` VARCHAR(191) NULL,
+  `aws_region` VARCHAR(191) NULL,
+  `aws_access_key_id` VARCHAR(191) NULL,
+  `aws_secret_access_key` VARCHAR(191) NULL,
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,
@@ -293,3 +298,17 @@ CREATE TABLE `notifications` (
   KEY `user_id` (`user_id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `monitoring` (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  server_id INT UNSIGNED NOT NULL,
+  db_connections INT UNSIGNED NULL,
+  queries INT UNSIGNED NULL,
+  cpu_utilization DOUBLE NULL,
+  freeable_memory INT UNSIGNED NULL,
+  network_receive_throughput DOUBLE NULL,
+  network_transmit_throughput DOUBLE NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE `server_id` (`server_id`),
+  FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
+);

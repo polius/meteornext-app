@@ -23,13 +23,13 @@ class Servers:
 
     def post(self, user_id, group_id, server):
         query = """
-            INSERT INTO servers (name, region_id, hostname, port, username, password, created_by, created_at)             
-            SELECT %s, id, %s, %s, %s, %s, %s, %s
+            INSERT INTO servers (name, region_id, hostname, port, username, password, aws_enabled, aws_instance_identifier, aws_region, aws_access_key_id, aws_secret_access_key, created_by, created_at)             
+            SELECT %s, id, %s, %s, %s, %s, %s, IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), %s, %s
             FROM regions
             WHERE group_id = %s
             AND name = %s
         """
-        self._sql.execute(query, (server['name'], server['hostname'], server['port'], server['username'], server['password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, server['region']))
+        self._sql.execute(query, (server['name'], server['hostname'], server['port'], server['username'], server['password'], server['aws_enabled'], server['aws_instance_identifier'], server['aws_instance_identifier'], server['aws_region'], server['aws_region'], server['aws_access_key_id'], server['aws_access_key_id'], server['aws_secret_access_key'], server['aws_secret_access_key'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, server['region']))
 
     def put(self, user_id, group_id, server):
         query = """
@@ -41,11 +41,16 @@ class Servers:
                 servers.port = %s,
                 servers.username = %s,
                 servers.password = %s,
+                servers.aws_enabled = %s,
+                servers.aws_instance_identifier = IF(%s = '', NULL, %s),
+                servers.aws_region = IF(%s = '', NULL, %s),
+                servers.aws_access_key_id = IF(%s = '', NULL, %s),
+                servers.aws_secret_access_key = IF(%s = '', NULL, %s),
                 servers.updated_by = %s,
                 servers.updated_at = %s
             WHERE servers.id = %s
         """
-        self._sql.execute(query, (server['region_id'], group_id, server['name'], group_id, server['region'], server['hostname'], server['port'], server['username'], server['password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
+        self._sql.execute(query, (server['region_id'], group_id, server['name'], group_id, server['region'], server['hostname'], server['port'], server['username'], server['password'], server['aws_enabled'], server['aws_instance_identifier'], server['aws_instance_identifier'], server['aws_region'], server['aws_region'], server['aws_access_key_id'], server['aws_access_key_id'], server['aws_secret_access_key'], server['aws_secret_access_key'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
     def delete(self, group_id, server_id):
         # Delete from 'environment_servers'

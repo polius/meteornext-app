@@ -12,6 +12,10 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
+        <template v-slot:item.aws_enabled="props">
+          <v-icon v-if="props.item.aws_enabled" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
+          <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>
+        </template>
       </v-data-table>
     </v-card>
 
@@ -35,6 +39,13 @@
                   <v-text-field v-model="item.port" :rules="[v => v == parseInt(v) || '']" label="Port" required style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
                   <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;" append-icon="person"></v-text-field>
                   <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
+                  <!-- MONITOR -->
+                  <div class="title font-weight-regular" style="margin-top:20px;">MONITOR</div>
+                  <v-switch v-model="item.aws_enabled" label="Enable AWS Monitor" color="info" hide-details style="margin-top:10px;"></v-switch>
+                  <v-text-field v-if="item.aws_enabled" v-model="item.aws_instance_identifier" :rules="[v => !!v || '']" label="DB Instance Identifier" style="margin-top:15px;" required append-icon="fas fa-database"></v-text-field>
+                  <v-select v-if="item.aws_enabled" v-model="item.aws_region" :items="aws_regions" item-value="code" item-text="name" label="Instance Region" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"  append-icon="fas fa-globe-europe"></v-select>
+                  <v-text-field v-if="item.aws_enabled" v-model="item.aws_access_key_id" :rules="[v => !!v || '']" label="Access Key ID" required style="padding-top:0px;" append-icon="fas fa-id-badge"></v-text-field>
+                  <v-text-field v-if="item.aws_enabled" v-model="item.aws_secret_access_key" :rules="[v => !!v || '']" label="Secret Access Key" required style="padding-top:0px;" hide-details append-icon="fas fa-key"></v-text-field>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected servers?</div>
                 <v-divider></v-divider>
@@ -69,15 +80,36 @@ export default {
       { text: 'Hostname', align: 'left', value: 'hostname'},
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
-      { text: 'Password', align: 'left', value: 'password'}
+      { text: 'Password', align: 'left', value: 'password'},
+      { text: 'Monitoring', align: 'left', value: 'aws_enabled'}
     ],
     items: [],
     selected: [],
     search: '',
-    item: { name: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' },
+    item: { name: '', region: '', engine: '', hostname: '', port: '', username: '', password: '', aws_enabled: 0, aws_instance_identifier: '', aws_region: '', aws_access_key_id: '', aws_secret_access_key: '' },
     mode: '',
     loading: true,
     engines_items: ['MySQL', 'PostgreSQL'],
+    aws_regions: [
+      { code: 'us-east-1', name: 'US East (N. Virginia)' },
+      { code: 'us-east-2', name: 'US East (Ohio)' },
+      { code: 'us-west-1', name: 'US West (N. California)' },
+      { code: 'us-west-2', name: 'US West (Oregon)' },
+      { code: 'ap-east-1', name: 'Asia Pacific (Hong Kong)' },
+      { code: 'ap-south-1', name: 'Asia Pacific (Mumbai)' },
+      { code: 'ap-northeast-2', name: 'Asia Pacific (Seoul)' },
+      { code: 'ap-southeast-1', name: 'Asia Pacific (Singapore)' },
+      { code: 'ap-southeast-2', name: 'Asia Pacific (Sydney)' },
+      { code: 'ap-northeast-1', name: 'Asia Pacific (Tokyo)' },
+      { code: 'ca-central-1', name: 'Canada (Central)' },
+      { code: 'eu-central-1', name: 'Europe (Frankfurt)' },
+      { code: 'eu-west-1', name: 'Europe (Ireland)' },
+      { code: 'eu-west-2', name: 'Europe (London)' },
+      { code: 'eu-west-3', name: 'Europe (Paris)' },
+      { code: 'eu-north-1', name: 'Europe (Stockholm)' },
+      { code: 'me-south-1', name: 'Middle East (Bahrain)' },
+      { code: 'sa-east-1', name: 'South America (São Paulo)' }
+    ],
     // Dialog: Item
     dialog: false,
     dialog_title: '',
@@ -125,7 +157,7 @@ export default {
     },
     newServer() {
       this.mode = 'new'
-      this.item = { name: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' }
+      this.item = { name: '', region: '', engine: '', hostname: '', port: '', username: '', password: '', aws_enabled: 0, aws_instance_identifier: '', aws_region: '', aws_access_key_id: '', aws_secret_access_key: '' }
       this.dialog_title = 'New Server'
       this.dialog = true
     },
