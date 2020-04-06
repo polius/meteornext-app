@@ -398,7 +398,7 @@ class core:
                             "short": False
                         },
                         {
-                            "title": "Logs",
+                            "title": "Results",
                             "value": "```{}```".format(logs_results),
                             "short": False
                         },

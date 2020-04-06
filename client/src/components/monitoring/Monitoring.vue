@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-layout style="margin-left:8px; margin-right:8px;">
-      <v-flex xs3 v-for="item in links" :key="item.id" style="margin:5px;">
+      <v-flex xs3 v-for="item in links" :key="item.id" style="margin:5px; cursor:pointer;" @click="monitor(item)">
         <v-hover>
           <v-card slot-scope="{ hover }" :class="`elevation-${hover ? 12 : 2}`">
             <v-img height="10px" :class="item.color"></v-img>
@@ -34,6 +34,12 @@
           { id: '3', title: 'Templates JP', region: 'AWS-JP', color: 'orange' },
           { id: '4', title: 'Aurora Apps', region: 'AWS-EU', color: 'teal' }      
         ]
+      }
+    },
+    methods: {
+      monitor(item) {
+        this.$router.push({ name:'monitor', params: { id: item.id }})
+        console.log(item)
       }
     }
   }

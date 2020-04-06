@@ -143,6 +143,12 @@ let router = new VueRouter({
           meta: { requiresMonitoring: true }
         },
         {
+          path: 'parameters',
+          name: 'monitoring.parameters',
+          component: () => import('../components/monitoring/views/Parameters'),
+          meta: { requiresMonitoring: true }
+        },
+        {
           path: 'processlist',
           name: 'monitoring.processlist',
           component: () => import('../components/monitoring/views/Processlist'),
@@ -152,6 +158,19 @@ let router = new VueRouter({
           path: 'queries',
           name: 'monitoring.queries',
           component: () => import('../components/monitoring/views/Queries'),
+          meta: { requiresMonitoring: true }
+        }
+      ]
+    },
+    {
+      path: '/monitor',
+      component: () => import('../components/monitoring/Navigation'),
+      meta: { requiresMonitoring: true },
+      children: [
+        {
+          path: ':id',
+          name: 'monitor',
+          component: () => import('../components/monitoring/Monitor'),
           meta: { requiresMonitoring: true }
         }
       ]
