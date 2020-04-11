@@ -4,6 +4,9 @@
       <v-toolbar flat color="primary">
         <v-toolbar-title class="white--text">PARAMETERS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
+        <v-toolbar-items class="hidden-sm-and-down">
+          <v-btn text title="Settings" ><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+        </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :hide-default-footer="items.length < 11" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
