@@ -1,8 +1,8 @@
 <template>
   <div>
     <v-card>
-      <v-toolbar flat color="primary">
-        <v-toolbar-title class="white--text">RELEASES</v-toolbar-title>
+      <v-toolbar dense flat color="primary">
+        <v-toolbar-title class="white--text subtitle-1 font-weight-medium">RELEASES</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="selected.length == 0" text @click='newRelease()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>

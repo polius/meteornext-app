@@ -2,10 +2,10 @@
   <div>
     <v-card style="margin-bottom:15px;">
       <v-toolbar dense flat color="primary">
-        <v-toolbar-title class="white--text">PROCESSLIST</v-toolbar-title>
+        <v-toolbar-title class="white--text subtitle-1">PROCESSLIST</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text title="Settings" ><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+          <v-btn text title="Settings" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
         </v-toolbar-items>
         <v-spacer></v-spacer>
         <div class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>

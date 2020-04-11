@@ -1,8 +1,8 @@
 <template>
   <div>
     <v-card>
-      <v-toolbar flat color="primary">
-        <v-toolbar-title>{{ this.title }}</v-toolbar-title>
+      <v-toolbar dense flat color="primary">
+        <v-toolbar-title class="subtitle-1 font-weight-medium">{{ this.title }}</v-toolbar-title>
         <v-divider v-if="route == 'new'" class="mx-3" inset vertical></v-divider>
         <div v-if="route == 'new'">
           <v-btn v-if="deployments_basic" :color="basicColor" @click="basic()" style="margin-right:10px;">Basic</v-btn>
