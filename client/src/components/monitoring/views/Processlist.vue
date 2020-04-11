@@ -1,6 +1,18 @@
 <template>
   <div>
     <v-card style="margin-bottom:15px;">
+      <v-toolbar dense flat color="primary">
+        <v-toolbar-title class="white--text">PROCESSLIST</v-toolbar-title>
+        <v-divider class="mx-3" inset vertical></v-divider>
+        <v-toolbar-items class="hidden-sm-and-down">
+          <v-btn text title="Settings" ><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+        </v-toolbar-items>
+        <v-spacer></v-spacer>
+        <div class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
+      </v-toolbar>
+    </v-card>
+
+    <v-card style="margin-bottom:15px;">
       <v-toolbar flat dense color="#263238">
         <v-toolbar-title class="subtitle-1">Templates EU</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
@@ -29,9 +41,11 @@
 
 <script>
 // import axios from 'axios'
+import moment from 'moment'
 
 export default {
   data: () => ({
+    last_updated: '2020-01-01 20:12:23',
     // Data Table
     headers: [
         { text: 'Id', align: 'left', value: 'id' },
@@ -66,6 +80,10 @@ export default {
     //       if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
     //       else this.notification(error.response.data.message, 'error')
     //     })
+    },
+    dateFormat(date) {
+      if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
+      return date
     },
     notification(message, color) {
       this.snackbarText = message
