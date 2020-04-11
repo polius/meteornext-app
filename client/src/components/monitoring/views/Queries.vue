@@ -1,6 +1,5 @@
 <template>
   <div>
-
     <v-card>
       <v-toolbar flat color="primary">
         <v-toolbar-title class="white--text">QUERIES</v-toolbar-title>
