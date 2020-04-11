@@ -1,30 +1,13 @@
 <template>
   <div>
-    <v-toolbar dark color="primary">
-      <v-toolbar-title class="white--text">QUERIES</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <div class="subheadline">Updated: <b>2019-07-22 10:22:05</b></div>
-    </v-toolbar>
 
     <v-card>
-      <v-card-title style="padding-top:0px">
-        <v-text-field v-model="search" append-icon="search" label="Search" single-line hide-details></v-text-field>
-      </v-card-title>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" item-key="id" class="elevation-1">
-        <template v-slot:items="props">
-          <td>{{ props.item.query }}</td>
-          <td>{{ props.item.database }}</td>
-          <td>{{ props.item.server }}</td>
-          <td>{{ props.item.user }}</td>
-          <td>{{ props.item.host }}</td>
-          <td>{{ props.item.seen }}</td>
-          <td>{{ props.item.time }}</td>
-        </template>
-        <template v-slot:no-results>
-          <v-alert :value="true" color="error" icon="warning">
-            Your search for "{{ search }}" found no results.
-          </v-alert>
-        </template>
+      <v-toolbar flat color="primary">
+        <v-toolbar-title class="white--text">QUERIES</v-toolbar-title>
+        <v-divider class="mx-3" inset vertical></v-divider>
+        <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
+      </v-toolbar>
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :hide-default-footer="items.length < 11" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
       </v-data-table>
     </v-card>
 

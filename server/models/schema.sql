@@ -193,6 +193,7 @@ CREATE TABLE `deployments_basic` (
  `pid` INT UNSIGNED NULL,
  `progress` TEXT NULL,
  `error` TINYINT(1) NULL,
+ `url` VARCHAR(191) NULL,
  `uri` VARCHAR(191) NULL,
  `engine` VARCHAR(191) NULL,
  `public` TINYINT(1) NOT NULL DEFAULT 0,
@@ -222,6 +223,7 @@ CREATE TABLE `deployments_pro` (
  `pid` INT UNSIGNED NULL,
  `progress` TEXT NULL,
  `error` TINYINT(1) NULL,
+ `url` VARCHAR(191) NULL,
  `uri` VARCHAR(191) NULL,
  `engine` VARCHAR(191) NULL,
  `public` TINYINT(1) NOT NULL DEFAULT 0,
@@ -254,6 +256,7 @@ CREATE TABLE `deployments_inbenta` (
  `pid` INT UNSIGNED NULL,
  `progress` TEXT NULL,
  `error` TINYINT(1) NULL,
+ `url` VARCHAR(191) NULL,
  `uri` VARCHAR(191) NULL,
  `engine` VARCHAR(191) NULL,
  `public` TINYINT(1) NOT NULL DEFAULT 0,
@@ -300,15 +303,10 @@ CREATE TABLE `notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `monitoring` (
-  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   server_id INT UNSIGNED NOT NULL,
-  db_connections INT UNSIGNED NULL,
-  queries INT UNSIGNED NULL,
-  cpu_utilization DOUBLE NULL,
-  freeable_memory INT UNSIGNED NULL,
-  network_receive_throughput DOUBLE NULL,
-  network_transmit_throughput DOUBLE NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE `server_id` (`server_id`),
+  summary TEXT NULL,
+  parameters TEXT NULL,
+  processlist TEXT NULL,
+  PRIMARY KEY (`server_id`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
 );

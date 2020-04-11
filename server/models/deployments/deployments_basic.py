@@ -8,7 +8,7 @@ class Deployments_Basic:
 
     def get(self, execution_id):
         query = """
-            SELECT d.id, b.id AS 'execution_id', 'BASIC' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', b.databases, b.queries, b.method, b.status, q.queue, b.created, b.scheduled, b.started, b.ended, CONCAT(TIMEDIFF(b.ended, b.started)) AS 'overall', b.error, b.progress, b.uri, b.engine, b.public
+            SELECT d.id, b.id AS 'execution_id', 'BASIC' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', b.databases, b.queries, b.method, b.status, q.queue, b.created, b.scheduled, b.started, b.ended, CONCAT(TIMEDIFF(b.ended, b.started)) AS 'overall', b.error, b.progress, b.url, b.uri, b.engine, b.public
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id
             JOIN releases r ON r.id = d.release_id
@@ -26,13 +26,13 @@ class Deployments_Basic:
 
     def post(self, deployment):
         query = """
-            INSERT INTO deployments_basic (deployment_id, environment_id, `databases`, queries, method, `status`, created, scheduled)
-            SELECT %s, e.id, %s, %s, %s, %s, %s, IF(%s = '', NULL, %s)
+            INSERT INTO deployments_basic (deployment_id, environment_id, `databases`, queries, method, `status`, created, scheduled, url)
+            SELECT %s, e.id, %s, %s, %s, %s, %s, IF(%s = '', NULL, %s), %s
             FROM environments e
             WHERE e.name = %s
             AND e.group_id = %s
         """
-        return self._sql.execute(query, (deployment['id'], deployment['databases'], str(deployment['queries']), deployment['method'], deployment['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), deployment['scheduled'], deployment['scheduled'], deployment['environment'], deployment['group_id']))
+        return self._sql.execute(query, (deployment['id'], deployment['databases'], str(deployment['queries']), deployment['method'], deployment['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), deployment['scheduled'], deployment['scheduled'], deployment['url'], deployment['environment'], deployment['group_id']))
 
     def put(self, deployment):
         query = """
@@ -105,7 +105,7 @@ class Deployments_Basic:
 
     def getExecutionsN(self, execution_ids):
         query = """
-            SELECT b.id AS 'execution_id', 'BASIC' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', b.databases, b.queries, b.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit'
+            SELECT b.id AS 'execution_id', 'BASIC' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', b.databases, b.queries, b.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit', b.url
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id
             JOIN environments e ON e.id = b.environment_id

@@ -234,7 +234,6 @@ class Basic:
         return jsonify({'deployment': deployment, 'environments': environments}), 200
 
     def __post(self, user, data):
-        print(data)
         # Check Coins
         group = self._groups.get(group_id=user['group_id'])[0]
         if (user['coins'] - group['coins_execution']) < 0:
@@ -381,7 +380,6 @@ class Basic:
         deployment['execution_limit'] = group['deployments_execution_limit']
         deployment['mode'] = 'BASIC'
         deployment['user'] = user['username']
-        deployment['url'] = data['url']
 
         # Update Execution Status
         status = 'STARTING' if not group['deployments_execution_concurrent'] else 'QUEUED'
