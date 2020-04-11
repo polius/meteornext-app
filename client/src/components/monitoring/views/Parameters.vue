@@ -1,22 +1,12 @@
 <template>
   <div>
-    <v-card style="margin-bottom:15px;">
-      <v-toolbar flat dense color="#263238">
-        <v-toolbar-title class="subtitle-1">Templates EU</v-toolbar-title>
+    <v-card>
+      <v-toolbar flat color="primary">
+        <v-toolbar-title class="white--text">PARAMETERS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px; margin-bottom:2px;" single-line hide-details></v-text-field>
+        <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table :headers="headers" :items="items" :search="search" :hide-default-footer="items.length < 11" class="elevation-1" style="padding-top:3px;">
-      </v-data-table>
-    </v-card>
-
-    <v-card style="margin-bottom:15px;">
-      <v-toolbar flat dense color="#263238">
-        <v-toolbar-title class="subtitle-1">Templates US</v-toolbar-title>
-        <v-divider class="mx-3" inset vertical></v-divider>
-        <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px; margin-bottom:2px;" single-line hide-details></v-text-field>
-      </v-toolbar>
-      <v-data-table :headers="headers" :items="items" :search="search" :hide-default-footer="items.length < 11" class="elevation-1" style="padding-top:3px;">
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :hide-default-footer="items.length < 11" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
       </v-data-table>
     </v-card>
 
@@ -34,14 +24,10 @@ export default {
   data: () => ({
     // Data Table
     headers: [
-        { text: 'Id', align: 'left', value: 'id' },
-        { text: 'User', align: 'left', value: 'user' },
-        { text: 'Host', align: 'left', value: 'host' },
-        { text: 'db', align: 'left', value: 'db' },
-        { text: 'Command', align: 'left', value: 'command' },
-        { text: 'Time', align: 'left', value: 'time' },
-        { text: 'State', align: 'left', value: 'state' },
-        { text: 'Info', align: 'left', value: 'info' }
+      { text: 'Variables', align: 'left', value: 'variables' },
+      { text: 'Templates EU', align: 'left', value: '1' },
+      { text: 'Templates US', align: 'left', value: '2' },
+      { text: 'Templates JP', align: 'left', value: '3' }
     ],
     items: [],
     selected: [],

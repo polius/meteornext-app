@@ -8,7 +8,7 @@ class Deployments_Pro:
 
     def get(self, execution_id):
         query = """
-            SELECT d.id, p.id AS 'execution_id', 'PRO' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', p.code, p.method, p.status, q.queue, p.created, p.started, p.scheduled, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.uri, p.engine, p.public
+            SELECT d.id, p.id AS 'execution_id', 'PRO' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', p.code, p.method, p.status, q.queue, p.created, p.started, p.scheduled, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.url, p.uri, p.engine, p.public
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id
             JOIN releases r ON r.id = d.release_id
@@ -26,13 +26,13 @@ class Deployments_Pro:
 
     def post(self, deployment):
         query = """
-            INSERT INTO deployments_pro (deployment_id, environment_id, code, method, `status`, created, scheduled)
-            SELECT %s, e.id, %s, %s, %s, %s, IF(%s = '', NULL, %s)
+            INSERT INTO deployments_pro (deployment_id, environment_id, code, method, `status`, created, scheduled, url)
+            SELECT %s, e.id, %s, %s, %s, %s, IF(%s = '', NULL, %s), %s
             FROM environments e
             WHERE e.name = %s
             AND e.group_id = %s
         """
-        return self._sql.execute(query, (deployment['id'], deployment['code'], deployment['method'], deployment['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), deployment['scheduled'], deployment['scheduled'], deployment['environment'], deployment['group_id']))
+        return self._sql.execute(query, (deployment['id'], deployment['code'], deployment['method'], deployment['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), deployment['scheduled'], deployment['scheduled'], deployment['url'], deployment['environment'], deployment['group_id']))
 
     def put(self, deployment):
         query = """
@@ -104,7 +104,7 @@ class Deployments_Pro:
 
     def getExecutionsN(self, execution_ids):
         query = """
-            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, p.status, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit'
+            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, p.status, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit', p.url
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id
             JOIN environments e ON e.id = p.environment_id
