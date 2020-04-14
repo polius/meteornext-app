@@ -20,6 +20,7 @@ class Cron:
         schedule.every(10).seconds.do(self.__executions)
         schedule.every().day.at("00:00").do(self.__coins)
         schedule.every().day.at("00:00").do(self.__logs)
+        schedule.every(30).seconds.do(self.__monitoring)
 
         # Start Cron Listener
         t = threading.Thread(target=self.__run_schedule)
@@ -53,7 +54,6 @@ class Cron:
     def __coins(self):
         if not self._license.validated:
             return
-
         print("- Giving coins...")
         query = """
             UPDATE users u
@@ -65,7 +65,6 @@ class Cron:
     def __logs(self):
         if not self._license.validated:
             return
-
         print("- Cleaning logs...")
         # Get expiration value
         setting = self._sql.execute("SELECT value FROM settings WHERE name = 'LOGS'")
@@ -102,3 +101,6 @@ class Cron:
                         os.remove(execution_path + '.js')
                     # SQL
                     self._sql.execute("UPDATE deployments_{} SET expired = 1 WHERE id = {}".format(i['mode'], i['id']))
+
+    def __monitoring(self):
+        pass

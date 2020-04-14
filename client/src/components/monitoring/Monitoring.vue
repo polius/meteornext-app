@@ -6,6 +6,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text title="Settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+          <v-btn text title="Events" class="body-2"><v-icon small style="padding-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
         </v-toolbar-items>
         <v-spacer></v-spacer>
         <div class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
@@ -46,26 +47,24 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">                  
-                  <v-card v-if="mode!='delete'">
+                  <v-card>
                     <v-toolbar flat dense color="#2e3131">
                       <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
                       <v-divider class="mx-3" inset vertical></v-divider>
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
-                      <v-treeview :active.sync="treeviewSelected" item-key="id" open-all :items="treeviewItems" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
                       </v-treeview>
                     </v-card-text>
                   </v-card>
-
-                  <div style="padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected environments?</div>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="submitServers()">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="error" @click="settings_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                 </div>
               </v-flex>
@@ -78,12 +77,13 @@
 </template>
 
 <script>
-  // import axios from 'axios'
+  import axios from 'axios'
   import moment from 'moment'
 
   export default {
     data() {
       return {
+        loading: true,
         last_updated: '2020-01-01 20:12:23',
         links: [
           { id: '1', title: 'Templates EU', region: 'AWS-EU', color: 'teal' },
@@ -93,13 +93,54 @@
         ],
 
         // Settings Dialog
-        settings_dialog: false
+        settings_dialog: false,
+        treeviewItems: [],
+        treeviewSelected: [],
+        treeviewSearch: ''
       }
+    },
+    created() {
+      this.getServers()
     },
     methods: {
       monitor(item) {
         this.$router.push({ name:'monitor', params: { id: item.id }})
-        console.log(item)
+      },
+      getServers() {
+        axios.get('/monitoring/servers')
+          .then((response) => {
+            this.parseTreeView(response.data.servers)
+            this.loading = false
+          })
+          .catch((error) => {
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message, 'error')
+          })
+      },
+      parseTreeView(servers) {
+        var data = []
+        var selected = []
+        if (servers.length == 0) return data
+
+        // Parse Servers
+        var current_region = null
+        for (let i = 0; i < servers.length; ++i) {
+          if (servers[i]['region_id'] != current_region) {
+            data.push({ id: servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'] }] })
+            current_region = servers[i]['region_id']
+          } else {
+            let row = data.pop()
+            row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'] })
+            data.push(row)
+          }
+          // Check selected
+          if (servers[i]['selected']) selected.push(servers[i]['server_id'])
+        }
+        this.treeviewItems = data
+        this.treeviewSelected = selected
+      },
+      submitServers() {
+        console.log(this.treeviewSelected)
       },
       dateFormat(date) {
         if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
