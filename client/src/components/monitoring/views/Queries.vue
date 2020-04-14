@@ -2,7 +2,7 @@
   <div>
     <v-card>
       <v-toolbar dense flat color="primary">
-        <v-toolbar-title class="white--text subtitle-1 font-weight-medium">QUERIES</v-toolbar-title>
+        <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text title="Settings" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>

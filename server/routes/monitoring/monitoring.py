@@ -16,7 +16,7 @@ class Monitoring:
         # Init blueprint
         monitoring_blueprint = Blueprint('monitoring', __name__, template_folder='monitoring')
 
-        @monitoring_blueprint.route('/monitoring/monitoring', methods=['GET','POST','PUT','DELETE'])
+        @monitoring_blueprint.route('/monitoring', methods=['GET','PUT'])
         @jwt_required
         def monitoring_method():
             # Check license
@@ -27,7 +27,7 @@ class Monitoring:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['inventory_enabled']:
+            if not user['monitoring_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -39,6 +39,44 @@ class Monitoring:
                 return self.post(user['id'], user['group_id'], monitoring_json)
             elif request.method == 'PUT':
                 return self.put(user['id'], user['group_id'], monitoring_json)
+        
+        @monitoring_blueprint.route('/monitoring/servers', methods=['GET'])
+        @jwt_required
+        def monitoring_servers_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['monitoring_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            monitoring_json = request.get_json()
+
+            return jsonify({'servers': self._monitoring.get_servers(user['group_id'])}), 200
+
+        @monitoring_blueprint.route('/monitoring/processlist', methods=['GET'])
+        @jwt_required
+        def monitoring_processlist_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['monitoring_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            monitoring_json = request.get_json()
+
+            # return jsonify({'servers': self._monitoring.get_servers(user['group_id'])}), 200
 
         return monitoring_blueprint
 

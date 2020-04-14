@@ -2,12 +2,12 @@
   <div>
     <v-card>
       <v-toolbar dense flat color="primary">
-        <v-toolbar-title class="white--text subtitle-1 font-weight-medium">SERVERS</v-toolbar-title>
+        <v-toolbar-title class="white--text subtitle-1">SERVERS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text @click="newServer()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editServer()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn v-if="selected.length > 0" text @click="deleteServer()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn text @click="newServer()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="editServer()" class="body-2"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn v-if="selected.length > 0" text @click="deleteServer()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
