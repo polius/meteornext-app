@@ -268,6 +268,9 @@ class License:
         # Check if first time
         if not self._license_status:
             self.__check()
+        # Check again if license server is unreachable
+        elif self._license_status['code'] == 404:
+            self.__check()
         # Check license if time was changed
         elif current_utc <= self._last_login_date or current_utc <= self._license_status['date']:
             self.__check()
@@ -304,8 +307,8 @@ class License:
 
             self._license_status = {"code": response_code, "response": response_text, "date": date, "expiration": expiration}
         except Exception:
-            self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established", "date": date, "expiration": expiration}
-        finally:
+            self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}
+        else:
             minutes = self._license_timeout if self._license_status['code'] == 200 else 1
             self._next_check = str(datetime.utcnow() + timedelta(minutes=minutes))
             self._next_check2 = str(datetime.strptime(self._license_status['date'], '%Y-%m-%d %H:%M:%S.%f') + timedelta(minutes=minutes))

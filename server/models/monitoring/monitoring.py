@@ -13,10 +13,35 @@ class Monitoring:
         """
         return self._sql.execute(query, (group_id))
 
-    # def post(self, group_id, se):
-    #     query = """
-    #         INSERT INTO monitoring (server_id)
-    #     """
+    def put(self, group_id, data):
+        if len(data) == 0:
+            query = """
+                DELETE m
+                FROM monitoring m
+                JOIN servers s ON s.id = m.server_id
+                JOIN regions r ON r.id = s.region_id AND r.group_id = %s 
+            """
+            self._sql.execute(query, (group_id))
+        else:
+            query = """
+                DELETE m
+                FROM monitoring m
+                JOIN servers s ON s.id = m.server_id
+                JOIN regions r ON r.id = s.region_id
+                WHERE r.group_id = {}
+                AND server_id NOT IN ({}) 
+            """.format(group_id, ','.join(['%s'] * len(data)))
+            self._sql.execute(query, (data))
+            
+            for i in data:
+                query = """
+                    INSERT IGNORE INTO monitoring (server_id)
+                    SELECT s.id
+                    FROM servers s
+                    JOIN regions r ON r.id = s.region_id
+                    WHERE s.id = %s;
+                """
+                self._sql.execute(query, (i))
 
     def get_servers(self, group_id):
         query = """

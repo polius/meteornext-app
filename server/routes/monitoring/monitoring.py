@@ -40,7 +40,7 @@ class Monitoring:
             elif request.method == 'PUT':
                 return self.put(user['id'], user['group_id'], monitoring_json)
         
-        @monitoring_blueprint.route('/monitoring/servers', methods=['GET'])
+        @monitoring_blueprint.route('/monitoring/servers', methods=['GET','PUT'])
         @jwt_required
         def monitoring_servers_method():
             # Check license
@@ -57,7 +57,11 @@ class Monitoring:
             # Get Request Json
             monitoring_json = request.get_json()
 
-            return jsonify({'servers': self._monitoring.get_servers(user['group_id'])}), 200
+            if request.method == 'GET':
+                return jsonify({'servers': self._monitoring.get_servers(user['group_id'])}), 200
+            elif request.method == 'PUT':
+                self._monitoring.put(user['group_id'], monitoring_json)
+                return jsonify({'message': 'Settings saved'}), 200
 
         @monitoring_blueprint.route('/monitoring/processlist', methods=['GET'])
         @jwt_required
@@ -89,7 +93,3 @@ class Monitoring:
     def post(self, user_id, group_id, data):
         self._monitoring.post(user_id, group_id, data)
         return jsonify({'message': 'Monitoring configuration added successfully'}), 200
-
-    def put(self, user_id, group_id, data):
-        self._monitoring.put(user_id, group_id, data)
-        return jsonify({'message': 'Monitoring configuration edited successfully'}), 200

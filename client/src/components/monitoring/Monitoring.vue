@@ -54,7 +54,7 @@
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
-                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -73,6 +73,10 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+      {{ snackbarText }}
+      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+    </v-snackbar>
   </div>
 </template>
 
@@ -96,7 +100,14 @@
         settings_dialog: false,
         treeviewItems: [],
         treeviewSelected: [],
-        treeviewSearch: ''
+        treeviewOpened: [],
+        treeviewSearch: '',
+
+        // Snackbar
+        snackbar: false,
+        snackbarTimeout: Number(3000),
+        snackbarColor: '',
+        snackbarText: ''
       }
     },
     created() {
@@ -120,31 +131,72 @@
       parseTreeView(servers) {
         var data = []
         var selected = []
+        var opened = []
         if (servers.length == 0) return data
 
         // Parse Servers
         var current_region = null
         for (let i = 0; i < servers.length; ++i) {
-          if (servers[i]['region_id'] != current_region) {
-            data.push({ id: servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'] }] })
-            current_region = servers[i]['region_id']
+          if ('r' + servers[i]['region_id'] != current_region) {
+            data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'] }] })
+            current_region = 'r' + servers[i]['region_id']
           } else {
             let row = data.pop()
             row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'] })
             data.push(row)
           }
           // Check selected
-          if (servers[i]['selected']) selected.push(servers[i]['server_id'])
+          if (servers[i]['selected']) {
+            selected.push(servers[i]['server_id'])
+            opened.push('r' + servers[i]['region_id'])
+          }
         }
         this.treeviewItems = data
         this.treeviewSelected = selected
+        this.treeviewOpened = opened
       },
       submitServers() {
-        console.log(this.treeviewSelected)
+        this.loading = true
+        const payload = JSON.stringify(this.treeviewSelected)
+        axios.put('/monitoring/servers', payload)
+          .then((response) => {
+            this.refreshTreeView()
+            this.notification(response.data.message, '#00b16a')
+            this.settings_dialog = false
+          })
+          .catch((error) => {
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message, 'error')
+          })
+          .finally(() => {
+            this.loading = false
+          })
+      },
+      refreshTreeView() {
+        var opened = []
+        for (let i = 0; i < this.treeviewSelected.length; ++i) {
+          let found = false
+          for (let j = 0; j < this.treeviewItems.length; ++j) {
+            for (let k = 0; k < this.treeviewItems[j]['children'].length; ++k) {
+              if (this.treeviewItems[j]['children'][k]['id'] == this.treeviewSelected[i]) {
+                if (!opened.includes(this.treeviewItems[j]['id'])) opened.push(this.treeviewItems[j]['id'])
+                found = true
+                break
+              }
+            }
+            if (found) break
+          }
+        }
+        this.treeviewOpened = opened
       },
       dateFormat(date) {
         if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
         return date
+      },
+      notification(message, color) {
+        this.snackbarText = message
+        this.snackbarColor = color 
+        this.snackbar = true
       }
     }
   }
