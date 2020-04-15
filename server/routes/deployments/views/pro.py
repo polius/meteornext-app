@@ -337,6 +337,7 @@ class Pro:
             deployment['code'] != data['code'] or \
             deployment['method'] != data['method'] or \
             str(deployment['scheduled']) != str(data['scheduled']) and not (deployment['scheduled'] is None and data['scheduled'] == ''):
+                data['group_id'] = user['group_id']
                 self._deployments_pro.put(data)
             return jsonify({'message': 'Deployment edited successfully', 'data': {'execution_id': data['execution_id']}}), 200
 
