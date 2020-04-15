@@ -37,7 +37,7 @@ class Deployments_Basic:
     def put(self, deployment):
         query = """
             UPDATE deployments_basic
-            SET `environment_id` = (SELECT id FROM environments WHERE name = %s),
+            SET `environment_id` = (SELECT id FROM environments WHERE name = %s AND group_id = %s),
                 `databases` = %s,
                 `queries` = %s,
                 `method` = %s,
@@ -45,7 +45,7 @@ class Deployments_Basic:
                 `scheduled` = IF(%s = '', NULL, %s)
             WHERE id = %s
         """
-        self._sql.execute(query, (deployment['environment'], deployment['databases'], deployment['queries'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
+        self._sql.execute(query, (deployment['environment'], deployment['group_id'], deployment['databases'], deployment['queries'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
 
     def updateStatus(self, deployment_id, status):
         query = """
@@ -92,7 +92,7 @@ class Deployments_Basic:
 
     def getScheduled(self):
         query = """
-            SELECT b.id AS 'execution_id', 'BASIC' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', b.databases, b.queries, b.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit', g.deployments_execution_concurrent AS 'concurrent_executions'
+            SELECT b.id AS 'execution_id', 'BASIC' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', b.databases, b.queries, b.method, b.url, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit', g.deployments_execution_concurrent AS 'concurrent_executions'
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id
             JOIN environments e ON e.id = b.environment_id

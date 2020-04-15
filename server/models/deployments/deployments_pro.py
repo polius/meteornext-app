@@ -37,14 +37,14 @@ class Deployments_Pro:
     def put(self, deployment):
         query = """
             UPDATE deployments_pro
-            SET `environment_id` = (SELECT id FROM environments WHERE name = %s),
+            SET `environment_id` = (SELECT id FROM environments WHERE name = %s AND group_id = %s),
                 `code` = %s,
                 `method` = %s,
                 `status` = %s,
                 `scheduled` = IF(%s = '', NULL, %s)
             WHERE id = %s
         """
-        self._sql.execute(query, (deployment['environment'], deployment['code'], deployment['method'], deployment['status'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
+        self._sql.execute(query, (deployment['environment'], deployment['group_id'], deployment['code'], deployment['method'], deployment['status'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
 
     def updateStatus(self, deployment_id, status):
         query = """
@@ -91,7 +91,7 @@ class Deployments_Pro:
 
     def getScheduled(self):
         query = """
-            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, p.status, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit', g.deployments_execution_concurrent AS 'concurrent_executions'
+            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, p.url, p.status, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit', g.deployments_execution_concurrent AS 'concurrent_executions'
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id
             JOIN environments e ON e.id = p.environment_id

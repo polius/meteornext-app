@@ -39,7 +39,7 @@ class Deployments_Inbenta:
         products = str(deployment['products'])[1:-1].replace("'", "").replace(" ", "")
         query = """
             UPDATE deployments_inbenta
-            SET `environment_id` = (SELECT id FROM environments WHERE name = %s),
+            SET `environment_id` = (SELECT id FROM environments WHERE name = %s AND group_id = %s),
                 `products` = %s,
                 `schema` = %s,
                 `databases` = %s,
@@ -49,7 +49,7 @@ class Deployments_Inbenta:
                 `scheduled` = IF(%s = '', NULL, %s)
             WHERE id = %s
         """
-        self._sql.execute(query, (deployment['environment'], products, deployment['schema'], deployment['databases'], deployment['queries'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
+        self._sql.execute(query, (deployment['environment'], deployment['group_id'], products, deployment['schema'], deployment['databases'], deployment['queries'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
 
     def updateStatus(self, deployment_id, status):
         query = """
@@ -96,7 +96,7 @@ class Deployments_Inbenta:
 
     def getScheduled(self):
         query = """
-            SELECT i.id AS 'execution_id', 'INBENTA' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', i.products, i.schema, i.databases, i.queries, i.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit', g.deployments_execution_concurrent AS 'concurrent_executions'
+            SELECT i.id AS 'execution_id', 'INBENTA' AS 'mode', u.username AS 'user', g.id AS 'group_id', e.name AS 'environment', i.products, i.schema, i.databases, i.queries, i.method, i.url, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit', g.deployments_execution_concurrent AS 'concurrent_executions'
             FROM deployments_inbenta i
             JOIN deployments d ON d.id = i.deployment_id
             JOIN environments e ON e.id = i.environment_id
