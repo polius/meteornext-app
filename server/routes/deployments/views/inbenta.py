@@ -201,11 +201,11 @@ class Inbenta:
         else:
             for s in scheduled:
                 # Update Execution Status
-                status = 'STARTING' if s['concurrent_executions'] == 0 else 'QUEUED'
+                status = 'QUEUED' if s['concurrent_executions'] else 'STARTING'
                 self._deployments_inbenta.updateStatus(s['execution_id'], status)
 
                 # Start Meteor Execution
-                if s['concurrent_executions'] == 0:
+                if s['concurrent_executions'] is None:
                     self._meteor.execute(s)
                     # Add Deployment to be Tracked
                     deployment = {"mode": s['mode'], "id": s['execution_id']}
