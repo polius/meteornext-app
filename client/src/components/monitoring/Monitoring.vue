@@ -5,8 +5,8 @@
         <v-toolbar-title class="white--text subtitle-1">MONITORING</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text title="Select Servers to Monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
-          <v-btn text title="Define Monitoring Rules and Settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+          <v-btn text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn text title="Define monitoring rules and settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
           <v-btn text title="What's going on in all servers" class="body-2"><v-icon small style="padding-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
         </v-toolbar-items>
         <v-spacer></v-spacer>
@@ -14,26 +14,26 @@
       </v-toolbar>
     </v-card>
 
-    <v-layout style="margin-left:-4px; margin-right:-4px;">
-      <v-flex xs3 v-for="item in servers" :key="item.id" style="margin:5px; cursor:pointer;" @click="monitor(item)">
-        <v-hover>
+    <v-layout v-for="(n, i) in Math.ceil(servers.length/align)" :key="i" style="margin-left:-4px; margin-right:-4px;">
+      <v-flex :xs3="align==4" :xs4="align==3" :xs6="align==2" :xs12="align==1" v-for="(m, j) in Math.min(servers.length-i*align,align)" :key="j" style="padding:5px; cursor:pointer;">
+        <v-hover @click="monitor(servers[i*align+j])">
           <v-card slot-scope="{ hover }" :class="`elevation-${hover ? 12 : 2}`">
-            <v-img height="10px" :class="item.color"></v-img>
+            <v-img height="10px" :class="servers[i*align+j].color"></v-img>
             <v-card-title primary-title style="padding-bottom:10px;">
               <p class="text-xs-center" style="margin-bottom:0px;">
-                <span class="title">{{item.name}}</span>
+                <span class="title">{{servers[i*align+j].name}}</span>
                 <br>
-                <span class="body-2">{{item.region}}</span>
+                <span class="body-2">{{servers[i*align+j].region}}</span>
               </p>
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="padding-bottom:1px;">
-              <p class="font-weight-medium">Hostname<pre>{{item.hostname}}</pre></p>
-              <p class="font-weight-medium">Connections<pre>{{item.connections}}</pre></p>
+              <p class="font-weight-medium">Hostname<pre>{{servers[i*align+j].hostname}}</pre></p>
+              <p class="font-weight-medium">Connections<pre>{{servers[i*align+j].connections}}</pre></p>
             </v-card-text>
           </v-card>
         </v-hover>
-      </v-flex>      
+      </v-flex>
     </v-layout>
 
     <v-dialog v-model="servers_dialog" persistent max-width="896px">
@@ -47,7 +47,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">                  
+                <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
                   <v-card>
                     <v-toolbar flat dense color="#2e3131">
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -72,6 +72,33 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="settings_dialog" persistent max-width="896px">
+      <v-card>
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">SETTINGS</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="settings_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 20px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
+
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn :loading="loading" color="#00b16a" @click="submitSettings()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="settings_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
       {{ snackbarText }}
       <v-btn color="white" text @click="snackbar = false">Close</v-btn>
@@ -89,6 +116,7 @@
         loading: true,
         last_updated: '2020-01-01 20:12:23',
         servers: [],
+        align: 4, // Min: 1 | Max: 5 | Default: 4
 
         // Settings Dialog
         settings_dialog: false,
