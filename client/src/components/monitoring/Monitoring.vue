@@ -5,8 +5,9 @@
         <v-toolbar-title class="white--text subtitle-1">MONITORING</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text title="Settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
-          <v-btn text title="Events" class="body-2"><v-icon small style="padding-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
+          <v-btn text title="Select Servers to Monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn text title="Define Monitoring Rules and Settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+          <v-btn text title="What's going on in all servers" class="body-2"><v-icon small style="padding-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
         </v-toolbar-items>
         <v-spacer></v-spacer>
         <div class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
@@ -14,33 +15,33 @@
     </v-card>
 
     <v-layout style="margin-left:-4px; margin-right:-4px;">
-      <v-flex xs3 v-for="item in links" :key="item.id" style="margin:5px; cursor:pointer;" @click="monitor(item)">
+      <v-flex xs3 v-for="item in servers" :key="item.id" style="margin:5px; cursor:pointer;" @click="monitor(item)">
         <v-hover>
           <v-card slot-scope="{ hover }" :class="`elevation-${hover ? 12 : 2}`">
             <v-img height="10px" :class="item.color"></v-img>
             <v-card-title primary-title style="padding-bottom:10px;">
               <p class="text-xs-center" style="margin-bottom:0px;">
-                <span class="title">{{item.title}}</span>
+                <span class="title">{{item.name}}</span>
                 <br>
                 <span class="body-2">{{item.region}}</span>
               </p>
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="padding-bottom:1px;">
-              <p class="font-weight-medium">Hostname<pre>127.0.0.1</pre></p>
-              <p class="font-weight-medium">Connections<pre>23</pre></p>
+              <p class="font-weight-medium">Hostname<pre>{{item.hostname}}</pre></p>
+              <p class="font-weight-medium">Connections<pre>{{item.connections}}</pre></p>
             </v-card-text>
           </v-card>
         </v-hover>
       </v-flex>      
     </v-layout>
 
-    <v-dialog v-model="settings_dialog" persistent max-width="896px">
+    <v-dialog v-model="servers_dialog" persistent max-width="896px">
       <v-card>
         <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">SETTINGS</v-toolbar-title>
+          <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="settings_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="servers_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -49,9 +50,7 @@
                 <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">                  
                   <v-card>
                     <v-toolbar flat dense color="#2e3131">
-                      <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
-                      <v-divider class="mx-3" inset vertical></v-divider>
-                      <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
+                      <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
                       <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
@@ -65,7 +64,7 @@
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitServers()">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="settings_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="servers_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -89,15 +88,13 @@
       return {
         loading: true,
         last_updated: '2020-01-01 20:12:23',
-        links: [
-          { id: '1', title: 'Templates EU', region: 'AWS-EU', color: 'teal' },
-          { id: '2', title: 'Templates US', region: 'AWS-US', color: 'red' },
-          { id: '3', title: 'Templates JP', region: 'AWS-JP', color: 'orange' },
-          { id: '4', title: 'Aurora Apps', region: 'AWS-EU', color: 'teal' }      
-        ],
+        servers: [],
 
         // Settings Dialog
         settings_dialog: false,
+
+        // Servers Dialog
+        servers_dialog: false,
         treeviewItems: [],
         treeviewSelected: [],
         treeviewOpened: [],
@@ -120,13 +117,32 @@
       getServers() {
         axios.get('/monitoring/servers')
           .then((response) => {
+            this.parseServers(response.data.servers)
             this.parseTreeView(response.data.servers)
             this.loading = false
           })
           .catch((error) => {
-            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-            else this.notification(error.response.data.message, 'error')
+            console.log(error)
+            // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            // else this.notification(error.response.data.message, 'error')
           })
+      },
+      parseServers(servers) {
+        for (let i = 0; i < servers.length; ++i) {
+          if (servers[i]['selected']) {
+            var summary = JSON.parse(servers[i]['summary'])
+            // Get Current Connections
+            let conn = (summary != null && summary['info']['available'] && 'connections' in summary) ? summary['connections']['current'] : '?'
+            // Get Status Color
+            let color = '' 
+            if (summary == null) color = 'orange'
+            else if (!summary['info']['available']) color = 'red'
+            else color = 'teal'
+            // Build Item
+            let item = {id: servers[i]['server_id'], name: servers[i]['server_name'], region: servers[i]['region_name'], hostname: servers[i]['hostname'], connections: conn, color: color}
+            this.servers.push(item)
+          }
+        }
       },
       parseTreeView(servers) {
         var data = []
@@ -162,7 +178,7 @@
           .then((response) => {
             this.refreshTreeView()
             this.notification(response.data.message, '#00b16a')
-            this.settings_dialog = false
+            this.servers_dialog = false
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))

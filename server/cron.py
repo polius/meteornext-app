@@ -25,7 +25,7 @@ class Cron:
         schedule.every(10).seconds.do(self.__executions)
         schedule.every().day.at("00:00").do(self.__coins)
         schedule.every().day.at("00:00").do(self.__logs)
-        schedule.every(5).seconds.do(self.__monitoring)
+        schedule.every(10).seconds.do(self.__monitoring)
 
         # Start Cron Listener
         t = threading.Thread(target=self.__run_schedule)
