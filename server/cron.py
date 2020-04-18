@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import time
 import schedule
@@ -8,6 +9,10 @@ import routes.deployments.deployments
 import routes.deployments.views.basic
 import routes.deployments.views.pro
 import routes.deployments.views.inbenta
+
+# Import Monitoring app
+sys.path.insert(0, "apps/monitoring")
+import apps.monitoring.monitoring
 
 class Cron:
     def __init__(self, app, license, blueprints, sql):
@@ -20,7 +25,7 @@ class Cron:
         schedule.every(10).seconds.do(self.__executions)
         schedule.every().day.at("00:00").do(self.__coins)
         schedule.every().day.at("00:00").do(self.__logs)
-        schedule.every(30).seconds.do(self.__monitoring)
+        schedule.every(5).seconds.do(self.__monitoring)
 
         # Start Cron Listener
         t = threading.Thread(target=self.__run_schedule)
@@ -103,4 +108,5 @@ class Cron:
                     self._sql.execute("UPDATE deployments_{} SET expired = 1 WHERE id = {}".format(i['mode'], i['id']))
 
     def __monitoring(self):
-        pass
+        monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
+        monitoring.start()

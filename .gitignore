@@ -9,5 +9,5 @@ server.conf
 *.pyc
 .bash_history
 .cache/
-/server/apps
+/server/apps/meteor.tar.gz
 /meteor/version.txt

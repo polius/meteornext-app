@@ -305,8 +305,8 @@ CREATE TABLE `notifications` (
 CREATE TABLE `monitoring` (
   server_id INT UNSIGNED NOT NULL,
   summary TEXT NULL,
-  parameters TEXT NULL,
-  processlist TEXT NULL,
+  parameters MEDIUMTEXT NULL,
+  processlist MEDIUMTEXT NULL,
   PRIMARY KEY (`server_id`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
 );
