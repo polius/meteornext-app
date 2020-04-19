@@ -5,16 +5,21 @@
         <v-toolbar-title class="white--text subtitle-1">MONITORING</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
           <v-btn text title="Define monitoring rules and settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+          <v-btn text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
           <v-btn text title="What's going on in all servers" @click="events_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:5px;" single-line hide-details></v-text-field>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <div class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
+        <div v-if="last_updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
+        <v-progress-circular v-if="last_updated == null" indeterminate size="20" width="2" color="white"></v-progress-circular>
+        <div v-if="last_updated == null" class="subheading font-weight-regular" style="margin-left:10px; padding-right:10px;">Loading...</b></div>
       </v-toolbar>
     </v-card>
+
+    <div v-if="!loading && servers_origin.length == 0" class="body-2" style="margin-top:10px; text-align:center">No servers selected</div>
+    <div v-else-if="!loading && servers.length == 0" class="body-2" style="margin-top:10px; text-align:center">The search returned no results</div>
 
     <v-layout v-for="(n, i) in Math.ceil(servers.length/align)" :key="i" style="margin-left:-4px; margin-right:-4px;">
       <v-flex :xs3="align==4" :xs4="align==3" :xs6="align==2" :xs12="align==1" v-for="(m, j) in Math.min(servers.length-i*align,align)" :key="j" style="padding:5px; cursor:pointer;">
@@ -175,13 +180,13 @@
       }
     },
     created() {
-      this.getServers()
+      this.getServers(true)
     },
     methods: {
       monitor(item) {
         this.$router.push({ name:'monitor', params: { id: item.id }})
       },
-      getServers() {
+      getServers(repeat) {
         axios.get('/monitoring/servers')
           .then((response) => {
             //this.parseSettings(response.data.settings)
@@ -189,7 +194,7 @@
             this.parseTreeView(response.data.servers)
             this.last_updated = response.data.last_updated
             this.loading = false
-            setTimeout(this.getServers, 10000)
+            if (repeat) setTimeout(this.getServers, 10000)
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -252,9 +257,12 @@
         const payload = JSON.stringify(this.treeviewSelected)
         axios.put('/monitoring/servers', payload)
           .then((response) => {
-            this.refreshTreeView()
+            this.servers = []
+            this.search = []
+            this.last_updated = ''
             this.notification(response.data.message, '#00b16a')
             this.servers_dialog = false
+            this.getServers(false)
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -264,23 +272,23 @@
             this.loading = false
           })
       },
-      refreshTreeView() {
-        var opened = []
-        for (let i = 0; i < this.treeviewSelected.length; ++i) {
-          let found = false
-          for (let j = 0; j < this.treeviewItems.length; ++j) {
-            for (let k = 0; k < this.treeviewItems[j]['children'].length; ++k) {
-              if (this.treeviewItems[j]['children'][k]['id'] == this.treeviewSelected[i]) {
-                if (!opened.includes(this.treeviewItems[j]['id'])) opened.push(this.treeviewItems[j]['id'])
-                found = true
-                break
-              }
-            }
-            if (found) break
-          }
-        }
-        this.treeviewOpened = opened
-      },
+      // refreshTreeView() {
+      //   var opened = []
+      //   for (let i = 0; i < this.treeviewSelected.length; ++i) {
+      //     let found = false
+      //     for (let j = 0; j < this.treeviewItems.length; ++j) {
+      //       for (let k = 0; k < this.treeviewItems[j]['children'].length; ++k) {
+      //         if (this.treeviewItems[j]['children'][k]['id'] == this.treeviewSelected[i]) {
+      //           if (!opened.includes(this.treeviewItems[j]['id'])) opened.push(this.treeviewItems[j]['id'])
+      //           found = true
+      //           break
+      //         }
+      //       }
+      //       if (found) break
+      //     }
+      //   }
+      //   this.treeviewOpened = opened
+      // },
       submitSettings() {
         this.align = this.settings.align
         this.interval = this.settings.interval
