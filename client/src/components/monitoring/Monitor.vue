@@ -239,9 +239,8 @@ export default {
           setTimeout(this.getMonitor, 10000)
         })
         .catch((error) => {
-          console.log(error)
-          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          // else this.notification(error.response.data.message, 'error')
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
         })
     },
     parseData(data) {
@@ -255,10 +254,11 @@ export default {
         // Parse Summary
         var summary = JSON.parse(data[0]['summary'])
         this.summary_items = [summary.info]
-        this.logs_items = [summary.logs]
-        this.connections_items = [summary.connections]
-        this.statements_items = [summary.statements]
-        this.indexes_items = [summary.index]
+        
+        if ('logs' in summary) this.logs_items = [summary.logs]
+        if ('connections' in summary) this.connections_items = [summary.connections]
+        if ('statements' in summary) this.statements_items = [summary.statements]
+        if ('index' in summary) this.indexes_items = [summary.index]
 
         // Parse Parameters
         this.params_items = []
@@ -269,7 +269,7 @@ export default {
         this.processlist_headers = []
         this.processlist_items = []
         var threads = JSON.parse(data[0]['processlist'])
-        if (threads.length > 0) {
+        if (threads && threads.length > 0) {
           for (let key in threads[0]) this.processlist_headers.push({ text: key, align: 'left', value: key })
           for (let i = 0; i < threads.length; ++i) this.processlist_items.push(threads[i])
         }
