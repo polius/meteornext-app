@@ -19,6 +19,7 @@ class Cron:
         self._app = app
         self._license = license
         self._sql = sql
+        self._monitoring_ready = True
 
     def start(self):
         # Init Crons
@@ -108,5 +109,8 @@ class Cron:
                     self._sql.execute("UPDATE deployments_{} SET expired = 1 WHERE id = {}".format(i['mode'], i['id']))
 
     def __monitoring(self):
-        monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
-        monitoring.start()
+        if self._monitoring_ready:
+            self._monitoring_ready = False
+            monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
+            monitoring.start()
+            self._monitoring_ready = True

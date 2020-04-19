@@ -2,17 +2,17 @@
   <div>
     <v-card>
       <v-toolbar flat color="primary">
-        <v-toolbar-title class="white--text">Templates EU</v-toolbar-title>
+        <v-toolbar-title class="white--text">{{ server_name }}</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <div class="subheading font-weight-regular">AWS-EU</div>
+        <div class="subheading font-weight-regular">{{ region_name }}</div>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <div class="subheading font-weight-regular">127.0.0.1</div>
+        <div class="subheading font-weight-regular">{{ server_hostname }}</div>
         <v-spacer></v-spacer>
+        <div class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(updated) }}</b></div>
         <v-btn icon title="Go back" @click="goBack()"><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn>
       </v-toolbar>
 
       <v-card-text>
-        <!-- <p class="font-weight-medium" style="margin-bottom:10px;">Hostname<pre>127.0.0.1</pre></p> -->
         <!-- MONITOR - BAR -->
         <div>
           <v-tabs show-arrows background-color="#263238" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
@@ -45,11 +45,11 @@
         <v-card v-show="tabs == 1">
           <v-data-table :headers="logs_headers" :items="logs_items" hide-default-footer class="elevation-1">
             <template v-slot:item.general_log="props">
-              <span v-if="props.item.general_log"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>On</span>
+              <span v-if="props.item.general_log == 'ON'"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>On</span>
               <span v-else><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Off</span>
             </template>
-            <template v-slot:item.slow_query_log="props">
-              <span v-if="props.item.slow_query_log"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>On</span>
+            <template v-slot:item.slow_log="props">
+              <span v-if="props.item.slow_log == 'ON'"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>On</span>
               <span v-else><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Off</span>
             </template>
           </v-data-table>
@@ -80,7 +80,6 @@
         </v-card>
 
         <!-- PARAMETERS -->
-        <!-- <div class="title font-weight-regular" style="padding-left:1px; margin-bottom:10px;">PARAMETERS</div> -->
         <v-card style="margin-top:15px; margin-bottom:10px;">
           <v-toolbar dense flat color="#263238">
             <v-toolbar-title class="white--text subtitle-1">PARAMETERS</v-toolbar-title>
@@ -102,8 +101,6 @@
           </v-data-table>
         </v-card>
       </v-card-text>
-
-     
     </v-card>
 
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
@@ -119,8 +116,11 @@ import moment from 'moment';
 
 export default {
   data: () => ({
-    // Monitor Data
-    monitor: {},
+    // Information
+    server_id: '',
+    server_name: '',
+    server_hostname: '',
+    region_name: '',
 
     // Tabs
     tabs: 0,
@@ -132,50 +132,50 @@ export default {
       { text: 'Uptime', align: 'left', value: 'uptime' },
       { text: 'Start Time', align: 'left', value: 'start_time' },
       { text: 'SQL Engine', align: 'left', value: 'sql_engine' },
-      { text: 'Storage Engine', align: 'left', value: 'storage_engine' },
+      { text: 'Storage Engine', align: 'left', value: 'engine' },
       { text: 'Allocated Memory', align: 'left', value: 'allocated_memory' },
-      { text: 'Timezone', align: 'left', value: 'timezone' }
+      { text: 'Timezone', align: 'left', value: 'time_zone' }
     ],
-    summary_items: [{ available: true, version: '5.6.10', uptime: '5d 2h 2m 3s', start_time: '2020-01-01 12:00:00', sql_engine: 'MySQL', storage_engine: 'InnoDB', allocated_memory: '24 GB', timezone: 'SERVER' }],
+    summary_items: [],
 
     // Logs
     logs_headers: [
       { text: 'General Log', align: 'left', value: 'general_log' },
       { text: 'General Log File', align: 'left', value: 'general_log_file' },
-      { text: 'Slow Query Log', align: 'left', value: 'slow_query_log' },
-      { text: 'Slow Query Log File', align: 'left', value: 'slow_query_log_file' },
+      { text: 'Slow Query Log', align: 'left', value: 'slow_log' },
+      { text: 'Slow Query Log File', align: 'left', value: 'slow_log_file' },
       { text: 'Error Log File', align: 'left', value: 'error_log_file' }
     ],
-    logs_items: [{ general_log: 'ON', general_log_file: '/opt/lampp/var/mysql/awseu-sql01.log', slow_query_log: 'ON', slow_query_log_file: '/opt/lampp/var/mysql/awseu-sql01-inbenta-com.slow-queries.log', error_log_file: '/opt/lampp/var/mysql/awseu-sql01.err' }],
+    logs_items: [],
 
     // Connections
     connections_headers: [
+      { text: 'Current Connections', align: 'left', value: 'current' },
       { text: 'Max Connections Allowed', align: 'left', value: 'max_connections_allowed' },
       { text: 'Max Connections Reached', align: 'left', value: 'max_connections_reached' },
       { text: 'Max Allowed Packed', align: 'left', value: 'max_allowed_packet' },
-      { text: 'Transaction Isolation', align: 'left', value: 'tx_isolation' },
+      { text: 'Transaction Isolation', align: 'left', value: 'transaction_isolation' },
       { text: 'Bytes received', align: 'left', value: 'bytes_received' },
       { text: 'Bytes sent', align: 'left', value: 'bytes_sent' }
     ],
-    connections_items: [{ max_connections_allowed: '3000', max_connections_reached: '250 (12%)', max_allowed_packet: '16 MB', tx_isolation: 'REPETEABLE-READ', bytes_received: '12312984', bytes_sent: '12894353' }],
+    connections_items: [],
 
     // Statements
     statements_headers: [
-      { text: 'All Statements', align: 'left', value: 'all_statements' },
-      { text: 'SELECTs', align: 'left', value: 'selects' },
-      { text: 'INSERTs', align: 'left', value: 'inserts' },
-      { text: 'UPDATEs', align: 'left', value: 'updates' },
-      { text: 'DELETEs', align: 'left', value: 'deletes' },
-      { text: 'DMLs', align: 'left', value: 'dmls' }
+      { text: 'All Statements', align: 'left', value: 'all' },
+      { text: 'SELECTs', align: 'left', value: 'select' },
+      { text: 'INSERTs', align: 'left', value: 'insert' },
+      { text: 'UPDATEs', align: 'left', value: 'update' },
+      { text: 'DELETEs', align: 'left', value: 'delete' }
     ],
-    statements_items: [{ all_statements: '3000', selects: '23', inserts: '10', updates: '11', deletes: '12', dmls: '12' }],
+    statements_items: [],
 
     // Indexes
     indexes_headers: [
-      { text: 'Percentage of queries not using indexes', align: 'left', value: 'full_table_scans' },
-      { text: 'SELECTs not using indexes', align: 'left', value: 'full_table_scans_selects' }
+      { text: 'Percentage of queries not using indexes', align: 'left', value: 'percent' },
+      { text: 'SELECTs not using indexes', align: 'left', value: 'selects' }
     ],
-    indexes_items: [{ full_table_scans: '43%', full_table_scans_selects: 2000 }],
+    indexes_items: [],
 
     // RDS Metrics
     rds_headers: [
@@ -189,7 +189,7 @@ export default {
 
     // Parameter Groups
     params_headers: [
-      { text: 'Name', align: 'left', value: 'name' },
+      { text: 'Name', align: 'left', value: 'name', width: '25%' },
       { text: 'Value', align: 'left', value: 'value' }
     ],
     params_items: [],
@@ -199,6 +199,9 @@ export default {
     processlist_headers: [],
     processlist_items: [],
     processlist_search: '',
+
+    // Updated
+    updated: '',
 
     // Loading
     loading: false,
@@ -219,23 +222,61 @@ export default {
     init() {
       const id = this.$route.params.id
       if (id === undefined) this.notification('Invalid Monitor Identifier', 'error')
-      // else this.getMonitor(id)
+      else {
+        this.server_id = id
+        this.getMonitor()
+      }
     },
     goBack() {
       this.$router.go(-1)
     },
-    getMonitor(id) {
+    getMonitor() {
       // Get Deployment Data
       const path = '/monitoring'
-      axios.get(path, { params: { monitor_id: id } })
+      axios.get(path, { params: { server_id: this.server_id } })
         .then((response) => {
-          const data = response.data.data
-          this.monitor = data
+          this.parseData(response.data.data)
+          setTimeout(this.getMonitor, 10000)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
         })
+    },
+    parseData(data) {
+      if (data.length == 0) this.notification("The server does not exist", 'error')
+      else {
+        // Parse Information
+        this.server_name = data[0]['name']
+        this.server_hostname = data[0]['hostname']
+        this.region_name = data[0]['region']
+
+        // Parse Summary
+        var summary = JSON.parse(data[0]['summary'])
+        this.summary_items = [summary.info]
+        this.logs_items = [summary.logs]
+        this.connections_items = [summary.connections]
+        this.statements_items = [summary.statements]
+        this.indexes_items = [summary.index]
+
+        // Parse Parameters
+        this.params_items = []
+        var params = JSON.parse(data[0]['parameters'])
+        for (let key in params) this.params_items.push({'name': key, 'value': params[key]})
+
+        // Parse Processlist
+        this.processlist_headers = []
+        this.processlist_items = []
+        var threads = JSON.parse(data[0]['processlist'])
+        if (threads.length > 0) {
+          for (let key in threads[0]) this.processlist_headers.push({ text: key, align: 'left', value: key })
+          for (let i = 0; i < threads.length; ++i) this.processlist_items.push(threads[i])
+        }
+
+        // Parse Updated
+        this.updated = data[0]['updated']
+      }
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")

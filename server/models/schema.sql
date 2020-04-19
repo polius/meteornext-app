@@ -307,6 +307,19 @@ CREATE TABLE `monitoring` (
   summary TEXT NULL,
   parameters MEDIUMTEXT NULL,
   processlist MEDIUMTEXT NULL,
+  updated DATETIME NULL,
   PRIMARY KEY (`server_id`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
 );
+
+CREATE TABLE `monitoring_settings` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+	`value` TEXT NOT NULL,
+  `updated_by` INT UNSIGNED NULL,
+  `updated_at` DATETIME NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+INSERT INTO monitoring_settings (`name`, `value`) VALUES ('interval', 10), ('align', 4);

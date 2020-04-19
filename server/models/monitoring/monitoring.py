@@ -4,14 +4,23 @@ class Monitoring:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, group_id):
-        query = """
-            SELECT m.*
-            FROM monitoring m
-            JOIN servers s ON s.id = m.server_id
-            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-        """
-        return self._sql.execute(query, (group_id))
+    def get(self, group_id, server_id=None):
+        if server_id:
+            query = """
+                SELECT m.*, s.name, s.hostname, r.name AS 'region'
+                FROM monitoring m
+                JOIN servers s ON s.id = m.server_id AND s.id = %s
+                JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            """
+            return self._sql.execute(query, (server_id, group_id))
+        else:
+            query = """
+                SELECT m.*
+                FROM monitoring m
+                JOIN servers s ON s.id = m.server_id
+                JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            """
+            return self._sql.execute(query, (group_id))
 
     def put(self, group_id, data):
         if len(data) == 0:
@@ -52,3 +61,12 @@ class Monitoring:
             ORDER BY r.name, s.name
         """
         return self._sql.execute(query, (group_id))
+    
+    def get_lastupdated(self, group_id):
+        query = """
+            SELECT MIN(m.updated) AS 'updated'
+            FROM monitoring m
+            JOIN servers s ON s.id = m.server_id
+            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+        """
+        return self._sql.execute(query, (group_id))[0]['updated']
