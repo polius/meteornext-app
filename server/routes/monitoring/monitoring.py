@@ -10,6 +10,7 @@ class Monitoring:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
+        self._settings = models.admin.settings.Settings(sql)
         self._monitoring = models.monitoring.monitoring.Monitoring(sql)
 
     def blueprint(self):
@@ -58,7 +59,10 @@ class Monitoring:
             monitoring_json = request.get_json()
 
             if request.method == 'GET':
-                return jsonify({'servers': self._monitoring.get_servers(user['group_id'])}), 200
+                servers = self._monitoring.get_servers(user['group_id'])
+                last_updated = self._monitoring.get_lastupdated(user['group_id'])
+                # settings = self._settings.get(setting_name='monitoring')[0]['value']
+                return jsonify({'servers': servers, 'last_updated': last_updated}), 200
             elif request.method == 'PUT':
                 self._monitoring.put(user['group_id'], monitoring_json)
                 return jsonify({'message': 'Settings saved'}), 200
@@ -88,7 +92,8 @@ class Monitoring:
     # Internal Methods #
     ####################
     def get(self, group_id):
-        return jsonify({'data': self._monitoring.get(group_id)}), 200
+        server_id = request.args['server_id'] if 'server_id' in request.args else None
+        return jsonify({'data': self._monitoring.get(group_id, server_id)}), 200
 
     def post(self, user_id, group_id, data):
         self._monitoring.post(user_id, group_id, data)
