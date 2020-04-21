@@ -8,7 +8,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <div class="subheading font-weight-regular">{{ server_hostname }}</div>
         <v-spacer></v-spacer>
-        <div class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(updated) }}</b></div>
+        <div v-if="updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(updated) }}</b></div>
         <v-btn icon title="Go back" @click="goBack()"><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn>
       </v-toolbar>
 
@@ -35,8 +35,9 @@
         <v-card v-show="tabs == 0">
           <v-data-table :headers="summary_headers" :items="summary_items" hide-default-footer class="elevation-1">
             <template v-slot:item.available="props">
-              <span v-if="props.item.available"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Yes</span>
-              <span v-else><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>No</span>
+              <span v-if="props.item.available == true"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Yes</span>
+              <span v-else-if="props.item.available == false"><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>No</span>
+              <span v-else-if="props.item.available == -1"><v-icon small color="orange" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Loading</span>
             </template>
           </v-data-table>
         </v-card>
@@ -201,7 +202,7 @@ export default {
     processlist_search: '',
 
     // Updated
-    updated: '',
+    updated: null,
 
     // Loading
     loading: false,
@@ -239,8 +240,9 @@ export default {
           setTimeout(this.getMonitor, 10000)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
         })
     },
     parseData(data) {
@@ -253,12 +255,17 @@ export default {
 
         // Parse Summary
         var summary = JSON.parse(data[0]['summary'])
-        this.summary_items = [summary.info]
+        if (summary == null) {
+          this.summary_items = [{available: -1}]
+        }
+        else {
+          this.summary_items = [summary.info]
+          if ('logs' in summary) this.logs_items = [summary.logs]
+          if ('connections' in summary) this.connections_items = [summary.connections]
+          if ('statements' in summary) this.statements_items = [summary.statements]
+          if ('index' in summary) this.indexes_items = [summary.index]
+        }
         
-        if ('logs' in summary) this.logs_items = [summary.logs]
-        if ('connections' in summary) this.connections_items = [summary.connections]
-        if ('statements' in summary) this.statements_items = [summary.statements]
-        if ('index' in summary) this.indexes_items = [summary.index]
 
         // Parse Parameters
         this.params_items = []
