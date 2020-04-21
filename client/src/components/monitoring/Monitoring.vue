@@ -7,25 +7,27 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text title="Define monitoring rules and settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
           <v-btn text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn text title="Filter servers" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn text title="What's going on in all servers" @click="events_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:5px;" single-line hide-details></v-text-field>
-        <v-divider class="mx-3" inset vertical></v-divider>
-        <div v-if="last_updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
-        <v-progress-circular v-if="last_updated == null" indeterminate size="20" width="2" color="white"></v-progress-circular>
-        <div v-if="last_updated == null" class="subheading font-weight-regular" style="margin-left:10px; padding-right:10px;">Loading...</b></div>
+        <v-divider v-if="loading || pending_servers || servers.length > 0" class="mx-3" inset vertical></v-divider>
+        <v-progress-circular v-if="loading || pending_servers" indeterminate size="20" width="2" color="white"></v-progress-circular>
+        <div v-if="loading || pending_servers" class="subheading font-weight-regular" style="margin-left:10px; padding-right:10px;">Loading servers...</div>
+        <div v-else-if="!loading && !pending_servers && last_updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
       </v-toolbar>
     </v-card>
 
-    <div v-if="!loading && servers_origin.length == 0" class="body-2" style="margin-top:10px; text-align:center">No servers selected</div>
-    <div v-else-if="!loading && servers.length == 0" class="body-2" style="margin-top:10px; text-align:center">The search returned no results</div>
+    <div v-if="!loading && servers_origin.length == 0" class="body-2" style="margin-top:20px; text-align:center; color:#D3D3D3">No servers selected</div>
+    <div v-else-if="!loading && servers.length == 0" class="body-2" style="margin-top:20px; text-align:center; color:#D3D3D3">The search returned no results</div>
 
     <v-layout v-for="(n, i) in Math.ceil(servers.length/align)" :key="i" style="margin-left:-4px; margin-right:-4px;">
       <v-flex :xs3="align==4" :xs4="align==3" :xs6="align==2" :xs12="align==1" v-for="(m, j) in Math.min(servers.length-i*align,align)" :key="j" style="padding:5px; cursor:pointer;">
         <v-hover>
           <v-card @click="monitor(servers[i*align+j])" slot-scope="{ hover }" :class="`elevation-${hover ? 12 : 2}`">
             <v-img height="10px" :class="servers[i*align+j].color"></v-img>
+            <v-progress-linear v-if="servers[i*align+j].color == 'orange'" indeterminate color="orange" height="3" style="margin-bottom:-3px;"></v-progress-linear>
             <v-card-title primary-title style="padding-bottom:10px;">
               <p class="text-xs-center" style="margin-bottom:0px;">
                 <span class="title">{{servers[i*align+j].name}}</span>
@@ -146,10 +148,11 @@
     data() {
       return {
         loading: true,
-        last_updated: '',
+        last_updated: null,
         servers: [],
         servers_origin: [],
         search: '',
+        pending_servers: true,
 
         // Servers Dialog
         servers_dialog: false,
@@ -194,7 +197,7 @@
             this.parseTreeView(response.data.servers)
             this.last_updated = response.data.last_updated
             this.loading = false
-            if (repeat) setTimeout(this.getServers, 10000)
+            if (repeat) setTimeout(this.getServers, 10000, true)
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -208,6 +211,7 @@
       },
       parseServers(servers) {
         this.servers_origin = []
+        var pending_servers = false
         for (let i = 0; i < servers.length; ++i) {
           if (servers[i]['selected']) {
             var summary = JSON.parse(servers[i]['summary'])
@@ -215,7 +219,10 @@
             let conn = (summary != null && summary['info']['available'] && 'connections' in summary) ? summary['connections']['current'] : '?'
             // Get Status Color
             let color = '' 
-            if (summary == null) color = 'orange'
+            if (summary == null) {
+              color = 'orange'
+              pending_servers = true
+            }
             else if (!summary['info']['available']) color = 'red'
             else color = 'teal'
             // Build Item
@@ -223,7 +230,8 @@
             this.servers_origin.push(item)
           }
         }
-        if (this.servers.length == 0 && this.search.length == 0) this.servers = this.servers_origin.slice(0)
+        this.pending_servers = pending_servers
+        if (this.search.length == 0) this.servers = this.servers_origin.slice(0)
       },
       parseTreeView(servers) {
         var data = []
@@ -257,9 +265,9 @@
         const payload = JSON.stringify(this.treeviewSelected)
         axios.put('/monitoring/servers', payload)
           .then((response) => {
+            this.servers_origin = []
             this.servers = []
-            this.search = []
-            this.last_updated = ''
+            this.search = ''
             this.notification(response.data.message, '#00b16a')
             this.servers_dialog = false
             this.getServers(false)
@@ -267,9 +275,6 @@
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
-          })
-          .finally(() => {
-            this.loading = false
           })
       },
       // refreshTreeView() {
