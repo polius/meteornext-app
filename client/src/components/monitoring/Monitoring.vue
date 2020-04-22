@@ -121,7 +121,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
-                  <v-select filled v-model="filter" label="Filter servers" :items="filter_items" :rules="[v => !!v || '']" hide-details></v-select>
+                  <v-select filled v-model="filter" label="Status" :items="filter_items" :rules="[v => !!v || '']" hide-details></v-select>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -236,7 +236,6 @@
             this.parseTreeView(response.data.servers)
             this.last_updated = response.data.last_updated
             this.loading = false
-            console.log(this.servers_origin)
             if (mode != 2) setTimeout(this.getMonitoring, 5000, 1)
           })
           .catch((error) => {
@@ -282,10 +281,9 @@
           }
         }
         this.pending_servers = pending_servers
+        // Apply filter
         if (this.search.length == 0) {
-          // Apply filter
-          this.servers = this.servers_origin.slice(0)
-          console.log(this.servers)
+          this.applyFilter()
         }
       },
       parseTreeView(servers) {
@@ -358,7 +356,26 @@
           })
       },
       submitFilter() {
-        
+        this.applyFilter()
+        this.applySearch()
+        this.filter_dialog = false
+      },
+      applyFilter() {
+        this.servers = []
+        for (let i = 0; i < this.servers_origin.length; ++i) {
+          if (this.filter == 'All') this.servers.push(this.servers_origin[i])
+          else if (this.filter == 'Available' && this.servers_origin[i]['color'] == 'teal') this.servers.push(this.servers_origin[i])
+          else if (this.filter == 'Unavailable' && this.servers_origin[i]['color'] == 'red') this.servers.push(this.servers_origin[i])
+          else if (this.filter == 'Loading' && this.servers_origin[i]['color'] == 'orange') this.servers.push(this.servers_origin[i])
+        }
+      },
+      applySearch(value=null) {
+        var newValue = value == null ? this.search : value
+        var search = []
+        for (let i = 0; i < this.servers.length; ++i) {
+          if (this.servers[i]['name'].includes(newValue)) search.push(this.servers[i])
+        }
+        this.servers = search.slice(0)
       },
       dateFormat(date) {
         if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
@@ -373,13 +390,8 @@
     watch: {
       // eslint-disable-next-line
       search: function (newValue, oldValue) {
-        if (newValue.length == 0) this.servers = this.servers_origin.slice(0)
-        else {
-          this.servers = []
-          for (let i = 0; i < this.servers_origin.length; ++i) {
-            if (this.servers_origin[i]['name'].includes(newValue)) this.servers.push(this.servers_origin[i])
-          }
-        }
+        this.applyFilter()
+        if (newValue.length > 0) this.applySearch(newValue)
       }
     }
   }
