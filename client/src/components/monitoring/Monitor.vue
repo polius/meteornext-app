@@ -265,7 +265,6 @@ export default {
           if ('statements' in summary) this.statements_items = [summary.statements]
           if ('index' in summary) this.indexes_items = [summary.index]
         }
-        
 
         // Parse Parameters
         this.params_items = []

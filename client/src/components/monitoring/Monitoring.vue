@@ -94,8 +94,8 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
-                  <v-select filled v-model="settings.align" label="Servers per line" :items="align_items" hide-details></v-select>
-                  <v-text-field filled v-model="settings.interval" :rules="[v => !!v || '']" label="Data Collection Interval (seconds)" required style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
+                  <v-select filled v-model="settings.align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>
+                  <v-text-field filled v-model="settings.interval" :rules="[v => v == parseInt(v) && v >= 10 || '']" label="Data Collection Interval (seconds)" required style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -147,6 +147,7 @@
   export default {
     data() {
       return {
+        active: true,
         loading: true,
         last_updated: null,
         servers: [],
@@ -163,8 +164,8 @@
 
         // Settings Dialog
         settings_dialog: false,        
-        settings: { align:'4', interval:'10', source: 'Information Schema' },
-        align_items: ['1', '2', '3', '4', '5'],
+        settings: { align:'4', interval:'10' },
+        align_items: ['1', '2', '3', '4'],
         source_items: ['Information Schema', 'Performance Schema (recommended)'],
         align: '4',
         interval: '10',
@@ -182,22 +183,27 @@
         snackbarText: ''
       }
     },
-    created() {
-      this.getServers(true)
+    mounted() {
+      this.active = true
+      this.getMonitoring(true)
+    },
+    destroyed() {
+      this.active = false
     },
     methods: {
       monitor(item) {
         this.$router.push({ name:'monitor', params: { id: item.id }})
       },
-      getServers(repeat) {
-        axios.get('/monitoring/servers')
+      getMonitoring(repeat) {
+        if (!this.active) return
+        axios.get('/monitoring')
           .then((response) => {
-            //this.parseSettings(response.data.settings)
+            if (!repeat) this.parseSettings(response.data.settings)
             this.parseServers(response.data.servers)
             this.parseTreeView(response.data.servers)
             this.last_updated = response.data.last_updated
             this.loading = false
-            if (repeat) setTimeout(this.getServers, 10000, true)
+            if (repeat) setTimeout(this.getMonitoring, 5000, true)
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -205,9 +211,19 @@
           })
       },
       parseSettings(settings) {
-        this.settings = JSON.parse(settings)
-        this.interval = this.settings.interval
-        this.align = this.settings.align
+        if (settings.length > 0) {
+          for (let i = 0; i < settings.length; ++i) {
+            if (settings[i]['name'] == 'align') {
+              this.settings.align = settings[i]['value']
+              this.align = settings[i]['value']
+              console.log(this.align)
+            }
+            else if (settings[i]['name'] == 'interval') {
+              this.settings.interval = settings[i]['value']
+              this.interval = settings[i]['value']
+            }
+          }
+        }
       },
       parseServers(servers) {
         this.servers_origin = []
@@ -256,9 +272,11 @@
             opened.push('r' + servers[i]['region_id'])
           }
         }
-        this.treeviewItems = data
-        this.treeviewSelected = selected
-        this.treeviewOpened = opened
+        if (!this.servers_dialog) {
+          this.treeviewItems = data
+          this.treeviewSelected = selected
+          this.treeviewOpened = opened
+        }
       },
       submitServers() {
         this.loading = true
@@ -270,34 +288,35 @@
             this.search = ''
             this.notification(response.data.message, '#00b16a')
             this.servers_dialog = false
-            this.getServers(false)
+            this.getMonitoring(false)
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
           })
       },
-      // refreshTreeView() {
-      //   var opened = []
-      //   for (let i = 0; i < this.treeviewSelected.length; ++i) {
-      //     let found = false
-      //     for (let j = 0; j < this.treeviewItems.length; ++j) {
-      //       for (let k = 0; k < this.treeviewItems[j]['children'].length; ++k) {
-      //         if (this.treeviewItems[j]['children'][k]['id'] == this.treeviewSelected[i]) {
-      //           if (!opened.includes(this.treeviewItems[j]['id'])) opened.push(this.treeviewItems[j]['id'])
-      //           found = true
-      //           break
-      //         }
-      //       }
-      //       if (found) break
-      //     }
-      //   }
-      //   this.treeviewOpened = opened
-      // },
       submitSettings() {
-        this.align = this.settings.align
-        this.interval = this.settings.interval
-        this.settings_dialog = false
+        this.loading = true
+        // Check if all fields are filled
+        if (!this.$refs.form.validate()) {
+          this.notification('Please make sure all required fields are filled out correctly', 'error')
+          this.loading = false
+          return
+        }
+        // Update settings        
+        const payload = JSON.stringify(this.settings)
+        axios.put('/monitoring/settings', payload)
+          .then((response) => {
+            this.align = this.settings.align
+            this.interval = this.settings.interval
+            this.notification(response.data.message, '#00b16a')
+            this.settings_dialog = false
+            this.loading = false
+          })
+          .catch((error) => {
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message, 'error')
+          })
       },
       dateFormat(date) {
         if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
