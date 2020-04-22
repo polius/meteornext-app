@@ -12,13 +12,16 @@ class Monitoring:
     def start(self):
         # Get Monitoring Servers
         query = """
-            SELECT 
-                s.id, s.engine, s.hostname, s.port, s.username, s.password, s.aws_enabled, s.aws_instance_identifier, s.aws_region, s.aws_access_key_id, s.aws_secret_access_key,
-                r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
-                m.summary 
-            FROM monitoring m
-            JOIN servers s ON s.id = m.server_id
-            JOIN regions r ON r.id = s.region_id
+        SELECT 
+            s.id, s.engine, s.hostname, s.port, s.username, s.password, s.aws_enabled, s.aws_instance_identifier, s.aws_region, s.aws_access_key_id, s.aws_secret_access_key,
+            r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
+            m.summary 
+        FROM monitoring m
+        JOIN servers s ON s.id = m.server_id
+        JOIN regions r ON r.id = s.region_id
+        LEFT JOIN monitoring_settings ms ON ms.group_id = r.group_id AND ms.name = 'interval'
+        WHERE (ms.value IS NULL AND DATE_ADD(m.updated, INTERVAL 10 SECOND) <= NOW())
+		OR (ms.value IS NOT NULL AND DATE_ADD(m.updated, INTERVAL ms.value SECOND) <= NOW())
         """
         servers_raw = self._sql.execute(query)
 
