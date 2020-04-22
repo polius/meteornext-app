@@ -20,7 +20,8 @@ class Monitoring:
         JOIN servers s ON s.id = m.server_id
         JOIN regions r ON r.id = s.region_id
         LEFT JOIN monitoring_settings ms ON ms.group_id = r.group_id AND ms.name = 'interval'
-        WHERE (ms.value IS NULL AND DATE_ADD(m.updated, INTERVAL 10 SECOND) <= NOW())
+        WHERE m.updated IS NULL
+        OR (ms.value IS NULL AND DATE_ADD(m.updated, INTERVAL 10 SECOND) <= NOW())
 		OR (ms.value IS NOT NULL AND DATE_ADD(m.updated, INTERVAL ms.value SECOND) <= NOW())
         """
         servers_raw = self._sql.execute(query)
