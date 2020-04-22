@@ -185,7 +185,7 @@
     },
     created() {
       this.active = true
-      this.getMonitoring(true)
+      this.getMonitoring(2)
     },
     destroyed() {
       this.active = false
@@ -194,16 +194,16 @@
       monitor(item) {
         this.$router.push({ name:'monitor', params: { id: item.id }})
       },
-      getMonitoring(repeat) {
+      getMonitoring(mode) {
         if (!this.active) return
         axios.get('/monitoring')
           .then((response) => {
-            if (!repeat) this.parseSettings(response.data.settings)
+            if (mode == 2) this.parseSettings(response.data.settings)
             this.parseServers(response.data.servers)
             this.parseTreeView(response.data.servers)
             this.last_updated = response.data.last_updated
             this.loading = false
-            if (repeat) setTimeout(this.getMonitoring, 5000, true)
+            if (mode > 0) setTimeout(this.getMonitoring, 5000, true)
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -287,7 +287,7 @@
             this.search = ''
             this.notification(response.data.message, '#00b16a')
             this.servers_dialog = false
-            this.getMonitoring(false)
+            this.getMonitoring(0)
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
