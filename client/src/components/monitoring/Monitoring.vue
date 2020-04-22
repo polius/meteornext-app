@@ -7,7 +7,7 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text title="Define monitoring rules and settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
           <v-btn text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
-          <v-btn text title="Filter servers" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn text title="Filter servers" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn text title="What's going on in all servers" @click="events_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
@@ -25,7 +25,7 @@
     <v-layout v-for="(n, i) in Math.ceil(servers.length/align)" :key="i" style="margin-left:-4px; margin-right:-4px;">
       <v-flex :xs3="align==4" :xs4="align==3" :xs6="align==2" :xs12="align==1" v-for="(m, j) in Math.min(servers.length-i*align,align)" :key="j" style="padding:5px; cursor:pointer;">
         <v-hover>
-          <v-card @click="monitor(servers[i*align+j])" slot-scope="{ hover }" :class="`elevation-${hover ? 12 : 2}`">
+          <v-card @click="monitor(servers[i*align+j])" slot-scope="{ hover }" :title="servers[i*align+j].color == 'teal' ? 'Server available' : servers[i*align+j].color == 'orange' ? 'Server loading...': 'Server unavailable'" :class="`elevation-${hover ? 12 : 2}`">
             <v-img height="10px" :class="servers[i*align+j].color"></v-img>
             <v-progress-linear v-if="servers[i*align+j].color == 'orange'" indeterminate color="orange" height="3" style="margin-bottom:-3px;"></v-progress-linear>
             <v-card-title primary-title style="padding-bottom:10px;">
@@ -44,6 +44,33 @@
         </v-hover>
       </v-flex>
     </v-layout>
+
+    <v-dialog v-model="settings_dialog" persistent max-width="50%">
+      <v-card>
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">SETTINGS</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="settings_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:15px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-bottom:15px;">
+                  <v-select filled v-model="settings.align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>
+                  <v-text-field filled v-model="settings.interval" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Data Collection Interval (seconds)" required style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-btn :loading="loading" color="#00b16a" @click="submitSettings()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="settings_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
 
     <v-dialog v-model="servers_dialog" persistent max-width="896px">
       <v-card>
@@ -82,25 +109,24 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="settings_dialog" persistent max-width="50%">
+    <v-dialog v-model="filter_dialog" persistent max-width="50%">
       <v-card>
         <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">SETTINGS</v-toolbar-title>
+          <v-toolbar-title class="white--text">FILTER</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="settings_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="filter_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
-                  <v-select filled v-model="settings.align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>
-                  <v-text-field filled v-model="settings.interval" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Data Collection Interval (seconds)" required style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
+                  <v-select filled v-model="filter" label="Filter servers" :items="filter_items" :rules="[v => !!v || '']" hide-details></v-select>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitSettings()">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="settings_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="submitFilter()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="filter_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -155,13 +181,6 @@
         search: '',
         pending_servers: true,
 
-        // Servers Dialog
-        servers_dialog: false,
-        treeviewItems: [],
-        treeviewSelected: [],
-        treeviewOpened: [],
-        treeviewSearch: '',
-
         // Settings Dialog
         settings_dialog: false,        
         settings: { align:'4', interval:'10' },
@@ -169,6 +188,18 @@
         source_items: ['Information Schema', 'Performance Schema (recommended)'],
         align: '4',
         interval: '10',
+
+        // Servers Dialog
+        servers_dialog: false,
+        treeviewItems: [],
+        treeviewSelected: [],
+        treeviewOpened: [],
+        treeviewSearch: '',
+
+        // Filter Dialog
+        filter_dialog: false,
+        filter_items: ['All', 'Available', 'Unavailable', 'Loading'],
+        filter: 'All',
 
         // Events Dialog
         events_dialog: false,
@@ -185,7 +216,7 @@
     },
     created() {
       this.active = true
-      this.getMonitoring(2)
+      this.getMonitoring(0)
     },
     destroyed() {
       this.active = false
@@ -196,19 +227,24 @@
       },
       getMonitoring(mode) {
         if (!this.active) return
-        axios.get('/monitoring')
+        else if (this.servers_origin.length == 0 && mode == 1) setTimeout(this.getMonitoring, 5000, 1)
+        else {
+          axios.get('/monitoring')
           .then((response) => {
-            if (mode == 2) this.parseSettings(response.data.settings)
+            if (mode == 0) this.parseSettings(response.data.settings)
             this.parseServers(response.data.servers)
             this.parseTreeView(response.data.servers)
             this.last_updated = response.data.last_updated
             this.loading = false
-            if (mode > 0) setTimeout(this.getMonitoring, 5000, true)
+            console.log(this.servers_origin)
+            if (mode != 2) setTimeout(this.getMonitoring, 5000, 1)
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
           })
+        }
+        
       },
       parseSettings(settings) {
         if (settings.length > 0) {
@@ -246,7 +282,11 @@
           }
         }
         this.pending_servers = pending_servers
-        if (this.search.length == 0) this.servers = this.servers_origin.slice(0)
+        if (this.search.length == 0) {
+          // Apply filter
+          this.servers = this.servers_origin.slice(0)
+          console.log(this.servers)
+        }
       },
       parseTreeView(servers) {
         var data = []
@@ -287,7 +327,7 @@
             this.search = ''
             this.notification(response.data.message, '#00b16a')
             this.servers_dialog = false
-            this.getMonitoring(0)
+            this.getMonitoring(2)
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -316,6 +356,9 @@
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
           })
+      },
+      submitFilter() {
+        
       },
       dateFormat(date) {
         if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
