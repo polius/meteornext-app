@@ -95,7 +95,7 @@
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
                   <v-select filled v-model="settings.align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>
-                  <v-text-field filled v-model="settings.interval" :rules="[v => v == parseInt(v) && v >= 10 || '']" label="Data Collection Interval (seconds)" required style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
+                  <v-text-field filled v-model="settings.interval" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Data Collection Interval (seconds)" required style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -183,7 +183,7 @@
         snackbarText: ''
       }
     },
-    mounted() {
+    created() {
       this.active = true
       this.getMonitoring(true)
     },
@@ -216,7 +216,6 @@
             if (settings[i]['name'] == 'align') {
               this.settings.align = settings[i]['value']
               this.align = settings[i]['value']
-              console.log(this.align)
             }
             else if (settings[i]['name'] == 'interval') {
               this.settings.interval = settings[i]['value']
