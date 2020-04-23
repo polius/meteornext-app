@@ -44,9 +44,9 @@ class Processlist:
     # Internal Methods #
     ####################
     def get(self, group_id):
-        servers = self._monitoring.get_servers(group_id)
-        return jsonify({'servers': servers, 'settings': settings}), 200
+        processlist = self._monitoring.get_processlist(group_id)
+        return jsonify({'data': processlist}), 200
 
     def put(self, group_id, data):
-        self._monitoring.put(user['group_id'], data)
+        self._monitoring.put(group_id, data)
         return jsonify({'message': 'Servers saved'}), 200

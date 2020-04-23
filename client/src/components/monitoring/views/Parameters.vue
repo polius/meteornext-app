@@ -5,14 +5,16 @@
         <v-toolbar-title class="white--text subtitle-1">PARAMETERS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text title="Settings" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+          <v-btn text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
           <v-btn text title="Filter parameters" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
         </v-toolbar-items>
         <v-text-field v-model="parameters_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
-        <v-divider v-if="!loading && last_updated != null" class="mx-3" inset vertical></v-divider>
-        <div v-if="!loading && last_updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
+        <v-divider v-if="loading || pending_servers || parameters_origin.length > 0" class="mx-3" inset vertical></v-divider>
+        <v-progress-circular v-if="loading || pending_servers" indeterminate size="20" width="2" color="white"></v-progress-circular>
+        <div v-if="loading || pending_servers" class="subheading font-weight-regular" style="margin-left:10px; padding-right:10px;">Loading servers...</div>
+        <div v-else-if="!loading && last_updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
       </v-toolbar>
-      <v-data-table :headers="parameters_headers" :items="parameters_items" :search="parameters_search" :hide-default-footer="parameters_items.length < 11" :loading="loading" item-key="id" class="elevation-1" style="padding-top:5px;">
+      <v-data-table :headers="parameters_headers" :items="parameters_items" :search="parameters_search" :hide-default-footer="parameters_items.length < 11" :loading="pending_servers" item-key="id" class="elevation-1" style="padding-top:5px;">
       </v-data-table>
     </v-card>
 
@@ -98,12 +100,7 @@ export default {
     last_updated: null,
 
     // Parameters
-    parameters_headers: [
-      { text: 'Variables', align: 'left', value: 'variables' },
-      { text: 'Templates EU', align: 'left', value: '1' },
-      { text: 'Templates US', align: 'left', value: '2' },
-      { text: 'Templates JP', align: 'left', value: '3' }
-    ],
+    parameters_headers: [],
     parameters_items: [],
     parameters_origin: [],
     parameters_search: '',
@@ -136,49 +133,47 @@ export default {
   methods: {
     getParameters(mode) {
       if (!this.active) return
-      else if (this.servers_origin.length == 0 && mode == 1) setTimeout(this.getMonitoring, 5000, 1)
+      else if (this.parameters_origin.length == 0 && mode == 1 && !this.pending_servers) setTimeout(this.getParameters, 5000, 1)
       else {
-        axios.get('/monitoring')
+        axios.get('/monitoring/parameters')
         .then((response) => {
-          this.parseParameters(response.data.servers)
-          this.parseTreeView(response.data.servers)
-          this.parseLastUpdated(response.data.servers)
+          this.parseParameters(response.data.data)
+          this.parseTreeView(response.data.data)
+          this.parseLastUpdated(response.data.data)
           this.loading = false
-          if (mode != 2) setTimeout(this.getMonitoring, 5000, 1)
+          if (mode != 2) setTimeout(this.getParameters, 5000, 1)
         })
         .catch((error) => {
-          console.log(error)
-          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          // else this.notification(error.response.data.message, 'error')
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
         })
       }
     },
-    parseParameters(servers) {
+    parseParameters(data) {
+      this.parameters_headers = [{ text: 'Variable', align: 'left', value: 'variable' }]
       this.parameters_origin = []
       var pending_servers = false
-      for (let i = 0; i < servers.length; ++i) {
-        if (servers[i]['selected']) {
-          var summary = JSON.parse(servers[i]['summary'])
-          // Get Current Connections
-          let conn = (summary != null && summary['info']['available'] && 'connections' in summary) ? summary['connections']['current'] : '?'
-          // Get Status Color
-          let color = '' 
-          if (summary == null) {
-            color = 'orange'
-            pending_servers = true
+      for (let i = 0; i < data.length; ++i) {
+        if (data[i]['selected']) {
+          // Check pending servers
+          pending_servers = data[i]['updated'] == null
+          // Fill parameter items
+          let params = JSON.parse(data[i]['parameters'])
+          for (let p in params) {
+            let obj = this.parameters_origin.find((o, i) => {
+              if (o.variable === p) {
+                this.parameters_origin[i][data[i]['server_id']] = params[p]
+                return true; // stop searching
+              }
+            });
+            if (obj === undefined) this.parameters_origin.push({variable: p, ['s'+data[i]['server_id']]: params[p]})
           }
-          else if (!summary['info']['available']) color = 'red'
-          else color = 'teal'
-          // Build Item
-          let item = {id: servers[i]['server_id'], name: servers[i]['server_name'], region: servers[i]['region_name'], hostname: servers[i]['hostname'], connections: conn, color: color}
-          this.servers_origin.push(item)
+          // Fill parameter headers
+          this.parameters_headers.push({ text: data[i]['server_name'] + ' (' + data[i]['region_name'] + ')', align: 'left', value: 's'+data[i]['server_id'] })
         }
       }
       this.pending_servers = pending_servers
-      // Apply filter
-      if (this.search.length == 0) {
-        this.applyFilter()
-      }
+      this.parameters_items = this.parameters_origin.slice(0)
     },
     parseTreeView(servers) {
       var data = []
@@ -227,7 +222,26 @@ export default {
       }
     },
     submitServers() {
-
+      this.loading = true
+      const payload = JSON.stringify(this.treeviewSelected)
+      axios.put('/monitoring/parameters', payload)
+        .then((response) => {
+          this.pending_servers = true
+          this.parameters_origin = []
+          this.parameters_items = []
+          this.parameters_search = ''
+          this.notification(response.data.message, '#00b16a')
+          this.servers_dialog = false
+          this.getParameters(2)
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+    },
+    dateFormat(date) {
+      if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
+      return date
     },
     notification(message, color) {
       this.snackbarText = message

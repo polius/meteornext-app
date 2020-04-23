@@ -68,7 +68,7 @@ class Setup:
             self._cron = Cron(self._app, self._license, self._blueprints, sql)
             self._cron.start()
 
-        except Exception:
+        except Exception as e:
             self._conf = {}
 
     def blueprint(self):

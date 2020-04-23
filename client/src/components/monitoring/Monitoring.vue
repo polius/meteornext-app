@@ -227,7 +227,7 @@
       },
       getMonitoring(mode) {
         if (!this.active) return
-        else if (this.servers_origin.length == 0 && mode == 1) setTimeout(this.getMonitoring, 5000, 1)
+        else if (this.servers_origin.length == 0 && mode == 1 && !this.pending_servers) setTimeout(this.getMonitoring, 5000, 1)
         else {
           axios.get('/monitoring')
           .then((response) => {
@@ -327,6 +327,7 @@
         const payload = JSON.stringify(this.treeviewSelected)
         axios.put('/monitoring', payload)
           .then((response) => {
+            this.pending_servers = true
             this.servers_origin = []
             this.servers = []
             this.search = ''

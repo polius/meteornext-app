@@ -14,11 +14,11 @@ class Queries:
 
     def blueprint(self):
         # Init blueprint
-        monitoring_blueprint = Blueprint('monitoring_queries', __name__, template_folder='monitoring_queries')
+        monitoring_queries_blueprint = Blueprint('monitoring_queries', __name__, template_folder='monitoring_queries')
 
         @monitoring_queries_blueprint.route('/monitoring/queries', methods=['GET', 'PUT'])
         @jwt_required
-        def monitoring_queries_blueprint():
+        def monitoring_queries_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
