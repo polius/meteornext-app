@@ -173,7 +173,7 @@ export default {
         }
       }
       this.pending_servers = pending_servers
-      this.parameters_items = this.parameters_origin.slice(0)
+      this.applyFilter()
     },
     parseTreeView(servers) {
       var data = []
@@ -213,12 +213,18 @@ export default {
       this.last_updated = last_updated
     },
     applyFilter() {
-      this.servers = []
-      for (let i = 0; i < this.servers_origin.length; ++i) {
-        if (this.filter == 'All') this.servers.push(this.servers_origin[i])
-        else if (this.filter == 'Available' && this.servers_origin[i]['color'] == 'teal') this.servers.push(this.servers_origin[i])
-        else if (this.filter == 'Unavailable' && this.servers_origin[i]['color'] == 'red') this.servers.push(this.servers_origin[i])
-        else if (this.filter == 'Loading' && this.servers_origin[i]['color'] == 'orange') this.servers.push(this.servers_origin[i])
+      this.parameters_items = []
+      for (let i = 0; i < this.parameters_origin.length; ++i) {        
+        if (this.filter == 'All') this.parameters_items.push(this.parameters_origin[i])
+        else {
+          let values = []
+          for (let key in this.parameters_origin[i]) {
+            if (key != 'variable') values.push(this.parameters_origin[i][key])
+          }
+          let match = values.every( v => v === values[0] )
+          if (this.filter == 'Matching' && match) this.parameters_items.push(this.parameters_origin[i])
+          else if (this.filter == 'Not Matching' && !match) this.parameters_items.push(this.parameters_origin[i])
+        }
       }
     },
     submitServers() {
@@ -238,6 +244,10 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
+    },
+    submitFilter() {
+      this.applyFilter()
+      this.filter_dialog = false
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
