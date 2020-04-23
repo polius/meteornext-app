@@ -1,12 +1,12 @@
 <template>
   <div>
     <v-card>
-      <v-toolbar flat color="primary">
-        <v-toolbar-title>DEPLOYMENTS</v-toolbar-title>
+      <v-toolbar dense flat color="primary">
+        <v-toolbar-title class="white--text subtitle-1">DEPLOYMENTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-          <v-btn text @click="filter_dialog = true"><v-icon small style="padding-right:10px">fas fa-search</v-icon>FILTER</v-btn>
-          <v-btn text v-if="selected.length == 1" @click="infoDeployment()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
+          <v-btn text @click="filter_dialog = true" class="body-2"><v-icon small style="padding-right:10px">fas fa-search</v-icon>FILTER</v-btn>
+          <v-btn text v-if="selected.length == 1" @click="infoDeployment()" class="body-2"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
