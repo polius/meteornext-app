@@ -71,10 +71,10 @@ class Monitoring:
         if server_id:
             return jsonify({'data': self._monitoring.get(group_id, server_id)}), 200
         else:
-            servers = self._monitoring.get_servers(group_id)
+            servers = self._monitoring.get_monitoring(group_id)
             settings = self._monitoring_settings.get(group_id)
             return jsonify({'servers': servers, 'settings': settings}), 200
 
     def put(self, group_id, data):
-        self._monitoring.put(user['group_id'], data)
+        self._monitoring.put(group_id, data)
         return jsonify({'message': 'Servers saved'}), 200

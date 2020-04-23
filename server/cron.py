@@ -24,6 +24,7 @@ class Cron:
         schedule.every(10).seconds.do(self.__executions)
         schedule.every().day.at("00:00").do(self.__coins)
         schedule.every().day.at("00:00").do(self.__logs)
+        schedule.every().day.at("00:00").do(self.__monitoring_clean)
         schedule.every(1).seconds.do(self.__monitoring)
 
         # Start Cron Listener
@@ -105,6 +106,10 @@ class Cron:
                         os.remove(execution_path + '.js')
                     # SQL
                     self._sql.execute("UPDATE deployments_{} SET expired = 1 WHERE id = {}".format(i['mode'], i['id']))
+
+    def __monitoring_clean(self):
+        monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
+        monitoring.clean()
 
     def __monitoring(self):
         if self._monitoring_ready:

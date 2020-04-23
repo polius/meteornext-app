@@ -307,14 +307,14 @@ CREATE TABLE `monitoring` (
   summary TEXT NULL,
   parameters MEDIUMTEXT NULL,
   processlist MEDIUMTEXT NULL,
-	monitor_enabled TINYINT(1) NOT NULL DEFAULT 1,
+	monitor_enabled TINYINT(1) NOT NULL DEFAULT 0,
 	parameters_enabled TINYINT(1) NOT NULL DEFAULT 0,
 	processlist_enabled TINYINT(1) NOT NULL DEFAULT 0,
 	queries_enabled TINYINT(1) NOT NULL DEFAULT 0,
   updated DATETIME NULL,
   PRIMARY KEY (`server_id`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `monitoring_settings` (
   `group_id` INT UNSIGNED NOT NULL,

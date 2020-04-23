@@ -20,7 +20,7 @@ class Monitoring:
         JOIN servers s ON s.id = m.server_id
         JOIN regions r ON r.id = s.region_id
         LEFT JOIN monitoring_settings ms ON ms.group_id = r.group_id AND ms.name = 'interval'
-        WHERE (m.monitor_enabled = 1 AND m.updated IS NULL)
+        WHERE m.updated IS NULL
         OR m.processlist_enabled = 1
         OR m.queries_enabled = 1
         OR (m.monitor_enabled = 1 AND ms.value IS NULL AND DATE_ADD(m.updated, INTERVAL 10 SECOND) <= NOW())
@@ -47,6 +47,17 @@ class Monitoring:
 
         for t in threads:
             t.join()
+
+    def clean(self):
+        # Clean Monitoring Servers
+        query = """
+            DELETE FROM monitoring
+            WHERE monitor_enabled = 0 
+            AND parameters_enabled = 0
+            AND processlist_enabled = 0
+            AND queries_enabled = 0
+        """
+        self._sql.execute(query)
 
     def __start_server(self, server):
         if server['sql']['engine'] == 'MySQL':
