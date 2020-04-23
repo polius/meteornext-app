@@ -307,6 +307,10 @@ CREATE TABLE `monitoring` (
   summary TEXT NULL,
   parameters MEDIUMTEXT NULL,
   processlist MEDIUMTEXT NULL,
+	monitor_enabled TINYINT(1) NOT NULL DEFAULT 1,
+	parameters_enabled TINYINT(1) NOT NULL DEFAULT 0,
+	processlist_enabled TINYINT(1) NOT NULL DEFAULT 0,
+	queries_enabled TINYINT(1) NOT NULL DEFAULT 0,
   updated DATETIME NULL,
   PRIMARY KEY (`server_id`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)

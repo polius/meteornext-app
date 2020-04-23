@@ -234,7 +234,7 @@
             if (mode == 0) this.parseSettings(response.data.settings)
             this.parseServers(response.data.servers)
             this.parseTreeView(response.data.servers)
-            this.last_updated = response.data.last_updated
+            this.parseLastUpdated(response.data.servers)
             this.loading = false
             if (mode != 2) setTimeout(this.getMonitoring, 5000, 1)
           })
@@ -243,7 +243,6 @@
             else this.notification(error.response.data.message, 'error')
           })
         }
-        
       },
       parseSettings(settings) {
         if (settings.length > 0) {
@@ -315,10 +314,18 @@
           this.treeviewOpened = opened
         }
       },
+      parseLastUpdated(servers) {
+        var last_updated = null
+        for (let i = 0; i < servers.length; ++i) {
+          if (last_updated == null) last_updated = servers[i]['updated']
+          else if (moment(servers[i]['updated']) < moment(last_updated)) last_updated = servers[i]['updated']
+        }
+        this.last_updated = last_updated
+      },
       submitServers() {
         this.loading = true
         const payload = JSON.stringify(this.treeviewSelected)
-        axios.put('/monitoring/servers', payload)
+        axios.put('/monitoring', payload)
           .then((response) => {
             this.servers_origin = []
             this.servers = []
