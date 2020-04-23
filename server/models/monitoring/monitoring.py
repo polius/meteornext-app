@@ -52,19 +52,10 @@ class Monitoring:
 
     def get_servers(self, group_id):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name', s.hostname, m.server_id IS NOT NULL AS 'selected', m.summary
+            SELECT s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name', s.hostname, m.server_id IS NOT NULL AS 'selected', m.summary, m.updated
             FROM servers s
             LEFT JOIN monitoring m ON m.server_id = s.id
             JOIN regions r ON r.id = s.region_id AND r.group_id = %s
             ORDER BY r.name, s.name
         """
         return self._sql.execute(query, (group_id))
-    
-    def get_lastupdated(self, group_id):
-        query = """
-            SELECT MIN(m.updated) AS 'updated'
-            FROM monitoring m
-            JOIN servers s ON s.id = m.server_id
-            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-        """
-        return self._sql.execute(query, (group_id))[0]['updated']
