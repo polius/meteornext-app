@@ -72,7 +72,7 @@ class Monitoring:
             # Set Server Available to False
             if server['monitor']['summary'] is None:
                 summary = {'info': {'available': False}}
-                query = "UPDATE monitoring SET summary = %s AND updated = CURRENT_TIMESTAMP WHERE server_id = %s"
+                query = "UPDATE monitoring SET summary = %s, updated = CURRENT_TIMESTAMP WHERE server_id = %s"
             else:
                 summary = self.__str2dict(server['monitor']['summary'])
                 summary['info']['available'] = False
