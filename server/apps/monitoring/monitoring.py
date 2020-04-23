@@ -12,19 +12,19 @@ class Monitoring:
     def start(self):
         # Get Monitoring Servers
         query = """
-        SELECT 
-            s.id, s.engine, s.hostname, s.port, s.username, s.password, s.aws_enabled, s.aws_instance_identifier, s.aws_region, s.aws_access_key_id, s.aws_secret_access_key,
-            r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
-            m.summary, m.monitor_enabled, m.parameters_enabled, m.processlist_enabled, m.queries_enabled
-        FROM monitoring m
-        JOIN servers s ON s.id = m.server_id
-        JOIN regions r ON r.id = s.region_id
-        LEFT JOIN monitoring_settings ms ON ms.group_id = r.group_id AND ms.name = 'interval'
-        WHERE m.updated IS NULL
-        OR m.processlist_enabled = 1
-        OR m.queries_enabled = 1
-        OR (m.monitor_enabled = 1 AND ms.value IS NULL AND DATE_ADD(m.updated, INTERVAL 10 SECOND) <= NOW())
-		OR (m.monitor_enabled = 1 AND ms.value IS NOT NULL AND DATE_ADD(m.updated, INTERVAL ms.value SECOND) <= NOW())
+            SELECT 
+                s.id, s.engine, s.hostname, s.port, s.username, s.password, s.aws_enabled, s.aws_instance_identifier, s.aws_region, s.aws_access_key_id, s.aws_secret_access_key,
+                r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
+                m.summary, m.monitor_enabled, m.parameters_enabled, m.processlist_enabled, m.queries_enabled
+            FROM monitoring m
+            JOIN servers s ON s.id = m.server_id
+            JOIN regions r ON r.id = s.region_id
+            LEFT JOIN monitoring_settings ms ON ms.group_id = r.group_id AND ms.name = 'interval'
+            WHERE m.updated IS NULL
+            OR m.processlist_enabled = 1
+            OR m.queries_enabled = 1
+            OR ((m.monitor_enabled = 1 OR m.parameters_enabled) AND ms.value IS NULL AND DATE_ADD(m.updated, INTERVAL 10 SECOND) <= NOW())
+            OR ((m.monitor_enabled = 1 OR m.parameters_enabled) AND ms.value IS NOT NULL AND DATE_ADD(m.updated, INTERVAL ms.value SECOND) <= NOW()) 
         """
         servers_raw = self._sql.execute(query)
 
