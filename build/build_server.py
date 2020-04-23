@@ -91,7 +91,6 @@ class build_server:
         # Build ext_modules
         ext_modules = []
         for root, dirs, files in os.walk("{}/build".format(build_path)):
-            dirs[:] = [d for d in dirs if d not in ['apps']]
             for f in files:
                 if f.endswith('.py'):
                     os.rename(os.path.join(root, f), os.path.join(root, f) + 'x')
