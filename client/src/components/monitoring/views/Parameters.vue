@@ -14,7 +14,7 @@
         <div v-if="loading || pending_servers" class="subheading font-weight-regular" style="margin-left:10px; padding-right:10px;">Loading servers...</div>
         <div v-else-if="!loading && last_updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
       </v-toolbar>
-      <v-data-table :headers="parameters_headers" :items="parameters_items" :search="parameters_search" :hide-default-footer="parameters_items.length < 11" :loading="pending_servers" item-key="id" class="elevation-1" style="padding-top:5px;">
+      <v-data-table :headers="parameters_headers" :items="parameters_items" :search="parameters_search" :hide-default-header="parameters_headers.length == 1" :hide-default-footer="parameters_items.length < 11" no-data-text="No servers selected" :loading="pending_servers" item-key="id" class="elevation-1" style="padding-top:5px;">
       </v-data-table>
     </v-card>
 
