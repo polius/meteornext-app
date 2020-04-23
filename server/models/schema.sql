@@ -318,5 +318,6 @@ CREATE TABLE `monitoring_settings` (
 	`value` VARCHAR(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`group_id`, `name`)
+  PRIMARY KEY (`group_id`, `name`),
+  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

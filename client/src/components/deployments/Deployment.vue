@@ -718,7 +718,6 @@
           { text: 'Ended', value: 'ended', sortable: false },
           { text: 'Overall', value: 'overall', sortable: false },
         ]
-        this.executions = {}
         this.validation_data = []
         this.execution_headers = []
         this.execution_progress = []
