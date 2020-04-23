@@ -1,4 +1,4 @@
-from mysql import mysql
+from apps.monitoring.mysql import mysql
 
 class connector:
     def __init__(self, server):

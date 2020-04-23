@@ -3,7 +3,7 @@ import datetime
 import threading
 from collections import OrderedDict
 
-from connector import connector
+from apps.monitoring.connector import connector
 
 class Monitoring:
     def __init__(self, sql):

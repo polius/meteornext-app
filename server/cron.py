@@ -10,8 +10,6 @@ import routes.deployments.views.basic
 import routes.deployments.views.pro
 import routes.deployments.views.inbenta
 
-# Import Monitoring app
-sys.path.insert(0, "apps/monitoring")
 import apps.monitoring.monitoring
 
 class Cron:
@@ -26,7 +24,7 @@ class Cron:
         schedule.every(10).seconds.do(self.__executions)
         schedule.every().day.at("00:00").do(self.__coins)
         schedule.every().day.at("00:00").do(self.__logs)
-        schedule.every(10).seconds.do(self.__monitoring)
+        schedule.every(1).seconds.do(self.__monitoring)
 
         # Start Cron Listener
         t = threading.Thread(target=self.__run_schedule)
