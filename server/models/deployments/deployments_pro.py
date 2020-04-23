@@ -40,11 +40,11 @@ class Deployments_Pro:
             SET `environment_id` = (SELECT id FROM environments WHERE name = %s AND group_id = %s),
                 `code` = %s,
                 `method` = %s,
-                `status` = %s,
+                `status` = IF (%s != '', 'SCHEDULED', 'CREATED'),
                 `scheduled` = IF(%s = '', NULL, %s)
             WHERE id = %s
         """
-        self._sql.execute(query, (deployment['environment'], deployment['group_id'], deployment['code'], deployment['method'], deployment['status'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
+        self._sql.execute(query, (deployment['environment'], deployment['group_id'], deployment['code'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
 
     def updateStatus(self, deployment_id, status):
         query = """
