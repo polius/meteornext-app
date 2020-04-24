@@ -20,11 +20,11 @@
     <div v-for="i in Object.keys(processlist_items)" :key="i" style="margin-bottom:15px;">
       <v-card>
         <v-toolbar flat dense color="#263238">
-          <v-toolbar-title class="subtitle-1">{{ processlist_metadata[i]['server_name'] + ' [' + processlist_metadata[i]['region_name'] + ']' }}</v-toolbar-title>
+          <v-toolbar-title class="subtitle-1">{{ processlist_metadata[i]['server_name'] + ' - ' + processlist_metadata[i]['region_name'] }}</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field v-model="processlist_search[i]" append-icon="search" label="Search" color="white" style="margin-left:10px; margin-bottom:2px;" single-line hide-details></v-text-field>
         </v-toolbar>
-        <v-data-table :headers="processlist_headers[i]" :items="processlist_items[i]" :search="processlist_search[i]" :hide-default-footer="processlist_items[i].length < 11" :no-data-text="(!pending_servers && processlist_items[i].length == 0 ) ? 'Server unavailable' : 'No data available'" :loading="pending_servers" class="elevation-1" style="padding-top:3px;">
+        <v-data-table :headers="processlist_headers[i]" :items="processlist_items[i]" :search="processlist_search[i]" :hide-default-footer="processlist_items[i].length < 11" :no-data-text="(!pending_servers && processlist_items[i].length == 0 && filter == 'All' ) ? 'Server unavailable' : 'No data available'" :loading="pending_servers" class="elevation-1" style="padding-top:3px;">
         </v-data-table>
       </v-card>
     </div>
@@ -58,6 +58,32 @@
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitServers()">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="error" @click="servers_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="filter_dialog" persistent max-width="50%">
+      <v-card>
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">FILTER</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="filter_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:15px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-bottom:15px;">
+                  <v-select filled v-model="filter_item" label="Command" :items="filter_items" :rules="[v => !!v || '']" hide-details></v-select>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-btn :loading="loading" color="#00b16a" @click="submitFilter()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="filter_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -101,7 +127,8 @@ export default {
 
     // Filter Dialog
     filter_dialog: false,
-    filter_items: ['All', 'Matching', 'Not matching'],
+    filter_items: ['All', 'Query', 'Sleep'],
+    filter_item : 'All',
     filter: 'All',
 
     // Snackbar
@@ -162,8 +189,7 @@ export default {
         }
       }
       this.pending_servers = pending_servers
-      // this.applyFilter()
-      this.processlist_items = JSON.parse(JSON.stringify(this.processlist_origin))
+      this.applyFilter()
     },
     parseTreeView(servers) {
       var data = []
@@ -219,6 +245,23 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
+    },
+    submitFilter() {
+      this.filter = this.filter_item
+      this.applyFilter()
+      this.filter_dialog = false
+    },
+    applyFilter() {
+      this.processlist_items = {}
+      var threads = JSON.parse(JSON.stringify(this.processlist_origin))
+      for (let i in threads) {
+        this.processlist_items[i] = []
+        for (let j = 0; j < threads[i].length; ++j) {
+          if (this.filter == 'All') this.processlist_items[i].push(threads[i][j])
+          else if (this.filter == 'Query' && threads[i][j]['COMMAND'] == 'Query') this.processlist_items[i].push(threads[i][j])
+          else if (this.filter == 'Sleep' && threads[i][j]['COMMAND'] == 'Sleep') this.processlist_items[i].push(threads[i][j])
+        }
+      }
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")

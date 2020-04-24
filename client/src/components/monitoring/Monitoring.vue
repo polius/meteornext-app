@@ -121,7 +121,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
-                  <v-select filled v-model="filter" label="Status" :items="filter_items" :rules="[v => !!v || '']" hide-details></v-select>
+                  <v-select filled v-model="filter_item" label="Status" :items="filter_items" :rules="[v => !!v || '']" hide-details></v-select>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -199,6 +199,7 @@
         // Filter Dialog
         filter_dialog: false,
         filter_items: ['All', 'Available', 'Unavailable', 'Loading'],
+        filter_item: 'All',
         filter: 'All',
 
         // Events Dialog
@@ -364,6 +365,7 @@
           })
       },
       submitFilter() {
+        this.filter = this.filter_item
         this.applyFilter()
         this.applySearch()
         this.filter_dialog = false
