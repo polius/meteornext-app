@@ -247,7 +247,7 @@
       },
       parseSettings(settings) {
         if (settings.length > 0) {
-          this.settings.align = this.align = settings[0]['monitor_align']
+          this.settings.align = this.align = settings[0]['monitor_align'].toString()
           this.settings.interval = this.interval = settings[0]['monitor_interval']
         }
       },
@@ -259,14 +259,10 @@
             var summary = JSON.parse(servers[i]['summary'])
             // Get Current Connections
             let conn = (summary != null && summary['info']['available'] && 'connections' in summary) ? summary['connections']['current'] : '?'
+            // Get Pending Servers
+            pending_servers = servers[i]['updated'] == null || (servers[i]['summary'] == null && servers[i]['available'])
             // Get Status Color
-            let color = '' 
-            if (summary == null) {
-              color = 'orange'
-              pending_servers = true
-            }
-            else if (!summary['info']['available']) color = 'red'
-            else color = 'teal'
+            let color = (pending_servers == 1) ? 'orange' : (servers[i]['available']) ? 'teal' : 'red'
             // Build Item
             let item = {id: servers[i]['server_id'], name: servers[i]['server_name'], region: servers[i]['region_name'], hostname: servers[i]['hostname'], connections: conn, color: color}
             this.servers_origin.push(item)

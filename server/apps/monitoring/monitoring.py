@@ -49,7 +49,6 @@ class Monitoring:
             t.join()
 
     def clean(self):
-        # Clean Monitoring Servers
         query = """
             DELETE m
             FROM monitoring m
