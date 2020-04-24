@@ -34,19 +34,19 @@ class Parameters:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
-                return self.get(user['group_id'])
+                return self.get(user)
             elif request.method == 'PUT':
-                return self.put(user['group_id'], monitoring_json)
+                return self.put(user, monitoring_json)
 
         return monitoring_parameters_blueprint
 
     ####################
     # Internal Methods #
     ####################
-    def get(self, group_id):
-        parameters = self._monitoring.get_parameters(group_id)
+    def get(self, user):
+        parameters = self._monitoring.get_parameters(user)
         return jsonify({'data': parameters}), 200
 
-    def put(self, group_id, data):
-        self._monitoring.put_parameters(group_id, data)
+    def put(self, user, data):
+        self._monitoring.put_parameters(user, data)
         return jsonify({'message': 'Servers saved'}), 200

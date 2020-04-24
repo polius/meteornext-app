@@ -36,9 +36,9 @@ class Monitoring:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
-                return self.get(user['group_id'])
+                return self.get(user)
             elif request.method == 'PUT':
-                return self.put(user['group_id'], monitoring_json)
+                return self.put(user, monitoring_json)
 
         @monitoring_blueprint.route('/monitoring/settings', methods=['PUT'])
         @jwt_required
@@ -66,15 +66,15 @@ class Monitoring:
     ####################
     # Internal Methods #
     ####################
-    def get(self, group_id):
+    def get(self, user):
         server_id = request.args['server_id'] if 'server_id' in request.args else None
         if server_id:
-            return jsonify({'data': self._monitoring.get(group_id, server_id)}), 200
+            return jsonify({'data': self._monitoring.get(user, server_id)}), 200
         else:
-            servers = self._monitoring.get_monitoring(group_id)
-            settings = self._monitoring_settings.get(group_id)
+            servers = self._monitoring.get_monitoring(user)
+            settings = self._monitoring_settings.get(user)
             return jsonify({'servers': servers, 'settings': settings}), 200
 
-    def put(self, group_id, data):
-        self._monitoring.put_monitor(group_id, data)
+    def put(self, user, data):
+        self._monitoring.put_monitor(user, data)
         return jsonify({'message': 'Servers saved'}), 200

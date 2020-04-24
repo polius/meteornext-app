@@ -34,25 +34,25 @@ class Processlist:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
-                return self.get(user['group_id'])
+                return self.get(user)
             elif request.method == 'PUT':
-                return self.put(user['group_id'], monitoring_json)
+                return self.put(user, monitoring_json)
             elif request.method == 'DELETE':
-                return self.delete(user['group_id'])
+                return self.delete(user)
 
         return monitoring_processlist_blueprint
 
     ####################
     # Internal Methods #
     ####################
-    def get(self, group_id):
-        processlist = self._monitoring.get_processlist(group_id)
+    def get(self, user):
+        processlist = self._monitoring.get_processlist(user)
         return jsonify({'data': processlist}), 200
 
-    def put(self, group_id, data):
-        self._monitoring.put_processlist(group_id, data)
+    def put(self, user, data):
+        self._monitoring.put_processlist(user, data)
         return jsonify({'message': 'Servers saved'}), 200
 
-    def delete(self, group_id):
-        self._monitoring.deactivate_processlist(group_id)
+    def delete(self, user):
+        self._monitoring.deactivate_processlist(user)
         return jsonify({'message': 'Processlist deactivated'}), 200

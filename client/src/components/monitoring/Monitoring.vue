@@ -240,23 +240,16 @@
             if (mode != 2) setTimeout(this.getMonitoring, 5000, 1)
           })
           .catch((error) => {
-            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-            else this.notification(error.response.data.message, 'error')
+            console.log(error)
+            // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            // else this.notification(error.response.data.message, 'error')
           })
         }
       },
       parseSettings(settings) {
         if (settings.length > 0) {
-          for (let i = 0; i < settings.length; ++i) {
-            if (settings[i]['name'] == 'align') {
-              this.settings.align = settings[i]['value']
-              this.align = settings[i]['value']
-            }
-            else if (settings[i]['name'] == 'interval') {
-              this.settings.interval = settings[i]['value']
-              this.interval = settings[i]['value']
-            }
-          }
+          this.settings.align = this.align = settings[0]['align']
+          this.settings.interval = this.interval = settings[0]['interval']
         }
       },
       parseServers(servers) {

@@ -15,16 +15,16 @@ class Monitoring:
             SELECT 
                 s.id, s.engine, s.hostname, s.port, s.username, s.password, s.aws_enabled, s.aws_instance_identifier, s.aws_region, s.aws_access_key_id, s.aws_secret_access_key,
                 r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
-                m.summary, m.monitor_enabled, m.parameters_enabled, m.processlist_enabled, m.queries_enabled
+                ms.summary, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled'
             FROM monitoring m
+			LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             JOIN servers s ON s.id = m.server_id
             JOIN regions r ON r.id = s.region_id
-            LEFT JOIN monitoring_settings ms ON ms.group_id = r.group_id AND ms.name = 'interval'
-            WHERE m.updated IS NULL
+			WHERE ms.updated IS NULL
             OR (m.processlist_enabled = 1 AND m.processlist_active = 1)
             OR m.queries_enabled = 1
-            OR ((m.monitor_enabled = 1 OR m.parameters_enabled) AND ms.value IS NULL AND DATE_ADD(m.updated, INTERVAL 10 SECOND) <= NOW())
-            OR ((m.monitor_enabled = 1 OR m.parameters_enabled) AND ms.value IS NOT NULL AND DATE_ADD(m.updated, INTERVAL ms.value SECOND) <= NOW()) 
+            OR ((m.monitor_enabled = 1 OR m.parameters_enabled = 1) AND DATE_ADD(ms.updated, INTERVAL (SELECT MIN(monitor_interval) FROM monitoring_settings WHERE user_id = m.user_id) SECOND) <= NOW())
+            GROUP BY m.server_id
         """
         servers_raw = self._sql.execute(query)
 
@@ -51,11 +51,20 @@ class Monitoring:
     def clean(self):
         # Clean Monitoring Servers
         query = """
-            DELETE FROM monitoring
+            DELETE m
+            FROM monitoring m
             WHERE monitor_enabled = 0 
             AND parameters_enabled = 0
             AND processlist_enabled = 0
             AND queries_enabled = 0
+        """
+        self._sql.execute(query)
+
+        query = """
+            DELETE ms
+            FROM monitoring_servers ms
+            LEFT JOIN monitoring m ON m.server_id = ms.server_id 
+            WHERE m.server_id IS NULL
         """
         self._sql.execute(query)
 
@@ -70,14 +79,19 @@ class Monitoring:
             conn.start()
         except Exception:
             # Set Server Available to False
+            query = """
+                INSERT INTO monitoring_servers (server_id, summary, updated)
+                VALUES (%s, %s, CURRENT_TIMESTAMP)
+                ON DUPLICATE KEY UPDATE
+                    summary = VALUES(summary),
+                    updated = VALUES(updated)
+            """
             if server['monitor']['summary'] is None:
                 summary = {'info': {'available': False}}
-                query = "UPDATE monitoring SET summary = %s, updated = CURRENT_TIMESTAMP WHERE server_id = %s"
             else:
                 summary = self.__str2dict(server['monitor']['summary'])
                 summary['info']['available'] = False
-                query = "UPDATE monitoring SET summary = %s, updated = CURRENT_TIMESTAMP WHERE server_id = %s"
-            self._sql.execute(query=query, args=(self.__dict2str(summary), server['id']))
+            self._sql.execute(query=query, args=(server['id'], self.__dict2str(summary)))
         else:
             # Build Parameters
             params = ''
@@ -108,14 +122,15 @@ class Monitoring:
 
             # Store Variables
             query = """
-                UPDATE monitoring
-                SET summary = IF(%s = '', NULL, %s),
-                    parameters = IF(%s = '', NULL, %s),
-                    processlist = IF(%s = '', NULL, %s),
-                    updated = CURRENT_TIMESTAMP
-                WHERE server_id = %s
+                INSERT INTO monitoring_servers (server_id, summary, parameters, processlist, updated)
+                SELECT %s, IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), CURRENT_TIMESTAMP
+                ON DUPLICATE KEY UPDATE
+                    summary = VALUES(summary),
+                    parameters = VALUES(parameters),
+                    processlist = VALUES(processlist),
+                    updated = VALUES(updated)
             """
-            self._sql.execute(query=query, args=(summary, summary, params, params, processlist, processlist, server['id']))
+            self._sql.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist))
 
         finally:
             # Stop Connection
