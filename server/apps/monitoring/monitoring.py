@@ -23,7 +23,7 @@ class Monitoring:
 			WHERE ms.updated IS NULL
             OR (m.processlist_enabled = 1 AND m.processlist_active = 1)
             OR m.queries_enabled = 1
-            OR ((m.monitor_enabled = 1 OR m.parameters_enabled = 1) AND DATE_ADD(ms.updated, INTERVAL (SELECT MIN(monitor_interval) FROM monitoring_settings WHERE user_id = m.user_id) SECOND) <= NOW())
+            OR ((m.monitor_enabled = 1 OR m.parameters_enabled = 1) AND DATE_ADD(ms.updated, INTERVAL (SELECT IFNULL(MIN(monitor_interval), 10) FROM monitoring_settings WHERE user_id = m.user_id) SECOND) <= NOW())
             GROUP BY m.server_id
         """
         servers_raw = self._sql.execute(query)
