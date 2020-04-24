@@ -5,8 +5,8 @@
         <v-toolbar-title class="white--text subtitle-1">PARAMETERS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
-          <v-btn text title="Filter parameters" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn :disabled="loading" text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn :disabled="loading" text title="Filter parameters" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
         </v-toolbar-items>
         <v-text-field v-model="parameters_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
         <v-divider v-if="loading || pending_servers || parameters_origin.length > 0" class="mx-3" inset vertical></v-divider>
@@ -208,8 +208,10 @@ export default {
     parseLastUpdated(servers) {
       var last_updated = null
       for (let i = 0; i < servers.length; ++i) {
-        if (last_updated == null) last_updated = servers[i]['updated']
-        else if (moment(servers[i]['updated']) < moment(last_updated)) last_updated = servers[i]['updated']
+        if (servers[i]['selected']) {
+          if (last_updated == null) last_updated = servers[i]['updated']
+          else if (moment(servers[i]['updated']) < moment(last_updated)) last_updated = servers[i]['updated']
+        }
       }
       this.last_updated = last_updated
     },
