@@ -303,26 +303,33 @@ CREATE TABLE `notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `monitoring` (
+  user_id INT UNSIGNED NOT NULL,
   server_id INT UNSIGNED NOT NULL,
-  summary TEXT NULL,
-  parameters MEDIUMTEXT NULL,
-  processlist MEDIUMTEXT NULL,
-	monitor_enabled TINYINT(1) NOT NULL DEFAULT 0,
+  monitor_enabled TINYINT(1) NOT NULL DEFAULT 0,
 	parameters_enabled TINYINT(1) NOT NULL DEFAULT 0,
 	processlist_enabled TINYINT(1) NOT NULL DEFAULT 0,
   processlist_active TINYINT(1) NOT NULL DEFAULT 0,
 	queries_enabled TINYINT(1) NOT NULL DEFAULT 0,
-  updated DATETIME NULL,
-  PRIMARY KEY (`server_id`),
+  PRIMARY KEY (`user_id`, `server_id`),
+  INDEX (`server_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `monitoring_settings` (
-  `group_id` INT UNSIGNED NOT NULL,
-  `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-	`value` VARCHAR(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `updated_by` INT UNSIGNED NULL,
-  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`group_id`, `name`),
-  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
+  user_id INT UNSIGNED NOT NULL,
+	monitor_align TINYINT UNSIGNED NOT NULL DEFAULT 4,
+  monitor_interval INT UNSIGNED NOT NULL DEFAULT 10,
+  PRIMARY KEY (`user_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `monitoring_servers` (
+  server_id INT UNSIGNED NOT NULL,
+  summary TEXT NULL,
+  parameters MEDIUMTEXT NULL,
+  processlist MEDIUMTEXT NULL,
+  updated DATETIME NULL,
+  PRIMARY KEY (`server_id`),
+  FOREIGN KEY (`server_id`) REFERENCES `monitoring` (`server_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

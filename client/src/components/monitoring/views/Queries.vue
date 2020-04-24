@@ -47,6 +47,8 @@
 
 export default {
   data: () => ({
+    loading: true,
+
     // Data Table
     headers: [
       { text: 'Query', align: 'left', value: 'query' },
