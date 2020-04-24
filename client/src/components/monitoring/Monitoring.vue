@@ -5,10 +5,10 @@
         <v-toolbar-title class="white--text subtitle-1">MONITORING</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text title="Define monitoring rules and settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
-          <v-btn text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
-          <v-btn text title="Filter servers" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
-          <v-btn text title="What's going on in all servers" @click="events_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
+          <v-btn :disabled="loading" text title="Define monitoring rules and settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+          <v-btn :disabled="loading" text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn :disabled="loading" text title="Filter servers" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn :disabled="loading" text title="What's going on in all servers" @click="events_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:5px;" single-line hide-details></v-text-field>
@@ -240,16 +240,15 @@
             if (mode != 2) setTimeout(this.getMonitoring, 5000, 1)
           })
           .catch((error) => {
-            console.log(error)
-            // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-            // else this.notification(error.response.data.message, 'error')
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message, 'error')
           })
         }
       },
       parseSettings(settings) {
         if (settings.length > 0) {
-          this.settings.align = this.align = settings[0]['align']
-          this.settings.interval = this.interval = settings[0]['interval']
+          this.settings.align = this.align = settings[0]['monitor_align']
+          this.settings.interval = this.interval = settings[0]['monitor_interval']
         }
       },
       parseServers(servers) {
@@ -311,8 +310,10 @@
       parseLastUpdated(servers) {
         var last_updated = null
         for (let i = 0; i < servers.length; ++i) {
-          if (last_updated == null) last_updated = servers[i]['updated']
-          else if (moment(servers[i]['updated']) < moment(last_updated)) last_updated = servers[i]['updated']
+          if (servers[i]['selected']) {
+            if (last_updated == null) last_updated = servers[i]['updated']
+            else if (moment(servers[i]['updated']) < moment(last_updated)) last_updated = servers[i]['updated']
+          }
         }
         this.last_updated = last_updated
       },

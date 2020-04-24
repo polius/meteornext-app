@@ -326,6 +326,7 @@ CREATE TABLE `monitoring_settings` (
 
 CREATE TABLE `monitoring_servers` (
   server_id INT UNSIGNED NOT NULL,
+  available TINYINT(1) NULL,
   summary TEXT NULL,
   parameters MEDIUMTEXT NULL,
   processlist MEDIUMTEXT NULL,

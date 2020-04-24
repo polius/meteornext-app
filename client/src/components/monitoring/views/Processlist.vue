@@ -5,8 +5,8 @@
         <v-toolbar-title class="white--text subtitle-1">PROCESSLIST</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
-          <v-btn text title="Filter processes" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn :disabled="loading" text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn :disabled="loading" text title="Filter processes" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
         </v-toolbar-items>
         <v-spacer></v-spacer>
         <v-divider v-if="loading || pending_servers || Object.keys(processlist_origin).length > 0" class="mx-3" inset vertical></v-divider>
@@ -24,7 +24,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field v-model="processlist_search[i]" append-icon="search" label="Search" color="white" style="margin-left:10px; margin-bottom:2px;" single-line hide-details></v-text-field>
         </v-toolbar>
-        <v-data-table :headers="processlist_headers[i]" :items="processlist_items[i]" :search="processlist_search[i]" :hide-default-footer="processlist_items[i].length < 11" :no-data-text="(!pending_servers && processlist_items[i].length == 0 && filter == 'All' ) ? 'Server unavailable' : 'No data available'" :loading="pending_servers" class="elevation-1" style="padding-top:3px;">
+        <v-data-table :headers="processlist_headers[i]" :items="processlist_items[i]" :search="processlist_search[i]" :hide-default-footer="processlist_items[i].length < 11" loading-text="Loading server..." :no-data-text="(!pending_servers && processlist_items[i].length == 0 && filter == 'All' ) ? 'Server unavailable' : 'No data available'" :loading="pending_servers" class="elevation-1" style="padding-top:3px;">
         </v-data-table>
       </v-card>
     </div>
@@ -154,7 +154,7 @@ export default {
       else {
         axios.get('/monitoring/processlist')
           .then((response) => {
-            this.parseParameters(response.data.data)
+            this.parseProcesslist(response.data.data)
             this.parseTreeView(response.data.data)
             this.parseLastUpdated(response.data.data)
             this.loading = false
@@ -166,7 +166,7 @@ export default {
           })
       }
     },
-    parseParameters(data) {
+    parseProcesslist(data) {
       this.processlist_metadata = {}
       this.processlist_headers = {}
       this.processlist_origin = {}
@@ -174,7 +174,7 @@ export default {
       for (let i = 0; i < data.length; ++i) {
         if (data[i]['selected']) {
           // Check pending servers
-          pending_servers = data[i]['updated'] == null
+          pending_servers = data[i]['updated'] == null || (data[i]['processlist'] == null && data[i]['available'])
 
           // Fill processlist 
           let threads = JSON.parse(data[i]['processlist'])
@@ -223,8 +223,10 @@ export default {
     parseLastUpdated(servers) {
       var last_updated = null
       for (let i = 0; i < servers.length; ++i) {
-        if (last_updated == null) last_updated = servers[i]['updated']
-        else if (moment(servers[i]['updated']) < moment(last_updated)) last_updated = servers[i]['updated']
+        if (servers[i]['selected']) {
+          if (last_updated == null) last_updated = servers[i]['updated']
+          else if (moment(servers[i]['updated']) < moment(last_updated)) last_updated = servers[i]['updated']
+        }
       }
       this.last_updated = last_updated
     },
