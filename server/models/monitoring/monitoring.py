@@ -35,13 +35,6 @@ class Monitoring:
 
     def get_processlist(self, user):
         query = """
-            UPDATE monitoring
-            SET processlist_active = 1
-            WHERE user_id = %s
-        """
-        self._sql.execute(query, (user['id']))
-
-        query = """
             SELECT s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.processlist_enabled = 1) AS 'selected', ms.available, ms.processlist, ms.updated
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
@@ -137,7 +130,15 @@ class Monitoring:
                 """
                 self._sql.execute(query, (user['id'], user['group_id'], i))
 
-    def deactivate_processlist(self, user):
+    def start_processlist(self, user):
+        query = """
+            UPDATE monitoring
+            SET processlist_active = 1
+            WHERE user_id = %s
+        """
+        self._sql.execute(query, (user['id']))
+
+    def stop_processlist(self, user):
         query = """
             UPDATE monitoring
             SET processlist_active = 0

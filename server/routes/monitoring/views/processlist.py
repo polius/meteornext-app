@@ -16,7 +16,7 @@ class Processlist:
         # Init blueprint
         monitoring_processlist_blueprint = Blueprint('monitoring_processlist', __name__, template_folder='monitoring_processlist')
 
-        @monitoring_processlist_blueprint.route('/monitoring/processlist', methods=['GET', 'PUT', 'DELETE'])
+        @monitoring_processlist_blueprint.route('/monitoring/processlist', methods=['GET', 'PUT'])
         @jwt_required
         def monitoring_processlist_method():
             # Check license
@@ -37,8 +37,42 @@ class Processlist:
                 return self.get(user)
             elif request.method == 'PUT':
                 return self.put(user, monitoring_json)
-            elif request.method == 'DELETE':
-                return self.delete(user)
+
+        @monitoring_processlist_blueprint.route('/monitoring/processlist/start', methods=['PUT'])
+        @jwt_required
+        def monitoring_processlist_start_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['monitoring_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Start processlist
+            self._monitoring.start_processlist(user)
+            return jsonify({'message': 'Processlist started'}), 200
+        
+        @monitoring_processlist_blueprint.route('/monitoring/processlist/stop', methods=['PUT'])
+        @jwt_required
+        def monitoring_processlist_stop_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['monitoring_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Stop processlist
+            self._monitoring.stop_processlist(user)
+            return jsonify({'message': 'Processlist stopped'}), 200
 
         return monitoring_processlist_blueprint
 
@@ -52,7 +86,3 @@ class Processlist:
     def put(self, user, data):
         self._monitoring.put_processlist(user, data)
         return jsonify({'message': 'Servers saved'}), 200
-
-    def delete(self, user):
-        self._monitoring.deactivate_processlist(user)
-        return jsonify({'message': 'Processlist deactivated'}), 200
