@@ -157,7 +157,8 @@ export default {
       for (let i = 0; i < data.length; ++i) {
         if (data[i]['selected']) {
           // Check pending servers
-          pending_servers = data[i]['updated'] == null
+          pending_servers = data[i]['updated'] == null || (data[i]['parameters'] == null && data[i]['available'])
+
           // Fill parameter items
           let params = JSON.parse(data[i]['parameters'])
           for (let p in params) {
@@ -173,7 +174,7 @@ export default {
           this.parameters_headers.push({ text: data[i]['server_name'] + ' (' + data[i]['region_name'] + ')', align: 'left', value: 's'+data[i]['server_id'] })
         }
       }
-      this.pending_servers = pending_servers
+      this.pending_servers = (pending_servers == 1) ? true : false
       this.applyFilter()
     },
     parseTreeView(servers) {

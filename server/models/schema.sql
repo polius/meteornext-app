@@ -332,5 +332,5 @@ CREATE TABLE `monitoring_servers` (
   processlist MEDIUMTEXT NULL,
   updated DATETIME NULL,
   PRIMARY KEY (`server_id`),
-  FOREIGN KEY (`server_id`) REFERENCES `monitoring` (`server_id`)
+  FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
