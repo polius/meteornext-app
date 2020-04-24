@@ -19,8 +19,8 @@
       </v-toolbar>
     </v-card>
 
-    <div v-if="!loading && servers_origin.length == 0" class="body-2" style="margin-top:20px; text-align:center; color:#D3D3D3">No servers selected</div>
-    <div v-else-if="!loading && servers.length == 0" class="body-2" style="margin-top:20px; text-align:center; color:#D3D3D3">The search returned no results</div>
+    <div v-if="!loading && servers_origin.length == 0" class="body-2" style="margin-top:15px; text-align:center; color:#D3D3D3">No servers selected</div>
+    <div v-else-if="!loading && servers.length == 0" class="body-2" style="margin-top:15px; text-align:center; color:#D3D3D3">The search returned no results</div>
 
     <v-layout v-for="(n, i) in Math.ceil(servers.length/align)" :key="i" style="margin-left:-4px; margin-right:-4px;">
       <v-flex :xs3="align==4" :xs4="align==3" :xs6="align==2" :xs12="align==1" v-for="(m, j) in Math.min(servers.length-i*align,align)" :key="j" style="padding:5px; cursor:pointer;">

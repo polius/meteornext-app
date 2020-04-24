@@ -76,5 +76,5 @@ class Monitoring:
             return jsonify({'servers': servers, 'settings': settings}), 200
 
     def put(self, group_id, data):
-        self._monitoring.put(group_id, data)
+        self._monitoring.put_monitor(group_id, data)
         return jsonify({'message': 'Servers saved'}), 200

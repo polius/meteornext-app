@@ -21,7 +21,7 @@ class Monitoring:
             JOIN regions r ON r.id = s.region_id
             LEFT JOIN monitoring_settings ms ON ms.group_id = r.group_id AND ms.name = 'interval'
             WHERE m.updated IS NULL
-            OR m.processlist_enabled = 1
+            OR (m.processlist_enabled = 1 AND m.processlist_active = 1)
             OR m.queries_enabled = 1
             OR ((m.monitor_enabled = 1 OR m.parameters_enabled) AND ms.value IS NULL AND DATE_ADD(m.updated, INTERVAL 10 SECOND) <= NOW())
             OR ((m.monitor_enabled = 1 OR m.parameters_enabled) AND ms.value IS NOT NULL AND DATE_ADD(m.updated, INTERVAL ms.value SECOND) <= NOW()) 

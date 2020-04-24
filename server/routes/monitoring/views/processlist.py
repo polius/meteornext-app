@@ -16,7 +16,7 @@ class Processlist:
         # Init blueprint
         monitoring_processlist_blueprint = Blueprint('monitoring_processlist', __name__, template_folder='monitoring_processlist')
 
-        @monitoring_processlist_blueprint.route('/monitoring/processlist', methods=['GET', 'PUT'])
+        @monitoring_processlist_blueprint.route('/monitoring/processlist', methods=['GET', 'PUT', 'DELETE'])
         @jwt_required
         def monitoring_processlist_method():
             # Check license
@@ -37,6 +37,8 @@ class Processlist:
                 return self.get(user['group_id'])
             elif request.method == 'PUT':
                 return self.put(user['group_id'], monitoring_json)
+            elif request.method == 'DELETE':
+                return self.delete(user['group_id'])
 
         return monitoring_processlist_blueprint
 
@@ -48,5 +50,9 @@ class Processlist:
         return jsonify({'data': processlist}), 200
 
     def put(self, group_id, data):
-        self._monitoring.put(group_id, data)
+        self._monitoring.put_processlist(group_id, data)
         return jsonify({'message': 'Servers saved'}), 200
+
+    def delete(self, group_id):
+        self._monitoring.deactivate_processlist(group_id)
+        return jsonify({'message': 'Processlist deactivated'}), 200
