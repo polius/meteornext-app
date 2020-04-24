@@ -7,6 +7,8 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn :disabled="loading" text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
           <v-btn :disabled="loading" text title="Filter processes" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-divider v-if="!loading && last_updated != null" class="mx-3" inset vertical></v-divider>
+          <v-btn v-if="!loading && last_updated != null" :disabled="loading" text :title="stopped ? 'Start processlist retrieval' : 'Stop processlist retrieval'" @click="submitStop()" class="body-2"><v-icon small style="padding-right:10px">{{ stopped ? 'fas fa-play' : 'fas fa-stop'}}</v-icon>{{ stopped ? 'START' : 'STOP' }}</v-btn>
         </v-toolbar-items>
         <v-spacer></v-spacer>
         <v-divider v-if="loading || pending_servers || Object.keys(processlist_origin).length > 0" class="mx-3" inset vertical></v-divider>
@@ -131,6 +133,9 @@ export default {
     filter_item : 'All',
     filter: 'All',
 
+    // Stop Processlist
+    stopped: false,
+
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -139,18 +144,19 @@ export default {
   }),
   created() {
     this.active = true
+    this.startProcesslist()
     this.getProcesslist(0)
   },
   destroyed() {
     this.active = false
-    axios.delete('/monitoring/processlist')
+    axios.put('/monitoring/processlist/stop')
       .then(() => {})
       .catch(() => {})
   },
   methods: {
     getProcesslist(mode) {
       if (!this.active) return
-      else if (Object.keys(this.processlist_origin).length == 0 && mode == 1 && !this.pending_servers) setTimeout(this.getProcesslist, 5000, 1)
+      else if (this.stopped || (Object.keys(this.processlist_origin).length == 0 && mode == 1 && !this.pending_servers)) setTimeout(this.getProcesslist, 5000, 1)
       else {
         axios.get('/monitoring/processlist')
           .then((response) => {
@@ -264,6 +270,31 @@ export default {
           else if (this.filter == 'Sleep' && threads[i][j]['COMMAND'] == 'Sleep') this.processlist_items[i].push(threads[i][j])
         }
       }
+    },
+    submitStop() {
+      if (this.stopped) this.startProcesslist(true)
+      else this.stopProcesslist()
+      this.stopped = !this.stopped
+    },
+    startProcesslist(notification=false) {
+      axios.put('/monitoring/processlist/start')
+        .then((response) => {
+          if (notification) this.notification(response.data.message, 'primary')
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+    },
+    stopProcesslist() {
+      axios.put('/monitoring/processlist/stop')
+        .then((response) => { 
+          this.notification(response.data.message, 'primary')
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
