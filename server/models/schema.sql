@@ -346,8 +346,10 @@ CREATE TABLE `monitoring_queries` (
   `user` VARCHAR(191) NOT NULL,
   `host` VARCHAR(191) NOT NULL,
   `first_seen` DATETIME NOT NULL,
-  `last_seen` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `execution_time` INT UNSIGNED NOT NULL,
+  `last_seen` DATETIME NULL,
+  `last_execution_time` INT UNSIGNED NOT NULL,
+  `max_execution_time` INT UNSIGNED NOT NULL,
+  `avg_execution_time` INT UNSIGNED NOT NULL,
   `count` INT UNSIGNED NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   UNIQUE `server_id__db__query_hash` (`server_id`, `db`, `query_hash`),
@@ -359,5 +361,6 @@ CREATE TABLE `monitoring_queries` (
   INDEX `first_seen` (`first_seen`),
   INDEX `last_seen` (`last_seen`),
   INDEX `execution_time` (`execution_time`),
+  INDEX `count` (`count`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

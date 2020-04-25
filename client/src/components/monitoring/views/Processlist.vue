@@ -9,6 +9,7 @@
           <v-btn :disabled="loading" text title="Filter processes" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-divider v-if="!loading && last_updated != null" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="!loading && last_updated != null" :disabled="loading" text :title="stopped ? 'Start processlist retrieval' : 'Stop processlist retrieval'" @click="submitStop()" class="body-2"><v-icon small style="padding-right:10px">{{ stopped ? 'fas fa-play' : 'fas fa-stop'}}</v-icon>{{ stopped ? 'START' : 'STOP' }}</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-spacer></v-spacer>
         <v-divider v-if="loading || pending_servers || Object.keys(processlist_origin).length > 0" class="mx-3" inset vertical></v-divider>
@@ -130,7 +131,7 @@ export default {
     // Filter Dialog
     filter_dialog: false,
     filter_items: ['All', 'Query', 'Sleep'],
-    filter_item : 'All',
+    filter_item: 'All',
     filter: 'All',
 
     // Stop Processlist
@@ -266,7 +267,7 @@ export default {
         this.processlist_items[i] = []
         for (let j = 0; j < threads[i].length; ++j) {
           if (this.filter == 'All') this.processlist_items[i].push(threads[i][j])
-          else if (this.filter == 'Query' && threads[i][j]['COMMAND'] == 'Query') this.processlist_items[i].push(threads[i][j])
+          else if (this.filter == 'Query' && threads[i][j]['COMMAND'].include('Query', 'Execute')) this.processlist_items[i].push(threads[i][j])
           else if (this.filter == 'Sleep' && threads[i][j]['COMMAND'] == 'Sleep') this.processlist_items[i].push(threads[i][j])
         }
       }
@@ -279,7 +280,7 @@ export default {
     startProcesslist(notification=false) {
       axios.put('/monitoring/processlist/start')
         .then((response) => {
-          if (notification) this.notification(response.data.message, 'primary')
+          if (notification) this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -289,7 +290,7 @@ export default {
     stopProcesslist() {
       axios.put('/monitoring/processlist/stop')
         .then((response) => { 
-          this.notification(response.data.message, 'primary')
+          this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))

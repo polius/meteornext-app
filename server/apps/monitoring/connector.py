@@ -36,6 +36,3 @@ class connector:
 
     def get_processlist(self):
         return self._sql.get_processlist()
-
-    def get_processlist_v2(self):
-        return self._sql.get_processlist_v2()
