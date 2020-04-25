@@ -317,9 +317,10 @@ CREATE TABLE `monitoring` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `monitoring_settings` (
-  user_id INT UNSIGNED NOT NULL,
-	monitor_align TINYINT UNSIGNED NOT NULL DEFAULT 4,
-  monitor_interval INT UNSIGNED NOT NULL DEFAULT 10,
+  `user_id` INT UNSIGNED NOT NULL,
+	`monitor_align` TINYINT UNSIGNED NOT NULL DEFAULT 4,
+  `monitor_interval` INT UNSIGNED NOT NULL DEFAULT 10,
+  `query_time` INT UNSIGNED NOT NULL DEFAULT 10, 
   PRIMARY KEY (`user_id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
@@ -332,5 +333,31 @@ CREATE TABLE `monitoring_servers` (
   processlist MEDIUMTEXT NULL,
   updated DATETIME NULL,
   PRIMARY KEY (`server_id`),
+  FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `monitoring_queries` (
+  `id` INT UNSIGNED AUTO_INCREMENT,
+  `server_id` INT UNSIGNED NOT NULL,
+  `query_id` INT UNSIGNED NOT NULL,
+  `query_text` TEXT NOT NULL,
+	`query_hash` VARCHAR(191) NOT NULL,
+  `db` VARCHAR(191) NOT NULL,
+  `user` VARCHAR(191) NOT NULL,
+  `host` VARCHAR(191) NOT NULL,
+  `first_seen` DATETIME NOT NULL,
+  `last_seen` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `execution_time` INT UNSIGNED NOT NULL,
+  `count` INT UNSIGNED NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE `server_id__db__query_hash` (`server_id`, `db`, `query_hash`),
+  INDEX `server_id__execution_time` (`server_id`, `execution_time`),
+  INDEX `query_text` (`query_text`(191)),
+  INDEX `db` (`db`),
+  INDEX `user` (`user`),
+  INDEX `host` (`host`),
+  INDEX `first_seen` (`first_seen`),
+  INDEX `last_seen` (`last_seen`),
+  INDEX `execution_time` (`execution_time`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

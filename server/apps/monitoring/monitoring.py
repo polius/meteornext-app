@@ -15,9 +15,10 @@ class Monitoring:
             SELECT 
                 s.id, s.engine, s.hostname, s.port, s.username, s.password, s.aws_enabled, s.aws_instance_identifier, s.aws_region, s.aws_access_key_id, s.aws_secret_access_key,
                 r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
-                ms.summary, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled'
+                ms.summary, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_time), 10) AS 'query_time'
             FROM monitoring m
 			LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
+            LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id
             JOIN servers s ON s.id = m.server_id
             JOIN regions r ON r.id = s.region_id
 			WHERE ms.updated IS NULL
@@ -35,7 +36,7 @@ class Monitoring:
             server['id'] = s['id']
             server['ssh'] = {'enabled': s['ssh_tunnel'], 'hostname': s['hostname'], 'port': s['rport'], 'username': s['rusername'], 'password': s['rpassword'], 'key': s['key']}
             server['sql'] = {'engine': s['engine'], 'hostname': s['hostname'], 'port': s['port'], 'username': s['username'], 'password': s['password']}
-            server['monitor'] = {'summary': s['summary'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled']}
+            server['monitor'] = {'summary': s['summary'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_time': s['query_time']}
             servers.append(server)
 
         # Get Server Info
@@ -95,7 +96,7 @@ class Monitoring:
 
             # Build Processlist
             processlist = ''
-            if server['monitor']['monitor_enabled'] or server['monitor']['processlist_enabled']:
+            if server['monitor']['monitor_enabled'] or server['monitor']['processlist_enabled'] or server['queries_enabled']:
                 processlist = conn.get_processlist()
             
             # Build Summary
@@ -108,6 +109,23 @@ class Monitoring:
                 summary['statements'] = {'all': status.get('Questions'), 'select': int(status.get('Com_select')) + int(status.get('Qcache_hits')), 'insert': int(status.get('Com_insert')) + int(status.get('Com_insert_select')), 'update': int(status.get('Com_update')) + int(status.get('Com_update_multi')), 'delete': int(status.get('Com_delete')) + int(status.get('Com_delete_multi'))}
                 summary['index'] = {'percent': "{:.2f}%".format((int(status['Handler_read_rnd_next']) + int(status['Handler_read_rnd'])) / (int(status['Handler_read_rnd_next']) + int(status['Handler_read_rnd']) + int(status['Handler_read_first']) + int(status['Handler_read_next']) + int(status['Handler_read_key']) + int(status['Handler_read_prev']))), 'selects': status['Select_scan']}
                 summary['rds'] = {}
+
+            # Store Queries
+            if server['monitor']['queries_enabled']:
+                for i in processlist:
+                    if i['TIME'] >= server['monitor']['query_time'] and i['COMMAND'] == 'Query':
+                        query = """
+                            INSERT INTO monitoring_queries (server_id, query_id, query_text, query_hash, db, user, host, first_seen, execution_time)
+                            VALUES (%s, %s, %s, SHA1(%s), %s, %s, %s, CURRENT_TIMESTAMP, %s)
+                            ON DUPLICATE KEY UPDATE
+                                user = VALUES(user),
+                                host = VALUES(host),
+                                execution_time = VALUES(execution_time),
+                                last_seen = IF(query_id = VALUES(query_id), last_seen, CURRENT_TIMESTAMP),
+                                count = IF(query_id = VALUES(query_id), count, count+1),
+                                query_id = VALUES(query_id)
+                        """
+                        self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], i['DB'], i['USER'], i['HOST'], i['TIME']))
 
             # Parse Variables
             summary = self.__dict2str(summary) if summary != '' else ''
