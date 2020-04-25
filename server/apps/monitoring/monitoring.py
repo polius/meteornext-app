@@ -113,7 +113,7 @@ class Monitoring:
             # Store Queries
             if server['monitor']['queries_enabled']:
                 for i in processlist:
-                    if i['TIME'] >= server['monitor']['query_time'] and i['COMMAND'] == 'Query':
+                    if i['TIME'] >= server['monitor']['query_time'] and i['COMMAND'] in ['Query','Execute']:
                         query = """
                             INSERT INTO monitoring_queries (server_id, query_id, query_text, query_hash, db, user, host, first_seen, execution_time)
                             VALUES (%s, %s, %s, SHA1(%s), %s, %s, %s, CURRENT_TIMESTAMP, %s)

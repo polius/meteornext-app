@@ -44,6 +44,17 @@ class Monitoring:
         """
         return self._sql.execute(query, (user['group_id'], user['id']))
 
+    def get_queries(self, user):
+        query = """
+            SELECT s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.queries_enabled = 1) AS 'selected'
+            FROM servers s
+			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
+            LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
+            ORDER BY r.name, s.name;
+        """
+        return self._sql.execute(query, (user['group_id'], user['id']))
+
     def put_monitor(self, user, data):
         if len(data) == 0:
             query = """

@@ -5,30 +5,147 @@
         <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text title="Settings" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+          <v-btn text title="Define monitoring rules and settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+          <v-btn text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn text title="Filter queries" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
-        <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
+        <v-text-field v-model="queries_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :hide-default-footer="items.length < 11" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
+      <v-data-table :headers="queries_headers" :items="queries_items" :search="queries_search" :hide-default-footer="queries_items.length < 11" :loading="loading" class="elevation-1" style="padding-top:5px;">
+        <template v-slot:item.first_seen="props">
+          <span>{{ dateFormat(props.item.first_seen) }}</span>
+        </template>
+        <template v-slot:item.last_seen="props">
+          <span>{{ dateFormat(props.item.last_seen) }}</span>
+        </template>
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="itemDialog" persistent max-width="768px">
-      <v-toolbar dark color="primary">
-        <v-toolbar-title class="white--text">{{ itemDialogTitle }}</v-toolbar-title>
-      </v-toolbar>
+    <v-dialog v-model="settings_dialog" persistent max-width="50%">
       <v-card>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">SETTINGS</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="settings_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:15px;">
+          <v-container style="padding:0px">
             <v-layout wrap>
-              <v-flex xs12 v-if="mode!='delete'">
-                <v-text-field ref="field" v-model="item.name" label="Environment Name" required></v-text-field>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-bottom:15px;">
+                  <v-text-field filled v-model="settings.execution_time" label="Minimum Execution Time (seconds)" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-bottom:10px;" hide-details></v-text-field>
+                  <v-text-field filled v-model="settings.data_retention" label="Data Retention Timeframe (days)" required style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-btn :loading="loading" color="#00b16a" @click="submitSettings()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="settings_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                </div>
               </v-flex>
-              <v-flex xs12 style="padding-bottom:10px" v-if="mode=='delete'">
-                <div class="subheading">Are you sure you want to delete the selected environments?</div>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="servers_dialog" persistent max-width="896px">
+      <v-card>
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="servers_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 20px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
+                  <v-card>
+                    <v-toolbar flat dense color="#2e3131">
+                      <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+                    </v-toolbar>
+                    <v-card-text style="padding: 10px;">
+                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                        <template v-slot:prepend="{ item }">
+                          <v-icon v-if="!item.children" small>fas fa-database</v-icon>
+                        </template>
+                      </v-treeview>
+                    </v-card-text>
+                  </v-card>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn :loading="loading" color="#00b16a" @click="submitServers()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="servers_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                </div>
               </v-flex>
-              <v-btn color="#00b16a" dark style="margin-left:0px">Confirm</v-btn>
-              <v-btn color="error" @click="itemDialog=false" dark style="margin-left:0px">Cancel</v-btn>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="filter_dialog" persistent max-width="50%">
+      <v-card>
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">FILTER</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="filter_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 15px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-bottom:10px;">
+                  <v-row>
+                    <v-col cols="8" style="padding-top:5px;">
+                      <v-text-field text v-model="filter.query" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Query" required style="padding-top:0px;" hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-top:5px;">
+                      <v-select text v-model="filter.query_options" label="Filter" :items="filter_options" :rules="[v => !!v || '']" style="padding-top:0px;" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="8" style="padding-top:0px;">
+                      <v-text-field text v-model="filter.database" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Database" required hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-top:0px;">
+                      <v-select text v-model="filter.database_options" label="Filter" :items="filter_options" :rules="[v => !!v || '']" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="8" style="padding-top:0px;">
+                      <v-select text v-model="filter.server" label="Server" :items="server_items" :rules="[v => !!v || '']" hide-details></v-select>
+                    </v-col>
+                    <v-col cols="4" style="padding-top:0px;">
+                      <v-select text v-model="filter.server_options" label="Filter" :items="filter_options" :rules="[v => !!v || '']" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="8" style="padding-top:0px;">
+                      <v-text-field text v-model="filter.user" :rules="[v => v == parseInt(v) && v > 0 || '']" label="User" required hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-top:0px;">
+                      <v-select text v-model="filter.user_options" label="Filter" :items="filter_options" :rules="[v => !!v || '']" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="8" style="padding-top:0px;">
+                      <v-text-field text v-model="filter.host" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Host" required hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-top:0px;">
+                      <v-select text v-model="filter.host_options" label="Filter" :items="filter_options" :rules="[v => !!v || '']" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn :loading="loading" color="#00b16a" @click="submitFilter()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="filter_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                  <v-btn :disabled="loading" color="info" @click="clearFilter()" style="float:right;">Remove Filter</v-btn>
+                </div>
+              </v-flex>
             </v-layout>
           </v-container>
         </v-card-text>
@@ -43,51 +160,105 @@
 </template>
 
 <script>
-// import axios from 'axios'
+import axios from 'axios'
+import moment from 'moment'
 
 export default {
   data: () => ({
     loading: true,
 
-    // Data Table
-    headers: [
+    // Queries
+    queries_headers: [
       { text: 'Query', align: 'left', value: 'query' },
-      { text: 'Database', align: 'left', value: 'database' },
+      { text: 'Database', align: 'left', value: 'db' },
       { text: 'Server', align: 'left', value: 'server' },
       { text: 'User', align: 'left', value: 'user' },
       { text: 'Host', align: 'left', value: 'host' },
-      { text: 'Seen', align: 'left', value: 'seen' },
-      { text: 'Time', align: 'left', value: 'time' }
+      { text: 'First Seen', align: 'left', value: 'first_seen' },
+      { text: 'Last Seen', align: 'left', value: 'last_seen' },
+      { text: 'Execution Time', align: 'left', value: 'execution_time' },
+      { text: 'Count', align: 'left', value: 'count' }
     ],
-    items: [
-      { 
-        query: "SELECT COUNT(*) AS n FROM t_ticket_archive WHERE id_responsible='0'",
-        database: "ilf_sky_tickets",
-        server: "awseu-sql03",
-        user: "ilf",
-        host: "localhost",
-        seen: "2019-07-17 11:23:52",
-        time: 158
-      }
-    ],
-    selected: [],
-    search: '',
-    // Item
-    item: { name: '' },
-    // Action Mode (new, edit, delete)
-    mode: '',
-    // Dialog: Item
-    itemDialog: false,
-    itemDialogTitle: '',
+    queries_items: [],
+    queries_search: '',
+
+    // Settings Dialog
+    settings_dialog: false,        
+    settings: { align:'4', interval:'10' },
+    align_items: ['1', '2', '3', '4'],
+    source_items: ['Information Schema', 'Performance Schema (recommended)'],
+    align: '4',
+    interval: '10',
+
+    // Servers Dialog
+    servers_dialog: false,
+    treeviewItems: [],
+    treeviewSelected: [],
+    treeviewOpened: [],
+    treeviewSearch: '',
+
+    // Filter Dialog
+    filter_dialog: false,
+    filter: {},
+    server_items: [],
+    filter_options: ['Equal', 'Not equal', 'Starts', 'Not starts'],
+
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
     snackbarText: '',
     snackbarColor: ''
   }),
-  methods: {
-  },
   created() {
+    this.getQueries()
+  },
+  methods: {
+    getQueries() {
+      axios.get('/monitoring/queries')
+        .then((response) => {
+          this.queries_items = response.data.queries
+          this.parseTreeView(response.data.servers)
+          this.loading = false
+        })
+        .catch((error) => {
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
+        })
+    },
+    parseTreeView(servers) {
+      var data = []
+      var selected = []
+      var opened = []
+      if (servers.length == 0) return data
+
+      // Parse Servers
+      var current_region = null
+      for (let i = 0; i < servers.length; ++i) {
+        if ('r' + servers[i]['region_id'] != current_region) {
+          data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'] }] })
+          current_region = 'r' + servers[i]['region_id']
+        } else {
+          let row = data.pop()
+          row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'] })
+          data.push(row)
+        }
+        // Check selected
+        if (servers[i]['selected']) {
+          selected.push(servers[i]['server_id'])
+          opened.push('r' + servers[i]['region_id'])
+        }
+      }
+      if (!this.servers_dialog) {
+        this.treeviewItems = data
+        this.treeviewSelected = selected
+        this.treeviewOpened = opened
+      }
+    },
+    dateFormat(date) {
+      if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
+      return date
+    },
   }
 }
 </script>

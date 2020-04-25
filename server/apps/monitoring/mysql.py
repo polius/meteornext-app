@@ -128,15 +128,14 @@ class mysql:
         return result
 
     def get_processlist(self):
-        query = "SELECT * FROM information_schema.processlist"
-        result = self.execute(query)
-        return result
-
-    def get_processlist_v2(self):
         query = """
             SELECT processlist_id AS 'id', processlist_user AS 'user', processlist_host AS 'host', processlist_db AS 'db', processlist_command AS 'command', processlist_time AS 'time', processlist_state AS 'state', processlist_info AS 'info'
             FROM performance_schema.threads 
             WHERE type = 'FOREGROUND'
         """
         result = self.execute(query)
+
+        if len(result) == 0:
+            query = "SELECT * FROM information_schema.processlist"
+            result = self.execute(query)
         return result
