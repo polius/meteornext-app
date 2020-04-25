@@ -320,7 +320,8 @@ CREATE TABLE `monitoring_settings` (
   `user_id` INT UNSIGNED NOT NULL,
 	`monitor_align` TINYINT UNSIGNED NOT NULL DEFAULT 4,
   `monitor_interval` INT UNSIGNED NOT NULL DEFAULT 10,
-  `query_time` INT UNSIGNED NOT NULL DEFAULT 10, 
+  `query_execution_time` INT UNSIGNED NOT NULL DEFAULT 10,
+  `query_data_retention` INT UNSIGNED NOT NULL DEFAULT 1,
   PRIMARY KEY (`user_id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
@@ -347,9 +348,10 @@ CREATE TABLE `monitoring_queries` (
   `host` VARCHAR(191) NOT NULL,
   `first_seen` DATETIME NOT NULL,
   `last_seen` DATETIME NULL,
-  `last_execution_time` INT UNSIGNED NOT NULL,
+  `execution_time` INT UNSIGNED NOT NULL,
+  /* `last_execution_time` INT UNSIGNED NOT NULL,
   `max_execution_time` INT UNSIGNED NOT NULL,
-  `avg_execution_time` INT UNSIGNED NOT NULL,
+  `avg_execution_time` INT UNSIGNED NOT NULL, */
   `count` INT UNSIGNED NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   UNIQUE `server_id__db__query_hash` (`server_id`, `db`, `query_hash`),
