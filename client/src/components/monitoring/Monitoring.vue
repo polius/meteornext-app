@@ -57,8 +57,8 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
-                  <v-select filled v-model="settings.align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>
-                  <v-text-field filled v-model="settings.interval" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Data Collection Interval (seconds)" required style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
+                  <v-select filled v-model="settings.monitor_align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>
+                  <v-text-field filled v-model="settings.monitor_interval" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Data Collection Interval (seconds)" required style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -183,7 +183,7 @@
 
         // Settings Dialog
         settings_dialog: false,        
-        settings: { align:'4', interval:'10' },
+        settings: { monitor_align:'4', monitor_interval:'10' },
         align_items: ['1', '2', '3', '4'],
         source_items: ['Information Schema', 'Performance Schema (recommended)'],
         align: '4',
@@ -247,8 +247,8 @@
       },
       parseSettings(settings) {
         if (settings.length > 0) {
-          this.settings.align = this.align = settings[0]['monitor_align'].toString()
-          this.settings.interval = this.interval = settings[0]['monitor_interval']
+          this.settings.monitor_align = this.align = settings[0]['monitor_align'].toString()
+          this.settings.monitor_interval = this.interval = settings[0]['monitor_interval']
         }
       },
       parseServers(servers) {
@@ -343,8 +343,8 @@
         const payload = JSON.stringify(this.settings)
         axios.put('/monitoring/settings', payload)
           .then((response) => {
-            this.align = this.settings.align
-            this.interval = this.settings.interval
+            this.align = this.settings.monitor_align
+            this.interval = this.settings.monitor_interval
             this.notification(response.data.message, '#00b16a')
             this.settings_dialog = false
             this.loading = false

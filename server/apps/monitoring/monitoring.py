@@ -50,6 +50,7 @@ class Monitoring:
             t.join()
 
     def clean(self):
+        # Clean monitoring entries
         query = """
             DELETE m
             FROM monitoring m
@@ -65,6 +66,22 @@ class Monitoring:
             FROM monitoring_servers ms
             LEFT JOIN monitoring m ON m.server_id = ms.server_id 
             WHERE m.server_id IS NULL
+        """
+        self._sql.execute(query)
+
+        # Clean queries that exceeds the MAX defined data retention
+        query = """
+            DELETE q
+            FROM monitoring_queries q
+            LEFT JOIN
+            (
+                SELECT m.server_id, MAX(s.query_data_retention) AS 'data_retention'
+                FROM monitoring_settings s
+                JOIN monitoring m ON m.user_id = s.user_id
+                GROUP BY m.server_id
+            ) t ON t.server_id = q.server_id
+            WHERE (t.server_id IS NULL AND DATE_ADD(q.first_seen, INTERVAL t.data_retention DAY) <= NOW())
+            OR (t.server_id IS NOT NULL AND  DATE_ADD(q.first_seen, INTERVAL 1 DAY) <= NOW());
         """
         self._sql.execute(query)
 

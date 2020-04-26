@@ -34,8 +34,8 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
-                  <v-text-field filled v-model="settings.execution_time" label="Minimum Execution Time (seconds)" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-bottom:10px;" hide-details></v-text-field>
-                  <v-text-field filled v-model="settings.data_retention" label="Data Retention Timeframe (days)" required style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
+                  <v-text-field filled v-model="settings.query_execution_time" label="Minimum Execution Time (seconds)" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-bottom:10px;" hide-details></v-text-field>
+                  <v-text-field filled v-model="settings.query_data_retention" label="Data Retention Timeframe (days)" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -154,7 +154,7 @@
 
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
       {{ snackbarText }}
-      <v-btn color="white" flat @click="snackbar = false">Close</v-btn>
+      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
     </v-snackbar>
   </div>
 </template>
@@ -184,11 +184,9 @@ export default {
 
     // Settings Dialog
     settings_dialog: false,        
-    settings: { align:'4', interval:'10' },
-    align_items: ['1', '2', '3', '4'],
-    source_items: ['Information Schema', 'Performance Schema (recommended)'],
-    align: '4',
-    interval: '10',
+    settings: { query_execution_time:'10', query_data_retention:'1' },
+    execution_time: '10',
+    data_retention: '1',
 
     // Servers Dialog
     servers_dialog: false,
@@ -206,8 +204,8 @@ export default {
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
-    snackbarText: '',
-    snackbarColor: ''
+    snackbarColor: '',
+    snackbarText: ''
   }),
   created() {
     this.getQueries()
@@ -217,6 +215,7 @@ export default {
       axios.get('/monitoring/queries')
         .then((response) => {
           this.queries_items = response.data.queries
+          this.parseSettings(response.data.settings)
           this.parseTreeView(response.data.servers)
           this.loading = false
         })
@@ -225,6 +224,12 @@ export default {
           // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           // else this.notification(error.response.data.message, 'error')
         })
+    },
+    parseSettings(settings) {
+      if (settings.length > 0) {
+        this.settings.query_execution_time = this.execution_time = settings[0]['query_execution_time']
+        this.settings.query_data_retention = this.data_retention = settings[0]['query_data_retention']
+      }
     },
     parseTreeView(servers) {
       var data = []
@@ -255,10 +260,38 @@ export default {
         this.treeviewOpened = opened
       }
     },
+    submitSettings() {
+      this.loading = true
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
+        return
+      }
+      // Update settings        
+      const payload = JSON.stringify(this.settings)
+      axios.put('/monitoring/settings', payload)
+        .then((response) => {
+          this.execution_time = this.settings.query_execution_time
+          this.data_retention = this.settings.query_data_retention
+          this.notification(response.data.message, '#00b16a')
+          this.settings_dialog = false
+          this.loading = false
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+    },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
     },
+    notification(message, color) {
+      this.snackbarText = message
+      this.snackbarColor = color 
+      this.snackbar = true
+    }
   }
 }
 </script>
