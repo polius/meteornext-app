@@ -100,42 +100,42 @@
                 <v-form ref="form" style="margin-bottom:10px;">
                   <v-row>
                     <v-col cols="8" style="padding-top:5px;">
-                      <v-text-field text v-model="filter.query" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Query" required style="padding-top:0px;" hide-details></v-text-field>
+                      <v-text-field text v-model="filter.query_text" label="Query" required style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-top:5px;">
-                      <v-select text v-model="filter.query_options" label="Filter" :items="filter_options" :rules="[v => !!v || '']" style="padding-top:0px;" hide-details></v-select>
+                      <v-select text v-model="filter.query_text_options" label="Filter" :items="filter_options" :rules="[v => ((filter.query_text === undefined || filter.query_text.length == 0) || (filter.query_text.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
                     </v-col>
                   </v-row>
                   <v-row>
                     <v-col cols="8" style="padding-top:0px;">
-                      <v-text-field text v-model="filter.database" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Database" required hide-details></v-text-field>
+                      <v-text-field text v-model="filter.db" label="Database" required hide-details></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-top:0px;">
-                      <v-select text v-model="filter.database_options" label="Filter" :items="filter_options" :rules="[v => !!v || '']" hide-details></v-select>
+                      <v-select text v-model="filter.db_options" label="Filter" :items="filter_options" :rules="[v => ((filter.db === undefined || filter.db.length == 0) || (filter.db.length > 0 && !!v)) || '']" hide-details></v-select>
                     </v-col>
                   </v-row>
                   <v-row>
                     <v-col cols="8" style="padding-top:0px;">
-                      <v-select text v-model="filter.server" label="Server" :items="server_items" :rules="[v => !!v || '']" hide-details></v-select>
+                      <v-text-field text v-model="filter.server" label="Server" required hide-details></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-top:0px;">
-                      <v-select text v-model="filter.server_options" label="Filter" :items="filter_options" :rules="[v => !!v || '']" hide-details></v-select>
+                      <v-select text v-model="filter.server_options" label="Filter" :items="filter_options" :rules="[v => ((filter.server === undefined || filter.server.length == 0) || (filter.server.length > 0 && !!v)) || '']" hide-details></v-select>
                     </v-col>
                   </v-row>
                   <v-row>
                     <v-col cols="8" style="padding-top:0px;">
-                      <v-text-field text v-model="filter.user" :rules="[v => v == parseInt(v) && v > 0 || '']" label="User" required hide-details></v-text-field>
+                      <v-text-field text v-model="filter.user" label="User" required hide-details></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-top:0px;">
-                      <v-select text v-model="filter.user_options" label="Filter" :items="filter_options" :rules="[v => !!v || '']" hide-details></v-select>
+                      <v-select text v-model="filter.user_options" label="Filter" :items="filter_options" :rules="[v => ((filter.user === undefined || filter.user.length == 0) || (filter.user.length > 0 && !!v)) || '']" hide-details></v-select>
                     </v-col>
                   </v-row>
                   <v-row>
                     <v-col cols="8" style="padding-top:0px;">
-                      <v-text-field text v-model="filter.host" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Host" required hide-details></v-text-field>
+                      <v-text-field text v-model="filter.host" label="Host" required hide-details></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-top:0px;">
-                      <v-select text v-model="filter.host_options" label="Filter" :items="filter_options" :rules="[v => !!v || '']" hide-details></v-select>
+                      <v-select text v-model="filter.host_options" label="Filter" :items="filter_options" :rules="[v => ((filter.host === undefined || filter.host.length == 0) || (filter.host.length > 0 && !!v)) || '']" hide-details></v-select>
                     </v-col>
                   </v-row>
                 </v-form>
@@ -143,7 +143,7 @@
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitFilter()">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="error" @click="filter_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
-                  <v-btn :disabled="loading" color="info" @click="clearFilter()" style="float:right;">Remove Filter</v-btn>
+                  <v-btn v-if="filter_applied" :disabled="loading" color="info" @click="clearFilter()" style="float:right;">Remove Filter</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -169,7 +169,8 @@ export default {
 
     // Queries
     queries_headers: [
-      { text: 'Query', align: 'left', value: 'query' },
+      { text: 'Id', align: 'left', value: 'query_id' },
+      { text: 'Query', align: 'left', value: 'query_text' },
       { text: 'Database', align: 'left', value: 'db' },
       { text: 'Server', align: 'left', value: 'server' },
       { text: 'User', align: 'left', value: 'user' },
@@ -198,8 +199,8 @@ export default {
     // Filter Dialog
     filter_dialog: false,
     filter: {},
-    server_items: [],
     filter_options: ['Equal', 'Not equal', 'Starts', 'Not starts'],
+    filter_applied: false,
 
     // Snackbar
     snackbar: false,
@@ -220,9 +221,8 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          console.log(error)
-          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          // else this.notification(error.response.data.message, 'error')
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
         })
     },
     parseSettings(settings) {
@@ -282,6 +282,55 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
+    },
+    submitFilter() {
+      this.loading = true
+      // Check if all fields are filled
+      if (
+        (this.filter.query_text === undefined || this.filter.query_text.length == 0) &&
+        (this.filter.db === undefined || this.filter.db.length == 0) &&
+        (this.filter.server === undefined || this.filter.server.length == 0) &&
+        (this.filter.user === undefined || this.filter.user.length == 0) &&
+        (this.filter.host === undefined || this.filter.host.length == 0)
+      ) {
+        this.notification('Please enter at least one filter', 'error')
+        this.loading = false
+        return
+      }
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
+        return
+      }
+      // Update settings        
+      const payload = JSON.stringify(this.filter)
+      axios.get('/monitoring/queries/filter', { params: { filter: payload } })
+        .then((response) => {
+          this.queries_items = response.data.queries
+          this.filter_dialog = false
+          this.filter_applied = true
+          this.loading = false
+        })
+        .catch((error) => {
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
+        })
+    },
+    clearFilter() {
+      this.loading = true
+      axios.get('/monitoring/queries/filter', { params: { filter: {}} })
+          .then((response) => {
+            this.queries_items = response.data.queries
+            this.filter = {}
+            this.filter_dialog = false
+            this.filter_applied = false
+            this.loading = false
+          })
+          .catch((error) => {
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message, 'error')
+          })
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")

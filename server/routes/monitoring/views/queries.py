@@ -37,6 +37,23 @@ class Queries:
             # Get queries
             return self.get(user)
 
+        @monitoring_queries_blueprint.route('/monitoring/queries/filter', methods=['GET'])
+        @jwt_required
+        def monitoring_queries_filter_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['monitoring_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get queries
+            return self.filter(user)
+
         return monitoring_queries_blueprint
 
     ####################
@@ -48,3 +65,8 @@ class Queries:
         settings = self._monitoring_settings.get(user)
 
         return jsonify({'servers': servers, 'queries': queries, 'settings': settings}), 200
+
+    def filter(self, user):
+        data = request.args['filter'] if 'filter' in request.args else None
+        queries = self._monitoring_queries.filter(user, data)
+        return jsonify({'queries': queries}), 200
