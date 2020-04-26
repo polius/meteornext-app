@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -37,36 +38,23 @@ class Queries:
             # Get queries
             return self.get(user)
 
-        @monitoring_queries_blueprint.route('/monitoring/queries/filter', methods=['GET'])
-        @jwt_required
-        def monitoring_queries_filter_method():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Get user data
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if not user['monitoring_enabled']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Get queries
-            return self.filter(user)
-
         return monitoring_queries_blueprint
 
     ####################
     # Internal Methods #
     ####################
     def get(self, user):
+        # Apply filter & sort
+        if request.args['filter'] and request.args['sort']:
+            filters = json.loads(request.args['filter'])
+            sort = json.loads(request.args['sort'])
+            if len(filters.keys()) > 0 or len(sort.keys()) > 0:    
+                queries = self._monitoring_queries.get(user, filters, sort)
+                return jsonify({'queries': queries}), 200
+
+        # Do not apply filter & sort
+        settings = self._monitoring_settings.get(user)
         servers = self._monitoring.get_queries(user)
         queries = self._monitoring_queries.get(user)
-        settings = self._monitoring_settings.get(user)
-
         return jsonify({'servers': servers, 'queries': queries, 'settings': settings}), 200
 
-    def filter(self, user):
-        data = request.args['filter'] if 'filter' in request.args else None
-        queries = self._monitoring_queries.filter(user, data)
-        return jsonify({'queries': queries}), 200

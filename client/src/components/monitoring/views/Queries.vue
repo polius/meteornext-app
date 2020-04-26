@@ -12,7 +12,7 @@
         </v-toolbar-items>
         <v-text-field v-model="queries_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table :headers="queries_headers" :items="queries_items" :search="queries_search" :hide-default-footer="queries_items.length < 11" :loading="loading" class="elevation-1" style="padding-top:5px;">
+      <v-data-table :headers="queries_headers" :items="queries_items" :search="queries_search" :options.sync="queries_options" :server-items-length="queries_total" :hide-default-footer="queries_items.length < 11" :loading="loading" class="elevation-1" style="padding-top:5px;">
         <template v-slot:item.first_seen="props">
           <span>{{ dateFormat(props.item.first_seen) }}</span>
         </template>
@@ -142,7 +142,7 @@
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitFilter()">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="filter_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="cancelFilter()" style="margin-left:5px;">CANCEL</v-btn>
                   <v-btn v-if="filter_applied" :disabled="loading" color="info" @click="clearFilter()" style="float:right;">Remove Filter</v-btn>
                 </div>
               </v-flex>
@@ -182,6 +182,8 @@ export default {
     ],
     queries_items: [],
     queries_search: '',
+    queries_total: 0,
+    queries_options: {},
 
     // Settings Dialog
     settings_dialog: false,        
@@ -208,22 +210,42 @@ export default {
     snackbarColor: '',
     snackbarText: ''
   }),
-  created() {
-    this.getQueries()
-  },
   methods: {
     getQueries() {
-      axios.get('/monitoring/queries')
-        .then((response) => {
-          this.queries_items = response.data.queries
-          this.parseSettings(response.data.settings)
-          this.parseTreeView(response.data.servers)
-          this.loading = false
-        })
-        .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
-        })
+      return new Promise((resolve) => {
+        const { sortBy, sortDesc, page, itemsPerPage } = this.queries_options
+
+        // Build filter    
+        const filter = this.filter
+
+        // Build sort
+        const sort = (sortBy.length > 0) ? {[sortBy[0]]: [sortDesc[0]]} : {}
+
+        axios.get('/monitoring/queries', { params: { filter: JSON.stringify(filter), sort: JSON.stringify(sort) }})
+          .then((response) => {
+            // First time
+            if (Object.keys(filter).length == 0 && Object.keys(sort).length == 0) {
+              this.parseSettings(response.data.settings)
+              this.parseTreeView(response.data.servers)
+            }
+            let items = response.data.queries
+            const total = items.length
+
+            if (itemsPerPage > 0) {
+              items = items.slice((page - 1) * itemsPerPage, page * itemsPerPage)
+            }
+            this.loading = false
+            resolve({
+              items,
+              total,
+            })
+          })
+          .catch((error) => {
+            console.log(error)
+            // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            // else this.notification(error.response.data.message, 'error')
+          })
+      })
     },
     parseSettings(settings) {
       if (settings.length > 0) {
@@ -283,6 +305,10 @@ export default {
           else this.notification(error.response.data.message, 'error')
         })
     },
+    cancelFilter() {
+      if (!this.filter_applied) this.filter = {}
+      this.filter_dialog = false
+    },
     submitFilter() {
       this.loading = true
       // Check if all fields are filled
@@ -304,6 +330,7 @@ export default {
       }
       // Update settings        
       const payload = JSON.stringify(this.filter)
+
       axios.get('/monitoring/queries/filter', { params: { filter: payload } })
         .then((response) => {
           this.queries_items = response.data.queries
@@ -341,6 +368,18 @@ export default {
       this.snackbarColor = color 
       this.snackbar = true
     }
-  }
+  },
+  watch: {
+    queries_options: {
+      handler () {
+        this.getQueries()
+          .then(data => {
+            this.queries_items = data.items
+            this.queries_total = data.total
+          })
+      },
+      deep: true,
+    },
+  },
 }
 </script>
