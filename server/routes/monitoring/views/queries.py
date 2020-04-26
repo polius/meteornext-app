@@ -3,6 +3,7 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
 import models.monitoring.monitoring
+import models.monitoring.monitoring_settings
 import models.monitoring.monitoring_queries
 
 class Queries:
@@ -12,6 +13,7 @@ class Queries:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._monitoring = models.monitoring.monitoring.Monitoring(sql)
+        self._monitoring_settings = models.monitoring.monitoring_settings.Monitoring_Settings(sql)
         self._monitoring_queries = models.monitoring.monitoring_queries.Monitoring_Queries(sql)
 
     def blueprint(self):
@@ -43,4 +45,6 @@ class Queries:
     def get(self, user):
         servers = self._monitoring.get_queries(user)
         queries = self._monitoring_queries.get(user)
-        return jsonify({'servers': servers, 'queries': queries}), 200
+        settings = self._monitoring_settings.get(user)
+
+        return jsonify({'servers': servers, 'queries': queries, 'settings': settings}), 200
