@@ -48,7 +48,7 @@ class Queries:
         if request.args['filter'] and request.args['sort']:
             filters = json.loads(request.args['filter'])
             sort = json.loads(request.args['sort'])
-            if len(filters.keys()) > 0 or len(sort.keys()) > 0:    
+            if len(filters.keys()) > 0 or len(sort) > 0:
                 queries = self._monitoring_queries.get(user, filters, sort)
                 return jsonify({'queries': queries}), 200
 

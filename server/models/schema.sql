@@ -106,7 +106,8 @@ CREATE TABLE `servers` (
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `region_id__name` (`region_id`,`name`),
+  UNIQUE KEY `region_id__name` (`region_id`, `name`),
+  INDEX `name` (`name`),
   FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 

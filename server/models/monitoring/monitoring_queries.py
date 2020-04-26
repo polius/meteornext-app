@@ -13,7 +13,7 @@ class Monitoring_Queries:
                 LIMIT 1000
             """
             return self._sql.execute(query, (user['id']))
-        else:           
+        else:
             # Apply filters
             keys = {i: filters[i] for i in filters if not i.endswith('_options') and len(filters[i]) > 0}
             values = []
@@ -43,6 +43,14 @@ class Monitoring_Queries:
                     break
 
             # Apply sort
+            order_by = []
+            if len(sort) == 0:
+                order_by.append('q.count DESC, q.execution_time DESC')
+            for i, s in enumerate(sort[0]):
+                if s == 'server':
+                    order_by.append('s.name {}'.format('DESC' if sort[1][i] else 'ASC'))
+                else:
+                    order_by.append('q.{} {}'.format(s, 'DESC' if sort[1][i] else 'ASC'))
 
             # Build query
             query = """
@@ -51,9 +59,9 @@ class Monitoring_Queries:
                 JOIN monitoring m ON m.server_id = q.server_id AND m.user_id = {}
                 JOIN servers s ON s.id = q.server_id {}
                 WHERE 1=1 {}
-                ORDER BY q.count DESC, q.execution_time DESC
+                ORDER BY {}
                 LIMIT 1000
-            """.format(user['id'], filter_server, ' '.join(filters_values))
+            """.format(user['id'], filter_server, ' '.join(filters_values), ', '.join(order_by))
 
             # Execute query
             return self._sql.execute(query, (values))
