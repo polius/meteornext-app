@@ -12,7 +12,7 @@
         </v-toolbar-items>
         <v-text-field v-model="queries_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table :headers="queries_headers" :items="queries_items" :search="queries_search" :options.sync="queries_options" :server-items-length="queries_total" :hide-default-footer="queries_items.length < 11" multi-sort :loading="loading" class="elevation-1" style="padding-top:5px;">
+      <v-data-table :headers="queries_headers" :items="queries_items" :options.sync="queries_options" :server-items-length="queries_total" :hide-default-footer="queries_items.length < 11" multi-sort :loading="loading" class="elevation-1" style="padding-top:5px;">
         <template v-slot:item.first_seen="props">
           <span>{{ dateFormat(props.item.first_seen) }}</span>
         </template>
@@ -180,6 +180,7 @@ export default {
       { text: 'Execution Time', align: 'left', value: 'execution_time' },
       { text: 'Count', align: 'left', value: 'count' }
     ],
+    queries_origin: [],
     queries_items: [],
     queries_search: '',
     queries_total: 0,
@@ -212,7 +213,9 @@ export default {
   }),
   methods: {
     getQueries() {
+      // Init vars
       this.loading = true
+
       // Build query options
       const { sortBy, sortDesc, page, itemsPerPage } = this.queries_options
 
@@ -235,8 +238,11 @@ export default {
           if (itemsPerPage > 0) {
             items = items.slice((page - 1) * itemsPerPage, page * itemsPerPage)
           }
+          this.queries_origin = items
           this.queries_items = items
           this.queries_total = items.length
+          // Apply search
+          this.applySearch(this.queries_search)
           this.loading = false
         })
         .catch((error) => {
@@ -337,6 +343,19 @@ export default {
       this.getQueries()
       this.filter_dialog = false
     },
+    applySearch(newValue) {
+      if (newValue.length == 0) this.queries_items = this.queries_origin.slice(0)
+      else {
+        let items = []
+        for (let i in this.queries_origin) {
+          let keys = Object.keys(this.queries_origin[i])
+          for (let k in keys) {
+            if (this.queries_origin[i][keys[k]].toString().includes(newValue)) { items.push(this.queries_origin[i]); break; }
+          }
+        }
+        this.queries_items = items
+      }
+    },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
@@ -351,6 +370,10 @@ export default {
     queries_options: {
       handler () { this.getQueries() },
       deep: true
+    },
+    // eslint-disable-next-line
+    queries_search: function (newValue, oldValue) {
+      this.applySearch(newValue)
     }
   }
 }
