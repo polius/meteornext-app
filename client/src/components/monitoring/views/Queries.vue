@@ -12,7 +12,7 @@
         </v-toolbar-items>
         <v-text-field v-model="queries_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table :headers="queries_headers" :items="queries_items" :search="queries_search" :options.sync="queries_options" :server-items-length="queries_total" :hide-default-footer="queries_items.length < 11" :loading="loading" class="elevation-1" style="padding-top:5px;">
+      <v-data-table :headers="queries_headers" :items="queries_items" :search="queries_search" :options.sync="queries_options" :server-items-length="queries_total" :hide-default-footer="queries_items.length < 11" multi-sort :loading="loading" class="elevation-1" style="padding-top:5px;">
         <template v-slot:item.first_seen="props">
           <span>{{ dateFormat(props.item.first_seen) }}</span>
         </template>
@@ -212,40 +212,37 @@ export default {
   }),
   methods: {
     getQueries() {
-      return new Promise((resolve) => {
-        const { sortBy, sortDesc, page, itemsPerPage } = this.queries_options
+      this.loading = true
+      // Build query options
+      const { sortBy, sortDesc, page, itemsPerPage } = this.queries_options
 
-        // Build filter    
-        const filter = this.filter
+      // Build filter    
+      const filter = this.filter
 
-        // Build sort
-        const sort = (sortBy.length > 0) ? {[sortBy[0]]: [sortDesc[0]]} : {}
+      // Build sort
+      const sort = (sortBy.length > 0) ? [sortBy, sortDesc] : []
 
-        axios.get('/monitoring/queries', { params: { filter: JSON.stringify(filter), sort: JSON.stringify(sort) }})
-          .then((response) => {
-            // First time
-            if (Object.keys(filter).length == 0 && Object.keys(sort).length == 0) {
-              this.parseSettings(response.data.settings)
-              this.parseTreeView(response.data.servers)
-            }
-            let items = response.data.queries
-            const total = items.length
+      // Get queries
+      axios.get('/monitoring/queries', { params: { filter: JSON.stringify(filter), sort: JSON.stringify(sort) }})
+        .then((response) => {
+          // First time
+          if (Object.keys(filter).length == 0 && Object.keys(sort).length == 0) {
+            this.parseSettings(response.data.settings)
+            this.parseTreeView(response.data.servers)
+          }
+          let items = response.data.queries
 
-            if (itemsPerPage > 0) {
-              items = items.slice((page - 1) * itemsPerPage, page * itemsPerPage)
-            }
-            this.loading = false
-            resolve({
-              items,
-              total,
-            })
-          })
-          .catch((error) => {
-            console.log(error)
-            // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-            // else this.notification(error.response.data.message, 'error')
-          })
-      })
+          if (itemsPerPage > 0) {
+            items = items.slice((page - 1) * itemsPerPage, page * itemsPerPage)
+          }
+          this.queries_items = items
+          this.queries_total = items.length
+          this.loading = false
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
     },
     parseSettings(settings) {
       if (settings.length > 0) {
@@ -328,36 +325,17 @@ export default {
         this.loading = false
         return
       }
-      // Update settings        
-      const payload = JSON.stringify(this.filter)
-
-      axios.get('/monitoring/queries/filter', { params: { filter: payload } })
-        .then((response) => {
-          this.queries_items = response.data.queries
-          this.filter_dialog = false
-          this.filter_applied = true
-          this.loading = false
-        })
-        .catch((error) => {
-          console.log(error)
-          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          // else this.notification(error.response.data.message, 'error')
-        })
+      // Apply filter
+      this.filter_applied = true
+      this.getQueries()
+      this.filter_dialog = false
     },
     clearFilter() {
       this.loading = true
-      axios.get('/monitoring/queries/filter', { params: { filter: {}} })
-          .then((response) => {
-            this.queries_items = response.data.queries
-            this.filter = {}
-            this.filter_dialog = false
-            this.filter_applied = false
-            this.loading = false
-          })
-          .catch((error) => {
-            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-            else this.notification(error.response.data.message, 'error')
-          })
+      this.filter = {}
+      this.filter_applied = false
+      this.getQueries()
+      this.filter_dialog = false
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
@@ -371,15 +349,9 @@ export default {
   },
   watch: {
     queries_options: {
-      handler () {
-        this.getQueries()
-          .then(data => {
-            this.queries_items = data.items
-            this.queries_total = data.total
-          })
-      },
-      deep: true,
-    },
-  },
+      handler () { this.getQueries() },
+      deep: true
+    }
+  }
 }
 </script>
