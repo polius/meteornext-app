@@ -177,7 +177,9 @@ export default {
       { text: 'Host', align: 'left', value: 'host' },
       { text: 'First Seen', align: 'left', value: 'first_seen' },
       { text: 'Last Seen', align: 'left', value: 'last_seen' },
-      { text: 'Execution Time', align: 'left', value: 'execution_time' },
+      { text: 'Last Execution Time', align: 'left', value: 'last_execution_time' },
+      { text: 'Max Execution Time', align: 'left', value: 'max_execution_time' },
+      { text: 'Avg Execution Time', align: 'left', value: 'avg_execution_time' },
       { text: 'Count', align: 'left', value: 'count' }
     ],
     queries_origin: [],
@@ -198,6 +200,7 @@ export default {
     treeviewSelected: [],
     treeviewOpened: [],
     treeviewSearch: '',
+    submit_servers: false,
 
     // Filter Dialog
     filter_dialog: false,
@@ -229,9 +232,10 @@ export default {
       axios.get('/monitoring/queries', { params: { filter: JSON.stringify(filter), sort: JSON.stringify(sort) }})
         .then((response) => {
           // First time
-          if (Object.keys(filter).length == 0 && Object.keys(sort).length == 0) {
+          if (this.submit_servers || (Object.keys(filter).length == 0 && Object.keys(sort).length == 0)) {
             this.parseSettings(response.data.settings)
             this.parseTreeView(response.data.servers)
+            this.submit_servers = false
           }
           let items = response.data.queries
 
@@ -311,6 +315,21 @@ export default {
     cancelFilter() {
       if (!this.filter_applied) this.filter = {}
       this.filter_dialog = false
+    },
+    submitServers() {
+      this.loading = true
+      const payload = JSON.stringify(this.treeviewSelected)
+      axios.put('/monitoring/queries', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+          this.servers_dialog = false
+          this.submit_servers = true
+          this.getQueries()
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
     },
     submitFilter() {
       this.loading = true

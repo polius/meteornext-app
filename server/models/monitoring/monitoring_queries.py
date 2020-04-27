@@ -5,11 +5,11 @@ class Monitoring_Queries:
     def get(self, user, filters=None, sort=None):
         if not filters and not sort:
             query = """
-                SELECT s.name AS 'server', q.query_id, q.query_text, q.db, q.user, q.host, q.first_seen, q.last_seen, q.execution_time, q.count
+                SELECT s.name AS 'server', q.query_id, q.query_text, q.db, q.user, q.host, q.first_seen, q.last_seen, q.last_execution_time, q.max_execution_time, q.avg_execution_time, q.count
                 FROM monitoring_queries q
                 JOIN monitoring m ON m.server_id = q.server_id AND m.user_id = %s
                 JOIN servers s ON s.id = q.server_id
-                ORDER BY q.count DESC, q.execution_time DESC
+                ORDER BY q.count DESC, q.avg_execution_time DESC
                 LIMIT 1000
             """
             return self._sql.execute(query, (user['id']))
@@ -45,7 +45,7 @@ class Monitoring_Queries:
             # Apply sort
             order_by = []
             if len(sort) == 0:
-                order_by.append('q.count DESC, q.execution_time DESC')
+                order_by.append('q.count DESC, q.last_execution_time DESC')
             for i, s in enumerate(sort[0]):
                 if s == 'server':
                     order_by.append('s.name {}'.format('DESC' if sort[1][i] else 'ASC'))
@@ -54,7 +54,7 @@ class Monitoring_Queries:
 
             # Build query
             query = """
-                SELECT s.name AS 'server', q.query_id, q.query_text, q.db, q.user, q.host, q.first_seen, q.last_seen, q.execution_time, q.count
+                SELECT s.name AS 'server', q.query_id, q.query_text, q.db, q.user, q.host, q.first_seen, q.last_seen, q.last_execution_time, q.max_execution_time, q.avg_execution_time, q.count
                 FROM monitoring_queries q
                 JOIN monitoring m ON m.server_id = q.server_id AND m.user_id = {}
                 JOIN servers s ON s.id = q.server_id {}
