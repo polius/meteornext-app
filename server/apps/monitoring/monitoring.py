@@ -15,17 +15,19 @@ class Monitoring:
             SELECT 
                 s.id, s.engine, s.hostname, s.port, s.username, s.password,
                 r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
-                ms.summary, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_execution_time), 10) AS 'query_execution_time'
+                ms.summary, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_execution_time), 10) AS 'query_execution_time',
+				DATE_ADD(ms.updated, INTERVAL IFNULL(MIN(mset.monitor_interval), 10) SECOND) <= NOW() AS 'needs_update'
             FROM monitoring m
 			LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
-            LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id
+            LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id						
             JOIN servers s ON s.id = m.server_id
             JOIN regions r ON r.id = s.region_id
 			WHERE ms.updated IS NULL
             OR (m.processlist_enabled = 1 AND m.processlist_active = 1)
             OR m.queries_enabled = 1
-            OR ((m.monitor_enabled = 1 OR m.parameters_enabled = 1) AND DATE_ADD(ms.updated, INTERVAL (SELECT IFNULL(MIN(monitor_interval), 10) FROM monitoring_settings WHERE user_id = m.user_id) SECOND) <= NOW())
-            GROUP BY m.server_id
+            OR m.monitor_enabled = 1 
+			OR m.parameters_enabled = 1
+            GROUP BY m.server_id;
         """
         servers_raw = self._sql.execute(query)
 
@@ -36,7 +38,7 @@ class Monitoring:
             server['id'] = s['id']
             server['ssh'] = {'enabled': s['ssh_tunnel'], 'hostname': s['hostname'], 'port': s['rport'], 'username': s['rusername'], 'password': s['rpassword'], 'key': s['key']}
             server['sql'] = {'engine': s['engine'], 'hostname': s['hostname'], 'port': s['port'], 'username': s['username'], 'password': s['password']}
-            server['monitor'] = {'summary': s['summary'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time']}
+            server['monitor'] = {'summary': s['summary'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'needs_update': s['needs_update']}
             servers.append(server)
 
         # Get Server Info
@@ -107,18 +109,18 @@ class Monitoring:
         else:
             # Build Parameters
             params = ''
-            if server['monitor']['monitor_enabled'] or server['monitor']['parameters_enabled']:
+            if (server['monitor']['monitor_enabled'] or server['monitor']['parameters_enabled']) and server['monitor']['needs_update']:
                 params = { p['Variable_name']: p['Value'] for p in conn.get_parameters() }
                 status = { s['Variable_name']: s['Value'] for s in conn.get_status() }
 
             # Build Processlist
             processlist = ''
-            if server['monitor']['monitor_enabled'] or server['monitor']['processlist_enabled'] or server['queries_enabled']:
+            if server['monitor']['processlist_enabled'] or server['monitor']['queries_enabled'] or (server['monitor']['monitor_enabled'] and server['monitor']['needs_update']):
                 processlist = conn.get_processlist()
             
             # Build Summary
             summary = ''
-            if server['monitor']['monitor_enabled']:
+            if server['monitor']['monitor_enabled'] and server['monitor']['needs_update']:
                 summary = {'info': {}, 'logs': {}, 'connections': {}, 'statements': {}, 'index': {}, 'rds': {}}
                 summary['info'] = {'version': params.get('version'), 'uptime': str(datetime.timedelta(seconds=int(status['Uptime']))), 'start_time': str((datetime.datetime.now() - datetime.timedelta(seconds=int(status['Uptime']))).replace(microsecond=0)), 'engine': server['sql']['engine'], 'sql_engine': params.get('default_storage_engine'), 'allocated_memory': params.get('innodb_buffer_pool_size'), 'time_zone': params.get('time_zone')}
                 summary['logs'] = {'general_log': params.get('general_log'), 'general_log_file': params.get('general_log_file'), 'slow_log': params.get('slow_query_log'), 'slow_log_file': params.get('slow_query_log_file'), 'error_log_file': params.get('log_error')}
@@ -155,9 +157,9 @@ class Monitoring:
                 SELECT %s, 1, IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), CURRENT_TIMESTAMP
                 ON DUPLICATE KEY UPDATE
                     available = 1,
-                    summary = VALUES(summary),
-                    parameters = VALUES(parameters),
-                    processlist = VALUES(processlist),
+                    summary = COALESCE(VALUES(summary), summary),
+                    parameters = COALESCE(VALUES(parameters), parameters),
+                    processlist = COALESCE(VALUES(processlist), processlist),
                     updated = VALUES(updated)
             """
             self._sql.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist))

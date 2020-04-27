@@ -237,7 +237,7 @@
             this.parseTreeView(response.data.servers)
             this.parseLastUpdated(response.data.servers)
             this.loading = false
-            if (mode != 2) setTimeout(this.getMonitoring, 5000, 1)
+            if (mode != 2) setTimeout(this.getMonitoring, 10000, 1)
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -258,11 +258,12 @@
           if (servers[i]['selected']) {
             var summary = JSON.parse(servers[i]['summary'])
             // Get Current Connections
-            let conn = (summary != null && summary['info']['available'] && 'connections' in summary) ? summary['connections']['current'] : '?'
+            let conn = (summary != null && servers[i]['available']) ? summary['connections']['current'] : '?'
             // Get Pending Servers
-            pending_servers = servers[i]['updated'] == null || (servers[i]['summary'] == null && servers[i]['available'])
+            let pending = (servers[i]['updated'] == null || (servers[i]['summary'] == null && servers[i]['available']))
+            if (pending == 1) pending_servers = true
             // Get Status Color
-            let color = (pending_servers == 1) ? 'orange' : (servers[i]['available']) ? 'teal' : 'red'
+            let color = (pending == 1) ? 'orange' : (servers[i]['available']) ? 'teal' : 'red'
             // Build Item
             let item = {id: servers[i]['server_id'], name: servers[i]['server_name'], region: servers[i]['region_name'], hostname: servers[i]['hostname'], connections: conn, color: color}
             this.servers_origin.push(item)

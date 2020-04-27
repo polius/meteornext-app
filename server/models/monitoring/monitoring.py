@@ -2,14 +2,14 @@ class Monitoring:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, group_id, server_id):
+    def get(self, user, server_id):
         query = """
             SELECT ms.*, s.name, s.hostname, r.name AS 'region'
             FROM monitoring_servers ms
-            JOIN servers s ON s.id = m.server_id AND s.id = %s
+            JOIN servers s ON s.id = ms.server_id AND s.id = %s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %s
         """
-        return self._sql.execute(query, (server_id, group_id))
+        return self._sql.execute(query, (server_id, user['group_id']))
 
     def get_monitoring(self, user):
         query = """

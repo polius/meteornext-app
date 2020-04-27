@@ -25,9 +25,7 @@
             <v-divider class="mx-3" inset vertical></v-divider>
             <v-tab><span class="pl-2 pr-2">STATEMENTS</span></v-tab>
             <v-divider class="mx-3" inset vertical></v-divider>
-            <v-tab><span class="pl-2 pr-2">INDEX USAGE</span></v-tab>
-            <v-divider class="mx-3" inset vertical></v-divider>
-            <v-tab><span class="pl-2 pr-2">RDS METRICS</span></v-tab>    
+            <v-tab><span class="pl-2 pr-2">INDEX USAGE</span></v-tab> 
           </v-tabs>
         </div>
 
@@ -35,8 +33,8 @@
         <v-card v-show="tabs == 0">
           <v-data-table :headers="summary_headers" :items="summary_items" hide-default-footer class="elevation-1">
             <template v-slot:item.available="props">
-              <span v-if="props.item.available == true"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Yes</span>
-              <span v-else-if="props.item.available == false"><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>No</span>
+              <span v-if="props.item.available == 1"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Yes</span>
+              <span v-else-if="props.item.available == 0"><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>No</span>
               <span v-else-if="props.item.available == -1"><v-icon small color="orange" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Loading</span>
             </template>
           </v-data-table>
@@ -71,12 +69,6 @@
         <!-- INDEXES -->
         <v-card v-show="tabs == 4">
           <v-data-table :headers="indexes_headers" :items="indexes_items" hide-default-footer class="elevation-1">
-          </v-data-table>
-        </v-card>
-
-        <!-- RDS METRICS -->
-        <v-card v-show="tabs == 5">
-          <v-data-table :headers="rds_headers" :items="rds_items" hide-default-footer class="elevation-1">
           </v-data-table>
         </v-card>
 
@@ -178,16 +170,6 @@ export default {
     ],
     indexes_items: [],
 
-    // RDS Metrics
-    rds_headers: [
-      { text: 'CPU Utilization', align: 'left', value: 'cpu_utilization' },
-      { text: 'Freeable Memory', align: 'left', value: 'freeable_memory' },
-      { text: 'DB Connections', align: 'left', value: 'db_connections' },
-      { text: 'Network Receive Throughput (MB/Second)', align: 'left', value: 'network_receive' },
-      { text: 'Network Transmit Throughput (MB/Second)', align: 'left', value: 'network_transmit' },
-    ],
-    rds_items: [{ cpu_utilization: '12%', freeable_memory: '12 GB', db_connections: '54', network_receive: '54.3', network_transmit: '43.1' }],
-
     // Parameter Groups
     params_headers: [
       { text: 'Name', align: 'left', value: 'name', width: '25%' },
@@ -237,12 +219,12 @@ export default {
       axios.get(path, { params: { server_id: this.server_id } })
         .then((response) => {
           this.parseData(response.data.data)
-          setTimeout(this.getMonitor, 10000)
+          let refreshRate = (this.available == 0) ? 10000 : 3000
+          setTimeout(this.getMonitor, refreshRate)
         })
         .catch((error) => {
-          console.log(error)
-          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          // else this.notification(error.response.data.message, 'error')
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
         })
     },
     parseData(data) {
@@ -256,7 +238,7 @@ export default {
         // Parse Summary
         var summary = JSON.parse(data[0]['summary'])
         if (summary == null) {
-          this.summary_items = [{available: -1}]
+          this.summary_items = (data[0]['available'] == null) ? [{ available: -1 }] : [{ available: data[0]['available'] }]
         }
         else {
           this.summary_items = [summary.info]
@@ -264,6 +246,7 @@ export default {
           if ('connections' in summary) this.connections_items = [summary.connections]
           if ('statements' in summary) this.statements_items = [summary.statements]
           if ('index' in summary) this.indexes_items = [summary.index]
+          this.summary_items[0]['available'] = data[0]['available']
         }
 
         // Parse Parameters
