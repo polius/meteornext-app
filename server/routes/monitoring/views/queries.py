@@ -57,4 +57,3 @@ class Queries:
         servers = self._monitoring.get_queries(user)
         queries = self._monitoring_queries.get(user)
         return jsonify({'servers': servers, 'queries': queries, 'settings': settings}), 200
-
