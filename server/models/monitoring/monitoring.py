@@ -141,6 +141,34 @@ class Monitoring:
                 """
                 self._sql.execute(query, (user['id'], user['group_id'], i))
 
+    def put_queries(self, user, data):
+        if len(data) == 0:
+            query = """
+                UPDATE monitoring
+                SET queries_enabled = 0
+                WHERE user_id = %s
+            """
+            self._sql.execute(query, (user['id']))
+        else:
+            query = """
+                UPDATE monitoring
+                SET queries_enabled = 0
+                WHERE user_id = {}
+                AND server_id NOT IN ({})
+            """.format(user['id'], ','.join(['%s'] * len(data)))
+            self._sql.execute(query, (data))
+            
+            for i in data:
+                query = """
+                    INSERT INTO monitoring (user_id, server_id, queries_enabled)
+                    SELECT %s, s.id, 1
+                    FROM servers s
+                    JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+                    WHERE s.id = %s
+                    ON DUPLICATE KEY UPDATE queries_enabled = 1
+                """
+                self._sql.execute(query, (user['id'], user['group_id'], i))
+
     def start_processlist(self, user):
         query = """
             UPDATE monitoring

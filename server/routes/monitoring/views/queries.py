@@ -21,7 +21,7 @@ class Queries:
         # Init blueprint
         monitoring_queries_blueprint = Blueprint('monitoring_queries', __name__, template_folder='monitoring_queries')
 
-        @monitoring_queries_blueprint.route('/monitoring/queries', methods=['GET'])
+        @monitoring_queries_blueprint.route('/monitoring/queries', methods=['GET','PUT'])
         @jwt_required
         def monitoring_queries_method():
             # Check license
@@ -31,12 +31,17 @@ class Queries:
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
+            # Get Request Json
+            monitoring_json = request.get_json()
+
             # Check user privileges
             if not user['monitoring_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get queries
-            return self.get(user)
+            if request.method == 'GET':
+                return self.get(user)
+            elif request.method == 'PUT':
+                return self.put(user, monitoring_json)
 
         return monitoring_queries_blueprint
 
@@ -57,3 +62,7 @@ class Queries:
         servers = self._monitoring.get_queries(user)
         queries = self._monitoring_queries.get(user)
         return jsonify({'servers': servers, 'queries': queries, 'settings': settings}), 200
+
+    def put(self, user, data):
+        self._monitoring.put_queries(user, data)
+        return jsonify({'message': 'Servers saved'}), 200
