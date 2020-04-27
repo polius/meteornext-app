@@ -143,7 +143,7 @@ export default {
           this.parseTreeView(response.data.data)
           this.parseLastUpdated(response.data.data)
           this.loading = false
-          if (mode != 2) setTimeout(this.getParameters, 5000, 1)
+          if (mode != 2) setTimeout(this.getParameters, 10000, 1)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -158,7 +158,8 @@ export default {
       for (let i = 0; i < data.length; ++i) {
         if (data[i]['selected']) {
           // Check pending servers
-          pending_servers = data[i]['updated'] == null || (data[i]['parameters'] == null && data[i]['available'])
+          let pending = (data[i]['updated'] == null || (data[i]['parameters'] == null && data[i]['available']))
+          if (pending == 1) pending_servers = true
 
           // Fill parameter items
           let params = JSON.parse(data[i]['parameters'])
@@ -175,7 +176,7 @@ export default {
           this.parameters_headers.push({ text: data[i]['server_name'] + ' (' + data[i]['region_name'] + ')', align: 'left', value: 's'+data[i]['server_id'] })
         }
       }
-      this.pending_servers = (pending_servers == 1) ? true : false
+      this.pending_servers = pending_servers
       this.applyFilter()
     },
     parseTreeView(servers) {

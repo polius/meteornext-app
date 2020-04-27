@@ -181,7 +181,8 @@ export default {
       for (let i = 0; i < data.length; ++i) {
         if (data[i]['selected']) {
           // Check pending servers
-          pending_servers = data[i]['updated'] == null || (data[i]['processlist'] == null && data[i]['available'])
+          let pending = (data[i]['updated'] == null || (data[i]['processlist'] == null && data[i]['available']))
+          if (pending == 1) pending_servers = true
 
           // Fill processlist 
           let threads = JSON.parse(data[i]['processlist'])
@@ -195,7 +196,7 @@ export default {
           }
         }
       }
-      this.pending_servers = (pending_servers == 1) ? true : false
+      this.pending_servers = pending_servers
       this.applyFilter()
     },
     parseTreeView(servers) {
