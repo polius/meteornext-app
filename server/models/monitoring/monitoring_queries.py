@@ -5,7 +5,7 @@ class Monitoring_Queries:
     def get(self, user, filters=None, sort=None):
         if not filters and not sort:
             query = """
-                SELECT s.name AS 'server', q.query_id, q.query_text, q.db, q.user, q.host, q.first_seen, q.last_seen, q.last_execution_time, q.max_execution_time, q.avg_execution_time, q.count
+                SELECT s.name AS 'server', q.query_text, q.db, q.user, q.host, q.first_seen, q.last_seen, q.last_execution_time, q.max_execution_time, q.avg_execution_time, q.count
                 FROM monitoring_queries q
                 JOIN monitoring m ON m.server_id = q.server_id AND m.user_id = %s
                 JOIN servers s ON s.id = q.server_id
@@ -54,7 +54,7 @@ class Monitoring_Queries:
 
             # Build query
             query = """
-                SELECT s.name AS 'server', q.query_id, q.query_text, q.db, q.user, q.host, q.first_seen, q.last_seen, q.last_execution_time, q.max_execution_time, q.avg_execution_time, q.count
+                SELECT s.name AS 'server', q.query_text, q.db, q.user, q.host, q.first_seen, q.last_seen, q.last_execution_time, q.max_execution_time, q.avg_execution_time, q.count
                 FROM monitoring_queries q
                 JOIN monitoring m ON m.server_id = q.server_id AND m.user_id = {}
                 JOIN servers s ON s.id = q.server_id {}

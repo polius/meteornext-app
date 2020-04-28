@@ -169,7 +169,6 @@ export default {
 
     // Queries
     queries_headers: [
-      { text: 'Id', align: 'left', value: 'query_id' },
       { text: 'Query', align: 'left', value: 'query_text' },
       { text: 'Database', align: 'left', value: 'db' },
       { text: 'Server', align: 'left', value: 'server' },
