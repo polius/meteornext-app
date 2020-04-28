@@ -134,19 +134,20 @@ class Monitoring:
                 for i in processlist:
                     if i['TIME'] >= server['monitor']['query_execution_time'] and i['COMMAND'] in ['Query','Execute']:
                         query = """
-                            INSERT INTO monitoring_queries (server_id, query_id, query_text, query_hash, db, user, host, first_seen, last_execution_time, max_execution_time, avg_execution_time)
-                            VALUES (%s, %s, %s, SHA1(%s), %s, %s, %s, CURRENT_TIMESTAMP, %s, %s, %s)
+                            INSERT INTO monitoring_queries (server_id, query_id, query_text, query_hash, db, user, host, first_seen, last_execution_time, max_execution_time, bavg_execution_time, avg_execution_time)
+                            VALUES (%s, %s, %s, SHA1(%s), %s, %s, %s, CURRENT_TIMESTAMP, %s, %s, %s, %s)
                             ON DUPLICATE KEY UPDATE
                                 user = VALUES(user),
                                 host = VALUES(host),
+                                bavg_execution_time = IF(count = 1 AND query_id = VALUES(query_id), VALUES(last_execution_time), IF(query_id = VALUES(query_id), bavg_execution_time, avg_execution_time)),
+                                max_execution_time = GREATEST(max_execution_time, VALUES(last_execution_time)),
+                                avg_execution_time = IF(count = 1 AND query_id = VALUES(query_id), VALUES(last_execution_time), IF(query_id = VALUES(query_id), (bavg_execution_time*(count-1) + VALUES(last_execution_time)) / count, (bavg_execution_time*count + VALUES(last_execution_time)) / (count+1))),
                                 last_execution_time = VALUES(last_execution_time),
-                                max_execution_time = (SELECT MAX(last_execution_time) FROM monitoring_queries WHERE server_id = VALUES(server_id) AND db = VALUES(db) AND query_hash = VALUES(query_hash)),
-                                avg_execution_time = (SELECT (avg_execution_time/count + VALUES(last_execution_time))/(count+1) FROM monitoring_queries WHERE server_id = VALUES(server_id) AND db = VALUES(db) AND query_hash = VALUES(query_hash)),
-                                last_seen = IF(query_id = VALUES(query_id), last_seen, CURRENT_TIMESTAMP),
+                                last_seen = CURRENT_TIMESTAMP,
                                 count = IF(query_id = VALUES(query_id), count, count+1),
-                                query_id = VALUES(query_id)
+                                query_id = VALUES(query_id);
                         """
-                        self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], i['DB'], i['USER'], i['HOST'], i['TIME'], i['TIME'], i['TIME']))
+                        self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], i['DB'], i['USER'], i['HOST'], i['TIME'], i['TIME'], i['TIME'], i['TIME']))
 
             # Parse Variables
             summary = self.__dict2str(summary) if summary != '' else ''
