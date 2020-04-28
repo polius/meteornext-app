@@ -5,9 +5,10 @@
         <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text title="Define monitoring rules and settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
-          <v-btn text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
-          <v-btn text title="Filter queries" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn :disabled="loading" text title="Define monitoring rules and settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+          <v-btn :disabled="loading" text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn :disabled="loading" text title="Filter queries" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn :disabled="loading" text title="Refresh query list" @click="getQueries()" class="body-2"><v-icon small style="padding-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-text-field v-model="queries_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
@@ -199,7 +200,7 @@ export default {
     treeviewSelected: [],
     treeviewOpened: [],
     treeviewSearch: '',
-    submit_servers: false,
+    submit_servers: true,
 
     // Filter Dialog
     filter_dialog: false,
@@ -231,7 +232,7 @@ export default {
       axios.get('/monitoring/queries', { params: { filter: JSON.stringify(filter), sort: JSON.stringify(sort) }})
         .then((response) => {
           // First time
-          if (this.submit_servers || (Object.keys(filter).length == 0 && Object.keys(sort).length == 0)) {
+          if (this.submit_servers) {
             this.parseSettings(response.data.settings)
             this.parseTreeView(response.data.servers)
             this.submit_servers = false
