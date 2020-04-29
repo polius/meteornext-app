@@ -13,7 +13,7 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:item.servers="props">
-          <div v-for="item in props.item.servers" :key="item.region + '|' + item.server" style="margin-left:0px; padding-left:0px; float:left; margin-right:5px; padding-top:3px; padding-bottom:3px;">
+          <div v-for="item in props.item.servers" :key="item.id" style="margin-left:0px; padding-left:0px; float:left; margin-right:5px; padding-top:3px; padding-bottom:3px;">
             <v-chip outlined :color="item.color" style="margin-left:0px;"><span class="font-weight-medium" style="padding-right:4px;">{{ item.server }}</span> - {{ item.region }}</v-chip>
           </div>
         </template>
@@ -79,7 +79,6 @@ td {
 
 <script>
 import axios from 'axios'
-
 export default {
   data: () => ({
     // Data Table
@@ -115,8 +114,9 @@ export default {
     getEnvironments() {
       axios.get('/inventory/environments')
         .then((response) => {
-          this.parseTreeView(response.data.servers)
-          // this.parseEnvironments(response.data.environments)
+          this.treeviewItems = this.parseTreeView(response.data.servers)
+          this.environment_servers = this.parseEnvironmentServers(response.data.environment_servers)
+          this.items = this.parseEnvironments(response.data.environments)
           this.loading = false
         })
         .catch((error) => {
@@ -125,39 +125,48 @@ export default {
         })
     },
     parseTreeView(servers) {
-      var data = []
-      var selected = []
-      var opened = []
-      if (servers.length == 0) return
-
-      // Parse Servers
-      var current_region = null
+      var treeview = []
+      var regions = []
+      // Fill regions
       for (let i = 0; i < servers.length; ++i) {
-        if ('r' + servers[i]['region_id'] != current_region) {
-          data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'] }] })
-          current_region = 'r' + servers[i]['region_id']
-        } else {
-          let row = data.pop()
-          row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'] })
-          data.push(row)
+        let found = false
+        for (let j = 0; j < regions.length; ++j) {
+          found = (servers[i]['region_id'] == regions[j]['id'])
+          if (found) break
         }
-        // Check selected
-        if (servers[i]['selected']) {
-          selected.push(servers[i]['server_id'])
-          opened.push('r' + servers[i]['region_id'])
+        if (!found) regions.push({ id: servers[i]['region_id'], name: servers[i]['region_name'] })
+      }
+      // Sort regions ASC by name
+      regions.sort(function(a,b) { 
+        if (a.name < b.name) return -1 
+        else if (a.name > b.name) return 1
+        return 0
+      })
+      // Fill treeview
+      for (let i = 0; i < regions.length; ++i) {
+        let region = { id: 'r'+regions[i]['id'], name: regions[i]['name'], children: []}
+        for (let j = 0; j < servers.length; ++j) {
+          if (regions[i]['name'] == servers[j]['region_name']) {
+            region['children'].push({ id: servers[j]['server_id'], name: servers[j]['server_name'] })
+          }
         }
+        if (region['children'].length == 0) delete region['children']
+        else {
+          // Sort servers ASC by name
+          region['children'].sort(function(a,b) { 
+            if (a.name < b.name) return -1 
+            else if (a.name > b.name) return 1
+            return 0
+          })
+        }
+        treeview.push(region)
       }
-      if (!this.servers_dialog) {
-        this.treeviewItems = data
-        this.treeviewSelected = selected
-        this.treeviewOpened = opened
-      }
+      return treeview
     },
     parseEnvironments(environments) {
       var data = []
       var regions = []
       var colors = ['#eb5f5d', '#fa8231', '#00b16a', '#9c59b6', '#2196f3']
-
       // Fill regions
       for (let i = 0; i < this.treeviewItems.length; ++i) regions.push(this.treeviewItems[i]['name'])
       regions.sort()
@@ -206,9 +215,9 @@ export default {
               break
             }
           }
-          if (!found) data[environment_servers[i]['environment_id']].push({ id: environment_servers[i]['region_id'], name: environment_servers[i]['region_name'], children: [{ id: environment_servers[i]['server_id'], name: environment_servers[i]['server_name'] }] })
+          if (!found) data[environment_servers[i]['environment_id']].push({ id: 'r' + environment_servers[i]['region_id'], name: environment_servers[i]['region_name'], children: [{ id: environment_servers[i]['server_id'], name: environment_servers[i]['server_name'] }] })
         }
-        else data[environment_servers[i]['environment_id']] = [{ id: environment_servers[i]['region_id'], name: environment_servers[i]['region_name'], children: [{ id: environment_servers[i]['server_id'], name: environment_servers[i]['server_name'] }] }]
+        else data[environment_servers[i]['environment_id']] = [{ id: 'r' + environment_servers[i]['region_id'], name: environment_servers[i]['region_name'], children: [{ id: environment_servers[i]['server_id'], name: environment_servers[i]['server_name'] }] }]
       }
       return data
     },
@@ -216,6 +225,7 @@ export default {
       this.mode = 'new'
       this.environment_name = ''
       this.treeviewSelected = []
+      this.treeviewOpened = []
       this.dialog_title = 'New Environment'
       this.dialog = true
     },
@@ -228,14 +238,21 @@ export default {
     },
     updateSelected() {
       var treeviewSelected = []
+      var treeviewOpened = []
       if (Object.keys(this.environment_servers) == 0) this.treeviewSelected = []
       else {
-        for (let i = 0; i < this.environment_servers[this.selected[0]['id']].length; ++i) {
-          for (let j = 0; j < this.environment_servers[this.selected[0]['id']][i]['children'].length; ++j) {
-            treeviewSelected.push(this.environment_servers[this.selected[0]['id']][i]['id'] + '|' + this.environment_servers[this.selected[0]['id']][i]['children'][j]['id'])
+        if (this.selected[0]['id'] in this.environment_servers) {
+          for (let i = 0; i < this.environment_servers[this.selected[0]['id']].length; ++i) {
+            for (let j = 0; j < this.environment_servers[this.selected[0]['id']][i]['children'].length; ++j) {
+              treeviewSelected.push(this.environment_servers[this.selected[0]['id']][i]['children'][j]['id'])
+              if (!treeviewOpened.includes(this.environment_servers[this.selected[0]['id']][i]['id'])) {
+                treeviewOpened.push(this.environment_servers[this.selected[0]['id']][i]['id'])
+              }
+            }
           }
         }
         this.treeviewSelected = [...treeviewSelected]
+        this.treeviewOpened = [...treeviewOpened]
       }
     },
     deleteEnvironment() {
@@ -248,8 +265,6 @@ export default {
       if (this.mode == 'new') this.newEnvironmentSubmit()
       else if (this.mode == 'edit') this.editEnvironmentSubmit()
       else if (this.mode == 'delete') this.deleteEnvironmentSubmit()
-      console.log(this.treeviewSelected)
-
     },
     newEnvironmentSubmit() {
       // Check if all fields are filled
@@ -268,8 +283,7 @@ export default {
       }
       // Build servers array
       var server_list = []
-      for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i].substring(this.treeviewSelected[i].indexOf('|')+1, this.treeviewSelected[i].length))
-
+      for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i])
       // Add item in the DB
       const payload = JSON.stringify({ name: this.environment_name, servers: server_list })
       axios.post('/inventory/environments', payload)
@@ -307,8 +321,7 @@ export default {
       }
       // Build servers array
       var server_list = []
-      for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i].substring(this.treeviewSelected[i].indexOf('|')+1, this.treeviewSelected[i].length))
-
+      for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i])
       // Edit item in the DB
       const payload = JSON.stringify({ id: this.selected[0]['id'], name: this.environment_name, servers: server_list })
       axios.put('/inventory/environments', payload)
