@@ -35,6 +35,8 @@ class Users:
 
     def delete(self, users):
         for user in users:
+            self._sql.execute("DELETE m FROM monitoring m JOIN users u ON u.id = m.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE ms FROM monitoring_settings ms JOIN users u ON u.id = ms.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE FROM users WHERE username = %s", (user))
 
     def exist(self, username):
