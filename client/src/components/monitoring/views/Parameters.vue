@@ -183,7 +183,7 @@ export default {
       var data = []
       var selected = []
       var opened = []
-      if (servers.length == 0) return data
+      if (servers.length == 0) return
 
       // Parse Servers
       var current_region = null

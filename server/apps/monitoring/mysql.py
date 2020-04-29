@@ -26,7 +26,7 @@ class mysql:
         sys.stderr = open(os.devnull, 'w')
 
         error = None
-        for i in range(3):
+        for i in range(1):
             try:
                 # Start SSH Tunnel
                 if self._server['ssh']['enabled']:

@@ -15,8 +15,8 @@ class Monitoring:
             SELECT 
                 s.id, s.engine, s.hostname, s.port, s.username, s.password,
                 r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
-                ms.summary, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_execution_time), 10) AS 'query_execution_time',
-				DATE_ADD(ms.updated, INTERVAL IFNULL(MIN(mset.monitor_interval), 10) SECOND) <= NOW() AS 'needs_update'
+                ms.available AS 'available', ms.summary, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_execution_time), 10) AS 'query_execution_time',
+				IF(ms.updated IS NULL, 1, DATE_ADD(ms.updated, INTERVAL IFNULL(MIN(mset.monitor_interval), 10) SECOND) <= NOW()) AS 'needs_update'
             FROM monitoring m
 			LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id						
@@ -38,7 +38,7 @@ class Monitoring:
             server['id'] = s['id']
             server['ssh'] = {'enabled': s['ssh_tunnel'], 'hostname': s['hostname'], 'port': s['rport'], 'username': s['rusername'], 'password': s['rpassword'], 'key': s['key']}
             server['sql'] = {'engine': s['engine'], 'hostname': s['hostname'], 'port': s['port'], 'username': s['username'], 'password': s['password']}
-            server['monitor'] = {'summary': s['summary'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'needs_update': s['needs_update']}
+            server['monitor'] = {'available': s['available'], 'summary': s['summary'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'needs_update': s['needs_update']}
             servers.append(server)
 
         # Get Server Info
@@ -48,8 +48,8 @@ class Monitoring:
             t.start()
             threads.append(t)
 
-        for t in threads:
-            t.join()
+        # for t in threads:
+        #     t.join()
 
     def clean(self):
         # Clean monitoring entries
@@ -155,17 +155,18 @@ class Monitoring:
             processlist = self.__dict2str(processlist) if processlist != '' else ''
 
             # Store Variables
-            query = """
-                INSERT INTO monitoring_servers (server_id, available, summary, parameters, processlist, updated)
-                SELECT %s, 1, IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), CURRENT_TIMESTAMP
-                ON DUPLICATE KEY UPDATE
-                    available = 1,
-                    summary = COALESCE(VALUES(summary), summary),
-                    parameters = COALESCE(VALUES(parameters), parameters),
-                    processlist = COALESCE(VALUES(processlist), processlist),
-                    updated = VALUES(updated)
-            """
-            self._sql.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist))
+            if summary != '' or params != '' or processlist != '':
+                query = """
+                    INSERT INTO monitoring_servers (server_id, available, summary, parameters, processlist, updated)
+                    SELECT %s, 1, IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), CURRENT_TIMESTAMP
+                    ON DUPLICATE KEY UPDATE
+                        available = 1,
+                        summary = COALESCE(VALUES(summary), summary),
+                        parameters = COALESCE(VALUES(parameters), parameters),
+                        processlist = COALESCE(VALUES(processlist), processlist),
+                        updated = VALUES(updated)
+                """
+                self._sql.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist))
 
         finally:
             # Stop Connection

@@ -170,7 +170,7 @@ export default {
 
     // Queries
     queries_headers: [
-      { text: 'Query', align: 'left', value: 'query_text' },
+      { text: 'Query', align: 'left', value: 'query_text', sortable: false },
       { text: 'Database', align: 'left', value: 'db' },
       { text: 'Server', align: 'left', value: 'server' },
       { text: 'User', align: 'left', value: 'user' },
