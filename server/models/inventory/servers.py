@@ -48,6 +48,31 @@ class Servers:
         self._sql.execute(query, (server['region_id'], group_id, server['name'], group_id, server['region'], server['hostname'], server['port'], server['username'], server['password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
     def delete(self, group_id, server_id):
+        # Delete from 'monitoring'
+        query = """
+            DELETE m 
+            FROM monitoring m 
+            JOIN servers s ON s.id = m.server_id AND s.id = %s
+            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+        """
+        self._sql.execute(query, (server_id, group_id))
+        # Delete from 'monitoring_servers'
+        query = """
+            DELETE ms
+            FROM monitoring_servers ms 
+            JOIN servers s ON s.id = ms.server_id AND s.id = %s
+            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+        """
+        self._sql.execute(query, (server_id, group_id))
+        # Delete from 'monitoring_queries'
+        query = """
+            DELETE mq
+            FROM monitoring_queries mq
+            JOIN servers s ON s.id = mq.server_id AND s.id = %s
+            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+        """
+        self._sql.execute(query, (server_id, group_id))
+
         # Delete from 'environment_servers'
         query = """
             DELETE es
