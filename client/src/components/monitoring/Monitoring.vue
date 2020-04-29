@@ -37,8 +37,10 @@
             </v-card-title>
             <v-divider></v-divider>
             <v-card-text style="padding-bottom:1px;">
-              <p class="font-weight-medium">Hostname<pre>{{servers[i*align+j].hostname}}</pre></p>
-              <p class="font-weight-medium">Connections<pre>{{servers[i*align+j].connections}}</pre></p>
+              <p class="font-weight-medium" style="margin-bottom:0px">Hostname</p>
+              <p style="font-family:monospace">{{servers[i*align+j].hostname}}</p>
+              <p class="font-weight-medium" style="margin-bottom:0px">Connections</p>
+              <p style="font-family:monospace">{{servers[i*align+j].connections}}</p>
             </v-card-text>
           </v-card>
         </v-hover>
