@@ -5,6 +5,7 @@ import pymysql
 import paramiko
 import warnings
 import sshtunnel
+from io import StringIO
 from collections import OrderedDict
 from pymysql.cursors import DictCursorMixin, Cursor
 
@@ -32,9 +33,9 @@ class mysql:
                 if self._server['ssh']['enabled']:
                     sshtunnel.SSH_TIMEOUT = 10.0
                     sshtunnel.TUNNEL_TIMEOUT = 10.0
-                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_pkey=paramiko.RSAKey.from_private_key_file(self._server['ssh']['key']), remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']))
+                    pkey = paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']))
+                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']))
                     self._tunnel.start()
-
                 # Start SQL Connection
                 hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
                 port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
@@ -43,6 +44,7 @@ class mysql:
                 return
 
             except Exception as e:
+                print(str(e))
                 self.stop()
                 error = e
                 time.sleep(1)
@@ -128,14 +130,20 @@ class mysql:
         return result
 
     def get_processlist(self):
-        query = """
-            SELECT processlist_id AS 'id', processlist_user AS 'user', processlist_host AS 'host', processlist_db AS 'db', processlist_command AS 'command', processlist_time AS 'time', processlist_state AS 'state', processlist_info AS 'info'
-            FROM performance_schema.threads 
-            WHERE type = 'FOREGROUND'
-        """
-        result = self.execute(query)
-
-        if len(result) == 0:
-            query = "SELECT * FROM information_schema.processlist"
+        try:
+            query = """
+                SELECT processlist_id AS 'id', processlist_user AS 'user', processlist_host AS 'host', processlist_db AS 'db', processlist_command AS 'command', processlist_time AS 'time', processlist_state AS 'state', processlist_info AS 'info'
+                FROM performance_schema.threads 
+                WHERE type = 'FOREGROUND'
+            """
             result = self.execute(query)
+        except Exception:
+            return self.__get_processlist_v2()
+        else:
+            if len(result) == 0:
+                return self.__get_processlist_v2()
+
+    def __get_processlist_v2(self):
+        query = "SELECT * FROM information_schema.processlist"
+        result = self.execute(query)
         return result
