@@ -11,12 +11,21 @@ class Utils:
         self._conn = connection
 
     def check_ssh(self):
-        pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']))
-        client = paramiko.SSHClient()
-        client.load_system_host_keys()
-        client.set_missing_host_key_policy(paramiko.WarningPolicy())
-        client.connect(hostname=self._conn['hostname'], port=int(self._conn['port']), username=self._conn['username'], password=self._conn['password'], pkey=pkey, timeout=10)
-        client.close()
+        # Supress Errors Output
+        sys_stderr = sys.stderr
+        sys.stderr = open(os.devnull, 'w')
+
+        try:
+            pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']))
+            client = paramiko.SSHClient()
+            client.load_system_host_keys()
+            client.set_missing_host_key_policy(paramiko.WarningPolicy())
+            client.connect(hostname=self._conn['hostname'], port=int(self._conn['port']), username=self._conn['username'], password=self._conn['password'], pkey=pkey, timeout=10)
+            client.close()
+        finally:
+            # Supress Errors Output
+            sys_stderr = sys.stderr
+            sys.stderr = open(os.devnull, 'w')
 
     def check_sql(self, server):
         f = open(os.devnull, 'w')

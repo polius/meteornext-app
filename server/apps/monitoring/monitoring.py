@@ -1,9 +1,16 @@
 import json
 import datetime
 import threading
+import decimal
 from collections import OrderedDict
 
 from apps.monitoring.connector import connector
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, decimal.Decimal):
+            return str(obj)
+        return json.JSONEncoder.default(self, obj)
 
 class Monitoring:
     def __init__(self, sql):
@@ -36,7 +43,7 @@ class Monitoring:
         for s in servers_raw:
             server = {'ssh': {}, 'sql': {}}
             server['id'] = s['id']
-            server['ssh'] = {'enabled': s['ssh_tunnel'], 'hostname': s['hostname'], 'port': s['rport'], 'username': s['rusername'], 'password': s['rpassword'], 'key': s['key']}
+            server['ssh'] = {'enabled': s['ssh_tunnel'], 'hostname': s['rhostname'], 'port': s['rport'], 'username': s['rusername'], 'password': s['rpassword'], 'key': s['key']}
             server['sql'] = {'engine': s['engine'], 'hostname': s['hostname'], 'port': s['port'], 'username': s['username'], 'password': s['password']}
             server['monitor'] = {'available': s['available'], 'summary': s['summary'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'needs_update': s['needs_update']}
             servers.append(server)
@@ -173,7 +180,7 @@ class Monitoring:
             conn.stop()
 
     def __dict2str(self, data):
-        return json.dumps(data, separators=(',', ':'))
+        return json.dumps(data, separators=(',', ':'), cls=DecimalEncoder)
 
     def __str2dict(self, data):
         # Convert a string representation of a dictionary to a dictionary
