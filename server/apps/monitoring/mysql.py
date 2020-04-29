@@ -141,6 +141,7 @@ class mysql:
         else:
             if len(result) == 0:
                 return self.__get_processlist_v2()
+            return result
 
     def __get_processlist_v2(self):
         query = "SELECT * FROM information_schema.processlist"
