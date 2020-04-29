@@ -74,24 +74,6 @@ class Environments:
             """
             return self._sql.execute(query, (environment['name'], group_id))[0]['exist'] == 1
 
-    def get_servers(self, group_id):
-        query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name'
-            FROM servers s
-            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-        """
-        return self._sql.execute(query, (group_id))
-
-    def get_environment_servers(self, group_id):
-        query = """
-            SELECT es.environment_id, s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name'
-            FROM environment_servers es
-            JOIN environments e ON e.id = es.environment_id AND e.group_id = %s
-            JOIN servers s ON s.id = es.server_id
-            JOIN regions r ON r.id = s.region_id
-        """
-        return self._sql.execute(query, (group_id))
-
     def get_by_name(self, group_id, environment_name):
         query = """
             SELECT *
@@ -100,3 +82,14 @@ class Environments:
             AND name = %s
         """
         return self._sql.execute(query, (group_id, environment_name))
+
+    def get_servers(self, group_id):
+        query = """
+            SELECT s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (es.server_id IS NOT NULL) AS 'selected' #, e.id AS 'environment_id', e.name AS 'environment_name'
+            FROM servers s
+            LEFT JOIN environment_servers es ON es.server_id = s.id
+            LEFT JOIN environments e ON e.id = es.environment_id AND e.group_id = %s
+            LEFT JOIN regions r ON r.id = s.region_id
+            ORDER BY r.name, s.name
+        """
+        return self._sql.execute(query, (group_id))

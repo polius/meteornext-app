@@ -68,7 +68,7 @@ class Environments:
     # Internal Methods #
     ####################
     def get(self, group_id):
-        return jsonify({'environments': self._environments.get(group_id), 'environment_servers': self._environments.get_environment_servers(group_id), 'servers': self._environments.get_servers(group_id)}), 200
+        return jsonify({'environments': self._environments.get(group_id), 'servers': self._environments.get_servers(group_id)}), 200
 
     def post(self, user_id, group_id, data):
         if self._environments.exist(group_id, data):

@@ -24,6 +24,8 @@
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -39,7 +41,7 @@
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
-                      <v-treeview :active.sync="treeviewSelected" item-key="id" open-all :items="treeviewItems" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -98,6 +100,7 @@ export default {
     environment_servers: {},
     treeviewItems: [],
     treeviewSelected: [],
+    treeviewOpened: [],
     treeviewSearch: '',
     // Snackbar
     snackbar: false,
@@ -112,9 +115,8 @@ export default {
     getEnvironments() {
       axios.get('/inventory/environments')
         .then((response) => {
-          this.treeviewItems = this.parseTreeView(response.data.servers)
-          this.environment_servers = this.parseEnvironmentServers(response.data.environment_servers)
-          this.items = this.parseEnvironments(response.data.environments)
+          this.parseTreeView(response.data.servers)
+          // this.parseEnvironments(response.data.environments)
           this.loading = false
         })
         .catch((error) => {
@@ -123,44 +125,33 @@ export default {
         })
     },
     parseTreeView(servers) {
-      var treeview = []
-      var regions = []
-      // Fill regions
-      for (let i = 0; i < servers.length; ++i) {
-        let found = false
-        for (let j = 0; j < regions.length; ++j) {
-          found = (servers[i]['region_id'] == regions[j]['id'])
-          if (found) break
-        }
-        if (!found) regions.push({ id: servers[i]['region_id'], name: servers[i]['region_name'] })
-      }
-      // Sort regions ASC by name
-      regions.sort(function(a,b) { 
-        if (a.name < b.name) return -1 
-        else if (a.name > b.name) return 1
-        return 0
-      })
+      var data = []
+      var selected = []
+      var opened = []
+      if (servers.length == 0) return
 
-      // Fill treeview
-      for (let i = 0; i < regions.length; ++i) {
-        let region = { id: regions[i]['id'], name: regions[i]['name'], children: []}
-        for (let j = 0; j < servers.length; ++j) {
-          if (regions[i]['name'] == servers[j]['region_name']) {
-            region['children'].push({ id: regions[i]['id'] + '|' + servers[j]['server_id'], name: servers[j]['server_name'] })
-          }
+      // Parse Servers
+      var current_region = null
+      for (let i = 0; i < servers.length; ++i) {
+        if ('r' + servers[i]['region_id'] != current_region) {
+          data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'] }] })
+          current_region = 'r' + servers[i]['region_id']
+        } else {
+          let row = data.pop()
+          row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'] })
+          data.push(row)
         }
-        if (region['children'].length == 0) delete region['children']
-        else {
-          // Sort servers ASC by name
-          region['children'].sort(function(a,b) { 
-            if (a.name < b.name) return -1 
-            else if (a.name > b.name) return 1
-            return 0
-          })
+        // Check selected
+        if (servers[i]['selected']) {
+          selected.push(servers[i]['server_id'])
+          opened.push('r' + servers[i]['region_id'])
         }
-        treeview.push(region)
       }
-      return treeview
+      if (!this.servers_dialog) {
+        this.treeviewItems = data
+        this.treeviewSelected = selected
+        this.treeviewOpened = opened
+      }
     },
     parseEnvironments(environments) {
       var data = []

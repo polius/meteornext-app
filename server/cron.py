@@ -25,7 +25,7 @@ class Cron:
         schedule.every().day.at("00:00").do(self.__coins)
         schedule.every().day.at("00:00").do(self.__logs)
         schedule.every().day.at("00:00").do(self.__monitoring_clean)
-        schedule.every(1).seconds.do(self.__monitoring)
+        schedule.every(2).seconds.do(self.__monitoring)
 
         # Start Cron Listener
         t = threading.Thread(target=self.__run_schedule)
@@ -112,8 +112,8 @@ class Cron:
         monitoring.clean()
 
     def __monitoring(self):
-        if self._monitoring_ready:
-            self._monitoring_ready = False
-            monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
-            monitoring.start()
-            self._monitoring_ready = True
+        # if self._monitoring_ready:
+        #     self._monitoring_ready = False
+        monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
+        monitoring.start()
+            # self._monitoring_ready = True
