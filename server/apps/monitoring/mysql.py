@@ -44,7 +44,6 @@ class mysql:
                 return
 
             except Exception as e:
-                print(str(e))
                 self.stop()
                 error = e
                 time.sleep(1)
