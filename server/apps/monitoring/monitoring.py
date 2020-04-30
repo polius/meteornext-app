@@ -104,16 +104,22 @@ class Monitoring:
             conn = connector(server)
             conn.start()
         except Exception:
+            # Get current timestamp in utc
+            utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
             # Set Server Available to False
             query = """
                 INSERT INTO monitoring_servers (server_id, available, updated)
-                VALUES (%s, 0, CURRENT_TIMESTAMP)
+                VALUES (%s, 0, %s)
                 ON DUPLICATE KEY UPDATE
                     available = VALUES(available),
                     updated = VALUES(updated)
             """
-            self._sql.execute(query=query, args=(server['id']))
+            self._sql.execute(query=query, args=(server['id'], utcnow))
         else:
+            # Get current timestamp in utc
+            utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
             # Build Parameters
             params = ''
             if (server['monitor']['monitor_enabled'] or server['monitor']['parameters_enabled']) and server['monitor']['needs_update']:
@@ -142,7 +148,7 @@ class Monitoring:
                     if i['TIME'] >= server['monitor']['query_execution_time'] and i['COMMAND'] in ['Query','Execute']:
                         query = """
                             INSERT INTO monitoring_queries (server_id, query_id, query_text, query_hash, db, user, host, first_seen, last_execution_time, max_execution_time, bavg_execution_time, avg_execution_time)
-                            VALUES (%s, %s, %s, SHA1(%s), %s, %s, %s, CURRENT_TIMESTAMP, %s, %s, %s, %s)
+                            VALUES (%s, %s, %s, SHA1(%s), %s, %s, %s, %s, %s, %s, %s, %s)
                             ON DUPLICATE KEY UPDATE
                                 user = VALUES(user),
                                 host = VALUES(host),
@@ -150,11 +156,11 @@ class Monitoring:
                                 max_execution_time = GREATEST(max_execution_time, VALUES(last_execution_time)),
                                 avg_execution_time = IF(count = 1 AND query_id = VALUES(query_id), VALUES(last_execution_time), IF(query_id = VALUES(query_id), (bavg_execution_time*(count-1) + VALUES(last_execution_time)) / count, (bavg_execution_time*count + VALUES(last_execution_time)) / (count+1))),
                                 last_execution_time = VALUES(last_execution_time),
-                                last_seen = CURRENT_TIMESTAMP,
+                                last_seen = VALUES(last_seen),
                                 count = IF(query_id = VALUES(query_id), count, count+1),
                                 query_id = VALUES(query_id);
                         """
-                        self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], i['DB'], i['USER'], i['HOST'], i['TIME'], i['TIME'], i['TIME'], i['TIME']))
+                        self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], i['DB'], i['USER'], i['HOST'], utcnow, i['TIME'], i['TIME'], i['TIME'], i['TIME']))
 
             # Parse Variables
             summary = self.__dict2str(summary) if summary != '' else ''
@@ -165,7 +171,7 @@ class Monitoring:
             if summary != '' or params != '' or processlist != '':
                 query = """
                     INSERT INTO monitoring_servers (server_id, available, summary, parameters, processlist, updated)
-                    SELECT %s, 1, IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), CURRENT_TIMESTAMP
+                    SELECT %s, 1, IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), %s
                     ON DUPLICATE KEY UPDATE
                         available = 1,
                         summary = COALESCE(VALUES(summary), summary),
@@ -173,7 +179,7 @@ class Monitoring:
                         processlist = COALESCE(VALUES(processlist), processlist),
                         updated = VALUES(updated)
                 """
-                self._sql.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist))
+                self._sql.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist, utcnow))
 
         finally:
             # Stop Connection
