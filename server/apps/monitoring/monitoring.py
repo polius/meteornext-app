@@ -18,12 +18,13 @@ class Monitoring:
 
     def start(self):
         # Get Monitoring Servers
+        utcnow = self.__utcnow()
         query = """
             SELECT 
                 s.id, s.engine, s.hostname, s.port, s.username, s.password,
                 r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
                 ms.available AS 'available', ms.summary, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_execution_time), 10) AS 'query_execution_time',
-				IF(ms.updated IS NULL, 1, DATE_ADD(ms.updated, INTERVAL IFNULL(MIN(mset.monitor_interval), 10) SECOND) <= NOW()) AS 'needs_update'
+				IF(ms.updated IS NULL, 1, DATE_ADD(ms.updated, INTERVAL IFNULL(MIN(mset.monitor_interval), 10) SECOND) <= %s) AS 'needs_update'
             FROM monitoring m
 			LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id						
@@ -36,7 +37,7 @@ class Monitoring:
 			OR m.parameters_enabled = 1
             GROUP BY m.server_id;
         """
-        servers_raw = self._sql.execute(query)
+        servers_raw = self._sql.execute(query=query, args=(utcnow))
 
         # Build Servers List
         servers = []
@@ -79,6 +80,7 @@ class Monitoring:
         self._sql.execute(query)
 
         # Clean queries that exceeds the MAX defined data retention
+        utcnow = self.__utcnow()
         query = """
             DELETE q
             FROM monitoring_queries q
@@ -89,10 +91,10 @@ class Monitoring:
                 JOIN monitoring m ON m.user_id = s.user_id
                 GROUP BY m.server_id
             ) t ON t.server_id = q.server_id
-            WHERE (t.server_id IS NULL AND DATE_ADD(q.first_seen, INTERVAL t.data_retention DAY) <= NOW())
-            OR (t.server_id IS NOT NULL AND  DATE_ADD(q.first_seen, INTERVAL 1 DAY) <= NOW());
+            WHERE (t.server_id IS NULL AND DATE_ADD(q.first_seen, INTERVAL t.data_retention DAY) <= %s)
+            OR (t.server_id IS NOT NULL AND  DATE_ADD(q.first_seen, INTERVAL 1 DAY) <= %s);
         """
-        self._sql.execute(query)
+        self._sql.execute(query=query, args=(utcnow, utcnow))
 
     def __start_server(self, server):
         if server['sql']['engine'] == 'MySQL':
@@ -191,3 +193,8 @@ class Monitoring:
     def __str2dict(self, data):
         # Convert a string representation of a dictionary to a dictionary
         return json.loads(data, object_pairs_hook=OrderedDict)
+
+    def __utcnow(self):
+        # Get current timestamp in utc
+        utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        return utcnow
