@@ -232,7 +232,7 @@ export default {
           }
           let match = values.every( v => v === values[0] )
           if (this.filter == 'Matching' && match) this.parameters_items.push(this.parameters_origin[i])
-          else if (this.filter == 'Not Matching' && !match) this.parameters_items.push(this.parameters_origin[i])
+          else if (this.filter == 'Not matching' && !match) this.parameters_items.push(this.parameters_origin[i])
         }
       }
     },
