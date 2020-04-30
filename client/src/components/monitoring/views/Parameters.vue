@@ -155,6 +155,7 @@ export default {
       this.parameters_headers = [{ text: 'Variable', align: 'left', value: 'variable' }]
       this.parameters_origin = []
       var pending_servers = false
+
       for (let i = 0; i < data.length; ++i) {
         if (data[i]['selected']) {
           // Check pending servers
@@ -162,18 +163,20 @@ export default {
           if (pending == 1) pending_servers = true
 
           // Fill parameter items
-          let params = JSON.parse(data[i]['parameters'])
-          for (let p in params) {
-            let obj = this.parameters_origin.find((o, i) => {
-              if (o.variable === p) {
-                this.parameters_origin[i][data[i]['server_id']] = params[p]
-                return true; // stop searching
-              }
-            });
-            if (obj === undefined) this.parameters_origin.push({variable: p, ['s'+data[i]['server_id']]: params[p]})
+          if (data[i]['parameters'] != null) {
+            let params = JSON.parse(data[i]['parameters'])
+            for (let p in params) {
+              let obj = this.parameters_origin.find((o, j) => {
+                if (o.variable === p) {
+                  this.parameters_origin[j]['s'+data[i]['server_id']] = params[p]
+                  return true; // stop searching
+                }
+              });
+              if (obj === undefined) this.parameters_origin.push({variable: p, ['s'+data[i]['server_id']]: params[p]})
+            }
+            // Fill parameter headers
+            this.parameters_headers.push({ text: data[i]['server_name'] + ' (' + data[i]['region_name'] + ')', align: 'left', value: 's'+data[i]['server_id'] })
           }
-          // Fill parameter headers
-          this.parameters_headers.push({ text: data[i]['server_name'] + ' (' + data[i]['region_name'] + ')', align: 'left', value: 's'+data[i]['server_id'] })
         }
       }
       this.pending_servers = pending_servers
