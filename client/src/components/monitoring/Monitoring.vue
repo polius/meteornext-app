@@ -25,12 +25,12 @@
     <v-layout v-for="(n, i) in Math.ceil(servers.length/align)" :key="i" style="margin-left:-4px; margin-right:-4px;">
       <v-flex :xs3="align==4" :xs4="align==3" :xs6="align==2" :xs12="align==1" v-for="(m, j) in Math.min(servers.length-i*align,align)" :key="j" style="padding:5px; cursor:pointer;">
         <v-hover>
-          <v-card @click="monitor(servers[i*align+j])" slot-scope="{ hover }" :title="servers[i*align+j].color == 'teal' ? 'Server available' : servers[i*align+j].color == 'orange' ? 'Server loading...': 'Server unavailable'" :class="`elevation-${hover ? 12 : 2}`">
+          <v-card :height="maxHeight" ref="serverRefs" @click="monitor(servers[i*align+j])" slot-scope="{ hover }" :title="servers[i*align+j].color == 'teal' ? 'Server available' : servers[i*align+j].color == 'orange' ? 'Server loading...': 'Server unavailable'" :class="`elevation-${hover ? 12 : 2}`">
             <v-img height="10px" :class="servers[i*align+j].color"></v-img>
             <v-progress-linear v-if="servers[i*align+j].color == 'orange'" indeterminate color="orange" height="3" style="margin-bottom:-3px;"></v-progress-linear>
             <v-card-title primary-title style="padding-bottom:10px;">
               <p class="text-xs-center" style="margin-bottom:0px;">
-                <span class="title"><v-icon v-if="servers[i*align+j].error.length > 0" :title="servers[i*align+j].error" small color="orange" style="margin-right:10px;">fas fa-exclamation-triangle</v-icon>{{servers[i*align+j].name}}</span>
+                <span class="title"><v-icon v-if="servers[i*align+j].error != null" :title="servers[i*align+j].error" small color="orange" style="margin-right:10px;">fas fa-exclamation-triangle</v-icon>{{servers[i*align+j].name}}</span>
                 <br>
                 <span class="body-2">{{servers[i*align+j].region}}</span>
               </p>
@@ -182,6 +182,8 @@
         servers_origin: [],
         search: '',
         pending_servers: true,
+        serverRefs: [],
+        maxHeight: '',
 
         // Settings Dialog
         settings_dialog: false,        
@@ -220,6 +222,9 @@
     created() {
       this.active = true
       this.getMonitoring(0)
+    },
+    updated() {
+      this.matchHeight()
     },
     destroyed() {
       this.active = false
@@ -379,6 +384,14 @@
           if (this.servers[i]['name'].includes(newValue)) search.push(this.servers[i])
         }
         this.servers = search.slice(0)
+      },
+      matchHeight() {
+        var max_height = 0
+        var refs = this.$refs.serverRefs
+        for (let i in refs) {
+          if (refs[i].$el.clientHeight > max_height) max_height = refs[i].$el.clientHeight
+        }
+        this.maxHeight = max_height
       },
       dateFormat(date) {
         if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
