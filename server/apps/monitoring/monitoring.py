@@ -102,25 +102,32 @@ class Monitoring:
 
     def __start_server_mysql(self, server):
         try:
-            # If server is "available=0" and "utcnow - update".total_seconds() <= 10, then return without connecting it.
-            # !!! TO IMPLEMENT !!!
+            # Init Connection
+            conn = None
+
+            # If server is not available check connection every 15 seconds
+            if server['monitor']['updated'] is not None:
+                diff = (datetime.datetime.utcnow() - server['monitor']['updated']).total_seconds()
+                if server['monitor']['available'] == 0 and diff < 15:
+                    return
 
             # Start Connection
             conn = connector(server)
             conn.start()
-        except Exception:
+        except Exception as e:
             # Get current timestamp in utc
             utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
-            # Set Server Available to False
+            # Set server unavailable with error
             query = """
-                INSERT INTO monitoring_servers (server_id, available, updated)
-                VALUES (%s, 0, %s)
+                INSERT INTO monitoring_servers (server_id, available, error, updated)
+                VALUES (%s, 0, %s, %s)
                 ON DUPLICATE KEY UPDATE
                     available = VALUES(available),
+                    error = VALUES(error),
                     updated = VALUES(updated)
             """
-            self._sql.execute(query=query, args=(server['id'], utcnow))
+            self._sql.execute(query=query, args=(server['id'], str(e), utcnow))
         else:
             # Get current timestamp in utc
             utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
@@ -188,7 +195,8 @@ class Monitoring:
 
         finally:
             # Stop Connection
-            conn.stop()
+            if conn:
+                conn.stop()
 
     def __dict2str(self, data):
         return json.dumps(data, separators=(',', ':'), cls=DecimalEncoder)
