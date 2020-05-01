@@ -13,7 +13,7 @@ class Monitoring:
 
     def get_monitoring(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.monitor_enabled = 1) AS 'selected', ms.available, ms.summary, ms.updated
+            SELECT s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.monitor_enabled = 1) AS 'selected', ms.available, ms.summary, ms.error, ms.updated
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
             LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
