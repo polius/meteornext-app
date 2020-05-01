@@ -387,11 +387,10 @@
       },
       matchHeight() {
         var max_height = 0
-        var refs = this.$refs.serverRefs
-        for (let i in refs) {
-          if (refs[i].$el.clientHeight > max_height) max_height = refs[i].$el.clientHeight
+        for (let i in this.$refs.serverRefs) {
+          if (this.$refs.serverRefs[i].$el.clientHeight > max_height) max_height = this.$refs.serverRefs[i].$el.clientHeight
         }
-        this.maxHeight = max_height
+        if (max_height > 0) this.maxHeight = max_height
       },
       dateFormat(date) {
         if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
