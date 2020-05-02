@@ -5,6 +5,7 @@ import decimal
 from collections import OrderedDict
 
 from apps.monitoring.connector import connector
+import models.notifications
 
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -15,15 +16,16 @@ class DecimalEncoder(json.JSONEncoder):
 class Monitoring:
     def __init__(self, sql):
         self._sql = sql
+        self._notifications = models.notifications.Notifications(sql)
 
     def start(self):
         # Get Monitoring Servers
         utcnow = self.__utcnow()
         query = """
             SELECT 
-                s.id, s.engine, s.hostname, s.port, s.username, s.password,
-                r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
-                ms.available AS 'available', ms.summary, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_execution_time), 10) AS 'query_execution_time',
+                s.id, s.name, s.engine, s.hostname, s.port, s.username, s.password,
+                r.name AS 'rname', r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
+                ms.available AS 'available', ms.summary, ms.parameters, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_execution_time), 10) AS 'query_execution_time',
 				ms.updated, IF(ms.updated IS NULL, 1, DATE_ADD(ms.updated, INTERVAL IFNULL(MIN(mset.monitor_interval), 10) SECOND) <= %s) AS 'needs_update'
             FROM monitoring m
 			LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
@@ -44,9 +46,9 @@ class Monitoring:
         for s in servers_raw:
             server = {'ssh': {}, 'sql': {}}
             server['id'] = s['id']
-            server['ssh'] = {'enabled': s['ssh_tunnel'], 'hostname': s['rhostname'], 'port': s['rport'], 'username': s['rusername'], 'password': s['rpassword'], 'key': s['key']}
-            server['sql'] = {'engine': s['engine'], 'hostname': s['hostname'], 'port': s['port'], 'username': s['username'], 'password': s['password']}
-            server['monitor'] = {'available': s['available'], 'summary': s['summary'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'updated': s['updated'], 'needs_update': s['needs_update']}
+            server['ssh'] = {'name': s['rname'], 'enabled': s['ssh_tunnel'], 'hostname': s['rhostname'], 'port': s['rport'], 'username': s['rusername'], 'password': s['rpassword'], 'key': s['key']}
+            server['sql'] = {'name': s['name'], 'engine': s['engine'], 'hostname': s['hostname'], 'port': s['port'], 'username': s['username'], 'password': s['password']}
+            server['monitor'] = {'available': s['available'], 'summary': s['summary'], 'parameters': s['parameters'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'updated': s['updated'], 'needs_update': s['needs_update']}
             servers.append(server)
 
         # Get Server Info
@@ -114,9 +116,13 @@ class Monitoring:
             # Start Connection
             conn = connector(server)
             conn.start()
+
         except Exception as e:
             # Get current timestamp in utc
             utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+            # Monitoring Alarms
+            self.__monitor_alarms(available=False, server=server, error=str(e))
 
             # Set server unavailable with error
             query = """
@@ -168,11 +174,14 @@ class Monitoring:
                                 max_execution_time = GREATEST(max_execution_time, VALUES(last_execution_time)),
                                 avg_execution_time = IF(count = 1 AND query_id = VALUES(query_id), VALUES(last_execution_time), IF(query_id = VALUES(query_id), (bavg_execution_time*(count-1) + VALUES(last_execution_time)) / count, (bavg_execution_time*count + VALUES(last_execution_time)) / (count+1))),
                                 last_execution_time = VALUES(last_execution_time),
-                                last_seen = VALUES(last_seen),
+                                last_seen = %s,
                                 count = IF(query_id = VALUES(query_id), count, count+1),
                                 query_id = VALUES(query_id);
                         """
-                        self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], i['DB'], i['USER'], i['HOST'], utcnow, i['TIME'], i['TIME'], i['TIME'], i['TIME']))
+                        self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], i['DB'], i['USER'], i['HOST'], utcnow, i['TIME'], i['TIME'], i['TIME'], i['TIME'], utcnow))
+
+            # Monitoring Alarms
+            self.__monitor_alarms(available=True, server=server, summary=summary, params=params)
 
             # Parse Variables
             summary = self.__dict2str(summary) if summary != '' else ''
@@ -197,6 +206,71 @@ class Monitoring:
             # Stop Connection
             if conn:
                 conn.stop()
+
+    def __monitor_alarms(self, available, server, summary=None, params=None, error=None):
+        # Init vars
+        users = None
+
+        # Check 'Unavailable'
+        if server is not None and server['monitor']['available'] and not available:
+            print("unavailable")
+            query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
+            users = self._sql.execute(query=query, args=(server['id']))
+
+            for user in users:
+                notification = {
+                    'name': 'Server {} - {} has become unavailable'.format(server['sql']['name'], server['ssh']['name']),
+                    'status': 'ERROR',
+                    'icon': 'fas fa-circle',
+                    'category': 'monitoring',
+                    'data': error,
+                    'date': self.__utcnow(),
+                    'show': 1
+                }
+                self._notifications.post(user_id=user['user_id'], notification=notification)
+
+        # Check 'Available'
+        if server is not None and not server['monitor']['available'] and available:
+            print("available")
+            if users is None:
+                query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
+                users = self._sql.execute(query=query, args=(server['id']))
+
+            for user in users:
+                notification = {
+                    'name': 'Server {} - {} has become available'.format(server['sql']['name'], server['ssh']['name']),
+                    'status': 'SUCCESS',
+                    'icon': 'fas fa-circle',
+                    'category': 'monitoring',
+                    'date': self.__utcnow(),
+                    'show': 1
+                }
+                self._notifications.post(user_id=user['user_id'], notification=notification)
+
+        # Check 'Server restarted'
+        if available and server is not None and summary is not None and 'summary' in server:
+            mon = self.__str2dict(server['monitor']['summary'])
+            if 'info' in summary and 'start_time' in summary['info'] and 'info' in mon and 'start_time' in mon['info'] and summary['info']['start_time'] < mon['info']['start_time']:
+                print("restarted")
+                if users is None:
+                    query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
+                    users = self._sql.execute(query=query, args=(server['id']))
+
+                for user in users:
+                    notification = {
+                        'name': 'Server {} - {} has restarted'.format(server['sql']['name'], server['ssh']['name']),
+                        'status': 'ERROR',
+                        'icon': 'fas fa-circle',
+                        'category': 'monitoring',
+                        'date': self.__utcnow(),
+                        'show': 1
+                    }
+                    self._notifications.post(user_id=user['user_id'], notification=notification)
+
+        # Check 'Params changed'
+        # if available and 'parameters' in server['monitor'] and params is not None:
+        #     params = self.__str2dict(server['monitor']['parameters'])
+        #     params_cmp = {}
 
     def __dict2str(self, data):
         return json.dumps(data, separators=(',', ':'), cls=DecimalEncoder)

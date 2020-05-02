@@ -3,18 +3,40 @@
     <v-card>
       <v-toolbar flat color="primary">
         <v-toolbar-title>SLACK</v-toolbar-title>
+        <v-divider class="mx-3" inset vertical></v-divider>
+        <v-btn :color="mode == 'deployments' ? 'primary' : '#779ecb'" @click="mode = 'deployments'" style="margin-right:10px;">Deployments</v-btn>
+        <v-btn :color="mode == 'monitoring' ? 'primary' : '#779ecb'" @click="mode = 'monitoring'" style="margin-right:10px;">Monitoring</v-btn>
       </v-toolbar>
       <v-container fluid grid-list-lg>
         <v-layout row wrap>
-          <v-flex xs12>
+          <!-- DEPLOYMENTS -->
+          <v-flex v-if="mode == 'deployments'" xs12>
             <v-form ref="form" style="padding:0px 10px 10px 10px;">
-              <v-text-field :loading="loading" :disabled="loading" v-model="channel_name" label="Channel Name" :rules="[v => enabled ? v.length > 0 : true || '']"></v-text-field>
-              <v-text-field :loading="loading" :disabled="loading" v-model="webhook_url" label="Webhook URL" :rules="[v => enabled ? v.length > 0 && (v.startsWith('http://') || v.startsWith('https://')) : true || '']" style="padding-top:0px;"></v-text-field>
-              <v-switch :disabled="loading" v-model="enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
+              <div class="title font-weight-regular" style="margin-top:5px;">DEPLOYMENTS</div>
+              <div class="body-1 font-weight-regular" style="margin-top:10px; margin-bottom:15px;">Send a <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime a deployment finishes.</div>
+              <v-text-field :loading="loading" :disabled="loading" v-model="deployments.channel_name" label="Channel Name" :rules="[v => !!v || '']"></v-text-field>
+              <v-text-field :loading="loading" :disabled="loading" v-model="deployments.webhook_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" style="padding-top:0px;"></v-text-field>
+              <v-switch :disabled="loading" v-model="deployments.enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
               <v-divider style="margin-top:-5px;"></v-divider>
               <div style="margin-top:20px;">
-                <v-btn :loading="loading" color="#00b16a" style="margin-left:0px;" @click="saveSlack()">SAVE</v-btn>
-                <v-btn :loading="loading" color="info" style="margin-left:10px;" @click="testSlack()">TEST</v-btn>
+                <v-btn :loading="loading" color="#00b16a" style="margin-left:0px;" @click="saveSlack('deployments')">SAVE</v-btn>
+                <v-btn :loading="loading" color="info" style="margin-left:10px;" @click="testSlack('deployments')">TEST</v-btn>
+              </div>
+            </v-form>
+          </v-flex>
+
+          <!-- MONITORING -->
+          <v-flex v-else-if="mode == 'monitoring'" xs12>
+            <v-form ref="form" style="padding:0px 10px 10px 10px;">
+              <div class="title font-weight-regular" style="margin-top:5px;">MONITORING</div>
+              <div class="body-1 font-weight-regular" style="margin-top:10px; margin-bottom:15px;">Send a <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message when a server becomes available or unavailable.</div>
+              <v-text-field :loading="loading" :disabled="loading" v-model="monitoring.channel_name" label="Channel Name" :rules="[v => !!v || '']"></v-text-field>
+              <v-text-field :loading="loading" :disabled="loading" v-model="monitoring.webhook_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" style="padding-top:0px;"></v-text-field>
+              <v-switch :disabled="loading" v-model="monitoring.enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
+              <v-divider style="margin-top:-5px;"></v-divider>
+              <div style="margin-top:20px;">
+                <v-btn :loading="loading" color="#00b16a" style="margin-left:0px;" @click="saveSlack('monitoring')">SAVE</v-btn>
+                <v-btn :loading="loading" color="info" style="margin-left:10px;" @click="testSlack('monitoring')">TEST</v-btn>
               </div>
             </v-form>
           </v-flex>
@@ -29,16 +51,17 @@
   </div>
 </template>
 
-
 <script>
 import axios from 'axios';
 
 export default {
   data: () => ({
-    channel_name: '',
-    webhook_url: '',
-    enabled: false,
     loading: true,
+
+    // Slack Data
+    deployments: { channel_name: '', webhook_url: '', enabled: false },
+    monitoring: { channel_name: '', webhook_url: '', enabled: false },
+    mode: 'deployments',
 
     // Snackbar
     snackbar: false,
@@ -53,11 +76,7 @@ export default {
     getSlack() {
       axios.get('/inventory/slack')
         .then((response) => {
-          if (response.data.data.length > 0) {
-            this.channel_name = response.data.data[0]['channel_name']
-            this.webhook_url = response.data.data[0]['webhook_url']
-            this.enabled = response.data.data[0]['enabled']
-          }
+          this.parseSlack(response.data.data)
           this.loading = false
         })
         .catch((error) => {
@@ -65,34 +84,42 @@ export default {
           else this.notification(error.response.data.message, 'error')
         })
     },
-    saveSlack() {
+    parseSlack(data) {
+      for (let i = 0; i < data.length; ++i) {
+        if (data[i]['mode'] == 'DEPLOYMENTS') this.deployments = data[i]
+        else if (data[i]['mode'] == 'MONITORING') this.monitoring = data[i]
+      }
+    },
+    saveSlack(mode) {
+      // Disable the fields while updating fields to the DB
+      this.loading = true
+
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
         this.loading = false
         return
       }
-      // Disable the fields while updating fields to the DB
-      this.loading = true
-      // Edit item in the DB
-      const payload = {
-        channel_name: this.channel_name,
-        webhook_url: this.webhook_url,
-        enabled: this.enabled
-      }
-      axios.put('/inventory/slack', payload)
+
+      // Build Payload
+      var payload = (mode == 'deployments') ? this.deployments : this.monitoring
+      payload['mode'] = mode
+
+      // Post new data into DB
+      axios.post('/inventory/slack', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
+          this.loading = false
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
     },
-    testSlack() {
+    testSlack(mode) {
+      // Disable the fields while updating fields to the DB
+      this.loading = true
+
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
@@ -100,7 +127,8 @@ export default {
         return
       }
       // Test Slack Webhook URL
-      axios.get('/inventory/slack/test', { params: { webhook_url: this.webhook_url } })
+      const url = (mode == 'deployments') ? this.deployments.webhook_url : this.monitoring.webhook_url
+      axios.get('/inventory/slack/test', { params: { webhook_url: url } })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
         })

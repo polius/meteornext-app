@@ -139,6 +139,7 @@ CREATE TABLE `auxiliary` (
 
 CREATE TABLE `slack` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `mode` ENUM('DEPLOYMENTS','MONITORING') NOT NULL,
   `channel_name` varchar(191) COLLATE utf8mb4_unicode_ci,
   `webhook_url` text COLLATE utf8mb4_unicode_ci,
   `enabled` tinyint(1) DEFAULT NULL,
@@ -148,7 +149,7 @@ CREATE TABLE `slack` (
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `group_id` (`group_id`),
+  UNIQUE KEY `group_id__mode` (`group_id`, `mode`),
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
@@ -288,7 +289,7 @@ CREATE TABLE `notifications` (
   `status` ENUM('INFO','SUCCESS','WARNING','ERROR') NOT NULL,
   `icon` VARCHAR(191) NULL,
   `category` VARCHAR(191) NOT NULL,
-  `data` TEXT NOT NULL,
+  `data` TEXT NULL,
   `date` DATETIME NOT NULL,
   `user_id` INT UNSIGNED NOT NULL,
   `show` TINYINT(1) NOT NULL DEFAULT 0,
@@ -328,6 +329,7 @@ CREATE TABLE `monitoring_servers` (
   summary TEXT NULL,
   parameters MEDIUMTEXT NULL,
   processlist MEDIUMTEXT NULL,
+  error TEXT NULL,
   updated DATETIME NULL,
   PRIMARY KEY (`server_id`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
@@ -345,9 +347,9 @@ CREATE TABLE `monitoring_queries` (
   `first_seen` DATETIME NOT NULL,
   `last_seen` DATETIME NULL,
   `last_execution_time` INT UNSIGNED NULL,
-  `max_execution_time` INT UNSIGNED NULL,
-  `bavg_execution_time` INT UNSIGNED NULL,
-  `avg_execution_time` INT UNSIGNED NULL,
+  `max_execution_time` INT UNSIGNED NOT NULL,
+  `bavg_execution_time` INT UNSIGNED NOT NULL,
+  `avg_execution_time` INT UNSIGNED NOT NULL,
   `count` INT UNSIGNED NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   UNIQUE `server_id__db__query_hash` (`server_id`, `db`, `query_hash`),

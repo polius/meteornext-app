@@ -65,7 +65,7 @@ class Meteor:
         regions = self._regions.get_by_environment(deployment['group_id'], deployment['environment'])
         servers = self._servers.get_by_environment(deployment['group_id'], deployment['environment'])
         auxiliary = self._auxiliary.get(deployment['group_id'])
-        slack = self._slack.get(deployment['group_id'])
+        slack = self._slack.get(deployment['group_id'], 'DEPLOYMENTS')
 
         if len(environment) == 0:
             return

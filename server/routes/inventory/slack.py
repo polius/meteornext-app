@@ -19,7 +19,7 @@ class Slack:
         # Init blueprint
         slack_blueprint = Blueprint('slack', __name__, template_folder='slack')
 
-        @slack_blueprint.route('/inventory/slack', methods=['GET','PUT'])
+        @slack_blueprint.route('/inventory/slack', methods=['GET','POST'])
         @jwt_required
         def slack_method():
             # Check license
@@ -38,8 +38,8 @@ class Slack:
 
             if request.method == 'GET':
                 return self.get(user['group_id'])
-            elif request.method == 'PUT':
-                return self.put(user['id'], user['group_id'], slack_json)
+            elif request.method == 'POST':
+                return self.post(user['id'], user['group_id'], slack_json)
 
         @slack_blueprint.route('/inventory/slack/test', methods=['GET'])
         @jwt_required
@@ -84,11 +84,8 @@ class Slack:
     def get(self, group_id):
         return jsonify({'data': self._slack.get(group_id)}), 200
 
-    def put(self, user_id, group_id, data):
-        if not self._slack.exist(group_id):
-            self._slack.post(user_id, group_id, data)
-        else:
-            self._slack.put(user_id, group_id, data)
+    def post(self, user_id, group_id, data):
+        self._slack.post(user_id, group_id, data)
         return jsonify({'message': 'Changes saved successfully'}), 200
 
     def delete(self, group_id):
