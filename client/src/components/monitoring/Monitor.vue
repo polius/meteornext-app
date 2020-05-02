@@ -12,7 +12,13 @@
         <v-btn icon title="Go back" @click="goBack()"><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn>
       </v-toolbar>
 
-      <v-card-text>
+      <v-card-text style="padding-top:10px;">
+        <v-card style="margin-bottom:10px;" :title="error">
+          <v-toolbar flat dense color="#424242">
+            <v-toolbar-title v-if="!loading" class="body-1" style="font-size:15px!important;"><v-icon small :color="error == null ? 'success' : 'error'" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ error == null ? 'Server up and running' : error }}</v-toolbar-title>
+          </v-toolbar>
+        </v-card>
+
         <!-- MONITOR - BAR -->
         <div>
           <v-tabs show-arrows background-color="#263238" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
@@ -33,9 +39,9 @@
         <v-card v-show="tabs == 0">
           <v-data-table :headers="summary_headers" :items="summary_items" hide-default-footer class="elevation-1">
             <template v-slot:item.available="props">
-              <span v-if="props.item.available == 1"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Yes</span>
-              <span v-else-if="props.item.available == 0"><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>No</span>
-              <span v-else-if="props.item.available == -1"><v-icon small color="orange" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Loading</span>
+              <span v-if="props.item.available == 1">Yes</span>
+              <span v-else-if="props.item.available == 0">No</span>
+              <span v-else-if="props.item.available == -1">Loading</span>
             </template>
           </v-data-table>
         </v-card>
@@ -114,6 +120,7 @@ export default {
     server_name: '',
     server_hostname: '',
     region_name: '',
+    error: null,
 
     // Tabs
     tabs: 0,
@@ -187,7 +194,7 @@ export default {
     updated: null,
 
     // Loading
-    loading: false,
+    loading: true,
 
     // Snackbar
     snackbar: false,
@@ -220,6 +227,7 @@ export default {
         .then((response) => {
           this.parseData(response.data.data)
           let refreshRate = (this.available == 0) ? 10000 : 3000
+          this.loading = false
           setTimeout(this.getMonitor, refreshRate)
         })
         .catch((error) => {
@@ -234,6 +242,7 @@ export default {
         this.server_name = data[0]['name']
         this.server_hostname = data[0]['hostname']
         this.region_name = data[0]['region']
+        this.error = data[0]['error']
 
         // Parse Summary
         var summary = JSON.parse(data[0]['summary'])
