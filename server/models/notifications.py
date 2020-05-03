@@ -7,7 +7,7 @@ class Notifications:
         self._sql = sql
 
     def get(self, user_id):
-        return self._sql.execute("SELECT * FROM notifications WHERE user_id = %s ORDER BY id DESC", (user_id))
+        return self._sql.execute("SELECT * FROM notifications WHERE user_id = %s ORDER BY id DESC LIMIT 1000", (user_id))
 
     def post(self, user_id, notification):
         query = "INSERT IGNORE INTO notifications (name, `status`, icon, category, data, `date`, user_id, `show`) VALUES (%s, %s, %s, %s, %s, %s, %s, 1)"

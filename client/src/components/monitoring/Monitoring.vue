@@ -30,7 +30,7 @@
             <v-progress-linear v-if="servers[i*align+j].color == 'orange'" indeterminate color="orange" height="3" style="margin-bottom:-3px;"></v-progress-linear>
             <v-card-title primary-title style="padding-bottom:10px;">
               <p class="text-xs-center" style="margin-bottom:0px;">
-                <span class="title"><v-icon v-if="servers[i*align+j].error != null" :title="servers[i*align+j].error" small color="orange" style="margin-right:10px;">fas fa-exclamation-triangle</v-icon>{{servers[i*align+j].name}}</span>
+                <span class="title"><v-icon v-if="!servers[i*align+j].available && servers[i*align+j].error != null" :title="servers[i*align+j].error" small color="orange" style="margin-right:10px;">fas fa-exclamation-triangle</v-icon>{{servers[i*align+j].name}}</span>
                 <br>
                 <span class="body-2">{{servers[i*align+j].region}}</span>
               </p>
@@ -272,7 +272,7 @@
             // Get Status Color
             let color = (pending == 1) ? 'orange' : (servers[i]['available']) ? 'teal' : 'red'
             // Build Item
-            let item = {id: servers[i]['server_id'], name: servers[i]['server_name'], region: servers[i]['region_name'], hostname: servers[i]['hostname'], error: servers[i]['error'], connections: conn, color: color}
+            let item = {id: servers[i]['server_id'], name: servers[i]['server_name'], region: servers[i]['region_name'], hostname: servers[i]['hostname'], available: servers[i]['available'], error: servers[i]['error'], connections: conn, color: color}
             this.servers_origin.push(item)
           }
         }

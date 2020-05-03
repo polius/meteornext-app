@@ -15,7 +15,7 @@
       <v-card-text style="padding-top:10px;">
         <v-card style="margin-bottom:10px;" :title="error">
           <v-toolbar flat dense color="#424242">
-            <v-toolbar-title v-if="!loading" class="body-1" style="font-size:15px!important;"><v-icon small :color="error == null ? 'success' : 'error'" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ error == null ? 'Server up and running' : error }}</v-toolbar-title>
+            <v-toolbar-title v-if="!loading" class="body-1" style="font-size:15px!important;"><v-icon small :color="available ? 'success' : 'error'" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ available ? 'Server up and running' : error }}</v-toolbar-title>
           </v-toolbar>
         </v-card>
 
@@ -120,6 +120,7 @@ export default {
     server_name: '',
     server_hostname: '',
     region_name: '',
+    available: true,
     error: null,
 
     // Tabs
@@ -242,6 +243,7 @@ export default {
         this.server_name = data[0]['name']
         this.server_hostname = data[0]['hostname']
         this.region_name = data[0]['region']
+        this.available = data[0]['available']
         this.error = data[0]['error']
 
         // Parse Summary

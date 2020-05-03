@@ -29,7 +29,7 @@
           <v-flex v-else-if="mode == 'monitoring'" xs12>
             <v-form ref="form" style="padding:0px 10px 10px 10px;">
               <div class="title font-weight-regular" style="margin-top:5px;">MONITORING</div>
-              <div class="body-1 font-weight-regular" style="margin-top:10px; margin-bottom:15px;">Send a <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message when a server becomes available or unavailable.</div>
+              <div class="body-1 font-weight-regular" style="margin-top:10px; margin-bottom:15px;">Send a <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message when a monitored server becomes available or unavailable.</div>
               <v-text-field :loading="loading" :disabled="loading" v-model="monitoring.channel_name" label="Channel Name" :rules="[v => !!v || '']"></v-text-field>
               <v-text-field :loading="loading" :disabled="loading" v-model="monitoring.webhook_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" style="padding-top:0px;"></v-text-field>
               <v-switch :disabled="loading" v-model="monitoring.enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
