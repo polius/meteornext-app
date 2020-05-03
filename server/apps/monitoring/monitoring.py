@@ -1,17 +1,13 @@
-import json
+import time
 import datetime
+import calendar
+import requests
 import threading
-import decimal
+import simplejson as json
 from collections import OrderedDict
 
 from apps.monitoring.connector import connector
 import models.notifications
-
-class DecimalEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, decimal.Decimal):
-            return str(obj)
-        return json.JSONEncoder.default(self, obj)
 
 class Monitoring:
     def __init__(self, sql):
@@ -148,7 +144,7 @@ class Monitoring:
             processlist = ''
             if server['monitor']['processlist_enabled'] or server['monitor']['queries_enabled'] or (server['monitor']['monitor_enabled'] and server['monitor']['needs_update']):
                 processlist = conn.get_processlist()
-            
+
             # Build Summary
             summary = ''
             if server['monitor']['monitor_enabled'] and server['monitor']['needs_update']:
@@ -201,7 +197,6 @@ class Monitoring:
                         updated = VALUES(updated)
                 """
                 self._sql.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist, utcnow))
-
         finally:
             # Stop Connection
             if conn:
@@ -210,70 +205,118 @@ class Monitoring:
     def __monitor_alarms(self, available, server, summary=None, params=None, error=None):
         # Init vars
         users = None
+        slack = None
 
         # Check 'Unavailable'
         if server is not None and server['monitor']['available'] and not available:
-            print("unavailable")
+            # - Notification -
             query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
             users = self._sql.execute(query=query, args=(server['id']))
 
+            notification = {
+                'name': '{} has become unavailable'.format(server['sql']['name']),
+                'status': 'ERROR',
+                'icon': 'fas fa-circle',
+                'category': 'monitoring',
+                'data': '{{"id":"{}", "error":"{}"}}'.format(server['id'], error),
+                'date': self.__utcnow(),
+                'show': 1
+            }
+
             for user in users:
-                notification = {
-                    'name': 'Server {} - {} has become unavailable'.format(server['sql']['name'], server['ssh']['name']),
-                    'status': 'ERROR',
-                    'icon': 'fas fa-circle',
-                    'category': 'monitoring',
-                    'data': error,
-                    'date': self.__utcnow(),
-                    'show': 1
-                }
                 self._notifications.post(user_id=user['user_id'], notification=notification)
+
+            # - Slack -
+            query = """
+                SELECT DISTINCT s.channel_name, s.webhook_url
+                FROM monitoring m
+                JOIN users u ON u.id = m.user_id
+                JOIN slack s ON s.group_id = u.group_id AND s.`mode` = 'MONITORING' AND s.enabled = 1
+                WHERE m.monitor_enabled = 1
+                AND m.server_id = %s
+            """
+            slack = self._sql.execute(query=query, args=(server['id']))
+
+            for s in slack:
+                self.__slack(slack=s, server=server, mode=1, error=error)
 
         # Check 'Available'
         if server is not None and not server['monitor']['available'] and available:
-            print("available")
+            # - Notification -
             if users is None:
                 query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
                 users = self._sql.execute(query=query, args=(server['id']))
 
+            notification = {
+                'name': '{} has become available'.format(server['sql']['name']),
+                'status': 'SUCCESS',
+                'icon': 'fas fa-circle',
+                'category': 'monitoring',
+                'data': '{{"id":"{}"}}'.format(server['id']),
+                'date': self.__utcnow(),
+                'show': 1
+            }
+
             for user in users:
-                notification = {
-                    'name': 'Server {} - {} has become available'.format(server['sql']['name'], server['ssh']['name']),
-                    'status': 'SUCCESS',
-                    'icon': 'fas fa-circle',
-                    'category': 'monitoring',
-                    'date': self.__utcnow(),
-                    'show': 1
-                }
                 self._notifications.post(user_id=user['user_id'], notification=notification)
 
-        # Check 'Server restarted'
-        if available and server is not None and summary is not None and 'summary' in server:
-            mon = self.__str2dict(server['monitor']['summary'])
-            if 'info' in summary and 'start_time' in summary['info'] and 'info' in mon and 'start_time' in mon['info'] and summary['info']['start_time'] < mon['info']['start_time']:
-                print("restarted")
-                if users is None:
-                    query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
-                    users = self._sql.execute(query=query, args=(server['id']))
+            # - Slack -
+            if slack is None:
+                query = """
+                    SELECT DISTINCT s.channel_name, s.webhook_url
+                    FROM monitoring m
+                    JOIN users u ON u.id = m.user_id
+                    JOIN slack s ON s.group_id = u.group_id AND s.`mode` = 'MONITORING' AND s.enabled = 1
+                    WHERE m.monitor_enabled = 1
+                    AND m.server_id = %s
+                """
+                slack = self._sql.execute(query=query, args=(server['id']))
 
-                for user in users:
-                    notification = {
-                        'name': 'Server {} - {} has restarted'.format(server['sql']['name'], server['ssh']['name']),
-                        'status': 'ERROR',
-                        'icon': 'fas fa-circle',
-                        'category': 'monitoring',
-                        'date': self.__utcnow(),
-                        'show': 1
-                    }
-                    self._notifications.post(user_id=user['user_id'], notification=notification)
+            for s in slack:
+                self.__slack(slack=s, server=server, mode=2, error=error)
 
-        # Check 'Params changed'
-        # if available and 'parameters' in server['monitor'] and params is not None:
-        #     params = self.__str2dict(server['monitor']['parameters'])
-        #     params_cmp = {}
+    def __slack(self, slack, server, mode, error):
+        # Build Slack Message
+        if mode == 1:
+            name = '[Monitoring] {} has become unavailable'.format(server['sql']['name'])
+        elif mode == 2:
+            name = '[Monitoring] {} has become available'.format(server['sql']['name'])
 
+        webhook_data = {
+            "attachments": [
+                {
+                    "text": name,
+                    "fields": [
+                        {
+                            "title": "Server",
+                            "value": "```{}```".format(server['sql']['name']),
+                            "short": False
+                        },
+                        {
+                            "title": "Region",
+                            "value": "```{}```".format(server['ssh']['name']),
+                            "short": False
+                        },
+                        {
+                            "title": "Hostname",
+                            "value": "```{}```".format(server['sql']['hostname']),
+                            "short": False
+                        }
+                    ],
+                    "color": 'good' if error is None else 'danger',
+                    "ts": calendar.timegm(time.gmtime())
+                }
+            ]
+        }
+
+        if error is not None:
+            webhook_data['attachments'][0]['fields'].append({"title": "Error", "value": "```{}```".format(error), "short": False})
+
+        # Send Slack Message
+        response = requests.post(slack['webhook_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
+    
     def __dict2str(self, data):
-        return json.dumps(data, separators=(',', ':'), cls=DecimalEncoder)
+        return json.dumps(data, separators=(',', ':'))
 
     def __str2dict(self, data):
         # Convert a string representation of a dictionary to a dictionary

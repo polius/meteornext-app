@@ -89,7 +89,8 @@
               <v-icon small :title="notification.status.charAt(0).toUpperCase() + notification.status.slice(1).toLowerCase()" :color="notification['status'].toLowerCase()">{{ notification['icon'] }}</v-icon>
             </v-list-item-action>
             <v-list-item-content>
-              <v-list-item-title>{{ notification['name'] }}</v-list-item-title>
+              <v-list-item-title v-if="notification['category'] == 'deployment'"><v-icon small title="Deployment" color="#e74c3c" style="padding-right:5px;">fas fa-meteor</v-icon> {{ notification['name'] }}</v-list-item-title>
+              <v-list-item-title v-else-if="notification['category'] == 'monitoring'"><v-icon small title="Monitoring" color="#fa8231" style="padding-right:5px;">fas fa-desktop</v-icon> {{ notification['name'] }}</v-list-item-title>
               <v-list-item-subtitle>{{ parseDate(notification['date']) }}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
@@ -164,10 +165,6 @@ export default {
       this.rightDrawer = !this.rightDrawer
     },
     openNotification(notification) {
-      // Go to the selected resource
-      const data = JSON.parse(notification.data)
-      this.$router.push({ name:'deployment', params: { id: data.mode.substring(0, 1) + data.id }})
-
       // Remove notification from notifications bar
       const payload = JSON.stringify({ id: notification.id })
       axios.put('/notifications', payload)
@@ -177,6 +174,14 @@ export default {
               this.notifications.splice(i, 1)
               break
             }
+          }
+          // Go to the selected resource
+          const data = JSON.parse(notification.data)
+          if (notification.category == 'deployment') {
+            this.$router.push({ name: 'deployment', params: { id: data.mode.substring(0, 1) + data.id }})
+          }
+          else if (notification.category == 'monitoring') {
+            this.$router.push({ name: 'monitor', params: { id:  data.id }})
           }
         })
         .catch((error) => {

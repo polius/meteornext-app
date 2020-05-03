@@ -15,6 +15,10 @@
           <template v-slot:item.name="props">
             <span><v-icon small :color="props.item.status.toLowerCase()" :title="props.item.status.charAt(0).toUpperCase() + props.item.status.slice(1).toLowerCase()" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ props.item.name }}</span>
           </template>
+          <template v-slot:item.category="props">
+            <v-icon v-if="props.item.category == 'deployment'" small color="#e74c3c" :title="props.item.category.charAt(0).toUpperCase() + props.item.category.slice(1)" style="margin-left:14px;">fas fa-meteor</v-icon>
+            <v-icon v-if="props.item.category == 'monitoring'" small color="#fa8231" :title="props.item.category.charAt(0).toUpperCase() + props.item.category.slice(1)" style="margin-left:14px;">fas fa-desktop</v-icon>
+          </template>
           <template v-slot:item.date="props">
             <span>{{ dateFormat(props.item.date) }}</span>
           </template>
@@ -105,6 +109,7 @@ export default {
     // Data Table
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
+      { text: 'Category', align: 'left', value: 'category' },
       { text: 'Date', align: 'left', value: 'date' },
       { text: 'Show', align: 'left', value: 'show' }
     ],
@@ -142,8 +147,14 @@ export default {
       this.openDialog = true
     },
     openNotificationSubmit() {
-      const id = this.item.data.mode.substring(0, 1) + this.item.data.id
-      this.$router.push({ name:'deployment', params: { id: id }})
+      if (this.item.category == 'deployments') {
+        const id = this.item.data.mode.substring(0, 1) + this.item.data.id
+        this.$router.push({ name:'deployment', params: { id: id }})
+      }
+      else if (this.item.category == 'monitoring') {
+        const id = this.item.data.id
+        this.$router.push({ name:'monitor', params: { id: id }})
+      }
     },
     editNotification() {
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
