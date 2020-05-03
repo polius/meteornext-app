@@ -46,11 +46,12 @@ class Monitoring_Queries:
             order_by = []
             if len(sort) == 0:
                 order_by.append('q.count DESC, q.last_execution_time DESC')
-            for i, s in enumerate(sort[0]):
-                if s == 'server':
-                    order_by.append('s.name {}'.format('DESC' if sort[1][i] else 'ASC'))
-                else:
-                    order_by.append('q.{} {}'.format(s, 'DESC' if sort[1][i] else 'ASC'))
+            else:
+                for i, s in enumerate(sort[0]):
+                    if s == 'server':
+                        order_by.append('s.name {}'.format('DESC' if sort[1][i] else 'ASC'))
+                    else:
+                        order_by.append('q.{} {}'.format(s, 'DESC' if sort[1][i] else 'ASC'))
 
             # Build query
             query = """
