@@ -208,7 +208,7 @@ class Monitoring:
         slack = None
 
         # Check 'Unavailable'
-        if server is not None and server['monitor']['available'] and not available:
+        if server['monitor']['available'] == 1 and not available:
             # - Notification -
             query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
             users = self._sql.execute(query=query, args=(server['id']))
@@ -241,7 +241,7 @@ class Monitoring:
                 self.__slack(slack=s, server=server, mode=1, error=error)
 
         # Check 'Available'
-        if server is not None and not server['monitor']['available'] and available:
+        if server['monitor']['available'] == 0 and available:
             # - Notification -
             if users is None:
                 query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
