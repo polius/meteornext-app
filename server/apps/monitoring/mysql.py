@@ -24,7 +24,9 @@ class mysql:
 
         # Supress Errors Output
         sys_stderr = sys.stderr
+        sys_stdout = sys.stdout
         sys.stderr = open(os.devnull, 'w')
+        sys.stdeout = open(os.devnull, 'w')
 
         error = None
         for i in range(1):
@@ -51,6 +53,7 @@ class mysql:
             finally:
                 # Show Errors Output Again
                 sys.stderr = sys_stderr
+                sys.stdout = sys_stdout
 
         # Check errors
         if error is not None:
