@@ -38,7 +38,7 @@
             <v-divider></v-divider>
             <v-card-text style="padding-bottom:1px;">
               <p class="font-weight-medium" style="margin-bottom:0px">Hostname</p>
-              <p style="font-family:monospace">{{servers[i*align+j].hostname}}</p>
+              <p style="font-family:monospace; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ servers[i*align+j].hostname }}</p>
               <p class="font-weight-medium" style="margin-bottom:0px">Connections</p>
               <p style="font-family:monospace">{{servers[i*align+j].connections}}</p>
             </v-card-text>
@@ -223,8 +223,14 @@
       this.active = true
       this.getMonitoring(0)
     },
-    updated() {
-      this.matchHeight()
+    filters: {
+      truncate: function (text, length, suffix) {
+        if (text.length > length) {
+          return text.substring(0, length) + suffix;
+        } else {
+          return text;
+        }
+      }
     },
     destroyed() {
       this.active = false
@@ -384,13 +390,6 @@
           if (this.servers[i]['name'].includes(newValue)) search.push(this.servers[i])
         }
         this.servers = search.slice(0)
-      },
-      matchHeight() {
-        var max_height = 0
-        for (let i in this.$refs.serverRefs) {
-          if (this.$refs.serverRefs[i].$el.clientHeight > max_height) max_height = this.$refs.serverRefs[i].$el.clientHeight
-        }
-        if (max_height > 0) this.maxHeight = max_height
       },
       dateFormat(date) {
         if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
