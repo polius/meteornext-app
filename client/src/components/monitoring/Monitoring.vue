@@ -28,19 +28,16 @@
           <v-card :height="maxHeight" ref="serverRefs" @click="monitor(servers[i*align+j])" slot-scope="{ hover }" :title="servers[i*align+j].color == 'teal' ? 'Server available' : servers[i*align+j].color == 'orange' ? 'Server loading...': 'Server unavailable'" :class="`elevation-${hover ? 12 : 2}`">
             <v-img height="10px" :class="servers[i*align+j].color"></v-img>
             <v-progress-linear v-if="servers[i*align+j].color == 'orange'" indeterminate color="orange" height="3" style="margin-bottom:-3px;"></v-progress-linear>
-            <v-card-title primary-title style="padding-bottom:10px;">
-              <p class="text-xs-center" style="margin-bottom:0px;">
-                <span class="title"><v-icon v-if="!servers[i*align+j].available && servers[i*align+j].error != null" :title="servers[i*align+j].error" small color="orange" style="margin-right:10px;">fas fa-exclamation-triangle</v-icon>{{servers[i*align+j].name}}</span>
-                <br>
-                <span class="body-2">{{servers[i*align+j].region}}</span>
-              </p>
-            </v-card-title>
+            <div style="padding:16px">
+              <p class="title" style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px;"><v-icon v-if="!servers[i*align+j].available && servers[i*align+j].error != null" :title="servers[i*align+j].error" small color="orange" style="margin-right:10px;">fas fa-exclamation-triangle</v-icon>{{servers[i*align+j].name}}</p>
+              <p class="body-2" style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:0px;">{{servers[i*align+j].region}}</p>
+            </div>
             <v-divider></v-divider>
             <v-card-text style="padding-bottom:1px;">
               <p class="font-weight-medium" style="margin-bottom:0px">Hostname</p>
               <p style="font-family:monospace; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ servers[i*align+j].hostname }}</p>
               <p class="font-weight-medium" style="margin-bottom:0px">Connections</p>
-              <p style="font-family:monospace">{{servers[i*align+j].connections}}</p>
+              <p style="font-family:monospace; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{servers[i*align+j].connections}}</p>
             </v-card-text>
           </v-card>
         </v-hover>
