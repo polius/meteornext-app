@@ -134,7 +134,7 @@ class mysql:
     def get_processlist(self):
         try:
             query = """
-                SELECT processlist_id AS 'id', processlist_user AS 'user', processlist_host AS 'host', processlist_db AS 'db', processlist_command AS 'command', processlist_time AS 'time', processlist_state AS 'state', processlist_info AS 'info'
+                SELECT processlist_id AS 'ID', processlist_user AS 'USER', processlist_host AS 'HOST', processlist_db AS 'DB', processlist_command AS 'COMMAND', processlist_time AS 'TIME', processlist_state AS 'STATE', processlist_info AS 'INFO'
                 FROM performance_schema.threads 
                 WHERE type = 'FOREGROUND'
             """
