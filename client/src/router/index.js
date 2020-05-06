@@ -215,7 +215,15 @@ let router = new VueRouter({
     {
       path: '/client',
       meta: { requiresClient: true },
-      component: () => import('../components/client/Navigation')
+      component: () => import('../components/client/Navigation'),
+      children: [
+        {
+          path: '',
+          name: 'client',
+          component: () => import('../components/client/Client'),
+          meta: { requiresAdmin: true }
+        }
+      ]
     },
     {
       path: '/admin',
