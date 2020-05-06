@@ -29,7 +29,7 @@ class mysql:
         sys.stdeout = open(os.devnull, 'w')
 
         error = None
-        for i in range(1):
+        for i in range(3):
             try:
                 # Start SSH Tunnel
                 if self._server['ssh']['enabled']:
