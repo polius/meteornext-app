@@ -1,7 +1,7 @@
 <template>
-  <div style="height: calc(100vh - 112px); margin: -12px;">
+  <div ref="masterDiv" style="height: calc(100vh - 112px); margin: -12px;">
     <Splitpanes>
-      <Pane size="20" min-size="10">
+      <Pane size="20" min-size="0">
         <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
           <v-treeview v-model="tree" :open="open" :items="items" activatable item-key="name" style="height:calc(100% - 58px); padding-top:7px; width:100%; overflow-y:auto;">
             <template v-slot:label="{item, open}">        
@@ -28,9 +28,9 @@
           <v-text-field v-model="search" label="Search" dense solo hide-details style="float:left; width:100%; padding:10px;"></v-text-field>
         </div>
       </Pane>
-      <Pane size="80" min-size="10">
-        <Splitpanes horizontal @ready="initAce()" @resize="resize()">
-          <Pane size="90">
+      <Pane size="80" min-size="0">
+        <Splitpanes horizontal @ready="initAce()" @resize="resize($event)">
+          <Pane size="100">
             <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
               <v-tabs dense show-arrows background-color="#303030" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2" style="width:100%;">
                 <v-tabs-slider></v-tabs-slider>
@@ -43,8 +43,8 @@
               <div id="editor" style="float:left"></div>
             </div>
           </Pane>
-          <Pane size="10" min-size="10">
-            <v-data-table :headers="resultsHeaders" :items="resultsItems" :hide-default-footer="resultsItems.length < 11" class="elevation-1" style="height:100%; width:100%; border-radius:0px; background-color:#303030;">
+          <Pane size="0" min-size="0">
+            <v-data-table :headers="resultsHeaders" :items="resultsItems" :footer-props="{'items-per-page-options': [10, 100, 1000, -1]}" :items-per-page="100" :hide-default-footer="resultsItems.length == 0" class="elevation-1" :height="resultsHeight + 'px'" fixed-header style="width:100%; border-radius:0px; background-color:#303030; overflow-y: auto;">
             </v-data-table>
           </Pane>
         </Splitpanes>
@@ -98,6 +98,10 @@
 .splitpanes__splitter:hover:before  {opacity:1; }
 .splitpanes--vertical > .splitpanes__splitter:before { left:-7px; right:-1px; height:100%; }
 .splitpanes--horizontal > .splitpanes__splitter:before { top:-8px; bottom:-2px; width:100%; }
+
+.theme--dark.v-data-table.v-data-table--fixed-header thead th {
+  background-color: #252525;
+}
 </style>
 
 <script>
@@ -192,8 +196,97 @@ export default {
       editorTools: null,
 
       // Results Table Data
-      resultsHeaders: [],
-      resultsItems: [],
+      resultsHeight: 0,
+      resultsHeaders: [
+        { text: 'Dessert (100g serving)', value: 'name' },
+        { text: 'Calories', value: 'calories' },
+        { text: 'Fat (g)', value: 'fat' },
+        { text: 'Carbs (g)', value: 'carbs' },
+        { text: 'Protein (g)', value: 'protein' },
+        { text: 'Iron (%)', value: 'iron' }
+      ],
+      resultsItems: [
+        {
+            name: 'Frozen Yogurt',
+            calories: 159,
+            fat: 6.0,
+            carbs: 24,
+            protein: 4.0,
+            iron: '1%',
+          },
+          {
+            name: 'Ice cream sandwich',
+            calories: 237,
+            fat: 9.0,
+            carbs: 37,
+            protein: 4.3,
+            iron: '1%',
+          },
+          {
+            name: 'Eclair',
+            calories: 262,
+            fat: 16.0,
+            carbs: 23,
+            protein: 6.0,
+            iron: '7%',
+          },
+          {
+            name: 'Cupcake',
+            calories: 305,
+            fat: 3.7,
+            carbs: 67,
+            protein: 4.3,
+            iron: '8%',
+          },
+          {
+            name: 'Gingerbread',
+            calories: 356,
+            fat: 16.0,
+            carbs: 49,
+            protein: 3.9,
+            iron: '16%',
+          },
+          {
+            name: 'Jelly bean',
+            calories: 375,
+            fat: 0.0,
+            carbs: 94,
+            protein: 0.0,
+            iron: '0%',
+          },
+          {
+            name: 'Lollipop',
+            calories: 392,
+            fat: 0.2,
+            carbs: 98,
+            protein: 0,
+            iron: '2%',
+          },
+          {
+            name: 'Honeycomb',
+            calories: 408,
+            fat: 3.2,
+            carbs: 87,
+            protein: 6.5,
+            iron: '45%',
+          },
+          {
+            name: 'Donut',
+            calories: 452,
+            fat: 25.0,
+            carbs: 51,
+            protein: 4.9,
+            iron: '22%',
+          },
+          {
+            name: 'KitKat',
+            calories: 518,
+            fat: 26.0,
+            carbs: 65,
+            protein: 7,
+            iron: '6%',
+          }
+      ],
 
       // Snackbar
       snackbar: false,
@@ -203,6 +296,9 @@ export default {
     }
   },
   components: { Splitpanes, Pane },
+  mounted() {
+
+  },
   methods: {
     initAce() {
       // Create Editor
@@ -243,7 +339,11 @@ export default {
       this.editorTools.addCompleter(myCompleter)
       this.editor.renderer.on('afterRender', this.resize);
     },
-    resize() {
+    resize(event) {
+      // Resize Results Data Table
+      if (typeof event !== 'undefined' && event.length > 0) this.resultsHeight = this.$refs.masterDiv.clientHeight * event[1].size / 100 - 70
+
+      // Resize Ace Code Editor
       this.editor.resize();
     },
     clickAction(){
