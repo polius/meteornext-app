@@ -1,5 +1,5 @@
 <template>
-  <div style="height: calc(100vh - 112px)">
+  <div style="height: calc(100vh - 112px); margin: -12px;">
     <Splitpanes>
       <Pane size="20" min-size="10">
         <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
@@ -50,9 +50,6 @@
   align-items: center;
   display: flex;
   position: relative;
-}
-.container {
-  padding: 0px;
 }
 .splitpanes--vertical > .splitpanes__splitter {
   min-width: 5px;
