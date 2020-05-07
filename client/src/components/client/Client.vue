@@ -3,7 +3,7 @@
     <Splitpanes>
       <Pane size="20" min-size="10">
         <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-          <v-treeview v-model="tree" :open="open" :items="items" activatable item-key="name" style="height:calc(100% - 58px); width:100%; overflow-y:auto;">
+          <v-treeview v-model="tree" :open="open" :items="items" activatable item-key="name" style="height:calc(100% - 58px); padding-top:5px; width:100%; overflow-y:auto;">
             <template v-slot:label="{item, open}">        
               <v-btn text @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
                 <!--button icon-->
@@ -55,10 +55,10 @@
   padding: 0px;
 }
 .splitpanes--vertical > .splitpanes__splitter {
-  min-width: 3px;
+  min-width: 5px;
 }
 .splitpanes--horizontal > .splitpanes__splitter {
-  min-height: 3px;
+  min-height: 5px;
 }
 .ace_editor {
   margin: auto;
@@ -151,7 +151,7 @@ export default {
       showMenu: false,
       x: 0,
       y: 0,
-      menuItems: ["create file", "create directory"],
+      menuItems: ["Preview Table", "Describe Table", "Backup", "Restore", "Refresh"],
       search: '',
 
       // ACE Editor
