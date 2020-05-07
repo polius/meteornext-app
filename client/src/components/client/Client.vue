@@ -29,9 +29,11 @@
         </div>
       </Pane>
       <Pane size="80" min-size="10">
-        <Splitpanes horizontal>
+        <Splitpanes horizontal @resize="resize()">
           <Pane size="90">
-            <div id="editor"></div>
+            <div style="padding:0px; overflow:auto; height:100%; width:100%">
+              <div id="editor"></div>
+            </div>
           </Pane>
           <Pane size="10" min-size="10">
             <v-data-table :headers="resultsHeaders" :items="resultsItems" :hide-default-footer="resultsItems.length < 11" class="elevation-1" style="height:100%; width:100%; border-radius:0px; background-color:#303030;">
@@ -61,6 +63,10 @@
   margin: auto;
   height: 100%;
   width: 100%;
+}
+.ace_content {
+  width: 100%;
+  height: 100%;
 }
 .v-treeview-node__root {
   min-height:40px;
@@ -170,7 +176,7 @@ export default {
       search: '',
 
       // ACE Editor
-      editor: '',
+      editor: null,
       editorTools: null,
 
       // Results Table Data
@@ -224,6 +230,9 @@ export default {
     this.editorTools.addCompleter(myCompleter);
   },
   methods: {
+    resize() {
+      this.editor.resize();
+    },
     clickAction(){
       alert('clicked');
     },
