@@ -29,11 +29,9 @@
         </div>
       </Pane>
       <Pane size="80" min-size="10">
-        <Splitpanes horizontal @resize="resize()">
+        <Splitpanes horizontal @ready="initAce()" @resize="resize()">
           <Pane size="90">
-            <div style="padding:0px; overflow:auto; height:100%; width:100%">
-              <div id="editor"></div>
-            </div>
+            <div id="editor"></div>
           </Pane>
           <Pane size="10" min-size="10">
             <v-data-table :headers="resultsHeaders" :items="resultsItems" :hide-default-footer="resultsItems.length < 11" class="elevation-1" style="height:100%; width:100%; border-radius:0px; background-color:#303030;">
@@ -63,6 +61,7 @@
   margin: auto;
   height: 100%;
   width: 100%;
+  background: #272822;
 }
 .ace_content {
   width: 100%;
@@ -191,45 +190,46 @@ export default {
     }
   },
   components: { Splitpanes, Pane },
-  mounted() {
-    // Create Editor
-    this.editor = ace.edit("editor", {
-      mode: "ace/mode/sql",
-      theme: "ace/theme/monokai",
-      fontSize: 14,
-      showPrintMargin: false,
-      wrap: true,
-      autoScrollEditorIntoView: true,
-      enableBasicAutocompletion: true,
-      enableLiveAutocompletion: true,
-      enableSnippets: false
-    });
-    this.editor.session.setOptions({ tabSize: 4, useSoftTabs: false });
-
-    var myList = [
-      "/dev/sda1",
-      "/dev/sda2"
-    ]
-
-    this.editorTools = ace.require("ace/ext/language_tools");
-    var myCompleter = {
-      identifierRegexps: [/[^\s]+/],
-      getCompletions: function(editor, session, pos, prefix, callback) {
-        callback(
-          null,
-          myList.filter(entry=>{
-            return entry.includes(prefix);
-          }).map(entry=>{
-            return {
-              value: entry
-            };
-          })
-        );
-      }
-    }
-    this.editorTools.addCompleter(myCompleter);
-  },
   methods: {
+    initAce() {
+      // Create Editor
+      this.editor = ace.edit("editor", {
+        mode: "ace/mode/sql",
+        theme: "ace/theme/monokai",
+        fontSize: 14,
+        showPrintMargin: false,
+        wrap: true,
+        autoScrollEditorIntoView: true,
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true,
+        enableSnippets: false
+      });
+      this.editor.session.setOptions({ tabSize: 4, useSoftTabs: false })
+
+      var myList = [
+        "/dev/sda1",
+        "/dev/sda2"
+      ]
+
+      this.editorTools = ace.require("ace/ext/language_tools")
+      var myCompleter = {
+        identifierRegexps: [/[^\s]+/],
+        getCompletions: function(editor, session, pos, prefix, callback) {
+          callback(
+            null,
+            myList.filter(entry=>{
+              return entry.includes(prefix)
+            }).map(entry=>{
+              return {
+                value: entry
+              };
+            })
+          );
+        }
+      }
+      this.editorTools.addCompleter(myCompleter)
+      this.editor.renderer.on('afterRender', this.resize);
+    },
     resize() {
       this.editor.resize();
     },
