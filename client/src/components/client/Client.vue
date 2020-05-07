@@ -3,7 +3,7 @@
     <Splitpanes>
       <Pane size="20" min-size="10">
         <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-          <v-treeview v-model="tree" :open="open" :items="items" activatable item-key="name" style="height:calc(100% - 58px); padding-top:5px; width:100%; overflow-y:auto;">
+          <v-treeview v-model="tree" :open="open" :items="items" activatable item-key="name" style="height:calc(100% - 58px); padding-top:7px; width:100%; overflow-y:auto;">
             <template v-slot:label="{item, open}">        
               <v-btn text @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
                 <!--button icon-->
@@ -30,11 +30,11 @@
       </Pane>
       <Pane size="80" min-size="10">
         <Splitpanes horizontal>
-          <Pane size="100">
+          <Pane size="90">
             <div id="editor"></div>
           </Pane>
-          <Pane size="0" min-size="10">
-            <v-data-table :headers="resultsHeaders" :items="resultsItems" :hide-default-footer="resultsItems.length < 11" class="elevation-1" style="height:100%; width:100%; border-radius:0px;">
+          <Pane size="10" min-size="10">
+            <v-data-table :headers="resultsHeaders" :items="resultsItems" :hide-default-footer="resultsItems.length < 11" class="elevation-1" style="height:100%; width:100%; border-radius:0px; background-color:#303030;">
             </v-data-table>
           </Pane>
         </Splitpanes>
@@ -68,6 +68,24 @@
 .v-treeview-node__root {
   min-height:40px;
 }
+.v-treeview-node__toggle {
+  width: 15px;
+}
+
+.splitpanes__splitter {background-color:transparent; position: relative;}
+.splitpanes__splitter:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: opacity 0.4s;
+  background-color: rgba(32, 32, 32, 0.3);
+  opacity: 0;
+  z-index: 10;
+}
+.splitpanes__splitter:hover:before  {opacity:1; }
+.splitpanes--vertical > .splitpanes__splitter:before { left:-7px; right:-1px; height:100%; }
+.splitpanes--horizontal > .splitpanes__splitter:before { top:-8px; bottom:-2px; width:100%; }
 </style>
 
 <script>
