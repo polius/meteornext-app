@@ -19,7 +19,7 @@
             </template>
           </v-treeview>
           <v-menu v-model="showMenu" :position-x="x" :position-y="y" absolute offset-y>
-            <v-list>
+            <v-list style="padding:0px;">
               <v-list-item v-for="menuItem in menuItems" :key="menuItem" @click="clickAction">
                 <v-list-item-title>{{menuItem}}</v-list-item-title>
               </v-list-item>
@@ -166,7 +166,7 @@ export default {
       showMenu: false,
       x: 0,
       y: 0,
-      menuItems: ["Preview Table", "Describe Table", "Backup", "Restore", "Refresh"],
+      menuItems: ["Preview", "Describe", "Backup", "Restore", "Refresh"],
       search: '',
 
       // ACE Editor
