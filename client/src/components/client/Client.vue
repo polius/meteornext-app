@@ -3,7 +3,10 @@
     <Splitpanes>
       <Pane size="20" min-size="0">
         <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-          <v-treeview v-model="tree" :open="open" :items="items" activatable item-key="name" style="height:calc(100% - 58px); padding-top:7px; width:100%; overflow-y:auto;">
+          <v-tabs dense background-color="#303030" class="elevation-2">
+            <v-select solo :items="databaseItems" label="Select Database" hide-details background-color="transparent"></v-select>
+          </v-tabs>
+          <v-treeview @contextmenu="show" v-model="tree" :open="open" :items="items" activatable item-key="name" class="clear_shadow" style="height:calc(100% - 58px); padding-top:7px; width:100%; overflow-y:auto;">
             <template v-slot:label="{item, open}">        
               <v-btn text @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
                 <!--button icon-->
@@ -32,14 +35,13 @@
         <Splitpanes horizontal @ready="initAce()" @resize="resize($event)">
           <Pane size="100">
             <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-              <v-tabs dense show-arrows background-color="#303030" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2" style="width:100%;">
+              <v-tabs dense background-color="#303030" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left; box-shadow:none!important; -webkit-box-shadow:none!important; -moz-box-shadow:none!important; ">
                 <v-tabs-slider></v-tabs-slider>
                 <v-tab><span class="pl-2 pr-2"><v-btn small icon style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>Connection 1</span></v-tab>
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-tab><span class="pl-2 pr-2" style="font-size:18px;">+</span></v-tab>
-                <v-spacer></v-spacer>
-                <v-btn style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
               </v-tabs>
+              <v-btn style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
               <div id="editor" style="float:left"></div>
             </div>
           </Pane>
@@ -84,7 +86,7 @@
   width: 15px;
 }
 
-.splitpanes__splitter {background-color:transparent; position: relative;}
+.splitpanes__splitter {background-color:rgba(32, 32, 32, 0.2); position: relative; }
 .splitpanes__splitter:before {
   content: '';
   position: absolute;
@@ -96,11 +98,14 @@
   z-index: 10;
 }
 .splitpanes__splitter:hover:before  {opacity:1; }
-.splitpanes--vertical > .splitpanes__splitter:before { left:-7px; right:-1px; height:100%; }
-.splitpanes--horizontal > .splitpanes__splitter:before { top:-8px; bottom:-2px; width:100%; }
+.splitpanes--vertical > .splitpanes__splitter:before { left:-3px; right:-3px; height:100%; }
+.splitpanes--horizontal > .splitpanes__splitter:before { top:-5px; bottom:-3px; width:100%; }
 
 .theme--dark.v-data-table.v-data-table--fixed-header thead th {
   background-color: #252525;
+}
+.v-treeview-node__level {
+  width: 10px;
 }
 </style>
 
@@ -117,6 +122,7 @@ export default {
     return {
       // Tabs
       tabs: [],
+      databaseItems: ['ilf_admin','ilf_palzina_km_en_tmpl_edit'],
 
       // Servers Tree View
       open: ["public"],
@@ -188,7 +194,7 @@ export default {
       showMenu: false,
       x: 0,
       y: 0,
-      menuItems: ["Preview", "Describe", "Backup", "Restore", "Refresh"],
+      menuItems: ["Structure", "Content", "Relations", "Table Info", "Delete", "Truncate", "Duplicate", "Rename"],
       search: '',
 
       // ACE Editor
@@ -341,7 +347,7 @@ export default {
     },
     resize(event) {
       // Resize Results Data Table
-      if (typeof event !== 'undefined' && event.length > 0) this.resultsHeight = this.$refs.masterDiv.clientHeight * event[1].size / 100 - 70
+      if (typeof event !== 'undefined' && event.length > 0) this.resultsHeight = this.$refs.masterDiv.clientHeight * event[1].size / 100 - 62
 
       // Resize Ace Code Editor
       this.editor.resize();
