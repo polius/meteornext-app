@@ -4,9 +4,10 @@
       <Pane size="20" min-size="0">
         <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
           <v-tabs dense background-color="#303030" class="elevation-2">
-            <v-select solo :items="databaseItems" label="Select Database" hide-details background-color="transparent"></v-select>
+            <v-select solo :items="databaseItems" label="Database" hide-details background-color="transparent"></v-select>
           </v-tabs>
-          <v-treeview @contextmenu="show" v-model="tree" :open="open" :items="items" activatable item-key="name" class="clear_shadow" style="height:calc(100% - 58px); padding-top:7px; width:100%; overflow-y:auto;">
+          <div class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">SERVERS</div>
+          <v-treeview @contextmenu="show" v-model="tree" :open="open" :items="items" activatable item-key="name" class="clear_shadow" style="height:calc(100% - 140px); padding-top:7px; width:100%; overflow-y:auto;">
             <template v-slot:label="{item, open}">        
               <v-btn text @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
                 <!--button icon-->
@@ -106,6 +107,21 @@
 }
 .v-treeview-node__level {
   width: 10px;
+}
+.v-label{
+  font-size: 0.9rem;
+}
+.v-list-item__title {
+  font-size: 0.9rem;
+}
+.v-list-item__content {
+  padding:0px;
+}
+.v-list-item {
+  min-height:40px;
+}
+.v-input {
+  font-size: 0.9rem;
 }
 </style>
 
