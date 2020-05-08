@@ -3,9 +3,7 @@
     <Splitpanes>
       <Pane size="20" min-size="0">
         <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-          <v-tabs dense background-color="#303030" class="elevation-2">
-            <v-select solo :items="databaseItems" label="Database" hide-details background-color="transparent"></v-select>
-          </v-tabs>
+          <v-select solo :items="databaseItems" label="Database" hide-details background-color="#303030"></v-select>
           <div class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">SERVERS</div>
           <v-treeview @contextmenu="show" v-model="tree" :open="open" :items="items" activatable item-key="name" class="clear_shadow" style="height:calc(100% - 140px); padding-top:7px; width:100%; overflow-y:auto;">
             <template v-slot:label="{item, open}">        
@@ -36,7 +34,7 @@
         <Splitpanes horizontal @ready="initAce()" @resize="resize($event)">
           <Pane size="100">
             <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-              <v-tabs dense background-color="#303030" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left; box-shadow:none!important; -webkit-box-shadow:none!important; -moz-box-shadow:none!important; ">
+              <v-tabs dense background-color="#303030" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
                 <v-tabs-slider></v-tabs-slider>
                 <v-tab><span class="pl-2 pr-2"><v-btn small icon style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>Connection 1</span></v-tab>
                 <v-divider class="mx-3" inset vertical></v-divider>
@@ -122,6 +120,9 @@
 }
 .v-input {
   font-size: 0.9rem;
+}
+.v-application .elevation-2 {
+  box-shadow:none!important;
 }
 </style>
 
