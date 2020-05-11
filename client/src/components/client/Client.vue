@@ -38,9 +38,11 @@
                 <v-tabs show-arrows dense background-color="#303030" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
                   <v-tabs-slider></v-tabs-slider>
                   <v-tab v-for="t in connections" :key="t" style="padding:0px 10px 0px 0px;">
-                    <span class="pl-2 pr-2"><v-btn small icon @click="removeConnection(t)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t }}</span>
+                    <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click="removeConnection(t)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t }}</span>
                   </v-tab>
-                  <v-btn text @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
+                  <v-divider class="mx-3" inset vertical></v-divider>
+                  <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
+                  <v-divider class="mx-3" inset vertical></v-divider>
                 </v-tabs>
                 <v-btn style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
                 <div id="editor" style="float:left"></div>
@@ -54,7 +56,7 @@
         </Pane>
       </Splitpanes>
     </div>
-    <div style="width:100%; padding-top:5px; padding-left:20px; padding-right:20px; border-top:2px solid rgba(37, 37, 37, 0.5);">
+    <div style="width:100%; padding-top:5px; padding-left:20px; padding-right:20px; border-top:1px solid rgba(37, 37, 37, 0.5);">
       <div class="body-2" style="float:left; width:calc(100vw - 180px); text-align:center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">5 rows affected</div>
       <div class="body-2" style="float:right; text-align:right;">0.046s elapsed</div>
     </div>
@@ -219,7 +221,7 @@ export default {
       showMenu: false,
       x: 0,
       y: 0,
-      menuItems: ["Structure", "Content", "Relations", "Table Info", "Delete", "Truncate", "Duplicate", "Rename"],
+      menuItems: ["Rename", "Truncate", "Delete", "Duplicate", "Export"],
       search: '',
 
       // ACE Editor
