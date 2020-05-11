@@ -1,57 +1,61 @@
 <template>
-  <div ref="masterDiv" style="height: calc(100vh - 112px); margin: -12px;">
-    <Splitpanes>
-      <Pane size="20" min-size="0">
-        <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-          <v-select solo :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
-          <div class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">SERVERS</div>
-          <v-treeview @contextmenu="show" v-model="tree" :open="open" :items="items" activatable item-key="name" class="clear_shadow" style="height:calc(100% - 160px); padding-top:7px; width:100%; overflow-y:auto;">
-            <template v-slot:label="{item, open}">        
-              <v-btn text @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
-                <!--button icon-->
-                <v-icon v-if="!item.file" small style="padding:10px;">
-                  {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
-                </v-icon>
-                <v-icon v-else small style="padding:10px;">
-                  {{ files[item.file] }}
-                </v-icon>
-                <!--button text-->
-                {{item.name}}                  
-              </v-btn>
-            </template>
-          </v-treeview>
-          <v-menu v-model="showMenu" :position-x="x" :position-y="y" absolute offset-y>
-            <v-list style="padding:0px;">
-              <v-list-item v-for="menuItem in menuItems" :key="menuItem" @click="clickAction">
-                <v-list-item-title>{{menuItem}}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-          <v-text-field v-model="search" label="Search" dense solo hide-details style="float:left; width:100%; padding:10px;"></v-text-field>
-        </div>
-      </Pane>
-      <Pane size="80" min-size="0">
-        <Splitpanes horizontal @ready="initAce()" @resize="resize($event)">
-          <Pane size="100">
-            <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-              <v-tabs show-arrows dense background-color="#303030" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
-                <v-tabs-slider></v-tabs-slider>
-                <v-tab v-for="t in connections" :key="t" style="padding:0px 10px 0px 0px;">
-                  <span class="pl-2 pr-2"><v-btn small icon @click="removeConnection(t)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t }}</span>
-                </v-tab>
-                <v-btn text @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
-              </v-tabs>
-              <v-btn style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
-              <div id="editor" style="float:left"></div>
-            </div>
-          </Pane>
-          <Pane size="0" min-size="0">
-            <v-data-table :headers="resultsHeaders" :items="resultsItems" :footer-props="{'items-per-page-options': [10, 100, 1000, -1]}" :items-per-page="100" :hide-default-footer="resultsItems.length == 0" class="elevation-1" :height="resultsHeight + 'px'" fixed-header style="width:100%; border-radius:0px; background-color:#303030; overflow-y: auto;">
-            </v-data-table>
-          </Pane>
-        </Splitpanes>
-      </Pane>
-    </Splitpanes>
+  <div style="margin: -12px;">
+    <div ref="masterDiv" style="height: calc(100vh - 142px);">
+      <Splitpanes>
+        <Pane size="20" min-size="0">
+          <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
+            <v-select solo :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
+            <div class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">SERVERS</div>
+            <v-treeview @contextmenu="show" v-model="tree" :open="open" :items="items" activatable item-key="name" class="clear_shadow" style="height:calc(100% - 160px); padding-top:7px; width:100%; overflow-y:auto;">
+              <template v-slot:label="{item, open}">        
+                <v-btn text @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
+                  <!--button icon-->
+                  <v-icon v-if="!item.file" small style="padding:10px;">
+                    {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
+                  </v-icon>
+                  <v-icon v-else small style="padding:10px;">
+                    {{ files[item.file] }}
+                  </v-icon>
+                  <!--button text-->
+                  {{item.name}}                  
+                </v-btn>
+              </template>
+            </v-treeview>
+            <v-menu v-model="showMenu" :position-x="x" :position-y="y" absolute offset-y>
+              <v-list style="padding:0px;">
+                <v-list-item v-for="menuItem in menuItems" :key="menuItem" @click="clickAction">
+                  <v-list-item-title>{{menuItem}}</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
+            <v-text-field v-model="search" label="Search" dense solo hide-details style="float:left; width:100%; padding:10px;"></v-text-field>
+          </div>
+        </Pane>
+        <Pane size="80" min-size="0">
+          <Splitpanes horizontal @ready="initAce()" @resize="resize($event)">
+            <Pane size="100">
+              <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
+                <v-tabs show-arrows dense background-color="#303030" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
+                  <v-tabs-slider></v-tabs-slider>
+                  <v-tab v-for="t in connections" :key="t" style="padding:0px 10px 0px 0px;">
+                    <span class="pl-2 pr-2"><v-btn small icon @click="removeConnection(t)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t }}</span>
+                  </v-tab>
+                  <v-btn text @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
+                </v-tabs>
+                <v-btn style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
+                <div id="editor" style="float:left"></div>
+              </div>
+            </Pane>
+            <Pane size="0" min-size="0">
+              <v-data-table :headers="resultsHeaders" :items="resultsItems" :footer-props="{'items-per-page-options': [10, 100, 1000, -1]}" :items-per-page="100" :hide-default-footer="resultsItems.length == 0" class="elevation-1" :height="resultsHeight + 'px'" fixed-header style="width:100%; border-radius:0px; background-color:#303030; overflow-y: auto;">
+              </v-data-table>
+            </Pane>
+          </Splitpanes>
+        </Pane>
+      </Splitpanes>
+    </div>
+    <div class="body-2" style="float:left; width:calc(100vw - 180px); text-align:center; padding-top:5px; padding-left:20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">5 rows affected</div>
+    <div class="body-2" style="float:right; text-align:right; padding-top:5px; padding-right:20px;">0.046s elapsed</div>
   </div>
 </template>
 
@@ -124,6 +128,9 @@
 }
 .v-application .elevation-2 {
   box-shadow:none!important;
+}
+.container {
+  padding-bottom:0px;
 }
 </style>
 
