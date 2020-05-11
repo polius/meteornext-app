@@ -11,8 +11,8 @@
         <v-tab to="/admin/inventory" title="Manage all inventories"><span class="pl-2 pr-2">Inventory</span></v-tab>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-tab to="/admin/deployments" title="Manage all deployments"><span class="pl-2 pr-2">Deployments</span></v-tab>
-        <v-divider class="mx-3" inset vertical></v-divider>
         <v-tab to="/admin/monitoring" title="Manage all monitoring"><span class="pl-2 pr-2">Monitoring</span></v-tab>
+        <v-tab to="/admin/client" title="Manage all queries"><span class="pl-2 pr-2">Client</span></v-tab>
         <v-divider class="mx-3" inset vertical></v-divider>
       </v-tabs>
     </div>

@@ -273,6 +273,18 @@ let router = new VueRouter({
           name: 'admin.deployments',
           component: () => import('../components/admin/views/Deployments'),
           meta: { requiresAdmin: true }
+        },
+        {
+          path: 'monitoring',
+          name: 'admin.monitoring',
+          component: () => import('../components/admin/views/Monitoring'),
+          meta: { requiresAdmin: true }
+        },
+        {
+          path: 'client',
+          name: 'admin.client',
+          component: () => import('../components/admin/views/Client'),
+          meta: { requiresAdmin: true }
         }
       ]
     }
