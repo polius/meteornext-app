@@ -3,9 +3,9 @@
     <Splitpanes>
       <Pane size="20" min-size="0">
         <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-          <v-select solo :items="databaseItems" label="Database" hide-details background-color="#303030"></v-select>
+          <v-select solo :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
           <div class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">SERVERS</div>
-          <v-treeview @contextmenu="show" v-model="tree" :open="open" :items="items" activatable item-key="name" class="clear_shadow" style="height:calc(100% - 140px); padding-top:7px; width:100%; overflow-y:auto;">
+          <v-treeview @contextmenu="show" v-model="tree" :open="open" :items="items" activatable item-key="name" class="clear_shadow" style="height:calc(100% - 160px); padding-top:7px; width:100%; overflow-y:auto;">
             <template v-slot:label="{item, open}">        
               <v-btn text @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
                 <!--button icon-->
@@ -36,9 +36,10 @@
             <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
               <v-tabs show-arrows dense background-color="#303030" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
                 <v-tabs-slider></v-tabs-slider>
-                <v-tab><span class="pl-2 pr-2"><v-btn small icon style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>Connection 1</span></v-tab>
-                <v-divider class="mx-3" inset vertical></v-divider>
-                <v-tab><span class="pl-2 pr-2" style="font-size:18px;">+</span></v-tab>
+                <v-tab v-for="t in connections" :key="t" style="padding:0px 10px 0px 0px;">
+                  <span class="pl-2 pr-2"><v-btn small icon @click="removeConnection(t)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t }}</span>
+                </v-tab>
+                <v-btn text @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
               </v-tabs>
               <v-btn style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
               <div id="editor" style="float:left"></div>
@@ -137,8 +138,10 @@ import 'ace-builds/src-noconflict/ext-language_tools';
 export default {
   data() {
     return {
+      // Connections
+      connections: ['Connection 1', 'Connection 2'],
       // Tabs
-      tabs: [],
+      tabs: 0,
       databaseItems: ['ilf_admin','ilf_palzina_km_en_tmpl_edit'],
 
       // Servers Tree View
@@ -323,6 +326,14 @@ export default {
 
   },
   methods: {
+    newConnection() {
+      this.connections.push("New")
+      this.tabs = this.connections.length - 1
+    },
+    removeConnection(i) {
+      var index = this.connections.indexOf(i)
+      this.connections.splice(index, 1)
+    },
     initAce() {
       // Create Editor
       this.editor = ace.edit("editor", {
