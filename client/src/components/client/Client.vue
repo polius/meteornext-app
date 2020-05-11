@@ -1,6 +1,6 @@
 <template>
   <div style="margin: -12px;">
-    <div ref="masterDiv" style="height: calc(100vh - 142px);">
+    <div ref="masterDiv" style="height: calc(100vh - 145px);">
       <Splitpanes>
         <Pane size="20" min-size="0">
           <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
@@ -54,8 +54,10 @@
         </Pane>
       </Splitpanes>
     </div>
-    <div class="body-2" style="float:left; width:calc(100vw - 180px); text-align:center; padding-top:5px; padding-left:20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">5 rows affected</div>
-    <div class="body-2" style="float:right; text-align:right; padding-top:5px; padding-right:20px;">0.046s elapsed</div>
+    <div style="width:100%; padding-top:5px; padding-left:20px; padding-right:20px; border-top:2px solid rgba(37, 37, 37, 0.5);">
+      <div class="body-2" style="float:left; width:calc(100vw - 180px); text-align:center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">5 rows affected</div>
+      <div class="body-2" style="float:right; text-align:right;">0.046s elapsed</div>
+    </div>
   </div>
 </template>
 
@@ -212,10 +214,6 @@ export default {
         {
           name: "vue.config.js",
           file: "js"
-        },
-        {
-          name: "yarn.lock",
-          file: "txt"
         }
       ],
       showMenu: false,
