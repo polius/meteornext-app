@@ -54,8 +54,8 @@ class Monitoring:
             t.start()
             threads.append(t)
 
-        # for t in threads:
-        #     t.join()
+        for t in threads:
+            t.join()
 
     def clean(self):
         # Clean monitoring entries

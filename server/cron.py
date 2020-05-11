@@ -112,8 +112,8 @@ class Cron:
         monitoring.clean()
 
     def __monitoring(self):
-        # if self._monitoring_ready:
-        #     self._monitoring_ready = False
-        monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
-        monitoring.start()
-            # self._monitoring_ready = True
+        if self._monitoring_ready:
+            self._monitoring_ready = False
+            monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
+            monitoring.start()
+            self._monitoring_ready = True
