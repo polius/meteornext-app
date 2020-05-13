@@ -35,6 +35,7 @@ import routes.monitoring.monitoring
 import routes.monitoring.views.parameters
 import routes.monitoring.views.processlist
 import routes.monitoring.views.queries
+import routes.client.client
 import models.mysql
 import models.admin.settings
 from cron import Cron
@@ -64,12 +65,12 @@ class Setup:
             self._license.validated()
             # Register blueprints
             self.__register_blueprints(sql)
+        except Exception:
+            self._conf = {}
+        else:
             # Init cron
             self._cron = Cron(self._app, self._license, self._blueprints, sql)
             self._cron.start()
-
-        except Exception:
-            self._conf = {}
 
     def blueprint(self):
         # Init blueprint
@@ -245,8 +246,9 @@ class Setup:
         monitoring_parameters = routes.monitoring.views.parameters.Parameters(self._app, sql, self._license)
         monitoring_processlist = routes.monitoring.views.processlist.Processlist(self._app, sql, self._license)
         monitoring_queries = routes.monitoring.views.queries.Queries(self._app, sql, self._license)
+        client = routes.client.client.Client(self._app, sql, self._license)
 
-        self._blueprints = [login, profile, notifications, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, slack, releases, deployments, deployments_basic, deployments_pro, deployments_inbenta, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries]
+        self._blueprints = [login, profile, notifications, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, slack, releases, deployments, deployments_basic, deployments_pro, deployments_inbenta, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client]
 
         # Register all blueprints
         for i in self._blueprints:

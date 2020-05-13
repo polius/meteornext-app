@@ -4,20 +4,22 @@
       <Splitpanes>
         <Pane size="20" min-size="0">
           <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-            <v-select solo :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
-            <div class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">SERVERS</div>
-            <v-treeview @contextmenu="show" v-model="tree" :open="open" :items="items" activatable item-key="name" class="clear_shadow" style="height:calc(100% - 160px); padding-top:7px; width:100%; overflow-y:auto;">
+            <v-select solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
+            <div class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">{{ treeviewMode == 'servers' ? 'SERVERS' : 'TABLES & VIEWS' }}</div>
+            <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 160px); padding-top:7px; width:100%; overflow-y:auto;">
               <template v-slot:label="{item, open}">        
-                <v-btn text @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
+                <v-btn text @dblclick="doubleClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
                   <!--button icon-->
-                  <v-icon v-if="!item.file" small style="padding:10px;">
+                  <v-icon v-if="!item.type" small style="padding:10px;">
                     {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
                   </v-icon>
                   <v-icon v-else small style="padding:10px;">
-                    {{ files[item.file] }}
+                    {{ treeviewImg[item.type] }}
                   </v-icon>
                   <!--button text-->
-                  {{item.name}}                  
+                  {{item.name}}
+                  <v-spacer></v-spacer>
+                  <v-progress-circular v-if="loadingServer && item.id == treeview[0]" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
                 </v-btn>
               </template>
             </v-treeview>
@@ -28,7 +30,7 @@
                 </v-list-item>
               </v-list>
             </v-menu>
-            <v-text-field v-model="search" label="Search" dense solo hide-details style="float:left; width:100%; padding:10px;"></v-text-field>
+            <v-text-field v-model="treeviewSearch" label="Search" dense solo hide-details style="float:left; width:100%; padding:10px;"></v-text-field>
           </div>
         </Pane>
         <Pane size="80" min-size="0">
@@ -139,6 +141,8 @@
 </style>
 
 <script>
+import axios from 'axios'
+
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 
@@ -149,80 +153,34 @@ import 'ace-builds/src-noconflict/ext-language_tools';
 export default {
   data() {
     return {
-      // Connections
-      connections: ['Connection 1', 'Connection 2'],
-      // Tabs
-      tabs: 0,
-      databaseItems: ['ilf_admin','ilf_palzina_km_en_tmpl_edit'],
+      // State vars
+      loadingServer: false,
+
+      // Database Selector
+      databaseItems: [],
 
       // Servers Tree View
-      open: ["public"],
-      files: {
-        html: "mdi-language-html5",
-        js: "mdi-nodejs",
-        json: "mdi-json",
-        md: "mdi-markdown",
-        pdf: "mdi-file-pdf",
-        png: "mdi-file-image",
-        txt: "mdi-file-document-outline",
-        xls: "mdi-file-excel"
+      treeviewMode: 'servers',
+      treeviewOpen: [],
+      treeviewImg: {
+        MySQL: "fas fa-server",
+        PostgreSQL: "fas fa-server",
+        table: "fas fa-th",
+        view: "fas fa-table"
       },
-      tree: [],
-      items: [
-        {
-          name: ".git"
-        },
-        {
-          name: "node_modules"
-        },
-        {
-          name: "public",
-          children: [
-            {
-              name: "static",
-              children: [
-                {
-                  name: "logo.png",
-                  file: "png"
-                }
-              ]
-            },
-            {
-              name: "favicon.ico",
-              file: "png"
-            },
-            {
-              name: "index.html",
-              file: "html"
-            }
-          ]
-        },
-        {
-          name: ".gitignore",
-          file: "txt"
-        },
-        {
-          name: "babel.config.js",
-          file: "js"
-        },
-        {
-          name: "package.json",
-          file: "json"
-        },
-        {
-          name: "README.md",
-          file: "md"
-        },
-        {
-          name: "vue.config.js",
-          file: "js"
-        }
-      ],
+      treeview: [],
+      treeviewItems: [],
+      treeviewSearch: '',
+
+      // Menu (right click)
       showMenu: false,
       x: 0,
       y: 0,
       menuItems: ["Rename", "Truncate", "Delete", "Duplicate", "Export"],
-      search: '',
+
+      // Connections
+      tabs: 0,
+      connections: ['Connection 1', 'Connection 2'],
 
       // ACE Editor
       editor: null,
@@ -230,96 +188,8 @@ export default {
 
       // Results Table Data
       resultsHeight: 0,
-      resultsHeaders: [
-        { text: 'Dessert (100g serving)', value: 'name' },
-        { text: 'Calories', value: 'calories' },
-        { text: 'Fat (g)', value: 'fat' },
-        { text: 'Carbs (g)', value: 'carbs' },
-        { text: 'Protein (g)', value: 'protein' },
-        { text: 'Iron (%)', value: 'iron' }
-      ],
-      resultsItems: [
-        {
-            name: 'Frozen Yogurt',
-            calories: 159,
-            fat: 6.0,
-            carbs: 24,
-            protein: 4.0,
-            iron: '1%',
-          },
-          {
-            name: 'Ice cream sandwich',
-            calories: 237,
-            fat: 9.0,
-            carbs: 37,
-            protein: 4.3,
-            iron: '1%',
-          },
-          {
-            name: 'Eclair',
-            calories: 262,
-            fat: 16.0,
-            carbs: 23,
-            protein: 6.0,
-            iron: '7%',
-          },
-          {
-            name: 'Cupcake',
-            calories: 305,
-            fat: 3.7,
-            carbs: 67,
-            protein: 4.3,
-            iron: '8%',
-          },
-          {
-            name: 'Gingerbread',
-            calories: 356,
-            fat: 16.0,
-            carbs: 49,
-            protein: 3.9,
-            iron: '16%',
-          },
-          {
-            name: 'Jelly bean',
-            calories: 375,
-            fat: 0.0,
-            carbs: 94,
-            protein: 0.0,
-            iron: '0%',
-          },
-          {
-            name: 'Lollipop',
-            calories: 392,
-            fat: 0.2,
-            carbs: 98,
-            protein: 0,
-            iron: '2%',
-          },
-          {
-            name: 'Honeycomb',
-            calories: 408,
-            fat: 3.2,
-            carbs: 87,
-            protein: 6.5,
-            iron: '45%',
-          },
-          {
-            name: 'Donut',
-            calories: 452,
-            fat: 25.0,
-            carbs: 51,
-            protein: 4.9,
-            iron: '22%',
-          },
-          {
-            name: 'KitKat',
-            calories: 518,
-            fat: 26.0,
-            carbs: 65,
-            protein: 7,
-            iron: '6%',
-          }
-      ],
+      resultsHeaders: [],
+      resultsItems: [],
 
       // Snackbar
       snackbar: false,
@@ -329,10 +199,60 @@ export default {
     }
   },
   components: { Splitpanes, Pane },
-  mounted() {
-
+  created() {
+    this.getServers()
   },
   methods: {
+    doubleClick(item) {
+      if (this.treeviewMode == 'servers') this.getDatabases(item.id)
+    },
+    getServers() {
+      axios.get('/client/servers')
+        .then((response) => {
+          this.parseServers(response.data.data)
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+    },
+    parseServers(data) {
+      var servers = []
+      for (let i = 0; i < data.length; ++i) {
+        let found = false
+        for (var j = 0; j < servers.length; ++j) {
+          if (servers[j]['id'] == 'r' + data[i]['region_id']) {
+            found = true
+            break
+          }
+        }
+        if (found) servers[j]['children'].push({ id: data[i]['server_id'], name: data[i]['server_name'], type: data[i]['server_engine'] })
+        else servers.push({ id: 'r' + data[i]['region_id'], name: data[i]['region_name'], children: [{ id: data[i]['server_id'], name: data[i]['server_name'], type: data[i]['server_engine'] }] })
+      }
+      this.treeviewItems = servers.slice(0)
+    },
+    getDatabases(server_id) {
+      // Select Server
+      this.treeview = [server_id]
+      this.loadingServer = true
+
+      // Retrieve Databases
+      axios.get('/client/databases', { params: { server_id: server_id } })
+        .then((response) => {
+          this.treeview = []
+          this.treeviewItems = []
+          this.treeviewMode = 'tables'
+          this.loadingServer = false
+          this.databaseItems = response.data.data
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+    },
+    // parseDatabases(data) {
+
+    // },
     newConnection() {
       this.connections.push("New")
       this.tabs = this.connections.length - 1
