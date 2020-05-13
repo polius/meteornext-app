@@ -130,6 +130,14 @@ class MySQL:
             databases.append(db['Database'])
         return databases
 
+    def get_all_tables(self, db):
+        query = """
+            SELECT table_name, table_type = 'VIEW' AS 'is_view'
+            FROM information_schema.tables 
+            WHERE table_schema = %s
+        """
+        return self.execute(query, args=(db))['query_result']
+
     def get_databases(self, db_regex):
         query = "SELECT DISTINCT(table_schema) AS table_schema FROM information_schema.tables WHERE table_schema LIKE '" + db_regex.strip() + "'"
         result = self.execute(query)['query_result']
