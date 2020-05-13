@@ -4,7 +4,7 @@
       <Splitpanes>
         <Pane size="20" min-size="0">
           <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-            <v-select solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
+            <v-select @change="getTables" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
             <div class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">{{ treeviewMode == 'servers' ? 'SERVERS' : 'TABLES & VIEWS' }}</div>
             <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 160px); padding-top:7px; width:100%; overflow-y:auto;">
               <template v-slot:label="{item, open}">        
@@ -154,6 +154,7 @@ export default {
   data() {
     return {
       // State vars
+      serverSelected: null,
       loadingServer: false,
 
       // Database Selector
@@ -235,6 +236,7 @@ export default {
       // Select Server
       this.treeview = [server_id]
       this.loadingServer = true
+      this.serverSelected = server_id
 
       // Retrieve Databases
       axios.get('/client/databases', { params: { server_id: server_id } })
@@ -250,9 +252,21 @@ export default {
           else this.notification(error.response.data.message, 'error')
         })
     },
-    // parseDatabases(data) {
-
-    // },
+    getTables(database) {
+      // Retrieve Tables
+      axios.get('/client/tables', { params: { server_id: this.serverSelected, database_name: database } })
+        .then((response) => {
+          this.parseTables(response.data.data)
+        })
+        .catch((error) => {
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
+        })
+    },
+    parseTables(data) {
+      console.log(data)
+    },
     newConnection() {
       this.connections.push("New")
       this.tabs = this.connections.length - 1

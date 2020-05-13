@@ -34,6 +34,9 @@ class Connector:
     def get_all_databases(self):
         return self._sql.get_all_databases()
 
+    def get_all_tables(self, db):
+        return self._sql.get_all_tables(db)
+
     def get_databases(self, db_regex):
         return self._sql.get_databases(db_regex)
 
