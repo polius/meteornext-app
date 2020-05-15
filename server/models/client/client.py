@@ -4,7 +4,7 @@ class Client:
 
     def get_servers(self, group_id):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.engine AS 'server_engine', r.id AS 'region_id', r.name AS 'region_name'
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.engine AS 'server_engine', s.hostname AS 'server_hostname', r.id AS 'region_id', r.name AS 'region_name'
             FROM servers s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %s
         """
