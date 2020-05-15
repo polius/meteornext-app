@@ -37,16 +37,15 @@
           <Splitpanes horizontal @ready="initAce()" @resize="resize($event)">
             <Pane size="100">
               <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-                <v-tabs show-arrows dense background-color="#303030" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
+                <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#303030" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
                   <v-tabs-slider></v-tabs-slider>
-                  <v-tab v-for="t in connections" :key="t" :title="t" style="padding:0px 10px 0px 0px;">
-                    <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click="removeConnection(t)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t }}</span>
+                  <v-tab v-for="t in connections" :key="t.name" :title="'Name: ' + t.name + '\nHost: ' + t.host + '\nSSH: '" style="padding:0px 10px 0px 0px; text-transform:none;">
+                    <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click="removeConnection(t)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t.name }}</span>
                   </v-tab>
                   <v-divider class="mx-3" inset vertical></v-divider>
                   <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
-                  <v-divider class="mx-3" inset vertical></v-divider>
                 </v-tabs>
-                <v-btn style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
+                <v-btn v-if="connections.length > 0" style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
                 <div id="editor" style="float:left"></div>
               </div>
             </Pane>
@@ -94,7 +93,7 @@
   height: 100%;
 }
 .v-treeview-node__root {
-  min-height:40px;
+  min-height:30px;
 }
 .v-treeview-node__toggle {
   width: 15px;
@@ -191,7 +190,7 @@ export default {
 
       // Connections
       tabs: 0,
-      connections: ['Connection 1'],
+      connections: [],
 
       // ACE Editor
       editor: null,
@@ -215,7 +214,7 @@ export default {
   },
   methods: {
     doubleClick(item) {
-      if (this.treeviewMode == 'servers') this.getDatabases(item.id)
+      if (this.treeviewMode == 'servers') this.getDatabases(item)
     },
     getServers() {
       axios.get('/client/servers')
@@ -237,24 +236,26 @@ export default {
             break
           }
         }
-        if (found) servers[j]['children'].push({ id: data[i]['server_id'], name: data[i]['server_name'], type: data[i]['server_engine'] })
-        else servers.push({ id: 'r' + data[i]['region_id'], name: data[i]['region_name'], children: [{ id: data[i]['server_id'], name: data[i]['server_name'], type: data[i]['server_engine'] }] })
+        if (found) servers[j]['children'].push({ id: data[i]['server_id'], name: data[i]['server_name'], type: data[i]['server_engine'], host: data[i]['server_hostname'] })
+        else servers.push({ id: 'r' + data[i]['region_id'], name: data[i]['region_name'], children: [{ id: data[i]['server_id'], name: data[i]['server_name'], type: data[i]['server_engine'], host: data[i]['server_hostname'] }] })
       }
       this.treeviewItems = servers.slice(0)
     },
-    getDatabases(server_id) {
+    getDatabases(server) {
       // Select Server
-      this.treeview = [server_id]
+      this.treeview = [server.id]
       this.loadingServer = true
-      this.serverSelected = server_id
+      this.serverSelected = server
 
       // Retrieve Databases
-      axios.get('/client/databases', { params: { server_id: server_id } })
+      axios.get('/client/databases', { params: { server_id: server.id } })
         .then((response) => {
           this.treeview = []
           this.treeviewItems = []
           this.treeviewMode = 'tables'
           this.databaseItems = response.data.data
+          this.connections.push({ name: server.name, host: server.host})
+
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -266,7 +267,7 @@ export default {
     },
     getTables(database) {
       // Retrieve Tables
-      axios.get('/client/tables', { params: { server_id: this.serverSelected, database_name: database } })
+      axios.get('/client/tables', { params: { server_id: this.serverSelected.id, database_name: database } })
         .then((response) => {
           this.parseTables(response.data.data)
         })
