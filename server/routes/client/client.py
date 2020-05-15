@@ -56,7 +56,10 @@ class Client:
             conn = connectors.connector.Connector(cred)
 
             # Get Databases
-            return jsonify({'data': conn.get_all_databases()}), 200
+            try:
+                return jsonify({'data': conn.get_all_databases()}), 200
+            except Exception as e:
+                return jsonify({'message': str(e)}), 400
 
         @client_blueprint.route('/client/tables', methods=['GET'])
         @jwt_required

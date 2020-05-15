@@ -13,7 +13,7 @@
                   <v-icon v-if="!item.type" small style="padding:10px;">
                     {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
                   </v-icon>
-                  <v-icon v-else small style="padding:10px;">
+                  <v-icon v-else small :title="item.type" :color="treeviewColor[item.type]" style="padding:10px;">
                     {{ treeviewImg[item.type] }}
                   </v-icon>
                   <!--button text-->
@@ -39,7 +39,7 @@
               <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                 <v-tabs show-arrows dense background-color="#303030" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
                   <v-tabs-slider></v-tabs-slider>
-                  <v-tab v-for="t in connections" :key="t" style="padding:0px 10px 0px 0px;">
+                  <v-tab v-for="t in connections" :key="t" :title="t" style="padding:0px 10px 0px 0px;">
                     <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click="removeConnection(t)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t }}</span>
                   </v-tab>
                   <v-divider class="mx-3" inset vertical></v-divider>
@@ -58,10 +58,14 @@
         </Pane>
       </Splitpanes>
     </div>
-    <div style="width:100%; padding-top:5px; padding-left:20px; padding-right:20px; border-top:1px solid rgba(37, 37, 37, 0.5);">
+    <div style="width:100%; padding-top:6px; padding-left:20px; padding-right:20px; border-top:1px solid rgba(37, 37, 37, 0.5);">
       <div class="body-2" style="float:left; width:calc(100vw - 180px); text-align:center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">5 rows affected</div>
       <div class="body-2" style="float:right; text-align:right;">0.046s elapsed</div>
     </div>
+    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+      {{ snackbarText }}
+      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+    </v-snackbar>
   </div>
 </template>
 
@@ -166,8 +170,14 @@ export default {
       treeviewImg: {
         MySQL: "fas fa-server",
         PostgreSQL: "fas fa-server",
-        table: "fas fa-th",
-        view: "fas fa-table"
+        Table: "fas fa-th",
+        View: "fas fa-th"
+      },
+      treeviewColor: {
+        MySQL: "",
+        PostgreSQL: "",
+        Table: "#ec644b",
+        View: "#f2d984"
       },
       treeview: [],
       treeviewItems: [],
@@ -181,7 +191,7 @@ export default {
 
       // Connections
       tabs: 0,
-      connections: ['Connection 1', 'Connection 2'],
+      connections: ['Connection 1'],
 
       // ACE Editor
       editor: null,
@@ -194,7 +204,7 @@ export default {
 
       // Snackbar
       snackbar: false,
-      snackbarTimeout: Number(3000),
+      snackbarTimeout: Number(5000),
       snackbarColor: '',
       snackbarText: ''
     }
@@ -244,12 +254,14 @@ export default {
           this.treeview = []
           this.treeviewItems = []
           this.treeviewMode = 'tables'
-          this.loadingServer = false
           this.databaseItems = response.data.data
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loadingServer = false
         })
     },
     getTables(database) {
@@ -259,13 +271,16 @@ export default {
           this.parseTables(response.data.data)
         })
         .catch((error) => {
-          console.log(error)
-          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          // else this.notification(error.response.data.message, 'error')
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
         })
     },
     parseTables(data) {
-      console.log(data)
+      var tables = []
+      for (let i = 0; i < data.length; ++i) {
+        tables.push({ id: data[i]['table_name'], name: data[i]['table_name'], type: (data[i]['is_view'] == 0) ? 'Table' : 'View' })
+      }
+      this.treeviewItems = tables
     },
     newConnection() {
       this.connections.push("New")
@@ -332,6 +347,12 @@ export default {
       this.$nextTick(() => {
         this.showMenu = true;
       });
+    },
+    notification(message, color, timeout=5) {
+      this.snackbarText = message
+      this.snackbarColor = color
+      this.snackbarTimeout = Number(timeout*1000)
+      this.snackbar = true
     }
   }
 }
