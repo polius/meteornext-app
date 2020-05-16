@@ -216,7 +216,7 @@ export default {
   },
   methods: {
     run() {
-      console.log(this.editor.getValue())
+
     },
     doubleClick(item) {
       if (this.treeviewMode == 'servers') this.getDatabases(item)
@@ -263,6 +263,7 @@ export default {
           const connection = { server: server, databases: response.data.data }
           if (this.connections.length == 0) this.connections.push(connection)
           else this.connections[this.currentConn] = connection
+          this.editor.focus()
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -277,6 +278,7 @@ export default {
       axios.get('/client/tables', { params: { server_id: this.serverSelected.id, database_name: database } })
         .then((response) => {
           this.parseTables(response.data.data)
+          this.editor.focus()
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -406,6 +408,7 @@ export default {
       }
       this.editorTools.addCompleter(myCompleter)
       this.editor.renderer.on('afterRender', this.resize);
+      this.editor.focus()
     },
     resize(event) {
       // Resize Results Data Table
