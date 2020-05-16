@@ -4,7 +4,7 @@
       <Splitpanes>
         <Pane size="20" min-size="0">
           <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-            <v-select @change="getTables" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
+            <v-select v-model="database" @change="getTables" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
             <div class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">{{ treeviewMode == 'servers' ? 'SERVERS' : 'TABLES & VIEWS' }}</div>
             <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 160px); padding-top:7px; width:100%; overflow-y:auto;">
               <template v-slot:label="{item, open}">        
@@ -37,15 +37,15 @@
           <Splitpanes horizontal @ready="initAce()" @resize="resize($event)">
             <Pane size="100">
               <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-                <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#303030" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
+                <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#303030" color="white" v-model="currentConn" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
                   <v-tabs-slider></v-tabs-slider>
-                  <v-tab v-for="t in connections" :key="t.name" :title="'Name: ' + t.name + '\nHost: ' + t.host + '\nSSH: '" style="padding:0px 10px 0px 0px; text-transform:none;">
-                    <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click="removeConnection(t)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t.name }}</span>
+                  <v-tab v-for="(t, index) in connections" :key="index" @click="changeConnection(index)" :title="'Name: ' + t.server.name + '\nHost: ' + t.server.host" style="padding:0px 10px 0px 0px; text-transform:none;">
+                    <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click.prevent.stop="removeConnection(index)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t.server.name }}</span>
                   </v-tab>
                   <v-divider class="mx-3" inset vertical></v-divider>
                   <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
                 </v-tabs>
-                <v-btn v-if="connections.length > 0" style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
+                <v-btn v-if="connections.length > 0" @click="run()" style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
                 <div id="editor" style="float:left"></div>
               </div>
             </Pane>
@@ -156,15 +156,20 @@ import 'ace-builds/src-noconflict/ext-language_tools';
 export default {
   data() {
     return {
-      // State vars
-      serverSelected: null,
+      // Connections
+      connections: [],
+      currentConn: 0,
+      nconn: 0,
+      servers: [],
+
+      // Loadings
       loadingServer: false,
 
       // Database Selector
       databaseItems: [],
+      database: '',
 
       // Servers Tree View
-      treeviewMode: 'servers',
       treeviewOpen: [],
       treeviewImg: {
         MySQL: "fas fa-server",
@@ -180,6 +185,7 @@ export default {
       },
       treeview: [],
       treeviewItems: [],
+      treeviewMode: 'servers',
       treeviewSearch: '',
 
       // Menu (right click)
@@ -187,10 +193,6 @@ export default {
       x: 0,
       y: 0,
       menuItems: ["Rename", "Truncate", "Delete", "Duplicate", "Export"],
-
-      // Connections
-      tabs: 0,
-      connections: [],
 
       // ACE Editor
       editor: null,
@@ -213,6 +215,9 @@ export default {
     this.getServers()
   },
   methods: {
+    run() {
+
+    },
     doubleClick(item) {
       if (this.treeviewMode == 'servers') this.getDatabases(item)
     },
@@ -240,6 +245,7 @@ export default {
         else servers.push({ id: 'r' + data[i]['region_id'], name: data[i]['region_name'], children: [{ id: data[i]['server_id'], name: data[i]['server_name'], type: data[i]['server_engine'], host: data[i]['server_hostname'] }] })
       }
       this.treeviewItems = servers.slice(0)
+      this.servers = servers.slice(0)
     },
     getDatabases(server) {
       // Select Server
@@ -254,8 +260,9 @@ export default {
           this.treeviewItems = []
           this.treeviewMode = 'tables'
           this.databaseItems = response.data.data
-          this.connections.push({ name: server.name, host: server.host})
-
+          const connection = { server: server, databases: response.data.data }
+          if (this.connections.length == 0) this.connections.push(connection)
+          else this.connections[this.currentConn] = connection
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -284,12 +291,79 @@ export default {
       this.treeviewItems = tables
     },
     newConnection() {
-      this.connections.push("New")
-      this.tabs = this.connections.length - 1
+      // Store connection
+      this.__storeConn(this.currentConn)
+
+      // Clear DOM
+      this.__clearDOM()
+
+      // Add new connection
+      this.nconn += 1
+      var newConn = {
+        server: { name: 'Connection ' + this.nconn },
+        databases: [],
+        database: '',
+        treeview: [],
+        treeviewItems: this.servers.slice(0),
+        treeviewMode: 'servers',
+        resultsHeaders: [],
+        resultsItems: []
+      }
+      this.connections.push(newConn)
+      this.currentConn = this.connections.length - 1
+      this.__loadConn(this.currentConn)
     },
-    removeConnection(i) {
-      var index = this.connections.indexOf(i)
+    removeConnection(index) {
       this.connections.splice(index, 1)
+      if (this.connections.length == 0) return
+      else if (index == this.currentConn) {
+        if (this.connections.length > index) this.__loadConn(index)
+        else this.__loadConn(index-1)
+      }
+      else if (this.currentConn > index) this.currentConn = index + 1
+    },
+    changeConnection(index) {
+      if (this.currentConn != index) {       
+        // Store connection
+        this.__storeConn(this.currentConn)
+
+        // Load connection
+        this.__loadConn(index)
+
+        // Change connection
+        this.currentConn = index
+      }
+    },
+    __storeConn(index) {
+      // Store Connection
+      this.connections[index] = {
+        server: JSON.parse(JSON.stringify(this.connections[index]['server'])),
+        databases: this.databaseItems.slice(0),
+        database: this.database,
+        treeview: this.treeview.slice(0),
+        treeviewItems: this.treeviewItems.slice(0),
+        treeviewMode: this.treeviewMode,
+        resultsHeaders: this.resultsHeaders.slice(0),
+        resultsItems: this.resultsItems.slice(0)
+      }
+    },
+    __loadConn(index) {
+      this.databaseItems = this.connections[index]['databases'].slice(0)
+      this.database = this.connections[index]['database']
+      this.treeview = this.connections[index]['treeview'].slice(0)
+      this.treeviewItems = this.connections[index]['treeviewItems'].slice(0)
+      this.treeviewMode = this.connections[index]['treeviewMode']
+      this.resultsHeaders = this.connections[index]['resultsHeaders'].slice(0)
+      this.resultsItems = this.connections[index]['resultsItems'].slice(0)
+    },
+    __clearDOM() {
+      this.databaseItems = []
+      this.database = ''
+      this.treeview = []
+      this.treeviewItems = []
+      this.treeviewMode = 'servers'
+      this.resultsHeaders = []
+      this.resultsItems = []
     },
     initAce() {
       // Create Editor
