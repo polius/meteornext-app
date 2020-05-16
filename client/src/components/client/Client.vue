@@ -216,7 +216,7 @@ export default {
   },
   methods: {
     run() {
-
+      console.log(this.editor.getValue())
     },
     doubleClick(item) {
       if (this.treeviewMode == 'servers') this.getDatabases(item)
@@ -306,6 +306,7 @@ export default {
         treeview: [],
         treeviewItems: this.servers.slice(0),
         treeviewMode: 'servers',
+        editor: '',
         resultsHeaders: [],
         resultsItems: []
       }
@@ -343,6 +344,7 @@ export default {
         treeview: this.treeview.slice(0),
         treeviewItems: this.treeviewItems.slice(0),
         treeviewMode: this.treeviewMode,
+        editor: this.editor.getValue(),
         resultsHeaders: this.resultsHeaders.slice(0),
         resultsItems: this.resultsItems.slice(0)
       }
@@ -353,6 +355,7 @@ export default {
       this.treeview = this.connections[index]['treeview'].slice(0)
       this.treeviewItems = this.connections[index]['treeviewItems'].slice(0)
       this.treeviewMode = this.connections[index]['treeviewMode']
+      this.editor.setValue(this.connections[index]['editor'])
       this.resultsHeaders = this.connections[index]['resultsHeaders'].slice(0)
       this.resultsItems = this.connections[index]['resultsItems'].slice(0)
     },
