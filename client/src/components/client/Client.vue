@@ -219,7 +219,7 @@ export default {
 
     },
     doubleClick(item) {
-      if (this.treeviewMode == 'servers') this.getDatabases(item)
+      if (!('children' in item) && this.treeviewMode == 'servers') this.getDatabases(item)
     },
     getServers() {
       axios.get('/client/servers')
@@ -296,9 +296,6 @@ export default {
       // Store connection
       this.__storeConn(this.currentConn)
 
-      // Clear DOM
-      this.__clearDOM()
-
       // Add new connection
       this.nconn += 1
       var newConn = {
@@ -308,6 +305,7 @@ export default {
         treeview: [],
         treeviewItems: this.servers.slice(0),
         treeviewMode: 'servers',
+        treeviewSearch: '',
         editor: '',
         resultsHeaders: [],
         resultsItems: []
@@ -346,6 +344,7 @@ export default {
         treeview: this.treeview.slice(0),
         treeviewItems: this.treeviewItems.slice(0),
         treeviewMode: this.treeviewMode,
+        treeviewSearch: this.treeviewSearch,
         editor: this.editor.getValue(),
         resultsHeaders: this.resultsHeaders.slice(0),
         resultsItems: this.resultsItems.slice(0)
@@ -357,18 +356,10 @@ export default {
       this.treeview = this.connections[index]['treeview'].slice(0)
       this.treeviewItems = this.connections[index]['treeviewItems'].slice(0)
       this.treeviewMode = this.connections[index]['treeviewMode']
+      this.treeviewSearch = this.connection[index]['treeviewSearch']
       this.editor.setValue(this.connections[index]['editor'])
       this.resultsHeaders = this.connections[index]['resultsHeaders'].slice(0)
       this.resultsItems = this.connections[index]['resultsItems'].slice(0)
-    },
-    __clearDOM() {
-      this.databaseItems = []
-      this.database = ''
-      this.treeview = []
-      this.treeviewItems = []
-      this.treeviewMode = 'servers'
-      this.resultsHeaders = []
-      this.resultsItems = []
     },
     initAce() {
       // Create Editor
