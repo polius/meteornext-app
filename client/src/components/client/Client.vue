@@ -309,9 +309,12 @@ export default {
           else chars.push("'")
         }
       }
-      if (start < i) queries.push({"begin": start, "end": i})
+      if (start < i && editorText.substring(start, i).trim().length > 0) queries.push({"begin": start, "end": i})
 
-      console.log(queries)
+      // Get Cursor Position Index
+      if (queries.length > 0) {
+        cursorPositionIndex = (cursorPositionIndex > queries[queries.length-1]['end']) ? queries[queries.length-1]['end'] : cursorPositionIndex 
+      }
 
       // Get Current Query
       var query = ''
@@ -321,17 +324,16 @@ export default {
           break
         }
       }
-      console.log(query)
 
       // Get Current Query Position
       var queryPosition = 0
       for (let i = 0; i < queries.length; ++i) {
-        if (editorText.substring(queries[i]['begin'], queries[i]['end']).trim().includes(query.trim())) {
+        var re = new RegExp('\\b' + query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b',"g");
+        if (re.test(editorText.substring(queries[i]['begin'], queries[i]['end']).trim())) {
           if (cursorPositionIndex > queries[i]['end']) queryPosition += 1
           else break
         }
       }
-      console.log(queryPosition)
 
       // Find Current Query in Ace Editor
       this.editor.$search.setOptions({
@@ -341,7 +343,6 @@ export default {
         regExp: false,
       }); 
       var queryRange = this.editor.$search.findAll(this.editor.session)
-      console.log(queryRange)
 
       // Remove Previous Markers
       while (this.editorMarkers.length > 0) {
