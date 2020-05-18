@@ -50,7 +50,7 @@
               </div>
             </Pane>
             <Pane size="0" min-size="0">
-              <v-data-table :headers="resultsHeaders" :items="resultsItems" :footer-props="{'items-per-page-options': [10, 100, 1000, -1]}" :items-per-page="100" :hide-default-footer="resultsItems.length == 0" class="elevation-1" :height="resultsHeight + 'px'" fixed-header style="width:100%; border-radius:0px; background-color:#303030; overflow-y: auto;">
+              <v-data-table v-if="resultsItems.length > 0" :headers="resultsHeaders" :items="resultsItems" :footer-props="{'items-per-page-options': [10, 100, 1000, -1]}" :items-per-page="100" :hide-default-footer="resultsItems.length == 0" class="elevation-1" :height="resultsHeight + 'px'" fixed-header style="width:100%; border-radius:0px; background-color:#303030; overflow-y: auto;">
               </v-data-table>
             </Pane>
           </Splitpanes>
@@ -197,6 +197,7 @@ export default {
       // ACE Editor
       editor: null,
       editorTools: null,
+      editorMarkers: [],
 
       // Results Table Data
       resultsHeight: 0,
@@ -215,8 +216,137 @@ export default {
     this.getServers()
   },
   methods: {
-    run() {
+    initAce() {
+      // Create Editor
+      this.editor = ace.edit("editor", {
+        mode: "ace/mode/sql",
+        theme: "ace/theme/monokai",
+        fontSize: 14,
+        showPrintMargin: false,
+        wrap: true,
+        autoScrollEditorIntoView: true,
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true,
+        enableSnippets: false
+      });
+      this.editor.session.setOptions({ tabSize: 4, useSoftTabs: false })
 
+      this.editor.getSelection().on("changeCursor", this.highlightQueries)
+
+      this.editor.commands.addCommand({
+        name: 'run_query',
+        bindKey: { win: 'Ctrl-R', mac: 'Command-R' },
+        exec: () => {
+          this.run()
+        }
+      });
+
+      // this.editor.commands.addCommand({
+      //   name: 'new_connection',
+      //   bindKey: { win: 'Ctrl-T', mac: 'Command-T' },
+      //   exec: () => {
+      //     console.log("new")
+      //     // if (this.connections.length > 0) this.newConnection()
+      //   },
+      //   readOnly: true
+      // });
+      // this.editor.commands.addCommand({
+      //   name: 'remove_connection',
+      //   bindKey: { win: 'Ctrl-W', mac: 'Command-W' },
+      //   exec: () => {
+      //     if (this.connections.length > 0) this.removeConnection()
+      //     console.log("remove")
+      //   }
+      // });
+
+      var myList = [
+        "/dev/sda1",
+        "/dev/sda2"
+      ]
+
+      this.editorTools = ace.require("ace/ext/language_tools")
+      var myCompleter = {
+        identifierRegexps: [/[^\s]+/],
+        getCompletions: function(editor, session, pos, prefix, callback) {
+          callback(
+            null,
+            myList.filter(entry=>{
+              return entry.includes(prefix)
+            }).map(entry=>{
+              return {
+                value: entry
+              };
+            })
+          );
+        }
+      }
+      this.editorTools.addCompleter(myCompleter)
+      this.editor.renderer.on('afterRender', this.resize);
+      this.editor.focus()
+    },
+    highlightQueries() {
+      var Range = ace.require("ace/range").Range
+      var cursorPosition = this.editor.getCursorPosition()
+      var cursorPositionIndex = this.editor.session.doc.positionToIndex(cursorPosition)
+      var editorText = this.editor.getValue()
+
+      // Get all Query Positions
+      var queries = []
+      var start = 0;
+      var chars = []
+      for (var i = 0; i < editorText.length; ++i) {
+        if (editorText[i] == ';' && chars.length == 0) {
+          queries.push({"begin": start, "end": i})
+          start = i+1
+        }
+        else if (editorText[i] == "\"") {
+          if (chars[chars.length-1] == '"') chars.pop()
+          else chars.push("\"")
+        }
+        else if (editorText[i] == "'") {
+          if (chars[chars.length-1] == "'") chars.pop()
+          else chars.push("'")
+        }
+      }
+      if (start < i) queries.push({"begin": start, "end": i})
+
+      // Get Current Query
+      var query = ''
+      for (let i = 0; i < queries.length; ++i) {
+        if (cursorPositionIndex >= queries[i]['begin'] && cursorPositionIndex <= queries[i]['end']) {
+          query = editorText.substring(queries[i]['begin'], queries[i]['end'])
+          break
+        }
+      }
+
+      // Get Current Query Position
+      var queryPosition = 0
+      for (let i = 0; i < queries.length; ++i) {
+        if (editorText.substring(queries[i]['begin'], queries[i]['end']).localeCompare(query) == 0) {
+          if (cursorPositionIndex > queries[i]['end']) queryPosition += 1
+          else break
+        }
+      }
+
+      // Find Current Query in Ace Editor
+      this.editor.$search.setOptions({
+        needle: query,
+        caseSensitive: true,
+        wholeWord: true,
+        regExp: false,
+      }); 
+      var queryRange = this.editor.$search.findAll(this.editor.session)
+
+      // Remove Previous Markers
+      while (this.editorMarkers.length > 0) {
+        this.editor.session.removeMarker(this.editorMarkers.pop())
+      }
+
+      // Highlight Current Query
+      if (query.trim().length > 0 && queryRange.length > 0) {
+        var marker = this.editor.session.addMarker(new Range(queryRange[queryPosition]['start'].row, queryRange[queryPosition]['start'].column, queryRange[queryPosition]['end'].row, queryRange[queryPosition]['end'].column), 'ace_active-line', true)
+        this.editorMarkers.push(marker)
+      }
     },
     doubleClick(item) {
       if (!('children' in item) && this.treeviewMode == 'servers') this.getDatabases(item)
@@ -316,7 +446,17 @@ export default {
     },
     removeConnection(index) {
       this.connections.splice(index, 1)
-      if (this.connections.length == 0) return
+      if (this.connections.length == 0) {
+        this.databaseItems = []
+        this.database = ''
+        this.treeview = []
+        this.treeviewItems = this.servers.slice(0)
+        this.treeviewMode = 'servers'
+        this.treeviewSearch = ''
+        this.editor.setValue('')
+        this.resultsHeaders = []
+        this.resultsItems = []
+      }
       else if (index == this.currentConn) {
         if (this.connections.length > index) this.__loadConn(index)
         else this.__loadConn(index-1)
@@ -361,46 +501,59 @@ export default {
       this.resultsHeaders = this.connections[index]['resultsHeaders'].slice(0)
       this.resultsItems = this.connections[index]['resultsItems'].slice(0)
     },
-    initAce() {
-      // Create Editor
-      this.editor = ace.edit("editor", {
-        mode: "ace/mode/sql",
-        theme: "ace/theme/monokai",
-        fontSize: 14,
-        showPrintMargin: false,
-        wrap: true,
-        autoScrollEditorIntoView: true,
-        enableBasicAutocompletion: true,
-        enableLiveAutocompletion: true,
-        enableSnippets: false
-      });
-      this.editor.session.setOptions({ tabSize: 4, useSoftTabs: false })
+    run() {
+      var Range = ace.require("ace/range").Range
+      var cursorPosition = this.editor.getCursorPosition()
+      // console.log() // row | column
+      
+      var textRange = this.editor.session.getTextRange(new Range(0,0, cursorPosition.row, cursorPosition.column));
+      console.log(textRange)
 
-      var myList = [
-        "/dev/sda1",
-        "/dev/sda2"
-      ]
-
-      this.editorTools = ace.require("ace/ext/language_tools")
-      var myCompleter = {
-        identifierRegexps: [/[^\s]+/],
-        getCompletions: function(editor, session, pos, prefix, callback) {
-          callback(
-            null,
-            myList.filter(entry=>{
-              return entry.includes(prefix)
-            }).map(entry=>{
-              return {
-                value: entry
-              };
-            })
-          );
-        }
-      }
-      this.editorTools.addCompleter(myCompleter)
-      this.editor.renderer.on('afterRender', this.resize);
-      this.editor.focus()
+      //this.editor.selection.setRange(new Range(0,0, cursorPosition.row, cursorPosition.column));
+      this.editor.session.addMarker(new Range(1, 0, 2, 1), 'ace_active-line', 'line'); // 
+      
+      // ;
+      // this.editor.selection.setRange(new Range(0, 23, 0, 42));
+      
+      // const payload = JSON.stringify(this.item);
+      // axios.post('/client/execute', payload)
+      //   .then((response) => {
+      //     this.notification(response.data.message, '#00b16a')
+      //     this.getRegions()
+      //     this.dialog = false
+      //   })
+      //   .catch((error) => {
+      //     if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+      //     else this.notification(error.response.data.message, 'error')
+      //   })
+      //   .finally(() => {
+      //     this.loading = false
+      //   })
     },
+    // __parseQueries(raw) {
+    //   // Build multi-queries
+    //   var queries = []
+    //   var start = 0;
+    //   var chars = []
+    //   for (var i = 0; i < this.query_item.length; ++i) {
+    //     if (this.query_item[i] == ';' && chars.length == 0) {
+    //       queries.push({"query": this.query_item.substring(start, i+1).trim()})
+    //       id += 1
+    //       start = i+1
+    //     }
+    //     else if (this.query_item[i] == "\"") {
+    //       if (chars[chars.length-1] == '"') chars.pop()
+    //       else chars.push("\"")
+    //     }
+    //     else if (this.query_item[i] == "'") {
+    //       if (chars[chars.length-1] == "'") chars.pop()
+    //       else chars.push("'")
+    //     }
+    //   }
+    //   if (start < i) queries.push({"query": this.query_item.substring(start, i).trim()})
+    //   // Return parsed queries
+    //   return queries
+    // },
     resize(event) {
       // Resize Results Data Table
       if (typeof event !== 'undefined' && event.length > 0) this.resultsHeight = this.$refs.masterDiv.clientHeight * event[1].size / 100 - 62
