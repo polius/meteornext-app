@@ -217,7 +217,7 @@ export default {
   },
   methods: {
     initAce() {
-      // Create Editor
+      // Editor Settings
       this.editor = ace.edit("editor", {
         mode: "ace/mode/sql",
         theme: "ace/theme/monokai",
@@ -232,8 +232,10 @@ export default {
       });
       this.editor.session.setOptions({ tabSize: 4, useSoftTabs: false })
 
+      // Highlight Queries
       this.editor.getSelection().on("changeCursor", this.highlightQueries)
 
+      // Add custom keybinds
       this.editor.commands.addCommand({
         name: 'run_query',
         bindKey: { win: 'Ctrl-R', mac: 'Command-R' },
@@ -241,7 +243,6 @@ export default {
           this.run()
         }
       });
-
       this.editor.commands.addCommand({
         name: 'new_connection',
         bindKey: { win: 'Ctrl-T', mac: 'Command-T' },
@@ -260,12 +261,33 @@ export default {
         }
       });
 
+      // Convert Completer to Uppercase
+      const defaultUpperCase = {
+        getCompletions(editor, session, pos, prefix, callback) {
+          if (session.$mode.completer) {
+            return session.$mode.completer.getCompletions(editor, session, pos, prefix, callback);
+          }
+          const state = editor.session.getState(pos.row);
+          let keywordCompletions;
+          // if (prefix === prefix.toUpperCase()) {
+            keywordCompletions = session.$mode.getCompletions(state, session, pos, prefix);
+            keywordCompletions = keywordCompletions.map((obj) => {
+              const copy = obj;
+              copy.value = obj.value.toUpperCase();
+              return copy;
+            });
+          // } else {
+          //   keywordCompletions = session.$mode.getCompletions(state, session, pos, prefix);
+          // }
+          return callback(null, keywordCompletions);
+        },
+      };
+
+      // Add custom Completer
       var myList = [
         "/dev/sda1",
         "/dev/sda2"
       ]
-
-      this.editorTools = ace.require("ace/ext/language_tools")
       var myCompleter = {
         identifierRegexps: [/[^\s]+/],
         getCompletions: function(editor, session, pos, prefix, callback) {
@@ -281,8 +303,20 @@ export default {
           );
         }
       }
-      this.editorTools.addCompleter(myCompleter)
+
+      this.editor.completers = [
+        defaultUpperCase,
+        myCompleter,
+      ];
+
+      // Add Custom Completer (Databases and tables names)
+      // this.editorTools = ace.require("ace/ext/language_tools")
+      // this.editorTools.addCompleter(myCompleter)
+
+      // Resize after Renderer
       this.editor.renderer.on('afterRender', this.resize);
+
+      // Focus Editor
       this.editor.focus()
     },
     highlightQueries() {
