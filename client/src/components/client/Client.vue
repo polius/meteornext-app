@@ -227,7 +227,8 @@ export default {
         autoScrollEditorIntoView: true,
         enableBasicAutocompletion: true,
         enableLiveAutocompletion: true,
-        enableSnippets: false
+        enableSnippets: false,
+        highlightActiveLine: false
       });
       this.editor.session.setOptions({ tabSize: 4, useSoftTabs: false })
 
@@ -241,23 +242,23 @@ export default {
         }
       });
 
-      // this.editor.commands.addCommand({
-      //   name: 'new_connection',
-      //   bindKey: { win: 'Ctrl-T', mac: 'Command-T' },
-      //   exec: () => {
-      //     console.log("new")
-      //     // if (this.connections.length > 0) this.newConnection()
-      //   },
-      //   readOnly: true
-      // });
-      // this.editor.commands.addCommand({
-      //   name: 'remove_connection',
-      //   bindKey: { win: 'Ctrl-W', mac: 'Command-W' },
-      //   exec: () => {
-      //     if (this.connections.length > 0) this.removeConnection()
-      //     console.log("remove")
-      //   }
-      // });
+      this.editor.commands.addCommand({
+        name: 'new_connection',
+        bindKey: { win: 'Ctrl-T', mac: 'Command-T' },
+        exec: () => {
+          console.log("new")
+          // if (this.connections.length > 0) this.newConnection()
+        },
+        readOnly: true
+      });
+      this.editor.commands.addCommand({
+        name: 'remove_connection',
+        bindKey: { win: 'Ctrl-W', mac: 'Command-W' },
+        exec: () => {
+          if (this.connections.length > 0) this.removeConnection()
+          console.log("remove")
+        }
+      });
 
       var myList = [
         "/dev/sda1",
@@ -310,6 +311,8 @@ export default {
       }
       if (start < i) queries.push({"begin": start, "end": i})
 
+      console.log(queries)
+
       // Get Current Query
       var query = ''
       for (let i = 0; i < queries.length; ++i) {
@@ -318,24 +321,27 @@ export default {
           break
         }
       }
+      console.log(query)
 
       // Get Current Query Position
       var queryPosition = 0
       for (let i = 0; i < queries.length; ++i) {
-        if (editorText.substring(queries[i]['begin'], queries[i]['end']).localeCompare(query) == 0) {
+        if (editorText.substring(queries[i]['begin'], queries[i]['end']).trim().includes(query.trim())) {
           if (cursorPositionIndex > queries[i]['end']) queryPosition += 1
           else break
         }
       }
+      console.log(queryPosition)
 
       // Find Current Query in Ace Editor
       this.editor.$search.setOptions({
-        needle: query,
+        needle: query.trim(),
         caseSensitive: true,
         wholeWord: true,
         regExp: false,
       }); 
       var queryRange = this.editor.$search.findAll(this.editor.session)
+      console.log(queryRange)
 
       // Remove Previous Markers
       while (this.editorMarkers.length > 0) {
