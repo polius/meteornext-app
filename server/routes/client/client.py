@@ -84,6 +84,34 @@ class Client:
             # Get Tables
             return jsonify({'data': conn.get_all_tables(db=request.args['database_name'])}), 200
 
+        @client_blueprint.route('/client/execute', methods=['POST'])
+        @jwt_required
+        def client_execute_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            client_json = request.get_json()
+
+            # Get Server Credentials + Connection
+            cred = self._client.get_credentials(user['group_id'], client_json['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = connectors.connector.Connector(cred)
+
+            # Execute all queries
+            for q in client_json['queries']:
+                result = conn.execute(query=q, database=client_json['database'])
+            return jsonify({'data': result}), 200
+
         return client_blueprint
 
     ####################

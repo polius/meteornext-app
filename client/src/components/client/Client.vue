@@ -410,7 +410,10 @@ export default {
       var queryPosition = 0
       for (let i = 0; i < queries.length; ++i) {
         var re = new RegExp('\\b' + query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b',"g");
-        if (re.test(editorText.substring(queries[i]['begin'], queries[i]['end']).trim())) {
+        if (
+          re.test(editorText.substring(queries[i]['begin'], queries[i]['end']).trim()) ||
+          query.trim().localeCompare(editorText.substring(queries[i]['begin'], queries[i]['end']).trim()) == 0
+        ) {
           if (cursorPositionIndex > queries[i]['end']) queryPosition += 1
           else break
         }
@@ -595,7 +598,7 @@ export default {
     runQuery() {
       this.loadingQuery = true
       const payload = {
-        server_id: this.serverSelected,
+        server: this.serverSelected.id,
         database: this.database,
         queries: this.__parseQueries()
       }
@@ -613,7 +616,17 @@ export default {
         })
     },
     parseResult(data) {
+      // Build Data Table
       console.log(data)
+      var headers = []
+      var items = data['query_result']
+      // - Build Headers -
+      var keys = Object.keys(data['query_result'][0])
+      for (let i = 0; i < keys.length; ++i) {
+        headers.push({ text: keys[i], value: keys[i].trim().toLowerCase() })
+      }
+      this.resultsHeaders = headers
+      this.resultsItems = items
     },
     __parseQueries() {
       // Get Query/ies (selected or highlighted)
