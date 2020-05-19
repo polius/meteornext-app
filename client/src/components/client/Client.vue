@@ -73,6 +73,7 @@
                         <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
                       </v-tabs>
                       <v-btn :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
+                      <!-- <v-btn :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Export Results"><v-icon small style="padding-right:10px;">fas fa-file-export</v-icon>Export Results</v-btn> -->
                       <div id="editor" style="float:left"></div>
                     </div>
                   </Pane>
@@ -261,7 +262,6 @@ export default {
     },
     onGridUpdated() {
       if (typeof this.gridApi !== 'undefined') {
-        console.log("go")
         var allColumnIds = [];
         this.columnApi.getAllColumns().forEach(function(column) {
           allColumnIds.push(column.colId);
@@ -614,6 +614,8 @@ export default {
       this.resultsItems = this.connections[index]['resultsItems'].slice(0)
     },
     runQuery() {
+      this.resultsHeaders = []
+      this.resultsItems = []
       this.loadingQuery = true
       const payload = {
         server: this.serverSelected.id,
