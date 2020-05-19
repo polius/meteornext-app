@@ -1,71 +1,101 @@
 <template>
-  <div style="margin: -12px;">
-    <div ref="masterDiv" style="height: calc(100vh - 145px);">
-      <Splitpanes>
-        <Pane size="20" min-size="0">
-          <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-            <v-select v-model="database" @change="getTables" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
-            <div class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">{{ treeviewMode == 'servers' ? 'SERVERS' : 'TABLES & VIEWS' }}</div>
-            <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 160px); padding-top:7px; width:100%; overflow-y:auto;">
-              <template v-slot:label="{item, open}">        
-                <v-btn text @dblclick="doubleClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
-                  <!--button icon-->
-                  <v-icon v-if="!item.type" small style="padding:10px;">
-                    {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
-                  </v-icon>
-                  <v-icon v-else small :title="item.type" :color="treeviewColor[item.type]" style="padding:10px;">
-                    {{ treeviewImg[item.type] }}
-                  </v-icon>
-                  <!--button text-->
-                  {{item.name}}
-                  <v-spacer></v-spacer>
-                  <v-progress-circular v-if="loadingServer && item.id == treeview[0]" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
-                </v-btn>
-              </template>
-            </v-treeview>
-            <v-menu v-model="showMenu" :position-x="x" :position-y="y" absolute offset-y>
-              <v-list style="padding:0px;">
-                <v-list-item v-for="menuItem in menuItems" :key="menuItem" @click="clickAction">
-                  <v-list-item-title>{{menuItem}}</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-            <v-text-field v-model="treeviewSearch" label="Search" dense solo hide-details style="float:left; width:100%; padding:10px;"></v-text-field>
+  <v-content>
+    <div>
+      <v-tabs show-arrows background-color="#9b59b6" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
+        <v-tabs-slider></v-tabs-slider>
+          <v-tab><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>CLIENT</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-tab :disabled="treeviewMode != 'tables' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-dice-d6</v-icon>Structure</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-tab :disabled="treeviewMode != 'tables' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">far fa-window-maximize</v-icon>Content</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-tab :disabled="treeviewMode != 'tables' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-sitemap</v-icon>Relations</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-tab :disabled="treeviewMode != 'tables' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-fire</v-icon>Triggers</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-tab :disabled="treeviewMode != 'tables' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-th</v-icon>Table Info</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <!-- <v-tab><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px; font-size:14px;">fas fa-terminal</v-icon>Query</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider> -->
+          <v-spacer></v-spacer>
+          <v-tab title="Users" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-user-shield</v-icon></span></v-tab>
+          <v-tab title="Saved Queries" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-star</v-icon></span></v-tab>
+          <v-tab title="Query History" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-history</v-icon></span></v-tab>
+          <v-tab title="Settings" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-cog</v-icon></span></v-tab>
+        </v-tabs>
+    </div>
+    <v-container fluid>
+      <v-content style="padding-top:0px; padding-bottom:0px;">
+        <div style="margin: -12px;">
+          <div ref="masterDiv" style="height: calc(100vh - 145px);">
+            <Splitpanes>
+              <Pane size="20" min-size="0">
+                <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
+                  <v-select v-model="database" @change="getTables" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
+                  <div class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">{{ treeviewMode == 'servers' ? 'SERVERS' : 'TABLES & VIEWS' }}</div>
+                  <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 160px); padding-top:7px; width:100%; overflow-y:auto;">
+                    <template v-slot:label="{item, open}">        
+                      <v-btn text @dblclick="doubleClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
+                        <!--button icon-->
+                        <v-icon v-if="!item.type" small style="padding:10px;">
+                          {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
+                        </v-icon>
+                        <v-icon v-else small :title="item.type" :color="treeviewColor[item.type]" style="padding:10px;">
+                          {{ treeviewImg[item.type] }}
+                        </v-icon>
+                        <!--button text-->
+                        {{item.name}}
+                        <v-spacer></v-spacer>
+                        <v-progress-circular v-if="loadingServer && item.id == treeview[0]" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
+                      </v-btn>
+                    </template>
+                  </v-treeview>
+                  <v-menu v-model="showMenu" :position-x="x" :position-y="y" absolute offset-y>
+                    <v-list style="padding:0px;">
+                      <v-list-item v-for="menuItem in menuItems" :key="menuItem" @click="clickAction">
+                        <v-list-item-title>{{menuItem}}</v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
+                  <v-text-field v-model="treeviewSearch" label="Search" dense solo hide-details style="float:left; width:100%; padding:10px;"></v-text-field>
+                </div>
+              </Pane>
+              <Pane size="80" min-size="0">
+                <Splitpanes horizontal @ready="initAce()" @resize="resize($event)">
+                  <Pane size="100">
+                    <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
+                      <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#303030" color="white" v-model="currentConn" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
+                        <v-tabs-slider></v-tabs-slider>
+                        <v-tab v-for="(t, index) in connections" :key="index" @click="changeConnection(index)" :title="'Name: ' + t.server.name + '\nHost: ' + t.server.host" style="padding:0px 10px 0px 0px; text-transform:none;">
+                          <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click.prevent.stop="removeConnection(index)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t.server.name }}</span>
+                        </v-tab>
+                        <v-divider class="mx-3" inset vertical></v-divider>
+                        <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
+                      </v-tabs>
+                      <v-btn :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
+                      <div id="editor" style="float:left"></div>
+                    </div>
+                  </Pane>
+                  <Pane size="0" min-size="0">
+                    <v-data-table v-if="resultsItems.length > 0" :headers="resultsHeaders" :items="resultsItems" :footer-props="{'items-per-page-options': [10, 100, 1000, -1]}" :items-per-page="100" :hide-default-footer="resultsItems.length == 0" class="elevation-1" :height="resultsHeight + 'px'" fixed-header style="width:100%; border-radius:0px; background-color:#303030; overflow-y: auto;">
+                    </v-data-table>
+                  </Pane>
+                </Splitpanes>
+              </Pane>
+            </Splitpanes>
           </div>
-        </Pane>
-        <Pane size="80" min-size="0">
-          <Splitpanes horizontal @ready="initAce()" @resize="resize($event)">
-            <Pane size="100">
-              <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-                <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#303030" color="white" v-model="currentConn" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
-                  <v-tabs-slider></v-tabs-slider>
-                  <v-tab v-for="(t, index) in connections" :key="index" @click="changeConnection(index)" :title="'Name: ' + t.server.name + '\nHost: ' + t.server.host" style="padding:0px 10px 0px 0px; text-transform:none;">
-                    <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click.prevent.stop="removeConnection(index)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t.server.name }}</span>
-                  </v-tab>
-                  <v-divider class="mx-3" inset vertical></v-divider>
-                  <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
-                </v-tabs>
-                <v-btn v-if="connections.length > 0" @click="run()" style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
-                <div id="editor" style="float:left"></div>
-              </div>
-            </Pane>
-            <Pane size="0" min-size="0">
-              <v-data-table v-if="resultsItems.length > 0" :headers="resultsHeaders" :items="resultsItems" :footer-props="{'items-per-page-options': [10, 100, 1000, -1]}" :items-per-page="100" :hide-default-footer="resultsItems.length == 0" class="elevation-1" :height="resultsHeight + 'px'" fixed-header style="width:100%; border-radius:0px; background-color:#303030; overflow-y: auto;">
-              </v-data-table>
-            </Pane>
-          </Splitpanes>
-        </Pane>
-      </Splitpanes>
-    </div>
-    <div style="width:100%; padding-top:6px; padding-left:20px; padding-right:20px; border-top:1px solid rgba(37, 37, 37, 0.5);">
-      <div class="body-2" style="float:left; width:calc(100vw - 180px); text-align:center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">5 rows affected</div>
-      <div class="body-2" style="float:right; text-align:right;">0.046s elapsed</div>
-    </div>
-    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
-      {{ snackbarText }}
-      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
-    </v-snackbar>
-  </div>
+          <div style="width:100%; padding-top:6px; padding-left:20px; padding-right:20px; border-top:1px solid rgba(37, 37, 37, 0.5);">
+            <div class="body-2" style="float:left; width:calc(100vw - 180px); text-align:center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">5 rows affected</div>
+            <div class="body-2" style="float:right; text-align:right;">0.046s elapsed</div>
+          </div>
+          <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+            {{ snackbarText }}
+            <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+          </v-snackbar>
+        </div>
+      </v-content>
+    </v-container>
+  </v-content>
 </template>
 
 <style>
@@ -156,6 +186,9 @@ import 'ace-builds/src-noconflict/ext-language_tools';
 export default {
   data() {
     return {
+      // Tabs Header
+      tabs: null,
+
       // Connections
       connections: [],
       currentConn: 0,
@@ -164,6 +197,7 @@ export default {
 
       // Loadings
       loadingServer: false,
+      loadingQuery: false,
 
       // Database Selector
       databaseItems: [],
@@ -198,6 +232,7 @@ export default {
       editor: null,
       editorTools: null,
       editorMarkers: [],
+      editorQuery: '',
 
       // Results Table Data
       resultsHeight: 0,
@@ -236,30 +271,38 @@ export default {
       this.editor.getSelection().on("changeCursor", this.highlightQueries)
 
       // Add custom keybinds
-      this.editor.commands.addCommand({
-        name: 'run_query',
-        bindKey: { win: 'Ctrl-R', mac: 'Command-R' },
-        exec: () => {
-          this.run()
+      // console.log(this.editor.keyBinding.$defaultHandler.commandKeyBinding)
+      this.editor.commands.removeCommand('transposeletters')
+      this.editor.container.addEventListener("keydown", (e) => {
+        // if (e.key.toLowerCase() == "w" && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey))
+        // - New Connection -
+        if (e.key.toLowerCase() == "t" && (e.ctrlKey || e.metaKey)) {
+          this.newConnection()
+          e.preventDefault()
         }
-      });
-      this.editor.commands.addCommand({
-        name: 'new_connection',
-        bindKey: { win: 'Ctrl-T', mac: 'Command-T' },
-        exec: () => {
-          console.log("new")
-          // if (this.connections.length > 0) this.newConnection()
-        },
-        readOnly: true
-      });
-      this.editor.commands.addCommand({
-        name: 'remove_connection',
-        bindKey: { win: 'Ctrl-W', mac: 'Command-W' },
-        exec: () => {
-          if (this.connections.length > 0) this.removeConnection()
-          console.log("remove")
+        // - Remove Connection -
+        else if (e.key.toLowerCase() == "w" && (e.ctrlKey || e.metaKey)) {
+          this.removeConnection(this.currentConn)
+          e.preventDefault()
         }
-      });
+        // - Run Query/ies -
+        else if (e.key.toLowerCase() == "r" && (e.ctrlKey || e.metaKey)) {
+          if (this.connections.length > 0 && this.editorQuery.length > 0) this.runQuery()
+          e.preventDefault()
+        }
+        // - Increase Font Size -
+        else if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
+          let size = parseInt(this.editor.getFontSize(), 10) || 12
+          this.editor.setFontSize(size + 1)
+          e.preventDefault()
+        }
+        // - Decrease Font Size -
+        else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
+          let size = parseInt(this.editor.getFontSize(), 10) || 12
+          this.editor.setFontSize(Math.max(size - 1 || 1))
+          e.preventDefault()
+        }
+      }, false);
 
       // Convert Completer to Uppercase
       const defaultUpperCase = {
@@ -319,6 +362,9 @@ export default {
       // Focus Editor
       this.editor.focus()
     },
+    check(e) {
+      console.log(e)
+    },
     highlightQueries() {
       var Range = ace.require("ace/range").Range
       var cursorPosition = this.editor.getCursorPosition()
@@ -358,6 +404,7 @@ export default {
           break
         }
       }
+      this.editorQuery = query
 
       // Get Current Query Position
       var queryPosition = 0
@@ -464,6 +511,8 @@ export default {
       this.treeviewItems = tables
     },
     newConnection() {
+      if (this.connections.length == 0) return
+
       // Store connection
       this.__storeConn(this.currentConn)
 
@@ -486,6 +535,7 @@ export default {
       this.__loadConn(this.currentConn)
     },
     removeConnection(index) {
+      if (this.connections.length == 0) return
       this.connections.splice(index, 1)
       if (this.connections.length == 0) {
         this.databaseItems = []
@@ -537,41 +587,38 @@ export default {
       this.treeview = this.connections[index]['treeview'].slice(0)
       this.treeviewItems = this.connections[index]['treeviewItems'].slice(0)
       this.treeviewMode = this.connections[index]['treeviewMode']
-      this.treeviewSearch = this.connection[index]['treeviewSearch']
+      this.treeviewSearch = this.connections[index]['treeviewSearch']
       this.editor.setValue(this.connections[index]['editor'])
       this.resultsHeaders = this.connections[index]['resultsHeaders'].slice(0)
       this.resultsItems = this.connections[index]['resultsItems'].slice(0)
     },
-    run() {
-      var Range = ace.require("ace/range").Range
-      var cursorPosition = this.editor.getCursorPosition()
-      // console.log() // row | column
-      
-      var textRange = this.editor.session.getTextRange(new Range(0,0, cursorPosition.row, cursorPosition.column));
-      console.log(textRange)
-
-      //this.editor.selection.setRange(new Range(0,0, cursorPosition.row, cursorPosition.column));
-      this.editor.session.addMarker(new Range(1, 0, 2, 1), 'ace_active-line', 'line'); // 
-      
-      // ;
-      // this.editor.selection.setRange(new Range(0, 23, 0, 42));
-      
-      // const payload = JSON.stringify(this.item);
-      // axios.post('/client/execute', payload)
-      //   .then((response) => {
-      //     this.notification(response.data.message, '#00b16a')
-      //     this.getRegions()
-      //     this.dialog = false
-      //   })
-      //   .catch((error) => {
-      //     if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-      //     else this.notification(error.response.data.message, 'error')
-      //   })
-      //   .finally(() => {
-      //     this.loading = false
-      //   })
+    runQuery() {
+      this.loadingQuery = true
+      const payload = {
+        server_id: this.serverSelected,
+        database: this.database,
+        queries: this.__parseQueries()
+      }
+      axios.post('/client/execute', payload)
+        .then((response) => {
+          this.parseResult(response.data.data)
+        })
+        .catch((error) => {
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loadingQuery = false
+        })
     },
+    // parseResult(data) {
+
+    // },
     // __parseQueries(raw) {
+    //   // Get Query/ies (selected or highlighted)
+
+
     //   // Build multi-queries
     //   var queries = []
     //   var start = 0;
