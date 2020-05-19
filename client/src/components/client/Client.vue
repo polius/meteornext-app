@@ -62,7 +62,7 @@
               </Pane>
               <Pane size="80" min-size="0">
                 <Splitpanes horizontal @ready="initAce()" @resize="resize($event)">
-                  <Pane size="100">
+                  <Pane size="50">
                     <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                       <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#303030" color="white" v-model="currentConn" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
                         <v-tabs-slider></v-tabs-slider>
@@ -76,9 +76,8 @@
                       <div id="editor" style="float:left"></div>
                     </div>
                   </Pane>
-                  <Pane size="0" min-size="0">
-                    <v-data-table v-if="resultsItems.length > 0" :headers="resultsHeaders" :items="resultsItems" :footer-props="{'items-per-page-options': [10, 100, 1000, -1]}" :items-per-page="100" :hide-default-footer="resultsItems.length == 0" class="elevation-1" :height="resultsHeight + 'px'" fixed-header style="width:100%; border-radius:0px; background-color:#303030; overflow-y: auto;">
-                    </v-data-table>
+                  <Pane size="50" min-size="0">
+                    <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @model-updated="onGridUpdated" style="width:100%; height:100%;" class="ag-theme-alpine-dark" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
                   </Pane>
                 </Splitpanes>
               </Pane>
@@ -99,6 +98,9 @@
 </template>
 
 <style>
+@import "../../../node_modules/ag-grid-community/dist/styles/ag-grid.css";
+@import "../../../node_modules/ag-grid-community/dist/styles/ag-theme-alpine-dark.css";
+
 .splitpanes__pane {
   box-shadow: 0 0 3px rgba(0, 0, 0, .2) inset;
   justify-content: center;
@@ -183,6 +185,8 @@ import * as ace from 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import 'ace-builds/src-noconflict/ext-language_tools';
 
+import {AgGridVue} from "ag-grid-vue";
+
 export default {
   data() {
     return {
@@ -235,7 +239,6 @@ export default {
       editorQuery: '',
 
       // Results Table Data
-      resultsHeight: 0,
       resultsHeaders: [],
       resultsItems: [],
 
@@ -246,11 +249,26 @@ export default {
       snackbarText: ''
     }
   },
-  components: { Splitpanes, Pane },
+  components: { Splitpanes, Pane, AgGridVue },
   created() {
     this.getServers()
   },
   methods: {
+    onGridReady(params) {
+      this.gridApi = params.api
+      this.columnApi = params.columnApi
+      this.gridApi.sizeColumnsToFit()
+    },
+    onGridUpdated() {
+      if (typeof this.gridApi !== 'undefined') {
+        console.log("go")
+        var allColumnIds = [];
+        this.columnApi.getAllColumns().forEach(function(column) {
+          allColumnIds.push(column.colId);
+        });
+        this.columnApi.autoSizeColumns(allColumnIds);
+      }
+    },
     initAce() {
       // Editor Settings
       this.editor = ace.edit("editor", {
@@ -623,7 +641,7 @@ export default {
       // - Build Headers -
       var keys = Object.keys(data['query_result'][0])
       for (let i = 0; i < keys.length; ++i) {
-        headers.push({ text: keys[i], value: keys[i].trim().toLowerCase() })
+        headers.push({ headerName: keys[i], field: keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
       }
       this.resultsHeaders = headers
       this.resultsItems = items
@@ -656,10 +674,7 @@ export default {
       // Return parsed queries
       return queries
     },
-    resize(event) {
-      // Resize Results Data Table
-      if (typeof event !== 'undefined' && event.length > 0) this.resultsHeight = this.$refs.masterDiv.clientHeight * event[1].size / 100 - 62
-
+    resize() {
       // Resize Ace Code Editor
       this.editor.resize();
     },
