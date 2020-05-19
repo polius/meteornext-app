@@ -612,36 +612,37 @@ export default {
           this.loadingQuery = false
         })
     },
-    // parseResult(data) {
-
-    // },
-    // __parseQueries(raw) {
-    //   // Get Query/ies (selected or highlighted)
-
-
-    //   // Build multi-queries
-    //   var queries = []
-    //   var start = 0;
-    //   var chars = []
-    //   for (var i = 0; i < this.query_item.length; ++i) {
-    //     if (this.query_item[i] == ';' && chars.length == 0) {
-    //       queries.push({"query": this.query_item.substring(start, i+1).trim()})
-    //       id += 1
-    //       start = i+1
-    //     }
-    //     else if (this.query_item[i] == "\"") {
-    //       if (chars[chars.length-1] == '"') chars.pop()
-    //       else chars.push("\"")
-    //     }
-    //     else if (this.query_item[i] == "'") {
-    //       if (chars[chars.length-1] == "'") chars.pop()
-    //       else chars.push("'")
-    //     }
-    //   }
-    //   if (start < i) queries.push({"query": this.query_item.substring(start, i).trim()})
-    //   // Return parsed queries
-    //   return queries
-    // },
+    parseResult(data) {
+      console.log(data)
+    },
+    __parseQueries() {
+      // Get Query/ies (selected or highlighted)
+      const selectedText = this.editor.getSelectedText()
+      var queries = []
+      if (selectedText.length == 0) queries = [this.editorQuery]
+      else {
+        // Build multi-queries
+        let start = 0;
+        let chars = []
+        for (var i = 0; i < selectedText.length; ++i) {
+          if (selectedText[i] == ';' && chars.length == 0) {
+            queries.push(selectedText.substring(start, i+1).trim())
+            start = i+1
+          }
+          else if (selectedText[i] == "\"") {
+            if (chars[chars.length-1] == '"') chars.pop()
+            else chars.push("\"")
+          }
+          else if (selectedText[i] == "'") {
+            if (chars[chars.length-1] == "'") chars.pop()
+            else chars.push("'")
+          }
+        }
+        if (start < i) queries.push(selectedText.substring(start, i).trim())
+      }
+      // Return parsed queries
+      return queries
+    },
     resize(event) {
       // Resize Results Data Table
       if (typeof event !== 'undefined' && event.length > 0) this.resultsHeight = this.$refs.masterDiv.clientHeight * event[1].size / 100 - 62
