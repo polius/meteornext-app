@@ -174,6 +174,10 @@
 .container {
   padding-bottom:0px;
 }
+*
+{
+  will-change: auto !important;
+}
 </style>
 
 <script>
@@ -237,6 +241,7 @@ export default {
       editor: null,
       editorTools: null,
       editorMarkers: [],
+      editorCompleters: [],
       editorQuery: '',
 
       // Results Table Data
@@ -284,6 +289,7 @@ export default {
         highlightActiveLine: false
       });
       this.editor.session.setOptions({ tabSize: 4, useSoftTabs: false })
+      this.editorTools = ace.require("ace/ext/language_tools")
 
       // Highlight Queries
       this.editor.getSelection().on("changeCursor", this.highlightQueries)
@@ -322,7 +328,7 @@ export default {
         }
       }, false);
 
-      // Convert Completer to Uppercase
+      // Convert Completer Keywords to Uppercase
       const defaultUpperCase = {
         getCompletions(editor, session, pos, prefix, callback) {
           if (session.$mode.completer) {
@@ -343,42 +349,37 @@ export default {
           return callback(null, keywordCompletions);
         },
       };
-
-      // Add custom Completer
-      var myList = [
-        "/dev/sda1",
-        "/dev/sda2"
-      ]
-      var myCompleter = {
-        identifierRegexps: [/[^\s]+/],
-        getCompletions: function(editor, session, pos, prefix, callback) {
-          callback(
-            null,
-            myList.filter(entry=>{
-              return entry.includes(prefix)
-            }).map(entry=>{
-              return {
-                value: entry
-              };
-            })
-          );
-        }
-      }
-
-      this.editor.completers = [
-        defaultUpperCase,
-        myCompleter,
-      ];
-
-      // Add Custom Completer (Databases and tables names)
-      // this.editorTools = ace.require("ace/ext/language_tools")
-      // this.editorTools.addCompleter(myCompleter)
+      this.editor.completers = [defaultUpperCase]
 
       // Resize after Renderer
       this.editor.renderer.on('afterRender', this.resize);
 
       // Focus Editor
       this.editor.focus()
+    },
+    editorAddCompleter(list) {
+      const newCompleter = {
+        identifierRegexps: [/[^\s]+/],
+        getCompletions: function(editor, session, pos, prefix, callback) {
+          callback(
+            null,
+            list.filter(entry => {
+              return entry.value.toLowerCase().includes(prefix.toLowerCase())
+            }).map(entry => {
+              return { 
+                value: entry.value,
+                meta: entry.meta
+              };
+            })
+          );
+        }
+      }
+      this.editor.completers.push(newCompleter)
+      this.editorCompleters.push(newCompleter)
+    },
+    editorRemoveCompleter(index) {
+      this.editor.completers.splice(index+1, 1)
+      this.editorCompleters.splice(index, 1)
     },
     check(e) {
       console.log(e)
@@ -495,22 +496,31 @@ export default {
       // Retrieve Databases
       axios.get('/client/databases', { params: { server_id: server.id } })
         .then((response) => {
-          this.treeview = []
-          this.treeviewItems = []
-          this.treeviewMode = 'tables'
-          this.databaseItems = response.data.data
-          const connection = { server: server, databases: response.data.data }
-          if (this.connections.length == 0) this.connections.push(connection)
-          else this.connections[this.currentConn] = connection
-          this.editor.focus()
+          this.parseDatabases(server, response.data.data)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
           this.loadingServer = false
         })
+    },
+    parseDatabases(server, data) {
+      this.treeview = []
+      this.treeviewItems = []
+      this.treeviewMode = 'tables'
+      this.databaseItems = data
+      const connection = { server: server, databases: data }
+      if (this.connections.length == 0) this.connections.push(connection)
+      else this.connections[this.currentConn] = connection
+      this.editor.focus()
+
+      // Add database names to the editor autocompleter
+      var completer = []
+      for (let i = 0; i < data.length; ++i) completer.push({ value: data[i], meta: 'database' })
+      this.editorAddCompleter(completer)
     },
     getTables(database) {
       // Retrieve Tables
@@ -520,16 +530,23 @@ export default {
           this.editor.focus()
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
         })
     },
     parseTables(data) {
       var tables = []
       for (let i = 0; i < data.length; ++i) {
-        tables.push({ id: data[i]['table_name'], name: data[i]['table_name'], type: (data[i]['is_view'] == 0) ? 'Table' : 'View' })
+        tables.push({ id: data[i]['table_name'], name: data[i]['table_name'], type: (data[i]['type'] == 'table') ? 'Table' : 'View' })
       }
       this.treeviewItems = tables
+
+      // Add table / view names to the editor autocompleter
+      var completer = []
+      for (let i = 0; i < data.length; ++i) completer.push({ value: data[i]['table_name'], meta: data[i]['type'] })
+      if (this.editorCompleters.length > 1) this.editorRemoveCompleter(1)
+      this.editorAddCompleter(completer)
     },
     newConnection() {
       if (this.connections.length == 0) return
@@ -548,6 +565,7 @@ export default {
         treeviewMode: 'servers',
         treeviewSearch: '',
         editor: '',
+        editorCompleters: [],
         resultsHeaders: [],
         resultsItems: []
       }
@@ -566,6 +584,8 @@ export default {
         this.treeviewMode = 'servers'
         this.treeviewSearch = ''
         this.editor.setValue('')
+        this.editorCompleters = []
+        for (let i = 1; i < this.editor.completers.length; ++i) this.editor.completers.splice(i, 1)
         this.resultsHeaders = []
         this.resultsItems = []
       }
@@ -576,13 +596,15 @@ export default {
       else if (this.currentConn > index) this.currentConn = index + 1
     },
     changeConnection(index) {
-      if (this.currentConn != index) {       
-        // Store connection
-        this.__storeConn(this.currentConn)
+      if (this.currentConn != index) {
+        const currentConn = this.currentConn
+        setTimeout(() => { 
+          // Store connection
+          this.__storeConn(currentConn)
 
-        // Load connection
-        this.__loadConn(index)
-
+          // Load connection
+          this.__loadConn(index)
+        }, 1);
         // Change connection
         this.currentConn = index
       }
@@ -598,6 +620,7 @@ export default {
         treeviewMode: this.treeviewMode,
         treeviewSearch: this.treeviewSearch,
         editor: this.editor.getValue(),
+        editorCompleters: this.editorCompleters.slice(0),
         resultsHeaders: this.resultsHeaders.slice(0),
         resultsItems: this.resultsItems.slice(0)
       }
@@ -610,6 +633,9 @@ export default {
       this.treeviewMode = this.connections[index]['treeviewMode']
       this.treeviewSearch = this.connections[index]['treeviewSearch']
       this.editor.setValue(this.connections[index]['editor'])
+      for (let i = 0; i < this.editor.completers.length; ++i) this.editor.completers.splice(1, 1)
+      this.editorCompleters =  this.connections[index]['editorCompleters'].slice(0)
+      for (let i = 0; i < this.editorCompleters.length; ++i) this.editor.completers.push(this.editorCompleters[i])
       this.resultsHeaders = this.connections[index]['resultsHeaders'].slice(0)
       this.resultsItems = this.connections[index]['resultsItems'].slice(0)
     },

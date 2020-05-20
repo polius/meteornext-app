@@ -132,7 +132,7 @@ class MySQL:
 
     def get_all_tables(self, db):
         query = """
-            SELECT table_name, table_type = 'VIEW' AS 'is_view'
+            SELECT table_name, IF(table_type = 'VIEW', 'view','table') AS 'type'
             FROM information_schema.tables 
             WHERE table_schema = %s
         """
