@@ -428,7 +428,7 @@ export default {
       // Get Current Query Position
       var queryPosition = 0
       for (let i = 0; i < queries.length; ++i) {
-        var re = new RegExp('\\b' + query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b',"g");
+        var re = new RegExp('\\b' + query.trim() + '\\b');
         if (
           re.test(editorText.substring(queries[i]['begin'], queries[i]['end']).trim()) ||
           query.trim().localeCompare(editorText.substring(queries[i]['begin'], queries[i]['end']).trim()) == 0
