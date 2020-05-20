@@ -61,7 +61,7 @@
                 </div>
               </Pane>
               <Pane size="80" min-size="0">
-                <Splitpanes horizontal @ready="initAce()" @resize="resize($event)">
+                <Splitpanes horizontal @ready="initAce()">
                   <Pane size="50">
                     <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                       <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#303030" color="white" v-model="currentConn" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
