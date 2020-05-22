@@ -221,7 +221,7 @@ export default {
         PostgreSQL: "fas fa-server",
         Table: "fas fa-th",
         View: "fas fa-th-list",
-        Trigger: "fas fa-fire",
+        Trigger: "fas fa-bolt",
         Event: "far fa-clock",
         Function: "fas fa-code-branch",
         Procedure: "fas fa-compress"
@@ -571,7 +571,7 @@ export default {
       var objects = [
         { id: 'tables', 'name': 'Tables (' + tables.length + ')', type: 'Table', children: [] },
         { id: 'views', 'name': 'Views (' + views.length + ')',  type: 'View', children: [] },
-        { id: 'triggers', 'name': 'Trigger (' + data.triggers.length + ')', type: 'Trigger', children: [] },
+        { id: 'triggers', 'name': 'Triggers (' + data.triggers.length + ')', type: 'Trigger', children: [] },
         { id: 'functions', 'name': 'Functions (' + functions.length + ')',  type: 'Function', children: [] },
         { id: 'procedures', 'name': 'Procedures (' + procedures.length + ')', type: 'Procedure', children: [] },
         { id: 'events', 'name': 'Events (' + data.events.length + ')',  type: 'Event', children: [] }
