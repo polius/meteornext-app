@@ -132,9 +132,41 @@ class MySQL:
 
     def get_all_tables(self, db):
         query = """
-            SELECT table_name, IF(table_type = 'VIEW', 'view','table') AS 'type'
+            SELECT table_name AS 'name', IF(table_type = 'VIEW', 'view','table') AS 'type'
             FROM information_schema.tables 
             WHERE table_schema = %s
+        """
+        return self.execute(query, args=(db))['query_result']
+
+    def get_all_columns(self, db):
+        query = """
+            SELECT DISTINCT column_name AS 'name'
+            FROM information_schema.columns
+            WHERE table_schema = %s
+        """
+        return self.execute(query, args=(db))['query_result']
+
+    def get_all_triggers(self, db):
+        query = """
+            SELECT trigger_name AS 'name', action_timing, event_manipulation, action_orientation, action_statement, created, definer, character_set_client, collation_connection, database_collation
+            FROM information_schema.triggers
+            WHERE trigger_schema = %s
+        """
+        return self.execute(query, args=(db))['query_result']
+
+    def get_all_events(self, db):
+        query = """
+            SELECT event_name AS 'name', event_definition, definer, event_type, execute_at, interval_value, interval_field, starts, ends, status, on_completion, created, last_altered, last_executed, character_set_client, collation_connection, database_collation
+            FROM information_schema.events
+            WHERE event_schema = %s;
+        """
+        return self.execute(query, args=(db))['query_result']
+
+    def get_all_routines(self, db):
+        query = """
+            SELECT routine_name AS 'name', LOWER(routine_type) AS 'type', routine_definition, is_deterministic, created, last_altered
+            FROM information_schema.routines
+            WHERE routine_schema = %s
         """
         return self.execute(query, args=(db))['query_result']
 
