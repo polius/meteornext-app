@@ -33,7 +33,7 @@
                 <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                   <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
                   <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
-                  <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
+                  <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:8px; padding-bottom:1px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
                   <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 158px); padding-top:7px; width:100%; overflow-y:auto;">
                     <template v-slot:label="{item, open}">        
                       <v-btn text @dblclick="doubleClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
@@ -222,7 +222,7 @@ export default {
         MySQL: "fas fa-server",
         PostgreSQL: "fas fa-server",
         Table: "fas fa-th",
-        View: "fas fa-th",
+        View: "fas fa-th-list",
         Trigger: "fas fa-fire",
         Event: "far fa-clock",
         Function: "fas fa-code-branch",
