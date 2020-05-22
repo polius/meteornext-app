@@ -31,8 +31,9 @@
             <Splitpanes>
               <Pane size="20" min-size="0">
                 <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-                  <v-select v-model="database" @change="getTables" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
-                  <div class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">{{ treeviewMode == 'servers' ? 'SERVERS' : 'TABLES & VIEWS' }}</div>
+                  <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
+                  <div v-if="treeviewMode == 'servers'" class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">SERVERS</div>
+                  <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
                   <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 160px); padding-top:7px; width:100%; overflow-y:auto;">
                     <template v-slot:label="{item, open}">        
                       <v-btn text @dblclick="doubleClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
@@ -178,6 +179,9 @@
 {
   will-change: auto !important;
 }
+.ace_editor.ace_autocomplete {
+  width: 512px;
+}
 </style>
 
 <script>
@@ -218,13 +222,21 @@ export default {
         MySQL: "fas fa-server",
         PostgreSQL: "fas fa-server",
         Table: "fas fa-th",
-        View: "fas fa-th"
+        View: "fas fa-th",
+        Trigger: "fas fa-fire",
+        Event: "fas fa-clock",
+        Function: "fas fa-scroll",
+        Procedure: "fas fa-scroll"
       },
       treeviewColor: {
         MySQL: "",
         PostgreSQL: "",
         Table: "#ec644b",
-        View: "#f2d984"
+        View: "#f2d984",
+        Trigger: "",
+        Event: "",
+        Function: "",
+        Procedure: ""
       },
       treeview: [],
       treeviewItems: [],
@@ -522,11 +534,11 @@ export default {
       for (let i = 0; i < data.length; ++i) completer.push({ value: data[i], meta: 'database' })
       this.editorAddCompleter(completer)
     },
-    getTables(database) {
+    getObjects(database) {
       // Retrieve Tables
-      axios.get('/client/tables', { params: { server_id: this.serverSelected.id, database_name: database } })
+      axios.get('/client/objects', { params: { server_id: this.serverSelected.id, database_name: database } })
         .then((response) => {
-          this.parseTables(response.data.data)
+          this.parseObjects(response.data)
           this.editor.focus()
         })
         .catch((error) => {
@@ -535,16 +547,60 @@ export default {
           // else this.notification(error.response.data.message, 'error')
         })
     },
-    parseTables(data) {
-      var tables = []
-      for (let i = 0; i < data.length; ++i) {
-        tables.push({ id: data[i]['table_name'], name: data[i]['table_name'], type: (data[i]['type'] == 'table') ? 'Table' : 'View' })
+    parseObjects(data) {
+      // Build routines
+      var procedures = []
+      var functions = []
+      for (let i = 0; i < data.routines.length; ++i) {
+        if (data.routines[i]['type'].toLowerCase() == 'procedure') procedures.push(data.routines[i])
+        else functions.push(data.routines[i])
       }
-      this.treeviewItems = tables
+      // Build tables / views
+      var tables = []
+      var views = []
+      for (let i = 0; i < data.tables.length; ++i) {
+        if (data.tables[i]['type'].toLowerCase() == 'table') tables.push(data.tables[i])
+        else views.push(data.tables[i])
+      }
+      // Build objects
+      var objects = [
+        { id: 'tables', 'name': 'Tables (' + tables.length + ')', type: 'Table', children: [] },
+        { id: 'views', 'name': 'Views (' + views.length + ')',  type: 'View', children: [] },
+        { id: 'triggers', 'name': 'Trigger (' + data.triggers.length + ')', type: 'Trigger', children: [] },
+        { id: 'functions', 'name': 'Functions (' + functions.length + ')',  type: 'Function', children: [] },
+        { id: 'procedures', 'name': 'Procedures (' + procedures.length + ')', type: 'Procedure', children: [] },
+        { id: 'events', 'name': 'Events (' + data.events.length + ')',  type: 'Event', children: [] }
+      ]
+      // Parse Tables
+      for (let i = 0; i < tables.length; ++i) {
+        objects[0]['children'].push({ id: 'table|' + tables[i]['name'], ...tables[i], type: 'Table' })
+      }
+      // Parse Views
+      for (let i = 0; i < views.length; ++i) {
+        objects[1]['children'].push({ id: 'view|' + views[i]['name'], ...views[i], type: 'View' })
+      }
+      // Parse Triggers
+      for (let i = 0; i < data.triggers.length; ++i) {
+        objects[2]['children'].push({ id: 'trigger|' + data.triggers[i]['name'], ...data.triggers[i], type: 'Trigger' })
+      }
+      // Parse Functions
+      for (let i = 0; i < functions.length; ++i) {
+        objects[3]['children'].push({ id: 'function|' + functions[i]['name'], ...functions[i], type: 'Function' })
+      }
+      // Parse Procedures
+      for (let i = 0; i < procedures.length; ++i) {
+        objects[4]['children'].push({ id: 'procedure|' + procedures[i]['name'], ...procedures[i], type: 'Procedure' })
+      }
+      // Parse Events
+      for (let i = 0; i < data.events.length; ++i) {
+        objects[5]['children'].push({ id: 'event|' + data.events[i]['name'], ...data.events[i], type: 'Event' })
+      }
+      this.treeviewItems = objects
 
       // Add table / view names to the editor autocompleter
       var completer = []
-      for (let i = 0; i < data.length; ++i) completer.push({ value: data[i]['table_name'], meta: data[i]['type'] })
+      for (let i = 0; i < data.tables.length; ++i) completer.push({ value: data.tables[i]['name'], meta: data.tables[i]['type'] })
+      for (let i = 0; i < data.columns.length; ++i) completer.push({ value: data.columns[i]['name'], meta: 'column' })
       if (this.editorCompleters.length > 1) this.editorRemoveCompleter(1)
       this.editorAddCompleter(completer)
     },
