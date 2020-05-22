@@ -5,20 +5,18 @@
         <v-tabs-slider></v-tabs-slider>
           <v-tab><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>CLIENT</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tab :disabled="treeviewMode != 'objects' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-dice-d6</v-icon>Structure</span></v-tab>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tab :disabled="treeviewMode != 'objects' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">far fa-window-maximize</v-icon>Content</span></v-tab>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tab :disabled="treeviewMode != 'objects' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-sitemap</v-icon>Relations</span></v-tab>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tab :disabled="treeviewMode != 'objects' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-fire</v-icon>Triggers</span></v-tab>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tab :disabled="treeviewMode != 'objects' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-th</v-icon>Table Info</span></v-tab>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <!-- <v-tab><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px; font-size:14px;">fas fa-terminal</v-icon>Query</span></v-tab>
-          <v-divider class="mx-3" inset vertical></v-divider> -->
+          <v-tab v-if="treeviewMode == 'objects' && database.length > 0 && treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-layer-group</v-icon>Objects</span></v-tab>
+          <v-divider v-if="treeviewMode == 'objects' && database.length > 0 && treeview.length == 0" class="mx-3" inset vertical></v-divider>
+          <v-tab v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-dice-d6</v-icon>Structure</span></v-tab>
+          <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'" class="mx-3" inset vertical></v-divider>
+          <v-tab v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">far fa-window-maximize</v-icon>Content</span></v-tab>
+          <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View'].includes(treeviewSelected['type'])" class="mx-3" inset vertical></v-divider>
+          <v-tab v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-sitemap</v-icon>Relations</span></v-tab>
+          <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'" class="mx-3" inset vertical></v-divider>
+          <v-tab v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-th</v-icon>{{ treeviewSelected['type'] }} Info</span></v-tab>
+          <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type'])" class="mx-3" inset vertical></v-divider>
           <v-spacer></v-spacer>
-          <v-tab title="Users" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-user-shield</v-icon></span></v-tab>
+          <v-tab :disabled="treeviewMode == 'servers'" title="Users" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-user-shield</v-icon></span></v-tab>
           <v-tab title="Saved Queries" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-star</v-icon></span></v-tab>
           <v-tab title="Query History" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-history</v-icon></span></v-tab>
           <v-tab title="Settings" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-cog</v-icon></span></v-tab>
@@ -36,7 +34,7 @@
                   <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:8px; padding-bottom:1px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
                   <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 158px); padding-top:7px; width:100%; overflow-y:auto;">
                     <template v-slot:label="{item, open}">        
-                      <v-btn text @dblclick="doubleClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
+                      <v-btn text @click="treeviewClick(item)" @dblclick="treeviewDoubleClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
                         <!--button icon-->
                         <v-icon v-if="!item.type" small style="padding:10px;">
                           {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
@@ -240,6 +238,7 @@ export default {
       },
       treeview: [],
       treeviewItems: [],
+      treeviewSelected: {},
       treeviewMode: 'servers',
       treeviewSearch: '',
 
@@ -470,8 +469,11 @@ export default {
         this.editorMarkers.push(marker)
       }
     },
-    doubleClick(item) {
-      if (!('children' in item) && this.treeviewMode == 'servers') this.getDatabases(item)
+    treeviewClick(item) {
+      this.treeviewSelected = item
+    },
+    treeviewDoubleClick(item) {
+      if (this.treeviewMode == 'servers') this.getDatabases(item)
     },
     getServers() {
       axios.get('/client/servers')
