@@ -5,15 +5,15 @@
         <v-tabs-slider></v-tabs-slider>
           <v-tab><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>CLIENT</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tab :disabled="treeviewMode != 'tables' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-dice-d6</v-icon>Structure</span></v-tab>
+          <v-tab :disabled="treeviewMode != 'objects' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-dice-d6</v-icon>Structure</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tab :disabled="treeviewMode != 'tables' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">far fa-window-maximize</v-icon>Content</span></v-tab>
+          <v-tab :disabled="treeviewMode != 'objects' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">far fa-window-maximize</v-icon>Content</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tab :disabled="treeviewMode != 'tables' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-sitemap</v-icon>Relations</span></v-tab>
+          <v-tab :disabled="treeviewMode != 'objects' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-sitemap</v-icon>Relations</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tab :disabled="treeviewMode != 'tables' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-fire</v-icon>Triggers</span></v-tab>
+          <v-tab :disabled="treeviewMode != 'objects' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-fire</v-icon>Triggers</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tab :disabled="treeviewMode != 'tables' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-th</v-icon>Table Info</span></v-tab>
+          <v-tab :disabled="treeviewMode != 'objects' || treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-th</v-icon>Table Info</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
           <!-- <v-tab><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px; font-size:14px;">fas fa-terminal</v-icon>Query</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider> -->
@@ -32,9 +32,9 @@
               <Pane size="20" min-size="0">
                 <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                   <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
-                  <div v-if="treeviewMode == 'servers'" class="subtitle-2" style="padding-left:10px; padding-top:10px; color:rgb(222,222,222);">SERVERS</div>
+                  <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
                   <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
-                  <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 160px); padding-top:7px; width:100%; overflow-y:auto;">
+                  <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 158px); padding-top:7px; width:100%; overflow-y:auto;">
                     <template v-slot:label="{item, open}">        
                       <v-btn text @dblclick="doubleClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
                         <!--button icon-->
@@ -58,7 +58,7 @@
                       </v-list-item>
                     </v-list>
                   </v-menu>
-                  <v-text-field v-model="treeviewSearch" label="Search" dense solo hide-details style="float:left; width:100%; padding:10px;"></v-text-field>
+                  <v-text-field :disabled="treeviewMode == 'objects' && database.length == 0" v-model="treeviewSearch" label="Search" dense solo hide-details style="float:left; width:100%; padding:10px;"></v-text-field>
                 </div>
               </Pane>
               <Pane size="80" min-size="0">
@@ -224,19 +224,19 @@ export default {
         Table: "fas fa-th",
         View: "fas fa-th",
         Trigger: "fas fa-fire",
-        Event: "fas fa-clock",
-        Function: "fas fa-scroll",
-        Procedure: "fas fa-scroll"
+        Event: "far fa-clock",
+        Function: "fas fa-code-branch",
+        Procedure: "fas fa-compress"
       },
       treeviewColor: {
-        MySQL: "",
+        MySQL: "#F29111",
         PostgreSQL: "",
         Table: "#ec644b",
         View: "#f2d984",
-        Trigger: "",
-        Event: "",
-        Function: "",
-        Procedure: ""
+        Trigger: "#59abe3",
+        Function: "#2abb9b",
+        Procedure: "#bf55ec",
+        Event: "#bdc3c7"
       },
       treeview: [],
       treeviewItems: [],
@@ -522,12 +522,15 @@ export default {
     parseDatabases(server, data) {
       this.treeview = []
       this.treeviewItems = []
-      this.treeviewMode = 'tables'
+      this.treeviewMode = 'objects'
       this.databaseItems = data
       const connection = { server: server, databases: data }
       if (this.connections.length == 0) this.connections.push(connection)
       else this.connections[this.currentConn] = connection
       this.editor.focus()
+
+      // Clean Treeview Search
+      this.treeviewSearch = ''
 
       // Add database names to the editor autocompleter
       var completer = []
