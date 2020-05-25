@@ -170,6 +170,27 @@ class MySQL:
         """
         return self.execute(query, args=(db))['query_result']
 
+    def get_table_structure(self, db, table):
+        query = """
+            SELECT 
+                column_name AS 'name', 
+                data_type AS 'type', 
+                IF(data_type = 'enum', SUBSTRING(column_type, 6, CHAR_LENGTH(column_type)-6), COALESCE(character_maximum_length, numeric_precision)) AS 'length',
+                column_type LIKE '% unsigned' AS 'unsigned',
+                IF(is_nullable = 'YES', true, false) AS 'allow_null',
+                column_key AS 'key',
+                extra AS 'extra',
+                column_default AS 'default',
+                character_set_name AS 'encoding',
+                collation_name AS 'collation',
+                column_comment AS 'comment'	
+            FROM information_schema.columns 
+            WHERE table_schema = %s
+            AND table_name = %s
+            ORDER BY ordinal_position
+        """
+        return self.execute(query, args=(db, table))['query_result']
+
     def get_databases(self, db_regex):
         query = "SELECT DISTINCT(table_schema) AS table_schema FROM information_schema.tables WHERE table_schema LIKE '" + db_regex.strip() + "'"
         result = self.execute(query)['query_result']
