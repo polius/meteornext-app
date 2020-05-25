@@ -84,7 +84,7 @@
                     <!------------->
                     <!-- AG GRID -->
                     <!------------->
-                    <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @model-updated="onGridUpdated" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="30" headerHeight="35" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
+                    <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @model-updated="onGridUpdated" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
                   </Pane>
                 </Splitpanes>
               </Pane>
@@ -204,13 +204,13 @@
 }
 .ag-theme-alpine-dark .ag-cell {
   font-size: 13px;
-  line-height: 25px;
+  line-height: 30px;
 }
 .ag-theme-alpine-dark .ag-cell-inline-editing {
   height: 30px;
 }
 .ag-theme-alpine-dark {
-  --ag-foreground-color:white;
+  --ag-foreground-color:#dcdcdc;
   --ag-header-background-color:#272727;
   --ag-background-color:#2c2c2c;
   --ag-odd-row-background-color:#303030;
