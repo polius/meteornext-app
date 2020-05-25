@@ -11,8 +11,8 @@
           <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'" class="mx-3" inset vertical></v-divider>
           <v-tab v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-bars</v-icon>Content</span></v-tab>
           <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View'].includes(treeviewSelected['type'])" class="mx-3" inset vertical></v-divider>
-          <v-tab v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-sitemap</v-icon>Relations</span></v-tab>
-          <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'" class="mx-3" inset vertical></v-divider>
+          <!-- <v-tab v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-sitemap</v-icon>Relations</span></v-tab>
+          <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'" class="mx-3" inset vertical></v-divider> -->
           <v-tab v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-th</v-icon>{{ treeviewSelected['type'] }} Info</span></v-tab>
           <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type'])" class="mx-3" inset vertical></v-divider>
           <v-spacer></v-spacer>
@@ -28,6 +28,9 @@
           <div ref="masterDiv" style="height: calc(100vh - 145px);">
             <Splitpanes>
               <Pane size="20" min-size="0">
+                <!------------->
+                <!-- SIDEBAR -->
+                <!------------->
                 <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                   <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
                   <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
@@ -35,14 +38,12 @@
                   <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 158px); padding-top:7px; width:100%; overflow-y:auto;">
                     <template v-slot:label="{item, open}">        
                       <v-btn text @click="treeviewClick(item)" @dblclick="treeviewDoubleClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
-                        <!--button icon-->
                         <v-icon v-if="!item.type" small style="padding:10px;">
                           {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
                         </v-icon>
                         <v-icon v-else small :title="item.type" :color="treeviewColor[item.type]" style="padding:10px;">
                           {{ treeviewImg[item.type] }}
                         </v-icon>
-                        <!--button text-->
                         {{item.name}}
                         <v-spacer></v-spacer>
                         <v-progress-circular v-if="loadingServer && item.id == treeview[0]" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
@@ -60,6 +61,9 @@
                 </div>
               </Pane>
               <Pane size="80" min-size="0">
+                <!---------------->
+                <!-- ACE EDITOR -->
+                <!---------------->
                 <Splitpanes horizontal @ready="initAce()">
                   <Pane size="50">
                     <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
@@ -77,7 +81,10 @@
                     </div>
                   </Pane>
                   <Pane size="50" min-size="0">
-                    <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @model-updated="onGridUpdated" style="width:100%; height:100%;" class="ag-theme-alpine-dark" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
+                    <!------------->
+                    <!-- AG GRID -->
+                    <!------------->
+                    <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @model-updated="onGridUpdated" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="30" headerHeight="35" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
                   </Pane>
                 </Splitpanes>
               </Pane>
@@ -179,6 +186,24 @@
 }
 .ace_editor.ace_autocomplete {
   width: 512px;
+}
+.ag-theme-alpine-dark .ag-header-row {
+  font-size: 13px;
+  font-weight: 500;
+}
+.ag-theme-alpine-dark .ag-cell {
+  font-size: 13px;
+  line-height: 25px;
+}
+.ag-theme-alpine-dark .ag-cell-inline-editing {
+  height: 30px;
+}
+.ag-theme-alpine-dark {
+  --ag-foreground-color:white;
+  --ag-header-background-color:#272727;
+  --ag-background-color:#2c2c2c;
+  --ag-odd-row-background-color:#303030;
+  --ag-border-color:#424242;
 }
 </style>
 
