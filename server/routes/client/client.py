@@ -113,10 +113,19 @@ class Client:
             conn = connectors.connector.Connector(cred)
 
             # Execute all queries
-            
+            execution = []
             for q in client_json['queries']:
-                result = conn.execute(query=q, database=client_json['database'])
-            return jsonify({'data': result}), 200
+                try:
+                    result = conn.execute(query=q, database=client_json['database'])
+                    result['query'] = q
+                    result['success'] = True
+                except Exception as e:
+                    result = {"query": q, "success": False, "error": str(e)}
+                    break
+                finally:
+                    execution.append(result)
+
+            return jsonify({'data': execution}), 200
 
         return client_blueprint
 
