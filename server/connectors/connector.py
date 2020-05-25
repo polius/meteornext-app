@@ -49,6 +49,9 @@ class Connector:
     def get_all_routines(self, db):
         return self._sql.get_all_routines(db)
 
+    def get_table_structure(self, db, table):
+        return self._sql.get_table_structure(db, table)
+
     def get_databases(self, db_regex):
         return self._sql.get_databases(db_regex)
 
