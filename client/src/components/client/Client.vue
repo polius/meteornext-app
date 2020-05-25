@@ -90,10 +90,17 @@
               </Pane>
             </Splitpanes>
           </div>
-          <div style="width:100%; padding-top:6px; padding-left:20px; padding-right:20px; border-top:1px solid rgba(37, 37, 37, 0.5);">
-            <div class="body-2" style="float:left; width:calc(100vw - 180px); text-align:center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">5 rows affected</div>
-            <div class="body-2" style="float:right; text-align:right;">0.046s elapsed</div>
-          </div>
+          <!---------------->
+          <!-- BOTTOM BAR -->
+          <!---------------->
+          <v-row no-gutters style="flex-wrap: nowrap; margin-top:7px; padding-left:10px; padding-right:12px;">
+            <v-col cols="auto" style="min-width: 100px; max-width: 100%; padding-right:10px;" class="flex-grow-1 flex-shrink-1">
+              <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><v-icon small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:10px;">fas fa-check-circle</v-icon>SELECT * FROM aELECT * FROM aELECT * FROM aELECT * FROM aELECT * FROM aELECT * FROM aELECT * FROM a</div>
+            </v-col>
+            <v-col cols="auto" style="min-width: 100px;" class="flex-grow-0 flex-shrink-0">
+              <div class="body-2" style="text-align:right;">180 records | 2 queries | 0.106s elapsed</div>
+            </v-col>
+          </v-row>
           <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
             {{ snackbarText }}
             <v-btn color="white" text @click="snackbar = false">Close</v-btn>
@@ -187,6 +194,7 @@
 .ace_editor.ace_autocomplete {
   width: 512px;
 }
+/* AG GRID */
 .ag-theme-alpine-dark .ag-header-row {
   font-size: 13px;
   font-weight: 500;
@@ -736,7 +744,7 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
-          this.parseResult(response.data.data)
+          this.parseExecution(response.data.data)
         })
         .catch((error) => {
           console.log(error)
@@ -747,7 +755,7 @@ export default {
           this.loadingQuery = false
         })
     },
-    parseResult(data) {
+    parseExecution(data) {
       // Build Data Table
       console.log(data)
       var headers = []
