@@ -75,7 +75,7 @@
                         <v-divider class="mx-3" inset vertical></v-divider>
                         <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
                       </v-tabs>
-                      <v-btn :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
+                      <v-btn :loading="loadingQuery" :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
                       <!-- <v-btn :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Export Results"><v-icon small style="padding-right:10px;">fas fa-file-export</v-icon>Export Results</v-btn> -->
                       <div id="editor" style="float:left"></div>
                     </div>
@@ -95,10 +95,13 @@
           <!---------------->
           <v-row no-gutters style="flex-wrap: nowrap; margin-top:7px; padding-left:10px; padding-right:12px;">
             <v-col cols="auto" style="min-width: 100px; max-width: 100%; padding-right:10px;" class="flex-grow-1 flex-shrink-1">
-              <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><v-icon small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:10px;">fas fa-check-circle</v-icon>SELECT * FROM aELECT * FROM aELECT * FROM aELECT * FROM aELECT * FROM aELECT * FROM aELECT * FROM a</div>
+              <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                <v-icon v-if="bottomBarStatus=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
+                <v-icon v-else-if="bottomBarStatus=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
+                {{ bottomBarText }}</div>
             </v-col>
             <v-col cols="auto" style="min-width: 100px;" class="flex-grow-0 flex-shrink-0">
-              <div class="body-2" style="text-align:right;">180 records | 2 queries | 0.106s elapsed</div>
+              <div class="body-2" style="text-align:right;">{{ bottomBarInfo }}</div>
             </v-col>
           </v-row>
           <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
@@ -291,6 +294,11 @@ export default {
       // Results Table Data
       resultsHeaders: [],
       resultsItems: [],
+
+      // Bottom Bar
+      bottomBarText: '',
+      bottomBarStatus: '', // success - failure
+      bottomBarInfo: '',
 
       // Snackbar
       snackbar: false,
@@ -661,7 +669,10 @@ export default {
         editor: '',
         editorCompleters: [],
         resultsHeaders: [],
-        resultsItems: []
+        resultsItems: [],
+        bottomBarStatus: '',
+        bottomBarText: '',
+        bottomBarInfo: ''
       }
       this.connections.push(newConn)
       this.currentConn = this.connections.length - 1
@@ -682,6 +693,9 @@ export default {
         for (let i = 1; i < this.editor.completers.length; ++i) this.editor.completers.splice(i, 1)
         this.resultsHeaders = []
         this.resultsItems = []
+        this.bottomBarStatus = ''
+        this.bottomBarText = ''
+        this.bottomBarInfo = ''
       }
       else if (index == this.currentConn) {
         if (this.connections.length > index) this.__loadConn(index)
@@ -716,7 +730,10 @@ export default {
         editor: this.editor.getValue(),
         editorCompleters: this.editorCompleters.slice(0),
         resultsHeaders: this.resultsHeaders.slice(0),
-        resultsItems: this.resultsItems.slice(0)
+        resultsItems: this.resultsItems.slice(0),
+        bottomBarStatus: this.bottomBarStatus,
+        bottomBarText: this.bottomBarText,
+        bottomBarInfo: this.bottomBarInfo
       }
     },
     __loadConn(index) {
@@ -732,10 +749,16 @@ export default {
       for (let i = 0; i < this.editorCompleters.length; ++i) this.editor.completers.push(this.editorCompleters[i])
       this.resultsHeaders = this.connections[index]['resultsHeaders'].slice(0)
       this.resultsItems = this.connections[index]['resultsItems'].slice(0)
+      this.bottomBarStatus = this.connections[index]['bottomBarStatus']
+      this.bottomBarText = this.connections[index]['bottomBarText']
+      this.bottomBarInfo = this.connections[index]['bottomBarInfo']
     },
     runQuery() {
       this.resultsHeaders = []
       this.resultsItems = []
+      this.bottomBarStatus = ''
+      this.bottomBarText = ''
+      this.bottomBarInfo = ''
       this.loadingQuery = true
       const payload = {
         server: this.serverSelected.id,
@@ -756,17 +779,28 @@ export default {
         })
     },
     parseExecution(data) {
-      // Build Data Table
       console.log(data)
+      // Build Data Table
       var headers = []
-      var items = data['query_result']
+      var items = data[data.length - 1]['query_result']
       // - Build Headers -
-      var keys = Object.keys(data['query_result'][0])
+      var keys = Object.keys(data[data.length - 1]['query_result'][0])
       for (let i = 0; i < keys.length; ++i) {
         headers.push({ headerName: keys[i], field: keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
       }
       this.resultsHeaders = headers
       this.resultsItems = items
+
+      // Build BottomBar
+      var elapsed = 0
+      for (let i = 0; i < data.length; ++i) {
+        elapsed += parseFloat(data[i]['query_time'])
+      }
+      elapsed /= data.length
+
+      this.bottomBarStatus = data[data.length-1]['success'] ? 'success' : 'failure'
+      this.bottomBarText = data[data.length-1]['query']
+      this.bottomBarInfo = data[data.length-1]['query_result'].length + ' records | ' + data.length + ' queries | ' + elapsed.toString() + 's elapsed'
     },
     __parseQueries() {
       // Get Query/ies (selected or highlighted)
