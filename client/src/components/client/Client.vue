@@ -3,17 +3,15 @@
     <div>
       <v-tabs show-arrows background-color="#9b59b6" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
         <v-tabs-slider></v-tabs-slider>
-          <v-tab><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>CLIENT</span></v-tab>
+          <v-tab @click="tabClient()"><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>CLIENT</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-tab v-if="treeviewMode == 'objects' && database.length > 0 && treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-layer-group</v-icon>Objects</span></v-tab>
           <v-divider v-if="treeviewMode == 'objects' && database.length > 0 && treeview.length == 0" class="mx-3" inset vertical></v-divider>
-          <v-tab v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-dice-d6</v-icon>Structure</span></v-tab>
+          <v-tab @click="tabStructure()" v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-dice-d6</v-icon>Structure</span></v-tab>
           <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'" class="mx-3" inset vertical></v-divider>
-          <v-tab v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-bars</v-icon>Content</span></v-tab>
+          <v-tab @click="tabClient()" v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-bars</v-icon>Content</span></v-tab>
           <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View'].includes(treeviewSelected['type'])" class="mx-3" inset vertical></v-divider>
-          <!-- <v-tab v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-sitemap</v-icon>Relations</span></v-tab>
-          <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'" class="mx-3" inset vertical></v-divider> -->
-          <v-tab v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-th</v-icon>{{ treeviewSelected['type'] }} Info</span></v-tab>
+          <v-tab @click="tabClient(treeviewSelected['type'].toLowerCase())" v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-th</v-icon>{{ treeviewSelected['type'] }} Info</span></v-tab>
           <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type'])" class="mx-3" inset vertical></v-divider>
           <v-spacer></v-spacer>
           <v-tab :disabled="treeviewMode == 'servers'" title="Users" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-user-shield</v-icon></span></v-tab>
@@ -25,85 +23,117 @@
     <v-container fluid>
       <v-content style="padding-top:0px; padding-bottom:0px;">
         <div style="margin: -12px;">
-          <div ref="masterDiv" style="height: calc(100vh - 145px);">
+          <div ref="masterDiv" style="height: calc(100vh - 112px);">
             <Splitpanes>
               <Pane size="20" min-size="0">
                 <!------------->
                 <!-- SIDEBAR -->
                 <!------------->
                 <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-                  <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
-                  <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
-                  <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:8px; padding-bottom:1px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
-                  <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 158px); padding-top:7px; width:100%; overflow-y:auto;">
-                    <template v-slot:label="{item, open}">        
-                      <v-btn text @click="treeviewClick(item)" @dblclick="treeviewDoubleClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
-                        <v-icon v-if="!item.type" small style="padding:10px;">
-                          {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
-                        </v-icon>
-                        <v-icon v-else small :title="item.type" :color="treeviewColor[item.type]" style="padding:10px;">
-                          {{ treeviewImg[item.type] }}
-                        </v-icon>
-                        {{item.name}}
-                        <v-spacer></v-spacer>
-                        <v-progress-circular v-if="loadingServer && item.id == treeview[0]" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
-                      </v-btn>
-                    </template>
-                  </v-treeview>
-                  <v-menu v-model="showMenu" :position-x="x" :position-y="y" absolute offset-y>
-                    <v-list style="padding:0px;">
-                      <v-list-item v-for="menuItem in menuItems" :key="menuItem" @click="clickAction">
-                        <v-list-item-title>{{menuItem}}</v-list-item-title>
-                      </v-list-item>
-                    </v-list>
-                  </v-menu>
-                  <v-text-field :disabled="treeviewMode == 'objects' && database.length == 0" v-model="treeviewSearch" label="Search" dense solo hide-details style="float:left; width:100%; padding:10px;"></v-text-field>
+                  <div style="height:calc(100% - 36px);">
+                    <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
+                    <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
+                    <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:8px; padding-bottom:1px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
+                    <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 158px); padding-top:7px; width:100%; overflow-y:auto;">
+                      <template v-slot:label="{item, open}">
+                        <v-btn text @click="treeviewClick(item)" @dblclick="treeviewDoubleClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
+                          <v-icon v-if="!item.type" small style="padding:10px;">
+                            {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
+                          </v-icon>
+                          <v-icon v-else small :title="item.type" :color="treeviewColor[item.type]" style="padding:10px;">
+                            {{ treeviewImg[item.type] }}
+                          </v-icon>
+                          {{item.name}}
+                          <v-spacer></v-spacer>
+                          <v-progress-circular v-if="loadingServer && item.id == treeview[0]" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
+                        </v-btn>
+                      </template>
+                    </v-treeview>
+                    <v-menu v-model="showMenu" :position-x="x" :position-y="y" absolute offset-y>
+                      <v-list style="padding:0px;">
+                        <v-list-item v-for="menuItem in menuItems" :key="menuItem" @click="clickAction">
+                          <v-list-item-title>{{menuItem}}</v-list-item-title>
+                        </v-list-item>
+                      </v-list>
+                    </v-menu>
+                    <v-text-field :disabled="treeviewMode == 'objects' && database.length == 0" v-model="treeviewSearch" label="Search" dense solo hide-details style="float:left; width:100%; padding:10px;"></v-text-field>
+                  </div>
+                  <!--------------------->
+                  <!-- LEFT BOTTOM BAR -->
+                  <!--------------------->
+                  <div style="height:35px; border-top:2px solid #2c2c2c;">
+                    <v-btn text small title="New Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+                    <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+                    <v-btn text small title="Remove Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+                    <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
+                    <v-btn text small title="Refresh Connections" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+                  </div>
                 </div>
               </Pane>
               <Pane size="80" min-size="0">
-                <!---------------->
-                <!-- ACE EDITOR -->
-                <!---------------->
-                <Splitpanes horizontal @ready="initAce()">
-                  <Pane size="50">
-                    <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-                      <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#303030" color="white" v-model="currentConn" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
+                <div style="height:100%; width:100%">
+                  <div style="height:calc(100% - 36px);">
+                    <!------------>
+                    <!-- CLIENT -->
+                    <!------------>
+                    <Splitpanes v-if="tabSelected == 'client'" horizontal @ready="initAce()">
+                      <Pane size="50">
+                        <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
+                          <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#303030" color="white" v-model="currentConn" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
+                            <v-tabs-slider></v-tabs-slider>
+                            <v-tab v-for="(t, index) in connections" :key="index" @click="changeConnection(index)" :title="'Name: ' + t.server.name + '\nHost: ' + t.server.host" style="padding:0px 10px 0px 0px; text-transform:none;">
+                              <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click.prevent.stop="removeConnection(index)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t.server.name }}</span>
+                            </v-tab>
+                            <v-divider class="mx-3" inset vertical></v-divider>
+                            <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
+                          </v-tabs>
+                          <v-btn :loading="loadingQuery" :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
+                          <!-- <v-btn :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Export Results"><v-icon small style="padding-right:10px;">fas fa-file-export</v-icon>Export Results</v-btn> -->
+                          <div id="editor" style="float:left"></div>
+                        </div>
+                      </Pane>
+                      <Pane size="50" min-size="0">
+                        <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @model-updated="onGridUpdated" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
+                      </Pane>
+                    </Splitpanes>
+                    <!--------------->
+                    <!-- STRUCTURE -->
+                    <!--------------->
+                    <div v-else-if="tabSelected == 'structure'" style="width:100%; height:100%;">
+                      <v-tabs show-arrows dense background-color="#303030" color="white" v-model="currentConn" slider-color="white" slot="extension" class="elevation-2">
                         <v-tabs-slider></v-tabs-slider>
-                        <v-tab v-for="(t, index) in connections" :key="index" @click="changeConnection(index)" :title="'Name: ' + t.server.name + '\nHost: ' + t.server.host" style="padding:0px 10px 0px 0px; text-transform:none;">
-                          <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click.prevent.stop="removeConnection(index)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t.server.name }}</span>
-                        </v-tab>
+                        <v-tab @click="tabStructureColumns()"><span class="pl-2 pr-2">Columns</span></v-tab>
                         <v-divider class="mx-3" inset vertical></v-divider>
-                        <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
+                        <v-tab @click="tabStructureIndexes()"><span class="pl-2 pr-2">Indexes</span></v-tab>
+                        <v-divider class="mx-3" inset vertical></v-divider>
+                        <v-tab @click="tabStructureFK()"><span class="pl-2 pr-2">Foreign Keys</span></v-tab>
+                        <v-divider class="mx-3" inset vertical></v-divider>
+                        <v-tab @click="tabStructureTriggers()"><span class="pl-2 pr-2">Triggers</span></v-tab>
+                        <v-divider class="mx-3" inset vertical></v-divider>
                       </v-tabs>
-                      <v-btn :loading="loadingQuery" :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
-                      <!-- <v-btn :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Export Results"><v-icon small style="padding-right:10px;">fas fa-file-export</v-icon>Export Results</v-btn> -->
-                      <div id="editor" style="float:left"></div>
+                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @model-updated="onGridUpdated" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
                     </div>
-                  </Pane>
-                  <Pane size="50" min-size="0">
-                    <!------------->
-                    <!-- AG GRID -->
-                    <!------------->
-                    <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @model-updated="onGridUpdated" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
-                  </Pane>
-                </Splitpanes>
+                  </div>
+                  <!---------------------->
+                  <!-- RIGHT BOTTOM BAR -->
+                  <!---------------------->
+                  <div style="height:35px; background-color:#303030; border-top:2px solid #2c2c2c;">
+                  <v-row no-gutters style="margin-top:7px; flex-wrap: nowrap; padding-left:10px; padding-right:12px;">
+                    <v-col cols="auto" style="min-width: 100px; max-width: 100%; padding-right:10px;" class="flex-grow-1 flex-shrink-1">
+                      <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        <v-icon v-if="bottomBarStatus=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
+                        <v-icon v-else-if="bottomBarStatus=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
+                        {{ bottomBarText }}</div>
+                    </v-col>
+                    <v-col cols="auto" style="min-width: 100px;" class="flex-grow-0 flex-shrink-0">
+                      <div class="body-2" style="text-align:right;">{{ bottomBarInfo }}</div>
+                    </v-col>
+                  </v-row>
+                  </div>
+                </div>
               </Pane>
             </Splitpanes>
           </div>
-          <!---------------->
-          <!-- BOTTOM BAR -->
-          <!---------------->
-          <v-row no-gutters style="flex-wrap: nowrap; margin-top:7px; padding-left:10px; padding-right:12px;">
-            <v-col cols="auto" style="min-width: 100px; max-width: 100%; padding-right:10px;" class="flex-grow-1 flex-shrink-1">
-              <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                <v-icon v-if="bottomBarStatus=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
-                <v-icon v-else-if="bottomBarStatus=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
-                {{ bottomBarText }}</div>
-            </v-col>
-            <v-col cols="auto" style="min-width: 100px;" class="flex-grow-0 flex-shrink-0">
-              <div class="body-2" style="text-align:right;">{{ bottomBarInfo }}</div>
-            </v-col>
-          </v-row>
           <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
             {{ snackbarText }}
             <v-btn color="white" text @click="snackbar = false">Close</v-btn>
@@ -126,10 +156,10 @@
   position: relative;
 }
 .splitpanes--vertical > .splitpanes__splitter {
-  min-width: 5px;
+  min-width: 2px;
 }
 .splitpanes--horizontal > .splitpanes__splitter {
-  min-height: 5px;
+  min-height: 2px;
 }
 .ace_editor {
   margin: auto;
@@ -235,6 +265,7 @@ export default {
     return {
       // Tabs Header
       tabs: null,
+      tabSelected: 'client',
 
       // Connections
       connections: [],
@@ -295,6 +326,10 @@ export default {
       resultsHeaders: [],
       resultsItems: [],
 
+      // Structure
+      structureHeaders: [],
+      structureItems: [],
+
       // Bottom Bar
       bottomBarText: '',
       bottomBarStatus: '', // success - failure
@@ -312,12 +347,16 @@ export default {
     this.getServers()
   },
   methods: {
+    clickTab() {
+      console.log("STRUCTURE")
+    },
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
-      this.gridApi.sizeColumnsToFit()
+      //this.gridApi.sizeColumnsToFit()
     },
     onGridUpdated() {
+      // if (typeof this.gridApi !== 'undefined') this.gridApi.sizeColumnsToFit()
       if (typeof this.gridApi !== 'undefined') {
         var allColumnIds = [];
         this.columnApi.getAllColumns().forEach(function(column) {
@@ -779,7 +818,6 @@ export default {
         })
     },
     parseExecution(data) {
-      console.log(data)
       // Build Data Table
       var headers = []
       var items = data[data.length - 1]['query_result']
@@ -829,6 +867,50 @@ export default {
       }
       // Return parsed queries
       return queries
+    },
+    // ------------
+    // --- TABS ---
+    // ------------
+    tabClient() {
+      this.tabSelected = 'client'
+    },
+    tabStructure() {
+      this.tabSelected = 'structure'
+      this.getStructure()
+    },
+    tabStructureColumns() {
+      console.log("resize")
+      this.gridApi.sizeColumnsToFit()
+    },
+    tabContent() {
+      this.tabSelected = 'content'
+    },
+    tabInfo(object) {
+      this.tabSelected = object + '_info'
+    },
+    getStructure() {
+      // Retrieve Tables
+      const table = this.treeview[0].substring(6, this.treeview[0].length)
+      axios.get('/client/structure', { params: { server: this.serverSelected.id, database: this.database, table: table } })
+        .then((response) => {
+          this.parseStructure(response.data.data)
+        })
+        .catch((error) => {
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
+        })
+    },
+    parseStructure(data) {
+      const structure = JSON.parse(data)
+      var headers = []
+      // - Build Headers -
+      var keys = Object.keys(structure[0])
+      for (let i = 0; i < keys.length; ++i) {
+        headers.push({ headerName: keys[i], field: keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+      }
+      this.structureHeaders = headers
+      this.structureItems = structure
     },
     resize() {
       // Resize Ace Code Editor

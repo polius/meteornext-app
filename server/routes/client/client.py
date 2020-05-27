@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import json
 import utils
 import models.admin.users
 import models.client.client
@@ -126,6 +127,30 @@ class Client:
                     execution.append(result)
 
             return jsonify({'data': execution}), 200
+
+        @client_blueprint.route('/client/structure', methods=['GET'])
+        @jwt_required
+        def client_structure_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Server Credentials + Connection
+            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = connectors.connector.Connector(cred)
+
+            # Get Structure
+            structure = conn.get_table_structure(db=request.args['database'], table=request.args['table'])
+            return jsonify({'data': json.dumps(structure)}), 200
 
         return client_blueprint
 
