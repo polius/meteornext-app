@@ -9,9 +9,9 @@
           <v-divider v-if="treeviewMode == 'objects' && database.length > 0 && treeview.length == 0" class="mx-3" inset vertical></v-divider>
           <v-tab @click="tabStructure()" v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-dice-d6</v-icon>Structure</span></v-tab>
           <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'" class="mx-3" inset vertical></v-divider>
-          <v-tab @click="tabClient()" v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-bars</v-icon>Content</span></v-tab>
+          <v-tab @click="tabContent()" v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-bars</v-icon>Content</span></v-tab>
           <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View'].includes(treeviewSelected['type'])" class="mx-3" inset vertical></v-divider>
-          <v-tab @click="tabClient(treeviewSelected['type'].toLowerCase())" v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-th</v-icon>{{ treeviewSelected['type'] }} Info</span></v-tab>
+          <v-tab @click="tabInfo(treeviewSelected['type'].toLowerCase())" v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-th</v-icon>{{ treeviewSelected['type'] }} Info</span></v-tab>
           <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type'])" class="mx-3" inset vertical></v-divider>
           <v-spacer></v-spacer>
           <v-tab :disabled="treeviewMode == 'servers'" title="Users" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-user-shield</v-icon></span></v-tab>
@@ -61,12 +61,17 @@
                   <!--------------------->
                   <!-- LEFT BOTTOM BAR -->
                   <!--------------------->
-                  <div style="height:35px; border-top:2px solid #2c2c2c;">
+                  <!-- SERVERS -->
+                  <div v-if="treeviewMode == 'servers'" style="height:35px; border-top:2px solid #2c2c2c;">
                     <v-btn text small title="New Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
                     <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
                     <v-btn text small title="Remove Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
                     <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
                     <v-btn text small title="Refresh Connections" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+                  </div>
+                  <!-- OBJECTS -->
+                  <div v-else-if="treeviewMode == 'objects'" style="height:35px; border-top:2px solid #2c2c2c;">
+                    <v-btn text small title="Refresh Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
                   </div>
                 </div>
               </Pane>
@@ -100,7 +105,7 @@
                     <!-- STRUCTURE -->
                     <!--------------->
                     <div v-else-if="tabSelected == 'structure'" style="width:100%; height:100%;">
-                      <v-tabs show-arrows dense background-color="#303030" color="white" v-model="currentConn" slider-color="white" slot="extension" class="elevation-2">
+                      <v-tabs show-arrows dense background-color="#303030" color="white" slider-color="white" slot="extension" class="elevation-2">
                         <v-tabs-slider></v-tabs-slider>
                         <v-tab @click="tabStructureColumns()"><span class="pl-2 pr-2">Columns</span></v-tab>
                         <v-divider class="mx-3" inset vertical></v-divider>
@@ -118,17 +123,26 @@
                   <!-- RIGHT BOTTOM BAR -->
                   <!---------------------->
                   <div style="height:35px; background-color:#303030; border-top:2px solid #2c2c2c;">
-                  <v-row no-gutters style="margin-top:7px; flex-wrap: nowrap; padding-left:10px; padding-right:12px;">
-                    <v-col cols="auto" style="min-width: 100px; max-width: 100%; padding-right:10px;" class="flex-grow-1 flex-shrink-1">
-                      <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        <v-icon v-if="bottomBarStatus=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
-                        <v-icon v-else-if="bottomBarStatus=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
-                        {{ bottomBarText }}</div>
-                    </v-col>
-                    <v-col cols="auto" style="min-width: 100px;" class="flex-grow-0 flex-shrink-0">
-                      <div class="body-2" style="text-align:right;">{{ bottomBarInfo }}</div>
-                    </v-col>
-                  </v-row>
+                    <!-- CLIENT -->
+                      <v-row v-if="tabSelected == 'client'" no-gutters style="margin-top:7px; flex-wrap: nowrap; padding-left:10px; padding-right:12px;">
+                        <v-col cols="auto" style="min-width: 100px; max-width: 100%; padding-right:10px;" class="flex-grow-1 flex-shrink-1">
+                          <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <v-icon v-if="bottomBarStatus=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
+                            <v-icon v-else-if="bottomBarStatus=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
+                            {{ bottomBarText }}</div>
+                        </v-col>
+                        <v-col cols="auto" style="min-width: 100px;" class="flex-grow-0 flex-shrink-0">
+                          <div class="body-2" style="text-align:right;">{{ bottomBarInfo }}</div>
+                        </v-col>
+                      </v-row>
+                    <!-- STRUCTURE -->
+                    <div v-else-if="tabSelected == 'structure'">
+                      <v-btn text small :title="tabStructureSelected == 'columns' ? 'New Column' : tabStructureSelected == 'indexes' ? 'New Index' : tabStructureSelected == 'fk' ? 'New Foreign Key' : 'New Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+                      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+                      <v-btn text small :title="tabStructureSelected == 'columns' ? 'Remove Column' : tabStructureSelected == 'indexes' ? 'Remove Index' : tabStructureSelected == 'fk' ? 'Remove Foreign Key' : 'Remove Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+                      <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
+                      <v-btn text small :title="tabStructureSelected == 'columns' ? 'Refresh Columns' : tabStructureSelected == 'indexes' ? 'Refresh Indexes' : tabStructureSelected == 'fk' ? 'Refresh Foreign Keys' : 'Refresh Triggers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+                    </div>
                   </div>
                 </div>
               </Pane>
@@ -327,6 +341,7 @@ export default {
       resultsItems: [],
 
       // Structure
+      tabStructureSelected: 'columns',
       structureHeaders: [],
       structureItems: [],
 
@@ -879,8 +894,18 @@ export default {
       this.getStructure()
     },
     tabStructureColumns() {
-      console.log("resize")
+      this.tabStructureSelected = 'columns'
+      console.log(this.tabStructureSelected)
       this.gridApi.sizeColumnsToFit()
+    },
+    tabStructureIndexes() {
+      this.tabStructureSelected = 'indexes'
+    },
+    tabStructureFK() {
+      this.tabStructureSelected = 'fk'
+    },
+    tabStructureTriggers() {
+      this.tabStructureSelected = 'triggers'
     },
     tabContent() {
       this.tabSelected = 'content'
