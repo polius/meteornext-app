@@ -149,8 +149,11 @@ class Client:
             conn = connectors.connector.Connector(cred)
 
             # Get Structure
-            structure = conn.get_table_structure(db=request.args['database'], table=request.args['table'])
-            return jsonify({'data': json.dumps(structure)}), 200
+            columns = conn.get_columns(db=request.args['database'], table=request.args['table'])
+            indexes = conn.get_indexes(db=request.args['database'], table=request.args['table'])
+            fks = conn.get_fks(db=request.args['database'], table=request.args['table'])
+            triggers = conn.get_triggers(db=request.args['database'], table=request.args['table'])
+            return jsonify({'columns': json.dumps(columns), 'indexes': json.dumps(indexes), 'fks': json.dumps(fks), 'triggers': json.dumps(triggers)}), 200
 
         return client_blueprint
 
