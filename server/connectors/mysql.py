@@ -174,9 +174,9 @@ class MySQL:
         query = """
             SELECT 
                 column_name AS 'name', 
-                data_type AS 'type', 
+                UPPER(data_type) AS 'type', 
                 IF(data_type = 'enum', SUBSTRING(column_type, 6, CHAR_LENGTH(column_type)-6), COALESCE(character_maximum_length, numeric_precision)) AS 'length',
-                column_type LIKE '% unsigned' AS 'unsigned',
+                column_type LIKE '%% unsigned' AS 'unsigned',
                 IF(is_nullable = 'YES', true, false) AS 'allow_null',
                 column_key AS 'key',
                 extra AS 'extra',
