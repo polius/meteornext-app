@@ -170,7 +170,7 @@ class MySQL:
         """
         return self.execute(query, args=(db))['query_result']
 
-    def get_table_structure(self, db, table):
+    def get_columns(self, db, table):
         query = """
             SELECT 
                 column_name AS 'name', 
@@ -190,6 +190,15 @@ class MySQL:
             ORDER BY ordinal_position
         """
         return self.execute(query, args=(db, table))['query_result']
+
+    def get_indexes(self, db, table):
+        return []
+    
+    def get_fks(self, db, table):
+        return []
+    
+    def get_triggers(self, db, table):
+        return []
 
     def get_databases(self, db_regex):
         query = "SELECT DISTINCT(table_schema) AS table_schema FROM information_schema.tables WHERE table_schema LIKE '" + db_regex.strip() + "'"

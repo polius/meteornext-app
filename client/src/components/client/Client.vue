@@ -31,7 +31,7 @@
                 <!------------->
                 <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                   <div style="height:calc(100% - 36px);">
-                    <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
+                    <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0"  :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
                     <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
                     <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:8px; padding-bottom:1px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
                     <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 158px); padding-top:7px; width:100%; overflow-y:auto;">
@@ -71,7 +71,7 @@
                   </div>
                   <!-- OBJECTS -->
                   <div v-else-if="treeviewMode == 'objects'" style="height:35px; border-top:2px solid #2c2c2c;">
-                    <v-btn text small title="Refresh Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+                    <!-- <v-btn text small title="Refresh Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn> -->
                   </div>
                 </div>
               </Pane>
@@ -137,11 +137,11 @@
                       </v-row>
                     <!-- STRUCTURE -->
                     <div v-else-if="tabSelected == 'structure'">
-                      <v-btn text small :title="tabStructureSelected == 'columns' ? 'New Column' : tabStructureSelected == 'indexes' ? 'New Index' : tabStructureSelected == 'fk' ? 'New Foreign Key' : 'New Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+                      <v-btn text small :title="tabStructureSelected == 'columns' ? 'New Column' : tabStructureSelected == 'indexes' ? 'New Index' : tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
                       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                      <v-btn text small :title="tabStructureSelected == 'columns' ? 'Remove Column' : tabStructureSelected == 'indexes' ? 'Remove Index' : tabStructureSelected == 'fk' ? 'Remove Foreign Key' : 'Remove Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+                      <v-btn text small :title="tabStructureSelected == 'columns' ? 'Remove Column' : tabStructureSelected == 'indexes' ? 'Remove Index' : tabStructureSelected == 'fks' ? 'Remove Foreign Key' : 'Remove Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
                       <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
-                      <v-btn text small :title="tabStructureSelected == 'columns' ? 'Refresh Columns' : tabStructureSelected == 'indexes' ? 'Refresh Indexes' : tabStructureSelected == 'fk' ? 'Refresh Foreign Keys' : 'Refresh Triggers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+                      <v-btn text small :title="tabStructureSelected == 'columns' ? 'Refresh Columns' : tabStructureSelected == 'indexes' ? 'Refresh Indexes' : tabStructureSelected == 'fks' ? 'Refresh Foreign Keys' : 'Refresh Triggers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
                     </div>
                   </div>
                 </div>
@@ -342,6 +342,7 @@ export default {
 
       // Structure
       tabStructureSelected: 'columns',
+      structureOrigin: {},
       structureHeaders: [],
       structureItems: [],
 
@@ -368,10 +369,9 @@ export default {
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
-      //this.gridApi.sizeColumnsToFit()
     },
     onGridUpdated() {
-      // if (typeof this.gridApi !== 'undefined') this.gridApi.sizeColumnsToFit()
+      //if (typeof this.gridApi !== 'undefined') this.gridApi.sizeColumnsToFit()
       if (typeof this.gridApi !== 'undefined') {
         var allColumnIds = [];
         this.columnApi.getAllColumns().forEach(function(column) {
@@ -891,21 +891,28 @@ export default {
     },
     tabStructure() {
       this.tabSelected = 'structure'
-      this.getStructure()
+      if (this.structureHeaders.length == 0) this.getStructure()
+      else this.tabStructureColumns()
     },
     tabStructureColumns() {
       this.tabStructureSelected = 'columns'
-      console.log(this.tabStructureSelected)
-      this.gridApi.sizeColumnsToFit()
+      this.structureHeaders = this.structureOrigin['columns']['headers'].slice(0)
+      this.structureItems = this.structureOrigin['columns']['items'].slice(0)
     },
     tabStructureIndexes() {
       this.tabStructureSelected = 'indexes'
+      this.structureHeaders = this.structureOrigin['indexes']['headers'].slice(0)
+      this.structureItems = this.structureOrigin['indexes']['items'].slice(0)
     },
     tabStructureFK() {
-      this.tabStructureSelected = 'fk'
+      this.tabStructureSelected = 'fks'
+      this.structureHeaders = this.structureOrigin['fks']['headers'].slice(0)
+      this.structureItems = this.structureOrigin['fks']['items'].slice(0)
     },
     tabStructureTriggers() {
       this.tabStructureSelected = 'triggers'
+      this.structureHeaders = this.structureOrigin['triggers']['headers'].slice(0)
+      this.structureItems = this.structureOrigin['triggers']['items'].slice(0)
     },
     tabContent() {
       this.tabSelected = 'content'
@@ -918,7 +925,7 @@ export default {
       const table = this.treeview[0].substring(6, this.treeview[0].length)
       axios.get('/client/structure', { params: { server: this.serverSelected.id, database: this.database, table: table } })
         .then((response) => {
-          this.parseStructure(response.data.data)
+          this.parseStructure(response.data)
         })
         .catch((error) => {
           console.log(error)
@@ -927,15 +934,25 @@ export default {
         })
     },
     parseStructure(data) {
-      const structure = JSON.parse(data)
-      var headers = []
-      // - Build Headers -
-      var keys = Object.keys(structure[0])
-      for (let i = 0; i < keys.length; ++i) {
-        headers.push({ headerName: keys[i], field: keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+      // Parse Columns
+      var columns_items = JSON.parse(data.columns)
+      var columns_headers = []
+      var columns_keys = Object.keys(columns_items[0])
+      for (let i = 0; i < columns_keys.length; ++i) {
+        columns_headers.push({ headerName: columns_keys[i], field: columns_keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
       }
-      this.structureHeaders = headers
-      this.structureItems = structure
+      this.structureOrigin['columns'] = { headers: columns_headers, items: columns_items }
+      this.structureHeaders = columns_headers
+      this.structureItems = columns_items
+
+      // Parse Indexes
+      this.structureOrigin['indexes'] = { headers: [], items: [] } 
+
+      // Parse Foreign Keys
+      this.structureOrigin['fks'] = { headers: [], items: [] } 
+
+      // Parse Triggers
+      this.structureOrigin['triggers'] = { headers: [], items: [] } 
     },
     resize() {
       // Resize Ace Code Editor
