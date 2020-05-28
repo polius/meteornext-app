@@ -182,8 +182,7 @@ class MySQL:
                 extra AS 'extra',
                 column_default AS 'default',
                 character_set_name AS 'encoding',
-                collation_name AS 'collation',
-                column_comment AS 'comment'	
+                collation_name AS 'collation'
             FROM information_schema.columns 
             WHERE table_schema = %s
             AND table_name = %s
@@ -192,8 +191,22 @@ class MySQL:
         return self.execute(query, args=(db, table))['query_result']
 
     def get_indexes(self, db, table):
-        return []
-    
+        query = """
+            SELECT 
+                CASE 
+                WHEN index_type = 'FULLTEXT' THEN 'FULLTEXT'
+                    WHEN index_name = 'PRIMARY' THEN 'PRIMARY'
+                    WHEN non_unique = 0 THEN 'UNIQUE'
+                    ELSE 'INDEX'
+                END AS 'index_type', 
+                index_name, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS 'fields'
+            FROM information_schema.statistics
+            WHERE table_schema = %s
+            AND table_name = %s
+            GROUP BY index_name, index_type, non_unique
+        """
+        return self.execute(query, args=(db, table))['query_result']
+
     def get_fks(self, db, table):
         return []
     
