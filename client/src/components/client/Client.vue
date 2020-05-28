@@ -98,7 +98,7 @@
                         </div>
                       </Pane>
                       <Pane size="50" min-size="0">
-                        <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @model-updated="onGridUpdated" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
+                        <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
                       </Pane>
                     </Splitpanes>
                     <!--------------->
@@ -116,7 +116,10 @@
                         <v-tab @click="tabStructureTriggers()"><span class="pl-2 pr-2">Triggers</span></v-tab>
                         <v-divider class="mx-3" inset vertical></v-divider>
                       </v-tabs>
-                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @model-updated="onGridUpdated" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
+                      <!-- <div style="width:100%; height:calc(100% - 85px); z-index:1; position:absolute; text-align:center;">
+                        <v-progress-circular indeterminate color="#dcdcdc" width="2" style="height:100%;"></v-progress-circular>
+                      </div>  @grid-size-changed="chaanged" -->
+                      <ag-grid-vue @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
                     </div>
                   </div>
                   <!---------------------->
@@ -369,16 +372,8 @@ export default {
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
-    },
-    onGridUpdated() {
-      //if (typeof this.gridApi !== 'undefined') this.gridApi.sizeColumnsToFit()
-      if (typeof this.gridApi !== 'undefined') {
-        var allColumnIds = [];
-        this.columnApi.getAllColumns().forEach(function(column) {
-          allColumnIds.push(column.colId);
-        });
-        this.columnApi.autoSizeColumns(allColumnIds);
-      }
+
+      setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
     },
     initAce() {
       // Editor Settings
@@ -401,7 +396,6 @@ export default {
       this.editor.getSelection().on("changeCursor", this.highlightQueries)
 
       // Add custom keybinds
-      // console.log(this.editor.keyBinding.$defaultHandler.commandKeyBinding)
       this.editor.commands.removeCommand('transposeletters')
       this.editor.container.addEventListener("keydown", (e) => {
         // if (e.key.toLowerCase() == "w" && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey))
@@ -886,6 +880,13 @@ export default {
     // ------------
     // --- TABS ---
     // ------------
+    resizeTable() {
+      var allColumnIds = [];
+      this.columnApi.getAllColumns().forEach(function(column) {
+        allColumnIds.push(column.colId);
+      });
+      this.columnApi.autoSizeColumns(allColumnIds);
+    },
     tabClient() {
       this.tabSelected = 'client'
     },
@@ -898,21 +899,25 @@ export default {
       this.tabStructureSelected = 'columns'
       this.structureHeaders = this.structureOrigin['columns']['headers'].slice(0)
       this.structureItems = this.structureOrigin['columns']['items'].slice(0)
+      setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
     },
     tabStructureIndexes() {
       this.tabStructureSelected = 'indexes'
       this.structureHeaders = this.structureOrigin['indexes']['headers'].slice(0)
       this.structureItems = this.structureOrigin['indexes']['items'].slice(0)
+      setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
     },
     tabStructureFK() {
       this.tabStructureSelected = 'fks'
       this.structureHeaders = this.structureOrigin['fks']['headers'].slice(0)
       this.structureItems = this.structureOrigin['fks']['items'].slice(0)
+      setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
     },
     tabStructureTriggers() {
       this.tabStructureSelected = 'triggers'
       this.structureHeaders = this.structureOrigin['triggers']['headers'].slice(0)
       this.structureItems = this.structureOrigin['triggers']['items'].slice(0)
+      setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
     },
     tabContent() {
       this.tabSelected = 'content'
@@ -946,7 +951,13 @@ export default {
       this.structureItems = columns_items
 
       // Parse Indexes
-      this.structureOrigin['indexes'] = { headers: [], items: [] } 
+      var indexes_items = JSON.parse(data.indexes)
+      var indexes_headers = []
+      var indexes_keys = Object.keys(indexes_items[0])
+      for (let i = 0; i < indexes_keys.length; ++i) {
+        indexes_headers.push({ headerName: indexes_keys[i], field: indexes_keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+      }
+      this.structureOrigin['indexes'] = { headers: indexes_headers, items: indexes_items }
 
       // Parse Foreign Keys
       this.structureOrigin['fks'] = { headers: [], items: [] } 
