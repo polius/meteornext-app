@@ -208,10 +208,23 @@ class MySQL:
         return self.execute(query, args=(db, table))['query_result']
 
     def get_fks(self, db, table):
-        return []
+        query = """
+            SELECT c.constraint_name AS 'name', column_name AS 'column', k.referenced_table_schema AS 'fk_database', k.referenced_table_name AS 'fk_table', referenced_column_name AS 'fk_column', update_rule AS 'on_update', delete_rule AS 'on_delete'
+            FROM information_schema.KEY_COLUMN_USAGE k
+            JOIN information_schema.REFERENTIAL_CONSTRAINTS c ON c.constraint_name = k.constraint_name AND c.constraint_schema = k.constraint_schema
+            WHERE c.constraint_schema = %s
+            AND k.table_name = %s
+        """
+        return self.execute(query, args=(db, table))['query_result']
     
     def get_triggers(self, db, table):
-        return []
+        query = """
+            SELECT trigger_name AS 'trigger', event_manipulation AS 'event', action_timing AS 'timing', action_statement AS 'statement', definer
+            FROM information_schema.triggers
+            WHERE event_object_schema = %s
+            AND event_object_table = %s
+        """
+        return self.execute(query, args=(db, table))['query_result']
 
     def get_databases(self, db_regex):
         query = "SELECT DISTINCT(table_schema) AS table_schema FROM information_schema.tables WHERE table_schema LIKE '" + db_regex.strip() + "'"
