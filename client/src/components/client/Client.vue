@@ -118,8 +118,21 @@
                       </v-tabs>
                       <!-- <div style="width:100%; height:calc(100% - 85px); z-index:1; position:absolute; text-align:center;">
                         <v-progress-circular indeterminate color="#dcdcdc" width="2" style="height:100%;"></v-progress-circular>
-                      </div>  @grid-size-changed="chaanged" -->
+                      </div>-->
                       <ag-grid-vue @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
+                    </div>
+                    <!------------->
+                    <!-- CONTENT -->
+                    <!------------->
+                    <div v-else-if="tabSelected == 'content'" style="width:100%; height:100%">
+                      <div style="height:48px; background-color:#2c2c2c; margin:0px;">
+                        <div class="body-2" style="float:left; margin-top:14px; padding-left:10px; padding-right:10px;">Search:</div>
+                        <v-select v-model="contentSearchColumn" dense solo hide-details style="float:left; min-height:20px; width:250px; padding-top:5px;"></v-select>
+                        <v-select v-model="contentSearchFilter" :items="contentSearchFilterItems" dense solo hide-details style="float:left; width:157px; padding-top:5px; padding-left:5px;"></v-select>
+                        <v-text-field v-model="contentSearchFilterText" solo dense hide-details prepend-inner-icon="search" style="float:left; padding-top:5px; padding-left:5px; width:calc(100% - 570px);"></v-text-field>
+                        <v-btn style="float:right; margin-top:6px; margin-left:6px; margin-right:5px;">Filter</v-btn>
+                      </div>
+                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
                     </div>
                   </div>
                   <!---------------------->
@@ -349,6 +362,15 @@ export default {
       structureHeaders: [],
       structureItems: [],
 
+      // Content
+      contentSearchColumn: '',
+      contentSearchColumnItems: ['id'],
+      contentSearchFilter: '',
+      contentSearchFilterText: '',
+      contentSearchFilterItems: ['=','≠','LIKE','NOT LIKE','REGEXP','NOT REGEXP','IN','BETWEEN','NULL','IS NOT NULL'],
+      contentHeaders: [],
+      contentItems: [],
+
       // Bottom Bar
       bottomBarText: '',
       bottomBarStatus: '', // success - failure
@@ -372,8 +394,6 @@ export default {
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
-
-      setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
     },
     initAce() {
       // Editor Settings
@@ -942,28 +962,49 @@ export default {
       // Parse Columns
       var columns_items = JSON.parse(data.columns)
       var columns_headers = []
-      var columns_keys = Object.keys(columns_items[0])
-      for (let i = 0; i < columns_keys.length; ++i) {
-        columns_headers.push({ headerName: columns_keys[i], field: columns_keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+      if (columns_items.length > 0) {
+        var columns_keys = Object.keys(columns_items[0])
+        for (let i = 0; i < columns_keys.length; ++i) {
+          columns_headers.push({ headerName: columns_keys[i], field: columns_keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+        }
       }
       this.structureOrigin['columns'] = { headers: columns_headers, items: columns_items }
       this.structureHeaders = columns_headers
       this.structureItems = columns_items
+      setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 10);
 
       // Parse Indexes
       var indexes_items = JSON.parse(data.indexes)
       var indexes_headers = []
-      var indexes_keys = Object.keys(indexes_items[0])
-      for (let i = 0; i < indexes_keys.length; ++i) {
-        indexes_headers.push({ headerName: indexes_keys[i], field: indexes_keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+      if (indexes_items.length > 0) {
+        var indexes_keys = Object.keys(indexes_items[0])
+        for (let i = 0; i < indexes_keys.length; ++i) {
+          indexes_headers.push({ headerName: indexes_keys[i], field: indexes_keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+        }
       }
       this.structureOrigin['indexes'] = { headers: indexes_headers, items: indexes_items }
 
       // Parse Foreign Keys
-      this.structureOrigin['fks'] = { headers: [], items: [] } 
+      var fks_items = JSON.parse(data.fks)
+      var fks_headers = []
+      if (fks_items.length > 0) {
+        var fks_keys = Object.keys(fks_items[0])
+        for (let i = 0; i < fks_keys.length; ++i) {
+          fks_headers.push({ headerName: fks_keys[i], field: fks_keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+        }
+      }
+      this.structureOrigin['fks'] = { headers: fks_headers, items: fks_items } 
 
       // Parse Triggers
-      this.structureOrigin['triggers'] = { headers: [], items: [] } 
+      var triggers_items = JSON.parse(data.triggers)
+      var triggers_headers = []
+      if (triggers_items.length > 0) {
+        var triggers_keys = Object.keys(triggers_items[0])
+        for (let i = 0; i < triggers_keys.length; ++i) {
+          triggers_headers.push({ headerName: triggers_keys[i], field: triggers_keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+        }
+      }
+      this.structureOrigin['triggers'] = { headers: triggers_headers, items: triggers_items } 
     },
     resize() {
       // Resize Ace Code Editor
