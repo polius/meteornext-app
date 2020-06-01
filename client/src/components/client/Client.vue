@@ -24,6 +24,19 @@
       <v-content style="padding-top:0px; padding-bottom:0px;">
         <div style="margin: -12px;">
           <div ref="masterDiv" style="height: calc(100vh - 112px);">
+            <!----------------->
+            <!-- CONNECTIONS -->
+            <!----------------->
+            <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#2c2c2c" color="white" v-model="currentConn" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
+              <v-tabs-slider color="#454545"></v-tabs-slider>
+              <v-tab v-for="(t, index) in connections" :key="index" @click="changeConnection(index)" :title="'Name: ' + t.server.name + '\nHost: ' + t.server.host" style="padding:0px 10px 0px 0px; text-transform:none;">
+                <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click.prevent.stop="removeConnection(index)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t.server.name }}</span>
+              </v-tab>
+              <v-divider class="mx-3" inset vertical></v-divider>
+              <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
+            </v-tabs>
+            <v-btn :loading="loadingQuery" :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
+
             <Splitpanes>
               <Pane size="20" min-size="0">
                 <!------------->
@@ -31,7 +44,7 @@
                 <!------------->
                 <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                   <div style="height:calc(100% - 36px);">
-                    <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0"  :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 10px 10px 10px 10px;"></v-select>
+                    <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0"  :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 12px 10px 10px 10px;"></v-select>
                     <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
                     <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:8px; padding-bottom:1px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
                     <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 158px); padding-top:7px; width:100%; overflow-y:auto;">
@@ -77,22 +90,13 @@
               </Pane>
               <Pane size="80" min-size="0">
                 <div style="height:100%; width:100%">
-                  <div style="height:calc(100% - 36px);">
+                  <div style="height:calc(100% - 36px);">                  
                     <!------------>
                     <!-- CLIENT -->
                     <!------------>
                     <Splitpanes v-if="tabSelected == 'client'" horizontal @ready="initAce()">
                       <Pane size="50">
                         <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-                          <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#303030" color="white" v-model="currentConn" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
-                            <v-tabs-slider></v-tabs-slider>
-                            <v-tab v-for="(t, index) in connections" :key="index" @click="changeConnection(index)" :title="'Name: ' + t.server.name + '\nHost: ' + t.server.host" style="padding:0px 10px 0px 0px; text-transform:none;">
-                              <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click.prevent.stop="removeConnection(index)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t.server.name }}</span>
-                            </v-tab>
-                            <v-divider class="mx-3" inset vertical></v-divider>
-                            <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
-                          </v-tabs>
-                          <v-btn :loading="loadingQuery" :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
                           <!-- <v-btn :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Export Results"><v-icon small style="padding-right:10px;">fas fa-file-export</v-icon>Export Results</v-btn> -->
                           <div id="editor" style="float:left"></div>
                         </div>
@@ -125,7 +129,7 @@
                     <!-- CONTENT -->
                     <!------------->
                     <div v-else-if="tabSelected == 'content'" style="width:100%; height:100%">
-                      <div style="height:48px; background-color:#2c2c2c; margin:0px;">
+                      <div style="height:48px; background-color:#303030; margin:0px;">
                         <div class="body-2" style="float:left; margin-top:14px; padding-left:10px; padding-right:10px;">Search:</div>
                         <v-select v-model="contentSearchColumn" dense solo hide-details style="float:left; min-height:20px; width:250px; padding-top:5px;"></v-select>
                         <v-select v-model="contentSearchFilter" :items="contentSearchFilterItems" dense solo hide-details style="float:left; width:157px; padding-top:5px; padding-left:5px;"></v-select>
