@@ -27,23 +27,23 @@
             <!----------------->
             <!-- CONNECTIONS -->
             <!----------------->
-            <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#2c2c2c" color="white" v-model="currentConn" slider-color="white" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left;">
-              <v-tabs-slider color="#454545"></v-tabs-slider>
+            <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#2c2c2c" color="white" v-model="currentConn" slider-color="#969696" slider-size="1" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left; border-bottom: 1px solid #424242;">
               <v-tab v-for="(t, index) in connections" :key="index" @click="changeConnection(index)" :title="'Name: ' + t.server.name + '\nHost: ' + t.server.host" style="padding:0px 10px 0px 0px; text-transform:none;">
                 <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click.prevent.stop="removeConnection(index)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t.server.name }}</span>
               </v-tab>
               <v-divider class="mx-3" inset vertical></v-divider>
               <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
             </v-tabs>
-            <v-btn :loading="loadingQuery" :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Execute Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
-
-            <Splitpanes>
+            <div v-if="connections.length > 0" style="background-color:#2c2c2c; padding:6px; border-bottom: 1px solid #424242;">
+              <v-btn :loading="loadingQuery" :disabled="editorQuery.length == 0" @click="runQuery()" title="Execute Query" style="margin-left:6px;"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
+            </div>
+            <Splitpanes :style="connections.length > 0 ? 'height:calc(100% - 49px)' : 'height:100%'">
               <Pane size="20" min-size="0">
                 <!------------->
                 <!-- SIDEBAR -->
                 <!------------->
                 <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-                  <div style="height:calc(100% - 36px);">
+                  <div style="height:calc(100% - 36px)">
                     <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0"  :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 12px 10px 10px 10px;"></v-select>
                     <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
                     <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:8px; padding-bottom:1px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
@@ -90,7 +90,7 @@
               </Pane>
               <Pane size="80" min-size="0">
                 <div style="height:100%; width:100%">
-                  <div style="height:calc(100% - 36px);">                  
+                  <div style="height:calc(100% - 36px)">                  
                     <!------------>
                     <!-- CLIENT -->
                     <!------------>
@@ -109,7 +109,7 @@
                     <!-- STRUCTURE -->
                     <!--------------->
                     <div v-else-if="tabSelected == 'structure'" style="width:100%; height:100%;">
-                      <v-tabs show-arrows dense background-color="#303030" color="white" slider-color="white" slot="extension" class="elevation-2">
+                      <v-tabs show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
                         <v-tabs-slider></v-tabs-slider>
                         <v-tab @click="tabStructureColumns()"><span class="pl-2 pr-2">Columns</span></v-tab>
                         <v-divider class="mx-3" inset vertical></v-divider>
