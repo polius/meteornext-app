@@ -5,14 +5,14 @@
         <v-tabs-slider></v-tabs-slider>
           <v-tab @click="tabClient()"><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>CLIENT</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tab v-if="treeviewMode == 'objects' && database.length > 0 && treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-layer-group</v-icon>Objects</span></v-tab>
-          <v-divider v-if="treeviewMode == 'objects' && database.length > 0 && treeview.length == 0" class="mx-3" inset vertical></v-divider>
-          <v-tab @click="tabStructure()" v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-dice-d6</v-icon>Structure</span></v-tab>
-          <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && treeviewSelected['type'] == 'Table'" class="mx-3" inset vertical></v-divider>
-          <v-tab @click="tabContent()" v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-bars</v-icon>Content</span></v-tab>
-          <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View'].includes(treeviewSelected['type'])" class="mx-3" inset vertical></v-divider>
-          <v-tab @click="tabInfo(treeviewSelected['type'].toLowerCase())" v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type'])"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-th</v-icon>{{ treeviewSelected['type'] }} Info</span></v-tab>
-          <v-divider v-if="treeviewMode == 'objects' && treeview.length > 0 && !('children' in treeviewSelected) && ['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type'])" class="mx-3" inset vertical></v-divider>
+          <!-- <v-tab v-if="treeviewMode == 'objects' && database.length > 0 && treeview.length == 0"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-layer-group</v-icon>Objects</span></v-tab> -->
+          <!-- <v-divider v-if="treeviewMode == 'objects' && database.length > 0 && treeview.length == 0" class="mx-3" inset vertical></v-divider> -->
+          <v-tab @click="tabStructure()" :disabled="treeviewMode != 'objects' || treeview.length == 0 || ('children' in treeviewSelected) || treeviewSelected['type'] != 'Table'"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-dice-d6</v-icon>Structure</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-tab @click="tabContent()" :disabled="treeviewMode != 'objects' || treeview.length == 0 || ('children' in treeviewSelected) || !(['Table','View'].includes(treeviewSelected['type']))"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-bars</v-icon>Content</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-tab @click="tabInfo(treeviewSelected['type'].toLowerCase())" :disabled="treeviewMode != 'objects' || treeview.length == 0 || ('children' in treeviewSelected) || !(['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type']))"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-info</v-icon>Info</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
           <v-spacer></v-spacer>
           <v-tab :disabled="treeviewMode == 'servers'" title="Users" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-user-shield</v-icon></span></v-tab>
           <v-tab title="Saved Queries" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-star</v-icon></span></v-tab>
@@ -44,7 +44,7 @@
                 <!------------->
                 <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                   <div style="height:calc(100% - 36px)">
-                    <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0"  :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding: 12px 10px 10px 10px;"></v-select>
+                    <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0"  :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding:10px;"></v-select>
                     <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
                     <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:8px; padding-bottom:1px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
                     <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 158px); padding-top:7px; width:100%; overflow-y:auto;">
@@ -131,12 +131,12 @@
                     <div v-else-if="tabSelected == 'content'" style="width:100%; height:100%">
                       <div style="height:48px; background-color:#303030; margin:0px;">
                         <div class="body-2" style="float:left; margin-top:14px; padding-left:10px; padding-right:10px;">Search:</div>
-                        <v-select v-model="contentSearchColumn" dense solo hide-details style="float:left; min-height:20px; width:250px; padding-top:5px;"></v-select>
+                        <v-select v-model="contentSearchColumn" dense solo hide-details style="float:left; width:250px; padding-top:5px;"></v-select>
                         <v-select v-model="contentSearchFilter" :items="contentSearchFilterItems" dense solo hide-details style="float:left; width:157px; padding-top:5px; padding-left:5px;"></v-select>
                         <v-text-field v-model="contentSearchFilterText" solo dense hide-details prepend-inner-icon="search" style="float:left; padding-top:5px; padding-left:5px; width:calc(100% - 570px);"></v-text-field>
                         <v-btn style="float:right; margin-top:6px; margin-left:6px; margin-right:5px;">Filter</v-btn>
                       </div>
-                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
+                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
                     </div>
                   </div>
                   <!---------------------->
@@ -144,7 +144,7 @@
                   <!---------------------->
                   <div style="height:35px; background-color:#303030; border-top:2px solid #2c2c2c;">
                     <!-- CLIENT -->
-                      <v-row v-if="tabSelected == 'client'" no-gutters style="margin-top:7px; flex-wrap: nowrap; padding-left:10px; padding-right:12px;">
+                      <v-row v-if="tabSelected == 'client' || tabSelected == 'content'" no-gutters style="margin-top:7px; flex-wrap: nowrap; padding-left:10px; padding-right:12px;">
                         <v-col cols="auto" style="min-width: 100px; max-width: 100%; padding-right:10px;" class="flex-grow-1 flex-shrink-1">
                           <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                             <v-icon v-if="bottomBarStatus=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
@@ -584,6 +584,7 @@ export default {
     },
     treeviewClick(item) {
       this.treeviewSelected = item
+      if (this.tabSelected == 'content') this.getContent()
     },
     treeviewDoubleClick(item) {
       if (this.treeviewMode == 'servers') this.getDatabases(item)
@@ -863,6 +864,10 @@ export default {
       this.resultsItems = items
 
       // Build BottomBar
+      this.parseBottomBar(data)
+    },
+    parseBottomBar(data) {
+      // Build BottomBar
       var elapsed = 0
       for (let i = 0; i < data.length; ++i) {
         elapsed += parseFloat(data[i]['query_time'])
@@ -872,6 +877,44 @@ export default {
       this.bottomBarStatus = data[data.length-1]['success'] ? 'success' : 'failure'
       this.bottomBarText = data[data.length-1]['query']
       this.bottomBarInfo = data[data.length-1]['query_result'].length + ' records | ' + data.length + ' queries | ' + elapsed.toString() + 's elapsed'
+    },
+    getContent() {
+      // this.contentHeaders = []
+      // this.contentItems = []
+      this.bottomBarStatus = ''
+      this.bottomBarText = ''
+      this.bottomBarInfo = ''
+      const payload = {
+        server: this.serverSelected.id,
+        database: this.database,
+        queries: ['SELECT * FROM ' +  this.treeview[0].substring(6, this.treeview[0].length) + ' LIMIT 1000;' ]
+      }
+      axios.post('/client/execute', payload)
+        .then((response) => {
+          this.parseContentExecution(response.data.data)
+        })
+        .catch((error) => {
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
+        })
+    },
+    parseContentExecution(data) {
+      // Build Data Table
+      var headers = []
+      var items = data[data.length - 1]['query_result']
+      // - Build Headers -
+      if (data.length > 0) {
+        var keys = Object.keys(data[data.length - 1]['query_result'][0])
+        for (let i = 0; i < keys.length; ++i) {
+          headers.push({ headerName: keys[i], field: keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+        }
+      }
+      this.contentHeaders = headers
+      this.contentItems = items
+
+      // Build BottomBar
+      this.parseBottomBar(data)
     },
     __parseQueries() {
       // Get Query/ies (selected or highlighted)
@@ -945,6 +988,7 @@ export default {
     },
     tabContent() {
       this.tabSelected = 'content'
+      this.getContent()
     },
     tabInfo(object) {
       this.tabSelected = object + '_info'
@@ -1009,6 +1053,10 @@ export default {
         }
       }
       this.structureOrigin['triggers'] = { headers: triggers_headers, items: triggers_items } 
+    },
+    treeviewKeyDown(event) {
+      event.preventDefault()
+      console.log("key pressed!")
     },
     resize() {
       // Resize Ace Code Editor
