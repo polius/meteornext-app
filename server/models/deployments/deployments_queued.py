@@ -42,7 +42,7 @@ class Deployments_Queued:
 
     def getNext(self):
         query = """
-            SELECT SUBSTRING_INDEX(GROUP_CONCAT(CONCAT(q.execution_mode, '|', q.execution_id, '|', q.status) ORDER BY q.id SEPARATOR ','), ',', g.deployments_execution_concurrent) AS 'executions'
+            SELECT SUBSTRING_INDEX(GROUP_CONCAT(CONCAT(q.execution_mode, '|', q.execution_id, '|', q.status) ORDER BY q.id SEPARATOR ','), ',', COALESCE(g.deployments_execution_concurrent,1)) AS 'executions'
             FROM
             (
                 SELECT q.id, q.execution_mode, q.execution_id, b.status, b.deployment_id FROM deployments_queued q JOIN deployments_basic b ON b.id = q.execution_id AND q.execution_mode = 'basic'
