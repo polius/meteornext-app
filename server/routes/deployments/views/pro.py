@@ -3,7 +3,7 @@ import sys
 import json
 import signal
 import unicodedata
-from datetime import datetime
+import datetime
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -273,7 +273,7 @@ class Pro:
         if data['scheduled'] != '':
             data['status'] = 'SCHEDULED'
             data['start_execution'] = False
-            if datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.now():
+            if datetime.datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
         elif data['start_execution']:
             data['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
@@ -324,7 +324,7 @@ class Pro:
         # Check scheduled date
         if data['scheduled'] != '':
             data['start_execution'] = False
-            if datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.now():
+            if datetime.datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
 
         # Get current deployment

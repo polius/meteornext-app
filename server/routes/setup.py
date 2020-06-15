@@ -62,7 +62,7 @@ class Setup:
             sql.test()
             # Init license
             self._license = License(self._conf['license'])
-            self._license.validated()
+            self._license.validate()
             # Register blueprints
             self.__register_blueprints(sql)
         except Exception:
@@ -97,7 +97,7 @@ class Setup:
 
             # Part 1: Check License
             self._license = License(setup_json)
-            self._license.validated()
+            self._license.validate()
             return jsonify({"message": self._license.status['response']}), self._license.status['code']
             
         @setup_blueprint.route('/setup/sql', methods=['POST'])
@@ -258,7 +258,7 @@ class License:
     def __init__(self, license):
         self._license_params = license
         self._license_status = {} 
-        self._license_timeout = 60  # Minutes
+        self._license_timeout = 1  # Minutes
         self._last_login_date = str(datetime.utcnow())
         self._next_check = None
         self._next_check2 = None
@@ -271,7 +271,7 @@ class License:
     def validated(self):
         return self._license_status and self._license_status['code'] == 200
 
-    def validated(self):
+    def validate(self):
         current_utc = str(datetime.utcnow())
         # Check if first time
         if not self._license_status:
@@ -288,7 +288,6 @@ class License:
 
         # Store last login date
         self._last_login_date = current_utc
-        return self._license_status['code'] == 200
 
     def __check(self):
         try:

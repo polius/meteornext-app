@@ -21,7 +21,8 @@ class Login:
         @login_blueprint.route('/login', methods=['POST'])
         def login_user():
             # Check license
-            if not self._license.validated():
+            self._license.validate()
+            if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
 
             # Check parameters
