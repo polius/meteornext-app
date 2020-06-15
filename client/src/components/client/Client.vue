@@ -123,7 +123,7 @@
                       <!-- <div style="width:100%; height:calc(100% - 85px); z-index:1; position:absolute; text-align:center;">
                         <v-progress-circular indeterminate color="#dcdcdc" width="2" style="height:100%;"></v-progress-circular>
                       </div>-->
-                      <ag-grid-vue @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
+                      <ag-grid-vue @column-resized="onColumnResized" @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
                     </div>
                     <!------------->
                     <!-- CONTENT -->
@@ -392,6 +392,11 @@ export default {
     this.getServers()
   },
   methods: {
+    onColumnResized() {
+      // if (ev.source == 'sizeColumnsToFit') {
+
+      // }
+    },
     clickTab() {
       console.log("STRUCTURE")
     },
@@ -840,7 +845,7 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
-          this.parseExecution(response.data.data)
+          this.parseExecution(JSON.parse(response.data.data))
         })
         .catch((error) => {
           console.log(error)
@@ -966,25 +971,25 @@ export default {
       this.tabStructureSelected = 'columns'
       this.structureHeaders = this.structureOrigin['columns']['headers'].slice(0)
       this.structureItems = this.structureOrigin['columns']['items'].slice(0)
-      setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
+      // setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
     },
     tabStructureIndexes() {
       this.tabStructureSelected = 'indexes'
       this.structureHeaders = this.structureOrigin['indexes']['headers'].slice(0)
       this.structureItems = this.structureOrigin['indexes']['items'].slice(0)
-      setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
+      // setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
     },
     tabStructureFK() {
       this.tabStructureSelected = 'fks'
       this.structureHeaders = this.structureOrigin['fks']['headers'].slice(0)
       this.structureItems = this.structureOrigin['fks']['items'].slice(0)
-      setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
+      // setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
     },
     tabStructureTriggers() {
       this.tabStructureSelected = 'triggers'
       this.structureHeaders = this.structureOrigin['triggers']['headers'].slice(0)
       this.structureItems = this.structureOrigin['triggers']['items'].slice(0)
-      setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
+      // setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
     },
     tabContent() {
       this.tabSelected = 'content'
@@ -995,6 +1000,7 @@ export default {
     },
     getStructure() {
       // Retrieve Tables
+      // this.gridApi.showLoadingOverlay()
       const table = this.treeview[0].substring(6, this.treeview[0].length)
       axios.get('/client/structure', { params: { server: this.serverSelected.id, database: this.database, table: table } })
         .then((response) => {
@@ -1019,7 +1025,15 @@ export default {
       this.structureOrigin['columns'] = { headers: columns_headers, items: columns_items }
       this.structureHeaders = columns_headers
       this.structureItems = columns_items
-      setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 10);
+
+      // setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
+      // this.gridApi.hideOverlay()
+
+      // show 'no rows' overlay
+      // this.gridApi.showNoRowsOverlay()
+
+      // clear all overlays
+      // this.gridApi.hideOverlay()
 
       // Parse Indexes
       var indexes_items = JSON.parse(data.indexes)

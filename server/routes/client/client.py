@@ -3,6 +3,7 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import json
 import utils
+import datetime
 import models.admin.users
 import models.client.client
 import connectors.connector
@@ -126,7 +127,7 @@ class Client:
                 finally:
                     execution.append(result)
 
-            return jsonify({'data': execution}), 200
+            return jsonify({'data': json.dumps(execution, default=self.__json_parser)}), 200
 
         @client_blueprint.route('/client/structure', methods=['GET'])
         @jwt_required
@@ -153,10 +154,13 @@ class Client:
             indexes = conn.get_indexes(db=request.args['database'], table=request.args['table'])
             fks = conn.get_fks(db=request.args['database'], table=request.args['table'])
             triggers = conn.get_triggers(db=request.args['database'], table=request.args['table'])
-            return jsonify({'columns': json.dumps(columns), 'indexes': json.dumps(indexes), 'fks': json.dumps(fks), 'triggers': json.dumps(triggers)}), 200
+            return jsonify({'columns': json.dumps(columns, default=self.__json_parser), 'indexes': json.dumps(indexes, default=self.__json_parser), 'fks': json.dumps(fks, default=self.__json_parser), 'triggers': json.dumps(triggers, default=self.__json_parser)}), 200
 
         return client_blueprint
 
     ####################
     # Internal Methods #
     ####################
+    def __json_parser(self, o):
+        if isinstance(o, datetime.datetime):
+            return o.__str__()
