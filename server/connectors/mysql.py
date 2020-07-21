@@ -335,7 +335,11 @@ class MySQL:
     def get_column_names(self, db, table):
         query = "SELECT COLUMN_NAME FROM information_schema.columns WHERE table_schema = '" + db.strip() + "' AND table_name = '" + table.strip() + "' ORDER BY ordinal_position"
         result = self.execute(query)['query_result']
-        return result
+        
+        tables = []
+        for tb in result:
+            tables.append(db['COLUMN_NAME'])
+        return tables
 
     def get_pk_columns(self, db, table):
         query = "SELECT COLUMN_NAME FROM information_schema.statistics WHERE table_schema = '" + db.strip() + "' AND table_name = '" + table.strip() + "' AND index_name = 'PRIMARY'"

@@ -96,7 +96,7 @@ class validate_regions:
         for i in range(attempts):
             try:
                 if self._region['ssh']['enabled']:
-                    ssh_pkey = paramiko.RSAKey.from_private_key_file(self._region['ssh']['key'])
+                    ssh_pkey = paramiko.RSAKey.from_private_key_file(self._region['ssh']['key'], password=self._region['ssh']['password'])
                     sshtunnel.SSH_TIMEOUT = 10.0
                     sshtunnel.TUNNEL_TIMEOUT = 10.0
                     with sshtunnel.SSHTunnelForwarder((self._region['ssh']['hostname'], int(self._region['ssh']['port'])), ssh_username=self._region['ssh']['username'], ssh_password=self._region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=(server['hostname'], int(server['port']))) as tunnel:
