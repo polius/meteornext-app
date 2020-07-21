@@ -1,12 +1,8 @@
 import os
-import sys
 import json
 import time
-import shutil
 import signal
-import paramiko
 import threading
-import subprocess
 
 from region import Region
 from deploy_servers import deploy_servers

@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import pymysql
-import paramiko
 import warnings
 import threading
 from collections import OrderedDict

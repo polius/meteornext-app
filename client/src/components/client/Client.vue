@@ -49,7 +49,7 @@
                     <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:8px; padding-bottom:1px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
                     <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 158px); padding-top:7px; width:100%; overflow-y:auto;">
                       <template v-slot:label="{item, open}">
-                        <v-btn text @click="treeviewClick(item)" @dblclick="treeviewDoubleClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
+                        <v-btn text @click="treeviewClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
                           <v-icon v-if="!item.type" small style="padding:10px;">
                             {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
                           </v-icon>
@@ -130,11 +130,32 @@
                     <!------------->
                     <div v-else-if="tabSelected == 'content'" style="width:100%; height:100%">
                       <div style="height:48px; background-color:#303030; margin:0px;">
-                        <div class="body-2" style="float:left; margin-top:14px; padding-left:10px; padding-right:10px;">Search:</div>
-                        <v-select v-model="contentSearchColumn" dense solo hide-details style="float:left; width:250px; padding-top:5px;"></v-select>
-                        <v-select v-model="contentSearchFilter" :items="contentSearchFilterItems" dense solo hide-details style="float:left; width:157px; padding-top:5px; padding-left:5px;"></v-select>
-                        <v-text-field v-model="contentSearchFilterText" solo dense hide-details prepend-inner-icon="search" style="float:left; padding-top:5px; padding-left:5px; width:calc(100% - 570px);"></v-text-field>
-                        <v-btn style="float:right; margin-top:6px; margin-left:6px; margin-right:5px;">Filter</v-btn>
+                        <v-row no-gutters>
+                          <v-col sm="auto">
+                            <div class="body-2" style="margin-top:14px; padding-left:10px; padding-right:10px;">Search:</div>
+                          </v-col>
+                          <v-col cols="2">
+                            <v-select v-model="contentSearchColumn" :items="contentSearchColumnItems" dense solo hide-details style="padding-top:5px;"></v-select>
+                          </v-col>
+                          <v-col cols="2">
+                            <v-select v-model="contentSearchFilter" :items="contentSearchFilterItems" dense solo hide-details style="padding-top:5px; padding-left:5px;"></v-select>
+                          </v-col>
+                          <v-col v-if="contentSearchFilter != 'BETWEEN'">
+                            <v-text-field @keyup.enter="filterClick" :disabled="['IS NULL','IS NOT NULL'].includes(contentSearchFilter)" v-model="contentSearchFilterText" solo dense hide-details prepend-inner-icon="search" style="padding-top:5px; padding-left:5px;"></v-text-field>
+                          </v-col>
+                          <v-col v-if="contentSearchFilter == 'BETWEEN'">
+                            <v-text-field v-model="contentSearchFilterText" @keyup.enter="filterClick" solo dense hide-details prepend-inner-icon="search" style="padding-top:5px; padding-left:5px;"></v-text-field>
+                          </v-col>
+                          <v-col v-if="contentSearchFilter == 'BETWEEN'" sm="auto">
+                            <div class="body-2" style="margin-top:14px; padding-left:10px; padding-right:5px;">AND</div>
+                          </v-col>
+                          <v-col v-if="contentSearchFilter == 'BETWEEN'">
+                            <v-text-field v-model="contentSearchFilterText2" @keyup.enter="filterClick" solo dense hide-details prepend-inner-icon="search" style="padding-top:5px; padding-left:5px;"></v-text-field>
+                          </v-col>
+                          <v-col sm="auto" justify="end">
+                            <v-btn @click="filterClick" style="margin-top:6px; margin-left:6px; margin-right:5px;">Filter</v-btn>
+                          </v-col>
+                        </v-row>
                       </div>
                       <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
                     </div>
@@ -367,11 +388,12 @@ export default {
       structureItems: [],
 
       // Content
+      contentSearchColumnItems: [],
       contentSearchColumn: '',
-      contentSearchColumnItems: ['id'],
-      contentSearchFilter: '',
+      contentSearchFilterItems: ['=','<>','LIKE','NOT LIKE','REGEXP','NOT REGEXP','IN','NOT IN','BETWEEN','IS NULL','IS NOT NULL'],
+      contentSearchFilter: '=',
       contentSearchFilterText: '',
-      contentSearchFilterItems: ['=','≠','LIKE','NOT LIKE','REGEXP','NOT REGEXP','IN','BETWEEN','NULL','IS NOT NULL'],
+      contentSearchFilterText2: '', // contentSearchFilterItems == 'BETWEEN'
       contentHeaders: [],
       contentItems: [],
 
@@ -384,7 +406,10 @@ export default {
       snackbar: false,
       snackbarTimeout: Number(5000),
       snackbarColor: '',
-      snackbarText: ''
+      snackbarText: '',
+
+      // Helpers
+      click: undefined
     }
   },
   components: { Splitpanes, Pane, AgGridVue },
@@ -588,11 +613,33 @@ export default {
       }
     },
     treeviewClick(item) {
-      this.treeviewSelected = item
-      if (this.tabSelected == 'content') this.getContent()
-    },
-    treeviewDoubleClick(item) {
-      if (this.treeviewMode == 'servers') this.getDatabases(item)
+      return new Promise ((resolve) => {
+        if (this.click) {
+          clearTimeout(this.click)
+          resolve('double')
+        }
+        this.click = setTimeout(() => {
+          this.click = undefined          
+          resolve('single')
+        }, 200)
+      }).then((data) => {
+        // Single Click
+        if (data == 'single') {
+          this.treeviewSelected = item
+          if (this.tabSelected == 'content') this.getContent()
+        }
+        // Double Click
+        else if (data == 'double') {
+          if (this.treeviewMode == 'servers') this.getDatabases(item)
+          else if (this.treeviewMode == 'objects' && ['Table','View'].includes(item.type) && item.children === undefined) {
+            this.treeview = []
+            this.treeviewSelected = item
+            this.tabs = 2
+            this.tabSelected = 'content'
+            this.getContent()
+          }
+        }
+      })
     },
     getServers() {
       axios.get('/client/servers')
@@ -860,14 +907,15 @@ export default {
       // Build Data Table
       var headers = []
       var items = data[data.length - 1]['query_result']
-      // - Build Headers -
-      var keys = Object.keys(data[data.length - 1]['query_result'][0])
-      for (let i = 0; i < keys.length; ++i) {
-        headers.push({ headerName: keys[i], field: keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+      // Build Headers
+      if (data.length > 0 && data[0]['query_result'].length > 0) {
+        var keys = Object.keys(data[data.length - 1]['query_result'][0])
+        for (let i = 0; i < keys.length; ++i) {
+          headers.push({ headerName: keys[i], field: keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+        }
       }
       this.resultsHeaders = headers
       this.resultsItems = items
-
       // Build BottomBar
       this.parseBottomBar(data)
     },
@@ -892,11 +940,11 @@ export default {
       const payload = {
         server: this.serverSelected.id,
         database: this.database,
-        queries: ['SELECT * FROM ' +  this.treeview[0].substring(6, this.treeview[0].length) + ' LIMIT 1000;' ]
+        queries: ['SELECT * FROM ' + this.treeviewSelected['name'] + ' LIMIT 1000;' ]
       }
       axios.post('/client/execute', payload)
         .then((response) => {
-          this.parseContentExecution(response.data.data)
+          this.parseContentExecution(JSON.parse(response.data.data))
         })
         .catch((error) => {
           console.log(error)
@@ -908,9 +956,11 @@ export default {
       // Build Data Table
       var headers = []
       var items = data[data.length - 1]['query_result']
-      // - Build Headers -
-      if (data.length > 0) {
+      // Build Headers
+      if (data.length > 0 && data[0]['query_result'].length > 0) {
         var keys = Object.keys(data[data.length - 1]['query_result'][0])
+        this.contentSearchColumnItems = keys.slice()
+        this.contentSearchColumn = keys[0].trim().toLowerCase()
         for (let i = 0; i < keys.length; ++i) {
           headers.push({ headerName: keys[i], field: keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
         }
@@ -920,6 +970,38 @@ export default {
 
       // Build BottomBar
       this.parseBottomBar(data)
+    },
+    filterClick() {
+      // Build query condition
+      var condition = ''
+      if (this.contentSearchFilter == 'BETWEEN') {
+        if (this.contentSearchFilterText.length != 0 && this.contentSearchFilterText2.length != 0) condition = ' WHERE ' + this.contentSearchColumn + " BETWEEN '" + this.contentSearchFilterText + "' AND '" + this.contentSearchFilterText2 + "'"
+      }
+      else if (['IS NULL','IS NOT NULL'].includes(this.contentSearchFilter)) {
+        condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter
+      }
+      else if (['IN','NOT IN'].includes(this.contentSearchFilter) && this.contentSearchFilterText.length != 0) {
+        condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter + " ("
+        let elements = this.contentSearchFilterText.split(',')
+        for (let i = 0; i < elements.length; ++i) condition += "'" + elements[i] + "',"
+        condition = condition.substring(0, condition.length - 1) + ")"
+      }
+      else if (this.contentSearchFilterText.length != 0) condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "'"
+      // Build payload
+      const payload = {
+        server: this.serverSelected.id,
+        database: this.database,
+        queries: ['SELECT * FROM ' + this.treeviewSelected['name'] + condition + ' LIMIT 1000;' ]
+      }
+      axios.post('/client/execute', payload)
+        .then((response) => {
+          this.parseContentExecution(JSON.parse(response.data.data))
+        })
+        .catch((error) => {
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
+        })
     },
     __parseQueries() {
       // Get Query/ies (selected or highlighted)
@@ -1001,7 +1083,7 @@ export default {
     getStructure() {
       // Retrieve Tables
       // this.gridApi.showLoadingOverlay()
-      const table = this.treeview[0].substring(6, this.treeview[0].length)
+      const table = this.treeviewSelected['name']
       axios.get('/client/structure', { params: { server: this.serverSelected.id, database: this.database, table: table } })
         .then((response) => {
           this.parseStructure(response.data)
