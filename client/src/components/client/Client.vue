@@ -173,11 +173,11 @@
                     <!-- CLIENT -->
                       <v-row v-if="tabSelected == 'client' || tabSelected == 'content'" no-gutters style="flex-wrap: nowrap;">
                         <v-col v-if="tabSelected == 'content'" cols="auto">
-                          <v-btn text small :title="tabStructureSelected == 'columns' ? 'New Column' : tabStructureSelected == 'indexes' ? 'New Index' : tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+                          <v-btn @click="addRow" text small :title="tabStructureSelected == 'columns' ? 'New Column' : tabStructureSelected == 'indexes' ? 'New Index' : tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
                           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
                           <v-btn disabled text small :title="tabStructureSelected == 'columns' ? 'Remove Column' : tabStructureSelected == 'indexes' ? 'Remove Index' : tabStructureSelected == 'fks' ? 'Remove Foreign Key' : 'Remove Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
                           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
-                          <v-btn text small :title="tabStructureSelected == 'columns' ? 'Refresh Columns' : tabStructureSelected == 'indexes' ? 'Refresh Indexes' : tabStructureSelected == 'fks' ? 'Refresh Foreign Keys' : 'Refresh Triggers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+                          <v-btn @click="getContent" text small :title="tabStructureSelected == 'columns' ? 'Refresh Columns' : tabStructureSelected == 'indexes' ? 'Refresh Indexes' : tabStructureSelected == 'fks' ? 'Refresh Foreign Keys' : 'Refresh Triggers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
                           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
                         </v-col>
                         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
@@ -960,6 +960,7 @@ export default {
       const payload = {
         server: this.serverSelected.id,
         database: this.database,
+        table: this.treeviewSelected['name'],
         queries: ['SELECT * FROM ' + this.treeviewSelected['name'] + ' LIMIT 1000;' ]
       }
       axios.post('/client/execute', payload)
@@ -975,14 +976,13 @@ export default {
     parseContentExecution(data) {
       // Build Data Table
       var headers = []
-      var items = data[data.length - 1]['query_result']
+      var items = data[0]['query_result']
       // Build Headers
-      if (data.length > 0 && data[0]['query_result'].length > 0) {
-        var keys = Object.keys(data[data.length - 1]['query_result'][0])
-        this.contentSearchColumnItems = keys.slice()
-        this.contentSearchColumn = keys[0].trim().toLowerCase()
-        for (let i = 0; i < keys.length; ++i) {
-          headers.push({ headerName: keys[i], field: keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+      if (data.length > 0) {
+        this.contentSearchColumnItems = data[0]['columns']
+        this.contentSearchColumn = data[0]['columns'][0].trim().toLowerCase()
+        for (let i = 0; i < data[0]['columns'].length; ++i) {
+          headers.push({ headerName: data[0]['columns'][i], field: data[0]['columns'][i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
         }
       }
       this.contentHeaders = headers
@@ -1188,6 +1188,13 @@ export default {
       this.y = e.clientY;
       this.$nextTick(() => {
         this.showMenu = true;
+      });
+    },
+    addRow() {
+      this.gridApi.applyTransaction({ add: [{}] });
+      this.gridApi.startEditingCell({
+        rowIndex: this.gridApi.getDisplayedRowCount()-1,
+        colKey: this.contentSearchColumnItems[0]
       });
     },
     notification(message, color, timeout=5) {
