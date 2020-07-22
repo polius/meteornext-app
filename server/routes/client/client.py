@@ -121,6 +121,12 @@ class Client:
                     result = conn.execute(query=q, database=client_json['database'])
                     result['query'] = q
                     result['success'] = True
+
+                    # Get table columns
+                    if 'table' in client_json:
+                        columns = conn.get_column_names(db=client_json['database'], table=client_json['table'])
+                        result['columns'] = columns
+
                 except Exception as e:
                     result = {"query": q, "success": False, "error": str(e)}
                     break

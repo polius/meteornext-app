@@ -338,7 +338,7 @@ class MySQL:
         
         tables = []
         for tb in result:
-            tables.append(db['COLUMN_NAME'])
+            tables.append(tb['COLUMN_NAME'])
         return tables
 
     def get_pk_columns(self, db, table):
