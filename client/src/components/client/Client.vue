@@ -1,5 +1,5 @@
 <template>
-  <v-content>
+  <v-main>
     <div>
       <v-tabs show-arrows background-color="#9b59b6" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
         <v-tabs-slider></v-tabs-slider>
@@ -21,7 +21,7 @@
         </v-tabs>
     </div>
     <v-container fluid>
-      <v-content style="padding-top:0px; padding-bottom:0px;">
+      <v-main style="padding-top:0px; padding-bottom:0px;">
         <div style="margin: -12px;">
           <div ref="masterDiv" style="height: calc(100vh - 112px);">
             <!----------------->
@@ -108,7 +108,7 @@
                         </div>
                       </Pane>
                       <Pane size="50" min-size="0">
-                        <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
+                        <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
                       </Pane>
                     </Splitpanes>
                     <!--------------->
@@ -129,7 +129,7 @@
                       <!-- <div style="width:100%; height:calc(100% - 85px); z-index:1; position:absolute; text-align:center;">
                         <v-progress-circular indeterminate color="#dcdcdc" width="2" style="height:100%;"></v-progress-circular>
                       </div>-->
-                      <ag-grid-vue @column-resized="onColumnResized" @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
+                      <ag-grid-vue @column-resized="onColumnResized" @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
                     </div>
                     <!------------->
                     <!-- CONTENT -->
@@ -141,7 +141,7 @@
                             <div class="body-2" style="margin-top:13px; padding-left:10px; padding-right:10px;">Search:</div>
                           </v-col>
                           <v-col cols="2">
-                            <v-select v-model="contentSearchColumn" :items="contentSearchColumnItems" dense solo hide-details height="35px" style="padding-top:5px;"></v-select>
+                            <v-select v-model="contentSearchColumn" :items="contentColumns" dense solo hide-details height="35px" style="padding-top:5px;"></v-select>
                           </v-col>
                           <v-col cols="2">
                             <v-select v-model="contentSearchFilter" :items="contentSearchFilterItems" dense solo hide-details height="35px" style="padding-top:5px; padding-left:5px;"></v-select>
@@ -163,7 +163,7 @@
                           </v-col>
                         </v-row>
                       </div>
-                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
                     </div>
                   </div>
                   <!---------------------->
@@ -208,9 +208,9 @@
             <v-btn color="white" text @click="snackbar = false">Close</v-btn>
           </v-snackbar>
         </div>
-      </v-content>
+      </v-main>
     </v-container>
-  </v-content>
+  </v-main>
 </template>
 
 <style>
@@ -408,7 +408,8 @@ export default {
       structureItems: [],
 
       // Content
-      contentSearchColumnItems: [],
+      contentColumns: [],
+      contentPks: [],
       contentSearchColumn: '',
       contentSearchFilterItems: ['=','<>','LIKE','NOT LIKE','REGEXP','NOT REGEXP','IN','NOT IN','BETWEEN','IS NULL','IS NOT NULL'],
       contentSearchFilter: '=',
@@ -979,7 +980,8 @@ export default {
       var items = data[0]['query_result']
       // Build Headers
       if (data.length > 0) {
-        this.contentSearchColumnItems = data[0]['columns']
+        this.contentColumns = data[0]['columns']
+        this.contentPks = data[0]['pks']
         this.contentSearchColumn = data[0]['columns'][0].trim().toLowerCase()
         for (let i = 0; i < data[0]['columns'].length; ++i) {
           headers.push({ headerName: data[0]['columns'][i], field: data[0]['columns'][i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
@@ -1194,7 +1196,7 @@ export default {
       this.gridApi.applyTransaction({ add: [{}] });
       this.gridApi.startEditingCell({
         rowIndex: this.gridApi.getDisplayedRowCount()-1,
-        colKey: this.contentSearchColumnItems[0]
+        colKey: this.contentColumns[0]
       });
     },
     notification(message, color, timeout=5) {

@@ -118,5 +118,5 @@ class Connector:
     def get_column_names(self, db, table):
         return self._sql.get_column_names(db, table)
 
-    def get_pk_columns(self, db, table):
-        return self._sql.get_pk_columns(db, table)
+    def get_pk_names(self, db, table):
+        return self._sql.get_pk_names(db, table)
