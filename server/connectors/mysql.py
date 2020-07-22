@@ -336,12 +336,16 @@ class MySQL:
         query = "SELECT COLUMN_NAME FROM information_schema.columns WHERE table_schema = '" + db.strip() + "' AND table_name = '" + table.strip() + "' ORDER BY ordinal_position"
         result = self.execute(query)['query_result']
         
-        tables = []
-        for tb in result:
-            tables.append(tb['COLUMN_NAME'])
-        return tables
+        columns = []
+        for cl in result:
+            columns.append(cl['COLUMN_NAME'])
+        return columns
 
-    def get_pk_columns(self, db, table):
+    def get_pk_names(self, db, table):
         query = "SELECT COLUMN_NAME FROM information_schema.statistics WHERE table_schema = '" + db.strip() + "' AND table_name = '" + table.strip() + "' AND index_name = 'PRIMARY'"
         result = self.execute(query)['query_result']
-        return result
+        
+        columns = []
+        for cl in result:
+            columns.append(cl['COLUMN_NAME'])
+        return columns

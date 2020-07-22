@@ -1,6 +1,6 @@
 <template>
   <div style="height:100%">
-    <v-content style="height:100%" :style="{ backgroundImage: 'url(' + require('@/assets/bg.jpg') + ')', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }">
+    <v-main style="height:100%" :style="{ backgroundImage: 'url(' + require('@/assets/bg.jpg') + ')', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }">
       <v-container grid-list-xl text-center style="padding-top:0px;">
         <v-layout row wrap align-center style="max-width:500px; margin: 0 auto;">
           <v-flex>
@@ -30,7 +30,7 @@
           </v-flex>
         </v-layout>
       </v-container>
-    </v-content>
+    </v-main>
 
     <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
       {{ snackbarText }}
