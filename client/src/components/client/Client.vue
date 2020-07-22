@@ -163,7 +163,7 @@
                           </v-col>
                         </v-row>
                       </div>
-                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
                     </div>
                   </div>
                   <!---------------------->
@@ -422,6 +422,10 @@ export default {
       bottomBarText: '',
       bottomBarStatus: '', // success - failure
       bottomBarInfo: '',
+
+      // AG Grid
+      currentCellEditMode: 'edit', // edit - new
+      currentCellEditValues: {},
 
       // Snackbar
       snackbar: false,
@@ -1198,6 +1202,38 @@ export default {
         rowIndex: this.gridApi.getDisplayedRowCount()-1,
         colKey: this.contentColumns[0]
       });
+      this.currentCellEditMode = 'new'
+    },
+    cellEditingStarted(event) {
+      if (this.currentCellEditValues[event.colDef.field] === undefined) this.currentCellEditValues[event.colDef.field] = {'old': event.value}
+    },
+    cellEditingStopped(event) {
+      // Store new value
+      this.currentCellEditValues[event.colDef.field]['new'] = event.value
+
+      // Check if the row has to be edited
+      var focused = this.gridApi.getFocusedCell()
+      if (event.rowIndex == focused.rowIndex && event.colDef.field == focused.column.colDef.field) {
+        // Check if some value differs in: "currentCellEditValues"
+        let keys = Object.keys(this.currentCellEditValues)
+        let needUpdate = false
+        for (let i = 0; i < keys.length; ++i) {
+          if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) { needUpdate = true; break}
+        }
+        console.log(this.currentCellEditValues)
+        if (needUpdate) {
+          if (this.currentCellEditMode == 'new') {
+            // NEW
+            console.log("NEW")
+          }
+          else if (this.currentCellEditMode == 'edit') {
+            // EDIT
+            console.log("EDIT")
+          }
+        }
+        this.currentCellEditMode = 'edit'
+        this.currentCellEditValues = {}
+      }
     },
     notification(message, color, timeout=5) {
       this.snackbarText = message
