@@ -27,16 +27,22 @@
             <!----------------->
             <!-- CONNECTIONS -->
             <!----------------->
-            <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#2c2c2c" color="white" v-model="currentConn" slider-color="#969696" slider-size="1" slot="extension" class="elevation-2" style="max-width:calc(100% - 97px); float:left; border-bottom: 1px solid #424242;">
-              <v-tab v-for="(t, index) in connections" :key="index" @click="changeConnection(index)" :title="'Name: ' + t.server.name + '\nHost: ' + t.server.host" style="padding:0px 10px 0px 0px; text-transform:none;">
-                <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click.prevent.stop="removeConnection(index)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t.server.name }}</span>
-              </v-tab>
-              <v-divider class="mx-3" inset vertical></v-divider>
-              <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
-            </v-tabs>
-            <div v-if="connections.length > 0" style="background-color:#2c2c2c; padding:6px; border-bottom: 1px solid #424242;">
-              <v-btn :loading="loadingQuery" :disabled="editorQuery.length == 0" @click="runQuery()" title="Execute Query" style="margin-left:6px;"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
-            </div>
+            <v-row no-gutters>
+              <v-col class="flex-grow-1 flex-shrink-1">
+                <v-tabs v-if="connections.length > 0" show-arrows dense background-color="#2c2c2c" color="white" v-model="currentConn" slider-color="#969696" slider-size="1" slot="extension" class="elevation-2" style="border-bottom: 1px solid #424242;">
+                  <v-tab v-for="(t, index) in connections" :key="index" @click="changeConnection(index)" :title="'Name: ' + t.server.name + '\nHost: ' + t.server.host" style="padding:0px 10px 0px 0px; text-transform:none;">
+                    <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click.prevent.stop="removeConnection(index)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ t.server.name }}</span>
+                  </v-tab>
+                  <v-divider class="mx-3" inset vertical></v-divider>
+                  <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
+                </v-tabs>
+              </v-col>
+              <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
+                <div v-if="tabSelected == 'client' && connections.length > 0" style="background-color:#2c2c2c; padding:6px; border-bottom: 1px solid #424242;">
+                  <v-btn :loading="loadingQuery" :disabled="editorQuery.length == 0" @click="runQuery()" title="Execute Query" style="margin-left:6px;"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
+                </div>
+              </v-col>
+            </v-row>
             <Splitpanes :style="connections.length > 0 ? 'height:calc(100% - 49px)' : 'height:100%'">
               <Pane size="20" min-size="0">
                 <!------------->
@@ -44,7 +50,7 @@
                 <!------------->
                 <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                   <div style="height:calc(100% - 36px)">
-                    <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0"  :items="databaseItems" label="Database" hide-details background-color="#303030" style="padding:10px;"></v-select>
+                    <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0"  :items="databaseItems" label="Database" hide-details background-color="#303030" height="48px" style="padding:10px;"></v-select>
                     <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
                     <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:8px; padding-bottom:1px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
                     <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 158px); padding-top:7px; width:100%; overflow-y:auto;">
@@ -69,7 +75,7 @@
                         </v-list-item>
                       </v-list>
                     </v-menu>
-                    <v-text-field :disabled="treeviewMode == 'objects' && database.length == 0" v-model="treeviewSearch" label="Search" dense solo hide-details style="float:left; width:100%; padding:10px;"></v-text-field>
+                    <v-text-field :disabled="treeviewMode == 'objects' && database.length == 0" v-model="treeviewSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
                   </div>
                   <!--------------------->
                   <!-- LEFT BOTTOM BAR -->
@@ -129,31 +135,31 @@
                     <!-- CONTENT -->
                     <!------------->
                     <div v-else-if="tabSelected == 'content'" style="width:100%; height:100%">
-                      <div style="height:48px; background-color:#303030; margin:0px;">
+                      <div style="height:45px; background-color:#303030; margin:0px;">
                         <v-row no-gutters>
                           <v-col sm="auto">
-                            <div class="body-2" style="margin-top:14px; padding-left:10px; padding-right:10px;">Search:</div>
+                            <div class="body-2" style="margin-top:13px; padding-left:10px; padding-right:10px;">Search:</div>
                           </v-col>
                           <v-col cols="2">
-                            <v-select v-model="contentSearchColumn" :items="contentSearchColumnItems" dense solo hide-details style="padding-top:5px;"></v-select>
+                            <v-select v-model="contentSearchColumn" :items="contentSearchColumnItems" dense solo hide-details height="35px" style="padding-top:5px;"></v-select>
                           </v-col>
                           <v-col cols="2">
-                            <v-select v-model="contentSearchFilter" :items="contentSearchFilterItems" dense solo hide-details style="padding-top:5px; padding-left:5px;"></v-select>
+                            <v-select v-model="contentSearchFilter" :items="contentSearchFilterItems" dense solo hide-details height="35px" style="padding-top:5px; padding-left:5px;"></v-select>
                           </v-col>
                           <v-col v-if="contentSearchFilter != 'BETWEEN'">
-                            <v-text-field @keyup.enter="filterClick" :disabled="['IS NULL','IS NOT NULL'].includes(contentSearchFilter)" v-model="contentSearchFilterText" solo dense hide-details prepend-inner-icon="search" style="padding-top:5px; padding-left:5px;"></v-text-field>
+                            <v-text-field @keyup.enter="filterClick" :disabled="['IS NULL','IS NOT NULL'].includes(contentSearchFilter)" v-model="contentSearchFilterText" solo dense hide-details prepend-inner-icon="search" height="35px" style="padding-top:5px; padding-left:5px;"></v-text-field>
                           </v-col>
                           <v-col v-if="contentSearchFilter == 'BETWEEN'">
-                            <v-text-field v-model="contentSearchFilterText" @keyup.enter="filterClick" solo dense hide-details prepend-inner-icon="search" style="padding-top:5px; padding-left:5px;"></v-text-field>
+                            <v-text-field v-model="contentSearchFilterText" @keyup.enter="filterClick" solo dense hide-details prepend-inner-icon="search" height="35px" style="padding-top:5px; padding-left:5px;"></v-text-field>
                           </v-col>
                           <v-col v-if="contentSearchFilter == 'BETWEEN'" sm="auto">
-                            <div class="body-2" style="margin-top:14px; padding-left:10px; padding-right:5px;">AND</div>
+                            <div class="body-2" style="margin-top:13px; padding-left:10px; padding-right:5px;">AND</div>
                           </v-col>
                           <v-col v-if="contentSearchFilter == 'BETWEEN'">
-                            <v-text-field v-model="contentSearchFilterText2" @keyup.enter="filterClick" solo dense hide-details prepend-inner-icon="search" style="padding-top:5px; padding-left:5px;"></v-text-field>
+                            <v-text-field v-model="contentSearchFilterText2" @keyup.enter="filterClick" solo dense hide-details prepend-inner-icon="search" height="35px" style="padding-top:5px; padding-left:5px;"></v-text-field>
                           </v-col>
                           <v-col sm="auto" justify="end">
-                            <v-btn @click="filterClick" style="margin-top:6px; margin-left:6px; margin-right:5px;">Filter</v-btn>
+                            <v-btn @click="filterClick" style="margin-top:4px; margin-left:6px; margin-right:5px;">Filter</v-btn>
                           </v-col>
                         </v-row>
                       </div>
@@ -165,14 +171,22 @@
                   <!---------------------->
                   <div style="height:35px; background-color:#303030; border-top:2px solid #2c2c2c;">
                     <!-- CLIENT -->
-                      <v-row v-if="tabSelected == 'client' || tabSelected == 'content'" no-gutters style="margin-top:7px; flex-wrap: nowrap; padding-left:10px; padding-right:12px;">
-                        <v-col cols="auto" style="min-width: 100px; max-width: 100%; padding-right:10px;" class="flex-grow-1 flex-shrink-1">
+                      <v-row v-if="tabSelected == 'client' || tabSelected == 'content'" no-gutters style="flex-wrap: nowrap;">
+                        <v-col v-if="tabSelected == 'content'" cols="auto">
+                          <v-btn text small :title="tabStructureSelected == 'columns' ? 'New Column' : tabStructureSelected == 'indexes' ? 'New Index' : tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+                          <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+                          <v-btn disabled text small :title="tabStructureSelected == 'columns' ? 'Remove Column' : tabStructureSelected == 'indexes' ? 'Remove Index' : tabStructureSelected == 'fks' ? 'Remove Foreign Key' : 'Remove Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+                          <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
+                          <v-btn text small :title="tabStructureSelected == 'columns' ? 'Refresh Columns' : tabStructureSelected == 'indexes' ? 'Refresh Indexes' : tabStructureSelected == 'fks' ? 'Refresh Foreign Keys' : 'Refresh Triggers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+                          <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+                        </v-col>
+                        <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
                           <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                             <v-icon v-if="bottomBarStatus=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
                             <v-icon v-else-if="bottomBarStatus=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
                             {{ bottomBarText }}</div>
                         </v-col>
-                        <v-col cols="auto" style="min-width: 100px;" class="flex-grow-0 flex-shrink-0">
+                        <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="min-width: 100px; margin-top:7px; padding-left:10px; padding-right:10px;">
                           <div class="body-2" style="text-align:right;">{{ bottomBarInfo }}</div>
                         </v-col>
                       </v-row>
@@ -300,6 +314,12 @@
   --ag-background-color:#2c2c2c;
   --ag-odd-row-background-color:#303030;
   --ag-border-color:#424242;
+}
+
+.v-text-field .v-input__control .v-input__slot {
+  min-height: auto !important;
+  display: flex !important;
+  align-items: center !important;
 }
 </style>
 
