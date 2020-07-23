@@ -203,6 +203,27 @@
               </Pane>
             </Splitpanes>
           </div>
+          <v-dialog v-model="errorDialog" persistent max-width="50%">
+            <v-card>
+              <v-card-text style="padding:15px;">
+                <v-container style="padding:0px">
+                  <v-layout wrap>
+                    <div class="text-h5">Unable to write row</div>
+                    <v-flex xs12>
+                      <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
+                        <div class="text-body-1">Incorrect integer value: 'a' for column 'id' at row 3</div>
+                      </v-form>
+                      <v-divider></v-divider>
+                      <div style="margin-top:15px;">
+                        <v-btn @click="errorDialogDiscard" outlined color="#dcdcdc">Discard changes</v-btn>
+                        <v-btn @click="errorDialogEdit" color="primary" style="margin-left:5px;">Edit row</v-btn>
+                      </div>
+                    </v-flex>
+                  </v-layout>
+                </v-container>
+              </v-card-text>
+            </v-card>
+          </v-dialog>
           <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
             {{ snackbarText }}
             <v-btn color="white" text @click="snackbar = false">Close</v-btn>
@@ -321,6 +342,12 @@
   display: flex !important;
   align-items: center !important;
 }
+.ag-cell-normal {
+  color: #dcdcdc;
+}
+.ag-cell-null {
+  color: gray;
+}
 </style>
 
 <script>
@@ -426,6 +453,9 @@ export default {
       // AG Grid
       currentCellEditMode: 'edit', // edit - new
       currentCellEditValues: {},
+
+      // Error Dialog
+      errorDialog: true,
 
       // Snackbar
       snackbar: false,
@@ -957,8 +987,6 @@ export default {
       this.bottomBarInfo = data[data.length-1]['query_result'].length + ' records | ' + data.length + ' queries | ' + elapsed.toString() + 's elapsed'
     },
     getContent() {
-      // this.contentHeaders = []
-      // this.contentItems = []
       this.bottomBarStatus = ''
       this.bottomBarText = ''
       this.bottomBarInfo = ''
@@ -988,7 +1016,16 @@ export default {
         this.contentPks = data[0]['pks']
         this.contentSearchColumn = data[0]['columns'][0].trim().toLowerCase()
         for (let i = 0; i < data[0]['columns'].length; ++i) {
-          headers.push({ headerName: data[0]['columns'][i], field: data[0]['columns'][i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+          headers.push({ headerName: data[0]['columns'][i], field: data[0]['columns'][i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true, 
+            cellClassRules: {
+              'ag-cell-null': params => {
+                return params.value == 'NULL';
+              },
+              'ag-cell-normal': function(params) {
+                return params.value != 'NULL';
+              }
+            }
+          })
         }
       }
       this.contentHeaders = headers
@@ -1017,6 +1054,7 @@ export default {
       const payload = {
         server: this.serverSelected.id,
         database: this.database,
+        table: this.treeviewSelected['name'],
         queries: ['SELECT * FROM ' + this.treeviewSelected['name'] + condition + ' LIMIT 1000;' ]
       }
       axios.post('/client/execute', payload)
@@ -1229,6 +1267,7 @@ export default {
           else if (this.currentCellEditMode == 'edit') {
             // EDIT
             console.log("EDIT")
+            this.errorDialog = true
           }
         }
         this.currentCellEditMode = 'edit'
