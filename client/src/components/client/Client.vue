@@ -989,14 +989,14 @@ export default {
       this.bottomBarStatus = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
       this.bottomBarText = data[data.length-1]['query']
       this.bottomBarInfo = (data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['query_result'].length + ' records | ' : ''
-      this.bottomBarInfo += data.length + ' queries '
+      this.bottomBarInfo += data.length + ' queries'
       if (data[data.length-1]['query_time'] !== undefined) {
         var elapsed = 0
         for (let i = 0; i < data.length; ++i) {
           elapsed += parseFloat(data[i]['query_time'])
         }
         elapsed /= data.length      
-        this.bottomBarInfo += elapsed.toString() + 's elapsed'
+        this.bottomBarInfo += ' | ' + elapsed.toString() + 's elapsed'
       }
     },
     getContent() {
