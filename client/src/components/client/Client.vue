@@ -460,6 +460,7 @@ export default {
       currentCellEditMode: 'edit', // edit - new
       currentCellEditValues: {},
       currentCellEditIndex: 0,
+      currentCellEditNode: {},
 
       // Error Dialog
       errorDialog: false,
@@ -1258,12 +1259,15 @@ export default {
       if (this.currentCellEditValues[event.colDef.field] === undefined) this.currentCellEditValues[event.colDef.field] = {'old': event.value}
     },
     cellEditingStopped(event) {
+      // Store row index
+      this.currentCellEditIndex = event.rowIndex
       // Store new value
       this.currentCellEditValues[event.colDef.field]['new'] = event.value
 
       // Check if the row has to be edited
-      var focused = this.gridApi.getFocusedCell()
-      if (event.rowIndex == focused.rowIndex && event.colDef.field == focused.column.colDef.field) {
+      if (this.gridApi.getEditingCells().length == 0) {
+        // Store selected node
+        this.currentCellEditNode = this.gridApi.getSelectedNodes()[0]
         // Build columns to be updated
         let keys = Object.keys(this.currentCellEditValues)
         let columns = []
@@ -1315,19 +1319,20 @@ export default {
 
       // Restore old values
       let keys = Object.keys(this.currentCellEditValues)
-      var newData = this.gridApi.getSelectedRows()[0]
+      var newData = this.currentCellEditNode.data
       for (let i = 0; i < keys.length; ++i) {
         if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) newData[keys[i]] = this.currentCellEditValues[keys[i]]['old']
       }
-      var rowNode = this.gridApi.getSelectedNodes()[0]
-      rowNode.setData(newData);
+      this.currentCellEditNode.setData(newData)
+      this.currentCellEditNode.setSelected(true)
     },
     errorDialogEdit() {
       this.errorDialog = false
       setTimeout(() => {
-        this.gridApi.setFocusedCell(this.gridApi.getSelectedNodes()[0]['rowIndex'], this.contentColumns[0])
+        this.currentCellEditNode.setSelected(true)
+        this.gridApi.setFocusedCell(this.currentCellEditIndex, this.contentColumns[0])
         this.gridApi.startEditingCell({
-          rowIndex: this.gridApi.getSelectedNodes()[0]['rowIndex'],
+          rowIndex: this.currentCellEditIndex,
           colKey: this.contentColumns[0]
         });
       }, 100);
