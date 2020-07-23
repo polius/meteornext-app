@@ -1325,6 +1325,10 @@ export default {
       }
       this.currentCellEditNode.setData(newData)
       this.currentCellEditNode.setSelected(true)
+
+      // Clean vars
+      this.currentCellEditMode = 'edit'
+      this.currentCellEditValues = {}
     },
     errorDialogEdit() {
       this.errorDialog = false
