@@ -208,10 +208,10 @@
               <v-card-text style="padding:15px;">
                 <v-container style="padding:0px">
                   <v-layout wrap>
-                    <div class="text-h5">Unable to write row</div>
+                    <div class="text-h5">{{ errorDialogTitle }}</div>
                     <v-flex xs12>
                       <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
-                        <div class="text-body-1">Incorrect integer value: 'a' for column 'id' at row 3</div>
+                        <div class="text-body-1">{{ errorDialogText }}</div>
                       </v-form>
                       <v-divider></v-divider>
                       <div style="margin-top:15px;">
@@ -455,7 +455,9 @@ export default {
       currentCellEditValues: {},
 
       // Error Dialog
-      errorDialog: true,
+      errorDialog: false,
+      errorDialogTitle: 'Unable to write row',
+      errorDialogText: '',
 
       // Snackbar
       snackbar: false,
@@ -1267,7 +1269,6 @@ export default {
           else if (this.currentCellEditMode == 'edit') {
             // EDIT
             console.log("EDIT")
-            this.errorDialog = true
           }
         }
         this.currentCellEditMode = 'edit'
