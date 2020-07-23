@@ -205,18 +205,24 @@
           </div>
           <v-dialog v-model="errorDialog" persistent max-width="50%">
             <v-card>
-              <v-card-text style="padding:15px;">
+              <v-card-text style="padding:15px 15px 5px;">
                 <v-container style="padding:0px">
                   <v-layout wrap>
                     <div class="text-h5">{{ errorDialogTitle }}</div>
                     <v-flex xs12>
                       <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
-                        <div class="text-body-1">{{ errorDialogText }}</div>
+                        <div class="text-body-1" style="font-weight:300; font-size:1.05rem!important;">{{ errorDialogText }}</div>
                       </v-form>
                       <v-divider></v-divider>
                       <div style="margin-top:15px;">
-                        <v-btn @click="errorDialogDiscard" outlined color="#dcdcdc">Discard changes</v-btn>
-                        <v-btn @click="errorDialogEdit" color="primary" style="margin-left:5px;">Edit row</v-btn>
+                        <v-row no-gutters>
+                          <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                            <v-btn @click="errorDialogDiscard" outlined color="#e74d3c">Discard changes</v-btn>
+                          </v-col>
+                          <v-col style="margin-bottom:10px;">
+                            <v-btn @click="errorDialogEdit" color="primary">Edit row</v-btn>
+                          </v-col>
+                        </v-row>
                       </div>
                     </v-flex>
                   </v-layout>
@@ -978,15 +984,18 @@ export default {
     },
     parseBottomBar(data) {
       // Build BottomBar
-      var elapsed = 0
-      for (let i = 0; i < data.length; ++i) {
-        elapsed += parseFloat(data[i]['query_time'])
-      }
-      elapsed /= data.length
-
       this.bottomBarStatus = data[data.length-1]['success'] ? 'success' : 'failure'
       this.bottomBarText = data[data.length-1]['query']
-      this.bottomBarInfo = data[data.length-1]['query_result'].length + ' records | ' + data.length + ' queries | ' + elapsed.toString() + 's elapsed'
+      this.bottomBarInfo = (data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['query_result'].length + ' records | ' : ''
+      this.bottomBarInfo += data.length + ' queries '
+      if (data[data.length-1]['query_time'] !== undefined) {
+        var elapsed = 0
+        for (let i = 0; i < data.length; ++i) {
+          elapsed += parseFloat(data[i]['query_time'])
+        }
+        elapsed /= data.length      
+        this.bottomBarInfo += elapsed.toString() + 's elapsed'
+      }
     },
     getContent() {
       this.bottomBarStatus = ''
@@ -1254,26 +1263,55 @@ export default {
       // Check if the row has to be edited
       var focused = this.gridApi.getFocusedCell()
       if (event.rowIndex == focused.rowIndex && event.colDef.field == focused.column.colDef.field) {
-        // Check if some value differs in: "currentCellEditValues"
+        // Build columns to be updated
         let keys = Object.keys(this.currentCellEditValues)
-        let needUpdate = false
+        let columns = []
         for (let i = 0; i < keys.length; ++i) {
-          if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) { needUpdate = true; break}
+          if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) columns.push(keys[i] + " = '" + this.currentCellEditValues[keys[i]]['new'] + "'")
         }
-        console.log(this.currentCellEditValues)
-        if (needUpdate) {
+        if (columns.length > 0) {
           if (this.currentCellEditMode == 'new') {
             // NEW
             console.log("NEW")
           }
           else if (this.currentCellEditMode == 'edit') {
-            // EDIT
-            console.log("EDIT")
+            // Build Pks
+            let row = this.gridApi.getSelectedRows()[0]
+            let pks = []
+            for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + row[this.contentPks[i]] + "'")
+            var query = "UPDATE " + this.treeviewSelected['name'] + " SET " + columns.join() + " WHERE " + pks.join(' AND ') + ';'
           }
+          // Execute Query
+          const payload = {
+            server: this.serverSelected.id,
+            database: this.database,
+            queries: [query]
+          }
+          axios.post('/client/execute', payload)
+            .then((response) => {
+              // Build BottomBar
+              this.parseBottomBar(JSON.parse(response.data.data))
+            })
+            .catch((error) => {
+              if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+              else {
+                let data = JSON.parse(error.response.data.data)
+                this.errorDialogText = data[0]['error']
+                this.errorDialog = true
+                // Build BottomBar
+                this.parseBottomBar(data)
+              }
+            })
         }
         this.currentCellEditMode = 'edit'
         this.currentCellEditValues = {}
       }
+    },
+    errorDialogDiscard() {
+
+    },
+    errorDialogEdit() {
+
     },
     notification(message, color, timeout=5) {
       this.snackbarText = message

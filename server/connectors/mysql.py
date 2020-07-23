@@ -82,7 +82,10 @@ class MySQL:
             self.start()
 
             # Retry the query
-            return self.__execute_query(query, args, database)
+            try:
+                return self.__execute_query(query, args, database)
+            except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
+                raise Exception(error.args[1])
 
         except KeyboardInterrupt:
             self.rollback()

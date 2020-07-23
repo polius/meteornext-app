@@ -119,8 +119,8 @@ class Client:
             for q in client_json['queries']:
                 try:
                     result = conn.execute(query=q, database=client_json['database'])
+                    conn.commit()
                     result['query'] = q
-                    result['success'] = True
 
                     # Get table metadata
                     if 'table' in client_json:
@@ -129,11 +129,12 @@ class Client:
                         result['columns'] = columns
                         result['pks'] = pks
 
-                except Exception as e:
-                    result = {"query": q, "success": False, "error": str(e)}
-                    break
-                finally:
                     execution.append(result)
+
+                except Exception as e:
+                    result = {'query': q, 'error': str(e)}
+                    execution.append(result)
+                    return jsonify({'data': json.dumps(execution, default=self.__json_parser)}), 400
 
             return jsonify({'data': json.dumps(execution, default=self.__json_parser)}), 200
 
