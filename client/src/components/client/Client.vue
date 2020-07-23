@@ -459,6 +459,7 @@ export default {
       // AG Grid
       currentCellEditMode: 'edit', // edit - new
       currentCellEditValues: {},
+      currentCellEditIndex: 0,
 
       // Error Dialog
       errorDialog: false,
@@ -984,7 +985,7 @@ export default {
     },
     parseBottomBar(data) {
       // Build BottomBar
-      this.bottomBarStatus = data[data.length-1]['success'] ? 'success' : 'failure'
+      this.bottomBarStatus = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
       this.bottomBarText = data[data.length-1]['query']
       this.bottomBarInfo = (data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['query_result'].length + ' records | ' : ''
       this.bottomBarInfo += data.length + ' queries '
@@ -1291,6 +1292,9 @@ export default {
             .then((response) => {
               // Build BottomBar
               this.parseBottomBar(JSON.parse(response.data.data))
+              // Clean vars
+              this.currentCellEditMode = 'edit'
+              this.currentCellEditValues = {}
             })
             .catch((error) => {
               if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -1303,15 +1307,30 @@ export default {
               }
             })
         }
-        this.currentCellEditMode = 'edit'
-        this.currentCellEditValues = {}
       }
     },
     errorDialogDiscard() {
+      // Close Dialog
+      this.errorDialog = false
 
+      // Restore old values
+      let keys = Object.keys(this.currentCellEditValues)
+      var newData = this.gridApi.getSelectedRows()[0]
+      for (let i = 0; i < keys.length; ++i) {
+        if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) newData[keys[i]] = this.currentCellEditValues[keys[i]]['old']
+      }
+      var rowNode = this.gridApi.getSelectedNodes()[0]
+      rowNode.setData(newData);
     },
     errorDialogEdit() {
-
+      this.errorDialog = false
+      setTimeout(() => {
+        this.gridApi.setFocusedCell(this.gridApi.getSelectedNodes()[0]['rowIndex'], this.contentColumns[0])
+        this.gridApi.startEditingCell({
+          rowIndex: this.gridApi.getSelectedNodes()[0]['rowIndex'],
+          colKey: this.contentColumns[0]
+        });
+      }, 100);
     },
     notification(message, color, timeout=5) {
       this.snackbarText = message
