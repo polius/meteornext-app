@@ -141,7 +141,7 @@
                             <div class="body-2" style="margin-top:13px; padding-left:10px; padding-right:10px;">Search:</div>
                           </v-col>
                           <v-col cols="2">
-                            <v-select v-model="contentSearchColumn" :items="contentColumns" dense solo hide-details height="35px" style="padding-top:5px;"></v-select>
+                            <v-select v-model="contentSearchColumn" :items="contentColumnsName" dense solo hide-details height="35px" style="padding-top:5px;"></v-select>
                           </v-col>
                           <v-col cols="2">
                             <v-select v-model="contentSearchFilter" :items="contentSearchFilterItems" dense solo hide-details height="35px" style="padding-top:5px; padding-left:5px;"></v-select>
@@ -441,7 +441,8 @@ export default {
       structureItems: [],
 
       // Content
-      contentColumns: [],
+      contentColumnsName: [],
+      contentColumnsDefault: [],
       contentPks: [],
       contentSearchColumn: '',
       contentSearchFilterItems: ['=','<>','LIKE','NOT LIKE','REGEXP','NOT REGEXP','IN','NOT IN','BETWEEN','IS NULL','IS NOT NULL'],
@@ -1025,12 +1026,13 @@ export default {
       var items = data[0]['query_result']
       // Build Headers
       if (data.length > 0) {
-        this.contentColumns = data[0]['columns']
+        this.contentColumnsName = data[0]['columns']['name']
+        this.contentColumnsDefault = data[0]['columns']['default']
         this.contentPks = data[0]['pks']
-        this.contentSearchColumn = data[0]['columns'][0].trim().toLowerCase()
-        for (let i = 0; i < data[0]['columns'].length; ++i) {
-          let field = data[0]['columns'][i].trim().toLowerCase()
-          headers.push({ headerName: data[0]['columns'][i], field: field, sortable: true, filter: true, resizable: true, editable: true, 
+        this.contentSearchColumn = this.contentColumnsName[0].trim().toLowerCase()
+        for (let i = 0; i < this.contentColumnsName.length; ++i) {
+          let field = this.contentColumnsName[i].trim().toLowerCase()
+          headers.push({ headerName: this.contentColumnsName[i], field: field, sortable: true, filter: true, resizable: true, editable: true, 
             valueGetter: function(params) {
               return (params.data[field] == null) ? 'NULL' : params.data[field]
             },            
@@ -1252,17 +1254,25 @@ export default {
       });
     },
     addRow() {
-      this.gridApi.applyTransaction({ add: [{}] });
+      var newData = {}
+      for (let i = 0; i < this.contentColumnsName.length; ++i) {
+        newData[this.contentColumnsName[i]] = this.contentColumnsDefault[i]
+      }
+      this.gridApi.applyTransaction({ add: [newData] });
+      this.gridApi.setFocusedCell(this.gridApi.getDisplayedRowCount()-1, this.contentColumnsName[0])
+      
+      this.gridApi.getRowNode(this.gridApi.getDisplayedRowCount()-1).setSelected(true)
+
       this.gridApi.startEditingCell({
         rowIndex: this.gridApi.getDisplayedRowCount()-1,
-        colKey: this.contentColumns[0]
+        colKey: this.contentColumnsName[0]
       });
       this.currentCellEditMode = 'new'
     },
     cellEditingStarted(event) {
       if (this.currentCellEditIndex != null && this.currentCellEditIndex != event.rowIndex) { 
         this.gridApi.stopEditing(true)
-        this.gridApi.setFocusedCell(this.currentCellEditIndex, this.contentColumns[0])
+        this.gridApi.setFocusedCell(this.currentCellEditIndex, this.contentColumnsName[0])
         this.gridApi.clearFocusedCell()
         this.currentCellEditNode.setSelected(true)
         this.cellEditingSubmit()
@@ -1298,16 +1308,21 @@ export default {
         }
       }
       if (columns.length > 0) {
+        var query = ''
         if (this.currentCellEditMode == 'new') {
           // NEW
           console.log("NEW")
+          console.log(columns)
+          query = "INSERT INTO " + this.treeviewSelected['name'] + ' (' + keys.join() + ') VALUES (' + columns.join() + ');'
+          console.log(query)
+          return
         }
         else if (this.currentCellEditMode == 'edit') {
           // Build Pks
           let row = this.gridApi.getSelectedRows()[0]
           let pks = []
           for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + row[this.contentPks[i]] + "'")
-          var query = "UPDATE " + this.treeviewSelected['name'] + " SET " + columns.join() + " WHERE " + pks.join(' AND ') + ';'
+          query = "UPDATE " + this.treeviewSelected['name'] + " SET " + columns.join() + " WHERE " + pks.join(' AND ') + ';'
         }
         // Execute Query
         const payload = {
@@ -1358,10 +1373,10 @@ export default {
       this.errorDialog = false
       setTimeout(() => {
         this.currentCellEditNode.setSelected(true)
-        this.gridApi.setFocusedCell(this.currentCellEditIndex, this.contentColumns[0])
+        this.gridApi.setFocusedCell(this.currentCellEditIndex, this.contentColumnsName[0])
         this.gridApi.startEditingCell({
           rowIndex: this.currentCellEditIndex,
-          colKey: this.contentColumns[0]
+          colKey: this.contentColumnsName[0]
         });
       }, 100);
     },

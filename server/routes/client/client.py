@@ -113,13 +113,13 @@ class Client:
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = connectors.connector.Connector(cred)
+            conn.start()
 
             # Execute all queries
             execution = []
             for q in client_json['queries']:
                 try:
                     result = conn.execute(query=q, database=client_json['database'])
-                    conn.commit()
                     result['query'] = q
 
                     # Get table metadata
@@ -129,12 +129,15 @@ class Client:
                         result['columns'] = columns
                         result['pks'] = pks
 
+                    conn.commit()
                     execution.append(result)
 
                 except Exception as e:
                     result = {'query': q, 'error': str(e)}
                     execution.append(result)
                     return jsonify({'data': json.dumps(execution, default=self.__json_parser)}), 400
+                finally:
+                    conn.stop()
 
             return jsonify({'data': json.dumps(execution, default=self.__json_parser)}), 200
 
