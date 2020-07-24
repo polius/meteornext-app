@@ -163,7 +163,7 @@
                           </v-col>
                         </v-row>
                       </div>
-                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @selection-changed="onSelectionChanged" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
                     </div>
                   </div>
                   <!---------------------->
@@ -175,9 +175,9 @@
                         <v-col v-if="tabSelected == 'content'" cols="auto">
                           <v-btn @click="addRow" text small :title="tabStructureSelected == 'columns' ? 'New Column' : tabStructureSelected == 'indexes' ? 'New Index' : tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
                           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                          <v-btn disabled text small :title="tabStructureSelected == 'columns' ? 'Remove Column' : tabStructureSelected == 'indexes' ? 'Remove Index' : tabStructureSelected == 'fks' ? 'Remove Foreign Key' : 'Remove Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+                          <v-btn @click="removeRow" :disabled="!isRowSelected" text small :title="tabStructureSelected == 'columns' ? 'Remove Column' : tabStructureSelected == 'indexes' ? 'Remove Index' : tabStructureSelected == 'fks' ? 'Remove Foreign Key' : 'Remove Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
                           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
-                          <v-btn @click="getContent" text small :title="tabStructureSelected == 'columns' ? 'Refresh Columns' : tabStructureSelected == 'indexes' ? 'Refresh Indexes' : tabStructureSelected == 'fks' ? 'Refresh Foreign Keys' : 'Refresh Triggers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+                          <v-btn @click="filterClick" text small :title="tabStructureSelected == 'columns' ? 'Refresh Columns' : tabStructureSelected == 'indexes' ? 'Refresh Indexes' : tabStructureSelected == 'fks' ? 'Refresh Foreign Keys' : 'Refresh Triggers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
                           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
                         </v-col>
                         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
@@ -203,24 +203,24 @@
               </Pane>
             </Splitpanes>
           </div>
-          <v-dialog v-model="errorDialog" persistent max-width="50%">
+          <v-dialog v-model="dialog" persistent max-width="50%">
             <v-card>
               <v-card-text style="padding:15px 15px 5px;">
                 <v-container style="padding:0px">
                   <v-layout wrap>
-                    <div class="text-h5">{{ errorDialogTitle }}</div>
+                    <div class="text-h5">{{ dialogTitle }}</div>
                     <v-flex xs12>
-                      <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
-                        <div class="text-body-1" style="font-weight:300; font-size:1.05rem!important;">{{ errorDialogText }}</div>
+                      <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
+                        <div class="text-body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
                       </v-form>
                       <v-divider></v-divider>
                       <div style="margin-top:15px;">
                         <v-row no-gutters>
                           <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                            <v-btn @click="errorDialogDiscard" outlined color="#e74d3c">Discard changes</v-btn>
+                            <v-btn @click="dialogSubmit(1)" color="primary">{{ dialogButtonText1 }}</v-btn>
                           </v-col>
                           <v-col style="margin-bottom:10px;">
-                            <v-btn @click="errorDialogEdit" color="primary">Edit row</v-btn>
+                            <v-btn @click="dialogSubmit(2)" outlined color="#e74d3c">{{ dialogButtonText2 }}</v-btn>
                           </v-col>
                         </v-row>
                       </div>
@@ -458,15 +458,18 @@ export default {
       bottomBarInfo: '',
 
       // AG Grid
+      isRowSelected: false,
       currentCellEditMode: 'edit', // edit - new
-      currentCellEditValues: {},
-      currentCellEditIndex: null,
       currentCellEditNode: {},
+      currentCellEditValues: {},
 
-      // Error Dialog
-      errorDialog: false,
-      errorDialogTitle: 'Unable to write row',
-      errorDialogText: '',
+      // Client Dialog
+      dialog: false,
+      dialogMode: '',
+      dialogTitle: '',
+      dialogText: '',
+      dialogButtonText1: '',
+      dialogButtonText2: '',
 
       // Snackbar
       snackbar: false,
@@ -1049,6 +1052,7 @@ export default {
       }
       this.contentHeaders = headers
       this.contentItems = items
+      this.isRowSelected = 0
 
       // Build BottomBar
       this.parseBottomBar(data)
@@ -1256,12 +1260,16 @@ export default {
     addRow() {
       // Clean vars
       this.currentCellEditValues = {}
-      this.currentCellEditIndex = null
+      this.currentCellEditNode = {}
 
       var newData = {}
       for (let i = 0; i < this.contentColumnsName.length; ++i) {
         newData[this.contentColumnsName[i]] = this.contentColumnsDefault[i]
       }
+
+      var nodes = this.gridApi.getSelectedNodes()
+      for (let i = 0; i < nodes.length; ++i) nodes[i].setSelected(false)
+
       this.gridApi.applyTransaction({ add: [newData] });
       this.gridApi.getRowNode(this.gridApi.getDisplayedRowCount()-1).setSelected(true)
       this.gridApi.setFocusedCell(this.gridApi.getDisplayedRowCount()-1, this.contentColumnsName[0])
@@ -1272,10 +1280,32 @@ export default {
       });
       this.currentCellEditMode = 'new'
     },
+    removeRow() {
+      // Show confirmation dialog
+      var dialogOptions = {
+        'mode': 'confirm',
+        'title': 'Delete rows?',
+        'text': 'Are you sure you want to delete the selected ' + this.gridApi.getSelectedNodes().length + ' rows from this table? This action cannot be undone.',
+        'button1': 'Cancel',
+        'button2': 'Delete'
+      }
+      this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+    },
+    removeRowSubmit() {
+      // Build Query
+
+
+      // this.currentCellEditNode = this.gridApi.getSelectedNodes()[0]
+      // this.currentCellEditValues = this.currentCellEditNode.data
+      // this.contentItems.splice(this.currentCellEditNode.rowIndex, 1)
+    },
+    onSelectionChanged() {
+      this.isRowSelected = this.gridApi.getSelectedNodes().length > 0
+    },
     cellEditingStarted(event) {
-      if (this.currentCellEditIndex != null && this.currentCellEditIndex != event.rowIndex) {
+      if (Object.keys(this.currentCellEditNode).length != 0 && this.currentCellEditNode.rowIndex != event.rowIndex) {
         this.gridApi.stopEditing(true)
-        this.gridApi.setFocusedCell(this.currentCellEditIndex, this.contentColumnsName[0])
+        this.gridApi.setFocusedCell(this.currentCellEditNode.rowIndex, this.contentColumnsName[0])
         this.gridApi.clearFocusedCell()
         this.currentCellEditNode.setSelected(true)
         this.cellEditingSubmit()
@@ -1286,12 +1316,11 @@ export default {
     },
     cellEditingStopped(event) {
       // Store row index & node
-      if (this.currentCellEditIndex == null) {
-        this.currentCellEditIndex = event.rowIndex
+      if (Object.keys(this.currentCellEditNode).length == 0) {
         this.currentCellEditNode = this.gridApi.getSelectedNodes()[0]
       }
       // Store new value
-      if (event.rowIndex == this.currentCellEditIndex) {
+      if (event.rowIndex == this.currentCellEditNode.rowIndex) {
         if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
         this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
       }
@@ -1305,22 +1334,25 @@ export default {
       var valuesWithCondition = []
       for (let i = 0; i < keys.length; ++i) {
         if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) {
-          valuesToUpdate.push(this.currentCellEditValues[keys[i]]['new'])
-          if (this.currentCellEditValues[keys[i]]['new'] == null) valuesWithCondition.push(keys[i] + " = NULL")
-          else valuesWithCondition.push(keys[i] + " = '" + this.currentCellEditValues[keys[i]]['new'] + "'")
+          if (this.currentCellEditValues[keys[i]]['new'] == null) {
+            valuesToUpdate.push('NULL')
+            valuesWithCondition.push(keys[i] + " = NULL")
+          }
+          else {
+            valuesToUpdate.push("'" + this.currentCellEditValues[keys[i]]['new'] + "'")
+            valuesWithCondition.push(keys[i] + " = '" + this.currentCellEditValues[keys[i]]['new'] + "'")
+          }
         }
       }
       if (valuesToUpdate.length > 0) {
         var query = ''
         if (this.currentCellEditMode == 'new') {
-          query = "INSERT INTO " + this.treeviewSelected['name'] + ' (' + keys.join() + ') VALUES (' + valuesToUpdate.join() + ');'
-          console.log(query)
+          query = "INSERT INTO " + this.treeviewSelected['name'] + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
         }
         else if (this.currentCellEditMode == 'edit') {
           // Build Pks
-          let row = this.gridApi.getSelectedRows()[0]
           let pks = []
-          for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + row[this.contentPks[i]] + "'")
+          for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + this.currentCellEditValues[this.contentPks[i]]['old'] + "'")
           query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesWithCondition.join(', ') + " WHERE " + pks.join(' AND ') + ';'
         }
         // Execute Query
@@ -1335,28 +1367,35 @@ export default {
             this.parseBottomBar(JSON.parse(response.data.data))
             // Clean vars
             this.currentCellEditMode = 'edit'
+            this.currentCellEditNode = {}
             this.currentCellEditValues = {}
-            this.currentCellEditIndex = null
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
             else {
+              // Show error
               let data = JSON.parse(error.response.data.data)
-              this.errorDialogText = data[0]['error']
-              this.errorDialog = true
+              let dialogOptions = {
+                'mode': 'error',
+                'title': 'Unable to write row',
+                'text': data[0]['error'],
+                'button1': 'Edit row',
+                'button2': 'Discard changes'
+              }
+              this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
               // Build BottomBar
               this.parseBottomBar(data)
             }
           })
       }
     },
-    errorDialogDiscard() {
+    cellEditingDiscard() {
       // Close Dialog
-      this.errorDialog = false
+      this.dialog = false
 
       // Restore old values
       if (this.currentCellEditMode == 'new') {
-        let deleteme = 1
+        this.contentItems.splice(this.currentCellEditNode.rowIndex, 1)
       }
       else if (this.currentCellEditMode == 'edit') {
         let keys = Object.keys(this.currentCellEditValues)
@@ -1370,19 +1409,40 @@ export default {
 
       // Clean vars
       this.currentCellEditMode = 'edit'
+      this.currentCellEditNode = {}
       this.currentCellEditValues = {}
-      this.currentCellEditIndex = null
     },
-    errorDialogEdit() {
-      this.errorDialog = false
+    cellEditingEdit() {
+      // Close Dialog
+      this.dialog = false
+
+      // Edit Row
       setTimeout(() => {
         this.currentCellEditNode.setSelected(true)
-        this.gridApi.setFocusedCell(this.currentCellEditIndex, this.contentColumnsName[0])
+        this.gridApi.setFocusedCell(this.currentCellEditNode.rowIndex, this.contentColumnsName[0])
         this.gridApi.startEditingCell({
-          rowIndex: this.currentCellEditIndex,
+          rowIndex: this.currentCellEditNode.rowIndex,
           colKey: this.contentColumnsName[0]
         });
       }, 100);
+    },
+    showDialog(mode, title, text, button1, button2) {
+      this.dialogMode = mode
+      this.dialogTitle = title
+      this.dialogText = text
+      this.dialogButtonText1 = button1
+      this.dialogButtonText2 = button2
+      this.dialog = true
+    },
+    dialogSubmit(button) {
+      if (this.dialogMode == 'error') {
+        if (button == 1) this.cellEditingEdit()
+        else if (button == 2) this.cellEditingDiscard()
+      }
+      else if (this.dialogMode == 'confirm') {
+        if (button == 1) this.dialog = false
+        else if (button == 2) this.removeRowSubmit()
+      }
     },
     notification(message, color, timeout=5) {
       this.snackbarText = message
