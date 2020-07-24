@@ -459,7 +459,7 @@ export default {
       // AG Grid
       currentCellEditMode: 'edit', // edit - new
       currentCellEditValues: {},
-      currentCellEditIndex: 0,
+      currentCellEditIndex: null,
       currentCellEditNode: {},
 
       // Error Dialog
@@ -1029,13 +1029,17 @@ export default {
         this.contentPks = data[0]['pks']
         this.contentSearchColumn = data[0]['columns'][0].trim().toLowerCase()
         for (let i = 0; i < data[0]['columns'].length; ++i) {
-          headers.push({ headerName: data[0]['columns'][i], field: data[0]['columns'][i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true, 
+          let field = data[0]['columns'][i].trim().toLowerCase()
+          headers.push({ headerName: data[0]['columns'][i], field: field, sortable: true, filter: true, resizable: true, editable: true, 
+            valueGetter: function(params) {
+              return (params.data[field] == null) ? 'NULL' : params.data[field]
+            },            
             cellClassRules: {
               'ag-cell-null': params => {
-                return params.value == 'NULL';
+                return params.data[field] == null
               },
               'ag-cell-normal': function(params) {
-                return params.value != 'NULL';
+                return params.data[field] != null
               }
             }
           })
@@ -1256,61 +1260,80 @@ export default {
       this.currentCellEditMode = 'new'
     },
     cellEditingStarted(event) {
-      if (this.currentCellEditValues[event.colDef.field] === undefined) this.currentCellEditValues[event.colDef.field] = {'old': event.value}
+      if (this.currentCellEditIndex != null && this.currentCellEditIndex != event.rowIndex) { 
+        this.gridApi.stopEditing(true)
+        this.gridApi.setFocusedCell(this.currentCellEditIndex, this.contentColumns[0])
+        this.gridApi.clearFocusedCell()
+        this.currentCellEditNode.setSelected(true)
+        this.cellEditingSubmit()
+      }
+      else if (this.currentCellEditValues[event.colDef.field] === undefined) {
+        this.currentCellEditValues[event.colDef.field] = {'old': event.value}
+      }
     },
     cellEditingStopped(event) {
-      // Store row index
-      this.currentCellEditIndex = event.rowIndex
-      // Store new value
-      this.currentCellEditValues[event.colDef.field]['new'] = event.value
-
-      // Check if the row has to be edited
-      if (this.gridApi.getEditingCells().length == 0) {
-        // Store selected node
+      // Store row index & node
+      if (this.currentCellEditIndex == null) {
+        this.currentCellEditIndex = event.rowIndex
         this.currentCellEditNode = this.gridApi.getSelectedNodes()[0]
-        // Build columns to be updated
-        let keys = Object.keys(this.currentCellEditValues)
-        let columns = []
-        for (let i = 0; i < keys.length; ++i) {
-          if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) columns.push(keys[i] + " = '" + this.currentCellEditValues[keys[i]]['new'] + "'")
+      }
+      // Store new value
+      if (event.rowIndex == this.currentCellEditIndex) {
+        if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
+        this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
+      }
+      // Check if the row has to be edited
+      if (this.gridApi.getEditingCells().length == 0) this.cellEditingSubmit()
+    },
+    cellEditingSubmit() {
+      // Build columns to be updated
+      let keys = Object.keys(this.currentCellEditValues)
+      let columns = []
+      for (let i = 0; i < keys.length; ++i) {
+        if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) {
+          let col = ''
+          if (this.currentCellEditValues[keys[i]]['new'] == null) col = keys[i] + " = NULL"
+          else col = keys[i] + " = '" + this.currentCellEditValues[keys[i]]['new'] + "'"
+          columns.push(col)
         }
-        if (columns.length > 0) {
-          if (this.currentCellEditMode == 'new') {
-            // NEW
-            console.log("NEW")
-          }
-          else if (this.currentCellEditMode == 'edit') {
-            // Build Pks
-            let row = this.gridApi.getSelectedRows()[0]
-            let pks = []
-            for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + row[this.contentPks[i]] + "'")
-            var query = "UPDATE " + this.treeviewSelected['name'] + " SET " + columns.join() + " WHERE " + pks.join(' AND ') + ';'
-          }
-          // Execute Query
-          const payload = {
-            server: this.serverSelected.id,
-            database: this.database,
-            queries: [query]
-          }
-          axios.post('/client/execute', payload)
-            .then((response) => {
+      }
+      if (columns.length > 0) {
+        if (this.currentCellEditMode == 'new') {
+          // NEW
+          console.log("NEW")
+        }
+        else if (this.currentCellEditMode == 'edit') {
+          // Build Pks
+          let row = this.gridApi.getSelectedRows()[0]
+          let pks = []
+          for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + row[this.contentPks[i]] + "'")
+          var query = "UPDATE " + this.treeviewSelected['name'] + " SET " + columns.join() + " WHERE " + pks.join(' AND ') + ';'
+        }
+        // Execute Query
+        const payload = {
+          server: this.serverSelected.id,
+          database: this.database,
+          queries: [query]
+        }
+        axios.post('/client/execute', payload)
+          .then((response) => {
+            // Build BottomBar
+            this.parseBottomBar(JSON.parse(response.data.data))
+            // Clean vars
+            this.currentCellEditMode = 'edit'
+            this.currentCellEditValues = {}
+            this.currentCellEditIndex = null
+          })
+          .catch((error) => {
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            else {
+              let data = JSON.parse(error.response.data.data)
+              this.errorDialogText = data[0]['error']
+              this.errorDialog = true
               // Build BottomBar
-              this.parseBottomBar(JSON.parse(response.data.data))
-              // Clean vars
-              this.currentCellEditMode = 'edit'
-              this.currentCellEditValues = {}
-            })
-            .catch((error) => {
-              if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-              else {
-                let data = JSON.parse(error.response.data.data)
-                this.errorDialogText = data[0]['error']
-                this.errorDialog = true
-                // Build BottomBar
-                this.parseBottomBar(data)
-              }
-            })
-        }
+              this.parseBottomBar(data)
+            }
+          })
       }
     },
     errorDialogDiscard() {
@@ -1329,6 +1352,7 @@ export default {
       // Clean vars
       this.currentCellEditMode = 'edit'
       this.currentCellEditValues = {}
+      this.currentCellEditIndex = null
     },
     errorDialogEdit() {
       this.errorDialog = false
