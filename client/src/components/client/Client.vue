@@ -1259,9 +1259,8 @@ export default {
         newData[this.contentColumnsName[i]] = this.contentColumnsDefault[i]
       }
       this.gridApi.applyTransaction({ add: [newData] });
-      this.gridApi.setFocusedCell(this.gridApi.getDisplayedRowCount()-1, this.contentColumnsName[0])
-      
       this.gridApi.getRowNode(this.gridApi.getDisplayedRowCount()-1).setSelected(true)
+      this.gridApi.setFocusedCell(this.gridApi.getDisplayedRowCount()-1, this.contentColumnsName[0])
 
       this.gridApi.startEditingCell({
         rowIndex: this.gridApi.getDisplayedRowCount()-1,
@@ -1296,24 +1295,21 @@ export default {
       if (this.gridApi.getEditingCells().length == 0) this.cellEditingSubmit()
     },
     cellEditingSubmit() {
-      // Build columns to be updated
-      let keys = Object.keys(this.currentCellEditValues)
-      let columns = []
+      // Check if there's a value to be updated
+      var keys = Object.keys(this.currentCellEditValues)
+      var valuesToUpdate = []
+      var valuesWithCondition = []
       for (let i = 0; i < keys.length; ++i) {
         if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) {
-          let col = ''
-          if (this.currentCellEditValues[keys[i]]['new'] == null) col = keys[i] + " = NULL"
-          else col = keys[i] + " = '" + this.currentCellEditValues[keys[i]]['new'] + "'"
-          columns.push(col)
+          valuesToUpdate.push(this.currentCellEditValues[keys[i]]['new'])
+          if (this.currentCellEditValues[keys[i]]['new'] == null) valuesWithCondition.push(keys[i] + " = NULL")
+          else valuesWithCondition.push(keys[i] + " = '" + this.currentCellEditValues[keys[i]]['new'] + "'")
         }
       }
-      if (columns.length > 0) {
+      if (valuesToUpdate.length > 0) {
         var query = ''
         if (this.currentCellEditMode == 'new') {
-          // NEW
-          console.log("NEW")
-          console.log(columns)
-          query = "INSERT INTO " + this.treeviewSelected['name'] + ' (' + keys.join() + ') VALUES (' + columns.join() + ');'
+          query = "INSERT INTO " + this.treeviewSelected['name'] + ' (' + keys.join() + ') VALUES (' + valuesToUpdate.join() + ');'
           console.log(query)
           return
         }
@@ -1322,7 +1318,7 @@ export default {
           let row = this.gridApi.getSelectedRows()[0]
           let pks = []
           for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + row[this.contentPks[i]] + "'")
-          query = "UPDATE " + this.treeviewSelected['name'] + " SET " + columns.join() + " WHERE " + pks.join(' AND ') + ';'
+          query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesWithCondition.join(', ') + " WHERE " + pks.join(' AND ') + ';'
         }
         // Execute Query
         const payload = {
