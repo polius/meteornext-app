@@ -216,10 +216,10 @@
                       <v-divider></v-divider>
                       <div style="margin-top:15px;">
                         <v-row no-gutters>
-                          <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                          <v-col v-if="dialogButtonText1.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
                             <v-btn @click="dialogSubmit(1)" color="primary">{{ dialogButtonText1 }}</v-btn>
                           </v-col>
-                          <v-col style="margin-bottom:10px;">
+                          <v-col v-if="dialogButtonText2.length > 0" style="margin-bottom:10px;">
                             <v-btn @click="dialogSubmit(2)" outlined color="#e74d3c">{{ dialogButtonText2 }}</v-btn>
                           </v-col>
                         </v-row>
@@ -1292,8 +1292,51 @@ export default {
       this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
     },
     removeRowSubmit() {
+      // Build Pks
+      let nodes = this.gridApi.getSelectedNodes()
+      let pks = []
+      for (let i = 0; i < nodes.length; ++i) {
+        let pk = []
+        for (let j = 0; j < this.contentPks.length; ++j) {
+          pk.push(this.contentPks[j] + " = '" + nodes[i].data[this.contentPks[j]] + "'")
+        }
+        pks.push('(' + pk.join(' AND ') + ')')
+      }
       // Build Query
+      var query = 'DELETE FROM ' + this.treeviewSelected['name'] + ' WHERE ' + pks.join(' OR ') + ';'
 
+      // Execute Query
+      const payload = {
+        server: this.serverSelected.id,
+        database: this.database,
+        queries: [query]
+      }
+      axios.post('/client/execute', payload)
+        .then((response) => {
+          // Build BottomBar
+          this.parseBottomBar(JSON.parse(response.data.data))
+          // Remove Frontend Rows
+          this.gridApi.applyTransaction({ remove: this.gridApi.getSelectedRows() })
+          // Close Dialog
+          this.dialog = false
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else {
+            // Show error
+            let data = JSON.parse(error.response.data.data)
+            let dialogOptions = {
+              'mode': 'info',
+              'title': 'Unable to delete rows',
+              'text': data[0]['error'],
+              'button1': 'Close',
+              'button2': ''
+            }
+            this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+            // Build BottomBar
+            this.parseBottomBar(data)
+          }
+        })
 
       // this.currentCellEditNode = this.gridApi.getSelectedNodes()[0]
       // this.currentCellEditValues = this.currentCellEditNode.data
@@ -1442,6 +1485,9 @@ export default {
       else if (this.dialogMode == 'confirm') {
         if (button == 1) this.dialog = false
         else if (button == 2) this.removeRowSubmit()
+      }
+      else if (this.dialogMode == 'info') {
+        this.dialog = false
       }
     },
     notification(message, color, timeout=5) {
