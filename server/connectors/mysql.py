@@ -336,12 +336,13 @@ class MySQL:
         return result[0]['row_format']
 
     def get_column_names(self, db, table):
-        query = "SELECT COLUMN_NAME FROM information_schema.columns WHERE table_schema = '" + db.strip() + "' AND table_name = '" + table.strip() + "' ORDER BY ordinal_position"
+        query = "SELECT COLUMN_NAME, COLUMN_DEFAULT FROM information_schema.columns WHERE table_schema = '" + db.strip() + "' AND table_name = '" + table.strip() + "' ORDER BY ordinal_position"
         result = self.execute(query)['query_result']
-        
-        columns = []
+
+        columns = {'name': [], 'default': []}
         for cl in result:
-            columns.append(cl['COLUMN_NAME'])
+            columns['name'].append(cl['COLUMN_NAME'])
+            columns['default'].append(cl['COLUMN_DEFAULT'])
         return columns
 
     def get_pk_names(self, db, table):
