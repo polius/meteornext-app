@@ -1254,6 +1254,10 @@ export default {
       });
     },
     addRow() {
+      // Clean vars
+      this.currentCellEditValues = {}
+      this.currentCellEditIndex = null
+
       var newData = {}
       for (let i = 0; i < this.contentColumnsName.length; ++i) {
         newData[this.contentColumnsName[i]] = this.contentColumnsDefault[i]
@@ -1269,7 +1273,7 @@ export default {
       this.currentCellEditMode = 'new'
     },
     cellEditingStarted(event) {
-      if (this.currentCellEditIndex != null && this.currentCellEditIndex != event.rowIndex) { 
+      if (this.currentCellEditIndex != null && this.currentCellEditIndex != event.rowIndex) {
         this.gridApi.stopEditing(true)
         this.gridApi.setFocusedCell(this.currentCellEditIndex, this.contentColumnsName[0])
         this.gridApi.clearFocusedCell()
@@ -1311,7 +1315,6 @@ export default {
         if (this.currentCellEditMode == 'new') {
           query = "INSERT INTO " + this.treeviewSelected['name'] + ' (' + keys.join() + ') VALUES (' + valuesToUpdate.join() + ');'
           console.log(query)
-          return
         }
         else if (this.currentCellEditMode == 'edit') {
           // Build Pks
@@ -1352,13 +1355,18 @@ export default {
       this.errorDialog = false
 
       // Restore old values
-      let keys = Object.keys(this.currentCellEditValues)
-      var newData = this.currentCellEditNode.data
-      for (let i = 0; i < keys.length; ++i) {
-        if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) newData[keys[i]] = this.currentCellEditValues[keys[i]]['old']
+      if (this.currentCellEditMode == 'new') {
+        let deleteme = 1
       }
-      this.currentCellEditNode.setData(newData)
-      this.currentCellEditNode.setSelected(true)
+      else if (this.currentCellEditMode == 'edit') {
+        let keys = Object.keys(this.currentCellEditValues)
+        var newData = this.currentCellEditNode.data
+        for (let i = 0; i < keys.length; ++i) {
+          if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) newData[keys[i]] = this.currentCellEditValues[keys[i]]['old']
+        }
+        this.currentCellEditNode.setData(newData)
+        this.currentCellEditNode.setSelected(true)
+      }
 
       // Clean vars
       this.currentCellEditMode = 'edit'
