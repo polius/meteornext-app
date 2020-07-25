@@ -103,12 +103,11 @@
                     <Splitpanes v-if="tabSelected == 'client'" horizontal @ready="initAce()">
                       <Pane size="50">
                         <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
-                          <!-- <v-btn :disabled="editorQuery.length == 0" v-if="connections.length > 0" @click="runQuery()" style="margin:6px;" title="Export Results"><v-icon small style="padding-right:10px;">fas fa-file-export</v-icon>Export Results</v-btn> -->
                           <div id="editor" style="float:left"></div>
                         </div>
                       </Pane>
                       <Pane size="50" min-size="0">
-                        <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="resultsHeaders" :rowData="resultsItems"></ag-grid-vue>
+                        <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
                       </Pane>
                     </Splitpanes>
                     <!--------------->
@@ -171,35 +170,57 @@
                   <!---------------------->
                   <div style="height:35px; background-color:#303030; border-top:2px solid #2c2c2c;">
                     <!-- CLIENT -->
-                      <v-row v-if="tabSelected == 'client' || tabSelected == 'content'" no-gutters style="flex-wrap: nowrap;">
-                        <v-col v-if="tabSelected == 'content'" cols="auto">
-                          <v-btn @click="addRow" text small title="Add row" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
-                          <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                          <v-btn @click="removeRow" :disabled="!isRowSelected" text small title="Remove selected row(s)" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
-                          <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
-                          <v-btn @click="filterClick" text small title="Refresh rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
-                          <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                          <v-btn text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
-                          <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                        </v-col>
-                        <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
-                          <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            <v-icon v-if="bottomBarStatus=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
-                            <v-icon v-else-if="bottomBarStatus=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
-                            {{ bottomBarText }}</div>
-                        </v-col>
-                        <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="min-width: 100px; margin-top:7px; padding-left:10px; padding-right:10px;">
-                          <div class="body-2" style="text-align:right;">{{ bottomBarInfo }}</div>
-                        </v-col>
-                      </v-row>
+                    <v-row v-if="tabSelected == 'client'" no-gutters style="flex-wrap: nowrap;">
+                      <v-col v-if="clientItems.length > 0" cols="auto">
+                        <v-btn text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
+                        <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+                      </v-col>
+                      <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
+                        <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                          <v-icon v-if="bottomBarClient['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
+                          <v-icon v-else-if="bottomBarClient['status']=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
+                          <span :title="bottomBarClient['text']">{{ bottomBarClient['text'] }}</span>
+                        </div>
+                      </v-col>
+                      <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="min-width: 100px; margin-top:7px; padding-left:10px; padding-right:10px;">
+                        <div class="body-2" style="text-align:right;">{{ bottomBarClient['info'] }}</div>
+                      </v-col>
+                    </v-row>
+                    <!-- CONTENT -->
+                    <v-row v-else-if="tabSelected == 'content'" no-gutters style="flex-wrap: nowrap;">
+                      <v-col cols="auto">
+                        <v-btn @click="addRow" text small title="Add row" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+                        <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+                        <v-btn @click="removeRow" :disabled="!isRowSelected" text small title="Remove selected row(s)" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+                        <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
+                        <v-btn @click="filterClick" text small title="Refresh rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+                        <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+                        <v-btn text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
+                        <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+                      </v-col>
+
+                      <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
+                        <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                          <v-icon v-if="bottomBarContent['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
+                          <v-icon v-else-if="bottomBarContent['status']=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
+                          <span :title="bottomBarContent['text']">{{ bottomBarContent['text'] }}</span>
+                        </div>
+                      </v-col>
+                      <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="min-width: 100px; margin-top:7px; padding-left:10px; padding-right:10px;">
+                        <div class="body-2" style="text-align:right;">{{ bottomBarContent['info'] }}</div>
+                      </v-col>
+                    </v-row>
                     <!-- STRUCTURE -->
-                    <div v-else-if="tabSelected == 'structure'">
-                      <v-btn text small :title="tabStructureSelected == 'columns' ? 'New Column' : tabStructureSelected == 'indexes' ? 'New Index' : tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
-                      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                      <v-btn text small :title="tabStructureSelected == 'columns' ? 'Remove Column' : tabStructureSelected == 'indexes' ? 'Remove Index' : tabStructureSelected == 'fks' ? 'Remove Foreign Key' : 'Remove Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
-                      <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
-                      <v-btn text small :title="tabStructureSelected == 'columns' ? 'Refresh Columns' : tabStructureSelected == 'indexes' ? 'Refresh Indexes' : tabStructureSelected == 'fks' ? 'Refresh Foreign Keys' : 'Refresh Triggers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
-                    </div>
+                    <v-row v-else-if="tabSelected == 'structure'" no-gutters style="flex-wrap: nowrap;">
+                      <v-col cols="auto">
+                        <v-btn text small :title="tabStructureSelected == 'columns' ? 'New Column' : tabStructureSelected == 'indexes' ? 'New Index' : tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+                        <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+                        <v-btn text small :title="tabStructureSelected == 'columns' ? 'Remove Column' : tabStructureSelected == 'indexes' ? 'Remove Index' : tabStructureSelected == 'fks' ? 'Remove Foreign Key' : 'Remove Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+                        <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
+                        <v-btn text small :title="tabStructureSelected == 'columns' ? 'Refresh Columns' : tabStructureSelected == 'indexes' ? 'Refresh Indexes' : tabStructureSelected == 'fks' ? 'Refresh Foreign Keys' : 'Refresh Triggers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+                        <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
+                      </v-col>
+                    </v-row>
                   </div>
                 </div>
               </Pane>
@@ -433,8 +454,8 @@ export default {
       editorQuery: '',
 
       // Results Table Data
-      resultsHeaders: [],
-      resultsItems: [],
+      clientHeaders: [],
+      clientItems: [],
 
       // Structure
       tabStructureSelected: 'columns',
@@ -455,9 +476,8 @@ export default {
       contentItems: [],
 
       // Bottom Bar
-      bottomBarText: '',
-      bottomBarStatus: '', // success - failure
-      bottomBarInfo: '',
+      bottomBarClient: { text: '', status: '', info: '' },
+      bottomBarContent: { text: '', status: '', info: '' },
 
       // AG Grid
       isRowSelected: false,
@@ -649,6 +669,7 @@ export default {
         }
       }
       this.editorQuery = query
+      console.log(this.editorQuery)
 
       // Get Current Query Position
       var queryPosition = 0
@@ -864,11 +885,10 @@ export default {
         treeviewSearch: '',
         editor: '',
         editorCompleters: [],
-        resultsHeaders: [],
-        resultsItems: [],
-        bottomBarStatus: '',
-        bottomBarText: '',
-        bottomBarInfo: ''
+        clientHeaders: [],
+        clientItems: [],
+        bottomBarClient: { text: '', status: '', info: '' },
+        bottomBarContent: { text: '', status: '', info: '' }
       }
       this.connections.push(newConn)
       this.currentConn = this.connections.length - 1
@@ -887,11 +907,10 @@ export default {
         this.editor.setValue('')
         this.editorCompleters = []
         for (let i = 1; i < this.editor.completers.length; ++i) this.editor.completers.splice(i, 1)
-        this.resultsHeaders = []
-        this.resultsItems = []
-        this.bottomBarStatus = ''
-        this.bottomBarText = ''
-        this.bottomBarInfo = ''
+        this.clientHeaders = []
+        this.clientItems = []
+        this.bottomBarClient = { text: '', status: '', info: '' }
+        this.bottomBarContent = { text: '', status: '', info: '' }
       }
       else if (index == this.currentConn) {
         if (this.connections.length > index) this.__loadConn(index)
@@ -925,11 +944,10 @@ export default {
         treeviewSearch: this.treeviewSearch,
         editor: this.editor.getValue(),
         editorCompleters: this.editorCompleters.slice(0),
-        resultsHeaders: this.resultsHeaders.slice(0),
-        resultsItems: this.resultsItems.slice(0),
-        bottomBarStatus: this.bottomBarStatus,
-        bottomBarText: this.bottomBarText,
-        bottomBarInfo: this.bottomBarInfo
+        clientHeaders: this.clientHeaders.slice(0),
+        clientItems: this.clientItems.slice(0),
+        bottomBarClient: JSON.parse(JSON.stringify(this.bottomBarClient)),
+        bottomBarContent: JSON.parse(JSON.stringify(this.bottomBarStatus))
       }
     },
     __loadConn(index) {
@@ -943,18 +961,15 @@ export default {
       for (let i = 0; i < this.editor.completers.length; ++i) this.editor.completers.splice(1, 1)
       this.editorCompleters =  this.connections[index]['editorCompleters'].slice(0)
       for (let i = 0; i < this.editorCompleters.length; ++i) this.editor.completers.push(this.editorCompleters[i])
-      this.resultsHeaders = this.connections[index]['resultsHeaders'].slice(0)
-      this.resultsItems = this.connections[index]['resultsItems'].slice(0)
-      this.bottomBarStatus = this.connections[index]['bottomBarStatus']
-      this.bottomBarText = this.connections[index]['bottomBarText']
-      this.bottomBarInfo = this.connections[index]['bottomBarInfo']
+      this.clientHeaders = this.connections[index]['clientHeaders'].slice(0)
+      this.clientItems = this.connections[index]['clientItems'].slice(0)
+      this.bottomBarClient = this.connections[index]['bottomBarClient']
+      this.bottomBarContent = this.connections[index]['bottomBarContent']
     },
     runQuery() {
-      this.resultsHeaders = []
-      this.resultsItems = []
-      this.bottomBarStatus = ''
-      this.bottomBarText = ''
-      this.bottomBarInfo = ''
+      this.clientHeaders = []
+      this.clientItems = []
+      this.bottomBarClient = { text: '', status: '', info: '' }
       this.loadingQuery = true
       const payload = {
         server: this.serverSelected.id,
@@ -985,30 +1000,37 @@ export default {
           headers.push({ headerName: keys[i], field: keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
         }
       }
-      this.resultsHeaders = headers
-      this.resultsItems = items
+      this.clientHeaders = headers
+      this.clientItems = items
       // Build BottomBar
       this.parseBottomBar(data)
     },
     parseBottomBar(data) {
-      // Build BottomBar
-      this.bottomBarStatus = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
-      this.bottomBarText = data[data.length-1]['query']
-      this.bottomBarInfo = (data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['query_result'].length + ' records | ' : ''
-      this.bottomBarInfo += data.length + ' queries'
+      var elapsed = null
       if (data[data.length-1]['query_time'] !== undefined) {
-        var elapsed = 0
+        elapsed = 0
         for (let i = 0; i < data.length; ++i) {
           elapsed += parseFloat(data[i]['query_time'])
         }
-        elapsed /= data.length      
-        this.bottomBarInfo += ' | ' + elapsed.toString() + 's elapsed'
+        elapsed /= data.length
+      }
+
+      if (this.tabSelected == 'content') {
+        this.bottomBarContent['status'] = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
+        this.bottomBarContent['text'] = data[data.length-1]['query']
+        this.bottomBarContent['info'] = this.contentItems.length + ' records'
+        if (elapsed != null) this.bottomBarContent['info'] += ' | ' + elapsed.toString() + 's elapsed'
+      }
+      else if (this.tabSelected == 'client') {
+        this.bottomBarClient['status'] = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
+        this.bottomBarClient['text'] = data[data.length-1]['query']
+        this.bottomBarClient['info'] = (data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['query_result'].length + ' records | ' : ''
+        this.bottomBarClient['info'] += data.length + ' queries'
+        if (elapsed != null) this.bottomBarClient['info'] += ' | ' + elapsed.toString() + 's elapsed'
       }
     },
     getContent() {
-      this.bottomBarStatus = ''
-      this.bottomBarText = ''
-      this.bottomBarInfo = ''
+      this.bottomBarContent = { status: '', text: '', info: '' }
       const payload = {
         server: this.serverSelected.id,
         database: this.database,
@@ -1355,8 +1377,8 @@ export default {
         this.currentCellEditNode.setSelected(true)
         this.cellEditingSubmit()
       }
-      else if (this.currentCellEditValues[event.colDef.field] === undefined) {
-        this.currentCellEditValues[event.colDef.field] = {'old': event.value}
+      if (this.currentCellEditValues[event.colDef.field] === undefined) {
+        this.currentCellEditValues[event.colDef.field] = {'old': event.value == 'NULL' ? null : event.value}
       }
     },
     cellEditingStopped(event) {
@@ -1373,33 +1395,31 @@ export default {
       if (this.gridApi.getEditingCells().length == 0) this.cellEditingSubmit()
     },
     cellEditingSubmit() {
-      // Check if there's a value to be updated
-      var keys = Object.keys(this.currentCellEditValues)
+      var query = ''
       var valuesToUpdate = []
-      var valuesWithCondition = []
-      for (let i = 0; i < keys.length; ++i) {
-        if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) {
-          if (this.currentCellEditValues[keys[i]]['new'] == null) {
-            valuesToUpdate.push('NULL')
-            valuesWithCondition.push(keys[i] + " = NULL")
-          }
-          else {
-            valuesToUpdate.push("'" + this.currentCellEditValues[keys[i]]['new'] + "'")
-            valuesWithCondition.push(keys[i] + " = '" + this.currentCellEditValues[keys[i]]['new'] + "'")
-          }
+      // NEW
+      if (this.currentCellEditMode == 'new') {
+        let keys = Object.keys(this.currentCellEditNode.data)
+        for (let i = 0; i < keys.length; ++i) {
+          if (this.currentCellEditNode.data[keys[i]] == null) valuesToUpdate.push('NULL')
+          else valuesToUpdate.push("'" + this.currentCellEditNode.data[keys[i]] + "'")
         }
+        query = "INSERT INTO " + this.treeviewSelected['name'] + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
       }
-      if (valuesToUpdate.length > 0) {
-        var query = ''
-        if (this.currentCellEditMode == 'new') {
-          query = "INSERT INTO " + this.treeviewSelected['name'] + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
+      // EDIT
+      else if (this.currentCellEditMode == 'edit') {
+        let keys = Object.keys(this.currentCellEditValues)
+        for (let i = 0; i < keys.length; ++i) {
+          if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) {
+            if (this.currentCellEditValues[keys[i]]['new'] == null) valuesToUpdate.push(keys[i] + " = NULL")
+            else valuesToUpdate.push(keys[i] + " = '" + this.currentCellEditValues[keys[i]]['new'] + "'")
+          }
         }
-        else if (this.currentCellEditMode == 'edit') {
-          // Build Pks
-          let pks = []
-          for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + this.currentCellEditValues[this.contentPks[i]]['old'] + "'")
-          query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesWithCondition.join(', ') + " WHERE " + pks.join(' AND ') + ';'
-        }
+        let pks = []
+        for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + this.currentCellEditNode.data[this.contentPks[i]] + "'")
+        query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + pks.join(' AND ') + ';'
+      }
+      if (this.currentCellEditMode == 'new' || (this.currentCellEditMode == 'edit' && valuesToUpdate.length > 0)) {
         // Execute Query
         const payload = {
           server: this.serverSelected.id,
@@ -1463,11 +1483,12 @@ export default {
 
       // Edit Row
       setTimeout(() => {
+        let focused = this.gridApi.getFocusedCell()
         this.currentCellEditNode.setSelected(true)
-        this.gridApi.setFocusedCell(this.currentCellEditNode.rowIndex, this.contentColumnsName[0])
+        this.gridApi.setFocusedCell(focused.rowIndex, focused.column.colId)
         this.gridApi.startEditingCell({
-          rowIndex: this.currentCellEditNode.rowIndex,
-          colKey: this.contentColumnsName[0]
+          rowIndex: focused.rowIndex,
+          colKey: focused.column.colId
         });
       }, 100);
     },
