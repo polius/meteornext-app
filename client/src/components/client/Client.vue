@@ -500,7 +500,7 @@ export default {
       snackbarText: '',
 
       // Helpers
-      click: undefined
+      click: undefined,
     }
   },
   components: { Splitpanes, Pane, AgGridVue },
@@ -1285,6 +1285,7 @@ export default {
       // Clean vars
       this.currentCellEditValues = {}
       this.currentCellEditNode = {}
+      this.currentCellEditMode = 'new'
 
       var newData = {}
       for (let i = 0; i < this.contentColumnsName.length; ++i) {
@@ -1302,7 +1303,6 @@ export default {
         rowIndex: this.gridApi.getDisplayedRowCount()-1,
         colKey: this.contentColumnsName[0]
       });
-      this.currentCellEditMode = 'new'
     },
     removeRow() {
       // Show confirmation dialog
@@ -1361,10 +1361,6 @@ export default {
             this.parseBottomBar(data)
           }
         })
-
-      // this.currentCellEditNode = this.gridApi.getSelectedNodes()[0]
-      // this.currentCellEditValues = this.currentCellEditNode.data
-      // this.contentItems.splice(this.currentCellEditNode.rowIndex, 1)
     },
     onSelectionChanged() {
       this.isRowSelected = this.gridApi.getSelectedNodes().length > 0
@@ -1375,7 +1371,7 @@ export default {
         this.gridApi.setFocusedCell(this.currentCellEditNode.rowIndex, this.contentColumnsName[0])
         this.gridApi.clearFocusedCell()
         this.currentCellEditNode.setSelected(true)
-        this.cellEditingSubmit()
+        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
       }
       if (this.currentCellEditValues[event.colDef.field] === undefined) {
         this.currentCellEditValues[event.colDef.field] = {'old': event.value == 'NULL' ? null : event.value}
@@ -1389,37 +1385,42 @@ export default {
       // Store new value
       if (event.rowIndex == this.currentCellEditNode.rowIndex) {
         if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
-        this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
+        if (this.currentCellEditMode == 'edit') this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
       }
       // Check if the row has to be edited
-      if (this.gridApi.getEditingCells().length == 0) this.cellEditingSubmit()
+      if (this.gridApi.getEditingCells().length == 0) this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+
+      // Clean vars
+      this.currentCellEditMode = 'edit'
+      this.currentCellEditNode = {}
+      this.currentCellEditValues = {}
     },
-    cellEditingSubmit() {
+    cellEditingSubmit(mode, node, values) {
       var query = ''
       var valuesToUpdate = []
       // NEW
-      if (this.currentCellEditMode == 'new') {
-        let keys = Object.keys(this.currentCellEditNode.data)
+      if (mode == 'new') {
+        let keys = Object.keys(node.data)
         for (let i = 0; i < keys.length; ++i) {
-          if (this.currentCellEditNode.data[keys[i]] == null) valuesToUpdate.push('NULL')
-          else valuesToUpdate.push("'" + this.currentCellEditNode.data[keys[i]] + "'")
+          if (node.data[keys[i]] == null) valuesToUpdate.push('NULL')
+          else valuesToUpdate.push("'" + node.data[keys[i]] + "'")
         }
         query = "INSERT INTO " + this.treeviewSelected['name'] + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
       }
       // EDIT
-      else if (this.currentCellEditMode == 'edit') {
-        let keys = Object.keys(this.currentCellEditValues)
+      else if (mode == 'edit') {
+        let keys = Object.keys(values)
         for (let i = 0; i < keys.length; ++i) {
-          if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) {
-            if (this.currentCellEditValues[keys[i]]['new'] == null) valuesToUpdate.push(keys[i] + " = NULL")
-            else valuesToUpdate.push(keys[i] + " = '" + this.currentCellEditValues[keys[i]]['new'] + "'")
+          if (values[keys[i]]['old'] != values[keys[i]]['new']) {
+            if (values[keys[i]]['new'] == null) valuesToUpdate.push(keys[i] + " = NULL")
+            else valuesToUpdate.push(keys[i] + " = '" + values[keys[i]]['new'] + "'")
           }
         }
         let pks = []
-        for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + this.currentCellEditNode.data[this.contentPks[i]] + "'")
+        for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + node.data[this.contentPks[i]] + "'")
         query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + pks.join(' AND ') + ';'
       }
-      if (this.currentCellEditMode == 'new' || (this.currentCellEditMode == 'edit' && valuesToUpdate.length > 0)) {
+      if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
         // Execute Query
         const payload = {
           server: this.serverSelected.id,
@@ -1430,10 +1431,6 @@ export default {
           .then((response) => {
             // Build BottomBar
             this.parseBottomBar(JSON.parse(response.data.data))
-            // Clean vars
-            this.currentCellEditMode = 'edit'
-            this.currentCellEditNode = {}
-            this.currentCellEditValues = {}
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -1450,6 +1447,10 @@ export default {
               this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
               // Build BottomBar
               this.parseBottomBar(data)
+              // Restore vars
+              this.currentCellEditMode = mode
+              this.currentCellEditNode = node
+              this.currentCellEditValues = values
             }
           })
       }
