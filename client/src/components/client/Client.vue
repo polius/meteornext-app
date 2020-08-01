@@ -539,7 +539,7 @@ export default {
       this.editorTools = ace.require("ace/ext/language_tools")
 
       // Highlight Queries
-      this.editor.getSelection().on("changeCursor", this.highlightQueries)
+      this.editor.on("changeSelection", this.highlightQueries)
 
       // Add custom keybinds
       this.editor.commands.removeCommand('transposeletters')
@@ -981,9 +981,23 @@ export default {
           this.parseExecution(JSON.parse(response.data.data))
         })
         .catch((error) => {
-          console.log(error)
-          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          // else this.notification(error.response.data.message, 'error')
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else {
+            // Get Response Data
+            let data = JSON.parse(error.response.data.data)
+            this.parseClientBottomBar(data)
+            // Close Editor Completer
+            this.editor.blur()
+            // Show confirmation dialog
+            var dialogOptions = {
+              'mode': 'queryError',
+              'title': 'Error Message',
+              'text': data[data.length-1]['error'],
+              'button1': 'Close',
+              'button2': ''
+            }
+            this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+          }
         })
         .finally(() => {
           this.loadingQuery = false
@@ -1016,8 +1030,8 @@ export default {
         elapsed /= data.length
       }
       this.bottomBarClient['status'] = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
-      this.bottomBarClient['text'] = data[data.length-1]['query']
-      this.bottomBarClient['info'] = (data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['data'].length + ' records | ' : ''
+      this.bottomBarClient['text'] = data[data.length-1]['query'].endsWith(';') ? data[data.length-1]['query'] : data[data.length-1]['query'] + ';'
+      this.bottomBarClient['info'] = (data[data.length-1]['data'] !== undefined && data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['data'].length + ' records | ' : ''
       this.bottomBarClient['info'] += data.length + ' queries'
       if (elapsed != null) this.bottomBarClient['info'] += ' | ' + elapsed.toString() + 's elapsed'
     },
@@ -1429,7 +1443,7 @@ export default {
           }
         }
         let pks = []
-        for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + node.data[this.contentPks[i]] + "'")
+        for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + values[this.contentPks[i]]['old'] + "'")
         query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + pks.join(' AND ') + ';'
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
@@ -1449,7 +1463,7 @@ export default {
             // Build BottomBar
             this.parseContentBottomBar(data)
             // Check AUTO_INCREMENTs
-            if (data[0].query.startsWith('INSERT')) node.setDataValue(this.contentPks[0], data[0].data)
+            if (data[0].query.startsWith('INSERT')) node.setDataValue(this.contentPks[0], data[0].lastRowId)
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -1533,6 +1547,10 @@ export default {
       }
       else if (this.dialogMode == 'info') {
         this.dialog = false
+      }
+      else if (this.dialogMode == 'queryError') {
+        this.dialog = false
+        this.editor.focus()
       }
     },
     notification(message, color, timeout=5) {
