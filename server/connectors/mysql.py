@@ -106,10 +106,10 @@ class MySQL:
                 cursor.execute(query, args)
 
             # Get the query results
-            query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
+            data = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
 
         # Return query info
-        query_data = {"query_result": query_result, "query_time": "{0:.3f}".format(time.time() - start_time)}
+        query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": cursor.rowcount, "time": "{0:.3f}".format(time.time() - start_time)}
         return query_data
 
     def begin(self):
@@ -126,7 +126,7 @@ class MySQL:
 
     def get_all_databases(self):
         query = "SHOW DATABASES"
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
 
         databases = []
         for db in result:
@@ -139,7 +139,7 @@ class MySQL:
             FROM information_schema.tables 
             WHERE table_schema = %s
         """
-        return self.execute(query, args=(db))['query_result']
+        return self.execute(query, args=(db))['data']
 
     def get_all_columns(self, db):
         query = """
@@ -147,7 +147,7 @@ class MySQL:
             FROM information_schema.columns
             WHERE table_schema = %s
         """
-        return self.execute(query, args=(db))['query_result']
+        return self.execute(query, args=(db))['data']
 
     def get_all_triggers(self, db):
         query = """
@@ -155,7 +155,7 @@ class MySQL:
             FROM information_schema.triggers
             WHERE trigger_schema = %s
         """
-        return self.execute(query, args=(db))['query_result']
+        return self.execute(query, args=(db))['data']
 
     def get_all_events(self, db):
         query = """
@@ -163,7 +163,7 @@ class MySQL:
             FROM information_schema.events
             WHERE event_schema = %s;
         """
-        return self.execute(query, args=(db))['query_result']
+        return self.execute(query, args=(db))['data']
 
     def get_all_routines(self, db):
         query = """
@@ -171,7 +171,7 @@ class MySQL:
             FROM information_schema.routines
             WHERE routine_schema = %s
         """
-        return self.execute(query, args=(db))['query_result']
+        return self.execute(query, args=(db))['data']
 
     def get_columns(self, db, table):
         query = """
@@ -191,7 +191,7 @@ class MySQL:
             AND table_name = %s
             ORDER BY ordinal_position
         """
-        return self.execute(query, args=(db, table))['query_result']
+        return self.execute(query, args=(db, table))['data']
 
     def get_indexes(self, db, table):
         query = """
@@ -208,7 +208,7 @@ class MySQL:
             AND table_name = %s
             GROUP BY index_name, index_type, non_unique
         """
-        return self.execute(query, args=(db, table))['query_result']
+        return self.execute(query, args=(db, table))['data']
 
     def get_fks(self, db, table):
         query = """
@@ -218,7 +218,7 @@ class MySQL:
             WHERE c.constraint_schema = %s
             AND k.table_name = %s
         """
-        return self.execute(query, args=(db, table))['query_result']
+        return self.execute(query, args=(db, table))['data']
     
     def get_triggers(self, db, table):
         query = """
@@ -227,11 +227,11 @@ class MySQL:
             WHERE event_object_schema = %s
             AND event_object_table = %s
         """
-        return self.execute(query, args=(db, table))['query_result']
+        return self.execute(query, args=(db, table))['data']
 
     def get_databases(self, db_regex):
         query = "SELECT DISTINCT(table_schema) AS table_schema FROM information_schema.tables WHERE table_schema LIKE '" + db_regex.strip() + "'"
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
 
         databases = []
         for db in result:
@@ -240,32 +240,32 @@ class MySQL:
 
     def get_table_size(self, db, table):
         query = "SELECT (data_length + index_length)/1024/1024 AS table_size FROM information_schema.tables WHERE table_schema = \"" + db.strip() + "\" AND table_name = \"" + table.strip() + "\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return result[0]['table_size']
 
     def check_db_exists(self, db):
         query = "SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"" + db.strip() + "\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) == 1 else False
 
     def check_table_exists(self, db, table):
         query = "SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_schema = \"" + db.strip() + "\" AND table_name = \"" + table.strip() + "\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) == 1 else False
 
     def check_column_exists(self, db, table, column):
         query = "SELECT COUNT(*) AS count FROM information_schema.columns WHERE table_schema = \"" + db.strip() + "\" AND table_name = \"" + table.strip() + "\" AND column_name = \"" + column.strip() + "\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) == 1 else False
 
     def check_index_exists(self, db, table, index):
         query = "SELECT COUNT(*) AS count FROM information_schema.statistics WHERE table_schema = \"" + db.strip() + "\" AND table_name = \"" + table.strip() + "\" AND index_name = \"" + index.strip() + "\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) > 0 else False
 
     def check_pk_exists(self, db, table):
         query = "SELECT COUNT(*) AS count FROM information_schema.statistics WHERE table_schema = \"" + db.strip() + "\" AND table_name = \"" + table.strip() + "\" AND index_name = \"PRIMARY\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) >= 1 else False
 
     def check_pk_exists_columns(self, db, table, columns):
@@ -282,62 +282,62 @@ class MySQL:
                 HAVING COUNT(*) = {}
             ) AS exist;
             """.format(db, table, str(columns)[1:-1], len(columns))
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['exist']) == 1 else False
 
     def check_fk_exists(self, db, table, column):
         query = "SELECT COUNT(*) AS count FROM information_schema.key_column_usage WHERE table_schema = \"" + db.strip() + "\" AND table_name = \"" + table.strip() + "\" AND column_name = \"" + column.strip() + "\" AND referenced_table_name IS NOT NULL"
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) == 1 else False
 
     def check_fk_exists_by_name(self, db, table, foreign):
         query = "SELECT COUNT(*) AS count FROM information_schema.key_column_usage WHERE table_schema = \"" + db.strip() + "\" AND table_name = \"" + table.strip() + "\" AND constraint_name = \"" + foreign.strip() + "\" AND referenced_table_name IS NOT NULL"
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) == 1 else False
 
     def check_partition_exists(self, db, table, partition):
         query = "SELECT COUNT(*) AS count FROM information_schema.partitions WHERE table_schema = \"" + db.strip() + "\" AND table_name = \"" + table.strip() + "\" AND partition_name = \"" + partition.strip() + "\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) == 1 else False
 
     def check_trigger_exists(self, db, table, trigger):
         query = "SELECT COUNT(*) AS count FROM information_schema.triggers WHERE event_object_schema = \"" + db.strip() + "\" AND event_object_table LIKE \"" + table.strip() + "\" AND trigger_name = \"" + trigger.strip() + "\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) == 1 else False
 
     def check_view_exists(self, db, view):
         query = "SELECT COUNT(*) AS count FROM information_schema.views WHERE table_schema = \"" + db.strip() + "\" AND table_name = \"" + view.strip() + "\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) == 1 else False
 
     def check_function_exists(self, db, function):
         query = "SELECT COUNT(*) AS count FROM information_schema.routines WHERE routine_schema = \"" + db.strip() + "\" AND routine_name = \"" + function.strip() + "\" AND routine_type = \"FUNCTION\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) == 1 else False
 
     def check_procedure_exists(self, db, procedure):
         query = "SELECT COUNT(*) AS count FROM information_schema.routines WHERE routine_schema = \"" + db.strip() + "\" AND routine_name = \"" + procedure.strip() + "\" AND routine_type = \"PROCEDURE\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) == 1 else False
 
     def check_event_exists(self, event):
         query = "SELECT COUNT(*) AS count FROM information_schema.events WHERE EVENT_NAME = \"" + event.strip() + "\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) == 1 else False
 
     def check_user_exists(self, user, host):
         query = "SELECT COUNT(*) AS count FROM mysql.user WHERE User = \"" + user + "\" AND Host = \"" + host.strip() + "\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return True if int(result[0]['count']) == 1 else False
 
     def get_row_format(self, db, table):
         query = "SELECT row_format AS row_format FROM information_schema.tables WHERE table_schema = \"" + db.strip() + "\" AND table_name = \"" + table.strip() + "\""
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         return result[0]['row_format']
 
     def get_column_names(self, db, table):
         query = "SELECT COLUMN_NAME, COLUMN_DEFAULT FROM information_schema.columns WHERE table_schema = '" + db.strip() + "' AND table_name = '" + table.strip() + "' ORDER BY ordinal_position"
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
 
         columns = {'name': [], 'default': []}
         for cl in result:
@@ -347,7 +347,7 @@ class MySQL:
 
     def get_pk_names(self, db, table):
         query = "SELECT COLUMN_NAME FROM information_schema.statistics WHERE table_schema = '" + db.strip() + "' AND table_name = '" + table.strip() + "' AND index_name = 'PRIMARY'"
-        result = self.execute(query)['query_result']
+        result = self.execute(query)['data']
         
         columns = []
         for cl in result:
