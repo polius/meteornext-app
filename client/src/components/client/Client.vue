@@ -11,7 +11,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-tab @click="tabContent()" :disabled="treeviewMode != 'objects' || treeview.length == 0 || ('children' in treeviewSelected) || !(['Table','View'].includes(treeviewSelected['type']))"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-bars</v-icon>Content</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tab @click="tabInfo(treeviewSelected['type'].toLowerCase())" :disabled="treeviewMode != 'objects' || treeview.length == 0 || ('children' in treeviewSelected) || !(['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type']))"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-info</v-icon>Info</span></v-tab>
+          <v-tab @click="tabInfo(treeviewSelected['type'].toLowerCase())" :disabled="treeviewMode != 'objects' || treeview.length == 0 || ('children' in treeviewSelected) || !(['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type']))"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-italic</v-icon>Info</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-spacer></v-spacer>
           <v-tab :disabled="treeviewMode == 'servers'" title="Users" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-user-shield</v-icon></span></v-tab>
