@@ -14,10 +14,9 @@
           <v-tab @click="tabInfo(treeviewSelected['type'].toLowerCase())" :disabled="treeviewMode != 'objects' || treeview.length == 0 || ('children' in treeviewSelected) || !(['Table','View','Trigger','Function','Procedure','Event'].includes(treeviewSelected['type']))"><span class="pl-2 pr-2"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-italic</v-icon>Info</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-spacer></v-spacer>
-          <v-tab :disabled="treeviewMode == 'servers'" title="Users" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-user-shield</v-icon></span></v-tab>
-          <v-tab title="Saved Queries" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-star</v-icon></span></v-tab>
           <v-tab title="Query History" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-history</v-icon></span></v-tab>
-          <v-tab title="Settings" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-cog</v-icon></span></v-tab>
+          <v-tab title="Saved Queries" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-star</v-icon></span></v-tab>
+          <v-tab :disabled="treeviewMode == 'servers'" title="Users" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-shield-alt</v-icon></span></v-tab>
         </v-tabs>
     </div>
     <v-container fluid>
@@ -717,8 +716,16 @@ export default {
       }).then((data) => {
         // Single Click
         if (data == 'single') {
-          this.treeviewSelected = item
-          if (this.tabSelected == 'content') this.getContent()
+          if (item.children === undefined) {
+            if (this.treeviewSelected == item) {
+              this.treeviewSelected = {}
+              this.tabClient()
+            }
+            else {
+              this.treeviewSelected = item
+              if (this.tabSelected == 'content') this.getContent()
+            }
+          }
         }
         // Double Click
         else if (data == 'double') {
@@ -1178,6 +1185,7 @@ export default {
       this.columnApi.autoSizeColumns(allColumnIds);
     },
     tabClient() {
+      this.tabs = 0
       this.tabSelected = 'client'
       setTimeout(() => { this.editor.focus() }, 100)
     },
