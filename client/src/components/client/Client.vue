@@ -100,7 +100,7 @@
                     <!------------>
                     <!-- CLIENT -->
                     <!------------>
-                    <Splitpanes v-if="tabSelected == 'client'" horizontal @ready="initAce()">
+                    <Splitpanes v-show="tabSelected == 'client'" horizontal @ready="initAce()">
                       <Pane size="50">
                         <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                           <div id="editor" style="float:left"></div>
@@ -113,7 +113,7 @@
                     <!--------------->
                     <!-- STRUCTURE -->
                     <!--------------->
-                    <div v-else-if="tabSelected == 'structure'" style="width:100%; height:100%;">
+                    <div v-show="tabSelected == 'structure'" style="width:100%; height:100%;">
                       <v-tabs show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
                         <v-tabs-slider></v-tabs-slider>
                         <v-tab @click="tabStructureColumns()"><span class="pl-2 pr-2">Columns</span></v-tab>
@@ -133,7 +133,7 @@
                     <!------------->
                     <!-- CONTENT -->
                     <!------------->
-                    <div v-else-if="tabSelected == 'content'" style="width:100%; height:100%">
+                    <div v-show="tabSelected == 'content'" style="width:100%; height:100%">
                       <div style="height:45px; background-color:#303030; margin:0px;">
                         <v-row no-gutters>
                           <v-col sm="auto">
@@ -464,6 +464,7 @@ export default {
       structureItems: [],
 
       // Content
+      contentTableSelected: '',
       contentColumnsName: [],
       contentColumnsDefault: [],
       contentPks: [],
@@ -669,7 +670,6 @@ export default {
         }
       }
       this.editorQuery = query
-      console.log(this.editorQuery)
 
       // Get Current Query Position
       var queryPosition = 0
@@ -1036,6 +1036,9 @@ export default {
       if (elapsed != null) this.bottomBarContent['info'] += ' | ' + elapsed.toString() + 's elapsed'
     },
     getContent() {
+      this.contentItems = []
+      this.contentHeaders = []
+      this.contentTableSelected = this.treeviewSelected['name']
       this.bottomBarContent = { status: '', text: '', info: '' }
       const payload = {
         server: this.serverSelected.id,
@@ -1080,10 +1083,9 @@ export default {
           })
         }
       }
-      this.gridApi.setColumnDefs([])
-      this.gridApi.setColumnDefs(headers)
+      this.contentHeaders = []
+      this.contentHeaders = headers
       this.contentItems = items
-      // this.gridApi.setRowData(items)
       this.isRowSelected = false
 
       // Build BottomBar
@@ -1194,7 +1196,7 @@ export default {
     },
     tabContent() {
       this.tabSelected = 'content'
-      this.getContent()
+      if (this.contentTableSelected != this.treeviewSelected['name']) this.getContent()
     },
     tabInfo(object) {
       this.tabSelected = object + '_info'
