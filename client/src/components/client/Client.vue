@@ -469,7 +469,7 @@ export default {
       contentColumnsDefault: [],
       contentPks: [],
       contentSearchColumn: '',
-      contentSearchFilterItems: ['=','<>','LIKE','NOT LIKE','REGEXP','NOT REGEXP','IN','NOT IN','BETWEEN','IS NULL','IS NOT NULL'],
+      contentSearchFilterItems: ['=','!=','>','<','>=','<=','LIKE','NOT LIKE','IN','NOT IN','BETWEEN','IS NULL','IS NOT NULL'],
       contentSearchFilter: '=',
       contentSearchFilterText: '',
       contentSearchFilterText2: '', // contentSearchFilterItems == 'BETWEEN'
@@ -1021,7 +1021,7 @@ export default {
       this.bottomBarClient['info'] += data.length + ' queries'
       if (elapsed != null) this.bottomBarClient['info'] += ' | ' + elapsed.toString() + 's elapsed'
     },
-    parseContentBottomBar(data) {
+    parseContentBottomBar(data) {     
       var elapsed = null
       if (data[data.length-1]['time'] !== undefined) {
         elapsed = 0
@@ -1032,7 +1032,7 @@ export default {
       }
       this.bottomBarContent['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
       this.bottomBarContent['text'] = data[0]['query']
-      this.bottomBarContent['info'] = this.contentItems.length + ' records'
+      this.bottomBarContent['info'] = this.gridApi.getDisplayedRowCount() + ' records'
       if (elapsed != null) this.bottomBarContent['info'] += ' | ' + elapsed.toString() + 's elapsed'
     },
     getContent() {
@@ -1086,6 +1086,7 @@ export default {
       this.contentHeaders = []
       this.contentHeaders = headers
       this.contentItems = items
+      this.gridApi.setRowData(items)
       this.isRowSelected = false
 
       // Build BottomBar
@@ -1311,7 +1312,7 @@ export default {
       var nodes = this.gridApi.getSelectedNodes()
       for (let i = 0; i < nodes.length; ++i) nodes[i].setSelected(false)
 
-      this.gridApi.applyTransaction({ add: [newData] });
+      this.gridApi.applyTransaction({ add: [newData] })
       this.gridApi.setFocusedCell(rowCount, this.contentColumnsName[0])
       var node = this.gridApi.getDisplayedRowAtIndex(rowCount)
       node.setSelected(true)
@@ -1353,10 +1354,10 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
-          // Build BottomBar
-          this.parseContentBottomBar(JSON.parse(response.data.data))
           // Remove Frontend Rows
           this.gridApi.applyTransaction({ remove: this.gridApi.getSelectedRows() })
+          // Build BottomBar
+          this.parseContentBottomBar(JSON.parse(response.data.data))
           // Close Dialog
           this.dialog = false
         })
@@ -1478,23 +1479,25 @@ export default {
       this.dialog = false
 
       // Restore old values
-      if (this.currentCellEditMode == 'new') {
-        this.contentItems.splice(this.currentCellEditNode.rowIndex, 1)
-      }
-      else if (this.currentCellEditMode == 'edit') {
-        let keys = Object.keys(this.currentCellEditValues)
-        var newData = this.currentCellEditNode.data
-        for (let i = 0; i < keys.length; ++i) {
-          if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) newData[keys[i]] = this.currentCellEditValues[keys[i]]['old']
-        }
-        this.currentCellEditNode.setData(newData)
-        this.currentCellEditNode.setSelected(true)
-      }
+      // if (this.currentCellEditMode == 'new') {
+      //   this.contentItems.splice(this.currentCellEditNode.rowIndex, 1)
+      // }
+      // else if (this.currentCellEditMode == 'edit') {
+      //   let keys = Object.keys(this.currentCellEditValues)
+      //   var newData = this.currentCellEditNode.data
+      //   for (let i = 0; i < keys.length; ++i) {
+      //     if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) newData[keys[i]] = this.currentCellEditValues[keys[i]]['old']
+      //   }
+      //   this.currentCellEditNode.setData(newData)
+      //   this.currentCellEditNode.setSelected(true)
+      // }
 
       // Clean vars
       this.currentCellEditMode = 'edit'
       this.currentCellEditNode = {}
       this.currentCellEditValues = {}
+
+      this.filterClick()
     },
     cellEditingEdit() {
       // Close Dialog
