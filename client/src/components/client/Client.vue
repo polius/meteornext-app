@@ -992,42 +992,48 @@ export default {
     parseExecution(data) {
       // Build Data Table
       var headers = []
-      var items = data[data.length - 1]['query_result']
+      var items = data[data.length - 1]['data']
       // Build Headers
-      if (data.length > 0 && data[0]['query_result'].length > 0) {
-        var keys = Object.keys(data[data.length - 1]['query_result'][0])
+      if (data.length > 0 && data[0]['data'].length > 0) {
+        var keys = Object.keys(data[data.length - 1]['data'][0])
         for (let i = 0; i < keys.length; ++i) {
-          headers.push({ headerName: keys[i], field: keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+          let field = keys[i].trim().toLowerCase()
+          headers.push({ headerName: keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
         }
       }
       this.clientHeaders = headers
       this.clientItems = items
       // Build BottomBar
-      this.parseBottomBar(data)
+      this.parseClientBottomBar(data)
     },
-    parseBottomBar(data) {
+    parseClientBottomBar(data) {
       var elapsed = null
-      if (data[data.length-1]['query_time'] !== undefined) {
+      if (data[data.length-1]['time'] !== undefined) {
         elapsed = 0
         for (let i = 0; i < data.length; ++i) {
-          elapsed += parseFloat(data[i]['query_time'])
+          elapsed += parseFloat(data[i]['time'])
         }
         elapsed /= data.length
       }
-
-      if (this.tabSelected == 'content') {
-        this.bottomBarContent['status'] = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
-        this.bottomBarContent['text'] = data[data.length-1]['query']
-        this.bottomBarContent['info'] = this.contentItems.length + ' records'
-        if (elapsed != null) this.bottomBarContent['info'] += ' | ' + elapsed.toString() + 's elapsed'
+      this.bottomBarClient['status'] = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
+      this.bottomBarClient['text'] = data[data.length-1]['query']
+      this.bottomBarClient['info'] = (data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['data'].length + ' records | ' : ''
+      this.bottomBarClient['info'] += data.length + ' queries'
+      if (elapsed != null) this.bottomBarClient['info'] += ' | ' + elapsed.toString() + 's elapsed'
+    },
+    parseContentBottomBar(data) {
+      var elapsed = null
+      if (data[data.length-1]['time'] !== undefined) {
+        elapsed = 0
+        for (let i = 0; i < data.length; ++i) {
+          elapsed += parseFloat(data[i]['time'])
+        }
+        elapsed /= data.length
       }
-      else if (this.tabSelected == 'client') {
-        this.bottomBarClient['status'] = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
-        this.bottomBarClient['text'] = data[data.length-1]['query']
-        this.bottomBarClient['info'] = (data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['query_result'].length + ' records | ' : ''
-        this.bottomBarClient['info'] += data.length + ' queries'
-        if (elapsed != null) this.bottomBarClient['info'] += ' | ' + elapsed.toString() + 's elapsed'
-      }
+      this.bottomBarContent['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
+      this.bottomBarContent['text'] = data[0]['query']
+      this.bottomBarContent['info'] = this.contentItems.length + ' records'
+      if (elapsed != null) this.bottomBarContent['info'] += ' | ' + elapsed.toString() + 's elapsed'
     },
     getContent() {
       this.bottomBarContent = { status: '', text: '', info: '' }
@@ -1050,7 +1056,7 @@ export default {
     parseContentExecution(data) {
       // Build Data Table
       var headers = []
-      var items = data[0]['query_result']
+      var items = data[0]['data']
       // Build Headers
       if (data.length > 0) {
         this.contentColumnsName = data[0]['columns']['name']
@@ -1059,10 +1065,10 @@ export default {
         this.contentSearchColumn = this.contentColumnsName[0].trim().toLowerCase()
         for (let i = 0; i < this.contentColumnsName.length; ++i) {
           let field = this.contentColumnsName[i].trim().toLowerCase()
-          headers.push({ headerName: this.contentColumnsName[i], field: field, sortable: true, filter: true, resizable: true, editable: true, 
+          headers.push({ headerName: this.contentColumnsName[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true, 
             valueGetter: function(params) {
               return (params.data[field] == null) ? 'NULL' : params.data[field]
-            },            
+            },
             cellClassRules: {
               'ag-cell-null': params => {
                 return params.data[field] == null
@@ -1074,12 +1080,14 @@ export default {
           })
         }
       }
-      this.contentHeaders = headers
+      this.gridApi.setColumnDefs([])
+      this.gridApi.setColumnDefs(headers)
       this.contentItems = items
-      this.isRowSelected = 0
+      // this.gridApi.setRowData(items)
+      this.isRowSelected = false
 
       // Build BottomBar
-      this.parseBottomBar(data)
+      this.parseContentBottomBar(data)
     },
     filterClick() {
       // Build query condition
@@ -1212,7 +1220,8 @@ export default {
       if (columns_items.length > 0) {
         var columns_keys = Object.keys(columns_items[0])
         for (let i = 0; i < columns_keys.length; ++i) {
-          columns_headers.push({ headerName: columns_keys[i], field: columns_keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+          let field = columns_keys[i].trim().toLowerCase()
+          columns_headers.push({ headerName: columns_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
         }
       }
       this.structureOrigin['columns'] = { headers: columns_headers, items: columns_items }
@@ -1234,7 +1243,8 @@ export default {
       if (indexes_items.length > 0) {
         var indexes_keys = Object.keys(indexes_items[0])
         for (let i = 0; i < indexes_keys.length; ++i) {
-          indexes_headers.push({ headerName: indexes_keys[i], field: indexes_keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+          let field = indexes_keys[i].trim().toLowerCase()
+          indexes_headers.push({ headerName: indexes_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
         }
       }
       this.structureOrigin['indexes'] = { headers: indexes_headers, items: indexes_items }
@@ -1245,7 +1255,8 @@ export default {
       if (fks_items.length > 0) {
         var fks_keys = Object.keys(fks_items[0])
         for (let i = 0; i < fks_keys.length; ++i) {
-          fks_headers.push({ headerName: fks_keys[i], field: fks_keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+          let field = fks_keys[i].trim().toLowerCase()
+          fks_headers.push({ headerName: fks_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
         }
       }
       this.structureOrigin['fks'] = { headers: fks_headers, items: fks_items } 
@@ -1256,7 +1267,8 @@ export default {
       if (triggers_items.length > 0) {
         var triggers_keys = Object.keys(triggers_items[0])
         for (let i = 0; i < triggers_keys.length; ++i) {
-          triggers_headers.push({ headerName: triggers_keys[i], field: triggers_keys[i].trim().toLowerCase(), sortable: true, filter: true, resizable: true, editable: true })
+          let field = triggers_keys[i].trim().toLowerCase()
+          triggers_headers.push({ headerName: triggers_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
         }
       }
       this.structureOrigin['triggers'] = { headers: triggers_headers, items: triggers_items } 
@@ -1292,15 +1304,16 @@ export default {
         newData[this.contentColumnsName[i]] = this.contentColumnsDefault[i]
       }
 
+      var rowCount = this.gridApi.getDisplayedRowCount()
       var nodes = this.gridApi.getSelectedNodes()
       for (let i = 0; i < nodes.length; ++i) nodes[i].setSelected(false)
 
       this.gridApi.applyTransaction({ add: [newData] });
-      this.gridApi.getRowNode(this.gridApi.getDisplayedRowCount()-1).setSelected(true)
-      this.gridApi.setFocusedCell(this.gridApi.getDisplayedRowCount()-1, this.contentColumnsName[0])
-
+      this.gridApi.setFocusedCell(rowCount, this.contentColumnsName[0])
+      var node = this.gridApi.getDisplayedRowAtIndex(rowCount)
+      node.setSelected(true)
       this.gridApi.startEditingCell({
-        rowIndex: this.gridApi.getDisplayedRowCount()-1,
+        rowIndex: rowCount,
         colKey: this.contentColumnsName[0]
       });
     },
@@ -1338,7 +1351,7 @@ export default {
       axios.post('/client/execute', payload)
         .then((response) => {
           // Build BottomBar
-          this.parseBottomBar(JSON.parse(response.data.data))
+          this.parseContentBottomBar(JSON.parse(response.data.data))
           // Remove Frontend Rows
           this.gridApi.applyTransaction({ remove: this.gridApi.getSelectedRows() })
           // Close Dialog
@@ -1358,7 +1371,7 @@ export default {
             }
             this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
             // Build BottomBar
-            this.parseBottomBar(data)
+            this.parseContentBottomBar(data)
           }
         })
     },
@@ -1389,11 +1402,6 @@ export default {
       }
       // Check if the row has to be edited
       if (this.gridApi.getEditingCells().length == 0) this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
-
-      // Clean vars
-      this.currentCellEditMode = 'edit'
-      this.currentCellEditNode = {}
-      this.currentCellEditValues = {}
     },
     cellEditingSubmit(mode, node, values) {
       var query = ''
@@ -1421,6 +1429,10 @@ export default {
         query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + pks.join(' AND ') + ';'
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
+        // Clean vars
+        this.currentCellEditMode = 'edit'
+        this.currentCellEditNode = {}
+        this.currentCellEditValues = {}
         // Execute Query
         const payload = {
           server: this.serverSelected.id,
@@ -1429,8 +1441,11 @@ export default {
         }
         axios.post('/client/execute', payload)
           .then((response) => {
+            let data = JSON.parse(response.data.data)
             // Build BottomBar
-            this.parseBottomBar(JSON.parse(response.data.data))
+            this.parseContentBottomBar(data)
+            // Check AUTO_INCREMENTs
+            if (data[0].query.startsWith('INSERT')) node.setDataValue(this.contentPks[0], data[0].data)
           })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
@@ -1446,7 +1461,7 @@ export default {
               }
               this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
               // Build BottomBar
-              this.parseBottomBar(data)
+              this.parseContentBottomBar(data)
               // Restore vars
               this.currentCellEditMode = mode
               this.currentCellEditNode = node
