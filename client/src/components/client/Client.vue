@@ -1164,6 +1164,7 @@ export default {
     },
     tabClient() {
       this.tabSelected = 'client'
+      setTimeout(() => { this.editor.focus() }, 100)
     },
     tabStructure() {
       this.tabSelected = 'structure'
