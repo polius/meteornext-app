@@ -120,3 +120,6 @@ class Connector:
 
     def get_pk_names(self, db, table):
         return self._sql.get_pk_names(db, table)
+
+    def get_table_syntax(self, db, table):
+        return self._sql.get_table_syntax(db, table)
