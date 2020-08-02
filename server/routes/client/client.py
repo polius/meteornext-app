@@ -126,6 +126,7 @@ class Client:
                     if 'table' in client_json:
                         columns = conn.get_column_names(db=client_json['database'], table=client_json['table'])
                         pks = conn.get_pk_names(db=client_json['database'], table=client_json['table'])
+                        # Get table column names & column type
                         result['columns'] = columns
                         result['pks'] = pks
 
@@ -167,6 +168,30 @@ class Client:
             fks = conn.get_fks(db=request.args['database'], table=request.args['table'])
             triggers = conn.get_triggers(db=request.args['database'], table=request.args['table'])
             return jsonify({'columns': json.dumps(columns, default=self.__json_parser), 'indexes': json.dumps(indexes, default=self.__json_parser), 'fks': json.dumps(fks, default=self.__json_parser), 'triggers': json.dumps(triggers, default=self.__json_parser)}), 200
+
+        @client_blueprint.route('/client/info', methods=['GET'])
+        @jwt_required
+        def client_info_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Server Credentials + Connection
+            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = connectors.connector.Connector(cred)
+
+            # Get Info
+            table_syntax = conn.get_table_syntax(db=request.args['database'], table=request.args['table'])
+            return jsonify({'table_syntax': json.dumps(table_syntax, default=self.__json_parser)}), 200
 
         return client_blueprint
 

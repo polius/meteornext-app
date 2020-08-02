@@ -99,7 +99,7 @@
                     <!------------>
                     <!-- CLIENT -->
                     <!------------>
-                    <Splitpanes v-show="tabSelected == 'client'" horizontal @ready="initAce()">
+                    <Splitpanes v-show="tabSelected == 'client'" horizontal @ready="initAceClient()">
                       <Pane size="50">
                         <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                           <div id="editor" style="float:left"></div>
@@ -162,6 +162,15 @@
                         </v-row>
                       </div>
                       <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @selection-changed="onSelectionChanged" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+                    </div>
+                    <!---------->
+                    <!-- INFO -->
+                    <!---------->
+                    <div v-show="tabSelected == 'table_info'" style="width:100%; height:100%">
+                      <div class="subtitle-2" style="padding:10px; padding-left:15px; color:rgb(222,222,222);">TABLE SYNTAX</div>
+                      <div style="margin-left:auto; margin-right:auto; height:calc(100% - 42px); width:100%">
+                        <div id="infoEditor" style="float:left"></div>
+                      </div>
                     </div>
                   </div>
                   <!---------------------->
@@ -262,42 +271,42 @@
   </v-main>
 </template>
 
-<style>
+<style scoped>
 @import "../../../node_modules/ag-grid-community/dist/styles/ag-grid.css";
 @import "../../../node_modules/ag-grid-community/dist/styles/ag-theme-alpine-dark.css";
 
-.splitpanes__pane {
+::v-deep .splitpanes__pane {
   box-shadow: 0 0 3px rgba(0, 0, 0, .2) inset;
   justify-content: center;
   align-items: center;
   display: flex;
   position: relative;
 }
-.splitpanes--vertical > .splitpanes__splitter {
+::v-deep .splitpanes--vertical > .splitpanes__splitter {
   min-width: 2px;
 }
-.splitpanes--horizontal > .splitpanes__splitter {
+::v-deep .splitpanes--horizontal > .splitpanes__splitter {
   min-height: 2px;
 }
-.ace_editor {
+::v-deep .ace_editor {
   margin: auto;
   height: 100%;
   width: 100%;
   background: #272822;
 }
-.ace_content {
+::v-deep .ace_content {
   width: 100%;
   height: 100%;
 }
-.v-treeview-node__root {
+::v-deep .v-treeview-node__root {
   min-height:30px;
 }
-.v-treeview-node__toggle {
+::v-deep .v-treeview-node__toggle {
   width: 15px;
 }
 
-.splitpanes__splitter {background-color:rgba(32, 32, 32, 0.2); position: relative; }
-.splitpanes__splitter:before {
+::v-deep .splitpanes__splitter {background-color:rgba(32, 32, 32, 0.2); position: relative; }
+::v-deep .splitpanes__splitter:before {
   content: '';
   position: absolute;
   left: 0;
@@ -307,73 +316,72 @@
   opacity: 0;
   z-index: 10;
 }
-.splitpanes__splitter:hover:before  {opacity:1; }
-.splitpanes--vertical > .splitpanes__splitter:before { left:-3px; right:-3px; height:100%; }
-.splitpanes--horizontal > .splitpanes__splitter:before { top:-5px; bottom:-3px; width:100%; }
+::v-deep .splitpanes__splitter:hover:before  {opacity:1; }
+::v-deep .splitpanes--vertical > .splitpanes__splitter:before { left:-3px; right:-3px; height:100%; }
+::v-deep .splitpanes--horizontal > .splitpanes__splitter:before { top:-5px; bottom:-3px; width:100%; }
 
-.theme--dark.v-data-table.v-data-table--fixed-header thead th {
+::v-deep .theme--dark.v-data-table.v-data-table--fixed-header thead th {
   background-color: #252525;
 }
-.v-treeview-node__level {
+::v-deep .v-treeview-node__level {
   width: 10px;
 }
-.v-label{
+::v-deep .v-label{
   font-size: 0.9rem;
 }
-.v-list-item__title {
+::v-deep .v-list-item__title {
   font-size: 0.9rem;
 }
-.v-list-item__content {
+::v-deep .v-list-item__content {
   padding:0px;
 }
-.v-list-item {
+::v-deep .v-list-item {
   min-height:40px;
 }
-.v-input {
+::v-deep .v-input {
   font-size: 0.9rem;
 }
-.v-application .elevation-2 {
+::v-deep .v-application .elevation-2 {
   box-shadow:none!important;
 }
-.container {
+::v-deep .container {
   padding-bottom:0px;
 }
-*
+::v-deep .v-text-field .v-input__control .v-input__slot {
+  min-height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+}
+::v-deep *
 {
   will-change: auto !important;
 }
-.ace_editor.ace_autocomplete {
+::v-deep .ace_editor.ace_autocomplete {
   width: 512px;
 }
 /* AG GRID */
-.ag-theme-alpine-dark .ag-header-row {
+::v-deep .ag-theme-alpine-dark .ag-header-row {
   font-size: 13px;
   font-weight: 500;
 }
-.ag-theme-alpine-dark .ag-cell {
+::v-deep .ag-theme-alpine-dark .ag-cell {
   font-size: 13px;
   line-height: 30px;
 }
-.ag-theme-alpine-dark .ag-cell-inline-editing {
+::v-deep .ag-theme-alpine-dark .ag-cell-inline-editing {
   height: 30px;
 }
-.ag-theme-alpine-dark {
+::v-deep .ag-theme-alpine-dark {
   --ag-foreground-color:#dcdcdc;
   --ag-header-background-color:#272727;
   --ag-background-color:#2c2c2c;
   --ag-odd-row-background-color:#303030;
   --ag-border-color:#424242;
 }
-
-.v-text-field .v-input__control .v-input__slot {
-  min-height: auto !important;
-  display: flex !important;
-  align-items: center !important;
-}
-.ag-cell-normal {
+::v-deep .ag-cell-normal {
   color: #dcdcdc;
 }
-.ag-cell-null {
+::v-deep .ag-cell-null {
   color: gray;
 }
 </style>
@@ -475,6 +483,9 @@ export default {
       contentHeaders: [],
       contentItems: [],
 
+      // Info
+      infoEditor: null,
+
       // Bottom Bar
       bottomBarClient: { text: '', status: '', info: '' },
       bottomBarContent: { text: '', status: '', info: '' },
@@ -520,7 +531,7 @@ export default {
       this.gridApi = params.api
       this.columnApi = params.columnApi
     },
-    initAce() {
+    initAceClient() {
       // Editor Settings
       this.editor = ace.edit("editor", {
         mode: "ace/mode/sql",
@@ -1018,12 +1029,14 @@ export default {
       if (data.length > 0 && data[0]['data'].length > 0) {
         var keys = Object.keys(data[data.length - 1]['data'][0])
         for (let i = 0; i < keys.length; ++i) {
-          let field = keys[i].trim().toLowerCase()
+          let field = keys[i].trim()
           headers.push({ headerName: keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
         }
       }
       this.clientHeaders = headers
       this.clientItems = items
+      console.log(this.clientHeaders)
+      console.log(this.clientItems)
       // Build BottomBar
       this.parseClientBottomBar(data)
     },
@@ -1086,9 +1099,9 @@ export default {
         this.contentColumnsName = data[0]['columns']['name']
         this.contentColumnsDefault = data[0]['columns']['default']
         this.contentPks = data[0]['pks']
-        this.contentSearchColumn = this.contentColumnsName[0].trim().toLowerCase()
+        this.contentSearchColumn = this.contentColumnsName[0].trim()
         for (let i = 0; i < this.contentColumnsName.length; ++i) {
-          let field = this.contentColumnsName[i].trim().toLowerCase()
+          let field = this.contentColumnsName[i].trim()
           headers.push({ headerName: this.contentColumnsName[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true, 
             valueGetter: function(params) {
               return (params.data[field] == null) ? 'NULL' : params.data[field]
@@ -1112,6 +1125,24 @@ export default {
 
       // Build BottomBar
       this.parseContentBottomBar(data)
+    },
+    getInfo() {
+      const payload = {
+        server: this.serverSelected.id,
+        database: this.database,
+        table: this.treeviewSelected['name']
+      }
+      axios.get('/client/info', { params: payload })
+        .then((response) => {
+          let data = JSON.parse(response.data.table_syntax)
+          this.infoEditor.setValue(data, -1)
+          this.infoEditor.focus()
+        })
+        .catch((error) => {
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
+        })
     },
     filterClick() {
       // Build query condition
@@ -1224,6 +1255,18 @@ export default {
     },
     tabInfo(object) {
       this.tabSelected = object + '_info'
+      if (this.infoEditor == null) {
+        this.infoEditor = ace.edit("infoEditor", {
+          mode: "ace/mode/sql",
+          theme: "ace/theme/monokai",
+          fontSize: 14,
+          showPrintMargin: false,
+          wrap: true,
+          readOnly: true,
+          showLineNumbers: false
+        });
+      }
+      this.getInfo()
     },
     getStructure() {
       // Retrieve Tables
@@ -1246,7 +1289,7 @@ export default {
       if (columns_items.length > 0) {
         var columns_keys = Object.keys(columns_items[0])
         for (let i = 0; i < columns_keys.length; ++i) {
-          let field = columns_keys[i].trim().toLowerCase()
+          let field = columns_keys[i].trim()
           columns_headers.push({ headerName: columns_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
         }
       }
@@ -1269,7 +1312,7 @@ export default {
       if (indexes_items.length > 0) {
         var indexes_keys = Object.keys(indexes_items[0])
         for (let i = 0; i < indexes_keys.length; ++i) {
-          let field = indexes_keys[i].trim().toLowerCase()
+          let field = indexes_keys[i].trim()
           indexes_headers.push({ headerName: indexes_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
         }
       }
@@ -1281,7 +1324,7 @@ export default {
       if (fks_items.length > 0) {
         var fks_keys = Object.keys(fks_items[0])
         for (let i = 0; i < fks_keys.length; ++i) {
-          let field = fks_keys[i].trim().toLowerCase()
+          let field = fks_keys[i].trim()
           fks_headers.push({ headerName: fks_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
         }
       }
@@ -1293,7 +1336,7 @@ export default {
       if (triggers_items.length > 0) {
         var triggers_keys = Object.keys(triggers_items[0])
         for (let i = 0; i < triggers_keys.length; ++i) {
-          let field = triggers_keys[i].trim().toLowerCase()
+          let field = triggers_keys[i].trim()
           triggers_headers.push({ headerName: triggers_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
         }
       }
@@ -1415,6 +1458,8 @@ export default {
       if (this.currentCellEditValues[event.colDef.field] === undefined) {
         this.currentCellEditValues[event.colDef.field] = {'old': event.value == 'NULL' ? null : event.value}
       }
+      // If the cell includes an special character (\n or \t) or the cell == TEXT, ... then open the extended editor
+      // ... 
     },
     cellEditingStopped(event) {
       // Store row index & node

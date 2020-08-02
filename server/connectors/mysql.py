@@ -353,3 +353,8 @@ class MySQL:
         for cl in result:
             columns.append(cl['COLUMN_NAME'])
         return columns
+
+    def get_table_syntax(self, db, table):
+        query = "SHOW CREATE TABLE {}.{}".format(db, table)
+        result = self.execute(query)['data'][0]['Create Table']
+        return result
