@@ -106,7 +106,7 @@
                         </div>
                       </Pane>
                       <Pane size="50" min-size="0">
-                        <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
+                        <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @cell-editing-started="cellEditingStarted($event, false)" @cell-editing-stopped="cellEditingStopped($event, false)" @cell-key-down="onCellKeyDown" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
                       </Pane>
                     </Splitpanes>
                     <!--------------->
@@ -127,7 +127,7 @@
                       <!-- <div style="width:100%; height:calc(100% - 85px); z-index:1; position:absolute; text-align:center;">
                         <v-progress-circular indeterminate color="#dcdcdc" width="2" style="height:100%;"></v-progress-circular>
                       </div>-->
-                      <ag-grid-vue @column-resized="onColumnResized" @grid-ready="onGridReady" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
+                      <ag-grid-vue @column-resized="onColumnResized" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
                     </div>
                     <!------------->
                     <!-- CONTENT -->
@@ -161,7 +161,7 @@
                           </v-col>
                         </v-row>
                       </div>
-                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @selection-changed="onSelectionChanged" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @cell-editing-started="cellEditingStarted($event, true)" @cell-editing-stopped="cellEditingStopped($event, true)" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
                     </div>
                     <!---------->
                     <!-- INFO -->
@@ -512,6 +512,7 @@ export default {
 
       // Helpers
       click: undefined,
+      gridEditing: false,
     }
   },
   components: { Splitpanes, Pane, AgGridVue },
@@ -530,6 +531,28 @@ export default {
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
+    },
+    onCellKeyDown(e) {
+      if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey) && !this.gridEditing) {
+        navigator.clipboard.writeText(e.value)
+
+        // Highlight cells
+        e.event.originalTarget.classList.add('ag-cell-highlight');
+        e.event.originalTarget.classList.remove('ag-cell-highlight-animation')
+
+        // Add animation
+        window.setTimeout(function () {
+            e.event.originalTarget.classList.remove('ag-cell-highlight')
+            e.event.originalTarget.classList.add('ag-cell-highlight-animation')
+            e.event.originalTarget.style.transition = "background-color " + 200 + "ms"
+
+            // Remove animation
+            window.setTimeout(function () {
+                e.event.originalTarget.classList.remove('ag-cell-highlight-animation')
+                e.event.originalTarget.style.transition = null;
+            }, 200);
+        }, 200);
+      }    
     },
     initAceClient() {
       // Editor Settings
@@ -1035,8 +1058,6 @@ export default {
       }
       this.clientHeaders = headers
       this.clientItems = items
-      console.log(this.clientHeaders)
-      console.log(this.clientItems)
       // Build BottomBar
       this.parseClientBottomBar(data)
     },
@@ -1447,7 +1468,10 @@ export default {
     onSelectionChanged() {
       this.isRowSelected = this.gridApi.getSelectedNodes().length > 0
     },
-    cellEditingStarted(event) {
+    cellEditingStarted(event, edit) {
+      this.gridEditing = true
+      if (!edit) return
+
       if (Object.keys(this.currentCellEditNode).length != 0 && this.currentCellEditNode.rowIndex != event.rowIndex) {
         this.gridApi.stopEditing(true)
         this.gridApi.setFocusedCell(this.currentCellEditNode.rowIndex, this.contentColumnsName[0])
@@ -1461,7 +1485,10 @@ export default {
       // If the cell includes an special character (\n or \t) or the cell == TEXT, ... then open the extended editor
       // ... 
     },
-    cellEditingStopped(event) {
+    cellEditingStopped(event, edit) {
+      this.gridEditing = false
+      if (!edit) return
+
       // Store row index & node
       if (Object.keys(this.currentCellEditNode).length == 0) {
         this.currentCellEditNode = this.gridApi.getSelectedNodes()[0]
