@@ -988,7 +988,7 @@ export default {
         clientHeaders: this.clientHeaders.slice(0),
         clientItems: this.clientItems.slice(0),
         bottomBarClient: JSON.parse(JSON.stringify(this.bottomBarClient)),
-        bottomBarContent: JSON.parse(JSON.stringify(this.bottomBarStatus))
+        bottomBarContent: JSON.parse(JSON.stringify(this.bottomBarContent))
       }
     },
     __loadConn(index) {
