@@ -180,7 +180,7 @@
                     <!-- CLIENT -->
                     <v-row v-if="tabSelected == 'client'" no-gutters style="flex-wrap: nowrap;">
                       <v-col v-if="clientItems.length > 0" cols="auto">
-                        <v-btn text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
+                        <v-btn @click="exportRows('client')" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
                         <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
                       </v-col>
                       <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
@@ -203,7 +203,7 @@
                         <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
                         <v-btn @click="filterClick" text small title="Refresh rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
                         <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                        <v-btn text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
+                        <v-btn @click="exportRows('content')" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
                         <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
                       </v-col>
 
@@ -242,7 +242,8 @@
                     <div class="text-h5">{{ dialogTitle }}</div>
                     <v-flex xs12>
                       <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
-                        <div class="text-body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
+                        <div v-if="dialogText.length>0" class="text-body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
+                        <v-select v-if="dialogMode=='export'" outlined v-model="dialogSelect" :items="['Meteor','JSON','CSV','SQL']" label="Format" hide-details></v-select>
                       </v-form>
                       <v-divider></v-divider>
                       <div style="margin-top:15px;">
@@ -503,6 +504,7 @@ export default {
       dialogText: '',
       dialogButtonText1: '',
       dialogButtonText2: '',
+      dialogSelect: '',
 
       // Snackbar
       snackbar: false,
@@ -1479,8 +1481,12 @@ export default {
         this.currentCellEditNode.setSelected(true)
         this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
       }
-      if (this.currentCellEditValues[event.colDef.field] === undefined) {
-        this.currentCellEditValues[event.colDef.field] = {'old': event.value == 'NULL' ? null : event.value}
+      if (Object.keys(this.currentCellEditValues).length == 0) {
+        let node = this.gridApi.getSelectedNodes()[0].data
+        let keys = Object.keys(node)
+        for (let i = 0; i < keys.length; ++i) {
+          this.currentCellEditValues[keys[i]] = {'old': node[keys[i]] == 'NULL' ? null : node[keys[i]]}
+        }
       }
       // If the cell includes an special character (\n or \t) or the cell == TEXT, ... then open the extended editor
       // ... 
@@ -1518,8 +1524,10 @@ export default {
         let keys = Object.keys(values)
         for (let i = 0; i < keys.length; ++i) {
           if (values[keys[i]]['old'] != values[keys[i]]['new']) {
-            if (values[keys[i]]['new'] == null) valuesToUpdate.push(keys[i] + " = NULL")
-            else valuesToUpdate.push(keys[i] + " = '" + values[keys[i]]['new'] + "'")
+            if (values[keys[i]]['new'] !== undefined) {
+              if (values[keys[i]]['new'] == null) valuesToUpdate.push(keys[i] + " = NULL")
+              else valuesToUpdate.push(keys[i] + " = '" + values[keys[i]]['new'] + "'")
+            }
           }
         }
         let pks = []
@@ -1608,6 +1616,72 @@ export default {
         });
       }, 100);
     },
+    exportRows() {
+      // Show confirmation dialog
+      this.dialogSelect = 'Meteor'
+      var dialogOptions = {
+        'mode': 'export',
+        'title': 'Export Rows',
+        'text': '',
+        'button1': 'Export',
+        'button2': 'Cancel'
+      }
+      this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2']) 
+    },
+    exportRowsSubmit() {
+      var columns = []
+      var rows = []
+
+      // Build Columns
+      let displayedColumns = this.columnApi.getAllDisplayedColumns()
+      for (var i = 0; i < displayedColumns.length; ++i) columns.push(displayedColumns[i]['colId']);
+
+      // Build Rows
+      if (['Meteor','JSON','CSV'].includes(this.dialogSelect)) {
+        this.gridApi.forEachNode(function(rowNode) {
+          rows.push(rowNode.data)
+        })
+      }
+
+      if (this.dialogSelect == 'Meteor') {
+        let exportData = 'var DATA = ' + JSON.stringify(rows) + ';\n' + 'var COLUMNS = ' + JSON.stringify(columns) + ';'
+        this.download('export.js', exportData)
+      }
+      else if (this.dialogSelect == 'JSON') {
+        let exportData = JSON.stringify(rows)
+        this.download('export.json', exportData)
+      }
+      else if (this.dialogSelect == 'CSV') {
+        let replacer = (key, value) => value === null ? '' : value // specify how you want to handle null values here
+        let header = Object.keys(rows[0])
+        let exportData = rows.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+        exportData.unshift(header.join(','))
+        exportData = exportData.join('\r\n')
+        this.download('export.csv', exportData)
+      }
+      else if (this.dialogSelect == 'SQL') {
+        let exportData = ''
+        this.gridApi.forEachNode(rowNode => {
+          let data = []
+          for (let i = 0; i < columns.length; ++i) {
+            if (rowNode.data[columns[i]] == null) data.push('NULL')
+            else data.push(JSON.stringify(rowNode.data[columns[i]]))
+          }
+          exportData += "INSERT INTO " + this.treeviewSelected['name'] + ' (' + columns.join() + ") VALUES (" + data.join() + "),\n"
+        })
+        exportData = exportData.slice(0, -2) + ';'
+        this.download('export.sql', exportData)
+      }
+    },
+    download(filename, text) {
+      var element = document.createElement('a')
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
+      element.setAttribute('download', filename)
+      element.style.display = 'none'
+      document.body.appendChild(element)
+      element.click()
+      document.body.removeChild(element)
+    },
     showDialog(mode, title, text, button1, button2) {
       this.dialogMode = mode
       this.dialogTitle = title
@@ -1631,6 +1705,10 @@ export default {
       else if (this.dialogMode == 'queryError') {
         this.dialog = false
         this.editor.focus()
+      }
+      else if (this.dialogMode == 'export') {
+        if (button == 1) this.exportRowsSubmit()
+        else if (button == 2) this.dialog = false
       }
     },
     notification(message, color, timeout=5) {
