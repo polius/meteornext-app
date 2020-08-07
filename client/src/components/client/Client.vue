@@ -50,9 +50,9 @@
                 <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                   <div style="height:calc(100% - 36px)">
                     <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0"  :items="databaseItems" label="Database" hide-details background-color="#303030" height="48px" style="padding:10px;"></v-select>
-                    <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
-                    <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:8px; padding-bottom:1px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
-                    <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 158px); padding-top:7px; width:100%; overflow-y:auto;">
+                    <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
+                    <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
+                    <v-treeview :disabled="loadingServer" @contextmenu="show" :active.sync="treeview" item-key="id" :open="treeviewOpen" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
                       <template v-slot:label="{item, open}">
                         <v-btn text @click="treeviewClick(item)" @contextmenu="show" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
                           <v-icon v-if="!item.type" small style="padding:10px;">
@@ -253,6 +253,35 @@
                           </v-col>
                           <v-col v-if="dialogButtonText2.length > 0" style="margin-bottom:10px;">
                             <v-btn @click="dialogSubmit(2)" outlined color="#e74d3c">{{ dialogButtonText2 }}</v-btn>
+                          </v-col>
+                        </v-row>
+                      </div>
+                    </v-flex>
+                  </v-layout>
+                </v-container>
+              </v-card-text>
+            </v-card>
+          </v-dialog>
+          <v-dialog v-model="editDialog" persistent max-width="80%">
+            <v-card>
+              <v-card-text style="padding:15px 15px 5px;">
+                <v-container style="padding:0px">
+                  <v-layout wrap>
+                    <div class="text-h5">Edit</div>
+                    <v-flex xs12>
+                      <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
+                        <div style="margin-left:auto; margin-right:auto; width:100%">
+                          <div id="editDialogEditor" style="float:left; height:60vh;"></div>
+                        </div>
+                      </v-form>
+                      <v-divider></v-divider>
+                      <div style="margin-top:15px;">
+                        <v-row no-gutters>
+                          <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                            <v-btn @click="editDialogSubmit" color="primary">OK</v-btn>
+                          </v-col>
+                          <v-col style="margin-bottom:10px;">
+                            <v-btn @click="editDialogCancel" outlined color="#e74d3c">Cancel</v-btn>
                           </v-col>
                         </v-row>
                       </div>
@@ -505,6 +534,10 @@ export default {
       dialogButtonText1: '',
       dialogButtonText2: '',
       dialogSelect: '',
+
+      // Edit Dialog
+      editDialog: false,
+      editDialogEditor: null,
 
       // Snackbar
       snackbar: false,
@@ -760,6 +793,7 @@ export default {
             else {
               this.treeviewSelected = item
               if (this.tabSelected == 'content') this.getContent()
+              if (this.tabSelected == 'table_info') this.getInfo()
             }
           }
         }
@@ -1489,7 +1523,8 @@ export default {
         }
       }
       // If the cell includes an special character (\n or \t) or the cell == TEXT, ... then open the extended editor
-      // ... 
+      // ...
+      this.editDialogOpen()
     },
     cellEditingStopped(event, edit) {
       this.gridEditing = false
@@ -1710,6 +1745,27 @@ export default {
         if (button == 1) this.exportRowsSubmit()
         else if (button == 2) this.dialog = false
       }
+    },
+    editDialogOpen() {
+      this.editDialog = true
+      if (this.editDialogEditor == null) {
+        setTimeout(() => {
+          this.editDialogEditor = ace.edit("editDialogEditor", {
+            mode: "ace/mode/sql",
+            theme: "ace/theme/monokai",
+            fontSize: 14,
+            showPrintMargin: false,
+            wrap: true,
+            showLineNumbers: false
+          });
+        }, 100);
+      }
+    },
+    editDialogSubmit() {
+
+    },
+    editDialogCancel() {
+
     },
     notification(message, color, timeout=5) {
       this.snackbarText = message
