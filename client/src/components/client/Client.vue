@@ -161,7 +161,7 @@
                           </v-col>
                         </v-row>
                       </div>
-                      <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @cell-editing-started="cellEditingStarted($event, true)" @cell-editing-stopped="cellEditingStopped($event, true)" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+                      <ag-grid-vue ref="agGridContent" suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @cell-editing-started="cellEditingStarted($event, true)" @cell-editing-stopped="cellEditingStopped($event, true)" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
                     </div>
                     <!---------->
                     <!-- INFO -->
@@ -265,20 +265,20 @@
           <v-dialog v-model="editDialog" persistent max-width="80%">
             <v-card>
               <v-card-text style="padding:15px 15px 5px;">
-                <v-container style="padding:0px">
+                <v-container style="padding:0px; max-width:100%;">
                   <v-layout wrap>
-                    <div class="text-h5">Edit</div>
+                    <div class="text-h6" style="font-weight:400;">ssh_port</div>
                     <v-flex xs12>
-                      <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
-                        <div style="margin-left:auto; margin-right:auto; width:100%">
-                          <div id="editDialogEditor" style="float:left; height:60vh;"></div>
+                      <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
+                        <div style="margin-left:auto; margin-right:auto; height:60vh; width:100%">
+                          <div id="editDialogEditor" style="float:left;"></div>
                         </div>
                       </v-form>
                       <v-divider></v-divider>
                       <div style="margin-top:15px;">
                         <v-row no-gutters>
                           <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                            <v-btn @click="editDialogSubmit" color="primary">OK</v-btn>
+                            <v-btn @click="editDialogSubmit" color="primary">Save</v-btn>
                           </v-col>
                           <v-col style="margin-bottom:10px;">
                             <v-btn @click="editDialogCancel" outlined color="#e74d3c">Cancel</v-btn>
@@ -504,6 +504,7 @@ export default {
       contentTableSelected: '',
       contentColumnsName: [],
       contentColumnsDefault: [],
+      contentColumnsType: {},
       contentPks: [],
       contentSearchColumn: '',
       contentSearchFilterItems: ['=','!=','>','<','>=','<=','LIKE','NOT LIKE','IN','NOT IN','BETWEEN','IS NULL','IS NOT NULL'],
@@ -554,6 +555,9 @@ export default {
   created() {
     this.getServers()
   },
+  mounted() {
+    this.$refs.agGridContent.$el.addEventListener('click', this.onGridClick)
+  },
   methods: {
     onColumnResized() {
       // if (ev.source == 'sizeColumnsToFit') {
@@ -566,6 +570,12 @@ export default {
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
+    },
+    onGridClick(event) {
+      if (event.target.className == 'ag-center-cols-viewport') {
+        this.gridApi.deselectAll()
+        // check if add / edit operation
+      }
     },
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey) && !this.gridEditing) {
@@ -1139,7 +1149,7 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
-          this.parseContentExecution(JSON.parse(response.data.data))
+          this.parseContentExecution(JSON.parse(response.data.data))          
         })
         .catch((error) => {
           console.log(error)
@@ -1155,6 +1165,7 @@ export default {
       if (data.length > 0) {
         this.contentColumnsName = data[0]['columns']['name']
         this.contentColumnsDefault = data[0]['columns']['default']
+        this.contentColumnsType = data[0]['columns']['type']
         this.contentPks = data[0]['pks']
         this.contentSearchColumn = this.contentColumnsName[0].trim()
         for (let i = 0; i < this.contentColumnsName.length; ++i) {
@@ -1505,44 +1516,59 @@ export default {
       this.isRowSelected = this.gridApi.getSelectedNodes().length > 0
     },
     cellEditingStarted(event, edit) {
+      console.log("start: " + event.rowIndex)
       this.gridEditing = true
       if (!edit) return
 
-      if (Object.keys(this.currentCellEditNode).length != 0 && this.currentCellEditNode.rowIndex != event.rowIndex) {
-        this.gridApi.stopEditing(true)
-        this.gridApi.setFocusedCell(this.currentCellEditNode.rowIndex, this.contentColumnsName[0])
-        this.gridApi.clearFocusedCell()
-        this.currentCellEditNode.setSelected(true)
-        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
-      }
+      // Store row index & node
+      // if (Object.keys(this.currentCellEditNode).length == 0) {
+      //   console.log("NEW NODE")
+      //   this.currentCellEditNode = this.gridApi.getSelectedNodes()[0]
+      // }
+
+      //if (Object.keys(this.currentCellEditNode).length != 0 && this.currentCellEditNode.rowIndex != event.rowIndex) {
+        // this.gridApi.stopEditing(true)
+        // this.gridApi.setFocusedCell(this.currentCellEditNode.rowIndex, this.contentColumnsName[0])
+        // this.gridApi.clearFocusedCell()
+        // this.currentCellEditNode.setSelected(true)
+        //this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+      //}
       if (Object.keys(this.currentCellEditValues).length == 0) {
         let node = this.gridApi.getSelectedNodes()[0].data
         let keys = Object.keys(node)
+        this.currentCellEditValues = {}
         for (let i = 0; i < keys.length; ++i) {
           this.currentCellEditValues[keys[i]] = {'old': node[keys[i]] == 'NULL' ? null : node[keys[i]]}
         }
       }
       // If the cell includes an special character (\n or \t) or the cell == TEXT, ... then open the extended editor
-      // ...
-      this.editDialogOpen()
+      let columnType = this.contentColumnsType[event.colDef.colId]
+      // if (['text','mediumtext','longtext'].includes(columnType) || (event.value.match(/\n/g)||[]).length > 0 || (event.value.match(/\t/g)||[]).length > 0) {
+      //   if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
+      //   else this.editDialogOpen(event.value)
+      // }
     },
     cellEditingStopped(event, edit) {
-      this.gridEditing = false
-      if (!edit) return
+      console.log("stop: " + event.rowIndex)
+      if (!edit || this.editDialog) return
 
-      // Store row index & node
-      if (Object.keys(this.currentCellEditNode).length == 0) {
-        this.currentCellEditNode = this.gridApi.getSelectedNodes()[0]
-      }
       // Store new value
-      if (event.rowIndex == this.currentCellEditNode.rowIndex) {
-        if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
-        if (this.currentCellEditMode == 'edit') this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
-      }
+      //    if (event.rowIndex == this.currentCellEditNode.rowIndex) {
+      if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
+      if (this.currentCellEditMode == 'edit') this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
+      // }
       // Check if the row has to be edited
-      if (this.gridApi.getEditingCells().length == 0) this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+      // this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+      // if (this.gridApi.getEditingCells().length == 0 && this.editDialogEditor != null && this.editDialogEditor.getValue().length == 0) this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
     },
     cellEditingSubmit(mode, node, values) {
+      console.log("submit1")
+      // Clean vars
+      this.currentCellEditMode = 'edit'
+      this.currentCellEditNode = {}
+      this.currentCellEditValues = {}
+
+      // Compute queries
       var query = ''
       var valuesToUpdate = []
       // NEW
@@ -1550,7 +1576,7 @@ export default {
         let keys = Object.keys(node.data)
         for (let i = 0; i < keys.length; ++i) {
           if (node.data[keys[i]] == null) valuesToUpdate.push('NULL')
-          else valuesToUpdate.push("'" + node.data[keys[i]] + "'")
+          else valuesToUpdate.push(JSON.stringify(node.data[keys[i]]))
         }
         query = "INSERT INTO " + this.treeviewSelected['name'] + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
       }
@@ -1561,19 +1587,17 @@ export default {
           if (values[keys[i]]['old'] != values[keys[i]]['new']) {
             if (values[keys[i]]['new'] !== undefined) {
               if (values[keys[i]]['new'] == null) valuesToUpdate.push(keys[i] + " = NULL")
-              else valuesToUpdate.push(keys[i] + " = '" + values[keys[i]]['new'] + "'")
+              else valuesToUpdate.push(keys[i] + " = " + JSON.stringify(values[keys[i]]['new']))
             }
           }
         }
         let pks = []
-        for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = '" + values[this.contentPks[i]]['old'] + "'")
+        for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = " + JSON.stringify(values[this.contentPks[i]]['old']))
         query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + pks.join(' AND ') + ';'
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
-        // Clean vars
-        this.currentCellEditMode = 'edit'
-        this.currentCellEditNode = {}
-        this.currentCellEditValues = {}
+        console.log("submit2")
+
         // Execute Query
         const payload = {
           server: this.serverSelected.id,
@@ -1746,7 +1770,7 @@ export default {
         else if (button == 2) this.dialog = false
       }
     },
-    editDialogOpen() {
+    editDialogOpen(text) {
       this.editDialog = true
       if (this.editDialogEditor == null) {
         setTimeout(() => {
@@ -1757,15 +1781,33 @@ export default {
             showPrintMargin: false,
             wrap: true,
             showLineNumbers: false
-          });
+          })
+          this.editDialogEditor.focus()
+          this.editDialogEditor.setValue(text, -1)
         }, 100);
+      } else {
+        this.editDialogEditor.focus()
+        this.editDialogEditor.setValue(text, -1)
       }
     },
     editDialogSubmit() {
-
+      this.editDialog = false
+      let nodes = this.gridApi.getSelectedNodes()
+      for (let i = 0; i < nodes.length; ++i) nodes[i].setSelected(false)
+      let focusedCell = this.gridApi.getFocusedCell()
+      let currentNode = this.gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex)
+      currentNode.setSelected(true)
+      currentNode.setDataValue(focusedCell.column.colId, this.editDialogEditor.getValue())
+      setTimeout(() => {
+        this.gridApi.startEditingCell({
+          rowIndex: focusedCell.rowIndex,
+          colKey: focusedCell.column.colId
+        })
+      }, 100)
     },
     editDialogCancel() {
-
+      this.editDialog = false
+      this.editDialogEditor.setValue('')
     },
     notification(message, color, timeout=5) {
       this.snackbarText = message
