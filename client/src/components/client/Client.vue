@@ -161,7 +161,7 @@
                           </v-col>
                         </v-row>
                       </div>
-                      <ag-grid-vue ref="agGridContent" suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @cell-editing-started="cellEditingStarted($event, true)" @cell-editing-stopped="cellEditingStopped($event, true)" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+                      <ag-grid-vue ref="agGridContent" suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @row-clicked="onRowClicked" @cell-editing-started="cellEditingStarted($event, true)" @cell-editing-stopped="cellEditingStopped($event, true)" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
                     </div>
                     <!---------->
                     <!-- INFO -->
@@ -575,6 +575,7 @@ export default {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.deselectAll()
         // check if add / edit operation
+        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
       }
     },
     onCellKeyDown(e) {
@@ -597,7 +598,25 @@ export default {
                 e.event.originalTarget.style.transition = null;
             }, 200);
         }, 200);
-      }    
+      }
+      else if (e.event.key == "Enter") {
+        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+      }
+      else if (e.event.key == "Escape") {
+        let focusedCell = this.gridApi.getFocusedCell()
+        if (Object.keys(this.currentCellEditValues).length != 0 && typeof this.currentCellEditValues[focusedCell.column.colId]['new'] !== 'undefined') {
+          this.currentCellEditNode.setDataValue(focusedCell.column.colId, this.currentCellEditValues[focusedCell.column.colId]['old'])
+          delete this.currentCellEditValues[focusedCell.column.colId]['new']
+        }
+        else {
+          let keys = Object.keys(this.currentCellEditValues)
+          for (let i = 0; i < keys.length; ++i) {
+            this.currentCellEditNode.setDataValue(keys[i], this.currentCellEditValues[keys[i]]['old'])
+          }
+          this.currentCellEditValues = {}
+          this.gridApi.deselectAll()
+        }  
+      }
     },
     initAceClient() {
       // Editor Settings
@@ -1515,24 +1534,19 @@ export default {
     onSelectionChanged() {
       this.isRowSelected = this.gridApi.getSelectedNodes().length > 0
     },
+    onRowClicked(event) {
+      if (Object.keys(this.currentCellEditNode).length != 0 && this.currentCellEditNode.rowIndex != event.rowIndex) {
+        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+      }
+    },
     cellEditingStarted(event, edit) {
-      console.log("start: " + event.rowIndex)
       this.gridEditing = true
       if (!edit) return
 
-      // Store row index & node
-      // if (Object.keys(this.currentCellEditNode).length == 0) {
-      //   console.log("NEW NODE")
-      //   this.currentCellEditNode = this.gridApi.getSelectedNodes()[0]
-      // }
-
-      //if (Object.keys(this.currentCellEditNode).length != 0 && this.currentCellEditNode.rowIndex != event.rowIndex) {
-        // this.gridApi.stopEditing(true)
-        // this.gridApi.setFocusedCell(this.currentCellEditNode.rowIndex, this.contentColumnsName[0])
-        // this.gridApi.clearFocusedCell()
-        // this.currentCellEditNode.setSelected(true)
-        //this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
-      //}
+      // Store row node
+      this.currentCellEditNode = this.gridApi.getSelectedNodes()[0]
+    
+      // Store row values
       if (Object.keys(this.currentCellEditValues).length == 0) {
         let node = this.gridApi.getSelectedNodes()[0].data
         let keys = Object.keys(node)
@@ -1543,26 +1557,21 @@ export default {
       }
       // If the cell includes an special character (\n or \t) or the cell == TEXT, ... then open the extended editor
       let columnType = this.contentColumnsType[event.colDef.colId]
-      // if (['text','mediumtext','longtext'].includes(columnType) || (event.value.match(/\n/g)||[]).length > 0 || (event.value.match(/\t/g)||[]).length > 0) {
-      //   if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
-      //   else this.editDialogOpen(event.value)
-      // }
+      if (['text','mediumtext','longtext'].includes(columnType) || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
+        if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
+        else this.editDialogOpen(event.value)
+      }
     },
     cellEditingStopped(event, edit) {
-      console.log("stop: " + event.rowIndex)
       if (!edit || this.editDialog) return
 
       // Store new value
-      //    if (event.rowIndex == this.currentCellEditNode.rowIndex) {
       if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
       if (this.currentCellEditMode == 'edit') this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
-      // }
-      // Check if the row has to be edited
-      // this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
-      // if (this.gridApi.getEditingCells().length == 0 && this.editDialogEditor != null && this.editDialogEditor.getValue().length == 0) this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
     },
     cellEditingSubmit(mode, node, values) {
-      console.log("submit1")
+      if (Object.keys(values).length == 0) return
+
       // Clean vars
       this.currentCellEditMode = 'edit'
       this.currentCellEditNode = {}
@@ -1596,8 +1605,6 @@ export default {
         query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + pks.join(' AND ') + ';'
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
-        console.log("submit2")
-
         // Execute Query
         const payload = {
           server: this.serverSelected.id,
@@ -1639,25 +1646,12 @@ export default {
       // Close Dialog
       this.dialog = false
 
-      // Restore old values
-      // if (this.currentCellEditMode == 'new') {
-      //   this.contentItems.splice(this.currentCellEditNode.rowIndex, 1)
-      // }
-      // else if (this.currentCellEditMode == 'edit') {
-      //   let keys = Object.keys(this.currentCellEditValues)
-      //   var newData = this.currentCellEditNode.data
-      //   for (let i = 0; i < keys.length; ++i) {
-      //     if (this.currentCellEditValues[keys[i]]['old'] != this.currentCellEditValues[keys[i]]['new']) newData[keys[i]] = this.currentCellEditValues[keys[i]]['old']
-      //   }
-      //   this.currentCellEditNode.setData(newData)
-      //   this.currentCellEditNode.setSelected(true)
-      // }
-
       // Clean vars
       this.currentCellEditMode = 'edit'
       this.currentCellEditNode = {}
       this.currentCellEditValues = {}
 
+      // Get the table data
       this.filterClick()
     },
     cellEditingEdit() {
