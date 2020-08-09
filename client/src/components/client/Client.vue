@@ -1077,6 +1077,7 @@ export default {
       this.clientItems = []
       this.bottomBarClient = { text: '', status: '', info: '' }
       this.loadingQuery = true
+      this.gridApi.showLoadingOverlay()
       const payload = {
         server: this.serverSelected.id,
         database: this.database,
@@ -1084,9 +1085,11 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
+          this.gridApi.hideOverlay()
           this.parseExecution(JSON.parse(response.data.data))
         })
         .catch((error) => {
+          this.gridApi.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else {
             // Get Response Data
@@ -1160,6 +1163,7 @@ export default {
       this.contentHeaders = []
       this.contentTableSelected = this.treeviewSelected['name']
       this.bottomBarContent = { status: '', text: '', info: '' }
+      this.gridApi.showLoadingOverlay()
       const payload = {
         server: this.serverSelected.id,
         database: this.database,
@@ -1168,9 +1172,11 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
+          this.gridApi.hideOverlay()
           this.parseContentExecution(JSON.parse(response.data.data))          
         })
         .catch((error) => {
+          this.gridApi.hideOverlay()
           console.log(error)
           // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           // else this.notification(error.response.data.message, 'error')
@@ -1247,6 +1253,8 @@ export default {
         condition = condition.substring(0, condition.length - 1) + ")"
       }
       else if (this.contentSearchFilterText.length != 0) condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "'"
+      // Show overlay
+      this.gridApi.showLoadingOverlay()
       // Build payload
       const payload = {
         server: this.serverSelected.id,
@@ -1256,9 +1264,11 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
+          this.gridApi.hideOverlay()
           this.parseContentExecution(JSON.parse(response.data.data))
         })
         .catch((error) => {
+          this.gridApi.hideOverlay()
           console.log(error)
           // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           // else this.notification(error.response.data.message, 'error')
@@ -1497,7 +1507,8 @@ export default {
       }
       // Build Query
       var query = 'DELETE FROM ' + this.treeviewSelected['name'] + ' WHERE ' + pks.join(' OR ') + ';'
-
+      // Show overlay
+      this.gridApi.showLoadingOverlay()
       // Execute Query
       const payload = {
         server: this.serverSelected.id,
@@ -1506,6 +1517,7 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
+          this.gridApi.hideOverlay()
           // Remove Frontend Rows
           this.gridApi.applyTransaction({ remove: this.gridApi.getSelectedRows() })
           // Build BottomBar
@@ -1514,6 +1526,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
+          this.gridApi.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else {
             // Show error
@@ -1600,11 +1613,18 @@ export default {
             }
           }
         }
-        let pks = []
-        for (let i = 0; i < this.contentPks.length; ++i) pks.push(this.contentPks[i] + " = " + JSON.stringify(values[this.contentPks[i]]['old']))
-        query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + pks.join(' AND ') + ';'
+        let where = []
+        if (this.contentPks.length == 0) {
+          for (let i = 0; i < keys.length; ++i) where.push(keys[i] + " = " + JSON.stringify(values[keys[i]]['old']))
+          query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
+        }
+        else {
+          for (let i = 0; i < this.contentPks.length; ++i) where.push(this.contentPks[i] + " = " + JSON.stringify(values[this.contentPks[i]]['old']))
+          query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
+        }
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
+        this.gridApi.showLoadingOverlay()
         // Execute Query
         const payload = {
           server: this.serverSelected.id,
@@ -1613,6 +1633,7 @@ export default {
         }
         axios.post('/client/execute', payload)
           .then((response) => {
+            this.gridApi.hideOverlay()
             let data = JSON.parse(response.data.data)
             // Build BottomBar
             this.parseContentBottomBar(data)
@@ -1620,6 +1641,7 @@ export default {
             if (data[0].query.startsWith('INSERT')) node.setDataValue(this.contentPks[0], data[0].lastRowId)
           })
           .catch((error) => {
+            this.gridApi.hideOverlay()
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
             else {
               // Show error
