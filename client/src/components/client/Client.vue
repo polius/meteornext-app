@@ -1615,7 +1615,10 @@ export default {
         }
         let where = []
         if (this.contentPks.length == 0) {
-          for (let i = 0; i < keys.length; ++i) where.push(keys[i] + " = " + JSON.stringify(values[keys[i]]['old']))
+          for (let i = 0; i < keys.length; ++i) {
+            if (values[keys[i]]['old'] == null) where.push(keys[i] + ' IS NULL')
+            else where.push(keys[i] + " = " + JSON.stringify(values[keys[i]]['old']))
+          }
           query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
         }
         else {
