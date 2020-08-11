@@ -123,3 +123,6 @@ class Connector:
 
     def get_table_syntax(self, db, table):
         return self._sql.get_table_syntax(db, table)
+
+    def get_table_info(self, db, table):
+        return self._sql.get_table_info(db, table)
