@@ -359,3 +359,14 @@ class MySQL:
         query = "SHOW CREATE TABLE {}.{}".format(db, table)
         result = self.execute(query)['data'][0]['Create Table']
         return result
+
+    def get_table_info(self, db, table):
+        query = """
+            SELECT engine, row_format, table_rows, avg_row_length, data_length, max_data_length, index_length, data_free, auto_increment, create_time, update_time, c.character_set_name AS table_charset, table_collation, table_comment
+            FROM information_schema.tables t
+            JOIN information_schema.collations c ON c.collation_name = t.table_collation
+            WHERE t.table_schema = '{}'
+            AND t.table_name = '{}';
+        """.format(db, table)
+        result = self.execute(query)['data'][0]
+        return result

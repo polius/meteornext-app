@@ -167,8 +167,9 @@
                     <!-- INFO -->
                     <!---------->
                     <div v-show="tabSelected == 'table_info'" style="width:100%; height:100%">
-                      <div class="subtitle-2" style="padding:10px; padding-left:15px; color:rgb(222,222,222);">TABLE SYNTAX</div>
-                      <div style="margin-left:auto; margin-right:auto; height:calc(100% - 42px); width:100%">
+                      <v-data-table :headers="infoHeaders" :items="infoItems" disable-sort hide-default-footer class="elevation-1" style="margin:10px; background-color:rgb(48,48,48);"></v-data-table>
+                      <div class="subtitle-2" style="padding:5px 15px 10px 15px; color:rgb(222,222,222);">TABLE SYNTAX</div>
+                      <div style="margin-left:auto; margin-right:auto; height:calc(100% - 118px); width:100%">
                         <div id="infoEditor" style="float:left"></div>
                       </div>
                     </div>
@@ -414,6 +415,9 @@
 ::v-deep .ag-cell-null {
   color: gray;
 }
+::v-deep tr:hover {
+  background-color: transparent !important;
+}
 </style>
 
 <script>
@@ -516,6 +520,8 @@ export default {
 
       // Info
       infoEditor: null,
+      infoHeaders: [],
+      infoItems: [],      
 
       // Bottom Bar
       bottomBarClient: { text: '', status: '', info: '' },
@@ -1227,15 +1233,39 @@ export default {
       }
       axios.get('/client/info', { params: payload })
         .then((response) => {
-          let data = JSON.parse(response.data.table_syntax)
-          this.infoEditor.setValue(data, -1)
-          this.infoEditor.focus()
+          this.parseInfo(response.data)
         })
         .catch((error) => {
           console.log(error)
           // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           // else this.notification(error.response.data.message, 'error')
         })
+    },
+    parseInfo(data) {
+      // Parse Info
+      this.infoHeaders = [
+        { text: 'Engine', value: 'engine' },
+        { text: 'Row format', value: 'row_format' },
+        { text: 'Rows', value: 'table_rows' },
+        { text: 'Data size', value: 'data_length' },
+        { text: 'Index size', value: 'index_length' },
+        { text: 'Total size', value: 'total_length' },
+        { text: 'Collation', value: 'table_collation' },
+        { text: 'Created', value: 'create_time' },
+        { text: 'Updated', value: 'update_time' }
+      ]
+      let info = JSON.parse(data.info)
+      info['total_length'] = this.parseBytes(info.data_length + info.index_length)
+      info.data_length = this.parseBytes(info.data_length)
+      info.index_length = this.parseBytes(info.index_length)
+      info.create_time = (info.create_time == null) ? 'Not available' : info.create_time
+      info.update_time = (info.update_time == null) ? 'Not available' : info.update_time
+      this.infoItems = [info]
+
+      // Parse Syntax
+      let syntax = JSON.parse(data.syntax)
+      this.infoEditor.setValue(syntax, -1)
+      this.infoEditor.focus()
     },
     filterClick() {
       // Build query condition
@@ -1359,9 +1389,22 @@ export default {
           fontSize: 14,
           showPrintMargin: false,
           wrap: true,
-          readOnly: true,
-          showLineNumbers: false
+          readOnly: true
         });
+        this.infoEditor.container.addEventListener("keydown", (e) => {
+          // - Increase Font Size -
+          if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
+            let size = parseInt(this.infoEditor.getFontSize(), 10) || 12
+            this.infoEditor.setFontSize(size + 1)
+            e.preventDefault()
+          }
+          // - Decrease Font Size -
+          else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
+            let size = parseInt(this.infoEditor.getFontSize(), 10) || 12
+            this.infoEditor.setFontSize(Math.max(size - 1 || 1))
+            e.preventDefault()
+          }
+        }, false);
       }
       this.getInfo()
     },
@@ -1827,6 +1870,13 @@ export default {
     editDialogCancel() {
       this.editDialog = false
       this.editDialogEditor.setValue('')
+    },
+    parseBytes(value) {
+      if (value/1024 < 1) return value + ' B'
+      else if (value/1024/1024 < 1) return value/1024 + 'KB'
+      else if (value/1024/1024/1024 < 1) return value/1024/1024 + 'MB'
+      else if (value/1024/1024/1024/1024 < 1) return value/1024/1024/1024 + 'GB'
+      else return value/1024/1024/1024/1024 + 'TB' 
     },
     notification(message, color, timeout=5) {
       this.snackbarText = message
