@@ -127,7 +127,7 @@
                       <!-- <div style="width:100%; height:calc(100% - 85px); z-index:1; position:absolute; text-align:center;">
                         <v-progress-circular indeterminate color="#dcdcdc" width="2" style="height:100%;"></v-progress-circular>
                       </div>-->
-                      <ag-grid-vue @column-resized="onColumnResized" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
+                      <ag-grid-vue @column-resized="onColumnResized" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
                     </div>
                     <!------------->
                     <!-- CONTENT -->
@@ -169,7 +169,7 @@
                     <div v-show="tabSelected == 'table_info'" style="width:100%; height:100%">
                       <v-data-table :headers="infoHeaders" :items="infoItems" disable-sort hide-default-footer class="elevation-1" style="margin:10px; background-color:rgb(48,48,48);"></v-data-table>
                       <div class="subtitle-2" style="padding:5px 15px 10px 15px; color:rgb(222,222,222);">TABLE SYNTAX</div>
-                      <div style="margin-left:auto; margin-right:auto; height:calc(100% - 118px); width:100%">
+                      <div style="height:calc(100% - 118px);">
                         <div id="infoEditor" style="float:left"></div>
                       </div>
                     </div>
@@ -222,11 +222,11 @@
                     <!-- STRUCTURE -->
                     <v-row v-else-if="tabSelected == 'structure'" no-gutters style="flex-wrap: nowrap;">
                       <v-col cols="auto">
-                        <v-btn text small :title="tabStructureSelected == 'columns' ? 'New Column' : tabStructureSelected == 'indexes' ? 'New Index' : tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+                        <v-btn @click="addStructure" text small :title="tabStructureSelected == 'columns' ? 'New Column' : tabStructureSelected == 'indexes' ? 'New Index' : tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
                         <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                        <v-btn text small :title="tabStructureSelected == 'columns' ? 'Remove Column' : tabStructureSelected == 'indexes' ? 'Remove Index' : tabStructureSelected == 'fks' ? 'Remove Foreign Key' : 'Remove Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+                        <v-btn @click="removeStructure" text small :title="tabStructureSelected == 'columns' ? 'Remove Column' : tabStructureSelected == 'indexes' ? 'Remove Index' : tabStructureSelected == 'fks' ? 'Remove Foreign Key' : 'Remove Trigger'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
                         <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
-                        <v-btn text small :title="tabStructureSelected == 'columns' ? 'Refresh Columns' : tabStructureSelected == 'indexes' ? 'Refresh Indexes' : tabStructureSelected == 'fks' ? 'Refresh Foreign Keys' : 'Refresh Triggers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+                        <v-btn @click="getStructure" text small :title="tabStructureSelected == 'columns' ? 'Refresh Columns' : tabStructureSelected == 'indexes' ? 'Refresh Indexes' : tabStructureSelected == 'fks' ? 'Refresh Foreign Keys' : 'Refresh Triggers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
                         <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
                       </v-col>
                     </v-row>
@@ -268,7 +268,7 @@
               <v-card-text style="padding:15px 15px 5px;">
                 <v-container style="padding:0px; max-width:100%;">
                   <v-layout wrap>
-                    <div class="text-h6" style="font-weight:400;">ssh_port</div>
+                    <div class="subtitle-1" style="font-weight:400;">{{ editDialogTitle }}</div>
                     <v-flex xs12>
                       <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
                         <div style="margin-left:auto; margin-right:auto; height:60vh; width:100%">
@@ -283,6 +283,48 @@
                           </v-col>
                           <v-col style="margin-bottom:10px;">
                             <v-btn @click="editDialogCancel" outlined color="#e74d3c">Cancel</v-btn>
+                          </v-col>
+                        </v-row>
+                      </div>
+                    </v-flex>
+                  </v-layout>
+                </v-container>
+              </v-card-text>
+            </v-card>
+          </v-dialog>
+          <v-dialog v-model="structureDialog" persistent max-width="60%">
+            <v-card>
+              <v-toolbar flat color="primary">
+                <v-toolbar-title class="white--text">{{ structureDialogTitle }}</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn icon @click="structureDialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+              </v-toolbar>
+              <v-card-text style="padding:15px 15px 5px;">
+                <v-container style="padding:0px; max-width:100%;">
+                  <v-layout wrap>
+                    <!-- <div class="text-h6" style="font-weight:400;">{{ structureDialogTitle }}</div> -->
+                    <v-flex xs12>
+                      <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
+                        <v-text-field v-model="structureDialogItem.name" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
+                        <v-select v-model="structureDialogItem.type" :items="structureDialogColumnTypes" :rules="[v => !!v || '']" label="Type" required style="padding-top:0px;"></v-select>
+                        <v-text-field v-model="structureDialogItem.length" :rules="[v => !v || (v == parseInt(v) && v >= 0) || '']" label="Length" required style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="structureDialogItem.default" label="Default" required style="padding-top:0px;"></v-text-field>
+                        <v-select v-model="structureDialogItem.collation" :items="structureDialogCollations" label="Collation" required style="padding-top:0px;"></v-select>
+                        <v-text-field v-model="structureDialogItem.comment" label="Comment" required style="padding-top:0px;"></v-text-field>
+                        <v-checkbox v-model="structureDialogItem.null" label="Allow Null" color="info" style="margin-top:0px; padding-top:0px;" hide-details></v-checkbox>
+                        <v-checkbox v-model="structureDialogItem.unsigned" label="Unsigned" color="info" style="margin-top:0px;" hide-details></v-checkbox>
+                        <v-checkbox v-model="structureDialogItem.current_timestamp" label="On Update Current Timestamp" color="info" style="margin-top:0px;" hide-details></v-checkbox>
+                        <v-checkbox v-model="structureDialogItem.auto_increment" label="Auto Increment" color="info" style="margin-top:0px;" hide-details></v-checkbox>
+                        <v-checkbox v-model="structureDialogItem.pk" label="Primary Key" color="info" style="margin-top:0px;" hide-details></v-checkbox>
+                      </v-form>
+                      <v-divider></v-divider>
+                      <div style="margin-top:15px;">
+                        <v-row no-gutters>
+                          <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                            <v-btn @click="structureDialogSubmit" color="primary">Save</v-btn>
+                          </v-col>
+                          <v-col style="margin-bottom:10px;">
+                            <v-btn @click="structureDialogCancel" outlined color="#e74d3c">Cancel</v-btn>
                           </v-col>
                         </v-row>
                       </div>
@@ -544,7 +586,15 @@ export default {
 
       // Edit Dialog
       editDialog: false,
+      editDialogTitle: '',
       editDialogEditor: null,
+
+      // Structure Dialog
+      structureDialog: false,
+      structureDialogTitle: '',
+      structureDialogItem: {},
+      structureDialogColumnTypes: [],
+      structureDialogCollations: [],
 
       // Snackbar
       snackbar: false,
@@ -1389,7 +1439,8 @@ export default {
           fontSize: 14,
           showPrintMargin: false,
           wrap: true,
-          readOnly: true
+          readOnly: true,
+          showLineNumbers: false
         });
         this.infoEditor.container.addEventListener("keydown", (e) => {
           // - Increase Font Size -
@@ -1430,7 +1481,7 @@ export default {
         var columns_keys = Object.keys(columns_items[0])
         for (let i = 0; i < columns_keys.length; ++i) {
           let field = columns_keys[i].trim()
-          columns_headers.push({ headerName: columns_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
+          columns_headers.push({ headerName: columns_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: false })
         }
       }
       this.structureOrigin['columns'] = { headers: columns_headers, items: columns_items }
@@ -1615,7 +1666,7 @@ export default {
       let columnType = this.contentColumnsType[event.colDef.colId]
       if (['text','mediumtext','longtext'].includes(columnType) || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
         if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
-        else this.editDialogOpen(event.value)
+        else this.editDialogOpen(event.column.colId + ': ' + columnType.toUpperCase(), event.value)
       }
     },
     cellEditingStopped(event, edit) {
@@ -1832,7 +1883,8 @@ export default {
         else if (button == 2) this.dialog = false
       }
     },
-    editDialogOpen(text) {
+    editDialogOpen(title, text) {
+      this.editDialogTitle = title
       this.editDialog = true
       if (this.editDialogEditor == null) {
         setTimeout(() => {
@@ -1844,6 +1896,20 @@ export default {
             wrap: true,
             showLineNumbers: false
           })
+          this.editDialogEditor.container.addEventListener("keydown", (e) => {
+            // - Increase Font Size -
+            if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
+              let size = parseInt(this.editDialogEditor.getFontSize(), 10) || 12
+              this.editDialogEditor.setFontSize(size + 1)
+              e.preventDefault()
+            }
+            // - Decrease Font Size -
+            else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
+              let size = parseInt(this.editDialogEditor.getFontSize(), 10) || 12
+              this.editDialogEditor.setFontSize(Math.max(size - 1 || 1))
+              e.preventDefault()
+            }
+          }, false);
           this.editDialogEditor.focus()
           this.editDialogEditor.setValue(text, -1)
         }, 100);
@@ -1870,6 +1936,26 @@ export default {
     editDialogCancel() {
       this.editDialog = false
       this.editDialogEditor.setValue('')
+    },
+    onRowDoubleClicked(event) {
+      console.log(event)
+      this.editStructure(event.data)
+    },
+    addStructure() {
+      this.structureDialogTitle = this.tabStructureSelected == 'columns' ? 'New Column' : this.tabStructureSelected == 'indexes' ? 'New Index' : this.tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'
+      this.structureDialog = true
+    },
+    removeStructure() {
+
+    },
+    editStructure() {
+
+    },
+    structureDialogSubmit() {
+
+    },
+    structureDialogCancel() {
+      this.structureDialog = false
     },
     parseBytes(value) {
       if (value/1024 < 1) return value + ' B'
