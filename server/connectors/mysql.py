@@ -370,3 +370,16 @@ class MySQL:
         """.format(db, table)
         result = self.execute(query)['data'][0]
         return result
+
+    def get_collations(self):
+        query = """
+            SELECT collation_name
+            FROM information_schema.collations
+            ORDER BY collation_name
+        """
+        result = self.execute(query)['data']
+
+        collations = []
+        for c in result:
+            collations.append(c['collation_name'])
+        return collations

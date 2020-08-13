@@ -126,3 +126,6 @@ class Connector:
 
     def get_table_info(self, db, table):
         return self._sql.get_table_info(db, table)
+
+    def get_collations(self):
+        return self._sql.get_collations()

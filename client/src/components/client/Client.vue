@@ -127,7 +127,7 @@
                       <!-- <div style="width:100%; height:calc(100% - 85px); z-index:1; position:absolute; text-align:center;">
                         <v-progress-circular indeterminate color="#dcdcdc" width="2" style="height:100%;"></v-progress-circular>
                       </div>-->
-                      <ag-grid-vue @column-resized="onColumnResized" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
+                      <ag-grid-vue @column-resized="onColumnResized" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
                     </div>
                     <!------------->
                     <!-- CONTENT -->
@@ -297,34 +297,34 @@
               <v-toolbar flat color="primary">
                 <v-toolbar-title class="white--text">{{ structureDialogTitle }}</v-toolbar-title>
                 <v-spacer></v-spacer>
-                <v-btn icon @click="structureDialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+                <v-btn :disabled="loadingDialog" @click="structureDialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
               </v-toolbar>
               <v-card-text style="padding:15px 15px 5px;">
                 <v-container style="padding:0px; max-width:100%;">
                   <v-layout wrap>
                     <!-- <div class="text-h6" style="font-weight:400;">{{ structureDialogTitle }}</div> -->
                     <v-flex xs12>
-                      <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
-                        <v-text-field v-model="structureDialogItem.name" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
-                        <v-select v-model="structureDialogItem.type" :items="structureDialogColumnTypes" :rules="[v => !!v || '']" label="Type" required style="padding-top:0px;"></v-select>
+                      <v-form v-if="tabStructureSelected == 'columns'" ref="structureDialogForm" style="margin-top:10px; margin-bottom:15px;">
+                        <v-text-field ref="structureDialogFormFocus" v-model="structureDialogItem.name" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
+                        <v-autocomplete v-model="structureDialogItem.type" :items="structureDialogColumnTypes" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                         <v-text-field v-model="structureDialogItem.length" :rules="[v => !v || (v == parseInt(v) && v >= 0) || '']" label="Length" required style="padding-top:0px;"></v-text-field>
-                        <v-text-field v-model="structureDialogItem.default" label="Default" required style="padding-top:0px;"></v-text-field>
-                        <v-select v-model="structureDialogItem.collation" :items="structureDialogCollations" label="Collation" required style="padding-top:0px;"></v-select>
+                        <v-autocomplete :disabled="!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT'].includes(structureDialogItem.type)" v-model="structureDialogItem.collation" :items="structureDialogCollations" label="Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
+                        <v-text-field :disabled="structureDialogItem.auto_increment" v-model="structureDialogItem.default" label="Default" required style="padding-top:0px;"></v-text-field>
                         <v-text-field v-model="structureDialogItem.comment" label="Comment" required style="padding-top:0px;"></v-text-field>
-                        <v-checkbox v-model="structureDialogItem.null" label="Allow Null" color="info" style="margin-top:0px; padding-top:0px;" hide-details></v-checkbox>
-                        <v-checkbox v-model="structureDialogItem.unsigned" label="Unsigned" color="info" style="margin-top:0px;" hide-details></v-checkbox>
-                        <v-checkbox v-model="structureDialogItem.current_timestamp" label="On Update Current Timestamp" color="info" style="margin-top:0px;" hide-details></v-checkbox>
-                        <v-checkbox v-model="structureDialogItem.auto_increment" label="Auto Increment" color="info" style="margin-top:0px;" hide-details></v-checkbox>
-                        <v-checkbox v-model="structureDialogItem.pk" label="Primary Key" color="info" style="margin-top:0px;" hide-details></v-checkbox>
+                        <v-checkbox :disabled="structureDialogItem.pk" v-model="structureDialogItem.null" label="Allow Null" color="info" style="margin-top:0px; padding-top:0px;" hide-details></v-checkbox>
+                        <v-checkbox :disabled="!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(structureDialogItem.type)" v-model="structureDialogItem.unsigned" label="Unsigned" color="info" style="margin-top:0px;" hide-details></v-checkbox>
+                        <v-checkbox :disabled="!['DATETIME','TIMESTAMP'].includes(structureDialogItem.type)" v-model="structureDialogItem.current_timestamp" label="On Update Current Timestamp" color="info" style="margin-top:0px;" hide-details></v-checkbox>
+                        <v-checkbox :disabled="!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(structureDialogItem.type)" v-model="structureDialogItem.auto_increment" label="Auto Increment" @change="structureDialogItem.auto_increment ? structureDialogItem.default = '' : ''" color="info" style="margin-top:0px;" hide-details></v-checkbox>
+                        <v-checkbox v-model="structureDialogItem.pk" label="Primary Key" @change="structureDialogItem.pk ? structureDialogItem.null = false : ''" color="info" style="margin-top:0px;" hide-details></v-checkbox>
                       </v-form>
                       <v-divider></v-divider>
                       <div style="margin-top:15px;">
                         <v-row no-gutters>
                           <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                            <v-btn @click="structureDialogSubmit" color="primary">Save</v-btn>
+                            <v-btn :loading="loadingDialog" @click="structureDialogSubmit" color="primary">Save</v-btn>
                           </v-col>
                           <v-col style="margin-bottom:10px;">
-                            <v-btn @click="structureDialogCancel" outlined color="#e74d3c">Cancel</v-btn>
+                            <v-btn :disabled="loadingDialog" @click="structureDialogCancel" outlined color="#e74d3c">Cancel</v-btn>
                           </v-col>
                         </v-row>
                       </div>
@@ -334,13 +334,13 @@
               </v-card-text>
             </v-card>
           </v-dialog>
-          <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
-            {{ snackbarText }}
-            <v-btn color="white" text @click="snackbar = false">Close</v-btn>
-          </v-snackbar>
         </div>
       </v-main>
     </v-container>
+    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+      {{ snackbarText }}
+      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+    </v-snackbar>
   </v-main>
 </template>
 
@@ -490,6 +490,7 @@ export default {
       // Loadings
       loadingServer: false,
       loadingQuery: false,
+      loadingDialog: false,
 
       // Database Selector
       databaseItems: [],
@@ -591,6 +592,7 @@ export default {
 
       // Structure Dialog
       structureDialog: false,
+      structureDialogMode: '',
       structureDialogTitle: '',
       structureDialogItem: {},
       structureDialogColumnTypes: [],
@@ -930,7 +932,7 @@ export default {
       // Retrieve Databases
       axios.get('/client/databases', { params: { server_id: server.id } })
         .then((response) => {
-          this.parseDatabases(server, response.data.data)
+          this.parseDatabases(server, response.data)
         })
         .catch((error) => {
           console.log(error)
@@ -945,8 +947,8 @@ export default {
       this.treeview = []
       this.treeviewItems = []
       this.treeviewMode = 'objects'
-      this.databaseItems = data
-      const connection = { server: server, databases: data }
+      this.databaseItems = data.databases
+      const connection = { server: server, databases: data.databases }
       if (this.connections.length == 0) this.connections.push(connection)
       else this.connections[this.currentConn] = connection
       this.editor.focus()
@@ -958,6 +960,12 @@ export default {
       var completer = []
       for (let i = 0; i < data.length; ++i) completer.push({ value: data[i], meta: 'database' })
       this.editorAddCompleter(completer)
+
+      // Get Column Types + Collations
+      if (server.type == 'MySQL') {
+        this.structureDialogColumnTypes = ['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','FLOAT','DOUBLE','BIT','CHAR','VARCHAR','BINARY','VARBINARY','TINYBLOB','BLOB','MEDIUMBLOB','LONGBLOB','TINYTEXT','TEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET','DATE','TIME','DATETIME','TIMESTAMP','YEAR','GEOMETRY','POINT','LINESTRING','POLYGON','GEOMETRYCOLLECTION','MULTILINESTRING','MULTIPOINT','MULTIPOLYGON','JSON']
+        this.structureDialogCollations = data.collations
+      }
     },
     getObjects(database) {
       // Retrieve Tables
@@ -1481,9 +1489,10 @@ export default {
         var columns_keys = Object.keys(columns_items[0])
         for (let i = 0; i < columns_keys.length; ++i) {
           let field = columns_keys[i].trim()
-          columns_headers.push({ headerName: columns_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: false })
+          columns_headers.push({ headerName: columns_keys[i], colId: field, field: field, sortable: false, filter: false, resizable: true, editable: false })
         }
       }
+      columns_headers[0]['rowDrag'] = true
       this.structureOrigin['columns'] = { headers: columns_headers, items: columns_items }
       this.structureHeaders = columns_headers
       this.structureItems = columns_items
@@ -1941,18 +1950,53 @@ export default {
       console.log(event)
       this.editStructure(event.data)
     },
+    onRowDragEnd(event) {
+      console.log(event)  
+    },
     addStructure() {
+      this.structureDialogMode = 'new'
       this.structureDialogTitle = this.tabStructureSelected == 'columns' ? 'New Column' : this.tabStructureSelected == 'indexes' ? 'New Index' : this.tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'
+      this.structureDialogItem = { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false, pk: false }
       this.structureDialog = true
     },
     removeStructure() {
-
+      this.structureDialogMode = 'delete'
     },
     editStructure() {
-
+      this.structureDialogMode = 'edit'
     },
     structureDialogSubmit() {
+      this.loadingDialog = true
+      // Parse Form Fields
+      if (!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT'].includes(this.structureDialogItem.type)) this.structureDialogItem.collation = ''
+      if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(this.structureDialogItem.type)) this.structureDialogItem.unsigned = false
+      if (!['DATETIME','TIMESTAMP'].includes(this.structureDialogItem.type)) this.structureDialogItem.current_timestamp = false
+      if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(this.structureDialogItem.type)) this.structureDialogItem.auto_increment = false
 
+      // Check if all fields are filled
+      if (!this.$refs.structureDialogForm.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loadingDialog = false
+        return
+      }
+
+      // Build Query
+      let query = ''
+      if (this.tabStructureSelected == 'columns') {
+        query = 'ALTER TABLE ' + this.treeviewSelected['name'] 
+          + ' ADD ' + this.structureDialogItem.name
+          + ' ' + this.structureDialogItem.type + (this.structureDialogItem.length.length > 0 ? '(' + this.structureDialogItem.length + ')' : '')
+          + (this.structureDialogItem.unsigned ? ' UNSIGNED' : '')
+          + (this.structureDialogItem.collation.length > 0 ? ' CHARACTER SET ' + this.structureDialogItem.collation.split('_')[0] + ' COLLATE ' + this.structureDialogItem.collation : '')
+          + (this.structureDialogItem.null ? ' NULL' : ' NOT NULL')
+          + (this.structureDialogItem.default.length > 0 ? " DEFAULT" + (this.structureDialogItem.default == 'CURRENT_TIMESTAMP' ? ' CURRENT_TIMESTAMP' : " '" + this.structureDialogItem.default + "'") : '')
+          + (this.structureDialogItem.current_timestamp ? ' ON UPDATE CURRENT_TIMESTAMP' : '')
+          + (this.structureDialogItem.auto_increment ? ' AUTO_INCREMENT' : '')
+          + (this.structureDialogItem.pk ? ' PRIMARY KEY' : '')
+          + (this.structureDialogItem.comment ? " COMMENT '" + this.structureDialogItem.comment + "'" : '')
+      }
+      console.log(query)
+      // Axios: '/execute'
     },
     structureDialogCancel() {
       this.structureDialog = false
@@ -1969,6 +2013,15 @@ export default {
       this.snackbarColor = color
       this.snackbarTimeout = Number(timeout*1000)
       this.snackbar = true
+    }
+  },
+  watch: {
+    structureDialog (val) {
+      if (!val) return
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.structureDialogForm !== 'undefined') this.$refs.structureDialogForm.resetValidation()
+        if (typeof this.$refs.structureDialogFormFocus !== 'undefined') this.$refs.structureDialogFormFocus.focus()
+      })
     }
   }
 }
