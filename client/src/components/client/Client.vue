@@ -99,20 +99,20 @@
                     <!------------>
                     <!-- CLIENT -->
                     <!------------>
-                    <Splitpanes v-show="tabSelected == 'client'" horizontal @ready="initAceClient()">
+                    <Splitpanes v-if="tabSelected == 'client'" horizontal @ready="initAceClient()">
                       <Pane size="50">
                         <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
                           <div id="editor" style="float:left"></div>
                         </div>
                       </Pane>
                       <Pane size="50" min-size="0">
-                        <ag-grid-vue suppressColumnVirtualisation @grid-ready="onGridReady" @cell-editing-started="cellEditingStarted($event, false)" @cell-editing-stopped="cellEditingStopped($event, false)" @cell-key-down="onCellKeyDown" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
+                        <ag-grid-vue ref="agGrid" suppressColumnVirtualisation @grid-ready="onGridReady" @cell-editing-started="cellEditingStarted($event, false)" @cell-editing-stopped="cellEditingStopped($event, false)" @cell-key-down="onCellKeyDown" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
                       </Pane>
                     </Splitpanes>
                     <!--------------->
                     <!-- STRUCTURE -->
                     <!--------------->
-                    <div v-show="tabSelected == 'structure'" style="width:100%; height:100%;">
+                    <div v-else-if="tabSelected == 'structure'" style="width:100%; height:100%;">
                       <v-tabs show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
                         <v-tabs-slider></v-tabs-slider>
                         <v-tab @click="tabStructureColumns()"><span class="pl-2 pr-2">Columns</span></v-tab>
@@ -127,12 +127,12 @@
                       <!-- <div style="width:100%; height:calc(100% - 85px); z-index:1; position:absolute; text-align:center;">
                         <v-progress-circular indeterminate color="#dcdcdc" width="2" style="height:100%;"></v-progress-circular>
                       </div>-->
-                      <ag-grid-vue @column-resized="onColumnResized" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
+                      <ag-grid-vue ref="agGrid" @column-resized="onColumnResized" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
                     </div>
                     <!------------->
                     <!-- CONTENT -->
                     <!------------->
-                    <div v-show="tabSelected == 'content'" style="width:100%; height:100%">
+                    <div v-else-if="tabSelected == 'content'" style="width:100%; height:100%">
                       <div style="height:45px; background-color:#303030; margin:0px;">
                         <v-row no-gutters>
                           <v-col sm="auto">
@@ -161,12 +161,12 @@
                           </v-col>
                         </v-row>
                       </div>
-                      <ag-grid-vue ref="agGridContent" suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @row-clicked="onRowClicked" @cell-editing-started="cellEditingStarted($event, true)" @cell-editing-stopped="cellEditingStopped($event, true)" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+                      <ag-grid-vue ref="agGrid" suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @row-clicked="onRowClicked" @cell-editing-started="cellEditingStarted($event, true)" @cell-editing-stopped="cellEditingStopped($event, true)" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
                     </div>
                     <!---------->
                     <!-- INFO -->
                     <!---------->
-                    <div v-show="tabSelected == 'table_info'" style="width:100%; height:100%">
+                    <div v-else-if="tabSelected == 'table_info'" style="width:100%; height:100%">
                       <v-data-table :headers="infoHeaders" :items="infoItems" disable-sort hide-default-footer class="elevation-1" style="margin:10px; background-color:rgb(48,48,48);"></v-data-table>
                       <div class="subtitle-2" style="padding:5px 15px 10px 15px; color:rgb(222,222,222);">TABLE SYNTAX</div>
                       <div style="height:calc(100% - 118px);">
@@ -240,10 +240,10 @@
               <v-card-text style="padding:15px 15px 5px;">
                 <v-container style="padding:0px">
                   <v-layout wrap>
-                    <div class="text-h5">{{ dialogTitle }}</div>
+                    <div class="subtitle-1">{{ dialogTitle }}</div>
                     <v-flex xs12>
                       <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
-                        <div v-if="dialogText.length>0" class="text-body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
+                        <div v-if="dialogText.length>0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
                         <v-select v-if="dialogMode=='export'" outlined v-model="dialogSelect" :items="['Meteor','JSON','CSV','SQL']" label="Format" hide-details></v-select>
                       </v-form>
                       <v-divider></v-divider>
@@ -613,9 +613,6 @@ export default {
   created() {
     this.getServers()
   },
-  mounted() {
-    this.$refs.agGridContent.$el.addEventListener('click', this.onGridClick)
-  },
   methods: {
     onColumnResized() {
       // if (ev.source == 'sizeColumnsToFit') {
@@ -628,12 +625,12 @@ export default {
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
+      this.$refs.agGrid.$el.addEventListener('click', this.onGridClick)
     },
     onGridClick(event) {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.deselectAll()
-        // check if add / edit operation
-        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+        if (this.tabSelected == 'content') this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
       }
     },
     onCellKeyDown(e) {
@@ -880,7 +877,8 @@ export default {
             else {
               this.treeviewSelected = item
               if (this.tabSelected == 'content') this.getContent()
-              if (this.tabSelected == 'table_info') this.getInfo()
+              else if (this.tabSelected == 'table_info') this.getInfo()
+              else if (this.tabSelected == 'structure') this.getStructure()
             }
           }
         }
@@ -1190,6 +1188,11 @@ export default {
       }
       this.clientHeaders = headers
       this.clientItems = items
+
+      // Resize Table
+      this.gridApi.setColumnDefs(headers)
+      this.resizeTable()
+
       // Build BottomBar
       this.parseClientBottomBar(data)
     },
@@ -1279,6 +1282,10 @@ export default {
       this.contentItems = items
       this.gridApi.setRowData(items)
       this.isRowSelected = false
+
+      // Resize Table
+      this.gridApi.setColumnDefs(headers)
+      this.resizeTable()
 
       // Build BottomBar
       this.parseContentBottomBar(data)
@@ -1408,31 +1415,34 @@ export default {
     tabStructure() {
       this.tabSelected = 'structure'
       if (this.structureHeaders.length == 0) this.getStructure()
-      else this.tabStructureColumns()
     },
     tabStructureColumns() {
       this.tabStructureSelected = 'columns'
       this.structureHeaders = this.structureOrigin['columns']['headers'].slice(0)
       this.structureItems = this.structureOrigin['columns']['items'].slice(0)
-      // setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
+      this.gridApi.setColumnDefs(this.structureHeaders)
+      this.gridApi.sizeColumnsToFit()
     },
     tabStructureIndexes() {
       this.tabStructureSelected = 'indexes'
       this.structureHeaders = this.structureOrigin['indexes']['headers'].slice(0)
       this.structureItems = this.structureOrigin['indexes']['items'].slice(0)
-      // setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
+      this.gridApi.setColumnDefs(this.structureHeaders)
+      this.gridApi.sizeColumnsToFit()
     },
     tabStructureFK() {
       this.tabStructureSelected = 'fks'
       this.structureHeaders = this.structureOrigin['fks']['headers'].slice(0)
       this.structureItems = this.structureOrigin['fks']['items'].slice(0)
-      // setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
+      this.gridApi.setColumnDefs(this.structureHeaders)
+      this.gridApi.sizeColumnsToFit()
     },
     tabStructureTriggers() {
       this.tabStructureSelected = 'triggers'
       this.structureHeaders = this.structureOrigin['triggers']['headers'].slice(0)
       this.structureItems = this.structureOrigin['triggers']['items'].slice(0)
-      // setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
+      this.gridApi.setColumnDefs(this.structureHeaders)
+      this.gridApi.sizeColumnsToFit()
     },
     tabContent() {
       this.tabSelected = 'content'
@@ -1468,8 +1478,8 @@ export default {
       this.getInfo()
     },
     getStructure() {
+      this.gridApi.showLoadingOverlay()
       // Retrieve Tables
-      // this.gridApi.showLoadingOverlay()
       const table = this.treeviewSelected['name']
       axios.get('/client/structure', { params: { server: this.serverSelected.id, database: this.database, table: table } })
         .then((response) => {
@@ -1479,6 +1489,9 @@ export default {
           console.log(error)
           // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           // else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.gridApi.hideOverlay()
         })
     },
     parseStructure(data) {
@@ -1494,17 +1507,9 @@ export default {
       }
       columns_headers[0]['rowDrag'] = true
       this.structureOrigin['columns'] = { headers: columns_headers, items: columns_items }
-      this.structureHeaders = columns_headers
-      this.structureItems = columns_items
-
-      // setTimeout(() => { this.gridApi.sizeColumnsToFit() }, 1);
-      // this.gridApi.hideOverlay()
 
       // show 'no rows' overlay
       // this.gridApi.showNoRowsOverlay()
-
-      // clear all overlays
-      // this.gridApi.hideOverlay()
 
       // Parse Indexes
       var indexes_items = JSON.parse(data.indexes)
@@ -1541,6 +1546,12 @@ export default {
         }
       }
       this.structureOrigin['triggers'] = { headers: triggers_headers, items: triggers_items } 
+
+      // Show Data
+      if (this.tabStructureSelected == 'columns') this.tabStructureColumns()
+      else if (this.tabStructureSelected == 'indexes') this.tabStructureIndexes()
+      else if (this.tabStructureSelected == 'fks') this.tabStructureFK()
+      else if (this.tabStructureSelected == 'triggers') this.tabStructureTriggers()
     },
     treeviewKeyDown(event) {
       event.preventDefault()
@@ -1589,7 +1600,7 @@ export default {
     removeRow() {
       // Show confirmation dialog
       var dialogOptions = {
-        'mode': 'confirm',
+        'mode': 'removeRowConfirm',
         'title': 'Delete rows?',
         'text': 'Are you sure you want to delete the selected ' + this.gridApi.getSelectedNodes().length + ' rows from this table? This action cannot be undone.',
         'button1': 'Cancel',
@@ -1753,7 +1764,7 @@ export default {
               // Show error
               let data = JSON.parse(error.response.data.data)
               let dialogOptions = {
-                'mode': 'error',
+                'mode': 'cellEditingError',
                 'title': 'Unable to write row',
                 'text': data[0]['error'],
                 'button1': 'Edit row',
@@ -1872,11 +1883,11 @@ export default {
       this.dialog = true
     },
     dialogSubmit(button) {
-      if (this.dialogMode == 'error') {
+      if (this.dialogMode == 'cellEditingError') {
         if (button == 1) this.cellEditingEdit()
         else if (button == 2) this.cellEditingDiscard()
       }
-      else if (this.dialogMode == 'confirm') {
+      else if (this.dialogMode == 'removeRowConfirm') {
         if (button == 1) this.dialog = false
         else if (button == 2) this.removeRowSubmit()
       }
@@ -1996,7 +2007,41 @@ export default {
           + (this.structureDialogItem.comment ? " COMMENT '" + this.structureDialogItem.comment + "'" : '')
       }
       console.log(query)
-      // Axios: '/execute'
+      this.gridApi.showLoadingOverlay()
+      // Execute Query
+      const payload = {
+        server: this.serverSelected.id,
+        database: this.database,
+        queries: [query]
+      }
+      axios.post('/client/execute', payload)
+          .then((response) => {
+            console.log(response)
+            this.getStructure()
+            // Build BottomBar
+            // this.parseContentBottomBar(data)
+          })
+          .catch((error) => {
+            this.gridApi.hideOverlay()
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            else {
+              // Show error
+              let data = JSON.parse(error.response.data.data)
+              let dialogOptions = {
+                'mode': 'info',
+                'title': 'Unable to apply changes',
+                'text': data[0]['error'],
+                'button1': 'Close',
+                'button2': ''
+              }
+              this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+              // Build BottomBar
+              // this.parseContentBottomBar(data)
+            }
+          })
+          .finally(() => {
+            this.loadingDialog = true
+          })
     },
     structureDialogCancel() {
       this.structureDialog = false
