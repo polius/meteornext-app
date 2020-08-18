@@ -185,7 +185,8 @@ class MySQL:
                 extra AS 'extra',
                 column_default AS 'default',
                 character_set_name AS 'encoding',
-                collation_name AS 'collation'
+                collation_name AS 'collation',
+                column_comment AS 'comment'
             FROM information_schema.columns 
             WHERE table_schema = %s
             AND table_name = %s
