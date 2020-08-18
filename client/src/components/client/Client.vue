@@ -124,9 +124,6 @@
                         <v-tab @click="tabStructureTriggers()"><span class="pl-2 pr-2">Triggers</span></v-tab>
                         <v-divider class="mx-3" inset vertical></v-divider>
                       </v-tabs>
-                      <!-- <div style="width:100%; height:calc(100% - 85px); z-index:1; position:absolute; text-align:center;">
-                        <v-progress-circular indeterminate color="#dcdcdc" width="2" style="height:100%;"></v-progress-circular>
-                      </div>-->
                       <ag-grid-vue ref="agGrid" @grid-ready="onGridReady" @row-data-changed="onFirstDataRendered" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="simple" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
                     </div>
                     <!------------->
@@ -1490,7 +1487,7 @@ export default {
     },
     getStructure() {
       this.gridApi.showLoadingOverlay()
-      this.bottomBarContent = { status: '', text: '', info: '' }
+      this.bottomBarStructure = { status: '', text: '', info: '' }
       // Retrieve Tables
       const table = this.treeviewSelected['name']
       axios.get('/client/structure', { params: { server: this.serverSelected.id, database: this.database, table: table } })
