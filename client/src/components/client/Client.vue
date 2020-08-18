@@ -207,7 +207,6 @@
                         <v-btn @click="exportRows('content')" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
                         <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
                       </v-col>
-
                       <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
                         <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                           <v-icon v-if="bottomBarContent['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
@@ -229,6 +228,16 @@
                         <v-btn @click="getStructure" text small :title="tabStructureSelected == 'columns' ? 'Refresh Columns' : tabStructureSelected == 'indexes' ? 'Refresh Indexes' : tabStructureSelected == 'fks' ? 'Refresh Foreign Keys' : 'Refresh Triggers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
                         <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
                       </v-col>
+                      <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
+                        <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                          <v-icon v-if="bottomBarStructure['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
+                          <v-icon v-else-if="bottomBarStructure['status']=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
+                          <span :title="bottomBarStructure['text']">{{ bottomBarStructure['text'] }}</span>
+                        </div>
+                      </v-col>
+                      <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="min-width: 100px; margin-top:7px; padding-left:10px; padding-right:10px;">
+                        <div class="body-2" style="text-align:right;">{{ bottomBarStructure['info'] }}</div>
+                      </v-col>
                     </v-row>
                   </div>
                 </div>
@@ -240,7 +249,7 @@
               <v-card-text style="padding:15px 15px 5px;">
                 <v-container style="padding:0px">
                   <v-layout wrap>
-                    <div class="subtitle-1">{{ dialogTitle }}</div>
+                    <div class="text-h6" style="font-weight:400;">{{ dialogTitle }}</div>
                     <v-flex xs12>
                       <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
                         <div v-if="dialogText.length>0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
@@ -250,10 +259,10 @@
                       <div style="margin-top:15px;">
                         <v-row no-gutters>
                           <v-col v-if="dialogButtonText1.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                            <v-btn @click="dialogSubmit(1)" color="primary">{{ dialogButtonText1 }}</v-btn>
+                            <v-btn :loading="loadingDialog" @click="dialogSubmit(1)" color="primary">{{ dialogButtonText1 }}</v-btn>
                           </v-col>
                           <v-col v-if="dialogButtonText2.length > 0" style="margin-bottom:10px;">
-                            <v-btn @click="dialogSubmit(2)" outlined color="#e74d3c">{{ dialogButtonText2 }}</v-btn>
+                            <v-btn :disabled="loadingDialog" @click="dialogSubmit(2)" outlined color="#e74d3c">{{ dialogButtonText2 }}</v-btn>
                           </v-col>
                         </v-row>
                       </div>
@@ -268,7 +277,7 @@
               <v-card-text style="padding:15px 15px 5px;">
                 <v-container style="padding:0px; max-width:100%;">
                   <v-layout wrap>
-                    <div class="subtitle-1" style="font-weight:400;">{{ editDialogTitle }}</div>
+                    <div class="text-h6" style="font-weight:400;">{{ editDialogTitle }}</div>
                     <v-flex xs12>
                       <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
                         <div style="margin-left:auto; margin-right:auto; height:60vh; width:100%">
@@ -314,8 +323,7 @@
                         <v-checkbox :disabled="!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(structureDialogItem.type)" v-model="structureDialogItem.unsigned" label="Unsigned" color="info" style="margin-top:0px; padding-top:0px;" hide-details></v-checkbox>
                         <v-checkbox :disabled="!['DATETIME','TIMESTAMP'].includes(structureDialogItem.type)" v-model="structureDialogItem.current_timestamp" label="On Update Current Timestamp" color="info" style="margin-top:0px;" hide-details></v-checkbox>
                         <v-checkbox :disabled="!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(structureDialogItem.type)" v-model="structureDialogItem.auto_increment" label="Auto Increment" @change="structureDialogItem.auto_increment ? structureDialogItem.default = '' : ''" color="info" style="margin-top:0px;" hide-details></v-checkbox>
-                        <v-checkbox :disabled="structureDialogItem.pk" v-model="structureDialogItem.null" label="Allow Null" color="info" style="margin-top:0px;" hide-details></v-checkbox>
-                        <v-checkbox v-model="structureDialogItem.pk" label="Primary Key" @change="structureDialogItem.pk ? structureDialogItem.null = false : ''" color="info" style="margin-top:0px;" hide-details></v-checkbox>
+                        <v-checkbox v-model="structureDialogItem.null" label="Allow Null" color="info" style="margin-top:0px;" hide-details></v-checkbox>
                       </v-form>
                       <v-divider></v-divider>
                       <div style="margin-top:15px;">
@@ -569,6 +577,7 @@ export default {
       // Bottom Bar
       bottomBarClient: { text: '', status: '', info: '' },
       bottomBarContent: { text: '', status: '', info: '' },
+      bottomBarStructure: { text: '', status: '', info: '' },
 
       // AG Grid
       isRowSelected: false,
@@ -1056,7 +1065,8 @@ export default {
         clientHeaders: [],
         clientItems: [],
         bottomBarClient: { text: '', status: '', info: '' },
-        bottomBarContent: { text: '', status: '', info: '' }
+        bottomBarContent: { text: '', status: '', info: '' },
+        bottomBarStructure: { text: '', status: '', info: '' }
       }
       this.connections.push(newConn)
       this.currentConn = this.connections.length - 1
@@ -1079,6 +1089,7 @@ export default {
         this.clientItems = []
         this.bottomBarClient = { text: '', status: '', info: '' }
         this.bottomBarContent = { text: '', status: '', info: '' }
+        this.bottomBarStructure = { text: '', status: '', info: '' }
       }
       else if (index == this.currentConn) {
         if (this.connections.length > index) this.__loadConn(index)
@@ -1115,7 +1126,8 @@ export default {
         clientHeaders: this.clientHeaders.slice(0),
         clientItems: this.clientItems.slice(0),
         bottomBarClient: JSON.parse(JSON.stringify(this.bottomBarClient)),
-        bottomBarContent: JSON.parse(JSON.stringify(this.bottomBarContent))
+        bottomBarContent: JSON.parse(JSON.stringify(this.bottomBarContent)),
+        bottomBarStructure: JSON.parse(JSON.stringify(this.bottomBarStructure))
       }
     },
     __loadConn(index) {
@@ -1133,6 +1145,7 @@ export default {
       this.clientItems = this.connections[index]['clientItems'].slice(0)
       this.bottomBarClient = this.connections[index]['bottomBarClient']
       this.bottomBarContent = this.connections[index]['bottomBarContent']
+      this.bottomBarStructure = this.connections[index]['bottomBarStructure']
     },
     runQuery() {
       this.clientHeaders = []
@@ -1224,6 +1237,19 @@ export default {
       this.bottomBarContent['text'] = data[0]['query']
       this.bottomBarContent['info'] = this.gridApi.getDisplayedRowCount() + ' records'
       if (elapsed != null) this.bottomBarContent['info'] += ' | ' + elapsed.toString() + 's elapsed'
+    },
+    parseStructureBottomBar(data) {
+      var elapsed = null
+      if (data[data.length-1]['time'] !== undefined) {
+        elapsed = 0
+        for (let i = 0; i < data.length; ++i) {
+          elapsed += parseFloat(data[i]['time'])
+        }
+        elapsed /= data.length
+      }
+      this.bottomBarStructure['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
+      this.bottomBarStructure['text'] = data[0]['query']
+      if (elapsed != null) this.bottomBarStructure['info'] = elapsed.toString() + 's elapsed'
     },
     getContent() {
       this.contentItems = []
@@ -1420,29 +1446,37 @@ export default {
       this.tabStructureSelected = 'columns'
       this.structureHeaders = this.structureOrigin['columns']['headers'].slice(0)
       this.structureItems = this.structureOrigin['columns']['items'].slice(0)
-      this.gridApi.setColumnDefs(this.structureHeaders)
-      this.gridApi.sizeColumnsToFit()
+      setTimeout(() => {
+        this.resizeTable()
+        this.gridApi.hideOverlay()
+      }, 100);
     },
     tabStructureIndexes() {
       this.tabStructureSelected = 'indexes'
       this.structureHeaders = this.structureOrigin['indexes']['headers'].slice(0)
       this.structureItems = this.structureOrigin['indexes']['items'].slice(0)
-      this.gridApi.setColumnDefs(this.structureHeaders)
-      this.gridApi.sizeColumnsToFit()
+      setTimeout(() => {
+        this.resizeTable()
+        this.gridApi.hideOverlay()
+      }, 100);
     },
     tabStructureFK() {
       this.tabStructureSelected = 'fks'
       this.structureHeaders = this.structureOrigin['fks']['headers'].slice(0)
       this.structureItems = this.structureOrigin['fks']['items'].slice(0)
-      this.gridApi.setColumnDefs(this.structureHeaders)
-      this.gridApi.sizeColumnsToFit()
+      setTimeout(() => {
+        this.resizeTable()
+        this.gridApi.hideOverlay()
+      }, 100);
     },
     tabStructureTriggers() {
       this.tabStructureSelected = 'triggers'
       this.structureHeaders = this.structureOrigin['triggers']['headers'].slice(0)
       this.structureItems = this.structureOrigin['triggers']['items'].slice(0)
-      this.gridApi.setColumnDefs(this.structureHeaders)
-      this.gridApi.sizeColumnsToFit()
+      setTimeout(() => {
+        this.resizeTable()
+        this.gridApi.hideOverlay()
+      }, 100);
     },
     tabContent() {
       this.tabSelected = 'content'
@@ -1478,7 +1512,8 @@ export default {
       this.getInfo()
     },
     getStructure() {
-      this.gridApi.showLoadingOverlay()
+      setTimeout(() => { this.gridApi.showLoadingOverlay() }, 100)
+      this.bottomBarContent = { status: '', text: '', info: '' }
       // Retrieve Tables
       const table = this.treeviewSelected['name']
       axios.get('/client/structure', { params: { server: this.serverSelected.id, database: this.database, table: table } })
@@ -1491,7 +1526,9 @@ export default {
           // else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
-          this.gridApi.hideOverlay()
+          this.loadingDialog = false
+          this.dialog = false
+          this.structureDialog = false
         })
     },
     parseStructure(data) {
@@ -1902,6 +1939,10 @@ export default {
         if (button == 1) this.exportRowsSubmit()
         else if (button == 2) this.dialog = false
       }
+      else if (this.dialogMode == 'removeColumnsConfirm') {
+        if (button == 1) this.dialog = false
+        else if (button == 2) this.structureDialogSubmit()
+      }
     },
     editDialogOpen(title, text) {
       this.editDialogTitle = title
@@ -1958,56 +1999,100 @@ export default {
       this.editDialogEditor.setValue('')
     },
     onRowDoubleClicked(event) {
-      console.log(event)
       this.editStructure(event.data)
     },
     onRowDragEnd(event) {
-      console.log(event)  
+      if (this.tabStructureSelected == 'columns') {
+        this.structureDialogMode = 'drag'
+        this.structureDialogSubmitColumns(event)
+      }
     },
     addStructure() {
       this.structureDialogMode = 'new'
       this.structureDialogTitle = this.tabStructureSelected == 'columns' ? 'New Column' : this.tabStructureSelected == 'indexes' ? 'New Index' : this.tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'
-      this.structureDialogItem = { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false, pk: false }
+      this.structureDialogItem = { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false }
       this.structureDialog = true
     },
     removeStructure() {
       this.structureDialogMode = 'delete'
+      // Show confirmation dialog
+      var dialogOptions = {
+        'mode': 'removeColumnsConfirm',
+        'title': 'Delete columns?',
+        'text': "Are you sure you want to delete the column '" + this.gridApi.getSelectedRows()[0].name + "' from this table? This action cannot be undone.",
+        'button1': 'Cancel',
+        'button2': 'Delete'
+      }
+      this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
     },
-    editStructure() {
+    editStructure(data) {
       this.structureDialogMode = 'edit'
+      this.structureDialogTitle = this.tabStructureSelected == 'columns' ? 'Edit Column' : this.tabStructureSelected == 'indexes' ? 'Edit Index' : this.tabStructureSelected == 'fks' ? 'Edit Foreign Key' : 'Edit Trigger'
+      this.structureDialogItem = { 
+        name: data.name, 
+        type: data.type, 
+        length: (data.length == null) ? '' : data.length, 
+        collation: (data.collation == null) ? '' : data.collation, 
+        default: (data.default == null) ? '' : data.default, 
+        comment: (data.comment == null) ? '' : data.comment, 
+        null: data.allow_null, 
+        unsigned: data.unsigned, 
+        current_timestamp: data.extra.toLowerCase() == 'on update current_timestamp', 
+        auto_increment: data.extra.toLowerCase() ==  'auto_increment'
+      }
+      this.structureDialog = true
     },
     structureDialogSubmit() {
+      if (this.tabStructureSelected == 'columns') this.structureDialogSubmitColumns()
+    },
+    structureDialogSubmitColumns(event) {
       this.loadingDialog = true
-      // Parse Form Fields
-      if (!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT'].includes(this.structureDialogItem.type)) this.structureDialogItem.collation = ''
-      if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(this.structureDialogItem.type)) this.structureDialogItem.unsigned = false
-      if (!['DATETIME','TIMESTAMP'].includes(this.structureDialogItem.type)) this.structureDialogItem.current_timestamp = false
-      if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(this.structureDialogItem.type)) this.structureDialogItem.auto_increment = false
+      let query = 'ALTER TABLE ' + this.treeviewSelected['name']
 
-      // Check if all fields are filled
-      if (!this.$refs.structureDialogForm.validate()) {
-        this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loadingDialog = false
-        return
-      }
+      if (['new','edit'].includes(this.structureDialogMode)) {
+        // Parse Form Fields
+        if (!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT'].includes(this.structureDialogItem.type)) this.structureDialogItem.collation = ''
+        if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(this.structureDialogItem.type)) this.structureDialogItem.unsigned = false
+        if (!['DATETIME','TIMESTAMP'].includes(this.structureDialogItem.type)) this.structureDialogItem.current_timestamp = false
+        if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(this.structureDialogItem.type)) this.structureDialogItem.auto_increment = false
 
-      // Build Query
-      let query = ''
-      if (this.tabStructureSelected == 'columns') {
-        query = 'ALTER TABLE ' + this.treeviewSelected['name'] 
-          + ' ADD ' + this.structureDialogItem.name
-          + ' ' + this.structureDialogItem.type + (this.structureDialogItem.length.length > 0 ? '(' + this.structureDialogItem.length + ')' : '')
+        // Check if all fields are filled
+        if (!this.$refs.structureDialogForm.validate()) {
+          this.notification('Please make sure all required fields are filled out correctly', 'error')
+          this.loadingDialog = false
+          return
+        }
+
+        // Build Query
+        if (this.structureDialogMode == 'new') query += ' ADD ' + this.structureDialogItem.name
+        else if (this.structureDialogMode == 'edit') query += ' CHANGE ' + this.gridApi.getSelectedRows()[0].name  + ' ' + this.structureDialogItem.name
+        query += ' ' + this.structureDialogItem.type + (this.structureDialogItem.length.length > 0 ? '(' + this.structureDialogItem.length + ')' : '')
           + (this.structureDialogItem.unsigned ? ' UNSIGNED' : '')
           + (this.structureDialogItem.collation.length > 0 ? ' CHARACTER SET ' + this.structureDialogItem.collation.split('_')[0] + ' COLLATE ' + this.structureDialogItem.collation : '')
           + (this.structureDialogItem.null ? ' NULL' : ' NOT NULL')
           + (this.structureDialogItem.default.length > 0 ? " DEFAULT" + (this.structureDialogItem.default == 'CURRENT_TIMESTAMP' ? ' CURRENT_TIMESTAMP' : " '" + this.structureDialogItem.default + "'") : '')
           + (this.structureDialogItem.current_timestamp ? ' ON UPDATE CURRENT_TIMESTAMP' : '')
           + (this.structureDialogItem.auto_increment ? ' AUTO_INCREMENT' : '')
-          + (this.structureDialogItem.pk ? ' PRIMARY KEY' : '')
           + (this.structureDialogItem.comment ? " COMMENT '" + this.structureDialogItem.comment + "'" : '')
       }
-      console.log(query)
+      else if (this.structureDialogMode == 'delete') query += ' DROP ' + this.gridApi.getSelectedRows()[0].name
+      else if (this.structureDialogMode == 'drag') {
+        query += ' MODIFY ' + this.gridApi.getDisplayedRowAtIndex(event.node.rowIndex).data.name
+          + ' ' + event.node.data.type + (event.node.data.length !== null ? '(' + event.node.data.length + ')' : '')
+          + (event.node.data.unsigned ? ' UNSIGNED' : '')
+          + (event.node.data.collation !== null ? ' CHARACTER SET ' + event.node.data.collation.split('_')[0] + ' COLLATE ' + event.node.data.collation : '')
+          + (event.node.data.allow_null ? ' NULL' : ' NOT NULL')
+          + (event.node.data.default !== null ? " DEFAULT" + (event.node.data.default == 'CURRENT_TIMESTAMP' ? ' CURRENT_TIMESTAMP' : " '" + event.node.data.default + "'") : '')
+          + (event.node.data.extra.toLowerCase() == 'on update current_timestamp' ? ' ON UPDATE CURRENT_TIMESTAMP' : '')
+          + (event.node.data.extra.toLowerCase() ==  'auto_increment' ? ' AUTO_INCREMENT' : '')
+          + (event.node.data.comment ? " COMMENT '" + event.node.data.comment + "'" : '')
+          + (event.node.rowIndex == 0 ? ' FIRST' : ' AFTER ' + this.gridApi.getDisplayedRowAtIndex(event.node.rowIndex - 1).data.name)
+      }
+      query += ';'
+
+      // Show Loading Overlay
       this.gridApi.showLoadingOverlay()
+
       // Execute Query
       const payload = {
         server: this.serverSelected.id,
@@ -2015,33 +2100,33 @@ export default {
         queries: [query]
       }
       axios.post('/client/execute', payload)
-          .then((response) => {
-            console.log(response)
-            this.getStructure()
-            // Build BottomBar
-            // this.parseContentBottomBar(data)
-          })
-          .catch((error) => {
-            this.gridApi.hideOverlay()
-            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-            else {
-              // Show error
-              let data = JSON.parse(error.response.data.data)
-              let dialogOptions = {
-                'mode': 'info',
-                'title': 'Unable to apply changes',
-                'text': data[0]['error'],
-                'button1': 'Close',
-                'button2': ''
-              }
-              this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
-              // Build BottomBar
-              // this.parseContentBottomBar(data)
+        .then((response) => {
+          // Get Response Data
+          let data = JSON.parse(response.data.data)
+          // Get Structure
+          this.getStructure()
+          // Build BottomBar
+          this.parseStructureBottomBar(data)
+        })
+        .catch((error) => {
+          this.gridApi.hideOverlay()
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else {
+            // Show error
+            let data = JSON.parse(error.response.data.data)
+            let dialogOptions = {
+              'mode': 'info',
+              'title': 'Unable to apply changes',
+              'text': data[0]['error'],
+              'button1': 'Close',
+              'button2': ''
             }
-          })
-          .finally(() => {
-            this.loadingDialog = true
-          })
+            this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+            // Build BottomBar
+            this.parseStructureBottomBar(data)
+            this.loadingDialog = false
+          }
+        })
     },
     structureDialogCancel() {
       this.structureDialog = false
