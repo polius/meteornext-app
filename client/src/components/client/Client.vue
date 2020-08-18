@@ -127,7 +127,7 @@
                       <!-- <div style="width:100%; height:calc(100% - 85px); z-index:1; position:absolute; text-align:center;">
                         <v-progress-circular indeterminate color="#dcdcdc" width="2" style="height:100%;"></v-progress-circular>
                       </div>-->
-                      <ag-grid-vue ref="agGrid" @column-resized="onColumnResized" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
+                      <ag-grid-vue ref="agGrid" @grid-ready="onGridReady" @row-data-changed="onFirstDataRendered" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
                     </div>
                     <!------------->
                     <!-- CONTENT -->
@@ -316,8 +316,8 @@
                       <v-form v-if="tabStructureSelected == 'columns'" ref="structureDialogForm" style="margin-top:10px; margin-bottom:15px;">
                         <v-text-field ref="structureDialogFormFocus" v-model="structureDialogItem.name" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
                         <v-autocomplete v-model="structureDialogItem.type" :items="structureDialogColumnTypes" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-autocomplete>
-                        <v-text-field v-model="structureDialogItem.length" :rules="[v => !v || (v == parseInt(v) && v >= 0) || '']" label="Length" required style="padding-top:0px;"></v-text-field>
-                        <v-autocomplete :disabled="!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT'].includes(structureDialogItem.type)" v-model="structureDialogItem.collation" :items="structureDialogCollations" label="Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
+                        <v-text-field v-model="structureDialogItem.length" label="Length" required style="padding-top:0px;"></v-text-field>
+                        <v-autocomplete :disabled="!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','SET','ENUM'].includes(structureDialogItem.type)" v-model="structureDialogItem.collation" :items="structureDialogCollations" label="Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                         <v-text-field :disabled="structureDialogItem.auto_increment" v-model="structureDialogItem.default" label="Default" required style="padding-top:0px;"></v-text-field>
                         <v-text-field v-model="structureDialogItem.comment" label="Comment" required style="padding-top:0px;"></v-text-field>
                         <v-checkbox :disabled="!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(structureDialogItem.type)" v-model="structureDialogItem.unsigned" label="Unsigned" color="info" style="margin-top:0px; padding-top:0px;" hide-details></v-checkbox>
@@ -623,18 +623,14 @@ export default {
     this.getServers()
   },
   methods: {
-    onColumnResized() {
-      // if (ev.source == 'sizeColumnsToFit') {
-
-      // }
-    },
-    clickTab() {
-      console.log("STRUCTURE")
-    },
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
       this.$refs.agGrid.$el.addEventListener('click', this.onGridClick)
+      if (['structure','content'].includes(this.tabSelected)) this.gridApi.showLoadingOverlay()
+    },
+    onFirstDataRendered() {
+      this.resizeTable()
     },
     onGridClick(event) {
       if (event.target.className == 'ag-center-cols-viewport') {
@@ -1160,7 +1156,6 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
-          this.gridApi.hideOverlay()
           this.parseExecution(JSON.parse(response.data.data))
         })
         .catch((error) => {
@@ -1265,7 +1260,6 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
-          this.gridApi.hideOverlay()
           this.parseContentExecution(JSON.parse(response.data.data))          
         })
         .catch((error) => {
@@ -1385,7 +1379,6 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
-          this.gridApi.hideOverlay()
           this.parseContentExecution(JSON.parse(response.data.data))
         })
         .catch((error) => {
@@ -1446,37 +1439,21 @@ export default {
       this.tabStructureSelected = 'columns'
       this.structureHeaders = this.structureOrigin['columns']['headers'].slice(0)
       this.structureItems = this.structureOrigin['columns']['items'].slice(0)
-      setTimeout(() => {
-        this.resizeTable()
-        this.gridApi.hideOverlay()
-      }, 100);
     },
     tabStructureIndexes() {
       this.tabStructureSelected = 'indexes'
       this.structureHeaders = this.structureOrigin['indexes']['headers'].slice(0)
       this.structureItems = this.structureOrigin['indexes']['items'].slice(0)
-      setTimeout(() => {
-        this.resizeTable()
-        this.gridApi.hideOverlay()
-      }, 100);
     },
     tabStructureFK() {
       this.tabStructureSelected = 'fks'
       this.structureHeaders = this.structureOrigin['fks']['headers'].slice(0)
       this.structureItems = this.structureOrigin['fks']['items'].slice(0)
-      setTimeout(() => {
-        this.resizeTable()
-        this.gridApi.hideOverlay()
-      }, 100);
     },
     tabStructureTriggers() {
       this.tabStructureSelected = 'triggers'
       this.structureHeaders = this.structureOrigin['triggers']['headers'].slice(0)
       this.structureItems = this.structureOrigin['triggers']['items'].slice(0)
-      setTimeout(() => {
-        this.resizeTable()
-        this.gridApi.hideOverlay()
-      }, 100);
     },
     tabContent() {
       this.tabSelected = 'content'
@@ -1512,7 +1489,7 @@ export default {
       this.getInfo()
     },
     getStructure() {
-      setTimeout(() => { this.gridApi.showLoadingOverlay() }, 100)
+      this.gridApi.showLoadingOverlay()
       this.bottomBarContent = { status: '', text: '', info: '' }
       // Retrieve Tables
       const table = this.treeviewSelected['name']
@@ -1668,7 +1645,6 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
-          this.gridApi.hideOverlay()
           // Remove Frontend Rows
           this.gridApi.applyTransaction({ remove: this.gridApi.getSelectedRows() })
           // Build BottomBar
@@ -2031,7 +2007,7 @@ export default {
       this.structureDialogItem = { 
         name: data.name, 
         type: data.type, 
-        length: (data.length == null) ? '' : data.length, 
+        length: (data.length == null) ? '' : ['ENUM','SET'].includes(data.type) ? data.length.replaceAll("'",'') : data.length, 
         collation: (data.collation == null) ? '' : data.collation, 
         default: (data.default == null) ? '' : data.default, 
         comment: (data.comment == null) ? '' : data.comment, 
@@ -2051,7 +2027,7 @@ export default {
 
       if (['new','edit'].includes(this.structureDialogMode)) {
         // Parse Form Fields
-        if (!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT'].includes(this.structureDialogItem.type)) this.structureDialogItem.collation = ''
+        if (!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET'].includes(this.structureDialogItem.type)) this.structureDialogItem.collation = ''
         if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(this.structureDialogItem.type)) this.structureDialogItem.unsigned = false
         if (!['DATETIME','TIMESTAMP'].includes(this.structureDialogItem.type)) this.structureDialogItem.current_timestamp = false
         if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(this.structureDialogItem.type)) this.structureDialogItem.auto_increment = false
@@ -2066,7 +2042,8 @@ export default {
         // Build Query
         if (this.structureDialogMode == 'new') query += ' ADD ' + this.structureDialogItem.name
         else if (this.structureDialogMode == 'edit') query += ' CHANGE ' + this.gridApi.getSelectedRows()[0].name  + ' ' + this.structureDialogItem.name
-        query += ' ' + this.structureDialogItem.type + (this.structureDialogItem.length.length > 0 ? '(' + this.structureDialogItem.length + ')' : '')
+        query += ' ' + this.structureDialogItem.type 
+          + (this.structureDialogItem.length.length > 0 ? (this.structureDialogItem.length.indexOf(',') == -1) ? '(' + this.structureDialogItem.length + ')' : '(' + this.structureDialogItem.length.split(",").map(item => "'" + item.trim() + "'") + ')' : '')
           + (this.structureDialogItem.unsigned ? ' UNSIGNED' : '')
           + (this.structureDialogItem.collation.length > 0 ? ' CHARACTER SET ' + this.structureDialogItem.collation.split('_')[0] + ' COLLATE ' + this.structureDialogItem.collation : '')
           + (this.structureDialogItem.null ? ' NULL' : ' NOT NULL')
@@ -2078,7 +2055,8 @@ export default {
       else if (this.structureDialogMode == 'delete') query += ' DROP ' + this.gridApi.getSelectedRows()[0].name
       else if (this.structureDialogMode == 'drag') {
         query += ' MODIFY ' + this.gridApi.getDisplayedRowAtIndex(event.node.rowIndex).data.name
-          + ' ' + event.node.data.type + (event.node.data.length !== null ? '(' + event.node.data.length + ')' : '')
+          + ' ' + event.node.data.type 
+          + (event.node.data.length.length > 0 ? (event.node.data.indexOf(',') == -1) ? '(' + event.node.data.length + ')' : '(' + event.node.data.length.split(",").map(item => "'" + item.trim() + "'") + ')' : '')
           + (event.node.data.unsigned ? ' UNSIGNED' : '')
           + (event.node.data.collation !== null ? ' CHARACTER SET ' + event.node.data.collation.split('_')[0] + ' COLLATE ' + event.node.data.collation : '')
           + (event.node.data.allow_null ? ' NULL' : ' NOT NULL')
