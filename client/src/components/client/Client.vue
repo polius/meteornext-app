@@ -127,7 +127,7 @@
                       <!-- <div style="width:100%; height:calc(100% - 85px); z-index:1; position:absolute; text-align:center;">
                         <v-progress-circular indeterminate color="#dcdcdc" width="2" style="height:100%;"></v-progress-circular>
                       </div>-->
-                      <ag-grid-vue ref="agGrid" @grid-ready="onGridReady" @row-data-changed="onFirstDataRendered" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
+                      <ag-grid-vue ref="agGrid" @grid-ready="onGridReady" @row-data-changed="onFirstDataRendered" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="simple" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
                     </div>
                     <!------------->
                     <!-- CONTENT -->
@@ -1978,6 +1978,8 @@ export default {
       this.editStructure(event.data)
     },
     onRowDragEnd(event) {
+      if (event.overIndex - event.node.id == 0) return
+
       if (this.tabStructureSelected == 'columns') {
         this.structureDialogMode = 'drag'
         this.structureDialogSubmitColumns(event)
@@ -2052,11 +2054,11 @@ export default {
           + (this.structureDialogItem.auto_increment ? ' AUTO_INCREMENT' : '')
           + (this.structureDialogItem.comment ? " COMMENT '" + this.structureDialogItem.comment + "'" : '')
       }
-      else if (this.structureDialogMode == 'delete') query += ' DROP ' + this.gridApi.getSelectedRows()[0].name
+      else if (this.structureDialogMode == 'delete') query += ' DROP COLUMN ' + this.gridApi.getSelectedRows()[0].name
       else if (this.structureDialogMode == 'drag') {
         query += ' MODIFY ' + this.gridApi.getDisplayedRowAtIndex(event.node.rowIndex).data.name
           + ' ' + event.node.data.type 
-          + (event.node.data.length.length > 0 ? (event.node.data.indexOf(',') == -1) ? '(' + event.node.data.length + ')' : '(' + event.node.data.length.split(",").map(item => "'" + item.trim() + "'") + ')' : '')
+          + (event.node.data.length !== null ? '(' + event.node.data.length + ')' : '')
           + (event.node.data.unsigned ? ' UNSIGNED' : '')
           + (event.node.data.collation !== null ? ' CHARACTER SET ' + event.node.data.collation.split('_')[0] + ' COLLATE ' + event.node.data.collation : '')
           + (event.node.data.allow_null ? ' NULL' : ' NOT NULL')
