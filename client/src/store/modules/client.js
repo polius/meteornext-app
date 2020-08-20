@@ -8,6 +8,7 @@ const state = () => ({
 
       // Header
       headerTab: 0,
+      headerTabSelected: 'client',
 
       // Database Selector
       databaseItems: [],
@@ -128,28 +129,15 @@ const getters = {
 
 // actions
 const actions = {
-  updateCurrentConn({ commit }, data) { commit('updateCurrentConn', data) },
-  addEditorCompleters({ commit }, data) { commit('addEditorCompleters', data) },
-  removeEditorCompleters({ commit }, data) { commit('removeEditorCompleters', data) },
-  updateGridApi({ commit }, data) { commit('updateGridApi', data) },
+  // updateCurrentConn({ commit }, data) { commit('updateCurrentConn', data) },
+  // addEditorCompleters({ commit }, data) { commit('addEditorCompleters', data) },
+  // removeEditorCompleters({ commit }, data) { commit('removeEditorCompleters', data) },
+  // updateGridApi({ commit }, data) { commit('updateGridApi', data) },
 }
 
 // mutations
 const mutations = {
   connection(state, data) { state.connections[state.currentConn][data.k] = data.v },
-  updateCurrentConn(state, data) { state.currentConn = data },
-  addEditorCompleters(state, data) { 
-    state.connections[state.currentConn].editor.completers.push(data) 
-    state.connections[state.currentConn].editorCompleters = data
-  },
-  removeEditorCompleters(state, data) { 
-    state.connections[state.currentConn].editor.completers.splice(data + 1, 1)
-    state.connections[state.currentConn].editorCompleters.splice(data, 1)
-  },
-  updateGridApi(state, data) {
-    state.connections[state.currentConn].gridApi[data.key] = data.value.api
-    state.connections[state.currentConn].columnApi[data.key] = data.value.columnApi
-  },
 }
 
 export default {

@@ -59,9 +59,9 @@
 </style>
 
 <script>
-import { mapFields } from '../js/map-fields'
 import axios from 'axios'
 import EventBus from '../js/event-bus'
+import { mapFields } from '../js/map-fields'
 
 export default {
   data() {

@@ -2,8 +2,8 @@
   <div style="height:100%">
     <Client v-show="headerTab == 0" />
     <Structure v-if="headerTab == 1" />
-    <Content v-else-if="headerTab == 2" />
-    <Info v-else-if="headerTab == 3" />
+    <Content v-show="headerTab == 2" />
+    <Info v-if="headerTab == 3" />
   </div>
 </template>
 
