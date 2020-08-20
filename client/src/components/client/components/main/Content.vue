@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="height:100%">
     <!------------->
     <!-- CONTENT -->
     <!------------->
@@ -113,8 +113,8 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
-        'clientHeaders',
-        'clientItems',
+        'contentHeaders',
+        'contentItems',
         'editDialog',
         'editDialogTitle',
         'treeviewSelected',
@@ -122,6 +122,8 @@ export default {
         'contentTableSelected',
         'gridApi',
         'columnApi',
+        'server',
+        'database',
         'currentCellEditMode',
         'currentCellEditNode',
         'currentCellEditValues',
@@ -130,7 +132,8 @@ export default {
         'contentSearchFilterItems',
         'contentSearchColumn',
         'contentColumnsName',
-        'isRowSelected'
+        'isRowSelected',
+        'bottomBarContent'
     ], { path: 'client/connection' }),
   },
   mounted () {
@@ -179,16 +182,168 @@ export default {
         }, 200);
       }
     },
+    getContent() {
+      this.contentTableSelected = this.treeviewSelected['name']
+      this.bottomBarContent = { status: '', text: '', info: '' }
+      this.gridApi.content.showLoadingOverlay()
+      const payload = {
+        server: this.server.id,
+        database: this.database,
+        table: this.treeviewSelected['name'],
+        queries: ['SELECT * FROM ' + this.treeviewSelected['name'] + ' LIMIT 1000;' ]
+      }
+      axios.post('/client/execute', payload)
+        .then((response) => {
+          this.parseContentExecution(JSON.parse(response.data.data))          
+        })
+        .catch((error) => {
+          this.gridApi.content.hideOverlay()
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+    },
+    parseContentExecution(data) {
+      // Build Data Table
+      var headers = []
+      var items = data[0]['data']
+      // Build Headers
+      if (data.length > 0) {
+        this.contentColumnsName = data[0]['columns']['name']
+        this.contentColumnsDefault = data[0]['columns']['default']
+        this.contentColumnsType = data[0]['columns']['type']
+        this.contentPks = data[0]['pks']
+        this.contentSearchColumn = this.contentColumnsName[0].trim()
+        for (let i = 0; i < this.contentColumnsName.length; ++i) {
+          let field = this.contentColumnsName[i].trim()
+          headers.push({ headerName: this.contentColumnsName[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true, 
+            valueGetter: function(params) {
+              return (params.data[field] == null) ? 'NULL' : params.data[field]
+            },
+            cellClassRules: {
+              'ag-cell-null': params => {
+                return params.data[field] == null
+              },
+              'ag-cell-normal': function(params) {
+                return params.data[field] != null
+              }
+            }
+          })
+        }
+      }
+      this.contentHeaders = []
+      this.contentHeaders = headers
+      this.contentItems = items
+      this.gridApi.content.setRowData(items)
+      this.isRowSelected = false
+
+      // Resize Table
+      this.gridApi.content.setColumnDefs(headers)
+      this.resizeTable()
+
+      // Build BottomBar
+      this.parseContentBottomBar(data)
+    },
+    resizeTable() {
+      var allColumnIds = [];
+      this.columnApi.content.getAllColumns().forEach(function(column) {
+        allColumnIds.push(column.colId);
+      });
+      this.columnApi.content.autoSizeColumns(allColumnIds);
+    },
+    addRow() {
+      // Clean vars
+      this.currentCellEditValues = {}
+      this.currentCellEditNode = {}
+      this.currentCellEditMode = 'new'
+
+      var newData = {}
+      for (let i = 0; i < this.contentColumnsName.length; ++i) {
+        newData[this.contentColumnsName[i]] = this.contentColumnsDefault[i]
+      }
+
+      var rowCount = this.gridApi.content.getDisplayedRowCount()
+      var nodes = this.gridApi.content.getSelectedNodes()
+      for (let i = 0; i < nodes.length; ++i) nodes[i].setSelected(false)
+
+      this.gridApi.content.applyTransaction({ add: [newData] })
+      this.gridApi.content.setFocusedCell(rowCount, this.contentColumnsName[0])
+      var node = this.gridApi.content.getDisplayedRowAtIndex(rowCount)
+      node.setSelected(true)
+      this.gridApi.content.startEditingCell({
+        rowIndex: rowCount,
+        colKey: this.contentColumnsName[0]
+      });
+    },
+    removeRow() {
+      // Show confirmation dialog
+      var dialogOptions = {
+        'mode': 'removeRowConfirm',
+        'title': 'Delete rows?',
+        'text': 'Are you sure you want to delete the selected ' + this.gridApi.content.getSelectedNodes().length + ' rows from this table? This action cannot be undone.',
+        'button1': 'Cancel',
+        'button2': 'Delete'
+      }
+      this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+    },
+    removeRowSubmit() {
+      // Build Pks
+      let nodes = this.gridApi.content.getSelectedNodes()
+      let pks = []
+      for (let i = 0; i < nodes.length; ++i) {
+        let pk = []
+        for (let j = 0; j < this.contentPks.length; ++j) {
+          pk.push(this.contentPks[j] + " = '" + nodes[i].data[this.contentPks[j]] + "'")
+        }
+        pks.push('(' + pk.join(' AND ') + ')')
+      }
+      // Build Query
+      var query = 'DELETE FROM ' + this.treeviewSelected['name'] + ' WHERE ' + pks.join(' OR ') + ';'
+      // Show overlay
+      this.gridApi.content.showLoadingOverlay()
+      // Execute Query
+      const payload = {
+        server: this.server.id,
+        database: this.database,
+        queries: [query]
+      }
+      axios.post('/client/execute', payload)
+        .then((response) => {
+          // Remove Frontend Rows
+          this.gridApi.content.applyTransaction({ remove: this.gridApi.content.getSelectedRows() })
+          // Build BottomBar
+          this.parseContentBottomBar(JSON.parse(response.data.data))
+          // Close Dialog
+          this.dialog = false
+        })
+        .catch((error) => {
+          this.gridApi.content.hideOverlay()
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else {
+            // Show error
+            let data = JSON.parse(error.response.data.data)
+            let dialogOptions = {
+              'mode': 'info',
+              'title': 'Unable to delete row(s)',
+              'text': data[0]['error'],
+              'button1': 'Close',
+              'button2': ''
+            }
+            this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+            // Build BottomBar
+            this.parseContentBottomBar(data)
+          }
+        })
+    },
     cellEditingStarted(event, edit) {
       this.gridEditing = true
       if (!edit) return
 
       // Store row node
-      this.currentCellEditNode = this.gridApi.getSelectedNodes()[0]
+      this.currentCellEditNode = this.gridApi.content.getSelectedNodes()[0]
     
       // Store row values
       if (Object.keys(this.currentCellEditValues).length == 0) {
-        let node = this.gridApi.getSelectedNodes()[0].data
+        let node = this.gridApi.content.getSelectedNodes()[0].data
         let keys = Object.keys(node)
         this.currentCellEditValues = {}
         for (let i = 0; i < keys.length; ++i) {
@@ -254,16 +409,16 @@ export default {
         }
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
-        this.gridApi.showLoadingOverlay()
+        this.gridApi.content.showLoadingOverlay()
         // Execute Query
         const payload = {
-          server: this.serverSelected.id,
+          server: this.server.id,
           database: this.database,
           queries: [query]
         }
         axios.post('/client/execute', payload)
           .then((response) => {
-            this.gridApi.hideOverlay()
+            this.gridApi.content.hideOverlay()
             let data = JSON.parse(response.data.data)
             // Build BottomBar
             this.parseContentBottomBar(data)
@@ -271,7 +426,7 @@ export default {
             if (data[0].query.startsWith('INSERT')) node.setDataValue(this.contentPks[0], data[0].lastRowId)
           })
           .catch((error) => {
-            this.gridApi.hideOverlay()
+            this.gridApi.content.hideOverlay()
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
             else {
               // Show error
@@ -294,6 +449,20 @@ export default {
           })
       }
     },
+    parseContentBottomBar(data) {     
+      var elapsed = null
+      if (data[data.length-1]['time'] !== undefined) {
+        elapsed = 0
+        for (let i = 0; i < data.length; ++i) {
+          elapsed += parseFloat(data[i]['time'])
+        }
+        elapsed /= data.length
+      }
+      this.bottomBarContent['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
+      this.bottomBarContent['text'] = data[0]['query']
+      this.bottomBarContent['info'] = this.gridApi.content.getDisplayedRowCount() + ' records'
+      if (elapsed != null) this.bottomBarContent['info'] += ' | ' + elapsed.toString() + 's elapsed'
+    },
     cellEditingDiscard() {
       // Close Dialog
       this.dialog = false
@@ -312,10 +481,10 @@ export default {
 
       // Edit Row
       setTimeout(() => {
-        let focused = this.gridApi.getFocusedCell()
+        let focused = this.gridApi.content.getFocusedCell()
         this.currentCellEditNode.setSelected(true)
-        this.gridApi.setFocusedCell(focused.rowIndex, focused.column.colId)
-        this.gridApi.startEditingCell({
+        this.gridApi.content.setFocusedCell(focused.rowIndex, focused.column.colId)
+        this.gridApi.content.startEditingCell({
           rowIndex: focused.rowIndex,
           colKey: focused.column.colId
         });
@@ -338,10 +507,10 @@ export default {
       }
       else if (this.contentSearchFilterText.length != 0) condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "'"
       // Show overlay
-      this.gridApi.showLoadingOverlay()
+      this.gridApi.content.showLoadingOverlay()
       // Build payload
       const payload = {
-        server: this.serverSelected.id,
+        server: this.server.id,
         database: this.database,
         table: this.treeviewSelected['name'],
         queries: ['SELECT * FROM ' + this.treeviewSelected['name'] + condition + ' LIMIT 1000;' ]
@@ -351,22 +520,21 @@ export default {
           this.parseContentExecution(JSON.parse(response.data.data))
         })
         .catch((error) => {
-          this.gridApi.hideOverlay()
-          console.log(error)
-          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          // else this.notification(error.response.data.message, 'error')
+          this.gridApi.content.hideOverlay()
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
         })
     },
     editDialogSubmit() {
       this.editDialog = false
-      let nodes = this.gridApi.getSelectedNodes()
+      let nodes = this.gridApi.content.getSelectedNodes()
       for (let i = 0; i < nodes.length; ++i) nodes[i].setSelected(false)
-      let focusedCell = this.gridApi.getFocusedCell()
-      let currentNode = this.gridApi.getDisplayedRowAtIndex(focusedCell.rowIndex)
+      let focusedCell = this.gridApi.content.getFocusedCell()
+      let currentNode = this.gridApi.content.getDisplayedRowAtIndex(focusedCell.rowIndex)
       currentNode.setSelected(true)
       currentNode.setDataValue(focusedCell.column.colId, this.editDialogEditor.getValue())
       setTimeout(() => {
-        this.gridApi.startEditingCell({
+        this.gridApi.content.startEditingCell({
           rowIndex: focusedCell.rowIndex,
           colKey: focusedCell.column.colId
         })

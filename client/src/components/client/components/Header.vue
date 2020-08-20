@@ -49,6 +49,7 @@ export default {
       if (this.structureHeaders.length == 0) EventBus.$emit('GET_STRUCTURE')
     },
     tabContent() {
+      this.headerTabSelected = 'content'
       if (this.contentTableSelected != this.treeviewSelected['name']) EventBus.$emit('GET_CONTENT')
     },
     tabInfo(object) {
