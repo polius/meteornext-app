@@ -131,7 +131,7 @@
             this.available = true
           })
           .catch((error) => {
-            if (error.response.status === 401) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            if (error.response.status === 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           })
       },
       setup() {

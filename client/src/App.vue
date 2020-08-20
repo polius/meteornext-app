@@ -137,21 +137,21 @@ export default {
     snackbarColor: ''
   }),
   computed : {
-    isLoggedIn : function() { return this.$store.getters.isLoggedIn },
-    admin : function() { return this.$store.getters.admin == 0 ? false : this.$store.getters.admin },
-    coins : function() { return this.$store.getters.coins },
-    inventory_enabled : function() { return this.$store.getters.inventory_enabled },
-    deployments_enabled : function() { return this.$store.getters.deployments_enabled },
-    monitoring_enabled : function() { return this.$store.getters.monitoring_enabled },
-    utils_enabled : function() { return this.$store.getters.utils_enabled },
-    client_enabled : function() { return this.$store.getters.client_enabled }
+    isLoggedIn : function() { return this.$store.getters['app/isLoggedIn'] },
+    admin : function() { return this.$store.getters['app/admin'] == 0 ? false : this.$store.getters['app/admin'] },
+    coins : function() { return this.$store.getters['app/coins'] },
+    inventory_enabled : function() { return this.$store.getters['app/inventory_enabled'] },
+    deployments_enabled : function() { return this.$store.getters['app/deployments_enabled'] },
+    monitoring_enabled : function() { return this.$store.getters['app/monitoring_enabled'] },
+    utils_enabled : function() { return this.$store.getters['app/utils_enabled'] },
+    client_enabled : function() { return this.$store.getters['app/client_enabled'] }
   },
   created() {
     this.getNotifications(true)
   },
   methods: {
     logout() {
-      this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+      this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
     },
     showTopNavbar() {
       if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/results')) return true
@@ -185,7 +185,7 @@ export default {
           }
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },
@@ -196,7 +196,7 @@ export default {
           this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },
@@ -216,7 +216,7 @@ export default {
             this.notifications = response.data.data
           })
           .catch(() => {
-            // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             // else this.notification(error.response.data.message, 'error')
           })
           .finally(() => {

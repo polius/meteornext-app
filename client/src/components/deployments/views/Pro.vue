@@ -242,7 +242,7 @@ export default {
           this.loading_rel = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },
@@ -253,7 +253,7 @@ export default {
           this.loading_env = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },
@@ -266,7 +266,7 @@ export default {
           this.loading_code = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },
@@ -328,12 +328,12 @@ export default {
           const data = response.data.data
           this.notification(response.data.message, '#00b16a')
           // Refresh user coins
-          this.$store.dispatch('coins', data['coins'])
+          this.$store.dispatch('app/coins', data['coins'])
           // Redirect page
           this.$router.push({ name:'deployment', params: { id: 'P' + data['execution_id'], admin: false, msg: response.data.message, color: '#00b16a' }})
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {

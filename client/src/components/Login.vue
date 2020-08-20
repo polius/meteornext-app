@@ -75,7 +75,7 @@
         this.loading = true
         let username = this.username 
         let password = this.password
-        this.$store.dispatch('login', { username, password })
+        this.$store.dispatch('app/login', { username, password })
         .then(() => {
           this.login_success()
         })
