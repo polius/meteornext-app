@@ -966,7 +966,7 @@
             ]
           })
           .catch((error) => {
-            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
           })
       },
@@ -1024,7 +1024,7 @@
           this.getDeployment()
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
       },
@@ -1043,7 +1043,7 @@
           .then(() => {
           })
           .catch((error) => {
-            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
           })
         }
@@ -1140,7 +1140,7 @@
           const data = response.data.data
           this.notification(response.data.message, '#00b16a')
           // Refresh user coins
-          if ('coins' in data) this.$store.dispatch('coins', data['coins'])
+          if ('coins' in data) this.$store.dispatch('app/coins', data['coins'])
           // Get new deployment
           if (payload.start_execution || (payload.scheduled != '' && this.deployment['status'] != 'SCHEDULED')) {
             const id = payload['mode'].substring(0, 1) + data['execution_id']
@@ -1155,7 +1155,7 @@
           this.information_dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
       },
@@ -1297,7 +1297,7 @@
           else this.notification('Results changed to private', 'info')
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
       },

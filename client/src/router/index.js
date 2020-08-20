@@ -292,39 +292,39 @@ let router = new VueRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.path == '/login' && store.getters.isLoggedIn) next('/')
+  if (to.path == '/login' && store.getters['app/isLoggedIn']) next('/')
   else if (to.matched.some(record => record.meta.requiresAdmin)) {
-    if (store.getters.isLoggedIn && store.getters.admin) next()
+    if (store.getters['app/isLoggedIn'] && store.getters['app/admin']) next()
     else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
     else next({ path: '/login' })
   }
   else if (to.matched.some(record => record.meta.requiresInventory)) {
-    if (store.getters.isLoggedIn && store.getters.inventory_enabled) next()
+    if (store.getters['app/isLoggedIn'] && store.getters['app/inventory_enabled']) next()
     else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
     else next({ path: '/login' })
   }
   else if (to.matched.some(record => record.meta.requiresDeployments)) {
-    if (store.getters.isLoggedIn && store.getters.deployments_enabled) next()
+    if (store.getters['app/isLoggedIn'] && store.getters['app/deployments_enabled']) next()
     else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
     else next({ path: '/login' })
   }
   else if (to.matched.some(record => record.meta.requiresMonitoring)) {
-    if (store.getters.isLoggedIn && store.getters.monitoring_enabled) next()
+    if (store.getters['app/isLoggedIn'] && store.getters['app/monitoring_enabled']) next()
     else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
     else next({ path: '/login' })
   }
   else if (to.matched.some(record => record.meta.requiresUtils)) {
-    if (store.getters.isLoggedIn && store.getters.utils_enabled) next()
+    if (store.getters['app/isLoggedIn'] && store.getters['app/utils_enabled']) next()
     else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
     else next({ path: '/login' })
   }
   else if (to.matched.some(record => record.meta.requiresClient)) {
-    if (store.getters.isLoggedIn && store.getters.client_enabled) next()
+    if (store.getters['app/isLoggedIn'] && store.getters['app/client_enabled']) next()
     else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
     else next({ path: '/login' })
   }
   else if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (store.getters.isLoggedIn) next()
+    if (store.getters['app/isLoggedIn']) next()
     else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
     else next({ path: '/login' })
   }
