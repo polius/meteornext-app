@@ -99,10 +99,11 @@
 </template>
 
 <script>
-// import axios from 'axios'
+import axios from 'axios'
 
 import {AgGridVue} from "ag-grid-vue";
-// import EventBus from './event-bus'
+import EventBus from '../../js/event-bus'
+import { mapFields } from '../../js/map-fields'
 
 export default {
   data() {
@@ -110,28 +111,51 @@ export default {
     }
   },
   components: { AgGridVue },
-  mounted () {
-    // EventBus.$on(‘EVENT_NAME’, function (payLoad) {
-    //   ...
-    // });
-  },
   computed: {
-    clientHeaders () { return this.$store.getters['client/connection'].clientHeaders },
-    clientItems () { return this.$store.getters['client/connection'].clientItems },
-    editDialog () { return this.$store.getters['client/connection'].editDialog },
-    editDialogTitle () { return this.$store.getters['client/connection'].editDialogTitle },
+    ...mapFields([
+        'clientHeaders',
+        'clientItems',
+        'editDialog',
+        'editDialogTitle',
+        'treeviewSelected',
+        'structureHeaders',
+        'contentTableSelected',
+        'gridApi',
+        'columnApi',
+        'currentCellEditMode',
+        'currentCellEditNode',
+        'currentCellEditValues',
+        'contentSearchFilter',
+        'contentSearchFilterText',
+        'contentSearchFilterItems',
+        'contentSearchColumn',
+        'contentColumnsName',
+        'isRowSelected'
+    ], { path: 'client/connection' }),
   },
-  watch: {
-    // currentConn(value) {
-    //   this.$store.dispatch('client/updateCurrentConn', value)
-    // }
+  mounted () {
+    EventBus.$on('GET_CONTENT', this.getContent);
   },
   methods: {
    onGridReady(params) {
-      this.gridApi = params.api
-      this.columnApi = params.columnApi
-      // this.$refs['agGrid' + object.charAt(0).toUpperCase() + object.slice(1)].$el.addEventListener('click', this.onGridClick)
-      if (['structure','content'].includes(this.tabSelected)) this.gridApi.showLoadingOverlay()
+      this.gridApi.content = params.api
+      this.columnApi.content = params.columnApi
+      this.$refs['agGridContent'].$el.addEventListener('click', this.onGridClick)
+      this.gridApi.content.showLoadingOverlay()
+    },
+    onGridClick(event) {
+      if (event.target.className == 'ag-center-cols-viewport') {
+        this.gridApi.content.deselectAll()
+        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+      }
+    },
+    onSelectionChanged() {
+      this.isRowSelected = this.gridApi.content.getSelectedNodes().length > 0
+    },
+    onRowClicked(event) {
+      if (Object.keys(this.currentCellEditNode).length != 0 && this.currentCellEditNode.rowIndex != event.rowIndex) {
+        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+      }
     },
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
@@ -154,6 +178,184 @@ export default {
             }, 200);
         }, 200);
       }
+    },
+    cellEditingStarted(event, edit) {
+      this.gridEditing = true
+      if (!edit) return
+
+      // Store row node
+      this.currentCellEditNode = this.gridApi.getSelectedNodes()[0]
+    
+      // Store row values
+      if (Object.keys(this.currentCellEditValues).length == 0) {
+        let node = this.gridApi.getSelectedNodes()[0].data
+        let keys = Object.keys(node)
+        this.currentCellEditValues = {}
+        for (let i = 0; i < keys.length; ++i) {
+          this.currentCellEditValues[keys[i]] = {'old': node[keys[i]] == 'NULL' ? null : node[keys[i]]}
+        }
+      }
+      // If the cell includes an special character (\n or \t) or the cell == TEXT, ... then open the extended editor
+      let columnType = this.contentColumnsType[event.colDef.colId]
+      if (['text','mediumtext','longtext'].includes(columnType) || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
+        if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
+        else this.editDialogOpen(event.column.colId + ': ' + columnType.toUpperCase(), event.value)
+      }
+    },
+    cellEditingStopped(event, edit) {
+      if (!edit || this.editDialog) return
+
+      // Store new value
+      if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
+      if (this.currentCellEditMode == 'edit') this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
+    },
+    cellEditingSubmit(mode, node, values) {
+      if (Object.keys(values).length == 0) return
+
+      // Clean vars
+      this.currentCellEditMode = 'edit'
+      this.currentCellEditNode = {}
+      this.currentCellEditValues = {}
+
+      // Compute queries
+      var query = ''
+      var valuesToUpdate = []
+      // NEW
+      if (mode == 'new') {
+        let keys = Object.keys(node.data)
+        for (let i = 0; i < keys.length; ++i) {
+          if (node.data[keys[i]] == null) valuesToUpdate.push('NULL')
+          else valuesToUpdate.push(JSON.stringify(node.data[keys[i]]))
+        }
+        query = "INSERT INTO " + this.treeviewSelected['name'] + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
+      }
+      // EDIT
+      else if (mode == 'edit') {
+        let keys = Object.keys(values)
+        for (let i = 0; i < keys.length; ++i) {
+          if (values[keys[i]]['old'] != values[keys[i]]['new']) {
+            if (values[keys[i]]['new'] !== undefined) {
+              if (values[keys[i]]['new'] == null) valuesToUpdate.push(keys[i] + " = NULL")
+              else valuesToUpdate.push(keys[i] + " = " + JSON.stringify(values[keys[i]]['new']))
+            }
+          }
+        }
+        let where = []
+        if (this.contentPks.length == 0) {
+          for (let i = 0; i < keys.length; ++i) {
+            if (values[keys[i]]['old'] == null) where.push(keys[i] + ' IS NULL')
+            else where.push(keys[i] + " = " + JSON.stringify(values[keys[i]]['old']))
+          }
+          query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
+        }
+        else {
+          for (let i = 0; i < this.contentPks.length; ++i) where.push(this.contentPks[i] + " = " + JSON.stringify(values[this.contentPks[i]]['old']))
+          query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
+        }
+      }
+      if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
+        this.gridApi.showLoadingOverlay()
+        // Execute Query
+        const payload = {
+          server: this.serverSelected.id,
+          database: this.database,
+          queries: [query]
+        }
+        axios.post('/client/execute', payload)
+          .then((response) => {
+            this.gridApi.hideOverlay()
+            let data = JSON.parse(response.data.data)
+            // Build BottomBar
+            this.parseContentBottomBar(data)
+            // Check AUTO_INCREMENTs
+            if (data[0].query.startsWith('INSERT')) node.setDataValue(this.contentPks[0], data[0].lastRowId)
+          })
+          .catch((error) => {
+            this.gridApi.hideOverlay()
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            else {
+              // Show error
+              let data = JSON.parse(error.response.data.data)
+              let dialogOptions = {
+                'mode': 'cellEditingError',
+                'title': 'Unable to write row',
+                'text': data[0]['error'],
+                'button1': 'Edit row',
+                'button2': 'Discard changes'
+              }
+              this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+              // Build BottomBar
+              this.parseContentBottomBar(data)
+              // Restore vars
+              this.currentCellEditMode = mode
+              this.currentCellEditNode = node
+              this.currentCellEditValues = values
+            }
+          })
+      }
+    },
+    cellEditingDiscard() {
+      // Close Dialog
+      this.dialog = false
+
+      // Clean vars
+      this.currentCellEditMode = 'edit'
+      this.currentCellEditNode = {}
+      this.currentCellEditValues = {}
+
+      // Get the table data
+      this.filterClick()
+    },
+    cellEditingEdit() {
+      // Close Dialog
+      this.dialog = false
+
+      // Edit Row
+      setTimeout(() => {
+        let focused = this.gridApi.getFocusedCell()
+        this.currentCellEditNode.setSelected(true)
+        this.gridApi.setFocusedCell(focused.rowIndex, focused.column.colId)
+        this.gridApi.startEditingCell({
+          rowIndex: focused.rowIndex,
+          colKey: focused.column.colId
+        });
+      }, 100);
+    },
+    filterClick() {
+      // Build query condition
+      var condition = ''
+      if (this.contentSearchFilter == 'BETWEEN') {
+        if (this.contentSearchFilterText.length != 0 && this.contentSearchFilterText2.length != 0) condition = ' WHERE ' + this.contentSearchColumn + " BETWEEN '" + this.contentSearchFilterText + "' AND '" + this.contentSearchFilterText2 + "'"
+      }
+      else if (['IS NULL','IS NOT NULL'].includes(this.contentSearchFilter)) {
+        condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter
+      }
+      else if (['IN','NOT IN'].includes(this.contentSearchFilter) && this.contentSearchFilterText.length != 0) {
+        condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter + " ("
+        let elements = this.contentSearchFilterText.split(',')
+        for (let i = 0; i < elements.length; ++i) condition += "'" + elements[i] + "',"
+        condition = condition.substring(0, condition.length - 1) + ")"
+      }
+      else if (this.contentSearchFilterText.length != 0) condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "'"
+      // Show overlay
+      this.gridApi.showLoadingOverlay()
+      // Build payload
+      const payload = {
+        server: this.serverSelected.id,
+        database: this.database,
+        table: this.treeviewSelected['name'],
+        queries: ['SELECT * FROM ' + this.treeviewSelected['name'] + condition + ' LIMIT 1000;' ]
+      }
+      axios.post('/client/execute', payload)
+        .then((response) => {
+          this.parseContentExecution(JSON.parse(response.data.data))
+        })
+        .catch((error) => {
+          this.gridApi.hideOverlay()
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
+        })
     },
     editDialogSubmit() {
       this.editDialog = false

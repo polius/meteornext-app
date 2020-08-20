@@ -74,7 +74,8 @@ export default {
         'editor',
         'editorMarkers',
         'editorTools',
-        'loadingQuery'
+        'loadingQuery',
+        'database',
     ], { path: 'client/connection' }),
   },
   watch: {
@@ -138,30 +139,30 @@ export default {
         // if (e.key.toLowerCase() == "w" && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey))
         // - New Connection -
         if (e.key.toLowerCase() == "t" && (e.ctrlKey || e.metaKey)) {
-          this.newConnection()
           e.preventDefault()
+          this.newConnection()
         }
         // - Remove Connection -
         else if (e.key.toLowerCase() == "w" && (e.ctrlKey || e.metaKey)) {
-          this.removeConnection(this.currentConn)
           e.preventDefault()
+          this.removeConnection(this.currentConn)
         }
         // - Run Query/ies -
         else if (e.key.toLowerCase() == "r" && (e.ctrlKey || e.metaKey)) {
-          if (Object.keys(this.server).length > 0 && this.editorQuery.length > 0) this.runQuery()
           e.preventDefault()
+          if (Object.keys(this.server).length > 0 && this.editorQuery.length > 0) this.runQuery()
         }
         // - Increase Font Size -
         else if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault()
           let size = parseInt(this.editor.getFontSize(), 10) || 12
           this.editor.setFontSize(size + 1)
-          e.preventDefault()
         }
         // - Decrease Font Size -
         else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault()
           let size = parseInt(this.editor.getFontSize(), 10) || 12
           this.editor.setFontSize(Math.max(size - 1 || 1))
-          e.preventDefault()
         }
       }, false);
 
@@ -269,23 +270,26 @@ export default {
       }
     },
     runQuery() {
+      this.gridApi.client.showLoadingOverlay()
       this.clientHeaders = []
       this.clientItems = []
       this.bottomBarClient = { text: '', status: '', info: '' }
-      this.loadingQuery = true
-      this.gridApi.client.showLoadingOverlay()
+      this.loadingQuery = true     
+      this.editor.completer.detach()
+      
       const payload = {
-        server: this.serverSelected.id,
+        server: this.server.id,
         database: this.database,
-        queries: this.__parseQueries()
+        queries: this.parseQueries()
       }
       axios.post('/client/execute', payload)
         .then((response) => {
           this.parseExecution(JSON.parse(response.data.data))
         })
         .catch((error) => {
+          console.log(error)
           this.gridApi.client.hideOverlay()
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             // Get Response Data
             let data = JSON.parse(error.response.data.data)
@@ -306,6 +310,34 @@ export default {
         .finally(() => {
           this.loadingQuery = false
         })
+    },
+    parseQueries() {
+      // Get Query/ies (selected or highlighted)
+      const selectedText = this.editor.getSelectedText()
+      var queries = []
+      if (selectedText.length == 0) queries = [this.editorQuery]
+      else {
+        // Build multi-queries
+        let start = 0;
+        let chars = []
+        for (var i = 0; i < selectedText.length; ++i) {
+          if (selectedText[i] == ';' && chars.length == 0) {
+            queries.push(selectedText.substring(start, i+1).trim())
+            start = i+1
+          }
+          else if (selectedText[i] == "\"") {
+            if (chars[chars.length-1] == '"') chars.pop()
+            else chars.push("\"")
+          }
+          else if (selectedText[i] == "'") {
+            if (chars[chars.length-1] == "'") chars.pop()
+            else chars.push("'")
+          }
+        }
+        if (start < i) queries.push(selectedText.substring(start, i).trim())
+      }
+      // Return parsed queries
+      return queries
     },
     parseExecution(data) {
       // Build Data Table
@@ -328,6 +360,13 @@ export default {
 
       // Build BottomBar
       this.parseClientBottomBar(data)
+    },
+    resizeTable() {
+      var allColumnIds = [];
+      this.columnApi.client.getAllColumns().forEach(function(column) {
+        allColumnIds.push(column.colId);
+      });
+      this.columnApi.client.autoSizeColumns(allColumnIds);
     },
     parseClientBottomBar(data) {
       var elapsed = null
