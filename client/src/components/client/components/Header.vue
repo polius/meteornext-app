@@ -20,42 +20,39 @@
 
 <script>
 import EventBus from '../js/event-bus'
+import { mapFields } from '../js/map-fields'
 
 export default {
   data() {
     return {
     }
   },
-  mounted () {
-    // EventBus.$on(‘EVENT_NAME’, function (payLoad) {
-    //   ...
-    // });
-  },
   computed: {
-    headerTab () { return this.$store.getters['client/connection'].headerTab },
-    treeview () { return this.$store.getters['client/connection'].treeview },
-    treeviewMode () { return this.$store.getters['client/connection'].treeviewMode },
-    treeviewSelected () { return this.$store.getters['client/connection'].treeviewSelected },
-    structureHeaders () { return this.$store.getters['client/connection'].structureHeaders },
-    contentTableSelected () { return this.$store.getters['client/connection'].contentTableSelected },
-  },
-  watch: {
-    headerTab(data) {
-      this.$store.dispatch('client/update', { key: 'headerTab', value: data})
-    }
+    ...mapFields([
+        'headerTab',
+        'headerTabSelected',
+        'treeview',
+        'treeviewMode',
+        'treeviewSelected',
+        'structureHeaders',
+        'contentTableSelected',
+    ], { path: 'client/connection' }),
   },
   methods: {
     tabClient() {
-      this.$store.dispatch('client/update', { key: 'headerTab', value: 0 })
-      // setTimeout(() => { this.editor.focus() }, 100)
+      this.headerTab = 0
+      this.headerTabSelected = 'client'
+      setTimeout(() => { this.editor.focus() }, 100)
     },
     tabStructure() {
-      if (this.structureHeaders.length == 0) EventBus.$emit('getStructure')
+      this.headerTabSelected = 'structure'
+      if (this.structureHeaders.length == 0) EventBus.$emit('GET_STRUCTURE')
     },
     tabContent() {
-      if (this.contentTableSelected != this.treeviewSelected['name']) EventBus.$emit('getContent')
+      if (this.contentTableSelected != this.treeviewSelected['name']) EventBus.$emit('GET_CONTENT')
     },
-    tabInfo() {
+    tabInfo(object) {
+      this.headerTabSelected = object + '_info'
       // if (this.infoEditor == null) {
       //   this.infoEditor = ace.edit("infoEditor", {
       //     mode: "ace/mode/sql",
@@ -81,8 +78,8 @@ export default {
       //     }
       //   }, false);
       // }
-      EventBus.$emit('getInfo')
-    }
+      EventBus.$emit('GET_INFO')
+    },
   },
 }
 </script>
