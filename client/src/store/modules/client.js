@@ -51,7 +51,6 @@ const state = () => ({
       structureItems: [],
 
       // Content
-      contentTableSelected: '',
       contentColumnsName: [],
       contentColumnsDefault: [],
       contentColumnsType: {},
@@ -83,28 +82,6 @@ const state = () => ({
       currentCellEditMode: 'edit', // edit - new
       currentCellEditNode: {},
       currentCellEditValues: {},
-
-      // Client Dialog
-      dialog: false,
-      dialogMode: '',
-      dialogTitle: '',
-      dialogText: '',
-      dialogButtonText1: '',
-      dialogButtonText2: '',
-      dialogSelect: '',
-
-      // Edit Dialog
-      editDialog: false,
-      editDialogTitle: '',
-      editDialogEditor: null,
-
-      // Structure Dialog
-      structureDialog: false,
-      structureDialogMode: '',
-      structureDialogTitle: '',
-      structureDialogItem: {},
-      structureDialogColumnTypes: [],
-      structureDialogCollations: [],
 
       // Snackbar
       snackbar: false,

@@ -63,29 +63,28 @@
         </v-col>
       </v-row>
     </div>
-    <!------------->
-    <!-- DIALOGS -->
-    <!------------->
-    <v-dialog v-model="editDialog" persistent max-width="80%">
+    <!------------>
+    <!-- DIALOG -->
+    <!------------>
+    <v-dialog v-model="dialog" persistent max-width="50%">
       <v-card>
         <v-card-text style="padding:15px 15px 5px;">
-          <v-container style="padding:0px; max-width:100%;">
+          <v-container style="padding:0px">
             <v-layout wrap>
-              <div class="text-h6" style="font-weight:400;">{{ editDialogTitle }}</div>
+              <div class="text-h6" style="font-weight:400;">{{ dialogTitle }}</div>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
-                  <div style="margin-left:auto; margin-right:auto; height:60vh; width:100%">
-                    <div id="editDialogEditor" style="float:left;"></div>
-                  </div>
+                <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
+                  <div v-if="dialogText.length>0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
+                  <v-select v-if="dialogMode=='export'" outlined v-model="dialogSelect" :items="['Meteor','JSON','CSV','SQL']" label="Format" hide-details></v-select>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
-                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn @click="editDialogSubmit" color="primary">Save</v-btn>
+                    <v-col v-if="dialogButtonText1.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogSubmitText }}</v-btn>
                     </v-col>
-                    <v-col style="margin-bottom:10px;">
-                      <v-btn @click="editDialogCancel" outlined color="#e74d3c">Cancel</v-btn>
+                    <v-col v-if="dialogButtonText2.length > 0" style="margin-bottom:10px;">
+                      <v-btn :disabled="loading" @click="dialogCancel" outlined color="#e74d3c">{{ dialogCancelText }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -108,6 +107,13 @@ import { mapFields } from '../../js/map-fields'
 export default {
   data() {
     return {
+      dialog: false,
+      dialogMode: '',
+      dialogTitle: '',
+      dialogText: '',
+      dialogButtonText1: '',
+      dialogButtonText2: '',
+      loading: false,
     }
   },
   components: { AgGridVue },
@@ -115,8 +121,6 @@ export default {
     ...mapFields([
         'contentHeaders',
         'contentItems',
-        'editDialog',
-        'editDialogTitle',
         'treeviewSelected',
         'structureHeaders',
         'gridApi',
@@ -282,7 +286,7 @@ export default {
         'button1': 'Cancel',
         'button2': 'Delete'
       }
-      this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+      this.showDialog(dialogOptions)
     },
     removeRowSubmit() {
       // Build Pks
@@ -327,7 +331,7 @@ export default {
               'button1': 'Close',
               'button2': ''
             }
-            this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+            this.showDialog(dialogOptions)
             // Build BottomBar
             this.parseContentBottomBar(data)
           }
@@ -437,7 +441,7 @@ export default {
                 'button1': 'Edit row',
                 'button2': 'Discard changes'
               }
-              this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+              this.showDialog(dialogOptions)
               // Build BottomBar
               this.parseContentBottomBar(data)
               // Restore vars
@@ -542,6 +546,92 @@ export default {
     editDialogCancel() {
       this.editDialog = false
       this.editDialogEditor.setValue('')
+    },
+    showDialog(options) {
+      this.dialogMode = options.mode
+      this.dialogTitle = options.title
+      this.dialogText = options.text
+      this.dialogButtonText1 = options.button1
+      this.dialogButtonText2 = options.button2
+      this.dialog = true
+    },
+    dialogSubmit() {
+      if (this.dialogMode == 'cellEditingError') this.cellEditingEdit()
+      else if (this.dialogMode == 'removeRowConfirm') this.dialog = false
+      else if (this.dialogMode == 'info') this.dialog = false
+      else if (this.dialogMode == 'export') this.exportRowsSubmit()
+    },
+    dialogCancel() {
+      if (this.dialogMode == 'cellEditingError') this.cellEditingDiscard()
+      else if (this.dialogMode == 'removeRowConfirm') this.removeRowSubmit()
+      else if (this.dialogMode == 'info') this.dialog = false
+      else if (this.dialogMode == 'export') this.dialog = false
+    },
+    exportRows() {
+      // Show confirmation dialog
+      this.dialogSelect = 'Meteor'
+      var dialogOptions = {
+        'mode': 'export',
+        'title': 'Export Rows',
+        'text': '',
+        'button1': 'Export',
+        'button2': 'Cancel'
+      }
+      this.showDialog(dialogOptions)
+    },
+    exportRowsSubmit() {
+      var columns = []
+      var rows = []
+
+      // Build Columns
+      let displayedColumns = this.columnApi.content.getAllDisplayedColumns()
+      for (var i = 0; i < displayedColumns.length; ++i) columns.push(displayedColumns[i]['colId']);
+
+      // Build Rows
+      if (['Meteor','JSON','CSV'].includes(this.dialogSelect)) {
+        this.gridApi.content.forEachNode(function(rowNode) {
+          rows.push(rowNode.data)
+        })
+      }
+
+      if (this.dialogSelect == 'Meteor') {
+        let exportData = 'var DATA = ' + JSON.stringify(rows) + ';\n' + 'var COLUMNS = ' + JSON.stringify(columns) + ';'
+        this.download('export.js', exportData)
+      }
+      else if (this.dialogSelect == 'JSON') {
+        let exportData = JSON.stringify(rows)
+        this.download('export.json', exportData)
+      }
+      else if (this.dialogSelect == 'CSV') {
+        let replacer = (key, value) => value === null ? '' : value // specify how you want to handle null values here
+        let header = Object.keys(rows[0])
+        let exportData = rows.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+        exportData.unshift(header.join(','))
+        exportData = exportData.join('\r\n')
+        this.download('export.csv', exportData)
+      }
+      else if (this.dialogSelect == 'SQL') {
+        let exportData = ''
+        this.gridApi.content.forEachNode(rowNode => {
+          let data = []
+          for (let i = 0; i < columns.length; ++i) {
+            if (rowNode.data[columns[i]] == null) data.push('NULL')
+            else data.push(JSON.stringify(rowNode.data[columns[i]]))
+          }
+          exportData += "INSERT INTO " + this.treeviewSelected['name'] + ' (' + columns.join() + ") VALUES (" + data.join() + "),\n"
+        })
+        exportData = exportData.slice(0, -2) + ';'
+        this.download('export.sql', exportData)
+      }
+    },
+    download(filename, text) {
+      var element = document.createElement('a')
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
+      element.setAttribute('download', filename)
+      element.style.display = 'none'
+      document.body.appendChild(element)
+      element.click()
+      document.body.removeChild(element)
     },
   },
 }
