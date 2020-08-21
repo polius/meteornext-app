@@ -129,6 +129,7 @@ export default {
         'currentCellEditValues',
         'contentSearchFilter',
         'contentSearchFilterText',
+        'contentSearchFilterText2',
         'contentSearchFilterItems',
         'contentSearchColumn',
         'contentColumnsName',

@@ -92,10 +92,11 @@
 </template>
 
 <script>
-// import axios from 'axios'
+import axios from 'axios'
 
 import {AgGridVue} from "ag-grid-vue";
-// import EventBus from './event-bus'
+import EventBus from '../../js/event-bus'
+import { mapFields } from '../../js/map-fields'
 
 export default {
   data() {
@@ -103,26 +104,41 @@ export default {
     }
   },
   components: { AgGridVue },
-  mounted () {
-    // EventBus.$on(‘EVENT_NAME’, function (payLoad) {
-    //   ...
-    // });
-  },
   computed: {
-    clientHeaders () { return this.$store.getters['client/connection'].clientHeaders },
-    clientItems () { return this.$store.getters['client/connection'].clientItems },
+    ...mapFields([
+        'tabStructureSelected',
+        'structureDialog',
+        'bottomBarStructure',
+        'gridApi',
+        'columnApi',
+        'structureHeaders',
+        'structureItems',
+    ], { path: 'client/connection' }),
   },
-  watch: {
-    // currentConn(value) {
-    //   this.$store.dispatch('client/updateCurrentConn', value)
-    // }
+  mounted () {
+    EventBus.$on('GET_STRUCTURE', this.getStructure);
   },
   methods: {
    onGridReady(params) {
-      this.gridApi = params.api
-      this.columnApi = params.columnApi
-      // this.$refs['agGrid' + object.charAt(0).toUpperCase() + object.slice(1)].$el.addEventListener('click', this.onGridClick)
-      if (['structure','content'].includes(this.tabSelected)) this.gridApi.showLoadingOverlay()
+      this.gridApi.structure = params.api
+      this.columnApi.structure = params.columnApi
+      this.$refs['agGridStructure'].$el.addEventListener('click', this.onGridClick)
+      this.gridApi.structure.showLoadingOverlay()
+    },
+    onGridClick(event) {
+      if (event.target.className == 'ag-center-cols-viewport') {
+        this.gridApi.structure.deselectAll()
+      }
+    },
+    onFirstDataRendered() {
+      this.resizeTable()
+    },
+    resizeTable() {
+      var allColumnIds = [];
+      this.columnApi.structure.getAllColumns().forEach(function(column) {
+        allColumnIds.push(column.colId);
+      });
+      this.columnApi.structure.autoSizeColumns(allColumnIds);
     },
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
@@ -145,7 +161,139 @@ export default {
             }, 200);
         }, 200);
       }
-    }
+    },
+    onRowDoubleClicked(event) {
+      this.editStructure(event.data)
+    },
+    onRowDragEnd(event) {
+      if (event.overIndex - event.node.id == 0) return
+
+      if (this.tabStructureSelected == 'columns') {
+        this.structureDialogMode = 'drag'
+        this.structureDialogSubmitColumns(event)
+      }
+    },
+    editStructure(data) {
+      this.structureDialogMode = 'edit'
+      this.structureDialogTitle = this.tabStructureSelected == 'columns' ? 'Edit Column' : this.tabStructureSelected == 'indexes' ? 'Edit Index' : this.tabStructureSelected == 'fks' ? 'Edit Foreign Key' : 'Edit Trigger'
+      this.structureDialogItem = { 
+        name: data.name, 
+        type: data.type, 
+        length: (data.length == null) ? '' : ['ENUM','SET'].includes(data.type) ? data.length.replaceAll("'",'') : data.length, 
+        collation: (data.collation == null) ? '' : data.collation, 
+        default: (data.default == null) ? '' : data.default, 
+        comment: (data.comment == null) ? '' : data.comment, 
+        null: data.allow_null, 
+        unsigned: data.unsigned, 
+        current_timestamp: data.extra.toLowerCase() == 'on update current_timestamp', 
+        auto_increment: data.extra.toLowerCase() ==  'auto_increment'
+      }
+      this.structureDialog = true
+    },
+    structureDialogSubmit() {
+      if (this.tabStructureSelected == 'columns') this.structureDialogSubmitColumns()
+    },
+    structureDialogSubmitColumns(event) {
+      this.loadingDialog = true
+      let query = 'ALTER TABLE ' + this.treeviewSelected['name']
+
+      if (['new','edit'].includes(this.structureDialogMode)) {
+        // Parse Form Fields
+        if (!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET'].includes(this.structureDialogItem.type)) this.structureDialogItem.collation = ''
+        if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(this.structureDialogItem.type)) this.structureDialogItem.unsigned = false
+        if (!['DATETIME','TIMESTAMP'].includes(this.structureDialogItem.type)) this.structureDialogItem.current_timestamp = false
+        if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(this.structureDialogItem.type)) this.structureDialogItem.auto_increment = false
+
+        // Check if all fields are filled
+        if (!this.$refs.structureDialogForm.validate()) {
+          this.notification('Please make sure all required fields are filled out correctly', 'error')
+          this.loadingDialog = false
+          return
+        }
+
+        // Build Query
+        if (this.structureDialogMode == 'new') query += ' ADD ' + this.structureDialogItem.name
+        else if (this.structureDialogMode == 'edit') query += ' CHANGE ' + this.gridApi.getSelectedRows()[0].name  + ' ' + this.structureDialogItem.name
+        query += ' ' + this.structureDialogItem.type 
+          + (this.structureDialogItem.length.length > 0 ? (this.structureDialogItem.length.indexOf(',') == -1) ? '(' + this.structureDialogItem.length + ')' : '(' + this.structureDialogItem.length.split(",").map(item => "'" + item.trim() + "'") + ')' : '')
+          + (this.structureDialogItem.unsigned ? ' UNSIGNED' : '')
+          + (this.structureDialogItem.collation.length > 0 ? ' CHARACTER SET ' + this.structureDialogItem.collation.split('_')[0] + ' COLLATE ' + this.structureDialogItem.collation : '')
+          + (this.structureDialogItem.null ? ' NULL' : ' NOT NULL')
+          + (this.structureDialogItem.default.length > 0 ? " DEFAULT" + (this.structureDialogItem.default == 'CURRENT_TIMESTAMP' ? ' CURRENT_TIMESTAMP' : " '" + this.structureDialogItem.default + "'") : '')
+          + (this.structureDialogItem.current_timestamp ? ' ON UPDATE CURRENT_TIMESTAMP' : '')
+          + (this.structureDialogItem.auto_increment ? ' AUTO_INCREMENT' : '')
+          + (this.structureDialogItem.comment ? " COMMENT '" + this.structureDialogItem.comment + "'" : '')
+      }
+      else if (this.structureDialogMode == 'delete') query += ' DROP COLUMN ' + this.gridApi.getSelectedRows()[0].name
+      else if (this.structureDialogMode == 'drag') {
+        query += ' MODIFY ' + this.gridApi.getDisplayedRowAtIndex(event.node.rowIndex).data.name
+          + ' ' + event.node.data.type 
+          + (event.node.data.length !== null ? '(' + event.node.data.length + ')' : '')
+          + (event.node.data.unsigned ? ' UNSIGNED' : '')
+          + (event.node.data.collation !== null ? ' CHARACTER SET ' + event.node.data.collation.split('_')[0] + ' COLLATE ' + event.node.data.collation : '')
+          + (event.node.data.allow_null ? ' NULL' : ' NOT NULL')
+          + (event.node.data.default !== null ? " DEFAULT" + (event.node.data.default == 'CURRENT_TIMESTAMP' ? ' CURRENT_TIMESTAMP' : " '" + event.node.data.default + "'") : '')
+          + (event.node.data.extra.toLowerCase() == 'on update current_timestamp' ? ' ON UPDATE CURRENT_TIMESTAMP' : '')
+          + (event.node.data.extra.toLowerCase() ==  'auto_increment' ? ' AUTO_INCREMENT' : '')
+          + (event.node.data.comment ? " COMMENT '" + event.node.data.comment + "'" : '')
+          + (event.node.rowIndex == 0 ? ' FIRST' : ' AFTER ' + this.gridApi.getDisplayedRowAtIndex(event.node.rowIndex - 1).data.name)
+      }
+      query += ';'
+
+      // Show Loading Overlay
+      this.gridApi.showLoadingOverlay()
+
+      // Execute Query
+      const payload = {
+        server: this.serverSelected.id,
+        database: this.database,
+        queries: [query]
+      }
+      axios.post('/client/execute', payload)
+        .then((response) => {
+          // Get Response Data
+          let data = JSON.parse(response.data.data)
+          // Get Structure
+          this.getStructure()
+          // Build BottomBar
+          this.parseStructureBottomBar(data)
+        })
+        .catch((error) => {
+          this.gridApi.hideOverlay()
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else {
+            // Show error
+            let data = JSON.parse(error.response.data.data)
+            let dialogOptions = {
+              'mode': 'info',
+              'title': 'Unable to apply changes',
+              'text': data[0]['error'],
+              'button1': 'Close',
+              'button2': ''
+            }
+            this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+            // Build BottomBar
+            this.parseStructureBottomBar(data)
+            this.loadingDialog = false
+          }
+        })
+    },
+    structureDialogCancel() {
+      this.structureDialog = false
+    },
+    parseStructureBottomBar(data) {
+      var elapsed = null
+      if (data[data.length-1]['time'] !== undefined) {
+        elapsed = 0
+        for (let i = 0; i < data.length; ++i) {
+          elapsed += parseFloat(data[i]['time'])
+        }
+        elapsed /= data.length
+      }
+      this.bottomBarStructure['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
+      this.bottomBarStructure['text'] = data[0]['query']
+      if (elapsed != null) this.bottomBarStructure['info'] = elapsed.toString() + 's elapsed'
+    },
   },
 }
 </script>

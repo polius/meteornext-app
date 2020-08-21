@@ -4,6 +4,7 @@
       <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" height="48px" style="padding:10px;"></v-select>
       <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
+      <v-progress-circular v-if="treeviewItems.length == 0" indeterminate size="20" width="2" style="margin-top:2px; margin-left:12px;"></v-progress-circular>
       <v-treeview :disabled="loadingServer" @contextmenu="showContextMenu" :active.sync="treeview" item-key="id" :open="treeviewOpened" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
         <template v-slot:label="{item, open}">
           <v-btn text @click="treeviewClick(item)" @contextmenu="showContextMenu" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
@@ -26,7 +27,7 @@
           </v-list-item>
         </v-list>
       </v-menu>
-      <v-text-field :disabled="treeviewMode == 'objects' && database.length == 0" v-model="treeviewSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
+      <v-text-field v-if="treeviewItems.length > 0" :disabled="treeviewMode == 'objects' && database.length == 0" v-model="treeviewSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
     </div>
     <!--------------------->
     <!-- LEFT BOTTOM BAR -->
@@ -116,14 +117,6 @@ export default {
   created() {
     this.getServers()
   },
-  mounted() {
-    // EventBus.$on(‘EVENT_NAME’, function (payLoad) {
-    //   ...
-    // });
-    // EventBus.$emit('EVENT_NAME', payLoad);
-  },
-  watch: {
-  },
   methods: {
     treeviewClick(item) {
       return new Promise ((resolve) => {
@@ -159,7 +152,7 @@ export default {
             this.treeviewSelected = item
             this.headerTab = 2
             this.headerTabSelected = 'content'
-            this.getContent()
+            EventBus.$emit('GET_CONTENT')
           }
         }
       })
@@ -188,11 +181,10 @@ export default {
         else servers.push({ id: 'r' + data[i]['region_id'], name: data[i]['region_name'], children: [{ id: data[i]['server_id'], name: data[i]['server_name'], type: data[i]['server_engine'], host: data[i]['server_hostname'] }] })
       }
       this.treeviewItems = servers.slice(0)
-      this.servers = servers.slice(0)
     },
     getDatabases(server) {
       // Select Server
-      this.treeview = [server.id]
+      // this.treeview = [server.id]
       this.loadingServer = true
       this.server = server
 
