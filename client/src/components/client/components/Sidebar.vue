@@ -133,10 +133,15 @@ export default {
         // Single Click
         if (data == 'single') {
           if (item.children === undefined) {
-            if (this.treeviewMode == 'objects') {
+            if (this.treeviewSelected == item) {
+              this.treeviewSelected = {}
+              this.headerTab = 0
+              this.headerTabSelected = 'client'
+              this.editor.focus()
+            }
+            else {
               this.treeviewSelected = item
-              if (this.headerTabSelected == 'client') EventBus.$emit('GET_CLIENT')
-              else if (this.headerTabSelected == 'content') EventBus.$emit('GET_CONTENT')
+              if (this.headerTabSelected == 'content') EventBus.$emit('GET_CONTENT')
               else if (this.headerTabSelected == 'table_info') EventBus.$emit('GET_INFO')
               else if (this.headerTabSelected == 'structure') EventBus.$emit('GET_STRUCTURE')
             }
