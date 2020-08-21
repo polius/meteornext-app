@@ -43,7 +43,7 @@ export default {
     tabClient() {
       this.headerTab = 0
       this.headerTabSelected = 'client'
-      setTimeout(() => { this.editor.focus() }, 100)
+      this.editor.focus()
     },
     tabStructure() {
       this.headerTabSelected = 'structure'
