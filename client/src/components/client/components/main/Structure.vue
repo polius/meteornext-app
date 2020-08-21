@@ -16,7 +16,7 @@
         <v-tab @click="tabStructureTriggers()"><span class="pl-2 pr-2">Triggers</span></v-tab>
         <v-divider class="mx-3" inset vertical></v-divider>
         </v-tabs>
-        <ag-grid-vue ref="agGridStructure" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="simple" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
+        <ag-grid-vue ref="agGridStructure" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>      
       </div>
     </div>
     <!---------------->
@@ -44,15 +44,15 @@
         </v-col>
       </v-row>
     </div>
-    <!------------->
-    <!-- DIALOGS -->
-    <!------------->
+    <!-------------------------------------->
+    <!-- DIALOG: STRUCTURE ('new','edit') -->
+    <!-------------------------------------->
     <v-dialog v-model="structureDialog" persistent max-width="60%">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ structureDialogTitle }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn :disabled="loadingDialog" @click="structureDialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn :disabled="loading" @click="structureDialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -60,9 +60,9 @@
               <v-flex xs12>
                 <v-form v-if="tabStructureSelected == 'columns'" ref="structureDialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <v-text-field ref="structureDialogFormFocus" v-model="structureDialogItem.name" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
-                  <v-autocomplete v-model="structureDialogItem.type" :items="structureDialogColumnTypes" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-autocomplete>
+                  <v-autocomplete v-model="structureDialogItem.type" :items="server.columnTypes" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                   <v-text-field v-model="structureDialogItem.length" label="Length" required style="padding-top:0px;"></v-text-field>
-                  <v-autocomplete :disabled="!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','SET','ENUM'].includes(structureDialogItem.type)" v-model="structureDialogItem.collation" :items="structureDialogCollations" label="Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
+                  <v-autocomplete :disabled="!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','SET','ENUM'].includes(structureDialogItem.type)" v-model="structureDialogItem.collation" :items="server.collations" label="Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                   <v-text-field :disabled="structureDialogItem.auto_increment" v-model="structureDialogItem.default" label="Default" required style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="structureDialogItem.comment" label="Comment" required style="padding-top:0px;"></v-text-field>
                   <v-checkbox :disabled="!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(structureDialogItem.type)" v-model="structureDialogItem.unsigned" label="Unsigned" color="info" style="margin-top:0px; padding-top:0px;" hide-details></v-checkbox>
@@ -74,10 +74,41 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loadingDialog" @click="structureDialogSubmit" color="primary">Save</v-btn>
+                      <v-btn :loading="loading" @click="structureDialogSubmit" color="primary">Save</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loadingDialog" @click="structureDialogCancel" outlined color="#e74d3c">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="structureDialogCancel" outlined color="#e74d3c">Cancel</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!------------------------------------>
+    <!-- DIALOG: BASIC ('info','error') -->
+    <!------------------------------------>
+    <v-dialog v-model="dialog" persistent max-width="50%">
+      <v-card>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <div class="text-h6" style="font-weight:400;">{{ dialogTitle }}</div>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
+                  <div v-if="dialogText.length>0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
+                  <v-select v-if="dialogMode == 'export'" outlined v-model="dialogSelect" :items="['Meteor','JSON','CSV','SQL']" label="Format" hide-details></v-select>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col v-if="dialogSubmitText.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogSubmitText }}</v-btn>
+                    </v-col>
+                    <v-col v-if="dialogCancelText.length > 0" style="margin-bottom:10px;">
+                      <v-btn :disabled="loading" @click="dialogCancel" outlined color="#e74d3c">{{ dialogCancelText }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -100,18 +131,27 @@ import { mapFields } from '../../js/map-fields'
 export default {
   data() {
     return {
+      // Loading
+      loading: false,
+      // Dialog - Structure
+      structureDialog: false,
+      structureDialogMode: '',
+      structureDialogItem: {},
+      structureDialogTitle: '',
+      // Dialog - Basic
+      dialog: false,
+      dialogMode: '',
+      dialogTitle: '',
+      dialogText: '',
+      dialogSelect: '',
+      dialogSubmitText: '',
+      dialogCancelText: '',
     }
   },
   components: { AgGridVue },
   computed: {
     ...mapFields([
         'tabStructureSelected',
-        'loadingDialog',
-        'structureDialog',
-        'structureDialogTitle',
-        'structureDialogItem',
-        'structureDialogColumnTypes',
-        'structureDialogCollations',
         'bottomBarStructure',
         'gridApi',
         'columnApi',
@@ -125,6 +165,15 @@ export default {
   },
   mounted () {
     EventBus.$on('GET_STRUCTURE', this.getStructure);
+  },
+  watch: {
+    structureDialog (val) {
+      if (!val) return
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.structureDialogForm !== 'undefined') this.$refs.structureDialogForm.resetValidation()
+        if (typeof this.$refs.structureDialogFormFocus !== 'undefined') this.$refs.structureDialogFormFocus.focus()
+      })
+    }
   },
   methods: {
    onGridReady(params) {
@@ -179,45 +228,52 @@ export default {
       }
     },
     addStructure() {
-      this.structureDialogMode = 'new'
-      this.structureDialogTitle = this.tabStructureSelected == 'columns' ? 'New Column' : this.tabStructureSelected == 'indexes' ? 'New Index' : this.tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'
-      this.structureDialogItem = { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false }
-      this.structureDialog = true
+      var dialogOptions = {
+        mode: 'new',
+        title: this.tabStructureSelected == 'columns' ? 'New Column' : this.tabStructureSelected == 'indexes' ? 'New Index' : this.tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger',
+        item: { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false },
+      }
+      this.showStructureDialog(dialogOptions)
     },
     removeStructure() {
+      // Show confirmation structureDialog
       this.structureDialogMode = 'delete'
-      // Show confirmation dialog
       var dialogOptions = {
-        'mode': 'removeColumnsConfirm',
-        'title': 'Delete columns?',
-        'text': "Are you sure you want to delete the column '" + this.gridApi.structure.getSelectedRows()[0].name + "' from this table? This action cannot be undone.",
-        'button1': 'Cancel',
-        'button2': 'Delete'
+        mode: 'delete',
+        title: 'Delete columns?',
+        text: "Are you sure you want to delete the column '" + this.gridApi.structure.getSelectedRows()[0].name + "' from this table? This action cannot be undone.",
+        submit: 'Cancel',
+        cancel: 'Delete'
       }
-      this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+      this.showDialog(dialogOptions)
     },
     editStructure(data) {
-      this.structureDialogMode = 'edit'
-      this.structureDialogTitle = this.tabStructureSelected == 'columns' ? 'Edit Column' : this.tabStructureSelected == 'indexes' ? 'Edit Index' : this.tabStructureSelected == 'fks' ? 'Edit Foreign Key' : 'Edit Trigger'
-      this.structureDialogItem = { 
-        name: data.name, 
-        type: data.type, 
-        length: (data.length == null) ? '' : ['ENUM','SET'].includes(data.type) ? data.length.replaceAll("'",'') : data.length, 
-        collation: (data.collation == null) ? '' : data.collation, 
-        default: (data.default == null) ? '' : data.default, 
-        comment: (data.comment == null) ? '' : data.comment, 
-        null: data.allow_null, 
-        unsigned: data.unsigned, 
-        current_timestamp: data.extra.toLowerCase() == 'on update current_timestamp', 
-        auto_increment: data.extra.toLowerCase() ==  'auto_increment'
+      var dialogOptions = {
+        mode: 'edit',
+        title: this.tabStructureSelected == 'columns' ? 'Edit Column' : this.tabStructureSelected == 'indexes' ? 'Edit Index' : this.tabStructureSelected == 'fks' ? 'Edit Foreign Key' : 'Edit Trigger',
+        item: { 
+          name: data.name, 
+          type: data.type, 
+          length: (data.length == null) ? '' : ['ENUM','SET'].includes(data.type) ? data.length.replaceAll("'",'') : data.length, 
+          collation: (data.collation == null) ? '' : data.collation, 
+          default: (data.default == null) ? '' : data.default, 
+          comment: (data.comment == null) ? '' : data.comment, 
+          null: data.allow_null, 
+          unsigned: data.unsigned, 
+          current_timestamp: data.extra.toLowerCase() == 'on update current_timestamp', 
+          auto_increment: data.extra.toLowerCase() ==  'auto_increment'
+        }
       }
-      this.structureDialog = true
+      this.showStructureDialog(dialogOptions)
     },
     structureDialogSubmit() {
       if (this.tabStructureSelected == 'columns') this.structureDialogSubmitColumns()
     },
+    structureDialogCancel() {
+      this.structureDialog = false
+    },
     structureDialogSubmitColumns(event) {
-      this.loadingDialog = true
+      this.loading = true
       let query = 'ALTER TABLE ' + this.treeviewSelected['name']
 
       if (['new','edit'].includes(this.structureDialogMode)) {
@@ -230,7 +286,7 @@ export default {
         // Check if all fields are filled
         if (!this.$refs.structureDialogForm.validate()) {
           this.notification('Please make sure all required fields are filled out correctly', 'error')
-          this.loadingDialog = false
+          this.loading = false
           return
         }
 
@@ -274,6 +330,9 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
+          // Hide Dialogs
+          this.dialog = false
+          this.structureDialog = false
           // Get Response Data
           let data = JSON.parse(response.data.data)
           // Get Structure
@@ -288,21 +347,18 @@ export default {
             // Show error
             let data = JSON.parse(error.response.data.data)
             let dialogOptions = {
-              'mode': 'info',
-              'title': 'Unable to apply changes',
-              'text': data[0]['error'],
-              'button1': 'Close',
-              'button2': ''
+              mode: 'info',
+              title: 'Unable to apply changes',
+              text: data[0]['error'],
+              submit: 'Close',
+              cancel: ''
             }
-            this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+            this.showDialog(dialogOptions)
             // Build BottomBar
             this.parseStructureBottomBar(data)
-            this.loadingDialog = false
+            this.loading = false
           }
         })
-    },
-    structureDialogCancel() {
-      this.structureDialog = false
     },
     getStructure() {
       this.gridApi.structure.showLoadingOverlay()
@@ -320,9 +376,7 @@ export default {
         })
         .finally(() => {
           this.gridApi.structure.hideOverlay()
-          this.loadingDialog = false
-          this.dialog = false
-          this.structureDialog = false
+          this.loading = false
         })
     },
     parseStructure(data) {
@@ -420,6 +474,26 @@ export default {
       this.tabStructureSelected = 'triggers'
       this.structureHeaders = this.structureOrigin['triggers']['headers'].slice(0)
       this.structureItems = this.structureOrigin['triggers']['items'].slice(0)
+    },
+    showDialog(options) {
+      this.dialogMode = options.mode
+      this.dialogTitle = options.title
+      this.dialogText = options.text
+      this.dialogSubmitText = options.submit
+      this.dialogCancelText = options.cancel
+      this.dialog = true
+    },
+    dialogSubmit() {
+      this.dialog = false
+    },
+    dialogCancel() {
+      if (this.dialogMode == 'delete') this.structureDialogSubmitColumns()
+    },
+    showStructureDialog(options) {
+      this.structureDialogMode = options.mode
+      this.structureDialogTitle = options.title
+      this.structureDialogItem = options.item
+      this.structureDialog = true
     },
   },
 }

@@ -270,13 +270,12 @@ export default {
       }
     },
     runQuery() {
-      this.gridApi.client.showLoadingOverlay()
       this.clientHeaders = []
       this.clientItems = []
       this.bottomBarClient = { text: '', status: '', info: '' }
       this.loadingQuery = true     
       this.editor.completer.detach()
-      
+      this.gridApi.client.showLoadingOverlay()
       const payload = {
         server: this.server.id,
         database: this.database,
