@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="height:100%">
     <!---------->
     <!-- INFO -->
     <!---------->
@@ -16,15 +16,18 @@
     <!-- BOTTOM BAR -->
     <!---------------->
     <div style="height:35px; background-color:#303030; border-top:2px solid #2c2c2c;">
-      
     </div>
   </div>
 </template>
 
 <script>
-// import axios from 'axios'
+import axios from 'axios'
+import EventBus from '../../js/event-bus'
+import { mapFields } from '../../js/map-fields'
 
-// import EventBus from './event-bus'
+import * as ace from 'ace-builds';
+import 'ace-builds/webpack-resolver';
+import 'ace-builds/src-noconflict/ext-language_tools';
 
 export default {
   data() {
@@ -32,49 +35,95 @@ export default {
     }
   },
   components: {  },
-  mounted () {
-    // EventBus.$on(‘EVENT_NAME’, function (payLoad) {
-    //   ...
-    // });
-  },
   computed: {
-    clientHeaders () { return this.$store.getters['client/connection'].clientHeaders },
-    clientItems () { return this.$store.getters['client/connection'].clientItems },
+    ...mapFields([
+        'infoHeaders',
+        'infoItems',
+        'server',
+        'database',
+        'treeviewSelected',
+        'infoEditor',
+    ], { path: 'client/connection' }),
   },
-  watch: {
-    // currentConn(value) {
-    //   this.$store.dispatch('client/updateCurrentConn', value)
-    // }
+  mounted () {
+    // Register Event
+    EventBus.$on('GET_INFO', this.getInfo);
+
+    // Init ACE Editor
+    this.infoEditor = ace.edit("infoEditor", {
+      mode: "ace/mode/sql",
+      theme: "ace/theme/monokai",
+      fontSize: 14,
+      showPrintMargin: false,
+      wrap: true,
+      readOnly: true,
+      showLineNumbers: false
+    });
+    this.infoEditor.container.addEventListener("keydown", (e) => {
+      // - Increase Font Size -
+      if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
+        let size = parseInt(this.infoEditor.getFontSize(), 10) || 12
+        this.infoEditor.setFontSize(size + 1)
+        e.preventDefault()
+      }
+      // - Decrease Font Size -
+      else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
+        let size = parseInt(this.infoEditor.getFontSize(), 10) || 12
+        this.infoEditor.setFontSize(Math.max(size - 1 || 1))
+        e.preventDefault()
+      }
+    }, false);
   },
   methods: {
-   onGridReady(params) {
-      this.gridApi = params.api
-      this.columnApi = params.columnApi
-      // this.$refs['agGrid' + object.charAt(0).toUpperCase() + object.slice(1)].$el.addEventListener('click', this.onGridClick)
-      if (['structure','content'].includes(this.tabSelected)) this.gridApi.showLoadingOverlay()
-    },
-    onCellKeyDown(e) {
-      if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
-        navigator.clipboard.writeText(e.value)
-
-        // Highlight cells
-        e.event.originalTarget.classList.add('ag-cell-highlight');
-        e.event.originalTarget.classList.remove('ag-cell-highlight-animation')
-
-        // Add animation
-        window.setTimeout(function () {
-            e.event.originalTarget.classList.remove('ag-cell-highlight')
-            e.event.originalTarget.classList.add('ag-cell-highlight-animation')
-            e.event.originalTarget.style.transition = "background-color " + 200 + "ms"
-
-            // Remove animation
-            window.setTimeout(function () {
-                e.event.originalTarget.classList.remove('ag-cell-highlight-animation')
-                e.event.originalTarget.style.transition = null;
-            }, 200);
-        }, 200);
+    getInfo() {
+      const payload = {
+        server: this.server.id,
+        database: this.database,
+        table: this.treeviewSelected['name']
       }
-    }
+      axios.get('/client/info', { params: payload })
+        .then((response) => {
+          this.parseInfo(response.data)
+        })
+        .catch((error) => {
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
+        })
+    },
+    parseInfo(data) {
+      // Parse Info
+      this.infoHeaders = [
+        { text: 'Engine', value: 'engine' },
+        { text: 'Row format', value: 'row_format' },
+        { text: 'Rows', value: 'table_rows' },
+        { text: 'Data size', value: 'data_length' },
+        { text: 'Index size', value: 'index_length' },
+        { text: 'Total size', value: 'total_length' },
+        { text: 'Collation', value: 'table_collation' },
+        { text: 'Created', value: 'create_time' },
+        { text: 'Updated', value: 'update_time' }
+      ]
+      let info = JSON.parse(data.info)
+      info['total_length'] = this.parseBytes(info.data_length + info.index_length)
+      info.data_length = this.parseBytes(info.data_length)
+      info.index_length = this.parseBytes(info.index_length)
+      info.create_time = (info.create_time == null) ? 'Not available' : info.create_time
+      info.update_time = (info.update_time == null) ? 'Not available' : info.update_time
+      this.infoItems = [info]
+
+      // Parse Syntax
+      let syntax = JSON.parse(data.syntax)
+      this.infoEditor.setValue(syntax, -1)
+      this.infoEditor.focus()
+    },
+    parseBytes(value) {
+      if (value/1024 < 1) return value + ' B'
+      else if (value/1024/1024 < 1) return value/1024 + 'KB'
+      else if (value/1024/1024/1024 < 1) return value/1024/1024 + 'MB'
+      else if (value/1024/1024/1024/1024 < 1) return value/1024/1024/1024 + 'GB'
+      else return value/1024/1024/1024/1024 + 'TB' 
+    },
   },
 }
 </script>

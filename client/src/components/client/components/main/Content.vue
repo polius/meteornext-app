@@ -119,7 +119,6 @@ export default {
         'editDialogTitle',
         'treeviewSelected',
         'structureHeaders',
-        'contentTableSelected',
         'gridApi',
         'columnApi',
         'server',
@@ -184,7 +183,6 @@ export default {
       }
     },
     getContent() {
-      this.contentTableSelected = this.treeviewSelected['name']
       this.bottomBarContent = { status: '', text: '', info: '' }
       this.gridApi.content.showLoadingOverlay()
       const payload = {
