@@ -35,7 +35,8 @@ export default {
         'treeviewMode',
         'treeviewSelected',
         'structureHeaders',
-        'contentTableSelected',
+        'contentHeaders',
+        'infoHeaders',
     ], { path: 'client/connection' }),
   },
   methods: {
@@ -50,36 +51,11 @@ export default {
     },
     tabContent() {
       this.headerTabSelected = 'content'
-      if (this.contentTableSelected != this.treeviewSelected['name']) EventBus.$emit('GET_CONTENT')
+      if (this.contentHeaders.length == 0) EventBus.$emit('GET_CONTENT')
     },
     tabInfo(object) {
       this.headerTabSelected = object + '_info'
-      // if (this.infoEditor == null) {
-      //   this.infoEditor = ace.edit("infoEditor", {
-      //     mode: "ace/mode/sql",
-      //     theme: "ace/theme/monokai",
-      //     fontSize: 14,
-      //     showPrintMargin: false,
-      //     wrap: true,
-      //     readOnly: true,
-      //     showLineNumbers: false
-      //   });
-      //   this.infoEditor.container.addEventListener("keydown", (e) => {
-      //     // - Increase Font Size -
-      //     if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
-      //       let size = parseInt(this.infoEditor.getFontSize(), 10) || 12
-      //       this.infoEditor.setFontSize(size + 1)
-      //       e.preventDefault()
-      //     }
-      //     // - Decrease Font Size -
-      //     else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
-      //       let size = parseInt(this.infoEditor.getFontSize(), 10) || 12
-      //       this.infoEditor.setFontSize(Math.max(size - 1 || 1))
-      //       e.preventDefault()
-      //     }
-      //   }, false);
-      // }
-      EventBus.$emit('GET_INFO')
+      if (this.infoHeaders.length == 0) EventBus.$emit('GET_INFO')
     },
   },
 }

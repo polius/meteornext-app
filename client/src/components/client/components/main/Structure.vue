@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="height:100%">
     <!--------------->
     <!-- STRUCTURE -->
     <!--------------->
@@ -16,7 +16,7 @@
         <v-tab @click="tabStructureTriggers()"><span class="pl-2 pr-2">Triggers</span></v-tab>
         <v-divider class="mx-3" inset vertical></v-divider>
         </v-tabs>
-        <ag-grid-vue ref="agGridStructure" @grid-ready="onGridReady" @row-data-changed="onFirstDataRendered" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="simple" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
+        <ag-grid-vue ref="agGridStructure" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" suppressNoRowsOverlay="true" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="simple" :stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>
       </div>
     </div>
     <!---------------->
@@ -57,7 +57,6 @@
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <!-- <div class="text-h6" style="font-weight:400;">{{ structureDialogTitle }}</div> -->
               <v-flex xs12>
                 <v-form v-if="tabStructureSelected == 'columns'" ref="structureDialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <v-text-field ref="structureDialogFormFocus" v-model="structureDialogItem.name" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
@@ -107,12 +106,21 @@ export default {
   computed: {
     ...mapFields([
         'tabStructureSelected',
+        'loadingDialog',
         'structureDialog',
+        'structureDialogTitle',
+        'structureDialogItem',
+        'structureDialogColumnTypes',
+        'structureDialogCollations',
         'bottomBarStructure',
         'gridApi',
         'columnApi',
+        'structureOrigin',
         'structureHeaders',
         'structureItems',
+        'treeviewSelected',
+        'server',
+        'database',
     ], { path: 'client/connection' }),
   },
   mounted () {
@@ -129,9 +137,6 @@ export default {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.structure.deselectAll()
       }
-    },
-    onFirstDataRendered() {
-      this.resizeTable()
     },
     resizeTable() {
       var allColumnIds = [];
@@ -173,6 +178,24 @@ export default {
         this.structureDialogSubmitColumns(event)
       }
     },
+    addStructure() {
+      this.structureDialogMode = 'new'
+      this.structureDialogTitle = this.tabStructureSelected == 'columns' ? 'New Column' : this.tabStructureSelected == 'indexes' ? 'New Index' : this.tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger'
+      this.structureDialogItem = { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false }
+      this.structureDialog = true
+    },
+    removeStructure() {
+      this.structureDialogMode = 'delete'
+      // Show confirmation dialog
+      var dialogOptions = {
+        'mode': 'removeColumnsConfirm',
+        'title': 'Delete columns?',
+        'text': "Are you sure you want to delete the column '" + this.gridApi.structure.getSelectedRows()[0].name + "' from this table? This action cannot be undone.",
+        'button1': 'Cancel',
+        'button2': 'Delete'
+      }
+      this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+    },
     editStructure(data) {
       this.structureDialogMode = 'edit'
       this.structureDialogTitle = this.tabStructureSelected == 'columns' ? 'Edit Column' : this.tabStructureSelected == 'indexes' ? 'Edit Index' : this.tabStructureSelected == 'fks' ? 'Edit Foreign Key' : 'Edit Trigger'
@@ -213,7 +236,7 @@ export default {
 
         // Build Query
         if (this.structureDialogMode == 'new') query += ' ADD ' + this.structureDialogItem.name
-        else if (this.structureDialogMode == 'edit') query += ' CHANGE ' + this.gridApi.getSelectedRows()[0].name  + ' ' + this.structureDialogItem.name
+        else if (this.structureDialogMode == 'edit') query += ' CHANGE ' + this.gridApi.structure.getSelectedRows()[0].name  + ' ' + this.structureDialogItem.name
         query += ' ' + this.structureDialogItem.type 
           + (this.structureDialogItem.length.length > 0 ? (this.structureDialogItem.length.indexOf(',') == -1) ? '(' + this.structureDialogItem.length + ')' : '(' + this.structureDialogItem.length.split(",").map(item => "'" + item.trim() + "'") + ')' : '')
           + (this.structureDialogItem.unsigned ? ' UNSIGNED' : '')
@@ -224,9 +247,9 @@ export default {
           + (this.structureDialogItem.auto_increment ? ' AUTO_INCREMENT' : '')
           + (this.structureDialogItem.comment ? " COMMENT '" + this.structureDialogItem.comment + "'" : '')
       }
-      else if (this.structureDialogMode == 'delete') query += ' DROP COLUMN ' + this.gridApi.getSelectedRows()[0].name
+      else if (this.structureDialogMode == 'delete') query += ' DROP COLUMN ' + this.gridApi.structure.getSelectedRows()[0].name
       else if (this.structureDialogMode == 'drag') {
-        query += ' MODIFY ' + this.gridApi.getDisplayedRowAtIndex(event.node.rowIndex).data.name
+        query += ' MODIFY ' + this.gridApi.structure.getDisplayedRowAtIndex(event.node.rowIndex).data.name
           + ' ' + event.node.data.type 
           + (event.node.data.length !== null ? '(' + event.node.data.length + ')' : '')
           + (event.node.data.unsigned ? ' UNSIGNED' : '')
@@ -236,16 +259,16 @@ export default {
           + (event.node.data.extra.toLowerCase() == 'on update current_timestamp' ? ' ON UPDATE CURRENT_TIMESTAMP' : '')
           + (event.node.data.extra.toLowerCase() ==  'auto_increment' ? ' AUTO_INCREMENT' : '')
           + (event.node.data.comment ? " COMMENT '" + event.node.data.comment + "'" : '')
-          + (event.node.rowIndex == 0 ? ' FIRST' : ' AFTER ' + this.gridApi.getDisplayedRowAtIndex(event.node.rowIndex - 1).data.name)
+          + (event.node.rowIndex == 0 ? ' FIRST' : ' AFTER ' + this.gridApi.structure.getDisplayedRowAtIndex(event.node.rowIndex - 1).data.name)
       }
       query += ';'
 
       // Show Loading Overlay
-      this.gridApi.showLoadingOverlay()
+      this.gridApi.structure.showLoadingOverlay()
 
       // Execute Query
       const payload = {
-        server: this.serverSelected.id,
+        server: this.server.id,
         database: this.database,
         queries: [query]
       }
@@ -259,7 +282,7 @@ export default {
           this.parseStructureBottomBar(data)
         })
         .catch((error) => {
-          this.gridApi.hideOverlay()
+          this.gridApi.structure.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
           else {
             // Show error
@@ -281,6 +304,90 @@ export default {
     structureDialogCancel() {
       this.structureDialog = false
     },
+    getStructure() {
+      this.gridApi.structure.showLoadingOverlay()
+      this.bottomBarStructure = { status: '', text: '', info: '' }
+      // Retrieve Tables
+      const table = this.treeviewSelected['name']
+      axios.get('/client/structure', { params: { server: this.server.id, database: this.database, table: table } })
+        .then((response) => {
+          this.parseStructure(response.data)
+        })
+        .catch((error) => {
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.gridApi.structure.hideOverlay()
+          this.loadingDialog = false
+          this.dialog = false
+          this.structureDialog = false
+        })
+    },
+    parseStructure(data) {
+      // Parse Columns
+      var columns_items = JSON.parse(data.columns)
+      var columns_headers = []
+      if (columns_items.length > 0) {
+        var columns_keys = Object.keys(columns_items[0])
+        for (let i = 0; i < columns_keys.length; ++i) {
+          let field = columns_keys[i].trim()
+          columns_headers.push({ headerName: columns_keys[i], colId: field, field: field, sortable: false, filter: false, resizable: true, editable: false })
+        }
+      }
+      columns_headers[0]['rowDrag'] = true
+      this.structureOrigin['columns'] = { headers: columns_headers, items: columns_items }
+
+      // show 'no rows' overlay
+      // this.gridApi.structure.showNoRowsOverlay()
+
+      // Parse Indexes
+      var indexes_items = JSON.parse(data.indexes)
+      var indexes_headers = []
+      if (indexes_items.length > 0) {
+        var indexes_keys = Object.keys(indexes_items[0])
+        for (let i = 0; i < indexes_keys.length; ++i) {
+          let field = indexes_keys[i].trim()
+          indexes_headers.push({ headerName: indexes_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
+        }
+      }
+      this.structureOrigin['indexes'] = { headers: indexes_headers, items: indexes_items }
+
+      // Parse Foreign Keys
+      var fks_items = JSON.parse(data.fks)
+      var fks_headers = []
+      if (fks_items.length > 0) {
+        var fks_keys = Object.keys(fks_items[0])
+        for (let i = 0; i < fks_keys.length; ++i) {
+          let field = fks_keys[i].trim()
+          fks_headers.push({ headerName: fks_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
+        }
+      }
+      this.structureOrigin['fks'] = { headers: fks_headers, items: fks_items } 
+
+      // Parse Triggers
+      var triggers_items = JSON.parse(data.triggers)
+      var triggers_headers = []
+      if (triggers_items.length > 0) {
+        var triggers_keys = Object.keys(triggers_items[0])
+        for (let i = 0; i < triggers_keys.length; ++i) {
+          let field = triggers_keys[i].trim()
+          triggers_headers.push({ headerName: triggers_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
+        }
+      }
+      this.structureOrigin['triggers'] = { headers: triggers_headers, items: triggers_items } 
+
+      // Show Data
+      if (this.tabStructureSelected == 'columns') this.tabStructureColumns()
+      else if (this.tabStructureSelected == 'indexes') this.tabStructureIndexes()
+      else if (this.tabStructureSelected == 'fks') this.tabStructureFK()
+      else if (this.tabStructureSelected == 'triggers') this.tabStructureTriggers()
+
+      // Resize Table
+      // this.gridApi.structure.setColumnDefs(headers)
+      this.resizeTable()
+    },
     parseStructureBottomBar(data) {
       var elapsed = null
       if (data[data.length-1]['time'] !== undefined) {
@@ -293,6 +400,26 @@ export default {
       this.bottomBarStructure['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
       this.bottomBarStructure['text'] = data[0]['query']
       if (elapsed != null) this.bottomBarStructure['info'] = elapsed.toString() + 's elapsed'
+    },
+    tabStructureColumns() {
+      this.tabStructureSelected = 'columns'
+      this.structureHeaders = this.structureOrigin['columns']['headers'].slice(0)
+      this.structureItems = this.structureOrigin['columns']['items'].slice(0)
+    },
+    tabStructureIndexes() {
+      this.tabStructureSelected = 'indexes'
+      this.structureHeaders = this.structureOrigin['indexes']['headers'].slice(0)
+      this.structureItems = this.structureOrigin['indexes']['items'].slice(0)
+    },
+    tabStructureFK() {
+      this.tabStructureSelected = 'fks'
+      this.structureHeaders = this.structureOrigin['fks']['headers'].slice(0)
+      this.structureItems = this.structureOrigin['fks']['items'].slice(0)
+    },
+    tabStructureTriggers() {
+      this.tabStructureSelected = 'triggers'
+      this.structureHeaders = this.structureOrigin['triggers']['headers'].slice(0)
+      this.structureItems = this.structureOrigin['triggers']['items'].slice(0)
     },
   },
 }

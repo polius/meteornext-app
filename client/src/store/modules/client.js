@@ -45,7 +45,7 @@ const state = () => ({
       clientItems: [],
 
       // Structure
-      structureTab: 'columns',
+      tabStructureSelected: 'columns',
       structureOrigin: {},
       structureHeaders: [],
       structureItems: [],

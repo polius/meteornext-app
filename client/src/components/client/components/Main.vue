@@ -1,9 +1,9 @@
 <template>
   <div style="height:100%">
     <Client v-show="headerTab == 0" />
-    <Structure v-if="headerTab == 1" />
+    <Structure v-show="headerTab == 1" />
     <Content v-show="headerTab == 2" />
-    <Info v-if="headerTab == 3" />
+    <Info v-show="headerTab == 3" />
   </div>
 </template>
 

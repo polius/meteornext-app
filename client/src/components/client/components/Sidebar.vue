@@ -4,8 +4,8 @@
       <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" height="48px" style="padding:10px;"></v-select>
       <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
-      <v-progress-circular v-if="treeviewItems.length == 0" indeterminate size="20" width="2" style="margin-top:2px; margin-left:12px;"></v-progress-circular>
-      <v-treeview :disabled="loadingServer" @contextmenu="showContextMenu" :active.sync="treeview" item-key="id" :open="treeviewOpened" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
+      <v-progress-circular v-if="treeviewItems.length == 0 && Object.keys(server).length == 0" indeterminate size="20" width="2" style="margin-top:2px; margin-left:12px;"></v-progress-circular>
+      <v-treeview @contextmenu="showContextMenu" :active.sync="treeview" item-key="id" :open="treeviewOpened" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
         <template v-slot:label="{item, open}">
           <v-btn text @click="treeviewClick(item)" @contextmenu="showContextMenu" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
             <v-icon v-if="!item.type" small style="padding:10px;">
@@ -119,6 +119,7 @@ export default {
   },
   methods: {
     treeviewClick(item) {
+      if (this.loadingServer) return
       return new Promise ((resolve) => {
         if (this.click) {
           clearTimeout(this.click)
@@ -132,13 +133,10 @@ export default {
         // Single Click
         if (data == 'single') {
           if (item.children === undefined) {
-            if (this.treeviewSelected == item) {
-              this.treeviewSelected = {}
-              this.tabClient()
-            }
-            else {
+            if (this.treeviewMode == 'objects') {
               this.treeviewSelected = item
-              if (this.headerTabSelected == 'content') EventBus.$emit('GET_CONTENT')
+              if (this.headerTabSelected == 'client') EventBus.$emit('GET_CLIENT')
+              else if (this.headerTabSelected == 'content') EventBus.$emit('GET_CONTENT')
               else if (this.headerTabSelected == 'table_info') EventBus.$emit('GET_INFO')
               else if (this.headerTabSelected == 'structure') EventBus.$emit('GET_STRUCTURE')
             }
@@ -146,6 +144,8 @@ export default {
         }
         // Double Click
         else if (data == 'double') {
+          this.treeview = [item]
+          this.treeviewSelected = item
           if (this.treeviewMode == 'servers') this.getDatabases(item)
           else if (this.treeviewMode == 'objects' && ['Table','View'].includes(item.type) && item.children === undefined) {
             this.treeview = []
@@ -183,11 +183,7 @@ export default {
       this.treeviewItems = servers.slice(0)
     },
     getDatabases(server) {
-      // Select Server
-      // this.treeview = [server.id]
       this.loadingServer = true
-      this.server = server
-
       // Retrieve Databases
       axios.get('/client/databases', { params: { server_id: server.id } })
         .then((response) => {
@@ -205,6 +201,7 @@ export default {
       this.treeview = []
       this.treeviewItems = []
       this.treeviewMode = 'objects'
+      this.server = server
       this.databaseItems = data.databases
       this.editor.focus()
 
