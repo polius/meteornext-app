@@ -16,7 +16,7 @@
         <v-tab @click="tabStructureTriggers()"><span class="pl-2 pr-2">Triggers</span></v-tab>
         <v-divider class="mx-3" inset vertical></v-divider>
         </v-tabs>
-        <ag-grid-vue ref="agGridStructure" @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>      
+        <ag-grid-vue ref="agGridStructure" @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders" :rowData="structureItems"></ag-grid-vue>      
       </div>
     </div>
     <!---------------->
@@ -59,7 +59,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form v-if="tabStructureSelected == 'columns'" ref="structureDialogForm" style="margin-top:10px; margin-bottom:15px;">
-                  <v-text-field ref="structureDialogFormFocus" v-model="structureDialogItem.name" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="structureDialogItem.name" :rules="[v => !!v || '']" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
                   <v-autocomplete v-model="structureDialogItem.type" :items="server.columnTypes" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                   <v-text-field v-model="structureDialogItem.length" label="Length" required style="padding-top:0px;"></v-text-field>
                   <v-autocomplete :disabled="!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','SET','ENUM'].includes(structureDialogItem.type)" v-model="structureDialogItem.collation" :items="server.collations" label="Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
@@ -69,6 +69,17 @@
                   <v-checkbox :disabled="!['DATETIME','TIMESTAMP'].includes(structureDialogItem.type)" v-model="structureDialogItem.current_timestamp" label="On Update Current Timestamp" color="info" style="margin-top:0px;" hide-details></v-checkbox>
                   <v-checkbox :disabled="!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(structureDialogItem.type)" v-model="structureDialogItem.auto_increment" label="Auto Increment" @change="structureDialogItem.auto_increment ? structureDialogItem.default = '' : ''" color="info" style="margin-top:0px;" hide-details></v-checkbox>
                   <v-checkbox v-model="structureDialogItem.null" label="Allow Null" color="info" style="margin-top:0px;" hide-details></v-checkbox>
+                </v-form>
+                <v-form v-else-if="tabStructureSelected == 'indexes'" ref="structureDialogForm" style="margin-top:10px; margin-bottom:5px;">
+                  <v-text-field v-model="structureDialogItem.name" :rules="[v => !!v || '']" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
+                  <v-select v-model="structureDialogItem.type" :items="server.indexTypes" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-select>
+                  <v-text-field v-model="structureDialogItem.fields" :rules="[v => !!v || '']" label="Fields" hint="Column names separated by comma. Example: col1, col2, col3" required style="padding-top:0px;"></v-text-field>
+                </v-form>
+                <v-form v-else-if="tabStructureSelected == 'fks'" ref="structureDialogForm" style="margin-top:10px; margin-bottom:15px;">
+                
+                </v-form>
+                <v-form v-else-if="tabStructureSelected == 'triggers'" ref="structureDialogForm" style="margin-top:10px; margin-bottom:15px;">
+                
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -98,7 +109,7 @@
               <div class="text-h6" style="font-weight:400;">{{ dialogTitle }}</div>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
-                  <div v-if="dialogText.length>0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
+                  <div v-if="dialogText.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
                   <v-select v-if="dialogMode == 'export'" outlined v-model="dialogSelect" :items="['Meteor','JSON','CSV','SQL']" label="Format" hide-details></v-select>
                 </v-form>
                 <v-divider></v-divider>
@@ -138,6 +149,11 @@ export default {
       structureDialogMode: '',
       structureDialogItem: {},
       structureDialogTitle: '',
+      // Indexes
+      indexHeaders: [],
+      indexItems: [],
+      indexItem: [],
+      indexMode: '',
       // Dialog - Basic
       dialog: false,
       dialogMode: '',
@@ -182,6 +198,9 @@ export default {
       this.$refs['agGridStructure'].$el.addEventListener('click', this.onGridClick)
       this.gridApi.structure.showLoadingOverlay()
     },
+    onNewColumnsLoaded() {
+      if (this.gridApi.structure != null) this.resizeTable()
+    },
     onGridClick(event) {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.structure.deselectAll()
@@ -217,7 +236,7 @@ export default {
       }
     },
     onRowDoubleClicked(event) {
-      this.editStructure(event.data)
+      if (this.tabStructureSelected == 'columns') this.editStructure(event.data)
     },
     onRowDragEnd(event) {
       if (event.overIndex - event.node.id == 0) return
@@ -231,17 +250,19 @@ export default {
       var dialogOptions = {
         mode: 'new',
         title: this.tabStructureSelected == 'columns' ? 'New Column' : this.tabStructureSelected == 'indexes' ? 'New Index' : this.tabStructureSelected == 'fks' ? 'New Foreign Key' : 'New Trigger',
-        item: { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false },
+        item: {}
       }
+      if (this.tabStructureSelected == 'columns') dialogOptions['item'] = { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false }
+      else if (this.tabStructureSelected == 'indexes') dialogOptions['item'] = { name: '', type: '', fields: '' }
       this.showStructureDialog(dialogOptions)
     },
     removeStructure() {
-      // Show confirmation structureDialog
       this.structureDialogMode = 'delete'
+      let objectName = this.tabStructureSelected == 'columns' ? 'column' : this.tabStructureSelected == 'indexes' ? 'index' : this.tabStructureSelected == 'fks' ? 'foreign key' : 'trigger'
       var dialogOptions = {
         mode: 'delete',
-        title: 'Delete columns?',
-        text: "Are you sure you want to delete the column '" + this.gridApi.structure.getSelectedRows()[0].name + "' from this table? This action cannot be undone.",
+        title: 'Delete ' + objectName + '?',
+        text: "Are you sure you want to delete the " + objectName + " '" + this.gridApi.structure.getSelectedRows()[0].name + "' from this table? This action cannot be undone.",
         submit: 'Cancel',
         cancel: 'Delete'
       }
@@ -251,7 +272,10 @@ export default {
       var dialogOptions = {
         mode: 'edit',
         title: this.tabStructureSelected == 'columns' ? 'Edit Column' : this.tabStructureSelected == 'indexes' ? 'Edit Index' : this.tabStructureSelected == 'fks' ? 'Edit Foreign Key' : 'Edit Trigger',
-        item: { 
+        item: {}
+      }
+      if (this.tabStructureSelected == 'columns') {
+        dialogOptions['item'] = {
           name: data.name, 
           type: data.type, 
           length: (data.length == null) ? '' : ['ENUM','SET'].includes(data.type) ? data.length.replaceAll("'",'') : data.length, 
@@ -268,6 +292,9 @@ export default {
     },
     structureDialogSubmit() {
       if (this.tabStructureSelected == 'columns') this.structureDialogSubmitColumns()
+      else if (this.tabStructureSelected == 'indexes') this.structureDialogSubmitIndexes()
+      else if (this.tabStructureSelected == 'fks') this.structureDialogSubmitFks()
+      else if (this.tabStructureSelected == 'triggers') this.structureDialogSubmitTriggers()
     },
     structureDialogCancel() {
       this.structureDialog = false
@@ -319,53 +346,36 @@ export default {
       }
       query += ';'
 
-      // Show Loading Overlay
-      this.gridApi.structure.showLoadingOverlay()
-
-      // Execute Query
-      const payload = {
-        server: this.server.id,
-        database: this.database,
-        queries: [query]
+      // Execute queries
+      this.execute([query])
+    },
+    structureDialogSubmitIndexes() {
+      this.loading = true
+      var queries = []
+      if (this.structureDialogMode == 'new') {
+        queries.push("ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + this.structureDialogItem.type + ' ' + this.structureDialogItem.name + "(" + this.structureDialogItem.fields + ");")
       }
-      axios.post('/client/execute', payload)
-        .then((response) => {
-          // Hide Dialogs
-          this.dialog = false
-          this.structureDialog = false
-          // Get Response Data
-          let data = JSON.parse(response.data.data)
-          // Get Structure
-          this.getStructure()
-          // Build BottomBar
-          this.parseStructureBottomBar(data)
-        })
-        .catch((error) => {
-          this.gridApi.structure.hideOverlay()
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
-          else {
-            // Show error
-            let data = JSON.parse(error.response.data.data)
-            let dialogOptions = {
-              mode: 'info',
-              title: 'Unable to apply changes',
-              text: data[0]['error'],
-              submit: 'Close',
-              cancel: ''
-            }
-            this.showDialog(dialogOptions)
-            // Build BottomBar
-            this.parseStructureBottomBar(data)
-            this.loading = false
-          }
-        })
+      else if (this.structureDialogMode == 'delete') {
+        let rows = this.gridApi.structure.getSelectedRows()
+        for (let i = 0; i < rows.length; ++i) {
+          queries.push("ALTER TABLE " + this.treeviewSelected['name'] + " DROP INDEX " + rows[i].name + ';')
+        }
+      }
+
+      // Execute queries
+      this.execute(queries)
+    },
+    structureDialogSubmitFks() {
+
+    },
+    structureDialogSubmitTriggers() {
+
     },
     getStructure() {
       this.gridApi.structure.showLoadingOverlay()
       this.bottomBarStructure = { status: '', text: '', info: '' }
       // Retrieve Tables
-      const table = this.treeviewSelected['name']
-      axios.get('/client/structure', { params: { server: this.server.id, database: this.database, table: table } })
+      axios.get('/client/structure', { params: { server: this.server.id, database: this.database, table: this.treeviewSelected['name'] } })
         .then((response) => {
           this.parseStructure(response.data)
         })
@@ -403,7 +413,7 @@ export default {
         var indexes_keys = Object.keys(indexes_items[0])
         for (let i = 0; i < indexes_keys.length; ++i) {
           let field = indexes_keys[i].trim()
-          indexes_headers.push({ headerName: indexes_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
+          indexes_headers.push({ headerName: indexes_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: false })
         }
       }
       this.structureOrigin['indexes'] = { headers: indexes_headers, items: indexes_items }
@@ -415,7 +425,7 @@ export default {
         var fks_keys = Object.keys(fks_items[0])
         for (let i = 0; i < fks_keys.length; ++i) {
           let field = fks_keys[i].trim()
-          fks_headers.push({ headerName: fks_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
+          fks_headers.push({ headerName: fks_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: false })
         }
       }
       this.structureOrigin['fks'] = { headers: fks_headers, items: fks_items } 
@@ -427,7 +437,7 @@ export default {
         var triggers_keys = Object.keys(triggers_items[0])
         for (let i = 0; i < triggers_keys.length; ++i) {
           let field = triggers_keys[i].trim()
-          triggers_headers.push({ headerName: triggers_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
+          triggers_headers.push({ headerName: triggers_keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: false })
         }
       }
       this.structureOrigin['triggers'] = { headers: triggers_headers, items: triggers_items } 
@@ -437,10 +447,6 @@ export default {
       else if (this.tabStructureSelected == 'indexes') this.tabStructureIndexes()
       else if (this.tabStructureSelected == 'fks') this.tabStructureFK()
       else if (this.tabStructureSelected == 'triggers') this.tabStructureTriggers()
-
-      // Resize Table
-      // this.gridApi.structure.setColumnDefs(headers)
-      this.resizeTable()
     },
     parseStructureBottomBar(data) {
       var elapsed = null
@@ -459,11 +465,13 @@ export default {
       this.tabStructureSelected = 'columns'
       this.structureHeaders = this.structureOrigin['columns']['headers'].slice(0)
       this.structureItems = this.structureOrigin['columns']['items'].slice(0)
+      this.gridApi.structure.setColumnDefs(this.structureHeaders)
     },
     tabStructureIndexes() {
       this.tabStructureSelected = 'indexes'
       this.structureHeaders = this.structureOrigin['indexes']['headers'].slice(0)
       this.structureItems = this.structureOrigin['indexes']['items'].slice(0)
+      this.gridApi.structure.setColumnDefs(this.structureHeaders)
     },
     tabStructureFK() {
       this.tabStructureSelected = 'fks'
@@ -487,7 +495,12 @@ export default {
       this.dialog = false
     },
     dialogCancel() {
-      if (this.dialogMode == 'delete') this.structureDialogSubmitColumns()
+      if (this.dialogMode == 'delete') {
+        if (this.tabStructureSelected == 'columns') this.structureDialogSubmitColumns()
+        else if (this.tabStructureSelected == 'indexes') this.structureDialogSubmitIndexes()
+        else if (this.tabStructureSelected == 'fks') this.structureDialogSubmitFks()
+        else if (this.tabStructureSelected == 'triggers') this.structureDialogSubmitTriggers()
+      }
     },
     showStructureDialog(options) {
       this.structureDialogMode = options.mode
@@ -495,6 +508,55 @@ export default {
       this.structureDialogItem = options.item
       this.structureDialog = true
     },
+    execute(queries) {
+      // Show Loading Overlay
+      this.gridApi.structure.showLoadingOverlay()
+
+      // Execute Query
+      const payload = {
+        server: this.server.id,
+        database: this.database,
+        queries: queries
+      }
+      axios.post('/client/execute', payload)
+        .then((response) => {
+          // Hide Dialogs
+          this.dialog = false
+          this.structureDialog = false
+          // Get Response Data
+          let data = JSON.parse(response.data.data)
+          // Get Structure
+          this.getStructure()
+          // Build BottomBar
+          this.parseStructureBottomBar(data)
+        })
+        .catch((error) => {
+          this.gridApi.structure.hideOverlay()
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          else {
+            // Show last error
+            let data = JSON.parse(error.response.data.data)
+            let error = ''
+            for (let i = data.length - 1; i >=0 ; i--) {
+              if (data[i]['error'] !== undefined) { 
+                error = data[i]['error']
+                break
+              }
+            }
+            let dialogOptions = {
+              mode: 'info',
+              title: 'Unable to apply changes',
+              text: error,
+              submit: 'Close',
+              cancel: ''
+            }
+            this.showDialog(dialogOptions)
+            // Build BottomBar
+            this.parseStructureBottomBar(data)
+            this.loading = false
+          }
+        })
+    }
   },
 }
 </script>

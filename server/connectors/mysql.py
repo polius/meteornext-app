@@ -197,16 +197,18 @@ class MySQL:
     def get_indexes(self, db, table):
         query = """
             SELECT 
+                index_name AS 'name',
                 CASE 
                 WHEN index_type = 'FULLTEXT' THEN 'FULLTEXT'
                     WHEN index_name = 'PRIMARY' THEN 'PRIMARY'
                     WHEN non_unique = 0 THEN 'UNIQUE'
                     ELSE 'INDEX'
-                END AS 'index_type', 
-                index_name, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS 'fields'
+                END AS 'type', 
+                GROUP_CONCAT(column_name ORDER BY seq_in_index) AS 'fields'
             FROM information_schema.statistics
             WHERE table_schema = %s
             AND table_name = %s
+            AND index_name != 'PRIMARY'
             GROUP BY index_name, index_type, non_unique
         """
         return self.execute(query, args=(db, table))['data']
