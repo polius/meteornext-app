@@ -292,7 +292,7 @@ export default {
       var dialogOptions = {
         mode: 'delete',
         title: 'Delete ' + objectName + '?',
-        text: "Are you sure you want to delete the " + objectName + " '" + this.gridApi.structure.getSelectedRows()[0].name + "' from this table? This action cannot be undone.",
+        text: "Are you sure you want to delete the " + objectName + " '" + this.gridApi.structure.getSelectedRows()[0].Name + "' from this table? This action cannot be undone.",
         submit: 'Cancel',
         cancel: 'Delete'
       }
@@ -330,11 +330,6 @@ export default {
       this.structureDialog = false
     },
     structureDialogSubmitColumns(event) {
-      // Check if all fields are filled
-      if (!this.$refs.structureDialogForm.validate()) {
-        EventBus.$emit('NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
-        return
-      }
       this.loading = true
       let query = 'ALTER TABLE ' + this.treeviewSelected['name']
 
@@ -347,7 +342,7 @@ export default {
 
         // Check if all fields are filled
         if (!this.$refs.structureDialogForm.validate()) {
-          this.notification('Please make sure all required fields are filled out correctly', 'error')
+          EventBus.$emit('NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
           this.loading = false
           return
         }
@@ -385,15 +380,15 @@ export default {
       this.execute([query])
     },
     structureDialogSubmitIndexes() {
-      // Check if all fields are filled
-      if (!this.$refs.structureDialogForm.validate()) {
-        EventBus.$emit('NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
-        return
-      }
-      // Build query
       this.loading = true
       var query = []
       if (this.structureDialogMode == 'new') {
+        // Check if all fields are filled
+        if (!this.$refs.structureDialogForm.validate()) {
+          EventBus.$emit('NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+          return
+        }
+        // Build query
         query.push("ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + this.structureDialogItem.type + ' ' + this.structureDialogItem.name + "(" + this.structureDialogItem.fields + ");")
       }
       else if (this.structureDialogMode == 'delete') {
@@ -404,22 +399,21 @@ export default {
       this.execute(query)
     },
     structureDialogSubmitFks() {
-      // Check if all fields are filled
-      if (!this.$refs.structureDialogForm.validate()) {
-        EventBus.$emit('NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
-        return
-      }
       // Build query
       let query = []
       if (this.structureDialogMode == 'new') {
+        // Check if all fields are filled
+        if (!this.$refs.structureDialogForm.validate()) {
+          EventBus.$emit('NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+          return
+        }
+        // Build query
         let constraintName = (this.structureDialogItem.name.length > 0) ? 'CONSTRAINT ' + this.structureDialogItem.name : ''
-        query.push("ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + constraintName + " FOREIGN KEY(" + this.structureDialogItem.column + ") REFERENCES " + this.structureDialogItem.fk_table + "(" + this.structureDialogItem.fk_column + ");")
+        query.push("ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + constraintName + " FOREIGN KEY(" + this.structureDialogItem.column + ") REFERENCES " + this.structureDialogItem.fk_table + "(" + this.structureDialogItem.fk_column + ") ON UPDATE " + this.structureDialogItem.on_update + " ON DELETE " + this.structureDialogItem.on_delete + ";")
       }
       else if (this.structureDialogMode == 'delete') {
         let row = this.gridApi.structure.getSelectedRows()[0]
-        console.log(row)
-        return
-        // query.push("ALTER TABLE " + this.treeviewSelected['name'] + " DROP FOREIGN KEY " +  + ";")
+        query.push("ALTER TABLE " + this.treeviewSelected['name'] + " DROP FOREIGN KEY " + row.Name + ";")
       }
       // Execute query
       this.execute(query)
@@ -437,7 +431,7 @@ export default {
         })
         .catch((error) => {
           console.log(error)
-          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           // else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
@@ -457,7 +451,7 @@ export default {
           columns_headers.push({ headerName: columns_keys[i], colId: field, field: field, sortable: false, filter: false, resizable: true, editable: false })
         }
         for (let i = 0; i < columns_items.length; ++i) {
-          column_names.push(columns_items[i]['name'])
+          column_names.push(columns_items[i]['Name'])
         }
       }
       columns_headers[0]['rowDrag'] = true
@@ -595,21 +589,14 @@ export default {
         })
         .catch((error) => {
           this.gridApi.structure.hideOverlay()
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
-            // Show last error
+            // Show error
             let data = JSON.parse(error.response.data.data)
-            let error = ''
-            for (let i = data.length - 1; i >=0 ; i--) {
-              if (data[i]['error'] !== undefined) { 
-                error = data[i]['error']
-                break
-              }
-            }
             let dialogOptions = {
               mode: 'info',
               title: 'Unable to apply changes',
-              text: error,
+              text: data[0]['error'],
               submit: 'Close',
               cancel: ''
             }
