@@ -60,7 +60,7 @@ export default {
   },
   components: { Splitpanes, Pane, AgGridVue },
   mounted () {
-    EventBus.$on('runQuery', this.runQuery);
+    EventBus.$on('RUN_QUERY', this.runQuery);
   },
   computed: {
     ...mapFields([
@@ -77,8 +77,6 @@ export default {
         'loadingQuery',
         'database',
     ], { path: 'client/connection' }),
-  },
-  watch: {
   },
   methods: {
    onGridReady(params) {
