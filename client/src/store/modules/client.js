@@ -13,6 +13,7 @@ const state = () => ({
       // Database Selector
       databaseItems: [],
       database: '',
+      tableItems: [],
 
       // Treeview
       treeview: [],

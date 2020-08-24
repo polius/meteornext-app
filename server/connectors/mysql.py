@@ -215,7 +215,7 @@ class MySQL:
 
     def get_fks(self, db, table):
         query = """
-            SELECT c.constraint_name AS 'name', column_name AS 'column', k.referenced_table_schema AS 'fk_database', k.referenced_table_name AS 'fk_table', referenced_column_name AS 'fk_column', update_rule AS 'on_update', delete_rule AS 'on_delete'
+            SELECT c.constraint_name AS 'Name', column_name AS 'Column', k.referenced_table_schema AS 'FK Database', k.referenced_table_name AS 'FK Table', referenced_column_name AS 'FK Column', update_rule AS 'On Update', delete_rule AS 'On Delete'
             FROM information_schema.KEY_COLUMN_USAGE k
             JOIN information_schema.REFERENTIAL_CONSTRAINTS c ON c.constraint_name = k.constraint_name AND c.constraint_schema = k.constraint_schema
             WHERE c.constraint_schema = %s

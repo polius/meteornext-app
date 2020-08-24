@@ -75,8 +75,34 @@
                   <v-select v-model="structureDialogItem.type" :items="server.indexTypes" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-select>
                   <v-text-field v-model="structureDialogItem.fields" :rules="[v => !!v || '']" label="Fields" hint="Column names separated by comma. Example: col1, col2, col3" required style="padding-top:0px;"></v-text-field>
                 </v-form>
-                <v-form v-else-if="tabStructureSelected == 'fks'" ref="structureDialogForm" style="margin-top:10px; margin-bottom:15px;">
-                
+                <v-form v-else-if="tabStructureSelected == 'fks'" ref="structureDialogForm" style="margin-bottom:15px;">
+                  <v-card>
+                    <v-toolbar flat dense height="42" color="#2e3131">
+                      <div class="body-1">Table: {{ this.treeviewSelected['name'] }}</div>
+                    </v-toolbar>
+                    <v-card-text style="padding-bottom:0px;">
+                      <v-text-field v-model="structureDialogItem.name" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
+                      <v-select v-model="structureDialogItem.column" :items="columnItems" :rules="[v => !!v || '']" label="Column" auto-select-first required style="padding-top:0px;"></v-select>
+                    </v-card-text>
+                  </v-card>
+                  <v-card style="margin-top:10px;">
+                    <v-toolbar flat dense height="42" color="#2e3131">
+                      <div class="body-1">References</div>
+                    </v-toolbar>
+                    <v-card-text style="padding-bottom:0px;">
+                      <v-select v-model="structureDialogItem.fk_table" :items="tableItems" :rules="[v => !!v || '']" label="Table" auto-select-first required style="padding-top:0px;"></v-select>
+                      <v-text-field v-model="structureDialogItem.fk_column" label="Column" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                    </v-card-text>
+                  </v-card>
+                  <v-card style="margin-top:10px;">
+                    <v-toolbar flat dense height="42" color="#2e3131">
+                      <div class="body-1">Action</div>
+                    </v-toolbar>
+                    <v-card-text style="padding-bottom:0px;">
+                      <v-select v-model="structureDialogItem.on_update" :items="server.fkRules" :rules="[v => !!v || '']" label="On update" auto-select-first required style="padding-top:0px;"></v-select>
+                      <v-select v-model="structureDialogItem.on_delete" :items="server.fkRules" :rules="[v => !!v || '']" label="On delete" auto-select-first required style="padding-top:0px;"></v-select>
+                    </v-card-text>
+                  </v-card>
                 </v-form>
                 <v-form v-else-if="tabStructureSelected == 'triggers'" ref="structureDialogForm" style="margin-top:10px; margin-bottom:15px;">
                 
@@ -162,6 +188,8 @@ export default {
       dialogSelect: '',
       dialogSubmitText: '',
       dialogCancelText: '',
+      // FK columns
+      columnItems: [],
     }
   },
   components: { AgGridVue },
@@ -177,6 +205,7 @@ export default {
         'treeviewSelected',
         'server',
         'database',
+        'tableItems',
     ], { path: 'client/connection' }),
   },
   mounted () {
@@ -254,6 +283,7 @@ export default {
       }
       if (this.tabStructureSelected == 'columns') dialogOptions['item'] = { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false }
       else if (this.tabStructureSelected == 'indexes') dialogOptions['item'] = { name: '', type: '', fields: '' }
+      else if (this.tabStructureSelected == 'fks') dialogOptions['item'] = { name: '', column: '', fk_table: '', fk_column: '', on_update: '', on_delete: '' }
       this.showStructureDialog(dialogOptions)
     },
     removeStructure() {
@@ -300,6 +330,11 @@ export default {
       this.structureDialog = false
     },
     structureDialogSubmitColumns(event) {
+      // Check if all fields are filled
+      if (!this.$refs.structureDialogForm.validate()) {
+        EventBus.$emit('NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
       this.loading = true
       let query = 'ALTER TABLE ' + this.treeviewSelected['name']
 
@@ -350,23 +385,44 @@ export default {
       this.execute([query])
     },
     structureDialogSubmitIndexes() {
+      // Check if all fields are filled
+      if (!this.$refs.structureDialogForm.validate()) {
+        EventBus.$emit('NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
+      // Build query
       this.loading = true
-      var queries = []
+      var query = []
       if (this.structureDialogMode == 'new') {
-        queries.push("ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + this.structureDialogItem.type + ' ' + this.structureDialogItem.name + "(" + this.structureDialogItem.fields + ");")
+        query.push("ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + this.structureDialogItem.type + ' ' + this.structureDialogItem.name + "(" + this.structureDialogItem.fields + ");")
       }
       else if (this.structureDialogMode == 'delete') {
-        let rows = this.gridApi.structure.getSelectedRows()
-        for (let i = 0; i < rows.length; ++i) {
-          queries.push("ALTER TABLE " + this.treeviewSelected['name'] + " DROP INDEX " + rows[i].name + ';')
-        }
+        let row = this.gridApi.structure.getSelectedRows()[0]
+        query.push("ALTER TABLE " + this.treeviewSelected['name'] + " DROP INDEX " + row.name + ';')
       }
-
-      // Execute queries
-      this.execute(queries)
+      // Execute query
+      this.execute(query)
     },
     structureDialogSubmitFks() {
-
+      // Check if all fields are filled
+      if (!this.$refs.structureDialogForm.validate()) {
+        EventBus.$emit('NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
+      // Build query
+      let query = []
+      if (this.structureDialogMode == 'new') {
+        let constraintName = (this.structureDialogItem.name.length > 0) ? 'CONSTRAINT ' + this.structureDialogItem.name : ''
+        query.push("ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + constraintName + " FOREIGN KEY(" + this.structureDialogItem.column + ") REFERENCES " + this.structureDialogItem.fk_table + "(" + this.structureDialogItem.fk_column + ");")
+      }
+      else if (this.structureDialogMode == 'delete') {
+        let row = this.gridApi.structure.getSelectedRows()[0]
+        console.log(row)
+        return
+        // query.push("ALTER TABLE " + this.treeviewSelected['name'] + " DROP FOREIGN KEY " +  + ";")
+      }
+      // Execute query
+      this.execute(query)
     },
     structureDialogSubmitTriggers() {
 
@@ -393,15 +449,20 @@ export default {
       // Parse Columns
       var columns_items = JSON.parse(data.columns)
       var columns_headers = []
+      var column_names = []
       if (columns_items.length > 0) {
         var columns_keys = Object.keys(columns_items[0])
         for (let i = 0; i < columns_keys.length; ++i) {
           let field = columns_keys[i].trim()
           columns_headers.push({ headerName: columns_keys[i], colId: field, field: field, sortable: false, filter: false, resizable: true, editable: false })
         }
+        for (let i = 0; i < columns_items.length; ++i) {
+          column_names.push(columns_items[i]['name'])
+        }
       }
       columns_headers[0]['rowDrag'] = true
       this.structureOrigin['columns'] = { headers: columns_headers, items: columns_items }
+      this.columnItems = column_names
 
       // show 'no rows' overlay
       // this.gridApi.structure.showNoRowsOverlay()
@@ -477,11 +538,13 @@ export default {
       this.tabStructureSelected = 'fks'
       this.structureHeaders = this.structureOrigin['fks']['headers'].slice(0)
       this.structureItems = this.structureOrigin['fks']['items'].slice(0)
+      this.gridApi.structure.setColumnDefs(this.structureHeaders)
     },
     tabStructureTriggers() {
       this.tabStructureSelected = 'triggers'
       this.structureHeaders = this.structureOrigin['triggers']['headers'].slice(0)
       this.structureItems = this.structureOrigin['triggers']['items'].slice(0)
+      this.gridApi.structure.setColumnDefs(this.structureHeaders)
     },
     showDialog(options) {
       this.dialogMode = options.mode
