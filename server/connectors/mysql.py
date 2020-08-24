@@ -176,17 +176,17 @@ class MySQL:
     def get_columns(self, db, table):
         query = """
             SELECT 
-                column_name AS 'name', 
-                UPPER(data_type) AS 'type', 
-                IF(data_type = 'enum', SUBSTRING(column_type, 6, CHAR_LENGTH(column_type)-6), COALESCE(character_maximum_length, numeric_precision)) AS 'length',
-                column_type LIKE '%% unsigned' AS 'unsigned',
-                IF(is_nullable = 'YES', true, false) AS 'allow_null',
-                column_key AS 'key',
-                extra AS 'extra',
-                column_default AS 'default',
-                character_set_name AS 'encoding',
-                collation_name AS 'collation',
-                column_comment AS 'comment'
+                column_name AS 'Name', 
+                UPPER(data_type) AS 'Type', 
+                IF(data_type = 'enum', SUBSTRING(column_type, 6, CHAR_LENGTH(column_type)-6), COALESCE(character_maximum_length, numeric_precision)) AS 'Length',
+                column_type LIKE '%% unsigned' AS 'Unsigned',
+                IF(is_nullable = 'YES', true, false) AS 'Allow NULL',
+                column_key AS 'Key',
+                extra AS 'Extra',
+                column_default AS 'Default',
+                character_set_name AS 'Encoding',
+                collation_name AS 'Collation',
+                column_comment AS 'Comment'
             FROM information_schema.columns 
             WHERE table_schema = %s
             AND table_name = %s
@@ -197,14 +197,14 @@ class MySQL:
     def get_indexes(self, db, table):
         query = """
             SELECT 
-                index_name AS 'name',
+                index_name AS 'Name',
                 CASE 
                 WHEN index_type = 'FULLTEXT' THEN 'FULLTEXT'
                     WHEN index_name = 'PRIMARY' THEN 'PRIMARY'
                     WHEN non_unique = 0 THEN 'UNIQUE'
                     ELSE 'INDEX'
-                END AS 'type', 
-                GROUP_CONCAT(column_name ORDER BY seq_in_index) AS 'fields'
+                END AS 'Type', 
+                GROUP_CONCAT(column_name ORDER BY seq_in_index) AS 'Fields'
             FROM information_schema.statistics
             WHERE table_schema = %s
             AND table_name = %s
@@ -225,7 +225,7 @@ class MySQL:
     
     def get_triggers(self, db, table):
         query = """
-            SELECT trigger_name AS 'trigger', event_manipulation AS 'event', action_timing AS 'timing', action_statement AS 'statement', definer
+            SELECT trigger_name AS 'Name', event_manipulation AS 'Event', action_timing AS 'Timing', action_statement AS 'Statement', definer AS 'Definer'
             FROM information_schema.triggers
             WHERE event_object_schema = %s
             AND event_object_table = %s

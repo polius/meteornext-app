@@ -376,19 +376,12 @@ export default {
           this.gridApi.content.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
-            // Show last error
+            // Show error
             let data = JSON.parse(error.response.data.data)
-            let error = ''
-            for (let i = data.length - 1; i >=0 ; i--) {
-              if (data[i]['error'] !== undefined) { 
-                error = data[i]['error']
-                break
-              }
-            }
             let dialogOptions = {
               'mode': 'info',
               'title': 'Unable to delete row(s)',
-              'text': error,
+              'text': data[0]['error'],
               'button1': 'Close',
               'button2': ''
             }
@@ -491,19 +484,12 @@ export default {
             this.gridApi.content.hideOverlay()
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else {
-              // Show last error
+              // Show error
               let data = JSON.parse(error.response.data.data)
-              let error = ''
-              for (let i = data.length - 1; i >=0 ; i--) {
-                if (data[i]['error'] !== undefined) { 
-                  error = data[i]['error']
-                  break
-                }
-              }
               let dialogOptions = {
                 'mode': 'cellEditingError',
                 'title': 'Unable to write row',
-                'text': error,
+                'text': data[0]['error'],
                 'button1': 'Edit row',
                 'button2': 'Discard changes'
               }
