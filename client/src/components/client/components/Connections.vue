@@ -26,9 +26,6 @@ export default {
     }
   },
   mounted () {
-    // EventBus.$on(‘EVENT_NAME’, function (payLoad) {
-    //   ...
-    // });
   },
   computed: {
     connections () { return this.$store.getters['client/connections'] },
@@ -51,7 +48,7 @@ export default {
 
     },
     runQuery() {
-      EventBus.$emit('runQuery')
+      EventBus.$emit('RUN_QUERY')
     }
   },
 }

@@ -37,6 +37,7 @@ export default {
         'structureHeaders',
         'contentHeaders',
         'infoHeaders',
+        'editor',
     ], { path: 'client/connection' }),
   },
   methods: {
