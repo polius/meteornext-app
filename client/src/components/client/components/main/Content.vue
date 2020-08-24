@@ -33,7 +33,7 @@
             </v-col>
           </v-row>
         </div>
-        <ag-grid-vue ref="agGridContent" suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @row-clicked="onRowClicked" @cell-editing-started="cellEditingStarted($event, true)" @cell-editing-stopped="cellEditingStopped($event, true)" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+        <ag-grid-vue ref="agGridContent" suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @row-clicked="onRowClicked" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
       </div>
     </div>
     <!---------------->
@@ -63,9 +63,41 @@
         </v-col>
       </v-row>
     </div>
-    <!------------>
-    <!-- DIALOG -->
-    <!------------>
+    <!-------------------------->
+    <!-- DIALOG: EDIT CONTENT -->
+    <!-------------------------->
+    <v-dialog v-model="editDialog" persistent max-width="80%">
+      <v-card>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <div class="text-h6" style="font-weight:400;">{{ editDialogTitle }}</div>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
+                  <div style="margin-left:auto; margin-right:auto; height:60vh; width:100%">
+                    <div id="editDialogEditor" style="height:100%;"></div>
+                  </div>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn @click="editDialogSubmit" color="primary">Save</v-btn>
+                    </v-col>
+                    <v-col style="margin-bottom:10px;">
+                      <v-btn @click="editDialogCancel" outlined color="#e74d3c">Cancel</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!------------------->
+    <!-- DIALOG: BASIC -->
+    <!------------------->
     <v-dialog v-model="dialog" persistent max-width="50%">
       <v-card>
         <v-card-text style="padding:15px 15px 5px;">
@@ -80,10 +112,10 @@
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
-                    <v-col v-if="dialogButtonText1.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                    <v-col v-if="dialogSubmitText.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
                       <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogSubmitText }}</v-btn>
                     </v-col>
-                    <v-col v-if="dialogButtonText2.length > 0" style="margin-bottom:10px;">
+                    <v-col v-if="dialogCancelText.length > 0" style="margin-bottom:10px;">
                       <v-btn :disabled="loading" @click="dialogCancel" outlined color="#e74d3c">{{ dialogCancelText }}</v-btn>
                     </v-col>
                   </v-row>
@@ -100,6 +132,10 @@
 <script>
 import axios from 'axios'
 
+import * as ace from 'ace-builds';
+import 'ace-builds/webpack-resolver';
+import 'ace-builds/src-noconflict/ext-language_tools';
+
 import {AgGridVue} from "ag-grid-vue";
 import EventBus from '../../js/event-bus'
 import { mapFields } from '../../js/map-fields'
@@ -107,13 +143,20 @@ import { mapFields } from '../../js/map-fields'
 export default {
   data() {
     return {
+      // Loading
+      loading: false,
+      // Dialog - Content Edit
+      editDialog: false,
+      editDialogTitle: '',
+      editDialogEditor: null,
+
+      // Dialog - Basic
       dialog: false,
       dialogMode: '',
       dialogTitle: '',
       dialogText: '',
-      dialogButtonText1: '',
-      dialogButtonText2: '',
-      loading: false,
+      dialogSubmitText: '',
+      dialogCancelText: '',
     }
   },
   components: { AgGridVue },
@@ -289,25 +332,36 @@ export default {
       this.showDialog(dialogOptions)
     },
     removeRowSubmit() {
-      // Build Pks
       let nodes = this.gridApi.content.getSelectedNodes()
-      let pks = []
-      for (let i = 0; i < nodes.length; ++i) {
-        let pk = []
-        for (let j = 0; j < this.contentPks.length; ++j) {
-          pk.push(this.contentPks[j] + " = '" + nodes[i].data[this.contentPks[j]] + "'")
+      var queries = []
+      if (this.contentPks.length == 0) {
+        for (let i = 0; i < nodes.length; ++i) {
+          let where = []
+          for (let [key, value] of Object.entries(nodes[i].data)) {
+            if (value == null) where.push(key + ' IS NULL')
+            else where.push(key + " = " + JSON.stringify(value))
+          }
+          queries.push('DELETE FROM ' + this.treeviewSelected['name'] + ' WHERE ' + where.join(' AND ') + ' LIMIT 1;')
         }
-        pks.push('(' + pk.join(' AND ') + ')')
       }
-      // Build Query
-      var query = 'DELETE FROM ' + this.treeviewSelected['name'] + ' WHERE ' + pks.join(' OR ') + ';'
+      else {
+        let pks = []
+        for (let i = 0; i < nodes.length; ++i) {
+          let pk = []
+          for (let j = 0; j < this.contentPks.length; ++j) {
+            pk.push(this.contentPks[j] + " = '" + nodes[i].data[this.contentPks[j]] + "'")
+          }
+          pks.push('(' + pk.join(' AND ') + ')')
+        }
+        queries = ['DELETE FROM ' + this.treeviewSelected['name'] + ' WHERE ' + pks.join(' OR ') + ';']
+      }
       // Show overlay
       this.gridApi.content.showLoadingOverlay()
-      // Execute Query
+      // Execute Query/ies
       const payload = {
         server: this.server.id,
         database: this.database,
-        queries: [query]
+        queries: queries
       }
       axios.post('/client/execute', payload)
         .then((response) => {
@@ -320,7 +374,7 @@ export default {
         })
         .catch((error) => {
           this.gridApi.content.hideOverlay()
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             // Show error
             let data = JSON.parse(error.response.data.data)
@@ -337,9 +391,8 @@ export default {
           }
         })
     },
-    cellEditingStarted(event, edit) {
+    cellEditingStarted(event) {
       this.gridEditing = true
-      if (!edit) return
 
       // Store row node
       this.currentCellEditNode = this.gridApi.content.getSelectedNodes()[0]
@@ -360,9 +413,7 @@ export default {
         else this.editDialogOpen(event.column.colId + ': ' + columnType.toUpperCase(), event.value)
       }
     },
-    cellEditingStopped(event, edit) {
-      if (!edit || this.editDialog) return
-
+    cellEditingStopped(event) {
       // Store new value
       if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
       if (this.currentCellEditMode == 'edit') this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
@@ -426,11 +477,12 @@ export default {
             // Build BottomBar
             this.parseContentBottomBar(data)
             // Check AUTO_INCREMENTs
-            if (data[0].query.startsWith('INSERT')) node.setDataValue(this.contentPks[0], data[0].lastRowId)
+            if (data[0].query.startsWith('INSERT') && this.contentPks.length > 0) node.setDataValue(this.contentPks[0], data[0].lastRowId)
           })
           .catch((error) => {
+            console.log(error)
             this.gridApi.content.hideOverlay()
-            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else {
               // Show error
               let data = JSON.parse(error.response.data.data)
@@ -528,6 +580,61 @@ export default {
           else this.notification(error.response.data.message, 'error')
         })
     },
+    showDialog(options) {
+      this.dialogMode = options.mode
+      this.dialogTitle = options.title
+      this.dialogText = options.text
+      this.dialogSubmitText = options.button1
+      this.dialogCancelText = options.button2
+      this.dialog = true
+    },
+    dialogSubmit() {
+      if (this.dialogMode == 'cellEditingError') this.cellEditingEdit()
+      else if (this.dialogMode == 'removeRowConfirm') this.dialog = false
+      else if (this.dialogMode == 'info') this.dialog = false
+      else if (this.dialogMode == 'export') this.exportRowsSubmit()
+    },
+    dialogCancel() {
+      if (this.dialogMode == 'cellEditingError') this.cellEditingDiscard()
+      else if (this.dialogMode == 'removeRowConfirm') this.removeRowSubmit()
+      else if (this.dialogMode == 'info') this.dialog = false
+      else if (this.dialogMode == 'export') this.dialog = false
+    },
+    editDialogOpen(title, text) {
+      this.editDialogTitle = title
+      this.editDialog = true
+      if (this.editDialogEditor == null) {
+        setTimeout(() => {
+          this.editDialogEditor = ace.edit("editDialogEditor", {
+            mode: "ace/mode/sql",
+            theme: "ace/theme/monokai",
+            fontSize: 14,
+            showPrintMargin: false,
+            wrap: true,
+            showLineNumbers: false
+          })
+          this.editDialogEditor.container.addEventListener("keydown", (e) => {
+            // - Increase Font Size -
+            if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
+              let size = parseInt(this.editDialogEditor.getFontSize(), 10) || 12
+              this.editDialogEditor.setFontSize(size + 1)
+              e.preventDefault()
+            }
+            // - Decrease Font Size -
+            else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
+              let size = parseInt(this.editDialogEditor.getFontSize(), 10) || 12
+              this.editDialogEditor.setFontSize(Math.max(size - 1 || 1))
+              e.preventDefault()
+            }
+          }, false);
+          this.editDialogEditor.focus()
+          this.editDialogEditor.setValue(text, -1)
+        }, 100);
+      } else {
+        this.editDialogEditor.focus()
+        this.editDialogEditor.setValue(text, -1)
+      }
+    },
     editDialogSubmit() {
       this.editDialog = false
       let nodes = this.gridApi.content.getSelectedNodes()
@@ -546,26 +653,6 @@ export default {
     editDialogCancel() {
       this.editDialog = false
       this.editDialogEditor.setValue('')
-    },
-    showDialog(options) {
-      this.dialogMode = options.mode
-      this.dialogTitle = options.title
-      this.dialogText = options.text
-      this.dialogButtonText1 = options.button1
-      this.dialogButtonText2 = options.button2
-      this.dialog = true
-    },
-    dialogSubmit() {
-      if (this.dialogMode == 'cellEditingError') this.cellEditingEdit()
-      else if (this.dialogMode == 'removeRowConfirm') this.dialog = false
-      else if (this.dialogMode == 'info') this.dialog = false
-      else if (this.dialogMode == 'export') this.exportRowsSubmit()
-    },
-    dialogCancel() {
-      if (this.dialogMode == 'cellEditingError') this.cellEditingDiscard()
-      else if (this.dialogMode == 'removeRowConfirm') this.removeRowSubmit()
-      else if (this.dialogMode == 'info') this.dialog = false
-      else if (this.dialogMode == 'export') this.dialog = false
     },
     exportRows() {
       // Show confirmation dialog
