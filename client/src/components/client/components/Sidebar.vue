@@ -94,6 +94,7 @@ export default {
     ...mapFields([
         'database',
         'databaseItems',
+        'tableItems',
         'loadingServer',
         'treeviewItems',
         'treeview',
@@ -222,6 +223,7 @@ export default {
       if (server.type == 'MySQL') {
         this.server.columnTypes = ['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','FLOAT','DOUBLE','BIT','CHAR','VARCHAR','BINARY','VARBINARY','TINYBLOB','BLOB','MEDIUMBLOB','LONGBLOB','TINYTEXT','TEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET','DATE','TIME','DATETIME','TIMESTAMP','YEAR','GEOMETRY','POINT','LINESTRING','POLYGON','GEOMETRYCOLLECTION','MULTILINESTRING','MULTIPOINT','MULTIPOLYGON','JSON']
         this.server.indexTypes = ['INDEX','UNIQUE','FULLTEXT']
+        this.server.fkRules = ['Restrict','Cascade','Set NULL','No Action']
         this.server.collations = data.collations
       }
     },
@@ -252,6 +254,8 @@ export default {
         if (data.tables[i]['type'].toLowerCase() == 'table') tables.push(data.tables[i])
         else views.push(data.tables[i])
       }
+      this.tableItems = tables.reduce((acc, val) => { acc.push(val['name']); return acc; }, [])
+
       // Build objects
       var objects = [
         { id: 'tables', 'name': 'Tables (' + tables.length + ')', type: 'Table', children: [] },

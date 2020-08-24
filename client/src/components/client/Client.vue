@@ -20,7 +20,7 @@
         </div>
       </v-main>
     </v-container>
-    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <v-btn color="white" text @click="snackbar = false">Close</v-btn>
     </v-snackbar>
@@ -175,10 +175,10 @@ export default {
     server () { return this.$store.getters['client/connection'].server },
   },
   mounted () {
-    EventBus.$on('SEND_NOTIFICATION', this.notification);
+    EventBus.$on('NOTIFICATION', this.notification);
   },
   methods: {
-    notification(message, color, timeout=5) {
+    notification(message, color='info', timeout=5) {
       this.snackbarText = message
       this.snackbarColor = color
       this.snackbarTimeout = Number(timeout*1000)
