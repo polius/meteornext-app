@@ -1,65 +1,22 @@
 <template>
   <v-main>
-    <!------------>
-    <!-- HEADER -->
-    <!------------>
     <Header/>
     <v-container fluid>
       <v-main style="padding-top:0px; padding-bottom:0px;">
         <div style="margin: -12px;">
           <div ref="masterDiv" style="height: calc(100vh - 112px);">
-            <!----------------->
-            <!-- CONNECTIONS -->
-            <!----------------->
             <Connections/>
             <Splitpanes :style="Object.keys(server).length != 0 ? 'height:calc(100% - 49px)' : 'height:100%'">
               <Pane size="20" min-size="0">
-                <!------------->
-                <!-- SIDEBAR -->
-                <!------------->
                 <Sidebar/>
               </Pane>
               <Pane size="80" min-size="0">
                 <div style="height:100%; width:100%">
-                  <!---------->
-                  <!-- MAIN -->
-                  <!---------->
                   <Main/>
                 </div>
               </Pane>
             </Splitpanes>
           </div>
-          <!------------->
-          <!-- DIALOGS -->
-          <!------------->
-          <!-- <v-dialog v-model="dialog" persistent max-width="50%">
-            <v-card>
-              <v-card-text style="padding:15px 15px 5px;">
-                <v-container style="padding:0px">
-                  <v-layout wrap>
-                    <div class="text-h6" style="font-weight:400;">{{ dialogTitle }}</div>
-                    <v-flex xs12>
-                      <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
-                        <div v-if="dialogText.length>0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
-                        <v-select v-if="dialogMode=='export'" outlined v-model="dialogSelect" :items="['Meteor','JSON','CSV','SQL']" label="Format" hide-details></v-select>
-                      </v-form>
-                      <v-divider></v-divider>
-                      <div style="margin-top:15px;">
-                        <v-row no-gutters>
-                          <v-col v-if="dialogButtonText1.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                            <v-btn :loading="loadingDialog" @click="dialogSubmit(1)" color="primary">{{ dialogButtonText1 }}</v-btn>
-                          </v-col>
-                          <v-col v-if="dialogButtonText2.length > 0" style="margin-bottom:10px;">
-                            <v-btn :disabled="loadingDialog" @click="dialogSubmit(2)" outlined color="#e74d3c">{{ dialogButtonText2 }}</v-btn>
-                          </v-col>
-                        </v-row>
-                      </div>
-                    </v-flex>
-                  </v-layout>
-                </v-container>
-              </v-card-text>
-            </v-card>
-          </v-dialog> -->
         </div>
       </v-main>
     </v-container>
@@ -131,24 +88,22 @@
   background-color: #252525;
 }
 
+/* LABEL */
 ::v-deep .v-label{
   font-size: 0.9rem;
 }
-::v-deep .v-list-item__title {
-  font-size: 0.9rem;
-}
-::v-deep .v-list-item__content {
-  padding:0px;
-}
-::v-deep .v-list-item {
-  min-height:40px;
-}
+
+/* INPUT */
 ::v-deep .v-input {
   font-size: 0.9rem;
 }
+
+/* APPLICATION */
 ::v-deep .v-application .elevation-2 {
   box-shadow:none!important;
 }
+
+/* CONTAINER */
 ::v-deep .container {
   padding-bottom:0px;
 }
@@ -203,24 +158,32 @@ import Connections from './components/Connections'
 import Sidebar from './components/Sidebar'
 import Main from './components/Main'
 
+import EventBus from './js/event-bus'
+
 export default {
   data() {
     return {
+      // Snackbar
+      snackbar: false,
+      snackbarTimeout: Number(5000),
+      snackbarColor: '',
+      snackbarText: '',
     }
   },
   components: { Splitpanes, Pane, Header, Connections, Sidebar, Main },
   computed: {
     server () { return this.$store.getters['client/connection'].server },
-    snackbar () { return this.$store.getters['client/connection'].snackbar },
-    snackbarTimeout () { return this.$store.getters['client/connection'].snackbarTimeout },
-    snackbarColor () { return this.$store.getters['client/connection'].snackbarColor },
-    snackbarText () { return this.$store.getters['client/connection'].snackbarText },
   },
-  created() {
+  mounted () {
+    EventBus.$on('SEND_NOTIFICATION', this.notification);
   },
   methods: {
+    notification(message, color, timeout=5) {
+      this.snackbarText = message
+      this.snackbarColor = color
+      this.snackbarTimeout = Number(timeout*1000)
+      this.snackbar = true
+    }
   },
-  watch: {
-  }
 }
 </script>
