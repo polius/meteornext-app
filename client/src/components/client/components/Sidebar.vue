@@ -4,7 +4,7 @@
       <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" height="48px" style="padding:10px;"></v-select>
       <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
-      <v-progress-circular v-if="treeviewItems.length == 0 && Object.keys(server).length == 0" indeterminate size="20" width="2" style="margin-top:2px; margin-left:12px;"></v-progress-circular>
+      <v-progress-circular v-if="loading" indeterminate size="20" width="2" style="margin-top:2px; margin-left:12px;"></v-progress-circular>
       <v-treeview @contextmenu="showContextMenu" :active.sync="treeview" item-key="id" :open="treeviewOpened" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
         <template v-slot:label="{item, open}">
           <v-btn text @click="treeviewClick(item)" @contextmenu="showContextMenu" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
@@ -67,6 +67,7 @@ import { mapFields } from '../js/map-fields'
 export default {
   data() {
     return {
+      loading: true,
       click: undefined,
       treeviewImg: {
         MySQL: "fas fa-server",
@@ -164,6 +165,7 @@ export default {
       })
     },
     getServers() {
+      this.loading = true
       axios.get('/client/servers')
         .then((response) => {
           this.parseServers(response.data.data)
@@ -172,6 +174,7 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
+        .finally(() => { this.loading = false })
     },
     parseServers(data) {
       var servers = []
@@ -228,6 +231,7 @@ export default {
       }
     },
     getObjects(database) {
+      this.loading = true
       // Retrieve Tables
       axios.get('/client/objects', { params: { server_id: this.server.id, database_name: database } })
         .then((response) => {
@@ -238,6 +242,7 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
+        .finally(() => { this.loading = false })
     },
     parseObjects(data) {
       // Build routines

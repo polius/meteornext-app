@@ -225,7 +225,7 @@ class MySQL:
     
     def get_triggers(self, db, table):
         query = """
-            SELECT trigger_name AS 'Name', event_manipulation AS 'Event', action_timing AS 'Timing', action_statement AS 'Statement', definer AS 'Definer'
+            SELECT trigger_name AS 'Name', action_timing AS 'Timing', event_manipulation AS 'Event', action_statement AS 'Statement', definer AS 'Definer'
             FROM information_schema.triggers
             WHERE event_object_schema = %s
             AND event_object_table = %s

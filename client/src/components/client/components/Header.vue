@@ -48,7 +48,7 @@ export default {
     },
     tabStructure() {
       this.headerTabSelected = 'structure'
-      if (this.structureHeaders.length == 0) EventBus.$emit('GET_STRUCTURE')
+      if (this.structureHeaders.columns.length == 0) EventBus.$emit('GET_STRUCTURE')
     },
     tabContent() {
       this.headerTabSelected = 'content'
