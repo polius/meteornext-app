@@ -21,17 +21,17 @@
     <Indexes v-show="tabStructureSelected == 'indexes'"/>
     <FKs v-show="tabStructureSelected == 'fks'"/>
     <Triggers v-show="tabStructureSelected == 'triggers'"/>
-    <!------------>
-    <!-- DIALOG -->
-    <!------------>
+    <!------------------>
+    <!-- DIALOG: info -->
+    <!------------------>
     <v-dialog v-model="dialog" persistent max-width="50%">
       <v-card>
         <v-card-text style="padding:15px 15px 5px;">
-          <v-container style="padding:0px;">
+          <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <div class="text-h6" style="font-weight:400;">Unable to apply changes</div>
               <v-flex xs12>
-                <v-form style="margin-top:20px; margin-bottom:15px;">
+                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
                 </v-form>
                 <v-divider></v-divider>
@@ -65,9 +65,8 @@ import Triggers from './structure/Triggers'
 export default {
   data() {
     return {
-      // Dialog
       dialog: false,
-      dialogText: '',
+      dialogText: ''
     }
   },
   components: { Columns, Indexes, FKs, Triggers },
@@ -192,8 +191,6 @@ export default {
         .then((response) => {
           // Show Loading Overlay
           this.gridApi.structure[this.tabStructureSelected].showLoadingOverlay()
-          // Hide Dialogs
-          this.dialog = false
           // Get Response Data
           let data = JSON.parse(response.data.data)
           // Get Structure

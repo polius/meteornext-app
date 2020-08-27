@@ -31,43 +31,44 @@
         </v-col>
       </v-row>
     </div>
-    <!------------>
-    <!-- DIALOG -->
-    <!------------>
+    <!------------------------------->
+    <!-- DIALOG: new, edit, delete -->
+    <!------------------------------->
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogTitle }}</v-toolbar-title>
+        <v-toolbar v-if="dialogOptions.mode != 'delete'" flat color="primary">
+          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
+              <div v-if="dialogOptions.mode == 'delete'" class="text-h6" style="font-weight:400;">{{ dialogOptions.title }}</div>
               <v-flex xs12>
                 <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
-                  <div v-if="dialogText.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
-                  <div v-if="Object.keys(dialogItem).length > 0">
-                    <v-text-field v-model="dialogItem.name" :rules="[v => !!v || '']" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
-                    <v-autocomplete v-model="dialogItem.type" :items="server.columnTypes" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-autocomplete>
-                    <v-text-field v-model="dialogItem.length" label="Length" required style="padding-top:0px;"></v-text-field>
-                    <v-autocomplete :disabled="!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','SET','ENUM'].includes(dialogItem.type)" v-model="dialogItem.collation" :items="server.collations" label="Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
-                    <v-text-field :disabled="dialogItem.auto_increment" v-model="dialogItem.default" label="Default" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="dialogItem.comment" label="Comment" required style="padding-top:0px;"></v-text-field>
-                    <v-checkbox :disabled="!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(dialogItem.type)" v-model="dialogItem.unsigned" label="Unsigned" color="info" style="margin-top:0px; padding-top:0px;" hide-details></v-checkbox>
-                    <v-checkbox :disabled="!['DATETIME','TIMESTAMP'].includes(dialogItem.type)" v-model="dialogItem.current_timestamp" label="On Update Current Timestamp" color="info" style="margin-top:0px;" hide-details></v-checkbox>
-                    <v-checkbox :disabled="!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(dialogItem.type)" v-model="dialogItem.auto_increment" label="Auto Increment" @change="dialogItem.auto_increment ? dialogItem.default = '' : ''" color="info" style="margin-top:0px;" hide-details></v-checkbox>
-                    <v-checkbox v-model="dialogItem.null" label="Allow Null" color="info" style="margin-top:0px;" hide-details></v-checkbox>
+                  <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
+                  <div v-if="Object.keys(dialogOptions.item).length > 0">
+                    <v-text-field v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
+                    <v-autocomplete v-model="dialogOptions.item.type" :items="server.columnTypes" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-autocomplete>
+                    <v-text-field v-model="dialogOptions.item.length" label="Length" required style="padding-top:0px;"></v-text-field>
+                    <v-autocomplete :disabled="!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','SET','ENUM'].includes(dialogOptions.item.type)" v-model="dialogOptions.item.collation" :items="server.collations" label="Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
+                    <v-text-field :disabled="dialogOptions.item.auto_increment" v-model="dialogOptions.item.default" label="Default" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="dialogOptions.item.comment" label="Comment" required style="padding-top:0px;"></v-text-field>
+                    <v-checkbox :disabled="!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(dialogOptions.item.type)" v-model="dialogOptions.item.unsigned" label="Unsigned" color="info" style="margin-top:0px; padding-top:0px;" hide-details></v-checkbox>
+                    <v-checkbox :disabled="!['DATETIME','TIMESTAMP'].includes(dialogOptions.item.type)" v-model="dialogOptions.item.current_timestamp" label="On Update Current Timestamp" color="info" style="margin-top:0px;" hide-details></v-checkbox>
+                    <v-checkbox :disabled="!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(dialogOptions.item.type)" v-model="dialogOptions.item.auto_increment" label="Auto Increment" @change="dialogOptions.item.auto_increment ? dialogOptions.item.default = '' : ''" color="info" style="margin-top:0px;" hide-details></v-checkbox>
+                    <v-checkbox v-model="dialogOptions.item.null" label="Allow Null" color="info" style="margin-top:0px;" hide-details></v-checkbox>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
-                    <v-col v-if="dialogSubmitText.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogSubmitText }}</v-btn>
+                    <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
-                    <v-col v-if="dialogCancelText.length > 0" style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogCancelText }}</v-btn>
+                    <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
+                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -92,12 +93,7 @@ export default {
       loading: false,
       // Dialog
       dialog: false,
-      dialogMode: '',
-      dialogItem: {},
-      dialogTitle: '',
-      dialogText: '',
-      dialogSubmitText: '',
-      dialogCancelText: ''
+      dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' }
     }
   },
   components: { AgGridVue },
@@ -175,11 +171,11 @@ export default {
     },
     onRowDragEnd(event) {
       if (event.overIndex - event.node.id == 0) return
-      this.dialogMode = 'drag'
+      this.dialogOptions.mode = 'drag'
       this.dialogSubmit(event)
     },
     addColumn() {
-      var dialogOptions = {
+      this.dialogOptions = {
         mode: 'new',
         title: 'New Column',
         text: '',
@@ -187,10 +183,10 @@ export default {
         submit: 'Save',
         cancel: 'Cancel'
       }
-      this.showDialog(dialogOptions)
+      this.dialog = true
     },
     editColumn(data) {
-      var dialogOptions = {
+      this.dialogOptions = {
         mode: 'edit',
         title: 'Edit Column',
         text: '',
@@ -209,19 +205,18 @@ export default {
         submit: 'Save',
         cancel: 'Cancel'
       }
-      this.showDialog(dialogOptions)
+      this.dialog = true
     },
     removeColumn() {
-      this.dialogMode = 'delete'
-      var dialogOptions = {
+      this.dialogOptions = {
         mode: 'delete',
         title: 'Delete column?',
         text: "Are you sure you want to delete the column '" + this.gridApi.structure.columns.getSelectedRows()[0].Name + "' from this table? This action cannot be undone.",
         item: {},
-        submit: 'Cancel',
-        cancel: 'Delete'
+        submit: 'Delete',
+        cancel: 'Cancel'
       }
-      this.showDialog(dialogOptions)
+      this.dialog = true
     },
     refreshColumns() {
       EventBus.$emit('GET_STRUCTURE')
@@ -230,12 +225,12 @@ export default {
       this.loading = true
       let query = 'ALTER TABLE ' + this.treeviewSelected['name']
 
-      if (['new','edit'].includes(this.dialogMode)) {
+      if (['new','edit'].includes(this.dialogOptions.mode)) {
         // Parse Form Fields
-        if (!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET'].includes(this.dialogItem.type)) this.dialogItem.collation = ''
-        if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(this.dialogItem.type)) this.dialogItem.unsigned = false
-        if (!['DATETIME','TIMESTAMP'].includes(this.dialogItem.type)) this.dialogItem.current_timestamp = false
-        if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(this.dialogItem.type)) this.dialogItem.auto_increment = false
+        if (!['CHAR','VARCHAR','TEXT','TINYTEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET'].includes(this.dialogOptions.item.type)) this.dialogOptions.item.collation = ''
+        if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','DECIMAL','FLOAT','DOUBLE'].includes(this.dialogOptions.item.type)) this.dialogOptions.item.unsigned = false
+        if (!['DATETIME','TIMESTAMP'].includes(this.dialogOptions.item.type)) this.dialogOptions.item.current_timestamp = false
+        if (!['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT'].includes(this.dialogOptions.item.type)) this.dialogOptions.item.auto_increment = false
 
         // Check if all fields are filled
         if (!this.$refs.dialogForm.validate()) {
@@ -245,20 +240,20 @@ export default {
         }
 
         // Build Query
-        if (this.dialogMode == 'new') query += ' ADD ' + this.dialogItem.name
-        else if (this.dialogMode == 'edit') query += ' CHANGE ' + this.gridApi.structure.columns.getSelectedRows()[0].Name  + ' ' + this.dialogItem.name
-        query += ' ' + this.dialogItem.type 
-          + (this.dialogItem.length.length > 0 ? (this.dialogItem.length.indexOf(',') == -1) ? '(' + this.dialogItem.length + ')' : '(' + this.dialogItem.length.split(",").map(item => "'" + item.trim() + "'") + ')' : '')
-          + (this.dialogItem.unsigned ? ' UNSIGNED' : '')
-          + (this.dialogItem.collation.length > 0 ? ' CHARACTER SET ' + this.dialogItem.collation.split('_')[0] + ' COLLATE ' + this.dialogItem.collation : '')
-          + (this.dialogItem.null ? ' NULL' : ' NOT NULL')
-          + (this.dialogItem.default.length > 0 ? " DEFAULT" + (this.dialogItem.default == 'CURRENT_TIMESTAMP' ? ' CURRENT_TIMESTAMP' : " '" + this.dialogItem.default + "'") : '')
-          + (this.dialogItem.current_timestamp ? ' ON UPDATE CURRENT_TIMESTAMP' : '')
-          + (this.dialogItem.auto_increment ? ' AUTO_INCREMENT' : '')
-          + (this.dialogItem.comment ? " COMMENT '" + this.dialogItem.comment + "'" : '')
+        if (this.dialogOptions.mode == 'new') query += ' ADD ' + this.dialogOptions.item.name
+        else if (this.dialogOptions.mode == 'edit') query += ' CHANGE ' + this.gridApi.structure.columns.getSelectedRows()[0].Name  + ' ' + this.dialogOptions.item.name
+        query += ' ' + this.dialogOptions.item.type 
+          + (this.dialogOptions.item.length.length > 0 ? (this.dialogOptions.item.length.indexOf(',') == -1) ? '(' + this.dialogOptions.item.length + ')' : '(' + this.dialogOptions.item.length.split(",").map(item => "'" + item.trim() + "'") + ')' : '')
+          + (this.dialogOptions.item.unsigned ? ' UNSIGNED' : '')
+          + (this.dialogOptions.item.collation.length > 0 ? ' CHARACTER SET ' + this.dialogOptions.item.collation.split('_')[0] + ' COLLATE ' + this.dialogOptions.item.collation : '')
+          + (this.dialogOptions.item.null ? ' NULL' : ' NOT NULL')
+          + (this.dialogOptions.item.default.length > 0 ? " DEFAULT" + (this.dialogOptions.item.default == 'CURRENT_TIMESTAMP' ? ' CURRENT_TIMESTAMP' : " '" + this.dialogOptions.item.default + "'") : '')
+          + (this.dialogOptions.item.current_timestamp ? ' ON UPDATE CURRENT_TIMESTAMP' : '')
+          + (this.dialogOptions.item.auto_increment ? ' AUTO_INCREMENT' : '')
+          + (this.dialogOptions.item.comment ? " COMMENT '" + this.dialogOptions.item.comment + "'" : '')
       }
-      else if (this.dialogMode == 'delete') query += ' DROP COLUMN ' + this.gridApi.structure.columns.getSelectedRows()[0]['Name']
-      else if (this.dialogMode == 'drag') {
+      else if (this.dialogOptions.mode == 'delete') query += ' DROP COLUMN ' + this.gridApi.structure.columns.getSelectedRows()[0]['Name']
+      else if (this.dialogOptions.mode == 'drag') {
         query += ' MODIFY ' + this.gridApi.structure.columns.getDisplayedRowAtIndex(event.node.rowIndex).data['Name']
           + ' ' + event.node.data['Type'] 
           + (event.node.data['Length'] !== null ? '(' + event.node.data['Length'] + ')' : '')
@@ -283,15 +278,6 @@ export default {
       promise.then(() => { this.dialog = false })
         .catch(() => {})
         .finally(() => { this.loading = false })
-    },
-    showDialog(options) {
-      this.dialogMode = options.mode
-      this.dialogTitle = options.title
-      this.dialogText = options.text
-      this.dialogItem = options.item
-      this.dialogSubmitText = options.submit
-      this.dialogCancelText = options.cancel
-      this.dialog = true
     },
   }
 }

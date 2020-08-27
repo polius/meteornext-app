@@ -4,7 +4,7 @@
     <!-- FKs -->
     <!--------->
     <div style="height:calc(100% - 84px)">
-      <ag-grid-vue ref="agGridStructureFKs" @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.fks" :rowData="structureItems.fks"></ag-grid-vue>
+      <ag-grid-vue ref="agGridStructureFKs" @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.fks" :rowData="structureItems.fks"></ag-grid-vue>
     </div>
     <!---------------->
     <!-- BOTTOM BAR -->
@@ -36,25 +36,26 @@
     <!------------>
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogTitle }}</v-toolbar-title>
+        <v-toolbar v-if="dialogOptions.mode != 'delete'" flat color="primary">
+          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
+              <div v-if="dialogOptions.mode == 'delete'" class="text-h6" style="font-weight:400;">{{ dialogOptions.title }}</div>
               <v-flex xs12>
-                <v-form ref="dialogForm" style="margin-bottom:15px;">
-                  <div v-if="dialogText.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
-                  <div v-if="Object.keys(dialogItem).length > 0">
+                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
+                  <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
+                  <div v-if="Object.keys(dialogOptions.item).length > 0">
                     <v-card>
                       <v-toolbar flat dense height="42" color="#2e3131">
                         <div class="body-1">Table: {{ this.treeviewSelected['name'] }}</div>
                       </v-toolbar>
                       <v-card-text style="padding-bottom:0px;">
-                        <v-text-field v-model="structureDialogItem.name" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
-                        <v-select v-model="structureDialogItem.column" :items="columnItems" :rules="[v => !!v || '']" label="Column" auto-select-first required style="padding-top:0px;"></v-select>
+                        <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
+                        <v-select v-model="dialogOptions.item.column" :items="columnItems" :rules="[v => !!v || '']" label="Column" auto-select-first required style="padding-top:0px;"></v-select>
                       </v-card-text>
                     </v-card>
                     <v-card style="margin-top:10px;">
@@ -62,8 +63,8 @@
                         <div class="body-1">References</div>
                       </v-toolbar>
                       <v-card-text style="padding-bottom:0px;">
-                        <v-select v-model="structureDialogItem.fk_table" :items="tableItems" :rules="[v => !!v || '']" label="Table" auto-select-first required style="padding-top:0px;"></v-select>
-                        <v-text-field v-model="structureDialogItem.fk_column" label="Column" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                        <v-select v-model="dialogOptions.item.fk_table" :items="tableItems" :rules="[v => !!v || '']" label="Table" auto-select-first required style="padding-top:0px;"></v-select>
+                        <v-text-field v-model="dialogOptions.item.fk_column" label="Column" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
                       </v-card-text>
                     </v-card>
                     <v-card style="margin-top:10px;">
@@ -71,8 +72,8 @@
                         <div class="body-1">Action</div>
                       </v-toolbar>
                       <v-card-text style="padding-bottom:0px;">
-                        <v-select v-model="structureDialogItem.on_update" :items="server.fkRules" :rules="[v => !!v || '']" label="On update" auto-select-first required style="padding-top:0px;"></v-select>
-                        <v-select v-model="structureDialogItem.on_delete" :items="server.fkRules" :rules="[v => !!v || '']" label="On delete" auto-select-first required style="padding-top:0px;"></v-select>
+                        <v-select v-model="dialogOptions.item.on_update" :items="server.fkRules" :rules="[v => !!v || '']" label="On update" auto-select-first required style="padding-top:0px;"></v-select>
+                        <v-select v-model="dialogOptions.item.on_delete" :items="server.fkRules" :rules="[v => !!v || '']" label="On delete" auto-select-first required style="padding-top:0px;"></v-select>
                       </v-card-text>
                     </v-card>
                   </div>
@@ -80,11 +81,11 @@
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
-                    <v-col v-if="dialogSubmitText.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogSubmitText }}</v-btn>
+                    <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
-                    <v-col v-if="dialogCancelText.length > 0" style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogCancelText }}</v-btn>
+                    <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
+                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -109,12 +110,7 @@ export default {
       loading: false,
       // Dialog
       dialog: false,
-      dialogMode: '',
-      dialogItem: {},
-      dialogTitle: '',
-      dialogText: '',
-      dialogSubmitText: '',
-      dialogCancelText: ''
+      dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' }
     }
   },
   components: { AgGridVue },
@@ -191,29 +187,27 @@ export default {
     onRowDoubleClicked(event) {
       this.editStructure(event.data)
     },
-    onRowDragEnd(event) {
-      if (event.overIndex - event.node.id == 0) return
-      this.structureDialogMode = 'drag'
-      this.dialogSubmit(event)
-    },
     addFK() {
-      var dialogOptions = {
+      this.dialogOptions = {
         mode: 'new',
         title: 'New Foreign Key',
-        item: { name: '', column: '', fk_table: '', fk_column: '', on_update: '', on_delete: '' }
+        text: '',
+        item: { name: '', column: '', fk_table: '', fk_column: '', on_update: '', on_delete: '' },
+        submit: 'Save',
+        cancel: 'Cancel'
       }
-      this.showDialog(dialogOptions)
+      this.dialog = true
     },
     removeFK() {
-      this.dialogMode = 'delete'
-      var dialogOptions = {
+      this.dialogOptions = {
         mode: 'delete',
         title: 'Delete foreign key?',
         text: "Are you sure you want to delete the foreign key '" + this.gridApi.structure.fks.getSelectedRows()[0].Name + "' from this table? This action cannot be undone.",
-        submit: 'Cancel',
-        cancel: 'Delete'
+        item: {},
+        submit: 'Delete',
+        cancel: 'Cancel'
       }
-      this.showDialog(dialogOptions)
+      this.dialog = true
     },
     refreshFKs() {
       EventBus.$emit('GET_STRUCTURE')
@@ -221,17 +215,17 @@ export default {
     dialogSubmit() {
       // Build query
       let query = ''
-      if (this.dialogMode == 'new') {
+      if (this.dialogOptions.mode == 'new') {
         // Check if all fields are filled
         if (!this.$refs.dialogForm.validate()) {
           EventBus.$emit('NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
           return
         }
         // Build query
-        let constraintName = (this.dialogItem.name.length > 0) ? 'CONSTRAINT ' + this.dialogItem.name : ''
-        query = "ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + constraintName + " FOREIGN KEY(" + this.dialogItem.column + ") REFERENCES " + this.dialogItem.fk_table + "(" + this.dialogItem.fk_column + ") ON UPDATE " + this.dialogItem.on_update + " ON DELETE " + this.dialogItem.on_delete + ";"
+        let constraintName = (this.dialogOptions.item.name.length > 0) ? 'CONSTRAINT ' + this.dialogOptions.item.name : ''
+        query = "ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + constraintName + " FOREIGN KEY(" + this.dialogOptions.item.column + ") REFERENCES " + this.dialogOptions.item.fk_table + "(" + this.dialogOptions.item.fk_column + ") ON UPDATE " + this.dialogOptions.item.on_update + " ON DELETE " + this.dialogOptions.item.on_delete + ";"
       }
-      else if (this.dialogMode == 'delete') {
+      else if (this.dialogOptions.mode == 'delete') {
         let row = this.gridApi.structure.fks.getSelectedRows()[0]
         query = "ALTER TABLE " + this.treeviewSelected['name'] + " DROP FOREIGN KEY " + row.Name + ";"
       }
@@ -245,14 +239,6 @@ export default {
       promise.then(() => { this.dialog = false })
         .catch(() => {})
         .finally(() => { this.loading = false })
-    },
-    showDialog(options) {
-      this.dialogMode = options.mode
-      this.dialogTitle = options.title
-      this.dialogItem = options.item
-      this.dialogSubmitText = options.submit
-      this.dialogCancelText = options.cancel
-      this.dialog = true
     },
   }
 }
