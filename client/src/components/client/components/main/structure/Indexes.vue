@@ -193,7 +193,8 @@ export default {
       if (this.dialogOptions.mode == 'new') {
         // Check if all fields are filled
         if (!this.$refs.dialogForm.validate()) {
-          EventBus.$emit('NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+          EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+          this.loading = false
           return
         }
         // Build query

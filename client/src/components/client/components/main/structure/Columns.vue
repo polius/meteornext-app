@@ -167,7 +167,7 @@ export default {
       }
     },
     onRowDoubleClicked(event) {
-      this.editStructure(event.data)
+      this.editColumn(event.data)
     },
     onRowDragEnd(event) {
       if (event.overIndex - event.node.id == 0) return
@@ -191,16 +191,16 @@ export default {
         title: 'Edit Column',
         text: '',
         item: {
-          name: data.name, 
-          type: data.type, 
-          length: (data.length == null) ? '' : ['ENUM','SET'].includes(data.type) ? data.length.replaceAll("'",'') : data.length, 
-          collation: (data.collation == null) ? '' : data.collation, 
-          default: (data.default == null) ? '' : data.default, 
-          comment: (data.comment == null) ? '' : data.comment, 
-          null: data.allow_null, 
-          unsigned: data.unsigned, 
-          current_timestamp: data.extra.toLowerCase() == 'on update current_timestamp', 
-          auto_increment: data.extra.toLowerCase() ==  'auto_increment'
+          name: data['Name'], 
+          type: data['Type'], 
+          length: (data['Length'] == null) ? '' : ['ENUM','SET'].includes(data['Type']) ? data['Length'].replaceAll("'",'') : data['Length'], 
+          collation: (data['Collation'] == null) ? '' : data['Collation'], 
+          default: (data['Default'] == null) ? '' : data['Default'], 
+          comment: (data['Comment'] == null) ? '' : data['Comment'], 
+          null: data['Allow NULL'], 
+          unsigned: data['Unsigned'], 
+          current_timestamp: data['Extra'].toLowerCase() == 'on update current_timestamp', 
+          auto_increment: data['Extra'].toLowerCase() == 'auto_increment'
         },
         submit: 'Save',
         cancel: 'Cancel'
@@ -234,7 +234,7 @@ export default {
 
         // Check if all fields are filled
         if (!this.$refs.dialogForm.validate()) {
-          EventBus.$emit('NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+          EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
           this.loading = false
           return
         }
@@ -276,9 +276,7 @@ export default {
         EventBus.$emit('EXECUTE_STRUCTURE', query, resolve, reject)
       })
       promise.then(() => { this.dialog = false })
-        .catch(() => { 
-          if (this.dialogOptions.mode == 'delete') this.dialog = false 
-        })
+        .catch(() => { if (this.dialogOptions.mode == 'delete') this.dialog = false })
         .finally(() => { this.loading = false })
     },
   }
