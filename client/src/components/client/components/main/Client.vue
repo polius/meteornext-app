@@ -26,13 +26,13 @@
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
           <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            <v-icon v-if="bottomBarClient['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
-            <v-icon v-else-if="bottomBarClient['status']=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
-            <span :title="bottomBarClient['text']">{{ bottomBarClient['text'] }}</span>
+            <v-icon v-if="bottomBar.client['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
+            <v-icon v-else-if="bottomBar.client['status']=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
+            <span :title="bottomBar.client['text']">{{ bottomBar.client['text'] }}</span>
           </div>
         </v-col>
         <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="min-width: 100px; margin-top:7px; padding-left:10px; padding-right:10px;">
-          <div class="body-2" style="text-align:right;">{{ bottomBarClient['info'] }}</div>
+          <div class="body-2" style="text-align:right;">{{ bottomBar.client['info'] }}</div>
         </v-col>
       </v-row>
     </div>
@@ -66,7 +66,7 @@ export default {
     ...mapFields([
         'clientHeaders',
         'clientItems',
-        'bottomBarClient',
+        'bottomBar',
         'gridApi',
         'columnApi',
         'server',
@@ -270,7 +270,7 @@ export default {
     runQuery() {
       this.clientHeaders = []
       this.clientItems = []
-      this.bottomBarClient = { text: '', status: '', info: '' }
+      this.bottomBar.client = { text: '', status: '', info: '' }
       this.loadingQuery = true     
       this.editor.completer.detach()
       this.gridApi.client.showLoadingOverlay()
@@ -374,11 +374,11 @@ export default {
         }
         elapsed /= data.length
       }
-      this.bottomBarClient['status'] = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
-      this.bottomBarClient['text'] = data[data.length-1]['query'].endsWith(';') ? data[data.length-1]['query'] : data[data.length-1]['query'] + ';'
-      this.bottomBarClient['info'] = (data[data.length-1]['data'] !== undefined && data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['data'].length + ' records | ' : ''
-      this.bottomBarClient['info'] += data.length + ' queries'
-      if (elapsed != null) this.bottomBarClient['info'] += ' | ' + elapsed.toString() + 's elapsed'
+      this.bottomBar.client['status'] = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
+      this.bottomBar.client['text'] = data[data.length-1]['query'].endsWith(';') ? data[data.length-1]['query'] : data[data.length-1]['query'] + ';'
+      this.bottomBar.client['info'] = (data[data.length-1]['data'] !== undefined && data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['data'].length + ' records | ' : ''
+      this.bottomBar.client['info'] += data.length + ' queries'
+      if (elapsed != null) this.bottomBar.client['info'] += ' | ' + elapsed.toString() + 's elapsed'
     },
     exportRows() {
       // Show confirmation dialog

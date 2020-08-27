@@ -53,13 +53,13 @@
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
           <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            <v-icon v-if="bottomBarContent['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
-            <v-icon v-else-if="bottomBarContent['status']=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
-            <span :title="bottomBarContent['text']">{{ bottomBarContent['text'] }}</span>
+            <v-icon v-if="bottomBar.content['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
+            <v-icon v-else-if="bottomBar.content['status']=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
+            <span :title="bottomBar.content['text']">{{ bottomBar.content['text'] }}</span>
           </div>
         </v-col>
         <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="min-width: 100px; margin-top:7px; padding-left:10px; padding-right:10px;">
-          <div class="body-2" style="text-align:right;">{{ bottomBarContent['info'] }}</div>
+          <div class="body-2" style="text-align:right;">{{ bottomBar.content['info'] }}</div>
         </v-col>
       </v-row>
     </div>
@@ -180,7 +180,7 @@ export default {
         'contentSearchColumn',
         'contentColumnsName',
         'isRowSelected',
-        'bottomBarContent'
+        'bottomBar'
     ], { path: 'client/connection' }),
   },
   mounted () {
@@ -230,7 +230,7 @@ export default {
       }
     },
     getContent() {
-      this.bottomBarContent = { status: '', text: '', info: '' }
+      this.bottomBar.content = { status: '', text: '', info: '' }
       this.gridApi.content.showLoadingOverlay()
       const payload = {
         server: this.server.id,
@@ -513,10 +513,10 @@ export default {
         }
         elapsed /= data.length
       }
-      this.bottomBarContent['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
-      this.bottomBarContent['text'] = data[0]['query']
-      this.bottomBarContent['info'] = this.gridApi.content.getDisplayedRowCount() + ' records'
-      if (elapsed != null) this.bottomBarContent['info'] += ' | ' + elapsed.toString() + 's elapsed'
+      this.bottomBar.content['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
+      this.bottomBar.content['text'] = data[0]['query']
+      this.bottomBar.content['info'] = this.gridApi.content.getDisplayedRowCount() + ' records'
+      if (elapsed != null) this.bottomBar.content['info'] += ' | ' + elapsed.toString() + 's elapsed'
     },
     cellEditingDiscard() {
       // Close Dialog
