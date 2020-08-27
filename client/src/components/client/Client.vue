@@ -175,7 +175,7 @@ export default {
     server () { return this.$store.getters['client/connection'].server },
   },
   mounted () {
-    EventBus.$on('NOTIFICATION', this.notification);
+    EventBus.$on('SEND_NOTIFICATION', this.notification);
   },
   methods: {
     notification(message, color='info', timeout=5) {

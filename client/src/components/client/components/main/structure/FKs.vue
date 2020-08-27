@@ -14,7 +14,7 @@
         <v-col cols="auto">
           <v-btn @click="addFK" text small title="New Foreign Key" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-          <v-btn @click="removeFK" text small title="Remove Foreign Key" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+          <v-btn :disabled="structureItems.fks.length == 0" @click="removeFK" text small title="Remove Foreign Key" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
           <v-btn @click="refreshFKs" text small title="Refresh Foreign Keys" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
@@ -55,7 +55,7 @@
                       </v-toolbar>
                       <v-card-text style="padding-bottom:0px;">
                         <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
-                        <v-select v-model="dialogOptions.item.column" :items="columnItems" :rules="[v => !!v || '']" label="Column" auto-select-first required style="padding-top:0px;"></v-select>
+                        <v-select v-model="dialogOptions.item.column" :items="structureColumnsName" :rules="[v => !!v || '']" label="Column" auto-select-first required style="padding-top:0px;"></v-select>
                       </v-card-text>
                     </v-card>
                     <v-card style="margin-top:10px;">
@@ -120,6 +120,7 @@ export default {
       'columnApi',
       'structureHeaders',
       'structureItems',
+      'structureColumnsName',
       'treeviewSelected',
       'server',
       'tableItems',
@@ -237,7 +238,7 @@ export default {
         EventBus.$emit('EXECUTE_STRUCTURE', query, resolve, reject)
       })
       promise.then(() => { this.dialog = false })
-        .catch(() => {})
+        .catch(() => { if (this.dialogOptions.mode == 'delete') this.dialog = false })
         .finally(() => { this.loading = false })
     },
   }
