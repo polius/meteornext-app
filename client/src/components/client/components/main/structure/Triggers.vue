@@ -14,7 +14,7 @@
         <v-col cols="auto">
           <v-btn @click="addTrigger" text small title="New Trigger" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-          <v-btn @click="removeTrigger" text small title="Remove Trigger" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+          <v-btn :disabled="structureItems.triggers.length == 0" @click="removeTrigger" text small title="Remove Trigger" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
           <v-btn @click="refreshTriggers" text small title="Refresh Triggers" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
@@ -213,7 +213,7 @@ export default {
         EventBus.$emit('EXECUTE_STRUCTURE', query, resolve, reject)
       })
       promise.then(() => { this.dialog = false })
-        .catch(() => {})
+        .catch(() => { if (this.dialogOptions.mode == 'delete') this.dialog = false })
         .finally(() => { this.loading = false })
     },
   }

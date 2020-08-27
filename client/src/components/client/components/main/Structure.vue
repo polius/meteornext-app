@@ -78,6 +78,7 @@ export default {
         'columnApi',
         'structureHeaders',
         'structureItems',
+        'structureColumnsName',
         'treeviewSelected',
         'server',
         'database',
@@ -133,9 +134,9 @@ export default {
         }
       }
       columns_headers[0]['rowDrag'] = true
-      this.columnItems = column_names
       this.structureHeaders.columns = columns_headers
       this.structureItems.columns = columns_items
+      this.structureColumnsName = column_names
       if (columns_items.length == 0) this.gridApi.structure.columns.showNoRowsOverlay()
 
       // Parse Indexes
