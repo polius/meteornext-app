@@ -49,11 +49,11 @@
                 <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
                   <div v-if="Object.keys(dialogOptions.item).length > 0">
-                    <v-text-field v-model="dialogOptions.item.name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="dialogOptions.item.name" label="Name" auto-select-first :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
                     <v-select v-model="dialogOptions.item.time" :items="['Before','After']" :rules="[v => !!v || '']" label="Action Time" auto-select-first required style="padding-top:0px;"></v-select>
                     <v-select v-model="dialogOptions.item.event" :items="['Insert','Update','Delete']" :rules="[v => !!v || '']" label="Event" auto-select-first required style="padding-top:0px;"></v-select>
-                    <div style="margin-left:auto; margin-right:auto; height:60vh; width:100%">
-                      <div id="structureDialogEditor" style="height:100%;"></div>
+                    <div style="margin-left:auto; margin-right:auto; height:40vh; width:100%">
+                      <div id="dialogEditor" style="height:100%;"></div>
                     </div>
                   </div>
                 </v-form>
@@ -78,7 +78,12 @@
 </template>
 
 <script>
-import {AgGridVue} from "ag-grid-vue";
+import * as ace from 'ace-builds';
+import 'ace-builds/webpack-resolver';
+import 'ace-builds/src-noconflict/ext-language_tools';
+
+import { AgGridVue } from "ag-grid-vue";
+
 import EventBus from '../../../js/event-bus'
 import { mapFields } from '../../../js/map-fields'
 
@@ -89,7 +94,9 @@ export default {
       loading: false,
       // Dialog
       dialog: false,
-      dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' }
+      dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
+      // Editor
+      dialogEditor: null
     }
   },
   components: { AgGridVue },
@@ -107,6 +114,7 @@ export default {
   watch: {
     dialog (val) {
       if (!val) return
+      if (this.dialogEditor == null) this.initEditor()
       requestAnimationFrame(() => {
         if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
       })
@@ -118,6 +126,40 @@ export default {
     }
   },
   methods: {
+    initEditor() {
+      this.$nextTick(() => {
+        // Editor Settings
+        this.dialogEditor = ace.edit("dialogEditor", {
+          mode: "ace/mode/sql",
+          theme: "ace/theme/monokai",
+          fontSize: 14,
+          showPrintMargin: false,
+          wrap: true,
+          autoScrollEditorIntoView: true,
+          enableBasicAutocompletion: true,
+          enableLiveAutocompletion: true,
+          enableSnippets: false,
+          highlightActiveLine: false
+        });
+        this.dialogEditor.session.setOptions({ tabSize: 4, useSoftTabs: false })
+
+        // Add custom keybinds
+        this.dialogEditor.container.addEventListener("keydown", (e) => {
+          // - Increase Font Size -
+          if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault()
+            let size = parseInt(this.dialogEditor.getFontSize(), 10) || 12
+            this.dialogEditor.setFontSize(size + 1)
+          }
+          // - Decrease Font Size -
+          else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault()
+            let size = parseInt(this.dialogEditor.getFontSize(), 10) || 12
+            this.dialogEditor.setFontSize(Math.max(size - 1 || 1))
+          }
+        }, false);
+      })
+    },
     onGridReady(params) {
       this.gridApi.structure.triggers = params.api
       this.columnApi.structure.triggers = params.columnApi
@@ -173,6 +215,7 @@ export default {
         submit: 'Save',
         cancel: 'Cancel'
       }
+      if (this.dialogEditor != null) this.dialogEditor.setValue('')
       this.dialog = true
     },
     removeTrigger() {
@@ -190,20 +233,21 @@ export default {
       EventBus.$emit('GET_STRUCTURE')
     },
     dialogSubmit() {
-      // Build query
+      this.loading = true
       let query = ''
       if (this.dialogOptions.mode == 'new') {
         // Check if all fields are filled
         if (!this.$refs.dialogForm.validate()) {
-          EventBus.$emit('NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+          EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+          this.loading = false
           return
         }
         // Build query
-        
+        query = "CREATE TRIGGER " + this.dialogOptions.item.name + ' ' + this.dialogOptions.item.time + ' ' + this.dialogOptions.item.event + ' ON ' + this.treeviewSelected['name'] + ' FOR EACH ROW ' + this.dialogEditor.getValue()
       }
       else if (this.dialogOptions.mode == 'delete') {
         let row = this.gridApi.structure.triggers.getSelectedRows()[0]
-        query = "ALTER TABLE " + this.treeviewSelected['name'] + " DROP TRIGGER " + row.Name + ";"
+        query = "DROP TRIGGER " + row.Name + ";"
       }
       // Execute query
       this.execute(query)

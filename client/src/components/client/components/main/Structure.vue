@@ -110,12 +110,8 @@ export default {
           this.parseStructure(response.data)
         })
         .catch((error) => {
-          console.log(error)
-          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          // else this.notification(error.response.data.message, 'error')
-        })
-        .finally(() => {
-          this.gridApi.structure[this.tabStructureSelected].hideOverlay()
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
         })
     },
     parseStructure(data) {
@@ -138,6 +134,7 @@ export default {
       this.structureItems.columns = columns_items
       this.structureColumnsName = column_names
       if (columns_items.length == 0) this.gridApi.structure.columns.showNoRowsOverlay()
+      else this.gridApi.structure.columns.hideOverlay()
 
       // Parse Indexes
       var indexes_items = JSON.parse(data.indexes)
@@ -152,6 +149,7 @@ export default {
       this.structureHeaders.indexes = indexes_headers
       this.structureItems.indexes = indexes_items
       if (indexes_items.length == 0) this.gridApi.structure.indexes.showNoRowsOverlay()
+      else this.gridApi.structure.indexes.hideOverlay()
 
       // Parse Foreign Keys
       var fks_items = JSON.parse(data.fks)
@@ -166,6 +164,7 @@ export default {
       this.structureHeaders.fks = fks_headers
       this.structureItems.fks = fks_items
       if (fks_items.length == 0) this.gridApi.structure.fks.showNoRowsOverlay()
+      else this.gridApi.structure.fks.hideOverlay()
 
       // Parse Triggers
       var triggers_items = JSON.parse(data.triggers)
@@ -180,6 +179,7 @@ export default {
       this.structureHeaders.triggers = triggers_headers
       this.structureItems.triggers = triggers_items
       if (triggers_items.length == 0) this.gridApi.structure.triggers.showNoRowsOverlay()
+      else this.gridApi.structure.triggers.hideOverlay()
     },
     execute(query, resolve, reject) {
       // Execute Query
