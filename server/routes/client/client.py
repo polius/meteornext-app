@@ -189,9 +189,13 @@ class Client:
             conn = connectors.connector.Connector(cred)
 
             # Get Info
-            syntax = conn.get_table_syntax(db=request.args['database'], table=request.args['table'])
-            info = conn.get_table_info(db=request.args['database'], table=request.args['table'])
-            return jsonify({'syntax': json.dumps(syntax, default=self.__json_parser), 'info': json.dumps(info, default=self.__json_parser)}), 200
+            if request.args['object'] == 'table':
+                info = conn.get_table_info(db=request.args['database'], table=request.args['name'])
+                info['syntax'] = conn.get_table_syntax(db=request.args['database'], table=request.args['name'])
+            elif request.args['object'] == 'view':
+                info = conn.get_view_info(db=request.args['database'], view=request.args['name'])
+
+            return jsonify({'info': json.dumps(info, default=self.__json_parser)}), 200
 
         return client_blueprint
 

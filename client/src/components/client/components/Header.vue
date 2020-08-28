@@ -55,8 +55,8 @@ export default {
       if (this.contentHeaders.length == 0) EventBus.$emit('GET_CONTENT')
     },
     tabInfo(object) {
-      this.headerTabSelected = object + '_info'
-      if (this.infoHeaders.length == 0) EventBus.$emit('GET_INFO')
+      this.headerTabSelected = 'info_' + object
+      if (this.infoHeaders[object + 's'].length == 0) EventBus.$emit('GET_INFO', object)
     },
   },
 }

@@ -157,9 +157,13 @@ export default {
             }
             else {
               this.treeviewSelected = item
-              if (this.headerTabSelected == 'content') EventBus.$emit('GET_CONTENT')
-              else if (this.headerTabSelected == 'table_info') EventBus.$emit('GET_INFO')
-              else if (this.headerTabSelected == 'structure') EventBus.$emit('GET_STRUCTURE')
+              if (this.headerTabSelected == 'structure') EventBus.$emit('GET_STRUCTURE')
+              else if (this.headerTabSelected == 'content') EventBus.$emit('GET_CONTENT')
+              else if (this.headerTabSelected.startsWith('info_')) {
+                let type = item.type.toLowerCase()
+                this.headerTabSelected = 'info_' + type
+                EventBus.$emit('GET_INFO', type)
+              }
             }
           }
         }
@@ -177,7 +181,9 @@ export default {
               EventBus.$emit('GET_CONTENT')
             }
             else if (item.type == 'Trigger' && item.children === undefined) {
-
+              this.headerTab = 3
+              this.headerTabSelected = 'trigger_info'
+              EventBus.$emit('GET_INFO', 'trigger')
             }
           }
         }

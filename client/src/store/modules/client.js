@@ -65,9 +65,9 @@ const state = () => ({
       contentItems: [],
 
       // Info
-      infoEditor: null,
-      infoHeaders: [],
-      infoItems: [],
+      infoHeaders: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
+      infoItems: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
+      infoEditor: { tables: '', views: '', triggers: '', functions: '', procedures: '', events: '' },
 
       // Bottom Bar
       bottomBar: {

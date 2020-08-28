@@ -121,11 +121,14 @@ class Connector:
     def get_pk_names(self, db, table):
         return self._sql.get_pk_names(db, table)
 
+    def get_table_info(self, db, table):
+        return self._sql.get_table_info(db, table)
+
     def get_table_syntax(self, db, table):
         return self._sql.get_table_syntax(db, table)
 
-    def get_table_info(self, db, table):
-        return self._sql.get_table_info(db, table)
+    def get_view_info(self, db, view):
+        return self._sql.get_view_info(db, view)
 
     def get_collations(self):
         return self._sql.get_collations()
