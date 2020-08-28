@@ -1,48 +1,64 @@
 <template>
   <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
     <div style="height:calc(100% - 36px)">
-      <v-select v-model="database" @change="getObjects" solo :disabled="databaseItems.length == 0" :items="databaseItems" label="Database" hide-details background-color="#303030" height="48px" style="padding:10px;"></v-select>
+      <v-select :disabled="loading || databaseItems.length == 0" v-model="database" @change="getObjects" solo :items="databaseItems" label="Database" hide-details background-color="#303030" height="48px" style="padding:10px;"></v-select>
       <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
       <v-progress-circular v-if="loading" indeterminate size="20" width="2" style="margin-top:2px; margin-left:12px;"></v-progress-circular>
-      <v-treeview @contextmenu="showContextMenu" :active.sync="treeview" item-key="id" :open="treeviewOpened" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
-        <template v-slot:label="{item, open}">
-          <v-btn text @click="treeviewClick(item)" @contextmenu="showContextMenu" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
-            <v-icon v-if="!item.type" small style="padding:10px;">
-              {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
-            </v-icon>
-            <v-icon v-else small :title="item.type" :color="treeviewColor[item.type]" style="padding:10px;">
-              {{ treeviewImg[item.type] }}
-            </v-icon>
-            {{item.name}}
-            <v-spacer></v-spacer>
-            <v-progress-circular v-if="loadingServer && item.id == treeview[0]" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
-          </v-btn>
-        </template>
-      </v-treeview>
-      <v-menu v-model="showMenu" :position-x="x" :position-y="y" absolute offset-y>
-        <v-list style="padding:0px;">
-          <v-list-item v-for="menuItem in menuItems" :key="menuItem" @click="clickAction">
-            <v-list-item-title>{{menuItem}}</v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
-      <v-text-field v-if="treeviewItems.length > 0" :disabled="treeviewMode == 'objects' && database.length == 0" v-model="treeviewSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
+      <div v-else-if="treeviewMode == 'servers' || database.length > 0" style="height:100%">
+        <v-treeview @contextmenu="showContextMenu" :active.sync="treeview" item-key="id" :open="treeviewOpened" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
+          <template v-slot:label="{item, open}">
+            <v-btn text @click="treeviewClick(item)" @contextmenu="showContextMenu" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
+              <v-icon v-if="!item.type" small style="padding:10px;">
+                {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
+              </v-icon>
+              <v-icon v-else small :title="item.type" :color="treeviewColor[item.type]" style="padding:10px;">
+                {{ treeviewImg[item.type] }}
+              </v-icon>
+              {{item.name}}
+              <v-spacer></v-spacer>
+              <v-progress-circular v-if="loadingServer && item.id == treeview[0]" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
+            </v-btn>
+          </template>
+        </v-treeview>
+        <v-menu v-model="showMenu" :position-x="x" :position-y="y" absolute offset-y>
+          <v-list style="padding:0px;">
+            <v-list-item v-for="menuItem in menuItems" :key="menuItem" @click="clickAction">
+              <v-list-item-title>{{menuItem}}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+        <v-text-field v-if="treeviewItems.length > 0" :disabled="treeviewMode == 'objects' && database.length == 0" v-model="treeviewSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
+      </div>
     </div>
     <!--------------------->
     <!-- LEFT BOTTOM BAR -->
     <!--------------------->
     <!-- SERVERS -->
     <div v-if="treeviewMode == 'servers'" style="height:35px; border-top:2px solid #2c2c2c;">
+      <v-btn text small title="Refresh Connections" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+      <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
       <v-btn text small title="New Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
       <v-btn text small title="Remove Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
-      <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
-      <v-btn text small title="Refresh Connections" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
     </div>
     <!-- OBJECTS -->
     <div v-else-if="treeviewMode == 'objects'" style="height:35px; border-top:2px solid #2c2c2c;">
-      <!-- <v-btn text small title="Refresh Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn> -->
+      <v-btn :disabled="loading" @click="refreshObjects" text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+      <v-btn :disabled="loading" @click="tables" text small title="Tables" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-th</v-icon></v-btn>
+      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+      <v-btn :disabled="loading" @click="views" text small title="Views" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-th-list</v-icon></v-btn>
+      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+      <v-btn :disabled="loading" @click="triggers" text small title="Triggers" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-bolt</v-icon></v-btn>
+      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+      <v-btn :disabled="loading" @click="functions" text small title="Functions" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-code-branch</v-icon></v-btn>
+      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+      <v-btn :disabled="loading" @click="procedures" text small title="Procedures" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-compress</v-icon></v-btn>
+      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+      <v-btn :disabled="loading" @click="events" text small title="Events" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">far fa-clock</v-icon></v-btn>
+      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
     </div>
   </div>
 </template>
@@ -75,9 +91,9 @@ export default {
         Table: "fas fa-th",
         View: "fas fa-th-list",
         Trigger: "fas fa-bolt",
-        Event: "far fa-clock",
         Function: "fas fa-code-branch",
-        Procedure: "fas fa-compress"
+        Procedure: "fas fa-compress",
+        Event: "far fa-clock"
       },
       treeviewColor: {
         MySQL: "#F29111",
@@ -112,8 +128,6 @@ export default {
         'editor',
         'headerTab',
         'headerTabSelected',
-        'structureDialogColumnTypes',
-        'structureDialogCollations'
     ], { path: 'client/connection' }),
   },
   created() {
@@ -172,7 +186,7 @@ export default {
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
         })
         .finally(() => { this.loading = false })
     },
@@ -200,7 +214,7 @@ export default {
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
         })
         .finally(() => {
           this.loadingServer = false
@@ -209,6 +223,7 @@ export default {
     parseDatabases(server, data) {
       this.treeview = []
       this.treeviewItems = []
+      this.treeviewSelected = {}
       this.treeviewMode = 'objects'
       this.server = server
       this.databaseItems = data.databases
@@ -240,7 +255,7 @@ export default {
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
         })
         .finally(() => { this.loading = false })
     },
@@ -339,6 +354,29 @@ export default {
         this.showMenu = true;
       });
     },
+    refreshObjects() {
+      // promise
+      this.getDatabases(this.server)
+      this.getObjects(this.database)
+    },
+    tables() {
+
+    },
+    views() {
+
+    },
+    triggers() {
+
+    },
+    functions() {
+
+    },
+    procedures() {
+
+    },
+    events() {
+
+    }
   },
 }
 </script>
