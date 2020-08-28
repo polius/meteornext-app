@@ -358,11 +358,6 @@ class MySQL:
             columns.append(cl['COLUMN_NAME'])
         return columns
 
-    def get_table_syntax(self, db, table):
-        query = "SHOW CREATE TABLE {}.{}".format(db, table)
-        result = self.execute(query)['data'][0]['Create Table']
-        return result
-
     def get_table_info(self, db, table):
         query = """
             SELECT engine, row_format, table_rows, avg_row_length, data_length, max_data_length, index_length, data_free, auto_increment, create_time, update_time, c.character_set_name AS table_charset, table_collation, table_comment
@@ -371,6 +366,21 @@ class MySQL:
             WHERE t.table_schema = '{}'
             AND t.table_name = '{}';
         """.format(db, table)
+        result = self.execute(query)['data'][0]
+        return result
+
+    def get_table_syntax(self, db, table):
+        query = "SHOW CREATE TABLE {}.{}".format(db, table)
+        result = self.execute(query)['data'][0]['Create Table']
+        return result
+
+    def get_view_info(self, db, view):
+        query = """
+            SELECT view_definition AS 'syntax', check_option, is_updatable, definer, character_set_client, collation_connection
+            FROM information_schema.views
+            WHERE table_schema = '{}'
+            AND table_name = '{}';
+        """.format(db, view)
         result = self.execute(query)['data'][0]
         return result
 
