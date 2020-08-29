@@ -423,6 +423,20 @@ class MySQL:
         result = self.execute(query)['data'][0]['Create Procedure']
         return result
 
+    def get_event_info(self, db, event):
+        query = """
+            SELECT event_name, event_type, execute_at, interval_value, interval_field, starts, ends, on_completion, definer, created, character_set_client, collation_connection, database_collation
+            FROM information_schema.events
+            WHERE event_schema = %s
+            AND event_name = %s;
+        """
+        return self.execute(query, args=(db, event))['data'][0]
+
+    def get_event_syntax(self, db, event):
+        query = "SHOW CREATE EVENT {}.{}".format(db, event)
+        result = self.execute(query)['data'][0]['Create Event']
+        return result
+
     def get_collations(self):
         query = """
             SELECT collation_name

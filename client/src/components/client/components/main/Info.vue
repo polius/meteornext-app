@@ -5,7 +5,7 @@
     <Triggers v-show="headerTabSelected == 'info_trigger'" />
     <Functions v-show="headerTabSelected == 'info_function'" />
     <Procedures v-show="headerTabSelected == 'info_procedure'" />
-    <!--<Events v-show="headerTabSelected == 'info_event'" /> -->
+    <Events v-show="headerTabSelected == 'info_event'" />
   </div>
 </template>
 
@@ -18,14 +18,14 @@ import Views from './info/Views'
 import Triggers from './info/Triggers'
 import Functions from './info/Functions'
 import Procedures from './info/Procedures'
-// import Events from './info/Events'
+import Events from './info/Events'
 
 export default {
   data() {
     return {
     }
   },
-  components: { Tables, Views, Triggers, Functions, Procedures },
+  components: { Tables, Views, Triggers, Functions, Procedures, Events },
   computed: {
     ...mapFields([
         'headerTabSelected',

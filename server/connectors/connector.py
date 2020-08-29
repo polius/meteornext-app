@@ -145,6 +145,12 @@ class Connector:
     def get_procedure_syntax(self, db, procedure):
         return self._sql.get_procedure_syntax(db, procedure)
 
+    def get_event_info(self, db, event):
+        return self._sql.get_event_info(db, event)
+
+    def get_event_syntax(self, db, event):
+        return self._sql.get_event_syntax(db, event)
+
     def get_collations(self):
         return self._sql.get_collations()
 

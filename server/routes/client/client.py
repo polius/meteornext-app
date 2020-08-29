@@ -226,7 +226,9 @@ class Client:
             elif request.args['object'] == 'procedure':
                 info = conn.get_procedure_info(db=request.args['database'], procedure=request.args['name'])
                 info['syntax'] = conn.get_procedure_syntax(db=request.args['database'], procedure=request.args['name'])
-
+            elif request.args['object'] == 'event':
+                info = conn.get_event_info(db=request.args['database'], event=request.args['name'])
+                info['syntax'] = conn.get_event_syntax(db=request.args['database'], event=request.args['name'])
             return jsonify({'info': json.dumps(info, default=self.__json_parser)}), 200
 
         return client_blueprint
