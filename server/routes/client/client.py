@@ -220,6 +220,7 @@ class Client:
                 info = conn.get_view_info(db=request.args['database'], view=request.args['name'])
             elif request.args['object'] == 'trigger':
                 info = conn.get_trigger_info(db=request.args['database'], trigger=request.args['name'])
+                info['syntax'] = conn.get_trigger_syntax(db=request.args['database'], trigger=request.args['name'])
             elif request.args['object'] == 'function':
                 info = conn.get_function_info(db=request.args['database'], function=request.args['name'])
                 info['syntax'] = conn.get_function_syntax(db=request.args['database'], function=request.args['name'])

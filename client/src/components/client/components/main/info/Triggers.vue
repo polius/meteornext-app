@@ -109,8 +109,8 @@ export default {
       this.infoItems.triggers = [info]
 
       // Parse Syntax
-      this.infoEditor.triggers = info.action_statement
-      this.editor.setValue(info.action_statement, -1)
+      this.infoEditor.triggers = info.syntax
+      this.editor.setValue(info.syntax, -1)
       this.editor.focus()
     },
   },
