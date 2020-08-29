@@ -174,10 +174,11 @@ export default {
               this.headerTabSelected = 'content'
               EventBus.$emit('GET_CONTENT')
             }
-            else if (item.type == 'Trigger' && item.children === undefined) {
+            else if (['Trigger','Function','Procedure','Event'].includes(item.type) && item.children === undefined) {
+              let type = item.type.toLowerCase()
               this.headerTab = 3
-              this.headerTabSelected = 'trigger_info'
-              EventBus.$emit('GET_INFO', 'trigger')
+              this.headerTabSelected = 'info_' + type
+              EventBus.$emit('GET_INFO', type)
             }
           }
         }
