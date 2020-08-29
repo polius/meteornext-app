@@ -225,6 +225,7 @@ class Client:
                 info['syntax'] = conn.get_function_syntax(db=request.args['database'], function=request.args['name'])
             elif request.args['object'] == 'procedure':
                 info = conn.get_procedure_info(db=request.args['database'], procedure=request.args['name'])
+                info['syntax'] = conn.get_procedure_syntax(db=request.args['database'], procedure=request.args['name'])
 
             return jsonify({'info': json.dumps(info, default=self.__json_parser)}), 200
 
