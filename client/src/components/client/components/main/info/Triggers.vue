@@ -6,7 +6,7 @@
     <div style="height:calc(100% - 36px)">
       <div style="width:100%; height:100%">
         <v-data-table :headers="infoHeaders.triggers" :items="infoItems.triggers" disable-sort hide-default-footer class="elevation-1" style="margin:10px; background-color:rgb(48,48,48);"></v-data-table>
-        <div class="subtitle-2" style="padding:5px 15px 10px 15px; color:rgb(222,222,222);">VIEW SYNTAX</div>
+        <div class="subtitle-2" style="padding:5px 15px 10px 15px; color:rgb(222,222,222);">TRIGGER DEFINITION</div>
         <div style="height:calc(100% - 118px);">
           <div id="infoTriggersEditor" style="float:left"></div>
         </div>
@@ -98,11 +98,12 @@ export default {
         { text: 'Name', value: 'trigger_name' },
         { text: 'Timing', value: 'action_timing' },
         { text: 'Event', value: 'event_manipulation' },
+        { text: 'Table', value: 'event_object_table' },
         { text: 'Definer', value: 'definer' },
-        { text: 'Created', value: 'created' },
         { text: 'Character Set Client', value: 'character_set_client' },
         { text: 'Collation Connection', value: 'collation_connection' },
-        { text: 'Database Collation', value: 'database_collation' }
+        { text: 'Database Collation', value: 'database_collation' },
+        { text: 'Created', value: 'created' }
       ]
       let info = JSON.parse(data.info)
       this.infoItems.triggers = [info]

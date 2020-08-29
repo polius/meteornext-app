@@ -386,12 +386,37 @@ class MySQL:
 
     def get_trigger_info(self, db, trigger):
         query = """
-            SELECT trigger_name, action_timing, action_statement, event_manipulation, definer, created, character_set_client, collation_connection, database_collation
+            SELECT trigger_name, action_timing, action_statement, event_manipulation, event_object_table, definer, character_set_client, collation_connection, database_collation, created
             FROM information_schema.triggers
             WHERE event_object_schema = %s
             AND trigger_name = %s
         """
         return self.execute(query, args=(db, trigger))['data'][0]
+
+    def get_function_info(self, db, function):
+        query = """
+            SELECT routine_name, dtd_identifier AS 'return_type', is_deterministic, definer, character_set_client, collation_connection, database_collation, created
+            FROM information_schema.routines 
+            WHERE routine_schema = %s
+            AND routine_name = %s
+            AND routine_type = 'FUNCTION';
+        """
+        return self.execute(query, args=(db, function))['data'][0]
+
+    def get_function_syntax(self, db, function):
+        query = "SHOW CREATE FUNCTION {}.{}".format(db, function)
+        result = self.execute(query)['data'][0]['Create Function']
+        return result
+
+    def get_procedure_info(self, db, procedure):
+        query = """
+            SELECT routine_name, dtd_identifier AS 'return_type', routine_definition, is_deterministic, definer, character_set_client, collation_connection, database_collation, created
+            FROM information_schema.routines 
+            WHERE routine_schema = %s
+            AND routine_name = %s
+            AND routine_type = 'PROCEDURE';
+        """
+        return self.execute(query, args=(db, procedure))['data'][0]
 
     def get_collations(self):
         query = """

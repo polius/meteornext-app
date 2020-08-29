@@ -133,6 +133,15 @@ class Connector:
     def get_trigger_info(self, db, trigger):
         return self._sql.get_trigger_info(db, trigger)
 
+    def get_function_info(self, db, function):
+        return self._sql.get_function_info(db, function)
+    
+    def get_function_syntax(self, db, function):
+        return self._sql.get_function_syntax(db, function)
+
+    def get_procedure_info(self, db, procedure):
+        return self._sql.get_procedure_info(db, procedure)
+
     def get_collations(self):
         return self._sql.get_collations()
 
