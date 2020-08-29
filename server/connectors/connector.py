@@ -133,6 +133,9 @@ class Connector:
     def get_trigger_info(self, db, trigger):
         return self._sql.get_trigger_info(db, trigger)
 
+    def get_trigger_syntax(self, db, trigger):
+        return self._sql.get_trigger_syntax(db, trigger)
+
     def get_function_info(self, db, function):
         return self._sql.get_function_info(db, function)
     

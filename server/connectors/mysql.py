@@ -386,12 +386,17 @@ class MySQL:
 
     def get_trigger_info(self, db, trigger):
         query = """
-            SELECT trigger_name, action_timing, action_statement, event_manipulation, event_object_table, definer, character_set_client, collation_connection, database_collation, created
+            SELECT trigger_name, action_timing, event_manipulation, event_object_table, definer, character_set_client, collation_connection, database_collation, created
             FROM information_schema.triggers
             WHERE event_object_schema = %s
             AND trigger_name = %s
         """
         return self.execute(query, args=(db, trigger))['data'][0]
+
+    def get_trigger_syntax(self, db, trigger):
+        query = "SHOW CREATE TRIGGER {}.{}".format(db, trigger)
+        result = self.execute(query)['data'][0]['SQL Original Statement']
+        return result
 
     def get_function_info(self, db, function):
         query = """
