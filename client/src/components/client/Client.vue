@@ -7,10 +7,10 @@
           <div ref="masterDiv" style="height: calc(100vh - 112px);">
             <Connections/>
             <Splitpanes :style="Object.keys(server).length != 0 ? 'height:calc(100% - 49px)' : 'height:100%'">
-              <Pane size="21" min-size="0">
+              <Pane size="20" min-size="0">
                 <Sidebar/>
               </Pane>
-              <Pane size="79" min-size="0">
+              <Pane size="80" min-size="0">
                 <div style="height:100%; width:100%">
                   <Main/>
                 </div>
