@@ -168,6 +168,30 @@ class Client:
             triggers = conn.get_triggers(db=request.args['database'], table=request.args['table'])
             return jsonify({'columns': json.dumps(columns, default=self.__json_parser), 'indexes': json.dumps(indexes, default=self.__json_parser), 'fks': json.dumps(fks, default=self.__json_parser), 'triggers': json.dumps(triggers, default=self.__json_parser)}), 200
 
+        @client_blueprint.route('/client/structure/columns', methods=['GET'])
+        @jwt_required
+        def client_structure_columns_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Server Credentials + Connection
+            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = connectors.connector.Connector(cred)
+
+            # Get Columns
+            columns = conn.get_columns_definition(db=request.args['database'], table=request.args['table'])
+            return jsonify({'columns': json.dumps(columns, default=self.__json_parser)}), 200
+
         @client_blueprint.route('/client/info', methods=['GET'])
         @jwt_required
         def client_info_method():
@@ -194,6 +218,8 @@ class Client:
                 info['syntax'] = conn.get_table_syntax(db=request.args['database'], table=request.args['name'])
             elif request.args['object'] == 'view':
                 info = conn.get_view_info(db=request.args['database'], view=request.args['name'])
+            elif request.args['object'] == 'trigger':
+                info = conn.get_trigger_info(db=request.args['database'], trigger=request.args['name'])
 
             return jsonify({'info': json.dumps(info, default=self.__json_parser)}), 200
 

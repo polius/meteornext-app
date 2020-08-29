@@ -78,7 +78,6 @@ export default {
         'columnApi',
         'structureHeaders',
         'structureItems',
-        'structureColumnsName',
         'treeviewSelected',
         'server',
         'database',
@@ -118,21 +117,16 @@ export default {
       // Parse Columns
       var columns_items = JSON.parse(data.columns)
       var columns_headers = []
-      var column_names = []
       if (columns_items.length > 0) {
         var columns_keys = Object.keys(columns_items[0])
         for (let i = 0; i < columns_keys.length; ++i) {
           let field = columns_keys[i].trim()
           columns_headers.push({ headerName: columns_keys[i], colId: field, field: field, sortable: false, filter: false, resizable: true, editable: false })
         }
-        for (let i = 0; i < columns_items.length; ++i) {
-          column_names.push(columns_items[i]['Name'])
-        }
       }
       columns_headers[0]['rowDrag'] = true
       this.structureHeaders.columns = columns_headers
       this.structureItems.columns = columns_items
-      this.structureColumnsName = column_names
       if (columns_items.length == 0) this.gridApi.structure.columns.showNoRowsOverlay()
       else this.gridApi.structure.columns.hideOverlay()
 
