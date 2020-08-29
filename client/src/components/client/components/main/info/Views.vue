@@ -1,8 +1,8 @@
 <template>
   <div style="height:100%">
-    <!---------->
-    <!-- INFO -->
-    <!---------->
+    <!----------->
+    <!-- VIEWS -->
+    <!----------->
     <div style="height:calc(100% - 36px)">
       <div style="width:100%; height:100%">
         <v-data-table :headers="infoHeaders.views" :items="infoItems.views" disable-sort hide-default-footer class="elevation-1" style="margin:10px; background-color:rgb(48,48,48);"></v-data-table>
@@ -88,9 +88,8 @@ export default {
           this.parseInfo(response.data)
         })
         .catch((error) => {
-            console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
         })
     },
     parseInfo(data) {

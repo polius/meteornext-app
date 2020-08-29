@@ -360,7 +360,7 @@ class MySQL:
 
     def get_table_info(self, db, table):
         query = """
-            SELECT engine, row_format, table_rows, avg_row_length, data_length, max_data_length, index_length, data_free, auto_increment, create_time, update_time, c.character_set_name AS table_charset, table_collation, table_comment
+            SELECT table_name, engine, row_format, table_rows, avg_row_length, data_length, max_data_length, index_length, data_free, auto_increment, create_time, update_time, c.character_set_name AS table_charset, table_collation, table_comment
             FROM information_schema.tables t
             JOIN information_schema.collations c ON c.collation_name = t.table_collation
             WHERE t.table_schema = '{}'
@@ -384,6 +384,15 @@ class MySQL:
         result = self.execute(query)['data'][0]
         return result
 
+    def get_trigger_info(self, db, trigger):
+        query = """
+            SELECT trigger_name, action_timing, action_statement, event_manipulation, definer, created, character_set_client, collation_connection, database_collation
+            FROM information_schema.triggers
+            WHERE event_object_schema = %s
+            AND trigger_name = %s
+        """
+        return self.execute(query, args=(db, trigger))['data'][0]
+
     def get_collations(self):
         query = """
             SELECT collation_name
@@ -396,3 +405,17 @@ class MySQL:
         for c in result:
             collations.append(c['collation_name'])
         return collations
+
+    def get_columns_definition(self, db, table):
+        query = """
+            SELECT CONCAT(column_name, ' ', column_type) AS 'column'
+            FROM information_schema.columns
+            WHERE table_schema = %s
+            AND table_name = %s;
+        """
+        result = self.execute(query, args=(db, table))['data']
+
+        columns = []
+        for c in result:
+            columns.append(c['column'])
+        return columns

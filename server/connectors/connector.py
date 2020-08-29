@@ -130,5 +130,11 @@ class Connector:
     def get_view_info(self, db, view):
         return self._sql.get_view_info(db, view)
 
+    def get_trigger_info(self, db, trigger):
+        return self._sql.get_trigger_info(db, trigger)
+
     def get_collations(self):
         return self._sql.get_collations()
+
+    def get_columns_definition(self, db, table):
+        return self._sql.get_columns_definition(db, table)

@@ -49,7 +49,6 @@ const state = () => ({
       tabStructureSelected: 'columns',
       structureHeaders: { columns: [], indexes: [], fks: [], triggers: [] },
       structureItems: { columns: [], indexes: [], fks: [], triggers: [] },
-      structureColumnsName: [],
 
       // Content
       contentColumnsName: [],

@@ -49,33 +49,13 @@
                 <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
                   <div v-if="Object.keys(dialogOptions.item).length > 0">
-                    <v-card>
-                      <v-toolbar flat dense height="42" color="#2e3131">
-                        <div class="body-1">Table: {{ this.treeviewSelected['name'] }}</div>
-                      </v-toolbar>
-                      <v-card-text style="padding-bottom:0px;">
-                        <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
-                        <v-select v-model="dialogOptions.item.column" :items="structureColumnsName" :rules="[v => !!v || '']" label="Column" auto-select-first required style="padding-top:0px;"></v-select>
-                      </v-card-text>
-                    </v-card>
-                    <v-card style="margin-top:10px;">
-                      <v-toolbar flat dense height="42" color="#2e3131">
-                        <div class="body-1">References</div>
-                      </v-toolbar>
-                      <v-card-text style="padding-bottom:0px;">
-                        <v-select v-model="dialogOptions.item.fk_table" :items="tableItems" :rules="[v => !!v || '']" label="Table" auto-select-first required style="padding-top:0px;"></v-select>
-                        <v-text-field v-model="dialogOptions.item.fk_column" label="Column" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-                      </v-card-text>
-                    </v-card>
-                    <v-card style="margin-top:10px;">
-                      <v-toolbar flat dense height="42" color="#2e3131">
-                        <div class="body-1">Action</div>
-                      </v-toolbar>
-                      <v-card-text style="padding-bottom:0px;">
-                        <v-select v-model="dialogOptions.item.on_update" :items="server.fkRules" :rules="[v => !!v || '']" label="On update" auto-select-first required style="padding-top:0px;"></v-select>
-                        <v-select v-model="dialogOptions.item.on_delete" :items="server.fkRules" :rules="[v => !!v || '']" label="On delete" auto-select-first required style="padding-top:0px;"></v-select>
-                      </v-card-text>
-                    </v-card>
+                    <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
+                    <v-text-field readonly v-model="dialogOptions.item.table" label="Table" required style="padding-top:0px;"></v-text-field>
+                    <v-select v-model="dialogOptions.item.column" :items="dialogOptions.item.column_items" :rules="[v => !!v || '']" label="Column" required style="padding-top:0px;"></v-select>
+                    <v-select @change="getColumns(dialogOptions.item.fk_table, true)" v-model="dialogOptions.item.fk_table" :items="tableItems" :rules="[v => !!v || '']" label="Target table" required style="padding-top:0px;"></v-select>
+                    <v-select v-model="dialogOptions.item.fk_column" :items="dialogOptions.item.fk_column_items" :rules="[v => !!v || '']" label="Target column" required style="padding-top:0px;"></v-select>
+                    <v-select v-model="dialogOptions.item.on_delete" :items="server.fkRules" label="ON DELETE" style="padding-top:0px;"></v-select>
+                    <v-select v-model="dialogOptions.item.on_update" :items="server.fkRules" label="ON UPDATE" hide-details style="padding-top:0px;"></v-select>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
@@ -99,6 +79,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 import {AgGridVue} from "ag-grid-vue";
 import EventBus from '../../../js/event-bus'
 import { mapFields } from '../../../js/map-fields'
@@ -110,7 +91,7 @@ export default {
       loading: false,
       // Dialog
       dialog: false,
-      dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' }
+      dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
     }
   },
   components: { AgGridVue },
@@ -120,9 +101,9 @@ export default {
       'columnApi',
       'structureHeaders',
       'structureItems',
-      'structureColumnsName',
       'treeviewSelected',
       'server',
+      'database',
       'tableItems',
       'bottomBar',
       'tabStructureSelected',
@@ -134,12 +115,16 @@ export default {
       requestAnimationFrame(() => {
         if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
       })
+      if (this.dialogOptions.item.column_items.length == 0) this.getColumns(this.treeviewSelected['name'])
     },
     tabStructureSelected(val) {
       this.$nextTick(() => {
         if (val == 'fks') this.resizeTable()
       })
     }
+  },
+  created() {
+    
   },
   methods: {
     onGridReady(params) {
@@ -190,7 +175,7 @@ export default {
         mode: 'new',
         title: 'New Foreign Key',
         text: '',
-        item: { name: '', column: '', fk_table: '', fk_column: '', on_update: '', on_delete: '' },
+        item: { name: '', table: this.treeviewSelected['name'], column_items: [], column: '', fk_table: '', fk_column_items: [], fk_column: '', on_update: '', on_delete: '' },
         submit: 'Save',
         cancel: 'Cancel'
       }
@@ -222,7 +207,10 @@ export default {
         }
         // Build query
         let constraintName = (this.dialogOptions.item.name.length > 0) ? 'CONSTRAINT ' + this.dialogOptions.item.name : ''
-        query = "ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + constraintName + " FOREIGN KEY(" + this.dialogOptions.item.column + ") REFERENCES " + this.dialogOptions.item.fk_table + "(" + this.dialogOptions.item.fk_column + ") ON UPDATE " + this.dialogOptions.item.on_update + " ON DELETE " + this.dialogOptions.item.on_delete + ";"
+        query = "ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + constraintName + " FOREIGN KEY(" + this.dialogOptions.item.column + ") REFERENCES " + this.dialogOptions.item.fk_table + "(" + this.dialogOptions.item.fk_column + ")" 
+        if (this.dialogOptions.item.on_delete.length > 0) query += " ON DELETE " + this.dialogOptions.item.on_delete
+        if (this.dialogOptions.item.on_update.length > 0) query += " ON UPDATE " + this.dialogOptions.item.on_update
+        query += ';'
       }
       else if (this.dialogOptions.mode == 'delete') {
         let row = this.gridApi.structure.fks.getSelectedRows()[0]
@@ -238,6 +226,31 @@ export default {
       promise.then(() => { this.dialog = false })
         .catch(() => { if (this.dialogOptions.mode == 'delete') this.dialog = false })
         .finally(() => { this.loading = false })
+    },
+    getColumns(table, target=false) {
+      if (target) {
+        this.dialogOptions.item.fk_column_items = []
+        this.dialogOptions.item.fk_column = ''
+        this.$refs.dialogForm.resetValidation()
+      } else {
+        this.dialogOptions.item.column_items = []
+        this.dialogOptions.item.column = ''
+      }
+      const payload = {
+        server: this.server.id,
+        database: this.database,
+        table: table
+      }
+      axios.get('/client/structure/columns', { params: payload })
+        .then((response) => {
+          let data = JSON.parse(response.data.columns)
+          if (target) this.dialogOptions.item.fk_column_items = data
+          else this.dialogOptions.item.column_items = data
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+        })
     },
   }
 }
