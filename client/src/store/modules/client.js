@@ -14,6 +14,7 @@ const state = () => ({
       databaseItems: [],
       database: '',
       tableItems: [],
+      table: '',
 
       // Treeview
       treeview: [],

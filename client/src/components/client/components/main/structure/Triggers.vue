@@ -240,7 +240,7 @@ export default {
           return
         }
         // Build query
-        query = "CREATE TRIGGER " + this.dialogOptions.item.name + ' ' + this.dialogOptions.item.time + ' ' + this.dialogOptions.item.event + ' ON ' + this.treeviewSelected['name'] + ' FOR EACH ROW \n' + this.dialogEditor.getValue() + '\nEND;'
+        query = "CREATE TRIGGER " + this.dialogOptions.item.name + ' ' + this.dialogOptions.item.time + ' ' + this.dialogOptions.item.event + ' ON ' + this.treeviewSelected['name'] + ' FOR EACH ROW BEGIN\n' + this.dialogEditor.getValue() + '\nEND;'
       }
       else if (this.dialogOptions.mode == 'delete') {
         let row = this.gridApi.structure.triggers.getSelectedRows()[0]

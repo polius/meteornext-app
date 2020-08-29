@@ -3,9 +3,9 @@
     <Tables v-show="headerTabSelected == 'info_table'" />
     <Views v-show="headerTabSelected == 'info_view'" />
     <Triggers v-show="headerTabSelected == 'info_trigger'" />
-    <!-- <Functions v-show="headerTab == 0" />
-    <Procedures v-show="headerTab == 0" />
-    <Events v-show="headerTab == 0" /> -->
+    <Functions v-show="headerTabSelected == 'info_function'" />
+    <!-- <Procedures v-show="headerTabSelected == 'info_procedure'" />
+    <Events v-show="headerTabSelected == 'info_event'" /> -->
   </div>
 </template>
 
@@ -16,7 +16,7 @@ import { mapFields } from '../../js/map-fields'
 import Tables from './info/Tables'
 import Views from './info/Views'
 import Triggers from './info/Triggers'
-// import Functions from './info/Functions'
+import Functions from './info/Functions'
 // import Procedures from './info/Procedures'
 // import Events from './info/Events'
 
@@ -25,7 +25,7 @@ export default {
     return {
     }
   },
-  components: { Tables, Views, Triggers },
+  components: { Tables, Views, Triggers, Functions },
   computed: {
     ...mapFields([
         'headerTabSelected',
