@@ -410,13 +410,18 @@ class MySQL:
 
     def get_procedure_info(self, db, procedure):
         query = """
-            SELECT routine_name, dtd_identifier AS 'return_type', routine_definition, is_deterministic, definer, character_set_client, collation_connection, database_collation, created
+            SELECT routine_name, is_deterministic, definer, character_set_client, collation_connection, database_collation, created
             FROM information_schema.routines 
             WHERE routine_schema = %s
             AND routine_name = %s
             AND routine_type = 'PROCEDURE';
         """
         return self.execute(query, args=(db, procedure))['data'][0]
+
+    def get_procedure_syntax(self, db, procedure):
+        query = "SHOW CREATE PROCEDURE {}.{}".format(db, procedure)
+        result = self.execute(query)['data'][0]['Create Procedure']
+        return result
 
     def get_collations(self):
         query = """
