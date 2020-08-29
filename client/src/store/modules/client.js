@@ -69,6 +69,10 @@ const state = () => ({
       infoItems: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
       infoEditor: { tables: '', views: '', triggers: '', functions: '', procedures: '', events: '' },
 
+      // Objects
+      objectHeaders: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
+      objectItems: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
+
       // Bottom Bar
       bottomBar: {
         client: { text: '', status: '', info: '' },
@@ -78,12 +82,25 @@ const state = () => ({
           indexes: { text: '', status: '', info: '' },
           fks: { text: '', status: '', info: '' },
           triggers: { text: '', status: '', info: '' }
-        }
+        },
+        objects: { tables: '', views: '', triggers: '', functions: '', procedures: '', events: '' }
       },
 
       // AG Grid API
-      gridApi: { client: null, structure: { columns: null, indexes: null, fks: null, triggers: null }, content: null, info: null },
-      columnApi: { client: null, structure: { columns: null, indexes: null, fks: null, triggers: null }, content: null, info: null },
+      gridApi: { 
+        client: null, 
+        structure: { columns: null, indexes: null, fks: null, triggers: null }, 
+        content: null, 
+        info: null, 
+        object: { tables: null, views: null, triggers: null, functions: null, procedures: null, events: null },
+      },
+      columnApi: { 
+        client: null, 
+        structure: { columns: null, indexes: null, fks: null, triggers: null }, 
+        content: null, 
+        info: null,
+        object: { tables: null, views: null, triggers: null, functions: null, procedures: null, events: null },
+      },
 
       // AG Grid Helpers
       isRowSelected: false,

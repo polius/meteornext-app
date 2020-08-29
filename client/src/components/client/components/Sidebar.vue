@@ -38,8 +38,7 @@
     <div v-if="treeviewMode == 'servers'" style="height:35px; border-top:2px solid #2c2c2c;">
       <v-btn text small title="Refresh Connections" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
-      <v-btn text small title="New Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
-      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+      <v-btn text small title="New Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
       <v-btn text small title="Remove Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
     </div>
@@ -47,12 +46,14 @@
     <div v-else-if="treeviewMode == 'objects'" style="height:35px; border-top:2px solid #2c2c2c;">
       <v-btn :disabled="loading" @click="refreshObjects" text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" @click="tables" text small title="Tables" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-th</v-icon></v-btn>
-      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" @click="views" text small title="Views" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-th-list</v-icon></v-btn>
-      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" @click="triggers" text small title="Triggers" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-bolt</v-icon></v-btn>
-      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" @click="functions" text small title="Functions" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-code-branch</v-icon></v-btn>
-      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" @click="procedures" text small title="Procedures" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-compress</v-icon></v-btn>
-      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" @click="events" text small title="Events" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">far fa-clock</v-icon></v-btn>
+      <v-btn :disabled="loading" text small title="New Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+      <v-btn :disabled="loading" text small title="Drop Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" text small title="Import SQL" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-up</v-icon></v-btn>
+      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" text small title="Export Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-down</v-icon></v-btn>
+      <span v-if="database.length > 0" :disabled="loading || loadingServer" style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" @click="showObjects" text small title="Show Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-cubes</v-icon></v-btn>
+      <span v-if="database.length > 0" :disabled="loading || loadingServer" style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>      
     </div>
   </div>
 </template>
@@ -365,24 +366,10 @@ export default {
       this.getDatabases(this.server)
       if (this.database.length > 0) this.getObjects(this.database)
     },
-    tables() {
-
+    showObjects() {
+      this.headerTabSelected = 'object_table'
+      EventBus.$emit('GET_OBJECT', 'table')
     },
-    views() {
-
-    },
-    triggers() {
-
-    },
-    functions() {
-
-    },
-    procedures() {
-
-    },
-    events() {
-
-    }
   },
 }
 </script>

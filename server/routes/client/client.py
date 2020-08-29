@@ -232,6 +232,41 @@ class Client:
                 info['syntax'] = conn.get_event_syntax(db=request.args['database'], event=request.args['name'])
             return jsonify({'info': json.dumps(info, default=self.__json_parser)}), 200
 
+        @client_blueprint.route('/client/objects', methods=['GET'])
+        @jwt_required
+        def client_objects_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Server Credentials + Connection
+            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = connectors.connector.Connector(cred)
+
+            # Get Info
+            if request.args['object'] == 'table':
+                objects = conn.get_table_info(db=request.args['database'])
+            elif request.args['object'] == 'view':
+                pass
+            elif request.args['object'] == 'trigger':
+                pass
+            elif request.args['object'] == 'function':
+                pass
+            elif request.args['object'] == 'procedure':
+                pass
+            elif request.args['object'] == 'event':
+                pass
+            return jsonify({'objects': json.dumps(objects, default=self.__json_parser)}), 200
+
         return client_blueprint
 
     ####################
