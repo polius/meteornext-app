@@ -13,6 +13,7 @@
       <v-spacer></v-spacer>
       <v-tab title="Query History" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-history</v-icon></span></v-tab>
       <v-tab title="Saved Queries" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-star</v-icon></span></v-tab>
+      <v-tab @click="tabObjects()" :disabled="treeviewMode != 'objects' || database.length == 0" title="Schema Objects" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-cubes</v-icon></span></v-tab>
       <v-tab :disabled="treeviewMode == 'servers'" title="User Rights" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-shield-alt</v-icon></span></v-tab>
     </v-tabs>
   </div>
@@ -38,6 +39,7 @@ export default {
         'contentHeaders',
         'infoHeaders',
         'editor',
+        'database',
     ], { path: 'client/connection' }),
   },
   methods: {
@@ -57,6 +59,10 @@ export default {
     tabInfo(object) {
       this.headerTabSelected = 'info_' + object
       if (this.infoHeaders[object + 's'].length == 0) EventBus.$emit('GET_INFO', object)
+    },
+    tabObjects() {
+      this.headerTabSelected = 'object_table'
+      EventBus.$emit('GET_OBJECT', 'table')
     },
   },
 }
