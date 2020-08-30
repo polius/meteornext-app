@@ -121,34 +121,37 @@ class Connector:
     def get_pk_names(self, db, table):
         return self._sql.get_pk_names(db, table)
 
-    def get_table_info(self, db, table):
+    def get_table_info(self, db, table=None):
         return self._sql.get_table_info(db, table)
 
     def get_table_syntax(self, db, table):
         return self._sql.get_table_syntax(db, table)
 
-    def get_view_info(self, db, view):
+    def get_view_info(self, db, view=None):
         return self._sql.get_view_info(db, view)
 
-    def get_trigger_info(self, db, trigger):
+    def get_view_syntax(self, db, view):
+        return self._sql.get_view_syntax(db, view)
+
+    def get_trigger_info(self, db, trigger=None):
         return self._sql.get_trigger_info(db, trigger)
 
     def get_trigger_syntax(self, db, trigger):
         return self._sql.get_trigger_syntax(db, trigger)
 
-    def get_function_info(self, db, function):
+    def get_function_info(self, db, function=None):
         return self._sql.get_function_info(db, function)
     
     def get_function_syntax(self, db, function):
         return self._sql.get_function_syntax(db, function)
 
-    def get_procedure_info(self, db, procedure):
+    def get_procedure_info(self, db, procedure=None):
         return self._sql.get_procedure_info(db, procedure)
 
     def get_procedure_syntax(self, db, procedure):
         return self._sql.get_procedure_syntax(db, procedure)
 
-    def get_event_info(self, db, event):
+    def get_event_info(self, db, event=None):
         return self._sql.get_event_info(db, event)
 
     def get_event_syntax(self, db, event):

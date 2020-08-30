@@ -93,6 +93,7 @@ export default {
         })
     },
     parseInfo(data) {
+      var syntax = ''
       // Parse Info
       this.infoHeaders.procedures = [
         { text: 'Name', value: 'routine_name' },
@@ -104,16 +105,23 @@ export default {
         { text: 'Created', value: 'created' }
       ]
       let info = JSON.parse(data.info)
-      this.infoItems.procedures = [info]
-
+      if (info.length == 0) {
+        this.infoItems.functions = []
+        syntax = ''
+        EventBus.$emit('SEND_NOTIFICATION', 'This procedure does not longer exist', 'error')
+      }
+      else {
+        this.infoItems.procedures = info
+        syntax = info[0].syntax
+      }
       // Parse Syntax
-      if (info.syntax == null) {
+      if (syntax == null) {
         this.editor.getSession().setMode("ace/mode/text")
-        info.syntax = 'Insufficient privileges to show the Procedure Definition.\n\nYou must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table'
+        syntax = 'Insufficient privileges to show the Procedure Definition.\n\nYou must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table'
       }
       else this.editor.getSession().setMode("ace/mode/sql")
-      this.infoEditor.procedures = info.syntax
-      this.editor.setValue(info.syntax, -1)
+      this.infoEditor.procedures = syntax
+      this.editor.setValue(syntax, -1)
       this.editor.focus()
     },
   },

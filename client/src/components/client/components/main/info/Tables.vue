@@ -94,6 +94,7 @@ export default {
         })
     },
     parseInfo(data) {
+      var syntax = ''
       // Parse Info
       this.infoHeaders.tables = [
         { text: 'Name', value: 'table_name'},
@@ -108,16 +109,24 @@ export default {
         { text: 'Updated', value: 'update_time' }
       ]
       let info = JSON.parse(data.info)
-      info['total_length'] = this.parseBytes(info.data_length + info.index_length)
-      info.data_length = this.parseBytes(info.data_length)
-      info.index_length = this.parseBytes(info.index_length)
-      info.create_time = (info.create_time == null) ? 'Not available' : info.create_time
-      info.update_time = (info.update_time == null) ? 'Not available' : info.update_time
-      this.infoItems.tables = [info]
-
+      if (info.length == 0) {
+        this.infoItems.tables = []
+        syntax = ''
+        EventBus.$emit('SEND_NOTIFICATION', 'This table does not longer exist', 'error')
+      }
+      else {
+        info = info[0]
+        info['total_length'] = this.parseBytes(info.data_length + info.index_length)
+        info.data_length = this.parseBytes(info.data_length)
+        info.index_length = this.parseBytes(info.index_length)
+        info.create_time = (info.create_time == null) ? 'Not available' : info.create_time
+        info.update_time = (info.update_time == null) ? 'Not available' : info.update_time
+        this.infoItems.tables = [info]
+        syntax = info.syntax
+      }
       // Parse Syntax
-      this.infoEditor.tables = info.syntax
-      this.editor.setValue(info.syntax, -1)
+      this.infoEditor.tables = syntax
+      this.editor.setValue(syntax, -1)
       this.editor.focus()
     },
     parseBytes(value) {

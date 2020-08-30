@@ -3,7 +3,7 @@
     <!------------>
     <!-- TABLES -->
     <!------------>
-    <ag-grid-vue ref="agGridObjectTables" suppressColumnVirtualisation @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" style="width:100%; height:calc(100% - 36px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="objectHeaders.tables" :rowData="objectItems.tables"></ag-grid-vue>
+    <ag-grid-vue ref="agGridObjectTables" suppressColumnVirtualisation @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" style="width:100%; height:calc(100% - 84px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="objectHeaders.tables" :rowData="objectItems.tables"></ag-grid-vue>
     <!---------------->
     <!-- BOTTOM BAR -->
     <!---------------->

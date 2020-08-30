@@ -93,6 +93,7 @@ export default {
         })
     },
     parseInfo(data) {
+      var syntax = ''
       // Parse Info
       this.infoHeaders.triggers = [
         { text: 'Name', value: 'trigger_name' },
@@ -106,11 +107,18 @@ export default {
         { text: 'Created', value: 'created' }
       ]
       let info = JSON.parse(data.info)
-      this.infoItems.triggers = [info]
-
+      if (info.length == 0) {
+        this.infoItems.triggers = []
+        syntax = ''
+        EventBus.$emit('SEND_NOTIFICATION', 'This trigger does not longer exist', 'error')
+      }
+      else {
+        this.infoItems.triggers = info
+        syntax = info[0].syntax
+      }
       // Parse Syntax
-      this.infoEditor.triggers = info.syntax
-      this.editor.setValue(info.syntax, -1)
+      this.infoEditor.triggers = syntax
+      this.editor.setValue(syntax, -1)
       this.editor.focus()
     },
   },
