@@ -93,6 +93,7 @@ export default {
         })
     },
     parseInfo(data) {
+      var syntax = ''
       // Parse Info
       this.infoHeaders.functions = [
         { text: 'Name', value: 'routine_name' },
@@ -105,16 +106,23 @@ export default {
         { text: 'Created', value: 'created' }
       ]
       let info = JSON.parse(data.info)
-      this.infoItems.functions = [info]
-
+      if (info.length == 0) {
+        this.infoItems.functions = []
+        syntax = ''
+        EventBus.$emit('SEND_NOTIFICATION', 'This function does not longer exist', 'error')
+      }
+      else {
+        this.infoItems.functions = info
+        syntax = info[0].syntax
+      }
       // Parse Syntax
-      if (info.syntax == null) {
+      if (syntax == null) {
         this.editor.getSession().setMode("ace/mode/text")
-        info.syntax = 'Insufficient privileges to show the Function Definition.\n\nYou must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table'
+        syntax = 'Insufficient privileges to show the Function Definition.\n\nYou must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table'
       }
       else this.editor.getSession().setMode("ace/mode/sql")
-      this.infoEditor.functions = info.syntax
-      this.editor.setValue(info.syntax, -1)
+      this.infoEditor.functions = syntax
+      this.editor.setValue(syntax, -1)
       this.editor.focus()
     },
   },

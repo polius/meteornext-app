@@ -93,9 +93,10 @@ export default {
         })
     },
     parseInfo(data) {
+      var syntax = ''
       // Parse Info
       this.infoHeaders.views = [
-        { text: 'Name', value: 'name' },
+        { text: 'Name', value: 'view_name' },
         { text: 'Check Option', value: 'check_option' },
         { text: 'Is Updatable', value: 'is_updatable' },
         { text: 'Definer', value: 'definer' },
@@ -103,12 +104,18 @@ export default {
         { text: 'Collation Connection', value: 'collation_connection' }
       ]
       let info = JSON.parse(data.info)
-      info['name'] = this.treeviewSelected['name']
-      this.infoItems.views = [info]
-
+      if (info.length == 0) {
+        this.infoItems.views = []
+        syntax = ''
+        EventBus.$emit('SEND_NOTIFICATION', 'This view does not longer exist', 'error')
+      }
+      else {
+        this.infoItems.views = info
+        syntax = info[0].syntax
+      }
       // Parse Syntax
-      this.infoEditor.views = info.syntax
-      this.editor.setValue(info.syntax, -1)
+      this.infoEditor.views = syntax
+      this.editor.setValue(syntax, -1)
       this.editor.focus()
     },
   },

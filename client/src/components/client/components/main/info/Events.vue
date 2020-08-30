@@ -93,6 +93,7 @@ export default {
         })
     },
     parseInfo(data) {
+      var syntax = ''
       // Parse Info
       this.infoHeaders.events = [
         { text: 'Name', value: 'event_name' },
@@ -110,11 +111,18 @@ export default {
         { text: 'Created', value: 'created' }
       ]
       let info = JSON.parse(data.info)
-      this.infoItems.events = [info]
-
+      if (info.length == 0) {
+        this.infoItems.events = []
+        syntax = ''
+        EventBus.$emit('SEND_NOTIFICATION', 'This event does not longer exist', 'error')
+      }
+      else {
+        this.infoItems.events = info
+        syntax = info[0].syntax
+      }
       // Parse Syntax
-      this.infoEditor.events = info.syntax
-      this.editor.setValue(info.syntax, -1)
+      this.infoEditor.events = syntax
+      this.editor.setValue(syntax, -1)
       this.editor.focus()
     },
   },

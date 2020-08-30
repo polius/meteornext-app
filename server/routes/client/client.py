@@ -215,21 +215,46 @@ class Client:
             # Get Info
             if request.args['object'] == 'table':
                 info = conn.get_table_info(db=request.args['database'], table=request.args['name'])
-                info['syntax'] = conn.get_table_syntax(db=request.args['database'], table=request.args['name'])
+                if len(info) > 0:
+                    try:
+                        info[0]['syntax'] = conn.get_table_syntax(db=request.args['database'], table=request.args['name'])
+                    except Exception:
+                        info[0]['syntax'] = ''
             elif request.args['object'] == 'view':
                 info = conn.get_view_info(db=request.args['database'], view=request.args['name'])
+                if len(info) > 0:
+                    try:
+                        info[0]['syntax'] = conn.get_view_syntax(db=request.args['database'], view=request.args['name'])
+                    except Exception as e:
+                        info[0]['syntax'] = ''
             elif request.args['object'] == 'trigger':
                 info = conn.get_trigger_info(db=request.args['database'], trigger=request.args['name'])
-                info['syntax'] = conn.get_trigger_syntax(db=request.args['database'], trigger=request.args['name'])
+                if len(info) > 0:
+                    try:
+                        info[0]['syntax'] = conn.get_trigger_syntax(db=request.args['database'], trigger=request.args['name'])
+                    except Exception:
+                        info[0]['syntax'] = ''
             elif request.args['object'] == 'function':
                 info = conn.get_function_info(db=request.args['database'], function=request.args['name'])
-                info['syntax'] = conn.get_function_syntax(db=request.args['database'], function=request.args['name'])
+                if len(info) > 0:
+                    try:
+                        info[0]['syntax'] = conn.get_function_syntax(db=request.args['database'], function=request.args['name'])
+                    except Exception:
+                        info[0]['syntax'] = ''
             elif request.args['object'] == 'procedure':
                 info = conn.get_procedure_info(db=request.args['database'], procedure=request.args['name'])
-                info['syntax'] = conn.get_procedure_syntax(db=request.args['database'], procedure=request.args['name'])
+                if len(info) > 0:
+                    try:
+                        info[0]['syntax'] = conn.get_procedure_syntax(db=request.args['database'], procedure=request.args['name'])
+                    except Exception:
+                        info[0]['syntax'] = ''
             elif request.args['object'] == 'event':
                 info = conn.get_event_info(db=request.args['database'], event=request.args['name'])
-                info['syntax'] = conn.get_event_syntax(db=request.args['database'], event=request.args['name'])
+                if len(info) > 0:
+                    try:
+                        info[0]['syntax'] = conn.get_event_syntax(db=request.args['database'], event=request.args['name'])
+                    except Exception:
+                        info[0]['syntax'] = ''
             return jsonify({'info': json.dumps(info, default=self.__json_parser)}), 200
 
         @client_blueprint.route('/client/objects', methods=['GET'])

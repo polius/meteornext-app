@@ -125,12 +125,15 @@ class MySQL:
             pass
 
     def get_all_databases(self):
-        query = "SHOW DATABASES"
+        query = """
+            SELECT schema_name
+            FROM information_schema.schemata
+        """
         result = self.execute(query)['data']
 
         databases = []
         for db in result:
-            databases.append(db['Database'])
+            databases.append(db['schema_name'])
         return databases
 
     def get_all_tables(self, db):
@@ -151,7 +154,7 @@ class MySQL:
 
     def get_all_triggers(self, db):
         query = """
-            SELECT trigger_name AS 'name', action_timing, event_manipulation, action_orientation, action_statement, created, definer, character_set_client, collation_connection, database_collation
+            SELECT trigger_name AS 'name'
             FROM information_schema.triggers
             WHERE trigger_schema = %s
         """
@@ -159,7 +162,7 @@ class MySQL:
 
     def get_all_events(self, db):
         query = """
-            SELECT event_name AS 'name', event_definition, definer, event_type, execute_at, interval_value, interval_field, starts, ends, status, on_completion, created, last_altered, last_executed, character_set_client, collation_connection, database_collation
+            SELECT event_name AS 'name'
             FROM information_schema.events
             WHERE event_schema = %s;
         """
@@ -167,7 +170,7 @@ class MySQL:
 
     def get_all_routines(self, db):
         query = """
-            SELECT routine_name AS 'name', LOWER(routine_type) AS 'type', routine_definition, is_deterministic, created, last_altered
+            SELECT routine_name AS 'name', LOWER(routine_type) AS 'type'
             FROM information_schema.routines
             WHERE routine_schema = %s
         """
@@ -358,15 +361,23 @@ class MySQL:
             columns.append(cl['COLUMN_NAME'])
         return columns
 
-    def get_table_info(self, db, table):
+    def get_database_info(self):
+        query = """
+            SELECT schema_name, default_character_set_name, default_collation_name
+            FROM information_schema.schemata
+        """
+        result = self.execute(query)['data']
+
+    def get_table_info(self, db, table=None):
+        table = '' if table is None else "AND t.table_name = '{}'".format(table)
         query = """
             SELECT table_name, engine, row_format, table_rows, avg_row_length, data_length, max_data_length, index_length, data_free, auto_increment, create_time, update_time, c.character_set_name AS table_charset, table_collation, table_comment
             FROM information_schema.tables t
             JOIN information_schema.collations c ON c.collation_name = t.table_collation
             WHERE t.table_schema = '{}'
-            AND t.table_name = '{}';
-        """.format(db, table)
-        result = self.execute(query)['data'][0]
+            {}
+        """.format(db, table).strip()
+        result = self.execute(query)['data']
         return result
 
     def get_table_syntax(self, db, table):
@@ -375,67 +386,77 @@ class MySQL:
         return result
 
     def get_view_info(self, db, view):
+        view = '' if view is None else "AND table_name = '{}'".format(view)
         query = """
-            SELECT view_definition AS 'syntax', check_option, is_updatable, definer, character_set_client, collation_connection
+            SELECT table_name AS 'view_name', check_option, is_updatable, definer, character_set_client, collation_connection
             FROM information_schema.views
             WHERE table_schema = '{}'
-            AND table_name = '{}';
-        """.format(db, view)
-        result = self.execute(query)['data'][0]
+            {}
+        """.format(db, view).strip()
+        result = self.execute(query)['data']
         return result
 
-    def get_trigger_info(self, db, trigger):
+    def get_view_syntax(self, db, view):
+        query = "SHOW CREATE VIEW {}.{}".format(db, view)
+        result = self.execute(query)['data'][0]['Create View']
+        return result
+
+    def get_trigger_info(self, db, trigger=None):
+        trigger = '' if trigger is None else "AND trigger_name = '{}'".format(trigger)
         query = """
             SELECT trigger_name, action_timing, event_manipulation, event_object_table, definer, character_set_client, collation_connection, database_collation, created
             FROM information_schema.triggers
-            WHERE event_object_schema = %s
-            AND trigger_name = %s
-        """
-        return self.execute(query, args=(db, trigger))['data'][0]
+            WHERE event_object_schema = '{}'
+            {}
+        """.format(db, trigger).strip()
+        return self.execute(query)['data']
 
     def get_trigger_syntax(self, db, trigger):
         query = "SHOW CREATE TRIGGER {}.{}".format(db, trigger)
         result = self.execute(query)['data'][0]['SQL Original Statement']
         return result
 
-    def get_function_info(self, db, function):
+    def get_function_info(self, db, function=None):
+        function = '' if function is None else "AND routine_name = '{}'".format(function)
         query = """
             SELECT routine_name, dtd_identifier AS 'return_type', is_deterministic, definer, character_set_client, collation_connection, database_collation, created
             FROM information_schema.routines 
-            WHERE routine_schema = %s
-            AND routine_name = %s
-            AND routine_type = 'FUNCTION';
-        """
-        return self.execute(query, args=(db, function))['data'][0]
+            WHERE routine_schema = '{}'
+            AND routine_type = 'FUNCTION'
+            {}
+        """.format(db, function).strip()
+        return self.execute(query)['data']
 
     def get_function_syntax(self, db, function):
         query = "SHOW CREATE FUNCTION {}.{}".format(db, function)
         result = self.execute(query)['data'][0]['Create Function']
         return result
 
-    def get_procedure_info(self, db, procedure):
+    def get_procedure_info(self, db, procedure=None):
+        procedure = '' if procedure is None else "AND routine_name = '{}'".format(procedure)
         query = """
             SELECT routine_name, is_deterministic, definer, character_set_client, collation_connection, database_collation, created
             FROM information_schema.routines 
-            WHERE routine_schema = %s
-            AND routine_name = %s
-            AND routine_type = 'PROCEDURE';
-        """
-        return self.execute(query, args=(db, procedure))['data'][0]
+            WHERE routine_schema = '{}'
+            AND routine_type = 'PROCEDURE'
+            {}
+        """.format(db, procedure).strip()
+        return self.execute(query)['data']
 
     def get_procedure_syntax(self, db, procedure):
         query = "SHOW CREATE PROCEDURE {}.{}".format(db, procedure)
         result = self.execute(query)['data'][0]['Create Procedure']
         return result
 
-    def get_event_info(self, db, event):
+    def get_event_info(self, db, event=None):
+        event = '' if event is None else "AND event_name = '{}'".format(event)
         query = """
             SELECT event_name, event_type, execute_at, interval_value, interval_field, starts, ends, on_completion, definer, created, character_set_client, collation_connection, database_collation
             FROM information_schema.events
-            WHERE event_schema = %s
-            AND event_name = %s;
-        """
-        return self.execute(query, args=(db, event))['data'][0]
+            WHERE event_schema = '{}'
+            {}
+        """.format(db, event).strip()
+        return self.execute(query)['data']
 
     def get_event_syntax(self, db, event):
         query = "SHOW CREATE EVENT {}.{}".format(db, event)
