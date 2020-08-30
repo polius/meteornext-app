@@ -52,8 +52,6 @@
       <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" text small title="Import SQL" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-up</v-icon></v-btn>
       <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" text small title="Export Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-down</v-icon></v-btn>
       <span v-if="database.length > 0" :disabled="loading || loadingServer" style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" @click="showObjects" text small title="Show Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-cubes</v-icon></v-btn>
-      <span v-if="database.length > 0" :disabled="loading || loadingServer" style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>      
     </div>
   </div>
 </template>
@@ -365,10 +363,6 @@ export default {
       // promise
       this.getDatabases(this.server)
       if (this.database.length > 0) this.getObjects(this.database)
-    },
-    showObjects() {
-      this.headerTabSelected = 'object_table'
-      EventBus.$emit('GET_OBJECT', 'table')
     },
   },
 }
