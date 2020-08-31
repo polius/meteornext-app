@@ -363,10 +363,11 @@ class MySQL:
 
     def get_database_info(self):
         query = """
-            SELECT schema_name, default_character_set_name, default_collation_name
+            SELECT schema_name AS 'name', default_character_set_name AS 'character_set_name', default_collation_name AS 'collation_name'
             FROM information_schema.schemata
         """
         result = self.execute(query)['data']
+        return result
 
     def get_table_info(self, db, table=None):
         table = '' if table is None else "AND t.table_name = '{}'".format(table)

@@ -254,7 +254,11 @@ export default {
     getObjects(database) {
       this.loading = true
       // Retrieve Tables
-      axios.get('/client/objects', { params: { server_id: this.server.id, database_name: database } })
+      const payload = {
+        server: this.server.id,
+        database: database
+      }
+      axios.get('/client/objects', { params: payload })
         .then((response) => {
           this.parseObjects(response.data)
           this.editor.focus()

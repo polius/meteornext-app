@@ -30,16 +30,17 @@ export default {
   },
   computed: {
     ...mapFields([
-        'headerTab',
-        'headerTabSelected',
-        'treeview',
-        'treeviewMode',
-        'treeviewSelected',
-        'structureHeaders',
-        'contentHeaders',
-        'infoHeaders',
-        'editor',
-        'database',
+      'headerTab',
+      'headerTabSelected',
+      'treeview',
+      'treeviewMode',
+      'treeviewSelected',
+      'structureHeaders',
+      'contentHeaders',
+      'infoHeaders',
+      'objectsHeaders',
+      'editor',
+      'database',
     ], { path: 'client/connection' }),
   },
   methods: {
@@ -61,8 +62,10 @@ export default {
       if (this.infoHeaders[object + 's'].length == 0) EventBus.$emit('GET_INFO', object)
     },
     tabObjects() {
-      this.headerTabSelected = 'object_table'
-      EventBus.$emit('GET_OBJECT', 'table')
+      this.headerTabSelected = 'objects'
+      if (this.objectsHeaders.databases.length == 0) {
+        new Promise((resolve, reject) => { EventBus.$emit('GET_OBJECTS', resolve, reject) })
+      }
     },
   },
 }
