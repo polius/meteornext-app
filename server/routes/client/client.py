@@ -77,18 +77,28 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], request.args['server_id'])
+            cred = self._client.get_credentials(user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = connectors.connector.Connector(cred)
 
             # Get Database Objects
-            tables = conn.get_all_tables(db=request.args['database_name'])
-            columns = conn.get_all_columns(db=request.args['database_name'])
-            triggers = conn.get_all_triggers(db=request.args['database_name'])
-            events = conn.get_all_events(db=request.args['database_name'])
-            routines = conn.get_all_routines(db=request.args['database_name'])
-            return jsonify({'tables': tables, 'columns': columns, 'triggers': triggers, 'events': events, 'routines': routines}), 200
+            if 'detailed' in request.args:
+                databases = conn.get_database_info()
+                tables = conn.get_table_info(db=request.args['database'])
+                views = conn.get_view_info(db=request.args['database'])
+                triggers = conn.get_trigger_info(db=request.args['database'])
+                functions = conn.get_function_info(db=request.args['database'])
+                procedures = conn.get_procedure_info(db=request.args['database'])
+                events = conn.get_event_info(db=request.args['database'])
+                return jsonify({'databases': self.__json(databases), 'tables': self.__json(tables), 'views': self.__json(views), 'triggers': self.__json(triggers), 'functions': self.__json(functions), 'procedures': self.__json(procedures), 'events': self.__json(events)}), 200
+            else:
+                tables = conn.get_all_tables(db=request.args['database'])
+                columns = conn.get_all_columns(db=request.args['database'])
+                triggers = conn.get_all_triggers(db=request.args['database'])
+                events = conn.get_all_events(db=request.args['database'])
+                routines = conn.get_all_routines(db=request.args['database'])
+                return jsonify({'tables': tables, 'columns': columns, 'triggers': triggers, 'events': events, 'routines': routines}), 200
 
         @client_blueprint.route('/client/execute', methods=['POST'])
         @jwt_required
@@ -257,46 +267,14 @@ class Client:
                         info[0]['syntax'] = ''
             return jsonify({'info': json.dumps(info, default=self.__json_parser)}), 200
 
-        @client_blueprint.route('/client/objects', methods=['GET'])
-        @jwt_required
-        def client_objects_method():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Get User
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if not user['client_enabled']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], request.args['server'])
-            if cred is None:
-                return jsonify({"message": 'This server does not exist'}), 400
-            conn = connectors.connector.Connector(cred)
-
-            # Get Info
-            if request.args['object'] == 'table':
-                objects = conn.get_table_info(db=request.args['database'])
-            elif request.args['object'] == 'view':
-                pass
-            elif request.args['object'] == 'trigger':
-                pass
-            elif request.args['object'] == 'function':
-                pass
-            elif request.args['object'] == 'procedure':
-                pass
-            elif request.args['object'] == 'event':
-                pass
-            return jsonify({'objects': json.dumps(objects, default=self.__json_parser)}), 200
-
         return client_blueprint
 
     ####################
     # Internal Methods #
     ####################
+    def __json(self, data):
+        return json.dumps(data, default=self.__json_parser)
+
     def __json_parser(self, o):
         if isinstance(o, datetime.datetime):
             return o.__str__()

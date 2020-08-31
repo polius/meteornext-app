@@ -4,7 +4,7 @@
     <Structure v-show="headerTabSelected == 'structure'" />
     <Content v-show="headerTabSelected == 'content'" />
     <Info v-show="headerTabSelected.startsWith('info')" />
-    <Objects v-show="headerTabSelected.startsWith('object')" />
+    <Objects v-show="headerTabSelected.startsWith('objects')" />
   </div>
 </template>
 

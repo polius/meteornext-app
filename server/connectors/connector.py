@@ -121,6 +121,9 @@ class Connector:
     def get_pk_names(self, db, table):
         return self._sql.get_pk_names(db, table)
 
+    def get_database_info(self):
+        return self._sql.get_database_info()
+
     def get_table_info(self, db, table=None):
         return self._sql.get_table_info(db, table)
 

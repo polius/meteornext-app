@@ -5,88 +5,108 @@
     <!------------->
     <v-tabs show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
       <v-tabs-slider></v-tabs-slider>
-      <v-tab @click="tabObjectsDatabases()"><span class="pl-2 pr-2">Databases</span></v-tab>
+      <v-tab @click="tabObjects('databases')"><span class="pl-2 pr-2">Databases</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
-      <v-tab @click="tabObjectsTables()"><span class="pl-2 pr-2">Tables</span></v-tab>
+      <v-tab @click="tabObjects('tables')"><span class="pl-2 pr-2">Tables</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
-      <v-tab @click="tabObjectsViews()"><span class="pl-2 pr-2">Views</span></v-tab>
+      <v-tab @click="tabObjects('views')"><span class="pl-2 pr-2">Views</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
-      <v-tab @click="tabObjectsTriggers()"><span class="pl-2 pr-2">Triggers</span></v-tab>
+      <v-tab @click="tabObjects('triggers')"><span class="pl-2 pr-2">Triggers</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
-      <v-tab @click="tabObjectsFunctions()"><span class="pl-2 pr-2">Functions</span></v-tab>
+      <v-tab @click="tabObjects('functions')"><span class="pl-2 pr-2">Functions</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
-      <v-tab @click="tabObjectsProcedures()"><span class="pl-2 pr-2">Procedures</span></v-tab>
+      <v-tab @click="tabObjects('procedures')"><span class="pl-2 pr-2">Procedures</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
-      <v-tab @click="tabObjectsEvents()"><span class="pl-2 pr-2">Events</span></v-tab>
+      <v-tab @click="tabObjects('events')"><span class="pl-2 pr-2">Events</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
     </v-tabs>
     <!---------------->
     <!-- COMPONENTS -->
     <!---------------->
-    <Tables v-show="headerTabSelected == 'object_table'" />
-    <!-- <Views v-show="headerTabSelected == 'object_view'" />
-    <Triggers v-show="headerTabSelected == 'object_trigger'" />
-    <Functions v-show="headerTabSelected == 'object_function'" />
-    <Procedures v-show="headerTabSelected == 'object_procedure'" />
-    <Events v-show="headerTabSelected == 'object_event'" /> -->
+    <Databases v-show="tabObjectsSelected == 'databases'" />
+    <Tables v-show="tabObjectsSelected == 'tables'" />
+    <Views v-show="tabObjectsSelected == 'views'" />
+    <Triggers v-show="tabObjectsSelected == 'triggers'" />
+    <Functions v-show="tabObjectsSelected == 'functions'" />
+    <Procedures v-show="tabObjectsSelected == 'procedures'" />
+    <Events v-show="tabObjectsSelected == 'events'" />
   </div>
 </template>
 
 <script>
+import axios from 'axios'
 import EventBus from '../../js/event-bus'
 import { mapFields } from '../../js/map-fields'
 
+import Databases from './objects/Databases'
 import Tables from './objects/Tables'
-// import Views from './objects/Views'
-// import Triggers from './objects/Triggers'
-// import Functions from './objects/Functions'
-// import Procedures from './objects/Procedures'
-// import Events from './objects/Events'
+import Views from './objects/Views'
+import Triggers from './objects/Triggers'
+import Functions from './objects/Functions'
+import Procedures from './objects/Procedures'
+import Events from './objects/Events'
 
 export default {
   data() {
     return {
     }
   },
-  components: { Tables /*, Views, Triggers, Functions, Procedures, Events */ },
+  components: { Databases, Tables, Views, Triggers, Functions, Procedures, Events },
   computed: {
     ...mapFields([
-        'headerTabSelected',
+      'tabObjectsSelected',
+      'server',
+      'database',
+      'objectsHeaders',
+      'objectsItems',
+      'bottomBar',
     ], { path: 'client/connection' }),
   },
   mounted() {
     // Register Event
-    EventBus.$on('GET_OBJECT', this.getObject);
+    EventBus.$on('GET_OBJECTS', this.getObjects);
   },
   methods: {
-    getObject(object) {
-      if (object == 'table') EventBus.$emit('GET_OBJECT_TABLE')
-      else if (object == 'view') EventBus.$emit('GET_OBJECT_VIEW')
-      else if (object == 'trigger') EventBus.$emit('GET_OBJECT_TRIGGER')
-      else if (object == 'function') EventBus.$emit('GET_OBJECT_FUNCTION')
-      else if (object == 'procedure') EventBus.$emit('GET_OBJECT_PROCEDURE')
-      else if (object == 'event') EventBus.$emit('GET_OBJECT_EVENT')
+    tabObjects(object) {
+      this.tabObjectsSelected = object
     },
-    tabObjectsDatabases() {
+    getObjects(resolve, reject) {
+      const payload = {
+        server: this.server.id,
+        database: this.database,
+        detailed: true
+      }
+      axios.get('/client/objects', { params: payload })
+        .then((response) => {
+          for (let [key, value] of Object.entries(response.data)) this.parseObjects(key, value)
+          resolve()
+        })
+        .catch((error) => {
+          console.log(error)
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+          reject()
+        })      
+    },
+    parseObjects(object, value) {
+      let data = JSON.parse(value)
+      // Parse each object
+      this.objectsHeaders[object] = []
+      this.objectsItems[object] = []
 
+      if (data.length > 0) {
+        for (let [key] of Object.entries(data[0])) {
+          this.objectsHeaders[object].push({ headerName: this.parseHeaderName(key), colId: key.trim(), field: key.trim(), sortable: true, filter: true, resizable: true, editable: false })
+        }
+        this.objectsItems[object] = data
+      }
+      this.bottomBar.objects[object] = data.length + ' record(s)'
     },
-    tabObjectsTables() {
-
-    },
-    tabObjectsViews() {
-
-    },
-    tabObjectsTriggers() {
-
-    },
-    tabObjectsFunctions() {
-
-    },
-    tabObjectsProcedures() {
-
-    },
-    tabObjectsEvents() {
-      
+    parseHeaderName(rawName) {
+      let name = rawName.replaceAll('_', ' ')
+      name = name.split(" ")
+      for (let i = 0; i < name.length; i++) name[i] = name[i][0].toUpperCase() + name[i].substr(1)
+      return name.join(" ").trim()
     }
   }
 }
