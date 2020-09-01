@@ -363,7 +363,7 @@ class MySQL:
 
     def get_database_info(self):
         query = """
-            SELECT schema_name AS 'name', default_character_set_name AS 'character_set_name', default_collation_name AS 'collation_name'
+            SELECT schema_name AS 'name', default_character_set_name AS 'charset', default_collation_name AS 'collation'
             FROM information_schema.schemata
         """
         result = self.execute(query)['data']
@@ -372,11 +372,12 @@ class MySQL:
     def get_table_info(self, db, table=None):
         table = '' if table is None else "AND t.table_name = '{}'".format(table)
         query = """
-            SELECT table_name, engine, row_format, table_rows, avg_row_length, data_length, max_data_length, index_length, data_free, auto_increment, create_time, update_time, c.character_set_name AS table_charset, table_collation, table_comment
+            SELECT table_name AS 'name', table_rows AS 'rows', data_length, index_length, (data_length + index_length) AS 'total_length', engine, row_format, avg_row_length, data_free, auto_increment, c.character_set_name AS 'charset', table_collation AS 'collation', table_comment AS 'comment', create_time AS 'created', update_time AS 'modified'
             FROM information_schema.tables t
             JOIN information_schema.collations c ON c.collation_name = t.table_collation
             WHERE t.table_schema = '{}'
             {}
+            ORDER BY table_name
         """.format(db, table).strip()
         result = self.execute(query)['data']
         return result
@@ -389,10 +390,11 @@ class MySQL:
     def get_view_info(self, db, view):
         view = '' if view is None else "AND table_name = '{}'".format(view)
         query = """
-            SELECT table_name AS 'view_name', check_option, is_updatable, definer, character_set_client, collation_connection
+            SELECT table_name AS 'name', check_option, is_updatable, definer, character_set_client AS 'charset', collation_connection AS 'collation'
             FROM information_schema.views
             WHERE table_schema = '{}'
             {}
+            ORDER BY table_name
         """.format(db, view).strip()
         result = self.execute(query)['data']
         return result
@@ -405,10 +407,11 @@ class MySQL:
     def get_trigger_info(self, db, trigger=None):
         trigger = '' if trigger is None else "AND trigger_name = '{}'".format(trigger)
         query = """
-            SELECT trigger_name, action_timing, event_manipulation, event_object_table, definer, character_set_client, collation_connection, database_collation, created
+            SELECT trigger_name AS 'name', event_object_table 'table', action_timing AS 'timing', event_manipulation AS 'event', definer, character_set_client AS 'charset', collation_connection AS 'collation', created
             FROM information_schema.triggers
             WHERE event_object_schema = '{}'
             {}
+            ORDER BY trigger_name
         """.format(db, trigger).strip()
         return self.execute(query)['data']
 
@@ -420,11 +423,12 @@ class MySQL:
     def get_function_info(self, db, function=None):
         function = '' if function is None else "AND routine_name = '{}'".format(function)
         query = """
-            SELECT routine_name, dtd_identifier AS 'return_type', is_deterministic, definer, character_set_client, collation_connection, database_collation, created
+            SELECT routine_name AS 'name', dtd_identifier AS 'return_type', is_deterministic, definer, character_set_client AS 'charset', collation_connection AS 'collation', created
             FROM information_schema.routines 
             WHERE routine_schema = '{}'
             AND routine_type = 'FUNCTION'
             {}
+            ORDER BY routine_name
         """.format(db, function).strip()
         return self.execute(query)['data']
 
@@ -436,11 +440,12 @@ class MySQL:
     def get_procedure_info(self, db, procedure=None):
         procedure = '' if procedure is None else "AND routine_name = '{}'".format(procedure)
         query = """
-            SELECT routine_name, is_deterministic, definer, character_set_client, collation_connection, database_collation, created
+            SELECT routine_name AS 'name', is_deterministic, definer, character_set_client AS 'charset', collation_connection AS 'collation', created
             FROM information_schema.routines 
             WHERE routine_schema = '{}'
             AND routine_type = 'PROCEDURE'
             {}
+            ORDER BY routine_name
         """.format(db, procedure).strip()
         return self.execute(query)['data']
 
@@ -452,10 +457,11 @@ class MySQL:
     def get_event_info(self, db, event=None):
         event = '' if event is None else "AND event_name = '{}'".format(event)
         query = """
-            SELECT event_name, event_type, execute_at, interval_value, interval_field, starts, ends, on_completion, definer, created, character_set_client, collation_connection, database_collation
+            SELECT event_name AS 'name', event_type AS 'type', execute_at, interval_value, interval_field, starts, ends, on_completion, definer, character_set_client AS 'charset', collation_connection AS 'collation', created
             FROM information_schema.events
             WHERE event_schema = '{}'
             {}
+            ORDER BY event_name
         """.format(db, event).strip()
         return self.execute(query)['data']
 

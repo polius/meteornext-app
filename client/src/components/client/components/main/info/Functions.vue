@@ -96,13 +96,12 @@ export default {
       var syntax = ''
       // Parse Info
       this.infoHeaders.functions = [
-        { text: 'Name', value: 'routine_name' },
+        { text: 'Name', value: 'name' },
         { text: 'Return Type', value: 'return_type' },
-        { text: 'Deterministic', value: 'is_deterministic' },
+        { text: 'Is Deterministic', value: 'is_deterministic' },
         { text: 'Definer', value: 'definer' },
-        { text: 'Character Set Client', value: 'character_set_client' },
-        { text: 'Collation Connection', value: 'collation_connection' },
-        { text: 'Database Collation', value: 'database_collation' },
+        { text: 'Charset', value: 'charset' },
+        { text: 'Collation', value: 'collation' },
         { text: 'Created', value: 'created' }
       ]
       let info = JSON.parse(data.info)

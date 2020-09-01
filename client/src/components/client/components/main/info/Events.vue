@@ -96,8 +96,8 @@ export default {
       var syntax = ''
       // Parse Info
       this.infoHeaders.events = [
-        { text: 'Name', value: 'event_name' },
-        { text: 'Type', value: 'event_type' },
+        { text: 'Name', value: 'name' },
+        { text: 'Type', value: 'type' },
         { text: 'Execute At', value: 'execute_at' },
         { text: 'Interval Value', value: 'interval_value' },
         { text: 'Interval Field', value: 'interval_field' },
@@ -105,9 +105,7 @@ export default {
         { text: 'Ends', value: 'ends' },
         { text: 'On Completion', value: 'on_completion' },
         { text: 'Definer', value: 'definer' },
-        // { text: 'Character Set Client', value: 'character_set_client' },
-        { text: 'Collation Connection', value: 'collation_connection' },
-        // { text: 'Database Collation', value: 'database_collation' },
+        { text: 'Collation Connection', value: 'collation' },
         { text: 'Created', value: 'created' }
       ]
       let info = JSON.parse(data.info)

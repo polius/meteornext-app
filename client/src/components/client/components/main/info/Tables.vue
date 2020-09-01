@@ -97,16 +97,16 @@ export default {
       var syntax = ''
       // Parse Info
       this.infoHeaders.tables = [
-        { text: 'Name', value: 'table_name'},
+        { text: 'Name', value: 'name'},
         { text: 'Engine', value: 'engine' },
-        { text: 'Row format', value: 'row_format' },
-        { text: 'Rows', value: 'table_rows' },
-        { text: 'Data size', value: 'data_length' },
-        { text: 'Index size', value: 'index_length' },
-        { text: 'Total size', value: 'total_length' },
-        { text: 'Collation', value: 'table_collation' },
-        { text: 'Created', value: 'create_time' },
-        { text: 'Updated', value: 'update_time' }
+        { text: 'Row Format', value: 'row_format' },
+        { text: 'Rows', value: 'rows' },
+        { text: 'Data Length', value: 'data_length' },
+        { text: 'Index Length', value: 'index_length' },
+        { text: 'Total Length', value: 'total_length' },
+        { text: 'Collation', value: 'collation' },
+        { text: 'Created', value: 'created' },
+        { text: 'Modified', value: 'modified' }
       ]
       let info = JSON.parse(data.info)
       if (info.length == 0) {
@@ -131,10 +131,10 @@ export default {
     },
     parseBytes(value) {
       if (value/1024 < 1) return value + ' B'
-      else if (value/1024/1024 < 1) return value/1024 + 'KB'
-      else if (value/1024/1024/1024 < 1) return value/1024/1024 + 'MB'
-      else if (value/1024/1024/1024/1024 < 1) return value/1024/1024/1024 + 'GB'
-      else return value/1024/1024/1024/1024 + 'TB' 
+      else if (value/1024/1024 < 1) return value/1024 + ' KB'
+      else if (value/1024/1024/1024 < 1) return value/1024/1024 + ' MB'
+      else if (value/1024/1024/1024/1024 < 1) return value/1024/1024/1024 + ' GB'
+      else return value/1024/1024/1024/1024 + ' TB' 
     },
   },
 }
