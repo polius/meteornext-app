@@ -96,14 +96,13 @@ export default {
       var syntax = ''
       // Parse Info
       this.infoHeaders.triggers = [
-        { text: 'Name', value: 'trigger_name' },
-        { text: 'Timing', value: 'action_timing' },
-        { text: 'Event', value: 'event_manipulation' },
-        { text: 'Table', value: 'event_object_table' },
+        { text: 'Name', value: 'name' },
+        { text: 'Table', value: 'table' },
+        { text: 'Timing', value: 'timing' },
+        { text: 'Event', value: 'event' },
         { text: 'Definer', value: 'definer' },
-        { text: 'Character Set Client', value: 'character_set_client' },
-        { text: 'Collation Connection', value: 'collation_connection' },
-        { text: 'Database Collation', value: 'database_collation' },
+        { text: 'Charset', value: 'charset' },
+        { text: 'Collation', value: 'collation' },
         { text: 'Created', value: 'created' }
       ]
       let info = JSON.parse(data.info)

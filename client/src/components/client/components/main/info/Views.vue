@@ -96,12 +96,12 @@ export default {
       var syntax = ''
       // Parse Info
       this.infoHeaders.views = [
-        { text: 'Name', value: 'view_name' },
+        { text: 'Name', value: 'name' },
         { text: 'Check Option', value: 'check_option' },
         { text: 'Is Updatable', value: 'is_updatable' },
         { text: 'Definer', value: 'definer' },
-        { text: 'Character Set Client', value: 'character_set_client' },
-        { text: 'Collation Connection', value: 'collation_connection' }
+        { text: 'Charset', value: 'charset' },
+        { text: 'Collation', value: 'collation' }
       ]
       let info = JSON.parse(data.info)
       if (info.length == 0) {

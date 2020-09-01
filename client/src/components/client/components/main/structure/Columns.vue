@@ -259,7 +259,7 @@ export default {
           + (event.node.data['Length'] !== null ? '(' + event.node.data['Length'] + ')' : '')
           + (event.node.data['Unsigned'] ? ' UNSIGNED' : '')
           + (event.node.data['Collation'] !== null ? ' CHARACTER SET ' + event.node.data['Collation'].split('_')[0] + ' COLLATE ' + event.node.data['Collation'] : '')
-          + (event.node.data['Allow Null'] ? ' NULL' : ' NOT NULL')
+          + (event.node.data['Allow NULL'] ? ' NULL' : ' NOT NULL')
           + (event.node.data['Default'] !== null ? " DEFAULT" + (event.node.data['Default'] == 'CURRENT_TIMESTAMP' ? ' CURRENT_TIMESTAMP' : " '" + event.node.data['Default'] + "'") : '')
           + (event.node.data['Extra'].toLowerCase() == 'on update current_timestamp' ? ' ON UPDATE CURRENT_TIMESTAMP' : '')
           + (event.node.data['Extra'].toLowerCase() ==  'auto_increment' ? ' AUTO_INCREMENT' : '')

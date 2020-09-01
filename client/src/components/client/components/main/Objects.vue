@@ -96,7 +96,14 @@ export default {
 
       if (data.length > 0) {
         for (let [key] of Object.entries(data[0])) {
-          this.objectsHeaders[object].push({ headerName: this.parseHeaderName(key), colId: key.trim(), field: key.trim(), sortable: true, filter: true, resizable: true, editable: false })
+          let column = { headerName: this.parseHeaderName(key), colId: key.trim(), field: key.trim(), sortable: true, filter: true, resizable: true, editable: false }
+          if (object == 'tables' && ['data_length','index_length','total_length'].includes(key)) {
+            column.valueGetter = (params) => {
+              return this.parseBytes(params.data[params.colDef.field])
+            }
+            column.comparator = this.compareValues
+          }
+          this.objectsHeaders[object].push(column)
         }
         this.objectsItems[object] = data
       }
@@ -107,6 +114,23 @@ export default {
       name = name.split(" ")
       for (let i = 0; i < name.length; i++) name[i] = name[i][0].toUpperCase() + name[i].substr(1)
       return name.join(" ").trim()
+    },
+    parseBytes(value) {
+      if (value/1024 < 1) return value + ' B'
+      else if (value/1024/1024 < 1) return value/1024 + ' KB'
+      else if (value/1024/1024/1024 < 1) return value/1024/1024 + ' MB'
+      else if (value/1024/1024/1024/1024 < 1) return value/1024/1024/1024 + ' GB'
+      else return value/1024/1024/1024/1024 + ' TB' 
+    },
+    compareValues(value1, value2) {
+      // Check NULL & Empty Values
+      if ((value1 === null && value2 === null) || (value1 !== null && value2 !== null && value1.toString().trim() == '' && value2.toString().trim() == '')) return 0
+      if ((value1 === null) || (value1.toString().trim() == '')) return -1
+      if ((value2 === null) || (value2.toString().trim() == '')) return 1
+
+      // Check NOT NULL Values
+      if (!isNaN(parseFloat(value1)) && !isNaN(parseFloat(value2))) return parseFloat(value1) - parseFloat(value2)
+      else return value1.toString().localeCompare(value2.toString())
     }
   }
 }
