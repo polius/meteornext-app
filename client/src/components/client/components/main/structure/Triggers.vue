@@ -102,14 +102,16 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
-      'gridApi',
-      'columnApi',
       'structureHeaders',
       'structureItems',
       'treeviewSelected',
       'bottomBar',
       'tabStructureSelected',
     ], { path: 'client/connection' }),
+    ...mapFields([
+      'gridApi',
+      'columnApi',
+    ], { path: 'client/components' }),
   },
   watch: {
     dialog (val) {

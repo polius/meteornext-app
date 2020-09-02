@@ -25,7 +25,7 @@ export default {
   components: { Client, Content, Structure, Info, Objects },
   computed: {
     ...mapFields([
-        'headerTabSelected',
+      'headerTabSelected',
     ], { path: 'client/connection' }),
   },
   mounted() {

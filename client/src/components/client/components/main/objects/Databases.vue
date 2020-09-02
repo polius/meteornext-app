@@ -43,9 +43,11 @@ export default {
       'server',
       'treeviewSelected',
       'bottomBar',
+    ], { path: 'client/connection' }),
+    ...mapFields([
       'gridApi',
       'columnApi',
-    ], { path: 'client/connection' }),
+    ], { path: 'client/components' }),
   },
   watch: {
     tabObjectsSelected(val) {

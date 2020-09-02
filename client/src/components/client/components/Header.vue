@@ -39,9 +39,11 @@ export default {
       'contentHeaders',
       'infoHeaders',
       'objectsHeaders',
-      'editor',
       'database',
     ], { path: 'client/connection' }),
+    ...mapFields([
+      'editor',
+    ], { path: 'client/components' }),
   },
   methods: {
     tabClient() {

@@ -6,7 +6,7 @@
         <div style="margin: -12px;">
           <div ref="masterDiv" style="height: calc(100vh - 112px);">
             <Connections/>
-            <Splitpanes :style="Object.keys(server).length != 0 ? 'height:calc(100% - 49px)' : 'height:100%'">
+            <Splitpanes :style="(Object.keys(server).length != 0 || connections.length > 1) ? 'height:calc(100% - 49px)' : 'height:100%'">
               <Pane size="20" min-size="0">
                 <Sidebar/>
               </Pane>
@@ -158,6 +158,7 @@ import Connections from './components/Connections'
 import Sidebar from './components/Sidebar'
 import Main from './components/Main'
 
+import { mapFields } from './js/map-fields'
 import EventBus from './js/event-bus'
 
 export default {
@@ -172,7 +173,8 @@ export default {
   },
   components: { Splitpanes, Pane, Header, Connections, Sidebar, Main },
   computed: {
-    server () { return this.$store.getters['client/connection'].server },
+    ...mapFields(['connections'], { path: 'client/client' }),
+    ...mapFields(['server'], { path: 'client/connection' }),
   },
   mounted () {
     EventBus.$on('SEND_NOTIFICATION', this.notification);
