@@ -166,8 +166,6 @@ export default {
         'contentItems',
         'treeviewSelected',
         'structureHeaders',
-        'gridApi',
-        'columnApi',
         'server',
         'database',
         'currentCellEditMode',
@@ -182,6 +180,10 @@ export default {
         'isRowSelected',
         'bottomBar'
     ], { path: 'client/connection' }),
+    ...mapFields([
+      'gridApi',
+      'columnApi',
+    ], { path: 'client/components' }),
   },
   mounted () {
     EventBus.$on('GET_CONTENT', this.getContent);

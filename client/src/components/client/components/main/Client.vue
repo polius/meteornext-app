@@ -64,22 +64,25 @@ export default {
   },
   computed: {
     ...mapFields([
-        'clientHeaders',
-        'clientItems',
-        'bottomBar',
-        'gridApi',
-        'columnApi',
-        'server',
-        'editorQuery',
-        'editor',
-        'editorMarkers',
-        'editorTools',
-        'loadingQuery',
-        'database',
+      'clientHeaders',
+      'clientItems',
+      'bottomBar',
+      'server',
+      'clientQuery',
+      'loadingQuery',
+      'database',
     ], { path: 'client/connection' }),
+    ...mapFields([
+      'editor',
+      'editorMarkers',
+      'editorTools',
+      'gridApi',
+      'columnApi',
+    ], { path: 'client/components' }),
   },
   methods: {
    onGridReady(params) {
+     console.log("CLIENT-GRID-READY")
       this.gridApi.client = params.api
       this.columnApi.client = params.columnApi
       this.$refs['agGridClient'].$el.addEventListener('click', this.onGridClick)
@@ -112,6 +115,7 @@ export default {
       }
     },
     initAceClient() {
+      console.log("CLIENT-EDITOR-READY")
       // Editor Settings
       this.editor = ace.edit("editor", {
         mode: "ace/mode/sql",
@@ -148,7 +152,7 @@ export default {
         // - Run Query/ies -
         else if (e.key.toLowerCase() == "r" && (e.ctrlKey || e.metaKey)) {
           e.preventDefault()
-          if (Object.keys(this.server).length > 0 && this.editorQuery.length > 0) this.runQuery()
+          if (Object.keys(this.server).length > 0 && this.clientQuery.length > 0) this.runQuery()
         }
         // - Increase Font Size -
         else if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
@@ -232,7 +236,7 @@ export default {
           break
         }
       }
-      this.editorQuery = query
+      this.clientQuery = query
 
       // Get Current Query Position
       var queryPosition = 0
@@ -312,7 +316,7 @@ export default {
       // Get Query/ies (selected or highlighted)
       const selectedText = this.editor.getSelectedText()
       var queries = []
-      if (selectedText.length == 0) queries = [this.editorQuery]
+      if (selectedText.length == 0) queries = [this.clientQuery]
       else {
         // Build multi-queries
         let start = 0;

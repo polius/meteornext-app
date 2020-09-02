@@ -103,6 +103,13 @@ export default {
   },
   computed: {
     ...mapFields([
+      'servers',
+    ], { path: 'client/client' }),
+    ...mapFields([
+      'editor',
+      'editorCompleters',
+    ], { path: 'client/components' }),
+    ...mapFields([
         'database',
         'databaseItems',
         'tableItems',
@@ -114,12 +121,10 @@ export default {
         'treeviewOpened',
         'treeviewSelected',
         'server',
-        'editorCompleters',
         'menuItems',
         'showMenu',
         'x',
         'y',
-        'editor',
         'headerTab',
         'headerTabSelected',
     ], { path: 'client/connection' }),
@@ -141,28 +146,26 @@ export default {
         }, 200)
       }).then((data) => {
         // Single Click
-        if (data == 'single') {
-          if (item.children === undefined) {
-            if (this.treeviewSelected == item) {
-              this.treeviewSelected = {}
-              this.headerTab = 0
-              this.headerTabSelected = 'client'
-              this.editor.focus()
-            }
-            else {
-              this.treeviewSelected = item
-              if (this.headerTabSelected == 'structure') EventBus.$emit('GET_STRUCTURE')
-              else if (this.headerTabSelected == 'content') EventBus.$emit('GET_CONTENT')
-              else if (this.headerTabSelected.startsWith('info_')) {
-                let type = item.type.toLowerCase()
-                this.headerTabSelected = 'info_' + type
-                EventBus.$emit('GET_INFO', type)
-              }
+        if (data == 'single' && item.children === undefined) {
+          if (this.treeviewSelected == item) {
+            this.treeviewSelected = {}
+            this.headerTab = 0
+            this.headerTabSelected = 'client'
+            this.editor.focus()
+          }
+          else {
+            this.treeviewSelected = item
+            if (this.headerTabSelected == 'structure') EventBus.$emit('GET_STRUCTURE')
+            else if (this.headerTabSelected == 'content') EventBus.$emit('GET_CONTENT')
+            else if (this.headerTabSelected.startsWith('info_')) {
+              let type = item.type.toLowerCase()
+              this.headerTabSelected = 'info_' + type
+              EventBus.$emit('GET_INFO', type)
             }
           }
         }
         // Double Click
-        else if (data == 'double') {
+        else if (data == 'double' && item.children === undefined) {
           this.treeview = [item]
           this.treeviewSelected = item
           if (this.treeviewMode == 'servers') this.getDatabases(item)
@@ -209,6 +212,7 @@ export default {
         if (found) servers[j]['children'].push({ id: data[i]['server_id'], name: data[i]['server_name'], type: data[i]['server_engine'], host: data[i]['server_hostname'] })
         else servers.push({ id: 'r' + data[i]['region_id'], name: data[i]['region_name'], children: [{ id: data[i]['server_id'], name: data[i]['server_name'], type: data[i]['server_engine'], host: data[i]['server_hostname'] }] })
       }
+      this.servers = servers.slice(0)
       this.treeviewItems = servers.slice(0)
     },
     getDatabases(server) {
@@ -219,6 +223,7 @@ export default {
           this.parseDatabases(server, response.data)
         })
         .catch((error) => {
+          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
         })

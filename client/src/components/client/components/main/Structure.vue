@@ -74,14 +74,16 @@ export default {
     ...mapFields([
         'tabStructureSelected',
         'bottomBar',
-        'gridApi',
-        'columnApi',
         'structureHeaders',
         'structureItems',
         'treeviewSelected',
         'server',
         'database',
     ], { path: 'client/connection' }),
+    ...mapFields([
+      'gridApi',
+      'columnApi',
+    ], { path: 'client/components' }),
   },
   mounted () {
     EventBus.$on('GET_STRUCTURE', this.getStructure);
