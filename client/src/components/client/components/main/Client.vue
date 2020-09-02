@@ -82,7 +82,6 @@ export default {
   },
   methods: {
    onGridReady(params) {
-     console.log("CLIENT-GRID-READY")
       this.gridApi.client = params.api
       this.columnApi.client = params.columnApi
       this.$refs['agGridClient'].$el.addEventListener('click', this.onGridClick)
@@ -115,7 +114,6 @@ export default {
       }
     },
     initAceClient() {
-      console.log("CLIENT-EDITOR-READY")
       // Editor Settings
       this.editor = ace.edit("editor", {
         mode: "ace/mode/sql",

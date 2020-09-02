@@ -3,7 +3,7 @@
     <v-col class="flex-grow-1 flex-shrink-1">
       <v-tabs v-if="Object.keys(server).length != 0 || connections.length > 1" show-arrows dense background-color="#2c2c2c" color="white" v-model="currentConn" slider-color="#969696" slider-size="1" slot="extension" class="elevation-2" style="border-bottom: 1px solid #424242;">
         <v-tab v-for="(conn, index) in connections" :key="index" @click="changeConnection(index)" :title="Object.keys(conn.server).length > 0 ? '[' + conn.server.type + '] ' + conn.server.host : ''" style="padding:0px 10px 0px 0px; text-transform:none;">
-          <span class="pl-2 pr-2"><v-btn title="Close Connection" small icon @click.prevent.stop="removeConnection(index)" style="margin-right:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn>{{ Object.keys(conn.server).length > 0 ? conn.server.name : 'Connection ' + (index+1) }}</span>
+          <span class="pl-2 pr-2" style="padding:0px!important; margin-left:15px;">{{ Object.keys(conn.server).length > 0 ? conn.server.name : 'Connection ' + (conn.index) }}<v-btn title="Close Connection" small icon @click.prevent.stop="deleteConnection(index)" style="margin-left:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn></span>
         </v-tab>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-btn text title="New Connection" @click="newConnection()" style="height:100%; font-size:16px;">+</v-btn>
@@ -37,17 +37,18 @@ export default {
       'clientQuery',
       'loadingQuery',
       'server',
+      'index',
     ], { path: 'client/connection' }),
   },
   methods: {
     newConnection() {
       this.$store.dispatch('client/newConnection')
     },
-    changeConnection() {
-
+    changeConnection(index) {
+      this.$store.dispatch('client/changeConnection', index)
     },
-    removeConnection() {
-
+    deleteConnection(index) {
+      this.$store.dispatch('client/deleteConnection', index)
     },
     runQuery() {
       EventBus.$emit('RUN_QUERY')

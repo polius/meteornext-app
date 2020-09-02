@@ -6,7 +6,7 @@
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
       <v-progress-circular v-if="loading" indeterminate size="20" width="2" style="margin-top:2px; margin-left:12px;"></v-progress-circular>
       <div v-else-if="treeviewMode == 'servers' || database.length > 0" style="height:100%">
-        <v-treeview @contextmenu="showContextMenu" :active.sync="treeview" item-key="id" :open="treeviewOpened" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
+        <v-treeview @contextmenu="showContextMenu" :active.sync="treeview" item-key="id" :open.sync="treeviewOpened" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
           <template v-slot:label="{item, open}">
             <v-btn text @click="treeviewClick(item)" @contextmenu="showContextMenu" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
               <v-icon v-if="!item.type" small style="padding:10px;">
