@@ -1,5 +1,8 @@
 // CONNECTION
 const connection = {
+  // Connection Index
+  index: 1,
+
   // Server
   server: {},
 
@@ -123,6 +126,7 @@ const state = {
   },
   connections: [JSON.parse(JSON.stringify(connection))],
   currentConn: 0,
+  connectionIndex: 1,
 }
 
 // GETTERS
@@ -137,18 +141,62 @@ const getters = {
 // ACTIONS
 const actions = {
   newConnection({ commit }) { commit('newConnection') },
-  // changeConnection({ commit }, data) { commit('currentConn', data) },
-  // deleteConnection({ commit }, data) { commit('deleteConnection', data) },
+  changeConnection({ commit }, data) { commit('changeConnection', data) },
+  deleteConnection({ commit }, data) { commit('deleteConnection', data) },
 }
 
 // MUTATIONS
 const mutations = {
-  newConnection(state) { 
-    state.connections.push(JSON.parse(JSON.stringify(connection)))
+  newConnection(state) {
+    state.connectionIndex += 1
+    // Add new connection
+    let conn = JSON.parse(JSON.stringify(connection))
+    conn.index = state.connectionIndex
+    state.connections.push(conn)
+    // Change connection pointer
     state.currentConn = state.connections.length - 1
+    // Init servers list
     state.connections[state.currentConn].treeviewItems = state.servers.slice(0)
+    // Init Client ACE Editor
+    state.components.editor.setValue('')
   },
-  // currentConn(state, data) { state.currentConn = data },
+  changeConnection(state, data) {
+    // Change current connection
+    state.currentConn = data
+    // Load Client ACE Editor
+    state.components.editor.setValue(state.connections[state.currentConn].clientQuery,1)
+  },
+  deleteConnection(state, data) {
+    // Array contains only 1 element
+    if (state.connections.length == 1) {
+      // Re-Initialize current connection
+      state.connections = [JSON.parse(JSON.stringify(connection))]
+      // Init servers list
+      state.connections[state.currentConn].treeviewItems = state.servers.slice(0)
+    }
+    // Delete last element of array
+    else if (data + 1 == state.connections.length) {
+      state.currentConn = data - 1
+      state.connections.splice(data, 1)
+    }
+    // Delete other element
+    else {
+      if (data < state.currentConn) {
+        state.connections.splice(data, 1)
+        state.currentConn -= 1
+      }
+      else if (data > state.currentConn) {
+        state.connections.splice(data, 1)
+      }
+      else {
+        state.currentConn = data + 1
+        state.connections.splice(data, 1)
+        state.currentConn = data
+      }
+    }
+    // Load Client ACE Editor
+    state.components.editor.setValue(state.connections[state.currentConn].clientQuery, 1)
+  },
   client(state, data) { state[data.k] = data.v },
   components(state, data) { state.components[data.k] = data.v },
   connection(state, data) { state.connections[state.currentConn][data.k] = data.v },

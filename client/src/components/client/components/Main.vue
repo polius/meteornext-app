@@ -1,10 +1,10 @@
 <template>
   <div style="height:100%">
     <Client v-show="headerTabSelected == 'client'" />
-    <Structure v-show="headerTabSelected == 'structure'" />
-    <Content v-show="headerTabSelected == 'content'" />
-    <Info v-show="headerTabSelected.startsWith('info')" />
-    <Objects v-show="headerTabSelected.startsWith('objects')" />
+    <Structure v-if="mounted" v-show="headerTabSelected == 'structure'" />
+    <Content v-if="mounted" v-show="headerTabSelected == 'content'" />
+    <Info v-if="mounted" v-show="headerTabSelected.startsWith('info')" />
+    <Objects v-if="mounted" v-show="headerTabSelected.startsWith('objects')" />
   </div>
 </template>
 
@@ -20,6 +20,7 @@ import Objects from './main/Objects'
 export default {
   data() {
     return {
+      mounted: false
     }
   },
   components: { Client, Content, Structure, Info, Objects },
@@ -29,7 +30,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-
+    setTimeout(() => { this.mounted = true }, 1000);
   },
   methods: {
   }
