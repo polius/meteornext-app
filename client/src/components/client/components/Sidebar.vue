@@ -8,7 +8,7 @@
       <div v-else-if="treeviewMode == 'servers' || database.length > 0" style="height:100%">
         <v-treeview :active.sync="treeview" item-key="id" :open.sync="treeviewOpened" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
           <template v-slot:label="{item, open}">
-            <v-btn text @click="treeviewClick(item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
+            <v-btn text @click="treeviewClicked(item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
               <v-icon v-if="!item.type" small style="padding:10px;">
                 {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
               </v-icon>
@@ -26,7 +26,7 @@
             <v-subheader>{{ contextMenuTitle }}</v-subheader>
             <v-list-item-group color="primary">
               <div v-for="[index, item] of contextMenuItems.entries()" :key="index">
-                <v-list-item v-if="item != '|'" @click="contextMenuClick(item)">
+                <v-list-item v-if="item != '|'" @click="contextMenuClicked(item)">
                   <v-list-item-title>{{item}}</v-list-item-title>
                 </v-list-item>
                 <v-divider v-else></v-divider>
@@ -83,8 +83,12 @@ import { mapFields } from '../js/map-fields'
 export default {
   data() {
     return {
+      // Loading
       loading: true,
-      click: undefined,
+      loadingServer: false,
+
+      
+      treeviewClick: undefined,
       treeviewImg: {
         MySQL: "fas fa-server",
         PostgreSQL: "fas fa-server",
@@ -105,7 +109,7 @@ export default {
         Procedure: "#bf55ec",
         Event: "#bdc3c7"
       },
-      // Treeview Menu (right click)
+      // Treeview - Context Menu
       contextMenu: false,
       contextMenuTitle: '',
       contextMenuItems: [],
@@ -125,7 +129,6 @@ export default {
         'database',
         'databaseItems',
         'tableItems',
-        'loadingServer',
         'treeviewItems',
         'treeview',
         'treeviewSearch',
@@ -141,15 +144,15 @@ export default {
     this.getServers()
   },
   methods: {
-    treeviewClick(item) {
+    treeviewClicked(item) {
       if (this.loadingServer) return
       return new Promise ((resolve) => {
-        if (this.click) {
-          clearTimeout(this.click)
+        if (this.treeviewClick) {
+          clearTimeout(this.treeviewClick)
           resolve('double')
         }
-        this.click = setTimeout(() => {
-          this.click = undefined          
+        this.treeviewClick = setTimeout(() => {
+          this.treeviewClick = undefined          
           resolve('single')
         }, 200)
       }).then((data) => {
@@ -412,7 +415,7 @@ export default {
         }
       }
     },
-    contextMenuClick(item) {
+    contextMenuClicked(item) {
       console.log(item)
     },
   },

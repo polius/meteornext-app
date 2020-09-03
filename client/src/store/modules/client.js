@@ -24,15 +24,11 @@ const connection = {
   treeviewMode: 'servers',
   treeviewSearch: '',
 
-  // Loadings
-  loadingServer: false,
-  loadingQuery: false,
-  loadingDialog: false,
-
   // Client
   clientHeaders: [],
   clientItems: [],
   clientQuery: '',
+  clientQueryExecuting: false,
 
   // Structure
   tabStructureSelected: 'columns',
@@ -48,7 +44,7 @@ const connection = {
   contentSearchFilterItems: ['=', '!=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'IS NULL', 'IS NOT NULL'],
   contentSearchFilter: '=',
   contentSearchFilterText: '',
-  contentSearchFilterText2: '', // contentSearchFilterItems == 'BETWEEN'
+  contentSearchFilterText2: '',
   contentHeaders: [],
   contentItems: [],
 
@@ -74,21 +70,6 @@ const connection = {
     },
     objects: { databases: '', tables: '', views: '', triggers: '', functions: '', procedures: '', events: '' }
   },
-
-  // AG Grid Helpers
-  isRowSelected: false,
-  currentCellEditMode: 'edit', // edit - new
-  currentCellEditNode: {},
-  currentCellEditValues: {},
-
-  // Snackbar
-  snackbar: false,
-  snackbarTimeout: Number(5000),
-  snackbarColor: '',
-  snackbarText: '',
-
-  // Helpers
-  gridEditing: false
 }
 
 // STATE
