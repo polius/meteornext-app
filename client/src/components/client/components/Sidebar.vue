@@ -6,9 +6,9 @@
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
       <v-progress-circular v-if="loading" indeterminate size="20" width="2" style="margin-top:2px; margin-left:12px;"></v-progress-circular>
       <div v-else-if="treeviewMode == 'servers' || database.length > 0" style="height:100%">
-        <v-treeview @contextmenu="showContextMenu" :active.sync="treeview" item-key="id" :open.sync="treeviewOpened" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
+        <v-treeview :active.sync="treeview" item-key="id" :open.sync="treeviewOpened" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
           <template v-slot:label="{item, open}">
-            <v-btn text @click="treeviewClick(item)" @contextmenu="showContextMenu" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
+            <v-btn text @click="treeviewClick(item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
               <v-icon v-if="!item.type" small style="padding:10px;">
                 {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
               </v-icon>
@@ -21,11 +21,17 @@
             </v-btn>
           </template>
         </v-treeview>
-        <v-menu v-model="showMenu" :position-x="x" :position-y="y" absolute offset-y>
+        <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y>
           <v-list style="padding:0px;">
-            <v-list-item v-for="menuItem in menuItems" :key="menuItem" @click="clickAction">
-              <v-list-item-title>{{menuItem}}</v-list-item-title>
-            </v-list-item>
+            <v-subheader>{{ contextMenuTitle }}</v-subheader>
+            <v-list-item-group color="primary">
+              <div v-for="[index, item] of contextMenuItems.entries()" :key="index">
+                <v-list-item v-if="item != '|'" @click="contextMenuClick(item)">
+                  <v-list-item-title>{{item}}</v-list-item-title>
+                </v-list-item>
+                <v-divider v-else></v-divider>
+              </div>
+            </v-list-item-group>
           </v-list>
         </v-menu>
         <v-text-field v-if="treeviewItems.length > 0" :disabled="treeviewMode == 'objects' && database.length == 0" v-model="treeviewSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
@@ -39,20 +45,20 @@
       <v-btn text small title="Refresh Connections" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
       <v-btn text small title="New Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
-      <v-btn text small title="Remove Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+      <v-btn text small title="Delete Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
     </div>
     <!-- OBJECTS -->
     <div v-else-if="treeviewMode == 'objects'" style="height:35px; border-top:2px solid #2c2c2c;">
       <v-btn :disabled="loading" @click="refreshObjects" text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn :disabled="loading" text small title="New Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+      <v-btn :disabled="loading" text small title="Create Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
       <v-btn :disabled="loading" text small title="Drop Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
       <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" text small title="Import SQL" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-up</v-icon></v-btn>
       <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" text small title="Export Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-down</v-icon></v-btn>
       <span v-if="database.length > 0" :disabled="loading || loadingServer" style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" text small title="Settings" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-cog</v-icon></v-btn>
+      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" text small title="Database Settings" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-cog</v-icon></v-btn>
     </div>
   </div>
 </template>
@@ -99,6 +105,12 @@ export default {
         Procedure: "#bf55ec",
         Event: "#bdc3c7"
       },
+      // Treeview Menu (right click)
+      contextMenu: false,
+      contextMenuTitle: '',
+      contextMenuItems: [],
+      contextMenuX: 0,
+      contextMenuY: 0,
     }
   },
   computed: {
@@ -121,10 +133,6 @@ export default {
         'treeviewOpened',
         'treeviewSelected',
         'server',
-        'menuItems',
-        'showMenu',
-        'x',
-        'y',
         'headerTab',
         'headerTabSelected',
     ], { path: 'client/connection' }),
@@ -357,22 +365,55 @@ export default {
       this.editor.completers.splice(index+1, 1)
       this.editorCompleters.splice(index, 1)
     },
-    clickAction(){
-      alert('clicked');
-    },
-    showContextMenu(e) {
-      e.preventDefault();
-      this.showMenu = false;
-      this.x = e.clientX;
-      this.y = e.clientY;
-      this.$nextTick(() => {
-        this.showMenu = true;
-      });
-    },
     refreshObjects() {
-      // promise
+      // !!! Add Promise
       this.getDatabases(this.server)
       if (this.database.length > 0) this.getObjects(this.database)
+    },
+    showContextMenu(e, item) {
+      e.preventDefault()
+      this.contextMenu = false
+      this.contextMenuX = e.clientX
+      this.contextMenuY = e.clientY
+      this.buildContextMenu(item)
+      this.$nextTick(() => { this.contextMenu = true })
+    },
+    buildContextMenu(item) {
+      this.contextMenuTitle = item.name
+      this.contextMenuItems = []
+      if (this.treeviewMode == 'servers') {
+        if (item.children === undefined) this.contextMenuItems = ['Open Connection', '|', 'Delete Connection', 'Duplicate Connection']
+        else this.contextMenuItems = ['New Connection', '|', 'New Group', 'Delete Group', 'Rename']
+      }
+      else if (this.treeviewMode == 'objects') {
+        if (item.type == 'Table') {
+          if (item.children === undefined) this.contextMenuItems = ['Create Table', '|', 'Rename Table', 'Duplicate Table', '|', 'Truncate Table', 'Delete Table', '|', 'Export', '|', 'Copy Table Syntax']
+          else this.contextMenuItems = ['Create Table', '|', 'Show Table Objects']
+        }
+        else if (item.type == 'View') {
+          if (item.children === undefined) this.contextMenuItems = ['Create View', '|', 'Rename View', 'Duplicate View', '|', 'Delete View', '|', 'Export', '|', 'Copy View Syntax']
+          else this.contextMenuItems = ['Create View', '|', 'Show View Objects']
+        }
+        else if (item.type == 'Trigger') {
+          if (item.children === undefined) this.contextMenuItems = ['Create Trigger', '|', 'Rename Trigger', 'Duplicate Trigger', '|', 'Delete Trigger', '|', 'Export', '|', 'Copy Trigger Syntax']
+          else this.contextMenuItems = ['Create Trigger', '|', 'Show Trigger Objects']
+        }
+        else if (item.type == 'Function') {
+          if (item.children === undefined) this.contextMenuItems = ['Create Function', '|', 'Rename Function', 'Duplicate Function', '|', 'Delete Function', '|', 'Export', '|', 'Copy Function Syntax']
+          else this.contextMenuItems = ['Create Function', '|', 'Show Function Objects']
+        }
+        else if (item.type == 'Procedure') {
+          if (item.children === undefined) this.contextMenuItems = ['Create Procedure', '|', 'Rename Procedure', 'Duplicate Procedure', '|', 'Delete Procedure', '|', 'Export', '|', 'Copy Procedure Syntax']
+          else this.contextMenuItems = ['Create Procedure', '|', 'Show Procedure Objects']
+        }
+        else if (item.type == 'Event') {
+          if (item.children === undefined) this.contextMenuItems = ['Create Event', '|', 'Rename Event', 'Duplicate Event', '|', 'Delete Event', '|', 'Export', '|', 'Copy Event Syntax']
+          else this.contextMenuItems = ['Create Event', '|', 'Show Event Objects']
+        }
+      }
+    },
+    contextMenuClick(item) {
+      console.log(item)
     },
   },
 }

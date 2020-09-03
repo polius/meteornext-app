@@ -24,12 +24,6 @@ const connection = {
   treeviewMode: 'servers',
   treeviewSearch: '',
 
-  // Treeview Menu (right click)
-  showMenu: false,
-  x: 0,
-  y: 0,
-  menuItems: ["Rename", "Truncate", "Delete", "Duplicate", "Export"],
-
   // Loadings
   loadingServer: false,
   loadingQuery: false,
@@ -94,7 +88,6 @@ const connection = {
   snackbarText: '',
 
   // Helpers
-  click: undefined,
   gridEditing: false
 }
 
