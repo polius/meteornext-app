@@ -13,7 +13,7 @@
     </v-col>
     <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
       <div v-if="treeviewMode == 'objects'" style="background-color:#2c2c2c; padding:6px; border-bottom: 1px solid #424242;">
-        <v-btn :loading="loadingQuery" :disabled="headerTabSelected != 'client' || clientQuery.length == 0" @click="runQuery()" title="Execute Query" style="margin-left:6px;"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
+        <v-btn :loading="clientQueryExecuting" :disabled="headerTabSelected != 'client' || clientQuery.length == 0" @click="runQuery()" title="Execute Query" style="margin-left:6px;"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
       </div>
     </v-col>
   </v-row>
@@ -39,7 +39,7 @@ export default {
       'headerTabSelected',
       'treeviewMode',
       'clientQuery',
-      'loadingQuery',
+      'clientQueryExecuting',
       'server',
       'index',
     ], { path: 'client/connection' }),

@@ -109,7 +109,7 @@ export default {
       'bottomBar',
       'server',
       'clientQuery',
-      'loadingQuery',
+      'clientQueryExecuting',
       'database',
     ], { path: 'client/connection' }),
     ...mapFields([
@@ -313,7 +313,7 @@ export default {
       this.clientHeaders = []
       this.clientItems = []
       this.bottomBar.client = { text: '', status: '', info: '' }
-      this.loadingQuery = true     
+      this.clientQueryExecuting = true     
       this.editor.completer.detach()
       this.gridApi.client.showLoadingOverlay()
       const payload = {
@@ -346,7 +346,10 @@ export default {
           }
         })
         .finally(() => {
-          this.loadingQuery = false
+          this.clientQueryExecuting = false
+          let cur = this.editor.getCursorPosition()
+          this.editor.focus()
+          this.editor.moveCursorTo(cur.row, cur.column);
         })
     },
     parseQueries() {

@@ -145,6 +145,13 @@ export default {
     return {
       // Loading
       loading: false,
+
+      // AG Grid
+      isRowSelected: false,
+      currentCellEditMode: 'edit', // edit - new
+      currentCellEditNode: {},
+      currentCellEditValues: {},
+
       // Dialog - Content Edit
       editDialog: false,
       editDialogTitle: '',
@@ -168,16 +175,12 @@ export default {
         'structureHeaders',
         'server',
         'database',
-        'currentCellEditMode',
-        'currentCellEditNode',
-        'currentCellEditValues',
         'contentSearchFilter',
         'contentSearchFilterText',
         'contentSearchFilterText2',
         'contentSearchFilterItems',
         'contentSearchColumn',
         'contentColumnsName',
-        'isRowSelected',
         'bottomBar'
     ], { path: 'client/connection' }),
     ...mapFields([
@@ -394,8 +397,6 @@ export default {
         })
     },
     cellEditingStarted(event) {
-      this.gridEditing = true
-
       // Store row node
       this.currentCellEditNode = this.gridApi.content.getSelectedNodes()[0]
     
