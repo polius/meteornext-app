@@ -36,6 +36,37 @@
         </v-col>
       </v-row>
     </div>
+    <!------------>
+    <!-- DIALOG -->
+    <!------------>
+    <v-dialog v-model="dialog" persistent max-width="50%">
+      <v-card>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <div class="text-h6" style="font-weight:400;">{{ dialogTitle }}</div>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
+                  <div v-if="dialogText.length>0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
+                  <v-select v-if="dialogMode=='export'" outlined v-model="dialogSelect" :items="['Meteor','JSON','CSV','SQL']" label="Format" hide-details></v-select>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col v-if="dialogSubmitText.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogSubmitText }}</v-btn>
+                    </v-col>
+                    <v-col v-if="dialogCancelText.length > 0" style="margin-bottom:10px;">
+                      <v-btn :disabled="loading" @click="dialogCancel" outlined color="#e74d3c">{{ dialogCancelText }}</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -56,6 +87,15 @@ import { mapFields } from '../../js/map-fields'
 export default {
   data() {
     return {
+      // Loading
+      loading: false,
+      // Dialog
+      dialog: false,
+      dialogMode: '',
+      dialogTitle: '',
+      dialogText: '',
+      dialogSubmitText: '',
+      dialogCancelText: '',
     }
   },
   components: { Splitpanes, Pane, AgGridVue },
@@ -286,7 +326,6 @@ export default {
           this.parseExecution(JSON.parse(response.data.data))
         })
         .catch((error) => {
-          console.log(error)
           this.gridApi.client.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
@@ -297,13 +336,13 @@ export default {
             this.editor.blur()
             // Show confirmation dialog
             var dialogOptions = {
-              'mode': 'queryError',
+              'mode': 'error',
               'title': 'Error Message',
               'text': data[data.length-1]['error'],
               'button1': 'Close',
               'button2': ''
             }
-            this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2'])
+            this.showDialog(dialogOptions)
           }
         })
         .finally(() => {
@@ -382,6 +421,24 @@ export default {
       this.bottomBar.client['info'] += data.length + ' queries'
       if (elapsed != null) this.bottomBar.client['info'] += ' | ' + elapsed.toString() + 's elapsed'
     },
+    showDialog(options) {
+      this.dialogMode = options.mode
+      this.dialogTitle = options.title
+      this.dialogText = options.text
+      this.dialogSubmitText = options.button1
+      this.dialogCancelText = options.button2
+      this.dialog = true
+    },
+    dialogSubmit() {
+      if (this.dialogMode == 'error') { 
+        this.dialog = false
+        this.editor.focus()
+      } 
+      else if (this.dialogMode == 'export') this.exportRowsSubmit()
+    },
+    dialogCancel() {
+      this.dialog = false
+    },
     exportRows() {
       // Show confirmation dialog
       this.dialogSelect = 'Meteor'
@@ -392,7 +449,61 @@ export default {
         'button1': 'Export',
         'button2': 'Cancel'
       }
-      this.showDialog(dialogOptions['mode'], dialogOptions['title'], dialogOptions['text'], dialogOptions['button1'], dialogOptions['button2']) 
+      this.showDialog(dialogOptions)
+    },
+    exportRowsSubmit() {
+      var columns = []
+      var rows = []
+
+      // Build Columns
+      let displayedColumns = this.columnApi.content.getAllDisplayedColumns()
+      for (var i = 0; i < displayedColumns.length; ++i) columns.push(displayedColumns[i]['colId']);
+
+      // Build Rows
+      if (['Meteor','JSON','CSV'].includes(this.dialogSelect)) {
+        this.gridApi.content.forEachNode(function(rowNode) {
+          rows.push(rowNode.data)
+        })
+      }
+
+      if (this.dialogSelect == 'Meteor') {
+        let exportData = 'var DATA = ' + JSON.stringify(rows) + ';\n' + 'var COLUMNS = ' + JSON.stringify(columns) + ';'
+        this.download('export.js', exportData)
+      }
+      else if (this.dialogSelect == 'JSON') {
+        let exportData = JSON.stringify(rows)
+        this.download('export.json', exportData)
+      }
+      else if (this.dialogSelect == 'CSV') {
+        let replacer = (key, value) => value === null ? '' : value // specify how you want to handle null values here
+        let header = Object.keys(rows[0])
+        let exportData = rows.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+        exportData.unshift(header.join(','))
+        exportData = exportData.join('\r\n')
+        this.download('export.csv', exportData)
+      }
+      else if (this.dialogSelect == 'SQL') {
+        let exportData = ''
+        this.gridApi.content.forEachNode(rowNode => {
+          let data = []
+          for (let i = 0; i < columns.length; ++i) {
+            if (rowNode.data[columns[i]] == null) data.push('NULL')
+            else data.push(JSON.stringify(rowNode.data[columns[i]]))
+          }
+          exportData += "INSERT INTO " + this.treeviewSelected['name'] + ' (' + columns.join() + ") VALUES (" + data.join() + "),\n"
+        })
+        exportData = exportData.slice(0, -2) + ';'
+        this.download('export.sql', exportData)
+      }
+    },
+    download(filename, text) {
+      var element = document.createElement('a')
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
+      element.setAttribute('download', filename)
+      element.style.display = 'none'
+      document.body.appendChild(element)
+      element.click()
+      document.body.removeChild(element)
     },
   },
 }
