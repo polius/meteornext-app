@@ -337,11 +337,6 @@ export default {
         .finally(() => { this.loading = false })
     },
     parseObjects(data) {
-      // Init treeview
-      this.treeview = []
-      this.treeviewItems = []
-      this.treeviewSelected = {}
-
       // Build routines
       var procedures = []
       var functions = []

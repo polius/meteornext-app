@@ -18,7 +18,7 @@
                 <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
                   <div v-if="dialogOptions.mode == 'createTable'">
-                    <v-text-field v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Table Name" autofocus required style="padding-top:0px;"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Table Name" autofocus required style="padding-top:0px;"></v-text-field>
                     <v-autocomplete @change="getCollations" v-model="dialogOptions.item.encoding" :items="encodings" :rules="[v => !!v || '']" label="Table Encoding" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                     <v-autocomplete :loading="loading" v-model="dialogOptions.item.collation" :items="collations" :rules="[v => !!v || '']" label="Table Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                     <v-select v-model="dialogOptions.item.engine" :items="engines" :rules="[v => !!v || '']" label="Table Engine" hide-details required style="padding-top:0px;"></v-select>
@@ -69,6 +69,7 @@ export default {
       'databaseItems',
       'treeview',
       'treeviewSelected',
+      'headerTab',
       'headerTabSelected',
       'tabStructureSelected',
     ], { path: 'client/connection' }),
@@ -183,6 +184,7 @@ export default {
           this.treeview = ['table|' + tableName]
           this.treeviewSelected = { id: 'table|' + tableName, name: tableName, type: 'Table' }
           // Change view to Structure - columns
+          this.headerTab = 1
           this.headerTabSelected = 'structure'
           this.tabStructureSelected = 'columns'
           EventBus.$emit('GET_STRUCTURE')
