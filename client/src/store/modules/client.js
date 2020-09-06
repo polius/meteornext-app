@@ -54,6 +54,7 @@ const connection = {
   infoEditor: { tables: '', views: '', triggers: '', functions: '', procedures: '', events: '' },
 
   // Objecs
+  objectsTab: 0,
   tabObjectsSelected: 'databases',
   objectsHeaders: { databases: [], tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
   objectsItems: { databases: [], tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },

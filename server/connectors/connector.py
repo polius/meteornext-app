@@ -31,6 +31,15 @@ class Connector:
     ####################
     # INTERNAL QUERIES #
     ####################
+    def get_engines(self):
+        return self._sql.get_engines()
+
+    def get_encodings(self):
+        return self._sql.get_encodings()
+
+    def get_collations(self, encoding):
+        return self._sql.get_collations(encoding)
+
     def get_all_databases(self):
         return self._sql.get_all_databases()
 
@@ -159,9 +168,6 @@ class Connector:
 
     def get_event_syntax(self, db, event):
         return self._sql.get_event_syntax(db, event)
-
-    def get_collations(self):
-        return self._sql.get_collations()
 
     def get_columns_definition(self, db, table):
         return self._sql.get_columns_definition(db, table)

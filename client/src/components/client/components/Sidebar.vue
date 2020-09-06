@@ -17,14 +17,13 @@
               </v-icon>
               {{item.name}}
               <v-spacer></v-spacer>
-              <v-progress-circular v-if="loadingServer && item.id == treeview[0]" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
+              <v-progress-circular v-if="loadingServer && (item.id == treeview[0] || item.id == contextMenuItem.id)" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
             </v-btn>
           </template>
         </v-treeview>
         <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y>
           <v-list style="padding:0px;">
-            <v-subheader>{{ contextMenuTitle }}</v-subheader>
-            <v-list-item-group color="primary">
+            <v-list-item-group v-model="contextMenuModel">
               <div v-for="[index, item] of contextMenuItems.entries()" :key="index">
                 <v-list-item v-if="item != '|'" @click="contextMenuClicked(item)">
                   <v-list-item-title>{{item}}</v-list-item-title>
@@ -60,6 +59,38 @@
       <span v-if="database.length > 0" :disabled="loading || loadingServer" style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
       <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" text small title="Database Settings" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-cog</v-icon></v-btn>
     </div>
+    <!---------------------------->
+    <!-- CONTEXT MENU - DIALOGs -->
+    <!---------------------------->
+    <Connections v-if="1 == 2" />
+    <Tables v-if="database.length != 0" />
+    <!------------>
+    <!-- DIALOG -->
+    <!------------>
+    <v-dialog v-model="dialog" persistent max-width="50%">
+      <v-card>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <div class="text-h6" style="font-weight:400;">Unable to apply changes</div>
+              <v-flex xs12>
+                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
+                  <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn @click="dialog = false" color="primary">Close</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -80,6 +111,9 @@ import axios from 'axios'
 import EventBus from '../js/event-bus'
 import { mapFields } from '../js/map-fields'
 
+import Connections from './sidebar/Connections'
+import Tables from './sidebar/Tables'
+
 export default {
   data() {
     return {
@@ -87,7 +121,7 @@ export default {
       loading: true,
       loadingServer: false,
 
-      
+      // Treeview
       treeviewClick: undefined,
       treeviewImg: {
         MySQL: "fas fa-server",
@@ -111,12 +145,17 @@ export default {
       },
       // Treeview - Context Menu
       contextMenu: false,
-      contextMenuTitle: '',
+      contextMenuModel: null,
       contextMenuItems: [],
+      contextMenuItem: {},
       contextMenuX: 0,
       contextMenuY: 0,
+      // Dialog
+      dialog: false,
+      dialogText: '',
     }
   },
+  components: { Connections, Tables },
   computed: {
     ...mapFields([
       'servers',
@@ -124,24 +163,31 @@ export default {
     ...mapFields([
       'editor',
       'editorCompleters',
+      'gridApi',
     ], { path: 'client/components' }),
     ...mapFields([
-        'database',
-        'databaseItems',
-        'tableItems',
-        'treeviewItems',
-        'treeview',
-        'treeviewSearch',
-        'treeviewMode',
-        'treeviewOpened',
-        'treeviewSelected',
-        'server',
-        'headerTab',
-        'headerTabSelected',
+      'database',
+      'databaseItems',
+      'tableItems',
+      'treeviewItems',
+      'treeview',
+      'treeviewSearch',
+      'treeviewMode',
+      'treeviewOpened',
+      'treeviewSelected',
+      'server',
+      'headerTab',
+      'headerTabSelected',
+      'objectsTab',
+      'tabObjectsSelected',
+      'objectsHeaders',
     ], { path: 'client/connection' }),
   },
   created() {
     this.getServers()
+  },
+  mounted() {
+    EventBus.$on('EXECUTE_SIDEBAR', this.execute);
   },
   methods: {
     treeviewClicked(item) {
@@ -202,7 +248,7 @@ export default {
       this.loading = true
       axios.get('/client/servers')
         .then((response) => {
-          this.parseServers(response.data.data)
+          this.parseServers(response.data.servers)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -229,7 +275,7 @@ export default {
     getDatabases(server) {
       this.loadingServer = true
       // Retrieve Databases
-      axios.get('/client/databases', { params: { server_id: server.id } })
+      axios.get('/client/databases', { params: { server: server.id } })
         .then((response) => {
           this.parseDatabases(server, response.data)
         })
@@ -248,7 +294,14 @@ export default {
       this.treeviewSelected = {}
       this.treeviewMode = 'objects'
       this.server = server
-      this.databaseItems = data.databases
+
+      // Build Databases
+      this.databaseItems = []
+      for (let i = 0; i < data.databases.length; ++i) {
+        this.databaseItems.push({ text: data.databases[i]['name'], encoding: data.databases[i]['encoding'], collation: data.databases[i]['collation'] })
+      }
+
+      // Focus Editor
       this.editor.focus()
 
       // Clean Treeview Search
@@ -261,10 +314,11 @@ export default {
 
       // Get Column Types + Collations
       if (server.type == 'MySQL') {
+        this.server.engines = data.engines
+        this.server.encodings = data.encodings
         this.server.columnTypes = ['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','FLOAT','DOUBLE','BIT','CHAR','VARCHAR','BINARY','VARBINARY','TINYBLOB','BLOB','MEDIUMBLOB','LONGBLOB','TINYTEXT','TEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET','DATE','TIME','DATETIME','TIMESTAMP','YEAR','GEOMETRY','POINT','LINESTRING','POLYGON','GEOMETRYCOLLECTION','MULTILINESTRING','MULTIPOINT','MULTIPOLYGON','JSON']
         this.server.indexTypes = ['INDEX','UNIQUE','FULLTEXT']
         this.server.fkRules = ['Restrict','Cascade','Set NULL','No Action']
-        this.server.collations = data.collations
       }
     },
     getObjects(database) {
@@ -376,13 +430,14 @@ export default {
     showContextMenu(e, item) {
       e.preventDefault()
       this.contextMenu = false
+      this.contextMenuModel = null
       this.contextMenuX = e.clientX
       this.contextMenuY = e.clientY
       this.buildContextMenu(item)
       this.$nextTick(() => { this.contextMenu = true })
     },
     buildContextMenu(item) {
-      this.contextMenuTitle = item.name
+      this.contextMenuItem = item
       this.contextMenuItems = []
       if (this.treeviewMode == 'servers') {
         if (item.children === undefined) this.contextMenuItems = ['Open Connection', '|', 'Delete Connection', 'Duplicate Connection']
@@ -416,8 +471,78 @@ export default {
       }
     },
     contextMenuClicked(item) {
-      console.log(item)
+      if (this.treeviewMode == 'servers') {
+        if (item == 'Open Connection') this.getDatabases(this.contextMenuItem)
+        else EventBus.$emit('CLICK_CONTEXTMENU_CONNECTION', item)
+      }
+      else if (this.treeviewMode == 'objects') {
+        if (this.contextMenuItem.type == 'Table') {
+          if (item == 'Show Table Objects') this.showObjectsTab('tables')
+          else EventBus.$emit('CLICK_CONTEXTMENU_TABLE', item)
+        }
+        else if (this.contextMenuItem.type == 'View') {
+          if (item == 'Show View Objects') this.showObjectsTab('views')
+          else EventBus.$emit('CLICK_CONTEXTMENU_VIEW', item)
+        }
+        else if (this.contextMenuItem.type == 'Trigger') {
+          if (item == 'Show Trigger Objects') this.showObjectsTab('triggers')
+          else EventBus.$emit('CLICK_CONTEXTMENU_TRIGGER', item)
+        }
+        else if (this.contextMenuItem.type == 'Function') {
+          if (item == 'Show Function Objects') this.showObjectsTab('functions')
+          else EventBus.$emit('CLICK_CONTEXTMENU_FUNCTION', item)
+        }
+        else if (this.contextMenuItem.type == 'Procedure') {
+          if (item == 'Show Procedure Objects') this.showObjectsTab('procedures')
+          else EventBus.$emit('CLICK_CONTEXTMENU_PROCEDURE', item)
+        }
+        else if (this.contextMenuItem.type == 'Event') {
+          if (item == 'Show Event Objects') this.showObjectsTab('events')
+          else EventBus.$emit('CLICK_CONTEXTMENU_EVENT', item)
+        }
+      }
     },
-  },
+    showObjectsTab(object) {
+      this.headerTab = 6
+      this.headerTabSelected = 'objects'
+      this.objectsTab = (object == 'tables') ? 1 : (object == 'views') ? 2 : (object == 'triggers') ? 3 : (object == 'functions') ? 4 : (object == 'procedures') ? 5 : (object == 'events') ? 6 : 0
+      this.tabObjectsSelected = object
+      if (this.objectsHeaders[object].length == 0) {
+        setTimeout(() => {
+          let promise = new Promise((resolve, reject) => {
+            this.gridApi.objects[object].showLoadingOverlay()
+            EventBus.$emit('GET_OBJECTS', resolve, reject)
+          })
+          promise.then(() => {})
+            .catch(() => {})
+            .finally(() => { this.gridApi.objects.events.hideOverlay() })
+        }, 500)
+      }
+    },
+    execute(query, resolve, reject) {
+      // Execute Query
+      const payload = {
+        server: this.server.id,
+        database: this.database,
+        queries: [query]
+      }
+      axios.post('/client/execute', payload)
+        .then(() => {
+          this.getObjects(this.database)
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else {
+            let data = JSON.parse(error.response.data.data)
+            // Show error
+            this.dialogText = data[0]['error']
+            this.dialog = true
+            // Reject promise
+            reject()
+          }
+        })
+        .finally(() => { resolve() })
+    },
+  }
 }
 </script>
