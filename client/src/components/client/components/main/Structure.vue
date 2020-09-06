@@ -106,11 +106,17 @@ export default {
       this.gridApi.structure[this.tabStructureSelected].showLoadingOverlay()
       this.bottomBar.structure[this.tabStructureSelected] = { status: '', text: '', info: '' }
       // Retrieve Tables
-      axios.get('/client/structure', { params: { server: this.server.id, database: this.database, table: this.treeviewSelected['name'] } })
+      const payload = {
+        server: this.server.id, 
+        database: this.database, 
+        table: this.treeviewSelected['name']
+      }
+      axios.get('/client/structure', { params: payload })
         .then((response) => {
           this.parseStructure(response.data)
         })
         .catch((error) => {
+          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })

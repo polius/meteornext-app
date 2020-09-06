@@ -61,11 +61,16 @@ export default {
       collations: [],
     }
   },
+  props: { contextMenuItem: Object },
   computed: {
     ...mapFields([
       'server',
       'database',
       'databaseItems',
+      'treeview',
+      'treeviewSelected',
+      'headerTabSelected',
+      'tabStructureSelected',
     ], { path: 'client/connection' }),
     encodings: function () {
       let db = this.databaseItems.filter(obj => { return obj.text == this.database })[0]
@@ -169,10 +174,18 @@ export default {
       }
       this.loading = true
       if (this.dialogOptions.mode == 'createTable') {
-        let query = "CREATE TABLE " + this.dialogOptions.item.name + " (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) ENGINE=" + this.dialogOptions.item.engine + " DEFAULT CHARSET=" + this.dialogOptions.item.encoding + " COLLATE= " + this.dialogOptions.item.collation + ";"
+        let tableName = this.dialogOptions.item.name
+        let query = "CREATE TABLE " + tableName + " (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) ENGINE=" + this.dialogOptions.item.engine + " DEFAULT CHARSET=" + this.dialogOptions.item.encoding + " COLLATE= " + this.dialogOptions.item.collation + ";"
         new Promise((resolve, reject) => { EventBus.$emit('EXECUTE_SIDEBAR', query, resolve, reject) }).then(() => { 
+          // Hide Dialog
           this.dialog = false
-          
+          // Select new created table
+          this.treeview = ['table|' + tableName]
+          this.treeviewSelected = { id: 'table|' + tableName, name: tableName, type: 'Table' }
+          // Change view to Structure - columns
+          this.headerTabSelected = 'structure'
+          this.tabStructureSelected = 'columns'
+          EventBus.$emit('GET_STRUCTURE')
         }).catch(() => {}).finally(() => { this.loading = false })
       }
       // else if (this.dialogOptions.mode == 'createView') {
