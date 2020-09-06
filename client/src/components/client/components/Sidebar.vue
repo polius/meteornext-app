@@ -288,11 +288,12 @@ export default {
         })
     },
     parseDatabases(server, data) {
-      this.treeview = []
-      this.treeviewItems = []
-      this.treeviewSelected = {}
-      this.treeviewMode = 'objects'
+      // Assign server
       this.server = server
+
+      // Init treeview
+      this.treeviewMode = 'objects'
+      this.treeviewSearch = ''
 
       // Build Databases
       this.databaseItems = []
@@ -301,10 +302,7 @@ export default {
       }
 
       // Focus Editor
-      this.editor.focus()
-
-      // Clean Treeview Search
-      this.treeviewSearch = ''
+      this.editor.focus()      
 
       // Add database names to the editor autocompleter
       var completer = []
@@ -339,6 +337,11 @@ export default {
         .finally(() => { this.loading = false })
     },
     parseObjects(data) {
+      // Init treeview
+      this.treeview = []
+      this.treeviewItems = []
+      this.treeviewSelected = {}
+
       // Build routines
       var procedures = []
       var functions = []
