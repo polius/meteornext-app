@@ -3,7 +3,7 @@
     <!------------->
     <!-- OBJECTS -->
     <!------------->
-    <v-tabs show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
+    <v-tabs v-model="objectsTab" show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
       <v-tabs-slider></v-tabs-slider>
       <v-tab @click="tabObjects('databases')"><span class="pl-2 pr-2">Databases</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
@@ -54,6 +54,7 @@ export default {
   components: { Databases, Tables, Views, Triggers, Functions, Procedures, Events },
   computed: {
     ...mapFields([
+      'objectsTab',
       'tabObjectsSelected',
       'server',
       'database',

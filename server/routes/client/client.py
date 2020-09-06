@@ -35,7 +35,8 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Servers
-            return jsonify({'data': self._client.get_servers(user['group_id'])}), 200
+            servers = self._client.get_servers(user['group_id'])
+            return jsonify({'servers': servers}), 200
 
         @client_blueprint.route('/client/databases', methods=['GET'])
         @jwt_required
@@ -52,15 +53,16 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], request.args['server_id'])
+            cred = self._client.get_credentials(user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = connectors.connector.Connector(cred)
 
             # Get Databases
             databases = conn.get_all_databases()
-            collations = conn.get_collations()
-            return jsonify({'databases': databases, 'collations': collations}), 200
+            engines = conn.get_engines()
+            encodings = conn.get_encodings()
+            return jsonify({'databases': databases, 'engines': engines, 'encodings': encodings}), 200
 
         @client_blueprint.route('/client/objects', methods=['GET'])
         @jwt_required
@@ -145,11 +147,11 @@ class Client:
                 except Exception as e:
                     result = {'query': q, 'error': str(e)}
                     execution.append(result)
-                    return jsonify({'data': json.dumps(execution, default=self.__json_parser)}), 400
+                    return jsonify({'data': self.__json(execution)}), 400
                 finally:
                     conn.stop()
 
-            return jsonify({'data': json.dumps(execution, default=self.__json_parser)}), 200
+            return jsonify({'data': self.__json(execution)}), 200
 
         @client_blueprint.route('/client/structure', methods=['GET'])
         @jwt_required
@@ -176,7 +178,7 @@ class Client:
             indexes = conn.get_indexes(db=request.args['database'], table=request.args['table'])
             fks = conn.get_fks(db=request.args['database'], table=request.args['table'])
             triggers = conn.get_triggers(db=request.args['database'], table=request.args['table'])
-            return jsonify({'columns': json.dumps(columns, default=self.__json_parser), 'indexes': json.dumps(indexes, default=self.__json_parser), 'fks': json.dumps(fks, default=self.__json_parser), 'triggers': json.dumps(triggers, default=self.__json_parser)}), 200
+            return jsonify({'columns': self.__json(columns), 'indexes': self.__json(indexes), 'fks': self.__json(fks), 'triggers': self.__json(triggers)}), 200
 
         @client_blueprint.route('/client/structure/columns', methods=['GET'])
         @jwt_required
@@ -200,7 +202,7 @@ class Client:
 
             # Get Columns
             columns = conn.get_columns_definition(db=request.args['database'], table=request.args['table'])
-            return jsonify({'columns': json.dumps(columns, default=self.__json_parser)}), 200
+            return jsonify({'columns': self.__json(columns)}), 200
 
         @client_blueprint.route('/client/info', methods=['GET'])
         @jwt_required
@@ -265,7 +267,31 @@ class Client:
                         info[0]['syntax'] = conn.get_event_syntax(db=request.args['database'], event=request.args['name'])
                     except Exception:
                         info[0]['syntax'] = ''
-            return jsonify({'info': json.dumps(info, default=self.__json_parser)}), 200
+            return jsonify({'info': self.__json(info)}), 200
+
+        @client_blueprint.route('/client/collations', methods=['GET'])
+        @jwt_required
+        def client_collations_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Server Credentials + Connection
+            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = connectors.connector.Connector(cred)
+
+            # Get Collations
+            collations = conn.get_collations(encoding=request.args['encoding'])
+            return jsonify({'collations': self.__json(collations)}), 200
 
         return client_blueprint
 

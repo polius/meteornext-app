@@ -324,6 +324,10 @@ export default {
       axios.post('/client/execute', payload)
         .then((response) => {
           this.parseExecution(JSON.parse(response.data.data))
+          // Focus Editor
+          let cur = this.editor.getCursorPosition()
+          this.editor.focus()
+          this.editor.moveCursorTo(cur.row, cur.column);
         })
         .catch((error) => {
           this.gridApi.client.hideOverlay()
@@ -347,9 +351,6 @@ export default {
         })
         .finally(() => {
           this.clientQueryExecuting = false
-          let cur = this.editor.getCursorPosition()
-          this.editor.focus()
-          this.editor.moveCursorTo(cur.row, cur.column);
         })
     },
     parseQueries() {

@@ -124,17 +124,48 @@ class MySQL:
         except Exception:
             pass
 
+    ####################
+    # INTERNAL QUERIES #
+    ####################
+    def get_engines(self):
+        query = """
+            SELECT engine, support 
+            FROM information_schema.engines 
+            WHERE SUPPORT IN ('DEFAULT', 'YES')
+            ORDER BY engine
+        """
+        result = self.execute(query)['data']
+        return result
+
+    def get_encodings(self):
+        query = """
+            SELECT character_set_name AS 'encoding', default_collate_name AS 'collation', description
+            FROM information_schema.character_sets 
+            ORDER BY character_set_name
+        """
+        result = self.execute(query)['data']
+        return result
+
+    def get_collations(self, encoding):
+        query = """
+            SELECT collation_name AS 'collation'
+            FROM information_schema.collations 
+            WHERE character_set_name = %s
+            ORDER BY collation_name ASC
+        """
+        result = self.execute(query, args=(encoding))['data']
+        collations = []
+        for c in result:
+            collations.append(c['collation'])
+        return collations
+
     def get_all_databases(self):
         query = """
-            SELECT schema_name
+            SELECT schema_name AS 'name', default_character_set_name AS 'encoding', default_collation_name AS 'collation'
             FROM information_schema.schemata
         """
         result = self.execute(query)['data']
-
-        databases = []
-        for db in result:
-            databases.append(db['schema_name'])
-        return databases
+        return result
 
     def get_all_tables(self, db):
         query = """
@@ -469,19 +500,6 @@ class MySQL:
         query = "SHOW CREATE EVENT {}.{}".format(db, event)
         result = self.execute(query)['data'][0]['Create Event']
         return result
-
-    def get_collations(self):
-        query = """
-            SELECT collation_name
-            FROM information_schema.collations
-            ORDER BY collation_name
-        """
-        result = self.execute(query)['data']
-
-        collations = []
-        for c in result:
-            collations.append(c['collation_name'])
-        return collations
 
     def get_columns_definition(self, db, table):
         query = """
