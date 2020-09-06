@@ -62,8 +62,8 @@
     <!---------------------------->
     <!-- CONTEXT MENU - DIALOGs -->
     <!---------------------------->
-    <Connections v-if="1 == 2" />
-    <Tables v-if="database.length != 0" />
+    <Connections v-if="1 == 2" :contextMenuItem="contextMenuItem" />
+    <Tables v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
     <!------------>
     <!-- DIALOG -->
     <!------------>
@@ -211,7 +211,7 @@ export default {
             this.editor.focus()
           }
           else {
-            this.treeviewSelected = item
+            this.treeviewSelected = {...item}
             if (this.headerTabSelected == 'structure') EventBus.$emit('GET_STRUCTURE')
             else if (this.headerTabSelected == 'content') EventBus.$emit('GET_CONTENT')
             else if (this.headerTabSelected.startsWith('info_')) {
@@ -224,12 +224,11 @@ export default {
         // Double Click
         else if (data == 'double' && item.children === undefined) {
           this.treeview = [item]
-          this.treeviewSelected = item
+          this.treeviewSelected = {...item}
           if (this.treeviewMode == 'servers') this.getDatabases(item)
           else if (this.treeviewMode == 'objects') {
             if (['Table','View'].includes(item.type) && item.children === undefined) {
               this.treeview = []
-              this.treeviewSelected = item
               this.headerTab = 2
               this.headerTabSelected = 'content'
               EventBus.$emit('GET_CONTENT')
@@ -423,7 +422,6 @@ export default {
       this.editorCompleters.splice(index, 1)
     },
     refreshObjects() {
-      // !!! Add Promise
       this.getDatabases(this.server)
       if (this.database.length > 0) this.getObjects(this.database)
     },
@@ -433,8 +431,10 @@ export default {
       this.contextMenuModel = null
       this.contextMenuX = e.clientX
       this.contextMenuY = e.clientY
+      this.treeview = [item.id]
+      this.treeviewSelected = {...item}
       this.buildContextMenu(item)
-      this.$nextTick(() => { this.contextMenu = true })
+      this.$nextTick(() => { this.contextMenu = true; })
     },
     buildContextMenu(item) {
       this.contextMenuItem = item
