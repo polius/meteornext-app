@@ -58,7 +58,9 @@ export default {
       dialog: false,
       dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
       // Selectors
+      encodings: [],
       collations: [],
+      engines: [],
     }
   },
   props: { contextMenuItem: Object },
@@ -73,36 +75,42 @@ export default {
       'headerTabSelected',
       'tabStructureSelected',
     ], { path: 'client/connection' }),
-    encodings: function () {
-      let db = this.databaseItems.filter(obj => { return obj.text == this.database })[0]
-      let encodings = [{ text: 'Default (' + db.encoding + ')', value: db.encoding }]
-      encodings.push({ divider: true })
-      encodings.push(...this.server.encodings.reduce((acc, val) => { 
-        acc.push({ text: val.description + ' (' + val.encoding + ')', value: val.encoding })
-        return acc
-      }, []))
-      return encodings
-    },
-    engines: function() {
-      let db = this.server.engines.filter(obj => { return obj.support == 'DEFAULT' })[0]
-      let engines = [{ text: 'Default (' + db.engine + ')', value: db.engine }]
-      engines.push({ divider: true })
-      engines.push(...this.server.engines.reduce((acc, val) => { 
-        acc.push(val.engine)
-        return acc
-      }, []))
-      return engines
-    },
   },
   created() {
-    // Build Collations
-    let db = this.databaseItems.filter(obj => { return obj.text == this.database })[0]
-    this.getCollations(db.encoding)
+    // Build Selectors
+    this.buildSelectors()
   },
   mounted() {
     EventBus.$on('CLICK_CONTEXTMENU_TABLE', this.contextMenuClicked);
   },
+  watch: {
+    database: function() {
+      this.buildSelectors()
+    }
+  },
   methods: {
+    buildSelectors() {
+      // Build Encodings
+      let db = this.databaseItems.filter(obj => { return obj.text == this.database })[0]
+      this.encodings = [{ text: 'Default (' + db.encoding + ')', value: db.encoding }]
+      this.encodings.push({ divider: true })
+      this.encodings.push(...this.server.encodings.reduce((acc, val) => { 
+        acc.push({ text: val.description + ' (' + val.encoding + ')', value: val.encoding })
+        return acc
+      }, []))
+
+      // Build Collations
+      this.getCollations(db.encoding)
+
+      // Build Engines
+      db = this.server.engines.filter(obj => { return obj.support == 'DEFAULT' })[0]
+      this.engines = [{ text: 'Default (' + db.engine + ')', value: db.engine }]
+      this.engines.push({ divider: true })
+      this.engines.push(...this.server.engines.reduce((acc, val) => { 
+        acc.push(val.engine)
+        return acc
+      }, []))
+    },
     contextMenuClicked(item) {
       if (item == 'Create Table') this.createTable()
       else if (item == 'Rename Table') 1 == 1
@@ -133,7 +141,7 @@ export default {
       }
       axios.get('/client/collations', { params: payload })
         .then((response) => {
-          this.parseCollations(response.data.collations)
+          this.parseCollations(encoding, response.data.collations)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -143,9 +151,9 @@ export default {
           this.loading = false
         })
     },
-    parseCollations(data) {
-      let db = this.databaseItems.filter(obj => { return obj.text == this.database })[0]
-      this.collations = [{ text: 'Default (' + db.collation + ')', value: db.collation }, { divider: true }, ...JSON.parse(data)]
+    parseCollations(encoding, data) {
+      let def = this.server.encodings.filter(obj => { return obj.encoding == encoding })[0]
+      this.collations = [{ text: 'Default (' + def.collation + ')', value: def.collation }, { divider: true }, ...JSON.parse(data)]
     },
     showObjectsTab(object) {
       let promise = new Promise((resolve, reject) => {
@@ -177,18 +185,24 @@ export default {
       if (this.dialogOptions.mode == 'createTable') {
         let tableName = this.dialogOptions.item.name
         let query = "CREATE TABLE " + tableName + " (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) ENGINE=" + this.dialogOptions.item.engine + " DEFAULT CHARSET=" + this.dialogOptions.item.encoding + " COLLATE= " + this.dialogOptions.item.collation + ";"
-        new Promise((resolve, reject) => { EventBus.$emit('EXECUTE_SIDEBAR', query, resolve, reject) }).then(() => { 
-          // Hide Dialog
-          this.dialog = false
-          // Select new created table
-          this.treeview = ['table|' + tableName]
-          this.treeviewSelected = { id: 'table|' + tableName, name: tableName, type: 'Table' }
-          // Change view to Structure - columns
-          this.headerTab = 1
-          this.headerTabSelected = 'structure'
-          this.tabStructureSelected = 'columns'
-          EventBus.$emit('GET_STRUCTURE')
-        }).catch(() => {}).finally(() => { this.loading = false })
+        new Promise((resolve, reject) => { 
+          EventBus.$emit('EXECUTE_SIDEBAR', query, resolve, reject)
+        }).then(() => { 
+          return new Promise((resolve, reject) => { 
+            EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          }).then(() => {
+            // Hide Dialog
+            this.dialog = false
+            // Select new created table
+            this.treeviewSelected = { id: 'table|' + tableName, name: tableName, type: 'Table' }
+            this.treeview = ['table|' + tableName]
+            // Change view to Structure (columns)
+            this.headerTab = 1
+            this.headerTabSelected = 'structure'
+            this.tabStructureSelected = 'columns'
+            EventBus.$emit('GET_STRUCTURE')
+          })
+        }).finally(() => { this.loading = false })
       }
       // else if (this.dialogOptions.mode == 'createView') {
         
