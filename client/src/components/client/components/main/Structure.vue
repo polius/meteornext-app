@@ -118,7 +118,7 @@ export default {
         .catch((error) => {
           console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
         })
     },
     parseStructure(data) {
@@ -131,8 +131,9 @@ export default {
           let field = columns_keys[i].trim()
           columns_headers.push({ headerName: columns_keys[i], colId: field, field: field, sortable: false, filter: false, resizable: true, editable: false })
         }
+        columns_headers[0]['rowDrag'] = true
       }
-      columns_headers[0]['rowDrag'] = true
+      else EventBus.$emit('SEND_NOTIFICATION', "This table no longer exists", 'error')
       this.structureHeaders.columns = columns_headers
       this.structureItems.columns = columns_items
       if (columns_items.length == 0) this.gridApi.structure.columns.showNoRowsOverlay()

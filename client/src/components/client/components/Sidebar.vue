@@ -1,11 +1,10 @@
 <template>
   <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
     <div style="height:calc(100% - 36px)">
-      <v-select :disabled="loadingServer || databaseItems.length == 0" v-model="database" @change="getObjects" solo :items="databaseItems" label="Database" hide-details background-color="#303030" height="48px" style="padding:10px;"></v-select>
-      <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}</div>
+      <v-select :disabled="loading || databaseItems.length == 0" v-model="database" @change="databaseChanged" solo :items="databaseItems" label="Database" hide-details background-color="#303030" height="48px" style="padding:10px;"></v-select>
+      <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="loading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
-      <v-progress-circular v-if="loading" indeterminate size="20" width="2" style="margin-top:2px; margin-left:12px;"></v-progress-circular>
-      <div v-else-if="treeviewMode == 'servers' || database.length > 0" style="height:100%">
+      <div v-if="treeviewMode == 'servers' || database.length > 0" style="height:100%">
         <v-treeview :active.sync="treeview" item-key="id" :open.sync="treeviewOpened" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
           <template v-slot:label="{item, open}">
             <v-btn text @click="treeviewClicked(item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
@@ -17,7 +16,7 @@
               </v-icon>
               {{item.name}}
               <v-spacer></v-spacer>
-              <v-progress-circular v-if="loadingServer && (item.id == treeview[0] || item.id == contextMenuItem.id)" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
+              <v-progress-circular v-if="loadingServer && treeviewMode == 'servers' && (item.id == treeview[0] || item.id == contextMenuItem.id)" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
             </v-btn>
           </template>
         </v-treeview>
@@ -49,15 +48,15 @@
     </div>
     <!-- OBJECTS -->
     <div v-else-if="treeviewMode == 'objects'" style="height:35px; border-top:2px solid #2c2c2c;">
-      <v-btn :disabled="loading" @click="refreshObjects" text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+      <v-btn :loading="loading" :disabled="loading" @click="refreshObjects" text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
       <v-btn :disabled="loading" text small title="Create Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
       <v-btn :disabled="loading" text small title="Drop Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" text small title="Import SQL" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-up</v-icon></v-btn>
-      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" text small title="Export Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-down</v-icon></v-btn>
-      <span v-if="database.length > 0" :disabled="loading || loadingServer" style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn v-if="database.length > 0" :disabled="loading || loadingServer" text small title="Database Settings" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-cog</v-icon></v-btn>
+      <v-btn v-if="database.length > 0" :disabled="loading" text small title="Import SQL" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-up</v-icon></v-btn>
+      <v-btn v-if="database.length > 0" :disabled="loading" text small title="Export Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-down</v-icon></v-btn>
+      <span v-if="database.length > 0" :disabled="loading" style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+      <v-btn v-if="database.length > 0" :disabled="loading" text small title="Database Settings" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-cog</v-icon></v-btn>
     </div>
     <!---------------------------->
     <!-- CONTEXT MENU - DIALOGs -->
@@ -188,6 +187,7 @@ export default {
   },
   mounted() {
     EventBus.$on('EXECUTE_SIDEBAR', this.execute);
+    EventBus.$on('GET_SIDEBAR_OBJECTS', this.getObjects);
   },
   methods: {
     treeviewClicked(item) {
@@ -318,7 +318,16 @@ export default {
         this.server.fkRules = ['Restrict','Cascade','Set NULL','No Action']
       }
     },
-    getObjects(database) {
+    databaseChanged(database) {
+      // Clear Treeview
+      this.treeview = []
+      this.treeviewSelected = {}
+      this.treeviewOpened = []
+      this.treeviewItems = []
+      // Get Objects
+      new Promise((resolve, reject) => { this.getObjects(database, resolve, reject) })
+    },
+    getObjects(database, resolve, reject) {
       this.loading = true
       // Retrieve Tables
       const payload = {
@@ -329,10 +338,12 @@ export default {
         .then((response) => {
           this.parseObjects(response.data)
           this.editor.focus()
+          resolve()
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+          reject(error)
         })
         .finally(() => { this.loading = false })
     },
@@ -421,7 +432,7 @@ export default {
     },
     refreshObjects() {
       this.getDatabases(this.server)
-      if (this.database.length > 0) this.getObjects(this.database)
+      if (this.database.length > 0) new Promise((resolve, reject) => { this.getObjects(this.database, resolve, reject) })
     },
     showContextMenu(e, item) {
       e.preventDefault()
@@ -525,9 +536,7 @@ export default {
         queries: [query]
       }
       axios.post('/client/execute', payload)
-        .then(() => {
-          this.getObjects(this.database)
-        })
+        .then(() => {})
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
