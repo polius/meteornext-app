@@ -49,9 +49,9 @@
                 <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
                   <div v-if="Object.keys(dialogOptions.item).length > 0">
-                    <v-text-field v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
+                    <v-text-field :disabled="dialogOptions.item.type == 'PRIMARY KEY'" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
                     <v-select v-model="dialogOptions.item.type" :items="server.indexTypes" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-select>
-                    <v-text-field v-model="dialogOptions.item.fields" :rules="[v => !!v || '']" label="Fields" hint="Column names separated by comma. Example: col1, col2, col3" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="dialogOptions.item.fields" :rules="[v => !!v || '']" label="Fields" hint="Column names separated by comma. Example: col1, col2, col3" persistent-hint required style="padding-top:0px;"></v-text-field>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
@@ -197,11 +197,13 @@ export default {
           return
         }
         // Build query
-        query = "ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + this.dialogOptions.item.type + ' ' + this.dialogOptions.item.name + "(" + this.dialogOptions.item.fields + ");"
+        if (this.dialogOptions.item.type == 'PRIMARY') query = "ALTER TABLE " + this.treeviewSelected['name'] + " ADD PRIMARY KEY (" + this.dialogOptions.item.fields + ");"
+        else query = "ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + this.dialogOptions.item.type + ' ' + this.dialogOptions.item.name + "(" + this.dialogOptions.item.fields + ");"
       }
       else if (this.dialogOptions.mode == 'delete') {
         let row = this.gridApi.structure.indexes.getSelectedRows()[0]
-        query = "ALTER TABLE " + this.treeviewSelected['name'] + " DROP INDEX " + row.Name + ';'
+        if (row.Type == 'PRIMARY') query = "ALTER TABLE " + this.treeviewSelected['name'] + " DROP PRIMARY KEY;"
+        else query = "ALTER TABLE " + this.treeviewSelected['name'] + " DROP INDEX " + row.Name + ';'
       }
       // Execute query
       this.execute(query)

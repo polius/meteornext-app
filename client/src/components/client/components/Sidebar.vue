@@ -314,7 +314,7 @@ export default {
         this.server.engines = data.engines
         this.server.encodings = data.encodings
         this.server.columnTypes = ['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','FLOAT','DOUBLE','BIT','CHAR','VARCHAR','BINARY','VARBINARY','TINYBLOB','BLOB','MEDIUMBLOB','LONGBLOB','TINYTEXT','TEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET','DATE','TIME','DATETIME','TIMESTAMP','YEAR','GEOMETRY','POINT','LINESTRING','POLYGON','GEOMETRYCOLLECTION','MULTILINESTRING','MULTIPOINT','MULTIPOLYGON','JSON']
-        this.server.indexTypes = ['INDEX','UNIQUE','FULLTEXT']
+        this.server.indexTypes = ['PRIMARY','INDEX','UNIQUE','FULLTEXT']
         this.server.fkRules = ['Restrict','Cascade','Set NULL','No Action']
       }
     },
