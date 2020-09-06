@@ -242,7 +242,6 @@ class MySQL:
             FROM information_schema.statistics
             WHERE table_schema = %s
             AND table_name = %s
-            AND index_name != 'PRIMARY'
             GROUP BY index_name, index_type, non_unique
         """
         return self.execute(query, args=(db, table))['data']
