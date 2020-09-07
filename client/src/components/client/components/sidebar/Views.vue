@@ -23,6 +23,10 @@
                       <div id="dialogEditor" style="height:100%;"></div>
                     </div>
                   </div>
+                  <div v-else-if="dialogOptions.mode == 'renameView'">
+                    <v-text-field read-only v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
+                  </div>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -80,7 +84,7 @@ export default {
   watch: {
     dialog (val) {
       if (!val) return
-      if (this.dialogEditor == null) this.initEditor()
+      if (this.dialogEditor == null && this.dialogOptions.mode == 'createView') this.initEditor()
       requestAnimationFrame(() => {
         if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
       })
@@ -132,6 +136,7 @@ export default {
     },
     contextMenuClicked(item) {
       if (item == 'Create View') this.createView()
+      else if (item == 'Rename View') this.renameView()
     },
     createView() {
       let dialogOptions = { 
@@ -146,6 +151,18 @@ export default {
       if (this.dialogEditor != null) this.dialogEditor.setValue('/* SELECT * FROM tbl; */', -1)
       this.dialog = true
     },
+    renameView() {
+      let dialogOptions = { 
+        mode: 'renameView', 
+        title: 'Rename View', 
+        text: '', 
+        item: { currentName: this.contextMenuItem.name, newName: '' }, 
+        submit: 'Submit', 
+        cancel: 'Cancel'
+      }
+      this.dialogOptions = dialogOptions
+      this.dialog = true
+    },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
@@ -155,6 +172,7 @@ export default {
       }
       this.loading = true
       if (this.dialogOptions.mode == 'createView') this.createViewSubmit()
+      else if (this.dialogOptions.mode == 'renameView') this.renameViewSubmit() 
     },
     createViewSubmit() {
       let viewName = this.dialogOptions.item.name
@@ -176,6 +194,24 @@ export default {
           this.headerTab = 2
           this.headerTabSelected = 'content'
           EventBus.$emit('GET_CONTENT')
+        })
+      }).catch(() => {}).finally(() => { this.loading = false })
+    },
+    renameViewSubmit() {
+      let currentName = this.contextMenuItem.name
+      let newName = this.dialogOptions.item.newName
+      let query = "RENAME TABLE " + currentName + " TO " + newName + ";"
+      new Promise((resolve, reject) => { 
+        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+      }).then(() => { 
+        return new Promise((resolve, reject) => { 
+          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+        }).then(() => {
+          // Hide Dialog
+          this.dialog = false
+          // Select renamed table
+          this.treeviewSelected = { id: 'view|' + newName, name: newName, type: 'View' }
+          this.treeview = ['view|' + newName]
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
