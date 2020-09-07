@@ -20,7 +20,7 @@
             </v-btn>
           </template>
         </v-treeview>
-        <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y>
+        <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
           <v-list style="padding:0px;">
             <v-list-item-group v-model="contextMenuModel">
               <div v-for="[index, item] of contextMenuItems.entries()" :key="index">
@@ -528,12 +528,12 @@ export default {
         }, 500)
       }
     },
-    execute(query, resolve, reject) {
+    execute(queries, resolve, reject) {
       // Execute Query
       const payload = {
         server: this.server.id,
         database: this.database,
-        queries: [query]
+        queries: queries
       }
       axios.post('/client/execute', payload)
         .then(() => {})
