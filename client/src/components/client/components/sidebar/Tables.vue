@@ -23,6 +23,10 @@
                     <v-autocomplete :loading="loading" v-model="dialogOptions.item.collation" :items="collations" :rules="[v => !!v || '']" label="Table Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                     <v-select v-model="dialogOptions.item.engine" :items="engines" :rules="[v => !!v || '']" label="Table Engine" hide-details required style="padding-top:0px;"></v-select>
                   </div>
+                  <div v-else-if="dialogOptions.mode == 'renameTable'">
+                    <v-text-field read-only v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
+                  </div>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -70,6 +74,7 @@ export default {
       'database',
       'databaseItems',
       'treeview',
+      'treeviewOpened',
       'treeviewSelected',
       'headerTab',
       'headerTabSelected',
@@ -86,7 +91,13 @@ export default {
   watch: {
     database: function() {
       this.buildSelectors()
-    }
+    },
+    dialog (val) {
+      if (!val) return
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
+      })
+    },
   },
   methods: {
     buildSelectors() {
@@ -111,27 +122,6 @@ export default {
         return acc
       }, []))
     },
-    contextMenuClicked(item) {
-      if (item == 'Create Table') this.createTable()
-      else if (item == 'Rename Table') 1 == 1
-      else if (item == 'Duplicate Table') 1 == 1
-      else if (item == 'Truncate Table') 1 == 1
-      else if (item == 'Delete Table') 1 == 1
-      else if (item == 'Export') 1 == 1
-      else if (item == 'Copy Table Syntax') 1 == 1
-    },
-    createTable() {
-      let dialogOptions = { 
-        mode: 'createTable', 
-        title: 'Create Table', 
-        text: '', 
-        item: { name: '', encoding: this.encodings[0].value, collation: this.collations[0].value, engine: this.engines[0].value }, 
-        submit: 'Submit', 
-        cancel: 'Cancel'
-      }
-      this.dialogOptions = dialogOptions
-      this.dialog = true
-    },
     getCollations(encoding) {
       // Retrieve Databases
       this.loading = true
@@ -155,24 +145,38 @@ export default {
       let def = this.server.encodings.filter(obj => { return obj.encoding == encoding })[0]
       this.collations = [{ text: 'Default (' + def.collation + ')', value: def.collation }, { divider: true }, ...JSON.parse(data)]
     },
-    showObjectsTab(object) {
-      let promise = new Promise((resolve, reject) => {
-        this.headerTab = 6
-        this.headerTabSelected = 'objects'
-        this.objectsTab = (object == 'tables') ? 1 : (object == 'views') ? 2 : (object == 'triggers') ? 3 : (object == 'functions') ? 4 : (object == 'procedures') ? 5 : (object == 'events') ? 6 : 0
-        this.tabObjectsSelected = object
-        if (this.objectsHeaders[object].length == 0) {
-          setTimeout(() => {
-            this.gridApi.objects[object].showLoadingOverlay()
-            EventBus.$emit('GET_OBJECTS', resolve, reject)
-          }, 100)        
-        }
-      })
-      promise.then(() => {})
-        .catch(() => {})
-        .finally(() => {
-          this.gridApi.objects[object].hideOverlay() 
-        })
+    contextMenuClicked(item) {
+      if (item == 'Create Table') this.createTable()
+      else if (item == 'Rename Table') this.renameTable()
+      else if (item == 'Duplicate Table') 1 == 1
+      else if (item == 'Truncate Table') 1 == 1
+      else if (item == 'Delete Table') 1 == 1
+      else if (item == 'Export') 1 == 1
+      else if (item == 'Copy Table Syntax') 1 == 1
+    },
+    createTable() {
+      let dialogOptions = { 
+        mode: 'createTable', 
+        title: 'Create Table', 
+        text: '', 
+        item: { name: '', encoding: this.encodings[0].value, collation: this.collations[0].value, engine: this.engines[0].value }, 
+        submit: 'Submit', 
+        cancel: 'Cancel'
+      }
+      this.dialogOptions = dialogOptions
+      this.dialog = true
+    },
+    renameTable() {
+      let dialogOptions = { 
+        mode: 'renameTable', 
+        title: 'Rename Table', 
+        text: '', 
+        item: { currentName: this.contextMenuItem.name, newName: '' }, 
+        submit: 'Submit', 
+        cancel: 'Cancel'
+      }
+      this.dialogOptions = dialogOptions
+      this.dialog = true
     },
     dialogSubmit() {
       // Check if all fields are filled
@@ -182,32 +186,51 @@ export default {
         return
       }
       this.loading = true
-      if (this.dialogOptions.mode == 'createTable') {
-        let tableName = this.dialogOptions.item.name
-        let query = "CREATE TABLE " + tableName + " (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) ENGINE=" + this.dialogOptions.item.engine + " DEFAULT CHARSET=" + this.dialogOptions.item.encoding + " COLLATE= " + this.dialogOptions.item.collation + ";"
-        new Promise((resolve, reject) => { 
-          EventBus.$emit('EXECUTE_SIDEBAR', query, resolve, reject)
-        }).then(() => { 
-          return new Promise((resolve, reject) => { 
-            EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
-          }).then(() => {
-            // Hide Dialog
-            this.dialog = false
-            // Select new created table
-            this.treeviewSelected = { id: 'table|' + tableName, name: tableName, type: 'Table' }
-            this.treeview = ['table|' + tableName]
-            // Change view to Structure (columns)
-            this.headerTab = 1
-            this.headerTabSelected = 'structure'
-            this.tabStructureSelected = 'columns'
-            EventBus.$emit('GET_STRUCTURE')
-          })
-        }).finally(() => { this.loading = false })
-      }
-      // else if (this.dialogOptions.mode == 'createView') {
-        
-      // }
+      if (this.dialogOptions.mode == 'createTable') this.createTableSubmit()
+      else if (this.dialogOptions.mode == 'renameTable') this.renameTableSubmit() 
     },
+    createTableSubmit() {
+      let tableName = this.dialogOptions.item.name
+      let query = "CREATE TABLE " + tableName + " (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) ENGINE=" + this.dialogOptions.item.engine + " DEFAULT CHARSET=" + this.dialogOptions.item.encoding + " COLLATE= " + this.dialogOptions.item.collation + ";"
+      new Promise((resolve, reject) => { 
+        EventBus.$emit('EXECUTE_SIDEBAR', query, resolve, reject)
+      }).then(() => { 
+        return new Promise((resolve, reject) => { 
+          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+        }).then(() => {
+          // Hide Dialog
+          this.dialog = false
+          // Select new created table
+          this.treeviewSelected = { id: 'table|' + tableName, name: tableName, type: 'Table' }
+          this.treeview = ['table|' + tableName]
+          // Open treeview parent
+          this.treeviewOpened = ['tables']
+          // Change view to Structure (columns)
+          this.headerTab = 1
+          this.headerTabSelected = 'structure'
+          this.tabStructureSelected = 'columns'
+          EventBus.$emit('GET_STRUCTURE')
+        })
+      }).finally(() => { this.loading = false })
+    },
+    renameTableSubmit() {
+      let currentName = this.contextMenuItem.name
+      let newName = this.dialogOptions.item.newName
+      let query = "RENAME TABLE " +currentName + " TO " + newName + ";"
+      new Promise((resolve, reject) => { 
+        EventBus.$emit('EXECUTE_SIDEBAR', query, resolve, reject)
+      }).then(() => { 
+        return new Promise((resolve, reject) => { 
+          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+        }).then(() => {
+          // Hide Dialog
+          this.dialog = false
+          // Select renamed table
+          this.treeviewSelected = { id: 'table|' + newName, name: newName, type: 'Table' }
+          this.treeview = ['table|' + newName]
+        })
+      }).finally(() => { this.loading = false })
+    }
   }
 }
 </script>
