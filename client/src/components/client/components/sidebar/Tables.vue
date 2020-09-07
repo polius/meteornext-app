@@ -30,13 +30,10 @@
                   <div v-else-if="dialogOptions.mode == 'duplicateTable'">
                     <v-text-field read-only v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
-                    <v-radio-group v-model="dialogOptions.item.duplicateContent" hide-details>
-                      <v-radio label="Structure + Data" value="1"></v-radio>
-                      <v-radio label="Structure Only" value="0"></v-radio>
-                    </v-radio-group>
+                    <v-checkbox v-model="dialogOptions.item.duplicateContent" label="Duplicate table content" hide-details class="body-1" style="padding:0px; font-weight:300;"></v-checkbox>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'deleteTable'">
-                    <v-checkbox v-model="dialogOptions.item.force" label="Force delete (disable integrity checks)" value="force" hide-details class="body-1" style="padding:0px; font-weight:300;"></v-checkbox>
+                    <v-checkbox v-model="dialogOptions.item.force" label="Force delete (disable integrity checks)" hide-details class="body-1" style="padding:0px; font-weight:300;"></v-checkbox>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
@@ -194,7 +191,7 @@ export default {
         mode: 'duplicateTable', 
         title: 'Duplicate Table', 
         text: '', 
-        item: { currentName: this.contextMenuItem.name, newName: '', duplicateContent: "1" }, 
+        item: { currentName: this.contextMenuItem.name, newName: '', duplicateContent: false }, 
         submit: 'Submit',
         cancel: 'Cancel'
       }
@@ -261,7 +258,7 @@ export default {
           this.tabStructureSelected = 'columns'
           EventBus.$emit('GET_STRUCTURE')
         })
-      }).finally(() => { this.loading = false })
+      }).catch(() => {}).finally(() => { this.loading = false })
     },
     renameTableSubmit() {
       let currentName = this.contextMenuItem.name
@@ -279,14 +276,14 @@ export default {
           this.treeviewSelected = { id: 'table|' + newName, name: newName, type: 'Table' }
           this.treeview = ['table|' + newName]
         })
-      }).finally(() => { this.loading = false })
+      }).catch(() => {}).finally(() => { this.loading = false })
     },
     duplicateTableSubmit() {
       let currentName = this.contextMenuItem.name
       let newName = this.dialogOptions.item.newName
       let duplicateContent = this.dialogOptions.item.duplicateContent
       let queries = ["CREATE TABLE " + newName + " LIKE " + currentName + ";"]
-      if (duplicateContent == "1") queries.push("INSERT INTO " + newName + " SELECT * FROM " + currentName + ";")
+      if (duplicateContent) queries.push("INSERT INTO " + newName + " SELECT * FROM " + currentName + ";")
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
       }).then(() => { 
@@ -299,7 +296,7 @@ export default {
           this.treeviewSelected = { id: 'table|' + newName, name: newName, type: 'Table' }
           this.treeview = ['table|' + newName]
         })
-      }).finally(() => { this.loading = false })
+      }).catch(() => {}).finally(() => { this.loading = false })
     },
     truncateTableSubmit() {
       let name = this.contextMenuItem.name
@@ -309,7 +306,7 @@ export default {
       }).then(() => { 
         // Hide Dialog
         this.dialog = false
-      }).finally(() => { this.loading = false })
+      }).catch(() => {}).finally(() => { this.loading = false })
     },
     deleteTableSubmit() {
       let name = this.contextMenuItem.name
@@ -327,7 +324,7 @@ export default {
           // Hide Dialog
           this.dialog = false
         })
-      }).finally(() => { this.loading = false })
+      }).catch(() => {}).finally(() => { this.loading = false })
     },
     copyTableSyntaxSubmit() {
       let name = this.contextMenuItem.name
@@ -338,7 +335,7 @@ export default {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Table']
         navigator.clipboard.writeText(syntax)
         EventBus.$emit('SEND_NOTIFICATION', "Syntax copied to clipboard", 'info')
-      }).finally(() => { this.loading = false })
+      }).catch(() => {}).finally(() => { this.loading = false })
     },
   }
 }
