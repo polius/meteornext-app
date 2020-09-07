@@ -27,6 +27,14 @@
                     <v-text-field read-only v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                   </div>
+                  <div v-else-if="dialogOptions.mode == 'duplicateTable'">
+                    <v-text-field read-only v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
+                    <v-radio-group v-model="dialogOptions.item.duplicateContent" hide-details>
+                      <v-radio label="Structure + Data" value="1"></v-radio>
+                      <v-radio label="Structure Only" value="0"></v-radio>
+                    </v-radio-group>
+                  </div>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -148,7 +156,7 @@ export default {
     contextMenuClicked(item) {
       if (item == 'Create Table') this.createTable()
       else if (item == 'Rename Table') this.renameTable()
-      else if (item == 'Duplicate Table') 1 == 1
+      else if (item == 'Duplicate Table') this.duplicateTable()
       else if (item == 'Truncate Table') 1 == 1
       else if (item == 'Delete Table') 1 == 1
       else if (item == 'Export') 1 == 1
@@ -178,6 +186,18 @@ export default {
       this.dialogOptions = dialogOptions
       this.dialog = true
     },
+    duplicateTable() {
+      let dialogOptions = { 
+        mode: 'duplicateTable', 
+        title: 'Duplicate Table', 
+        text: '', 
+        item: { currentName: this.contextMenuItem.name, newName: '', duplicateContent: "1" }, 
+        submit: 'Submit',
+        cancel: 'Cancel'
+      }
+      this.dialogOptions = dialogOptions
+      this.dialog = true
+    },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
@@ -188,12 +208,13 @@ export default {
       this.loading = true
       if (this.dialogOptions.mode == 'createTable') this.createTableSubmit()
       else if (this.dialogOptions.mode == 'renameTable') this.renameTableSubmit() 
+      else if (this.dialogOptions.mode == 'duplicateTable') this.duplicateTableSubmit() 
     },
     createTableSubmit() {
       let tableName = this.dialogOptions.item.name
       let query = "CREATE TABLE " + tableName + " (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) ENGINE=" + this.dialogOptions.item.engine + " DEFAULT CHARSET=" + this.dialogOptions.item.encoding + " COLLATE= " + this.dialogOptions.item.collation + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', query, resolve, reject)
+        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
           EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
@@ -216,9 +237,9 @@ export default {
     renameTableSubmit() {
       let currentName = this.contextMenuItem.name
       let newName = this.dialogOptions.item.newName
-      let query = "RENAME TABLE " +currentName + " TO " + newName + ";"
+      let query = "RENAME TABLE " + currentName + " TO " + newName + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', query, resolve, reject)
+        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
           EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
@@ -230,6 +251,12 @@ export default {
           this.treeview = ['table|' + newName]
         })
       }).finally(() => { this.loading = false })
+    },
+    duplicateTableSubmit() {
+      // let currentName = this.contextMenuItem.name
+      // let newName = this.dialogOptions.item.newName
+      // let duplicateContent = this.dialogOptions.item.duplicateContent
+      // let queries = []
     }
   }
 }
