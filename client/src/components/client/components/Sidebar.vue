@@ -64,6 +64,7 @@
     <Connections v-if="1 == 2" :contextMenuItem="contextMenuItem" />
     <Tables v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
     <Views v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
+    <Triggers v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
     <!------------>
     <!-- DIALOG -->
     <!------------>
@@ -114,6 +115,7 @@ import { mapFields } from '../js/map-fields'
 import Connections from './sidebar/Connections'
 import Tables from './sidebar/Tables'
 import Views from './sidebar/Views'
+import Triggers from './sidebar/Triggers'
 
 export default {
   data() {
@@ -156,7 +158,7 @@ export default {
       dialogText: '',
     }
   },
-  components: { Connections, Tables, Views },
+  components: { Connections, Tables, Views, Triggers },
   computed: {
     ...mapFields([
       'servers',

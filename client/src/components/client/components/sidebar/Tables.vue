@@ -1,7 +1,7 @@
 <template>
   <div>
     <!------------>
-    <!-- DIALOG -->
+    <!-- TABLES -->
     <!------------>
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>

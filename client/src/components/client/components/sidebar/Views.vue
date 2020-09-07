@@ -1,8 +1,8 @@
 <template>
   <div>
-    <!------------>
-    <!-- DIALOG -->
-    <!------------>
+    <!----------->
+    <!-- VIEWS -->
+    <!----------->
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
         <v-toolbar v-if="dialogOptions.text.length == 0" flat color="primary">
