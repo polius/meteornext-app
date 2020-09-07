@@ -95,7 +95,6 @@ export default {
       // Dialog
       dialog: false,
       dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
-      // Editor
       dialogEditor: null
     }
   },

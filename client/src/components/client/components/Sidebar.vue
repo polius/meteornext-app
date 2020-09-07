@@ -63,6 +63,7 @@
     <!---------------------------->
     <Connections v-if="1 == 2" :contextMenuItem="contextMenuItem" />
     <Tables v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
+    <Views v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
     <!------------>
     <!-- DIALOG -->
     <!------------>
@@ -112,6 +113,7 @@ import { mapFields } from '../js/map-fields'
 
 import Connections from './sidebar/Connections'
 import Tables from './sidebar/Tables'
+import Views from './sidebar/Views'
 
 export default {
   data() {
@@ -154,7 +156,7 @@ export default {
       dialogText: '',
     }
   },
-  components: { Connections, Tables },
+  components: { Connections, Tables, Views },
   computed: {
     ...mapFields([
       'servers',
