@@ -323,6 +323,12 @@ export default {
         }).then(() => {
           // Hide Dialog
           this.dialog = false
+          // Unselect deleted table
+          this.treeviewSelected = {}
+          this.treeview = []
+          // Change view to Client
+          this.headerTab = 0
+          this.headerTabSelected = 'client'
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
