@@ -27,6 +27,10 @@
                     <v-text-field read-only v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                   </div>
+                  <div v-else-if="dialogOptions.mode == 'duplicateView'">
+                    <v-text-field read-only v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
+                  </div>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -137,6 +141,10 @@ export default {
     contextMenuClicked(item) {
       if (item == 'Create View') this.createView()
       else if (item == 'Rename View') this.renameView()
+      else if (item == 'Duplicate View') this.duplicateView()
+      else if (item == 'Delete View') this.deleteView()
+      else if (item == 'Export') 1 == 1
+      else if (item == 'Copy View Syntax') this.copyViewSyntaxSubmit()
     },
     createView() {
       let dialogOptions = { 
@@ -163,6 +171,30 @@ export default {
       this.dialogOptions = dialogOptions
       this.dialog = true
     },
+    duplicateView() {
+      let dialogOptions = { 
+        mode: 'duplicateView', 
+        title: 'Duplicate View', 
+        text: '', 
+        item: { currentName: this.contextMenuItem.name, newName: '', duplicateContent: false }, 
+        submit: 'Submit',
+        cancel: 'Cancel'
+      }
+      this.dialogOptions = dialogOptions
+      this.dialog = true
+    },
+    deleteView() {
+      let dialogOptions = { 
+        mode: 'deleteView', 
+        title: 'Delete View?', 
+        text: "Are you sure you want to delete the view '" + this.contextMenuItem.name + "'? This operation cannot be undone.",
+        item: {}, 
+        submit: 'Submit',
+        cancel: 'Cancel'
+      }
+      this.dialogOptions = dialogOptions
+      this.dialog = true
+    },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
@@ -173,6 +205,8 @@ export default {
       this.loading = true
       if (this.dialogOptions.mode == 'createView') this.createViewSubmit()
       else if (this.dialogOptions.mode == 'renameView') this.renameViewSubmit() 
+      else if (this.dialogOptions.mode == 'duplicateView') this.duplicateViewSubmit() 
+      else if (this.dialogOptions.mode == 'deleteView') this.deleteViewSubmit() 
     },
     createViewSubmit() {
       let viewName = this.dialogOptions.item.name
@@ -213,6 +247,65 @@ export default {
           this.treeviewSelected = { id: 'view|' + newName, name: newName, type: 'View' }
           this.treeview = ['view|' + newName]
         })
+      }).catch(() => {}).finally(() => { this.loading = false })
+    },
+    duplicateViewSubmit() {
+      let currentName = this.dialogOptions.item.currentName
+      let newName = this.dialogOptions.item.newName
+      let query = "SHOW CREATE VIEW " + currentName + ";"
+      new Promise((resolve, reject) => { 
+        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+      }).then((res) => { 
+        let syntax = 'SELECT ' + JSON.parse(res.data)[0].data[0]['Create View'].split(' AS select ')[1]
+        let query = "CREATE VIEW " + newName + " AS " + syntax
+        return new Promise((resolve, reject) => {
+          EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        }).then(() => { 
+          return new Promise((resolve, reject) => { 
+            EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          }).then(() => {
+            // Hide Dialog
+            this.dialog = false
+            // Select duplicated view
+            this.treeviewSelected = { id: 'view|' + newName, name: newName, type: 'View' }
+            this.treeview = ['view|' + newName]
+            // Change view to Content
+          this.headerTab = 2
+          this.headerTabSelected = 'content'
+          EventBus.$emit('GET_CONTENT')
+          })
+        }).catch(() => {})
+      }).catch(() => {}).finally(() => { this.loading = false })
+    },
+    deleteViewSubmit() {
+      let name = this.contextMenuItem.name
+      let query = "DROP VIEW " + name + ";"
+      new Promise((resolve, reject) => { 
+        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+      }).then(() => { 
+        return new Promise((resolve, reject) => { 
+          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+        }).then(() => {
+          // Hide Dialog
+          this.dialog = false
+          // Unselect deleted view
+          this.treeviewSelected = {}
+          this.treeview = []
+          // Change view to Client
+          this.headerTab = 0
+          this.headerTabSelected = 'client'
+        })
+      }).catch(() => {}).finally(() => { this.loading = false })
+    },
+    copyViewSyntaxSubmit() {
+      let name = this.contextMenuItem.name
+      let query = "SHOW CREATE VIEW " + name + ";"
+      new Promise((resolve, reject) => { 
+        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+      }).then((res) => {
+        let syntax = JSON.parse(res.data)[0].data[0]['Create View']
+        navigator.clipboard.writeText(syntax)
+        EventBus.$emit('SEND_NOTIFICATION', "Syntax copied to clipboard", 'info')
       }).catch(() => {}).finally(() => { this.loading = false })
     },
   }
