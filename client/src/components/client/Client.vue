@@ -20,9 +20,11 @@
         </div>
       </v-main>
     </v-container>
-    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
+    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
-      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
+      </template>
     </v-snackbar>
   </v-main>
 </template>
@@ -180,7 +182,7 @@ export default {
     EventBus.$on('SEND_NOTIFICATION', this.notification);
   },
   methods: {
-    notification(message, color='info', timeout=5) {
+    notification(message, color='', timeout=5) {
       this.snackbarText = message
       this.snackbarColor = color
       this.snackbarTimeout = Number(timeout*1000)
