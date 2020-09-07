@@ -5,7 +5,7 @@
     <!------------>
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
-        <v-toolbar v-if="dialogOptions.mode != 'delete'" flat color="primary">
+        <v-toolbar v-if="dialogOptions.text.length == 0" flat color="primary">
           <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
@@ -13,7 +13,7 @@
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <div v-if="dialogOptions.mode == 'delete'" class="text-h6" style="font-weight:400;">{{ dialogOptions.title }}</div>
+              <div v-if="dialogOptions.text.length > 0" class="text-h6" style="font-weight:400;"> {{ dialogOptions.title }}</div>
               <v-flex xs12>
                 <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
@@ -34,6 +34,9 @@
                       <v-radio label="Structure + Data" value="1"></v-radio>
                       <v-radio label="Structure Only" value="0"></v-radio>
                     </v-radio-group>
+                  </div>
+                  <div v-else-if="dialogOptions.mode == 'deleteTable'">
+                    <v-checkbox v-model="dialogOptions.item.force" label="Force delete (disable integrity checks)" value="force" hide-details class="body-1" style="padding:0px; font-weight:300;"></v-checkbox>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
@@ -157,10 +160,10 @@ export default {
       if (item == 'Create Table') this.createTable()
       else if (item == 'Rename Table') this.renameTable()
       else if (item == 'Duplicate Table') this.duplicateTable()
-      else if (item == 'Truncate Table') 1 == 1
-      else if (item == 'Delete Table') 1 == 1
+      else if (item == 'Truncate Table') this.truncateTable()
+      else if (item == 'Delete Table') this.deleteTable()
       else if (item == 'Export') 1 == 1
-      else if (item == 'Copy Table Syntax') 1 == 1
+      else if (item == 'Copy Table Syntax') this.copyTableSyntaxSubmit()
     },
     createTable() {
       let dialogOptions = { 
@@ -198,6 +201,30 @@ export default {
       this.dialogOptions = dialogOptions
       this.dialog = true
     },
+    truncateTable() {
+      let dialogOptions = { 
+        mode: 'truncateTable', 
+        title: 'Truncate Table?', 
+        text: "Are you sure you want to delete ALL records in the table '" + this.contextMenuItem.name + "'? This operation cannot be undone.", 
+        item: {}, 
+        submit: 'Submit',
+        cancel: 'Cancel'
+      }
+      this.dialogOptions = dialogOptions
+      this.dialog = true
+    },
+    deleteTable() {
+      let dialogOptions = { 
+        mode: 'deleteTable', 
+        title: 'Delete Table?', 
+        text: "Are you sure you want to delete the table '" + this.contextMenuItem.name + "'? This operation cannot be undone.",
+        item: { force: false }, 
+        submit: 'Submit',
+        cancel: 'Cancel'
+      }
+      this.dialogOptions = dialogOptions
+      this.dialog = true
+    },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
@@ -209,6 +236,8 @@ export default {
       if (this.dialogOptions.mode == 'createTable') this.createTableSubmit()
       else if (this.dialogOptions.mode == 'renameTable') this.renameTableSubmit() 
       else if (this.dialogOptions.mode == 'duplicateTable') this.duplicateTableSubmit() 
+      else if (this.dialogOptions.mode == 'truncateTable') this.truncateTableSubmit() 
+      else if (this.dialogOptions.mode == 'deleteTable') this.deleteTableSubmit() 
     },
     createTableSubmit() {
       let tableName = this.dialogOptions.item.name
@@ -253,11 +282,64 @@ export default {
       }).finally(() => { this.loading = false })
     },
     duplicateTableSubmit() {
-      // let currentName = this.contextMenuItem.name
-      // let newName = this.dialogOptions.item.newName
-      // let duplicateContent = this.dialogOptions.item.duplicateContent
-      // let queries = []
-    }
+      let currentName = this.contextMenuItem.name
+      let newName = this.dialogOptions.item.newName
+      let duplicateContent = this.dialogOptions.item.duplicateContent
+      let queries = ["CREATE TABLE " + newName + " LIKE " + currentName + ";"]
+      if (duplicateContent == "1") queries.push("INSERT INTO " + newName + " SELECT * FROM " + currentName + ";")
+      new Promise((resolve, reject) => { 
+        EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
+      }).then(() => { 
+        return new Promise((resolve, reject) => { 
+          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+        }).then(() => {
+          // Hide Dialog
+          this.dialog = false
+          // Select duplicated table
+          this.treeviewSelected = { id: 'table|' + newName, name: newName, type: 'Table' }
+          this.treeview = ['table|' + newName]
+        })
+      }).finally(() => { this.loading = false })
+    },
+    truncateTableSubmit() {
+      let name = this.contextMenuItem.name
+      let query = "TRUNCATE TABLE " + name + ";"
+      new Promise((resolve, reject) => { 
+        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+      }).then(() => { 
+        // Hide Dialog
+        this.dialog = false
+      }).finally(() => { this.loading = false })
+    },
+    deleteTableSubmit() {
+      let name = this.contextMenuItem.name
+      let force = this.dialogOptions.item.force
+      let queries = []
+      if (force) queries.push("SET FOREIGN_KEY_CHECKS = 0")
+      queries.push("DROP TABLE " + name + ";")
+      if (force) queries.push("SET FOREIGN_KEY_CHECKS = 1")
+      new Promise((resolve, reject) => { 
+        EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
+      }).then(() => { 
+        return new Promise((resolve, reject) => { 
+          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+        }).then(() => {
+          // Hide Dialog
+          this.dialog = false
+        })
+      }).finally(() => { this.loading = false })
+    },
+    copyTableSyntaxSubmit() {
+      let name = this.contextMenuItem.name
+      let query = "SHOW CREATE TABLE " + name + ";"
+      new Promise((resolve, reject) => { 
+        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+      }).then((res) => {
+        let syntax = JSON.parse(res.data)[0].data[0]['Create Table']
+        navigator.clipboard.writeText(syntax)
+        EventBus.$emit('SEND_NOTIFICATION', "Syntax copied to clipboard", 'info')
+      }).finally(() => { this.loading = false })
+    },
   }
 }
 </script>

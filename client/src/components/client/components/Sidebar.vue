@@ -536,7 +536,9 @@ export default {
         queries: queries
       }
       axios.post('/client/execute', payload)
-        .then(() => {})
+        .then((response) => {
+          resolve(response.data)
+        })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
@@ -548,7 +550,6 @@ export default {
             reject()
           }
         })
-        .finally(() => { resolve() })
     },
   }
 }
