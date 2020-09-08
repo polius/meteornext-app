@@ -65,6 +65,7 @@
     <Tables v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
     <Views v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
     <Triggers v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
+    <Procedures v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
     <!------------>
     <!-- DIALOG -->
     <!------------>
@@ -116,6 +117,7 @@ import Connections from './sidebar/Connections'
 import Tables from './sidebar/Tables'
 import Views from './sidebar/Views'
 import Triggers from './sidebar/Triggers'
+import Procedures from './sidebar/Procedures'
 
 export default {
   data() {
@@ -158,7 +160,7 @@ export default {
       dialogText: '',
     }
   },
-  components: { Connections, Tables, Views, Triggers },
+  components: { Connections, Tables, Views, Triggers, Procedures },
   computed: {
     ...mapFields([
       'servers',
@@ -539,6 +541,7 @@ export default {
         database: this.database,
         queries: queries
       }
+      console.log(payload)
       axios.post('/client/execute', payload)
         .then((response) => {
           resolve(response.data)
