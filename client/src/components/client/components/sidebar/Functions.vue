@@ -1,8 +1,8 @@
 <template>
   <div>
-    <!---------------->
-    <!-- PROCEDURES -->
-    <!---------------->
+    <!--------------->
+    <!-- FUNCTIONS -->
+    <!--------------->
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
         <v-toolbar v-if="dialogOptions.text.length == 0" flat color="primary">
@@ -17,19 +17,20 @@
               <v-flex xs12>
                 <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
-                  <div v-if="dialogOptions.mode == 'createProcedure'">
+                  <div v-if="dialogOptions.mode == 'createFunction'">
                     <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="dialogOptions.item.params" label="Parameters" placeholder="IN country CHAR(3), OUT cities INT" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="dialogOptions.item.params" label="Parameters" placeholder="credit DECIMAL(10,2)" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="dialogOptions.item.returns" label="Returns" placeholder="VARCHAR(20)" style="padding-top:0px;"></v-text-field>
                     <div style="margin-left:auto; margin-right:auto; height:35vh; width:100%">
                       <div id="dialogEditor" style="height:100%;"></div>
                     </div>
                     <v-checkbox v-model="dialogOptions.item.deterministic" label="Deterministic" hide-details class="body-1" style="padding:0px"></v-checkbox>
                   </div>
-                  <div v-else-if="dialogOptions.mode == 'renameProcedure'">
+                  <div v-else-if="dialogOptions.mode == 'renameFunction'">
                     <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                   </div>
-                  <div v-else-if="dialogOptions.mode == 'duplicateProcedure'">
+                  <div v-else-if="dialogOptions.mode == 'duplicateFunction'">
                     <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                   </div>
@@ -86,12 +87,12 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('CLICK_CONTEXTMENU_PROCEDURE', this.contextMenuClicked);
+    EventBus.$on('CLICK_CONTEXTMENU_FUNCTION', this.contextMenuClicked);
   },
   watch: {
     dialog (val) {
       if (!val) return
-      if (this.dialogEditor == null && this.dialogOptions.mode == 'createProcedure') this.initEditor()
+      if (this.dialogEditor == null && this.dialogOptions.mode == 'createFunction') this.initEditor()
       requestAnimationFrame(() => {
         if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
       })
@@ -117,9 +118,15 @@ export default {
 
         // Add default value + placeholder
         let placeholder = `/*
-SELECT COUNT(*) INTO cities
-FROM world.city
-WHERE CountryCode = country;
+DECLARE customerLevel VARCHAR(20);
+
+IF credit > 50000 THEN
+    SET customerLevel = 'PLATINUM';
+ELSE
+    SET customerLevel = 'SILVER';
+END IF;
+
+RETURN (customerLevel);
 */`
         this.dialogEditor.setValue(placeholder, -1)
         this.dialogEditor.on("focus", () => {
@@ -147,17 +154,17 @@ WHERE CountryCode = country;
       })
     },
     contextMenuClicked(item) {
-      if (item == 'Create Procedure') this.createProcedure()
-      else if (item == 'Rename Procedure') this.renameProcedure()
-      else if (item == 'Duplicate Procedure') this.duplicateProcedure()
-      else if (item == 'Delete Procedure') this.deleteProcedure()
+      if (item == 'Create Function') this.createFunction()
+      else if (item == 'Rename Function') this.renameFunction()
+      else if (item == 'Duplicate Function') this.duplicateFunction()
+      else if (item == 'Delete Function') this.deleteFunction()
       else if (item == 'Export') 1 == 1
-      else if (item == 'Copy Procedure Syntax') this.copyProcedureSyntaxSubmit()
+      else if (item == 'Copy Function Syntax') this.copyFunctionSyntaxSubmit()
     },
-    createProcedure() {
+    createFunction() {
       let dialogOptions = { 
-        mode: 'createProcedure', 
-        title: 'Create Procedure', 
+        mode: 'createFunction', 
+        title: 'Create Function', 
         text: '', 
         item: { name: '', params: '' }, 
         submit: 'Submit', 
@@ -167,10 +174,10 @@ WHERE CountryCode = country;
       this.dialogOptions = dialogOptions
       this.dialog = true
     },
-    renameProcedure() {
+    renameFunction() {
       let dialogOptions = { 
-        mode: 'renameProcedure', 
-        title: 'Rename Procedure', 
+        mode: 'renameFunction', 
+        title: 'Rename Function', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit', 
@@ -179,10 +186,10 @@ WHERE CountryCode = country;
       this.dialogOptions = dialogOptions
       this.dialog = true
     },
-    duplicateProcedure() {
+    duplicateFunction() {
       let dialogOptions = { 
-        mode: 'duplicateProcedure', 
-        title: 'Duplicate Procedure', 
+        mode: 'duplicateFunction', 
+        title: 'Duplicate Function', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit',
@@ -191,11 +198,11 @@ WHERE CountryCode = country;
       this.dialogOptions = dialogOptions
       this.dialog = true
     },
-    deleteProcedure() {
+    deleteFunction() {
       let dialogOptions = { 
-        mode: 'deleteProcedure', 
-        title: 'Delete Procedure?', 
-        text: "Are you sure you want to delete the procedure '" + this.contextMenuItem.name + "'? This operation cannot be undone.",
+        mode: 'deleteFunction', 
+        title: 'Delete Function?', 
+        text: "Are you sure you want to delete the function '" + this.contextMenuItem.name + "'? This operation cannot be undone.",
         item: {}, 
         submit: 'Submit',
         cancel: 'Cancel'
@@ -211,17 +218,18 @@ WHERE CountryCode = country;
         return
       }
       this.loading = true
-      if (this.dialogOptions.mode == 'createProcedure') this.createProcedureSubmit()
-      else if (this.dialogOptions.mode == 'renameProcedure') this.renameProcedureSubmit() 
-      else if (this.dialogOptions.mode == 'duplicateProcedure') this.duplicateProcedureSubmit() 
-      else if (this.dialogOptions.mode == 'deleteProcedure') this.deleteProcedureSubmit() 
+      if (this.dialogOptions.mode == 'createFunction') this.createFunctionSubmit()
+      else if (this.dialogOptions.mode == 'renameFunction') this.renameFunctionSubmit() 
+      else if (this.dialogOptions.mode == 'duplicateFunction') this.duplicateFunctionSubmit() 
+      else if (this.dialogOptions.mode == 'deleteFunction') this.deleteFunctionSubmit() 
     },
-    createProcedureSubmit() {
-      let procedureName = this.dialogOptions.item.name
-      let procedureParams = this.dialogOptions.item.params
-      let procedureCode = this.dialogEditor.getValue().endsWith(';') ? this.dialogEditor.getValue() : this.dialogEditor.getValue() + ';'
-      let procedureDeterministic = this.dialogOptions.item.deterministic ? '\nDETERMINISTIC' : ''
-      let query = "CREATE PROCEDURE " + procedureName + ' (' + procedureParams + ')' + procedureDeterministic + '\nBEGIN\n' + procedureCode + '\nEND;'
+    createFunctionSubmit() {
+      let functionName = this.dialogOptions.item.name
+      let functionParams = this.dialogOptions.item.params
+      let functionReturns = this.dialogOptions.item.returns
+      let functionCode = this.dialogEditor.getValue().endsWith(';') ? this.dialogEditor.getValue() : this.dialogEditor.getValue() + ';'
+      let functionDeterministic = this.dialogOptions.item.deterministic ? '\nDETERMINISTIC' : ''
+      let query = "CREATE FUNCTION " + functionName + ' (' + functionParams + ')\nRETURNS ' + functionReturns + functionDeterministic + '\nBEGIN\n' + functionCode + '\nEND;'
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then(() => { 
@@ -231,26 +239,26 @@ WHERE CountryCode = country;
           // Hide Dialog
           this.dialog = false
           // Select new created proceure
-          this.treeviewSelected = { id: 'procedure|' + procedureName, name: procedureName, type: 'Procedure' }
-          this.treeview = ['procedure|' + procedureName]
+          this.treeviewSelected = { id: 'function|' + functionName, name: functionName, type: 'Function' }
+          this.treeview = ['function|' + functionName]
           // Open treeview parent
-          this.treeviewOpened = ['procedures']
+          this.treeviewOpened = ['functions']
           // Change view to Info
           this.headerTab = 3
-          this.headerTabSelected = 'info_procedure'
-          EventBus.$emit('GET_INFO', 'procedure')
+          this.headerTabSelected = 'info_function'
+          EventBus.$emit('GET_INFO', 'function')
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
-    renameProcedureSubmit() {
+    renameFunctionSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let queries = ["SHOW CREATE PROCEDURE " + currentName, "DROP PROCEDURE IF EXISTS " + currentName]
+      let queries = ["SHOW CREATE FUNCTION " + currentName, "DROP FUNCTION IF EXISTS " + currentName]
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
       }).then((res) => {
-        let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure'].split(' PROCEDURE `' + currentName + '`')[1]
-        let query = "CREATE PROCEDURE " + newName + " " + syntax
+        let syntax = JSON.parse(res.data)[0].data[0]['Create Function'].split(' FUNCTION `' + currentName + '`')[1]
+        let query = "CREATE FUNCTION " + newName + " " + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
         }).then(() => { 
@@ -260,25 +268,25 @@ WHERE CountryCode = country;
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.treeviewSelected = { id: 'procedure|' + newName, name: newName, type: 'Procedure' }
-            this.treeview = ['procedure|' + newName]
+            this.treeviewSelected = { id: 'function|' + newName, name: newName, type: 'Function' }
+            this.treeview = ['function|' + newName]
             // Change view to Info
             this.headerTab = 3
-            this.headerTabSelected = 'info_procedure'
-            EventBus.$emit('GET_INFO', 'procedure')
+            this.headerTabSelected = 'info_function'
+            EventBus.$emit('GET_INFO', 'function')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
     },
-    duplicateProcedureSubmit() {
+    duplicateFunctionSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let queries = ["SHOW CREATE PROCEDURE " + currentName]
+      let queries = ["SHOW CREATE FUNCTION " + currentName]
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
       }).then((res) => {
-        let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure'].split(' PROCEDURE `' + currentName + '`')[1]
-        let query = "CREATE PROCEDURE " + newName + " " + syntax
+        let syntax = JSON.parse(res.data)[0].data[0]['Create Function'].split(' FUNCTION `' + currentName + '`')[1]
+        let query = "CREATE FUNCTION " + newName + " " + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
         }).then(() => { 
@@ -288,19 +296,19 @@ WHERE CountryCode = country;
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.treeviewSelected = { id: 'procedure|' + newName, name: newName, type: 'Procedure' }
-            this.treeview = ['procedure|' + newName]
+            this.treeviewSelected = { id: 'function|' + newName, name: newName, type: 'Function' }
+            this.treeview = ['function|' + newName]
             // Change view to Info
             this.headerTab = 3
-            this.headerTabSelected = 'info_procedure'
-            EventBus.$emit('GET_INFO', 'procedure')
+            this.headerTabSelected = 'info_function'
+            EventBus.$emit('GET_INFO', 'function')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
     },
-    deleteProcedureSubmit() {
+    deleteFunctionSubmit() {
       let name = this.contextMenuItem.name
-      let query = "DROP PROCEDURE " + name + ";"
+      let query = "DROP FUNCTION " + name + ";"
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then(() => { 
@@ -318,13 +326,13 @@ WHERE CountryCode = country;
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
-    copyProcedureSyntaxSubmit() {
+    copyFunctionSyntaxSubmit() {
       let name = this.contextMenuItem.name
-      let query = "SHOW CREATE PROCEDURE " + name + ";"
+      let query = "SHOW CREATE FUNCTION " + name + ";"
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then((res) => {
-        let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure']
+        let syntax = JSON.parse(res.data)[0].data[0]['Create Function']
         navigator.clipboard.writeText(syntax)
         EventBus.$emit('SEND_NOTIFICATION', "Syntax copied to clipboard", 'info')
       }).catch(() => {}).finally(() => { this.loading = false })

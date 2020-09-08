@@ -66,6 +66,7 @@
     <Views v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
     <Triggers v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
     <Procedures v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
+    <Functions v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
     <!------------>
     <!-- DIALOG -->
     <!------------>
@@ -118,6 +119,7 @@ import Tables from './sidebar/Tables'
 import Views from './sidebar/Views'
 import Triggers from './sidebar/Triggers'
 import Procedures from './sidebar/Procedures'
+import Functions from './sidebar/Functions'
 
 export default {
   data() {
@@ -160,7 +162,7 @@ export default {
       dialogText: '',
     }
   },
-  components: { Connections, Tables, Views, Triggers, Procedures },
+  components: { Connections, Tables, Views, Triggers, Procedures, Functions },
   computed: {
     ...mapFields([
       'servers',
