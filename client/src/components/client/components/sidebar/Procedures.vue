@@ -1,8 +1,8 @@
 <template>
   <div>
-    <!-------------->
-    <!-- TRIGGERS -->
-    <!-------------->
+    <!---------------->
+    <!-- PROCEDURES -->
+    <!---------------->
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
         <v-toolbar v-if="dialogOptions.text.length == 0" flat color="primary">
@@ -17,20 +17,18 @@
               <v-flex xs12>
                 <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
-                  <div v-if="dialogOptions.mode == 'createTrigger'">
+                  <div v-if="dialogOptions.mode == 'createProcedure'">
                     <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-                    <v-select v-model="dialogOptions.item.time" :items="['Before','After']" :rules="[v => !!v || '']" label="Action Time" required style="padding-top:0px;"></v-select>
-                    <v-select v-model="dialogOptions.item.event" :items="['Insert','Update','Delete']" :rules="[v => !!v || '']" label="Event" required style="padding-top:0px;"></v-select>
-                    <v-select v-model="dialogOptions.item.table" :items="tableItems" :rules="[v => !!v || '']" label="Table" required style="padding-top:0px;"></v-select>
+                    <v-text-field v-model="dialogOptions.item.params" label="Parameters" placeholder="IN param1 CHAR(3), OUT param2 INT" style="padding-top:0px;"></v-text-field>
                     <div style="margin-left:auto; margin-right:auto; height:35vh; width:100%">
                       <div id="dialogEditor" style="height:100%;"></div>
                     </div>
                   </div>
-                  <div v-else-if="dialogOptions.mode == 'renameTrigger'">
+                  <div v-else-if="dialogOptions.mode == 'renameProcedure'">
                     <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                   </div>
-                  <div v-else-if="dialogOptions.mode == 'duplicateTrigger'">
+                  <div v-else-if="dialogOptions.mode == 'duplicateProcedure'">
                     <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                   </div>
@@ -87,12 +85,12 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('CLICK_CONTEXTMENU_TRIGGER', this.contextMenuClicked);
+    EventBus.$on('CLICK_CONTEXTMENU_PROCEDURE', this.contextMenuClicked);
   },
   watch: {
     dialog (val) {
       if (!val) return
-      if (this.dialogEditor == null && this.dialogOptions.mode == 'createTrigger') this.initEditor()
+      if (this.dialogEditor == null && this.dialogOptions.mode == 'createProcedure') this.initEditor()
       requestAnimationFrame(() => {
         if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
       })
@@ -116,6 +114,16 @@ export default {
         });
         this.dialogEditor.session.setOptions({ tabSize: 4, useSoftTabs: false })
 
+        // Add default value + placeholder
+        let placeholder = '/* SELECT COUNT(*) INTO param2 FROM tbl WHERE col = param1; */'
+        this.dialogEditor.setValue(placeholder, -1)
+        this.dialogEditor.on("focus", () => {
+          if (this.dialogEditor.getValue() == placeholder) this.dialogEditor.setValue('')
+        })
+        this.dialogEditor.on("blur", () => {
+          if (this.dialogEditor.getValue().length == 0) this.dialogEditor.setValue(placeholder, -1)
+        })
+
         // Add custom keybinds
         this.dialogEditor.container.addEventListener("keydown", (e) => {
           // - Increase Font Size -
@@ -134,19 +142,19 @@ export default {
       })
     },
     contextMenuClicked(item) {
-      if (item == 'Create Trigger') this.createTrigger()
-      else if (item == 'Rename Trigger') this.renameTrigger()
-      else if (item == 'Duplicate Trigger') this.duplicateTrigger()
-      else if (item == 'Delete Trigger') this.deleteTrigger()
+      if (item == 'Create Procedure') this.createProcedure()
+      else if (item == 'Rename Procedure') this.renameProcedure()
+      else if (item == 'Duplicate Procedure') this.duplicateProcedure()
+      else if (item == 'Delete Procedure') this.deleteProcedure()
       else if (item == 'Export') 1 == 1
-      else if (item == 'Copy Trigger Syntax') this.copyTriggerSyntaxSubmit()
+      else if (item == 'Copy Procedure Syntax') this.copyProcedureSyntaxSubmit()
     },
-    createTrigger() {
+    createProcedure() {
       let dialogOptions = { 
-        mode: 'createTrigger', 
-        title: 'Create Trigger', 
+        mode: 'createProcedure', 
+        title: 'Create Procedure', 
         text: '', 
-        item: { name: '', table: '', time: '', event: '' }, 
+        item: { name: '', params: '' }, 
         submit: 'Submit', 
         cancel: 'Cancel'
       }
@@ -154,10 +162,10 @@ export default {
       this.dialogOptions = dialogOptions
       this.dialog = true
     },
-    renameTrigger() {
+    renameProcedure() {
       let dialogOptions = { 
-        mode: 'renameTrigger', 
-        title: 'Rename Trigger', 
+        mode: 'renameProcedure', 
+        title: 'Rename Procedure', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit', 
@@ -166,10 +174,10 @@ export default {
       this.dialogOptions = dialogOptions
       this.dialog = true
     },
-    duplicateTrigger() {
+    duplicateProcedure() {
       let dialogOptions = { 
-        mode: 'duplicateTrigger', 
-        title: 'Duplicate Trigger', 
+        mode: 'duplicateProcedure', 
+        title: 'Duplicate Procedure', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit',
@@ -178,11 +186,11 @@ export default {
       this.dialogOptions = dialogOptions
       this.dialog = true
     },
-    deleteTrigger() {
+    deleteProcedure() {
       let dialogOptions = { 
-        mode: 'deleteTrigger', 
-        title: 'Delete Trigger?', 
-        text: "Are you sure you want to delete the trigger '" + this.contextMenuItem.name + "'? This operation cannot be undone.",
+        mode: 'deleteProcedure', 
+        title: 'Delete Procedure?', 
+        text: "Are you sure you want to delete the procedure '" + this.contextMenuItem.name + "'? This operation cannot be undone.",
         item: {}, 
         submit: 'Submit',
         cancel: 'Cancel'
@@ -198,15 +206,16 @@ export default {
         return
       }
       this.loading = true
-      if (this.dialogOptions.mode == 'createTrigger') this.createTriggerSubmit()
-      else if (this.dialogOptions.mode == 'renameTrigger') this.renameTriggerSubmit() 
-      else if (this.dialogOptions.mode == 'duplicateTrigger') this.duplicateTriggerSubmit() 
-      else if (this.dialogOptions.mode == 'deleteTrigger') this.deleteTriggerSubmit() 
+      if (this.dialogOptions.mode == 'createProcedure') this.createProcedureSubmit()
+      else if (this.dialogOptions.mode == 'renameProcedure') this.renameProcedureSubmit() 
+      else if (this.dialogOptions.mode == 'duplicateProcedure') this.duplicateProcedureSubmit() 
+      else if (this.dialogOptions.mode == 'deleteProcedure') this.deleteProcedureSubmit() 
     },
-    createTriggerSubmit() {
-      let triggerName = this.dialogOptions.item.name
-      let triggerCode = this.dialogEditor.getValue().endsWith(';') ? this.dialogEditor.getValue() : this.dialogEditor.getValue() + ';'
-      let query = "CREATE TRIGGER " + triggerName + ' ' + this.dialogOptions.item.time + ' ' + this.dialogOptions.item.event + ' ON ' + this.dialogOptions.item.table + ' FOR EACH ROW BEGIN\n' + triggerCode + '\nEND;'
+    createProcedureSubmit() {
+      let procedureName = this.dialogOptions.item.name
+      let procedureParams = this.dialogOptions.item.params
+      let procedureCode = this.dialogEditor.getValue().endsWith(';') ? this.dialogEditor.getValue() : this.dialogEditor.getValue() + ';'
+      let query = "CREATE PROCEDURE " + procedureName + ' (' + procedureParams + ')\nBEGIN\n' + procedureCode + '\nEND;'
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then(() => { 
@@ -215,27 +224,27 @@ export default {
         }).then(() => {
           // Hide Dialog
           this.dialog = false
-          // Select new created trigger
-          this.treeviewSelected = { id: 'trigger|' + triggerName, name: triggerName, type: 'Trigger' }
-          this.treeview = ['trigger|' + triggerName]
+          // Select new created proceure
+          this.treeviewSelected = { id: 'procedure|' + procedureName, name: procedureName, type: 'Procedure' }
+          this.treeview = ['procedure|' + procedureName]
           // Open treeview parent
-          this.treeviewOpened = ['triggers']
+          this.treeviewOpened = ['procedures']
           // Change view to Info
           this.headerTab = 3
-          this.headerTabSelected = 'info_trigger'
-          EventBus.$emit('GET_INFO', 'trigger')
+          this.headerTabSelected = 'info_procedure'
+          EventBus.$emit('GET_INFO', 'procedure')
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
-    renameTriggerSubmit() {
+    renameProcedureSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let queries = ["SHOW CREATE TRIGGER " + currentName, "DROP TRIGGER IF EXISTS " + currentName]
+      let queries = ["SHOW CREATE PROCEDURE " + currentName, "DROP PROCEDURE IF EXISTS " + currentName]
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
       }).then((res) => {
-        let syntax = JSON.parse(res.data)[0].data[0]['SQL Original Statement'].split(' TRIGGER ' + currentName + ' ')[1]
-        let query = "CREATE TRIGGER " + newName + " " + syntax
+        let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure'].split(' PROCEDURE `' + currentName + '`')[1]
+        let query = "CREATE PROCEDURE " + newName + " " + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
         }).then(() => { 
@@ -245,25 +254,25 @@ export default {
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.treeviewSelected = { id: 'trigger|' + newName, name: newName, type: 'Trigger' }
-            this.treeview = ['trigger|' + newName]
+            this.treeviewSelected = { id: 'procedure|' + newName, name: newName, type: 'Procedure' }
+            this.treeview = ['procedure|' + newName]
             // Change view to Info
             this.headerTab = 3
-            this.headerTabSelected = 'info_trigger'
-            EventBus.$emit('GET_INFO', 'trigger')
+            this.headerTabSelected = 'info_procedure'
+            EventBus.$emit('GET_INFO', 'procedure')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
     },
-    duplicateTriggerSubmit() {
+    duplicateProcedureSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let queries = ["SHOW CREATE TRIGGER " + currentName]
+      let queries = ["SHOW CREATE PROCEDURE " + currentName]
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
       }).then((res) => {
-        let syntax = JSON.parse(res.data)[0].data[0]['SQL Original Statement'].split(' TRIGGER ' + currentName + ' ')[1]
-        let query = "CREATE TRIGGER " + newName + " " + syntax
+        let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure'].split(' PROCEDURE `' + currentName + '`')[1]
+        let query = "CREATE PROCEDURE " + newName + " " + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
         }).then(() => { 
@@ -273,19 +282,19 @@ export default {
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.treeviewSelected = { id: 'trigger|' + newName, name: newName, type: 'Trigger' }
-            this.treeview = ['trigger|' + newName]
+            this.treeviewSelected = { id: 'procedure|' + newName, name: newName, type: 'Procedure' }
+            this.treeview = ['procedure|' + newName]
             // Change view to Info
             this.headerTab = 3
-            this.headerTabSelected = 'info_trigger'
-            EventBus.$emit('GET_INFO', 'trigger')
+            this.headerTabSelected = 'info_procedure'
+            EventBus.$emit('GET_INFO', 'procedure')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
     },
-    deleteTriggerSubmit() {
+    deleteProcedureSubmit() {
       let name = this.contextMenuItem.name
-      let query = "DROP TRIGGER " + name + ";"
+      let query = "DROP PROCEDURE " + name + ";"
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then(() => { 
@@ -303,13 +312,13 @@ export default {
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
-    copyTriggerSyntaxSubmit() {
+    copyProcedureSyntaxSubmit() {
       let name = this.contextMenuItem.name
-      let query = "SHOW CREATE TRIGGER " + name + ";"
+      let query = "SHOW CREATE PROCEDURE " + name + ";"
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then((res) => {
-        let syntax = JSON.parse(res.data)[0].data[0]['SQL Original Statement']
+        let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure']
         navigator.clipboard.writeText(syntax)
         EventBus.$emit('SEND_NOTIFICATION', "Syntax copied to clipboard", 'info')
       }).catch(() => {}).finally(() => { this.loading = false })

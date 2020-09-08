@@ -24,11 +24,11 @@
                     </div>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'renameView'">
-                    <v-text-field read-only v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'duplicateView'">
-                    <v-text-field read-only v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                   </div>
                 </v-form>
@@ -113,12 +113,13 @@ export default {
         this.dialogEditor.session.setOptions({ tabSize: 4, useSoftTabs: false })
 
         // Add default value + placeholder
-        this.dialogEditor.setValue('/* SELECT * FROM tbl; */', -1)
+        let placeholder = '/* SELECT * FROM tbl; */'
+        this.dialogEditor.setValue(placeholder, -1)
         this.dialogEditor.on("focus", () => {
-          if (this.dialogEditor.getValue() == '/* SELECT * FROM tbl; */') this.dialogEditor.setValue('')
+          if (this.dialogEditor.getValue() == placeholder) this.dialogEditor.setValue('')
         })
         this.dialogEditor.on("blur", () => {
-          if (this.dialogEditor.getValue().length == 0) this.dialogEditor.setValue('/* SELECT * FROM tbl; */', -1)
+          if (this.dialogEditor.getValue().length == 0) this.dialogEditor.setValue(placeholder, -1)
         })
 
         // Add custom keybinds
@@ -176,7 +177,7 @@ export default {
         mode: 'duplicateView', 
         title: 'Duplicate View', 
         text: '', 
-        item: { currentName: this.contextMenuItem.name, newName: '', duplicateContent: false }, 
+        item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit',
         cancel: 'Cancel'
       }
@@ -270,9 +271,9 @@ export default {
             this.treeviewSelected = { id: 'view|' + newName, name: newName, type: 'View' }
             this.treeview = ['view|' + newName]
             // Change view to Content
-          this.headerTab = 2
-          this.headerTabSelected = 'content'
-          EventBus.$emit('GET_CONTENT')
+            this.headerTab = 2
+            this.headerTabSelected = 'content'
+            EventBus.$emit('GET_CONTENT')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
