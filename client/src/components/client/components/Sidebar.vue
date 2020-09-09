@@ -67,6 +67,7 @@
     <Triggers v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
     <Procedures v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
     <Functions v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
+    <Events v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
     <!------------>
     <!-- DIALOG -->
     <!------------>
@@ -120,6 +121,7 @@ import Views from './sidebar/Views'
 import Triggers from './sidebar/Triggers'
 import Procedures from './sidebar/Procedures'
 import Functions from './sidebar/Functions'
+import Events from './sidebar/Events'
 
 export default {
   data() {
@@ -162,7 +164,7 @@ export default {
       dialogText: '',
     }
   },
-  components: { Connections, Tables, Views, Triggers, Procedures, Functions },
+  components: { Connections, Tables, Views, Triggers, Procedures, Functions, Events },
   computed: {
     ...mapFields([
       'servers',
@@ -458,7 +460,7 @@ export default {
       this.contextMenuItems = []
       if (this.treeviewMode == 'servers') {
         if (item.children === undefined) this.contextMenuItems = ['Open Connection', '|', 'Delete Connection', 'Duplicate Connection']
-        else this.contextMenuItems = ['New Connection', '|', 'New Group', 'Delete Group', 'Rename']
+        else this.contextMenuItems = ['New Connection', '|', 'New Group', 'Delete Group', 'Rename Group']
       }
       else if (this.treeviewMode == 'objects') {
         if (item.type == 'Table') {
