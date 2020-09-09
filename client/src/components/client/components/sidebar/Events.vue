@@ -40,16 +40,16 @@
                               <div class="body-1" style="margin-top:14px">Execute at:</div>
                             </v-col>
                             <v-col cols="3" style="margin-left:10px">
-                              <v-text-field solo v-model="dialogOptions.item.executedAt" label="" :rules="[v => !!v || '']" required hide-details style="padding-top:0px;"></v-text-field>
+                              <v-text-field solo v-model="dialogOptions.item.executedAt" :rules="[v => !!v || '']" required hide-details style="padding-top:0px;"></v-text-field>
                             </v-col>
                             <v-col cols="auto" style="margin-left:10px">
-                              <v-checkbox v-model="dialogOptions.item.interval" label="Interval" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
+                              <v-checkbox @change="$nextTick(() => $refs.executedAtInterval.focus())" v-model="dialogOptions.item.executedAtInterval" label="Interval" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
                             </v-col>
                             <v-col style="margin-top:3px; margin-left:10px;">
-                              <v-text-field :disabled="!dialogOptions.item.interval" solo v-model="dialogOptions.item.intervalValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                              <v-text-field ref="executedAtInterval" :disabled="!dialogOptions.item.executedAtInterval" solo v-model="dialogOptions.item.executeAtIntervalValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
                             </v-col>
                             <v-col style="margin-top:3px; margin-left:10px;">
-                              <v-select :disabled="!dialogOptions.item.interval" solo v-model="dialogOptions.item.intervalOptions" :items="interval" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                              <v-select :disabled="!dialogOptions.item.executedAtInterval" solo v-model="dialogOptions.item.executeAtIntervalOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
                             </v-col>
                           </v-row>
                         </div>
@@ -62,49 +62,50 @@
                               <v-text-field solo v-model="dialogOptions.item.executedEvery" label="" :rules="[v => !!v || '']" required hide-details style="padding-top:0px;"></v-text-field>
                             </v-col>
                             <v-col style="margin-left:10px;">
-                              <v-select solo v-model="dialogOptions.item.intervalOptions" :items="['SECOND','MINUTE','HOUR']" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                              <v-select solo v-model="dialogOptions.item.executedEveryIntervalOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
                             </v-col>
                           </v-row>
                           <v-row no-gutters style="height:50px; margin-top:5px;">
                             <v-col cols="auto" style="margin-right:10px; margin-left:26px;">
-                              <v-checkbox v-model="dialogOptions.item.starts" label="Starts" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
+                              <v-checkbox @change="dialogOptions.item.executedEveryStartsInterval = false" v-model="dialogOptions.item.executedEveryStarts" label="Starts" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
                             </v-col>
                             <v-col cols="3" style="margin-top:3px;">
-                              <v-text-field :disabled="!dialogOptions.item.starts" solo v-model="dialogOptions.item.startsValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                              <v-text-field :disabled="!dialogOptions.item.executedEveryStarts" solo v-model="dialogOptions.item.executedEveryStartsValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
                             </v-col>
                             <v-col cols="auto" style="margin-left:10px;">
-                              <v-checkbox :disabled="!dialogOptions.item.starts" v-model="dialogOptions.item.startsInterval" label="Interval" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
+                              <v-checkbox :disabled="!dialogOptions.item.executedEveryStarts" v-model="dialogOptions.item.executedEveryStartsInterval" label="Interval" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
                             </v-col>
                             <v-col style="margin-top:3px; margin-left:10px;">
-                              <v-text-field :disabled="!dialogOptions.item.startsInterval" solo v-model="dialogOptions.item.startsIntervalValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                              <v-text-field :disabled="!dialogOptions.item.executedEveryStartsInterval" solo v-model="dialogOptions.item.executedEveryStartsIntervalValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
                             </v-col>
                             <v-col style="margin-top:3px; margin-left:10px;">
-                              <v-select :disabled="!dialogOptions.item.startsInterval" solo v-model="dialogOptions.item.startsIntervalOptions" :items="interval" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                              <v-select :disabled="!dialogOptions.item.executedEveryStartsInterval" solo v-model="dialogOptions.item.executedEveryStartsIntervalOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
                             </v-col>
                           </v-row>
                           <v-row no-gutters style="height:50px; margin-top:5px;">
                             <v-col cols="auto" style="margin-right:10px;">
-                              <v-checkbox v-model="dialogOptions.item.ends" label="Ends" hide-details class="body-1" style="padding:0px; margin-top:14px; margin-left:26px; margin-right:9px;"></v-checkbox>
+                              <v-checkbox @change="dialogOptions.item.executedEveryEndsInterval = false" v-model="dialogOptions.item.executedEveryEnds" label="Ends" hide-details class="body-1" style="padding:0px; margin-top:14px; margin-left:26px; margin-right:9px;"></v-checkbox>
                             </v-col>
                             <v-col cols="3" style="margin-top:3px;">
-                              <v-text-field :disabled="!dialogOptions.item.ends" solo v-model="dialogOptions.item.endsValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                              <v-text-field :disabled="!dialogOptions.item.executedEveryEnds" solo v-model="dialogOptions.item.executedEveryEndsValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
                             </v-col>
                             <v-col cols="auto" style="margin-left:10px;">
-                              <v-checkbox :disabled="!dialogOptions.item.ends" v-model="dialogOptions.item.endsInterval" label="Interval" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
+                              <v-checkbox :disabled="!dialogOptions.item.executedEveryEnds" v-model="dialogOptions.item.executedEveryEndsInterval" label="Interval" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
                             </v-col>
                             <v-col style="margin-top:3px; margin-left:10px;">
-                              <v-text-field :disabled="!dialogOptions.item.endsInterval" solo v-model="dialogOptions.item.endsIntervalValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                              <v-text-field :disabled="!dialogOptions.item.executedEveryEndsInterval" solo v-model="dialogOptions.item.executedEveryEndsIntervalValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
                             </v-col>
                             <v-col style="margin-top:3px; margin-left:10px;">
-                              <v-select :disabled="!dialogOptions.item.endsInterval" solo v-model="dialogOptions.item.endsIntervalOptions" :items="interval" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                              <v-select :disabled="!dialogOptions.item.executedEveryEndsInterval" solo v-model="dialogOptions.item.executedEveryEndsIntervalOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
                             </v-col>
                           </v-row>
                         </div>
                       </v-card-text>
                     </v-card>
-                    <!-- <div style="margin-left:auto; margin-right:auto; height:40vh; width:100%">
+                    <div style="margin-left:auto; margin-right:auto; margin-top:15px; height:30vh; width:100%">
                       <div id="dialogEditor" style="height:100%;"></div>
-                    </div> -->
+                    </div>
+                    <v-select v-model="dialogOptions.item.onCompletion" label="On Completion" :items="['PRESERVE','NOT PRESERVE']" :rules="[v => !!v || '']" required hide-details style="margin-top:15px;"></v-select>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'renameEvent'">
                     <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
@@ -153,7 +154,7 @@ export default {
       dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
       dialogEditor: null,
       // Event Interval
-      interval: ['SECOND','MINUTE','HOUR','DAY','WEEK','MONTH','QUARTER','YEAR','MINUTE_SECOND','HOUR_SECOND','HOUR_MINUTE','DAY_SECOND','DAY_MINUTE','DAY_HOUR','YEAR_MONTH'],
+      intervalItems: ['SECOND','MINUTE','HOUR','DAY','WEEK','MONTH','QUARTER','YEAR','MINUTE_SECOND','HOUR_SECOND','HOUR_MINUTE','DAY_SECOND','DAY_MINUTE','DAY_HOUR','YEAR_MONTH'],
     }
   },
   props: { contextMenuItem: Object },
@@ -181,8 +182,10 @@ export default {
     },
   },
   methods: {
+    tst() {
+      this.$nextTick(() => this.$refs.gogo.focus())
+    },
     initEditor() {
-      return
       this.$nextTick(() => {
         // Editor Settings
         this.dialogEditor = ace.edit("dialogEditor", {
@@ -198,20 +201,6 @@ export default {
           highlightActiveLine: false
         });
         this.dialogEditor.session.setOptions({ tabSize: 4, useSoftTabs: false })
-
-        // Add default value + placeholder
-        let placeholder = `/*
-SELECT COUNT(*) INTO cities
-FROM world.city
-WHERE CountryCode = country;
-*/`
-        this.dialogEditor.setValue(placeholder, -1)
-        this.dialogEditor.on("focus", () => {
-          if (this.dialogEditor.getValue() == placeholder) this.dialogEditor.setValue('')
-        })
-        this.dialogEditor.on("blur", () => {
-          if (this.dialogEditor.getValue().length == 0) this.dialogEditor.setValue(placeholder, -1)
-        })
 
         // Add custom keybinds
         this.dialogEditor.container.addEventListener("keydown", (e) => {
@@ -243,7 +232,15 @@ WHERE CountryCode = country;
         mode: 'createEvent', 
         title: 'Create Event', 
         text: '', 
-        item: { name: '', timing: '0' }, 
+        item: { 
+          name: '',
+          timing: '0',
+          executedAt: '', executedAtInterval: '', executeAtIntervalValue: '', executeAtIntervalOption: '',
+          executedEvery: '', executedEveryIntervalOption: '',
+          executedEveryStarts: '', executedEveryStartsValue: '', executedEveryStartsInterval: '', executedEveryStartsIntervalValue: '', executedEveryStartsIntervalOption: '',
+          executedEveryEnds: '', executedEveryEndsValue: '', executedEveryEndsInterval: '', executedEveryEndsIntervalValue: '', executedEveryEndsIntervalOption: '',
+          onCompletion: 'NOT PRESERVE'
+        }, 
         submit: 'Submit', 
         cancel: 'Cancel'
       }
