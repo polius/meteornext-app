@@ -20,7 +20,7 @@
                   <div v-if="dialogOptions.mode == 'createProcedure'">
                     <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="dialogOptions.item.params" label="Parameters" placeholder="IN country CHAR(3), OUT cities INT" style="padding-top:0px;"></v-text-field>
-                    <div style="margin-left:auto; margin-right:auto; height:35vh; width:100%">
+                    <div style="margin-left:auto; margin-right:auto; height:40vh; width:100%">
                       <div id="dialogEditor" style="height:100%;"></div>
                     </div>
                     <v-checkbox v-model="dialogOptions.item.deterministic" label="Deterministic" hide-details class="body-1" style="padding:0px"></v-checkbox>
