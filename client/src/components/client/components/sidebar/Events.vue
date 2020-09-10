@@ -373,7 +373,7 @@ export default {
         EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Event'].split(' EVENT `' + currentName + '`')[1]
-        let query = "CREATE EVENT " + newName + " " + syntax
+        let query = "CREATE EVENT " + newName + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
         }).then(() => { 
