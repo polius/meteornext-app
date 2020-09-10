@@ -95,19 +95,6 @@ export default {
     parseInfo(data) {
       var syntax = ''
       // Parse Info
-      this.infoHeaders.events = [
-        { text: 'Name', value: 'name' },
-        { text: 'Type', value: 'type' },
-        { text: 'Execute At', value: 'execute_at' },
-        { text: 'Interval Value', value: 'interval_value' },
-        { text: 'Interval Field', value: 'interval_field' },
-        { text: 'Starts', value: 'starts' },
-        { text: 'Ends', value: 'ends' },
-        { text: 'On Completion', value: 'on_completion' },
-        { text: 'Definer', value: 'definer' },
-        { text: 'Collation Connection', value: 'collation' },
-        { text: 'Created', value: 'created' }
-      ]
       let info = JSON.parse(data.info)
       if (info.length == 0) {
         this.infoItems.events = []
@@ -115,6 +102,33 @@ export default {
         EventBus.$emit('SEND_NOTIFICATION', 'This event does not longer exist', 'error')
       }
       else {
+        // Build Headers
+        if (info[0]['type'] == 'ONE TIME') {
+          this.infoHeaders.events = [
+            { text: 'Name', value: 'name' },
+            { text: 'Type', value: 'type' },
+            { text: 'Execute At', value: 'execute_at' },
+            { text: 'On Completion', value: 'on_completion' },
+            { text: 'Definer', value: 'definer' },
+            { text: 'Collation Connection', value: 'collation' },
+            { text: 'Created', value: 'created' }
+          ]
+        }
+        else if (info[0]['type'] == 'RECURRING') {
+          this.infoHeaders.events = [
+            { text: 'Name', value: 'name' },
+            { text: 'Type', value: 'type' },
+            { text: 'Interval Value', value: 'interval_value' },
+            { text: 'Interval Field', value: 'interval_field' },
+            { text: 'Starts', value: 'starts' },
+            { text: 'Ends', value: 'ends' },
+            { text: 'On Completion', value: 'on_completion' },
+            { text: 'Definer', value: 'definer' },
+            { text: 'Collation Connection', value: 'collation' },
+            { text: 'Created', value: 'created' }
+          ]
+        }
+        // Build Items
         this.infoItems.events = info
         syntax = info[0].syntax
       }
