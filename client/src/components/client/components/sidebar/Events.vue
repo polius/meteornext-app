@@ -28,7 +28,7 @@
                           <v-radio label="One-time event" value="at"></v-radio>
                         </v-col>
                         <v-col cols="auto" style="margin-top:2px; margin-left:15px;">
-                          <v-radio label="Repeating event" value="every"></v-radio>
+                          <v-radio label="Recurring event" value="every"></v-radio>
                         </v-col>
                       </v-row>
                     </v-radio-group>
