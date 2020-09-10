@@ -22,19 +22,19 @@
                     <v-radio-group v-model="dialogOptions.item.timing" hide-details style="margin-top:20px;">
                       <v-row no-gutters>
                         <v-col cols="auto">
-                          <div class="text-subtitle-1 font-weight-medium" style="margin-right:15px;">SCHEDULE:</div>
+                          <div class="text-subtitle-1 font-weight-regular" style="margin-right:15px;">SCHEDULE:</div>
                         </v-col>
                         <v-col cols="auto" style="margin-top:2px">
-                          <v-radio label="One-time event" value="0"></v-radio>
+                          <v-radio label="One-time event" value="at"></v-radio>
                         </v-col>
                         <v-col cols="auto" style="margin-top:2px; margin-left:15px;">
-                          <v-radio label="Repeating event" value="1"></v-radio>
+                          <v-radio label="Repeating event" value="every"></v-radio>
                         </v-col>
                       </v-row>
                     </v-radio-group>
                     <v-card style="margin-top:15px;">
                       <v-card-text>
-                        <div v-if="dialogOptions.item.timing == '0'">
+                        <div v-if="dialogOptions.item.timing == 'at'">
                           <v-row no-gutters style="height:50px;">
                             <v-col cols="auto">
                               <div class="body-1" style="margin-top:14px">Execute at:</div>
@@ -62,7 +62,7 @@
                               <v-text-field solo v-model="dialogOptions.item.executedEvery" label="" :rules="[v => !!v || '']" required hide-details style="padding-top:0px;"></v-text-field>
                             </v-col>
                             <v-col style="margin-top:2px; margin-left:10px;">
-                              <v-select solo v-model="dialogOptions.item.executedEveryIntervalOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                              <v-select solo v-model="dialogOptions.item.executedEveryOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
                             </v-col>
                           </v-row>
                           <v-row no-gutters style="height:50px; margin-top:5px;">
@@ -259,11 +259,11 @@ export default {
         text: '', 
         item: { 
           name: '',
-          timing: '0',
-          executedAt: '', executedAtInterval: '', executeAtIntervalValue: '', executeAtIntervalOption: '',
-          executedEvery: '', executedEveryIntervalOption: '',
-          executedEveryStarts: '', executedEveryStartsValue: '', executedEveryStartsInterval: '', executedEveryStartsIntervalValue: '', executedEveryStartsIntervalOption: '',
-          executedEveryEnds: '', executedEveryEndsValue: '', executedEveryEndsInterval: '', executedEveryEndsIntervalValue: '', executedEveryEndsIntervalOption: '',
+          timing: 'at',
+          executedAt: '', executedAtInterval: false, executeAtIntervalValue: '', executeAtIntervalOption: '',
+          executedEvery: '', executedEveryOption: '',
+          executedEveryStarts: '', executedEveryStartsValue: '', executedEveryStartsInterval: false, executedEveryStartsIntervalValue: '', executedEveryStartsIntervalOption: '',
+          executedEveryEnds: '', executedEveryEndsValue: '', executedEveryEndsInterval: false, executedEveryEndsIntervalValue: '', executedEveryEndsIntervalOption: '',
           onCompletion: 'NOT PRESERVE'
         }, 
         submit: 'Submit', 
@@ -324,10 +324,27 @@ export default {
     },
     createEventSubmit() {
       let eventName = this.dialogOptions.item.name
-      let procedureParams = this.dialogOptions.item.params
-      let procedureCode = this.dialogEditor.getValue().endsWith(';') ? this.dialogEditor.getValue() : this.dialogEditor.getValue() + ';'
-      let procedureDeterministic = this.dialogOptions.item.deterministic ? '\nDETERMINISTIC' : ''
-      let query = "CREATE EVENT " + eventName + ' (' + procedureParams + ')' + procedureDeterministic + '\nBEGIN\n' + procedureCode + '\nEND;'
+      let eventCode = this.dialogEditor.getValue().endsWith(';') ? this.dialogEditor.getValue() : this.dialogEditor.getValue() + ';'
+      let query = "CREATE EVENT " + eventName + ' ON SCHEDULE'
+
+      if (this.dialogOptions.item.timing == 'at') {
+        query += "\nAT '" + this.dialogOptions.item.executedAt + "'"
+        if (this.dialogOptions.item.executedAtInterval) query += ' + INTERVAL ' + this.dialogOptions.item.executeAtIntervalValue + ' ' + this.dialogOptions.item.executeAtIntervalOption
+      }
+      else if (this.dialogOptions.item.timing == 'every') {
+        query += '\nEVERY ' + this.dialogOptions.item.executedEvery + ' ' + this.dialogOptions.item.executedEveryOption
+        if (this.dialogOptions.item.executedEveryStartsInterval) {
+          query += "\nSTARTS '" + this.dialogOptions.item.executedEveryStartsValue + "'"
+          if (this.dialogOptions.item.executedEveryStartsInterval) query += " + INTERVAL " + this.dialogOptions.item.executedEveryStartsIntervalValue + ' ' + this.dialogOptions.item.executedEveryStartsIntervalOption
+        }
+        if (this.dialogOptions.item.executedEveryEndsInterval) {
+          query += "\nENDS '" + this.dialogOptions.item.executedEveryEndsValue + "'"
+          if (this.dialogOptions.item.executedEveryEndsInterval) query += " + INTERVAL " + this.dialogOptions.item.executedEveryEndsIntervalValue + ' ' + this.dialogOptions.item.executedEveryEndsIntervalOption
+        }
+      }
+      query += "\nON COMPLETION " + this.dialogOptions.item.onCompletion
+      query += '\nDO\nBEGIN\n' + eventCode + '\nEND;'
+
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then(() => { 
