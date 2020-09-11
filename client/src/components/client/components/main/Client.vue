@@ -242,12 +242,12 @@ export default {
       var editorText = this.editor.getValue()
 
       // Get all Query Positions
-      var queries = []
+      var rawQueries = []
       var start = 0;
       var chars = []
       for (var i = 0; i < editorText.length; ++i) {
         if (editorText[i] == ';' && chars.length == 0) {
-          queries.push({"begin": start, "end": i})
+          rawQueries.push({"begin": start, "end": i+1})
           start = i+1
         }
         else if (editorText[i] == "\"") {
@@ -259,7 +259,24 @@ export default {
           else chars.push("'")
         }
       }
-      if (start < i && editorText.substring(start, i).trim().length > 0) queries.push({"begin": start, "end": i})
+      if (start < i && editorText.substring(start, i).trim().length > 0) rawQueries.push({"begin": start, "end": i})
+
+      // Parse Complex Queries (Triggers, Functions, Procedures, Events)
+      var queries = []
+      var detected = false
+      for (let i = 0; i < rawQueries.length; ++i) {
+        let query = editorText.substring(rawQueries[i]['begin'], rawQueries[i]['end'])
+        let queryLower = query.toLowerCase().trim()
+        // console.log(queryLower)
+        if (detected) {
+          if (queryLower.startsWith('end') && queryLower.includes(';')) detected = false
+          queries[queries.length-1]['end'] = rawQueries[i]['end']
+        }
+        else {
+          if (queryLower.startsWith('create ') && (queryLower.includes(' trigger ') || queryLower.includes(' function ') || queryLower.includes(' procedure ') || queryLower.includes(' event '))) detected = true
+          queries.push({"begin": rawQueries[i]['begin'], "end": rawQueries[i]['end']})
+        }
+      }
 
       // Get Cursor Position Index
       if (queries.length > 0) {
