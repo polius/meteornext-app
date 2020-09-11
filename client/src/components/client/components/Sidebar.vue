@@ -448,6 +448,7 @@ export default {
     },
     showContextMenu(e, item) {
       e.preventDefault()
+      this.treeviewClicked(item)
       this.contextMenu = false
       this.contextMenuModel = null
       this.contextMenuX = e.clientX
