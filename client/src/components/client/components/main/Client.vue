@@ -330,6 +330,7 @@ export default {
           this.editor.moveCursorTo(cur.row, cur.column);
         })
         .catch((error) => {
+          console.log(error)
           this.gridApi.client.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {

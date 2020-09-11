@@ -62,12 +62,12 @@
     <!-- CONTEXT MENU - DIALOGs -->
     <!---------------------------->
     <Connections v-if="1 == 2" :contextMenuItem="contextMenuItem" />
-    <Tables v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
-    <Views v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
-    <Triggers v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
-    <Procedures v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
-    <Functions v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
-    <Events v-if="database.length != 0" :contextMenuItem="contextMenuItem" />
+    <Tables :contextMenuItem="contextMenuItem" />
+    <Views :contextMenuItem="contextMenuItem" />
+    <Triggers :contextMenuItem="contextMenuItem" />
+    <Procedures :contextMenuItem="contextMenuItem" />
+    <Functions :contextMenuItem="contextMenuItem" />
+    <Events :contextMenuItem="contextMenuItem" />
     <!------------>
     <!-- DIALOG -->
     <!------------>
@@ -260,6 +260,7 @@ export default {
           this.parseServers(response.data.servers)
         })
         .catch((error) => {
+          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
         })
@@ -351,6 +352,7 @@ export default {
           resolve()
         })
         .catch((error) => {
+          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
           reject(error)
@@ -545,12 +547,12 @@ export default {
         database: this.database,
         queries: queries
       }
-      console.log(payload)
       axios.post('/client/execute', payload)
         .then((response) => {
           resolve(response.data)
         })
         .catch((error) => {
+          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             let data = JSON.parse(error.response.data.data)
