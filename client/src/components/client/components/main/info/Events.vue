@@ -131,7 +131,7 @@ export default {
         }
         // Build Items
         this.infoItems.events = info
-        syntax = info[0].syntax
+        syntax = info[0].syntax + ';'
       }
       // Parse Syntax
       this.infoEditor.events = syntax

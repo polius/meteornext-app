@@ -119,7 +119,10 @@ export default {
         this.editor.getSession().setMode("ace/mode/text")
         syntax = 'Insufficient privileges to show the Procedure Definition.\n\nYou must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table'
       }
-      else this.editor.getSession().setMode("ace/mode/sql")
+      else {
+        this.editor.getSession().setMode("ace/mode/sql")
+        syntax += ';'
+      }
       this.infoEditor.procedures = syntax
       this.editor.setValue(syntax, -1)
       this.editor.focus()

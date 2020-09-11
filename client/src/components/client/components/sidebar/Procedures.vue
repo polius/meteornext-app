@@ -325,7 +325,8 @@ WHERE CountryCode = country;
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure']
-        navigator.clipboard.writeText(syntax)
+        if (syntax == null) EventBus.$emit('SEND_NOTIFICATION', "Insufficient privileges to copy the procedure syntax", 'error')
+        else navigator.clipboard.writeText(syntax) + ';'
         EventBus.$emit('SEND_NOTIFICATION', "Syntax copied to clipboard", 'info')
       }).catch(() => {}).finally(() => { this.loading = false })
     },

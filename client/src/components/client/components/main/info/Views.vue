@@ -112,7 +112,7 @@ export default {
       }
       else {
         this.infoItems.views = info
-        syntax = info[0].syntax
+        syntax = info[0].syntax + ';'
       }
       // Parse Syntax
       this.infoEditor.views = syntax

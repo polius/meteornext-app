@@ -122,7 +122,7 @@ export default {
         info.create_time = (info.create_time == null) ? 'Not available' : info.create_time
         info.update_time = (info.update_time == null) ? 'Not available' : info.update_time
         this.infoItems.tables = [info]
-        syntax = info.syntax
+        syntax = info.syntax + ';'
       }
       // Parse Syntax
       this.infoEditor.tables = syntax

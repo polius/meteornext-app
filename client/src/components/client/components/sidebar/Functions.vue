@@ -333,8 +333,8 @@ RETURN (customerLevel);
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Function']
-        navigator.clipboard.writeText(syntax)
-        EventBus.$emit('SEND_NOTIFICATION', "Syntax copied to clipboard", 'info')
+        if (syntax == null) EventBus.$emit('SEND_NOTIFICATION', "Insufficient privileges to copy the function syntax", 'error')
+        else navigator.clipboard.writeText(syntax) + ';'
       }).catch(() => {}).finally(() => { this.loading = false })
     },
   }

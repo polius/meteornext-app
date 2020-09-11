@@ -304,7 +304,7 @@ export default {
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then((res) => {
-        let syntax = JSON.parse(res.data)[0].data[0]['Create View']
+        let syntax = JSON.parse(res.data)[0].data[0]['Create View'] + ';'
         navigator.clipboard.writeText(syntax)
         EventBus.$emit('SEND_NOTIFICATION', "Syntax copied to clipboard", 'info')
       }).catch(() => {}).finally(() => { this.loading = false })
