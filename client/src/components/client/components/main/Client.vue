@@ -248,7 +248,7 @@ export default {
       for (var i = 0; i < editorText.length; ++i) {
         if (editorText[i] == ';' && chars.length == 0) {
           rawQueries.push({"begin": start, "end": i+1})
-          start = i+1
+          start = i+2
         }
         else if (editorText[i] == "\"") {
           if (chars[chars.length-1] == '"') chars.pop()
@@ -267,7 +267,6 @@ export default {
       for (let i = 0; i < rawQueries.length; ++i) {
         let query = editorText.substring(rawQueries[i]['begin'], rawQueries[i]['end'])
         let queryLower = query.toLowerCase().trim()
-        // console.log(queryLower)
         if (detected) {
           if (queryLower.startsWith('end') && queryLower.includes(';')) detected = false
           queries[queries.length-1]['end'] = rawQueries[i]['end']
@@ -285,35 +284,26 @@ export default {
 
       // Get Current Query
       var query = ''
+      var queryStart = null
       for (let i = 0; i < queries.length; ++i) {
         if (cursorPositionIndex >= queries[i]['begin'] && cursorPositionIndex <= queries[i]['end']) {
           query = editorText.substring(queries[i]['begin'], queries[i]['end'])
+          queryStart = queries[i]['begin']
           break
         }
       }
       this.clientQuery = query
 
-      // Get Current Query Position
-      var queryPosition = 0
-      for (let i = 0; i < queries.length; ++i) {
-        var re = new RegExp('\\b' + query.trim().replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&') + '\\b');
-        if (
-          re.test(editorText.substring(queries[i]['begin'], queries[i]['end']).trim()) ||
-          query.trim().localeCompare(editorText.substring(queries[i]['begin'], queries[i]['end']).trim()) == 0
-        ) {
-          if (cursorPositionIndex > queries[i]['end']) queryPosition += 1
-          else break
-        }
-      }
-
       // Find Current Query in Ace Editor
+      let queryPosition = this.editor.session.doc.indexToPosition(queryStart)
       this.editor.$search.setOptions({
         needle: query.trim(),
         caseSensitive: true,
         wholeWord: true,
         regExp: false,
+        start: queryPosition
       }); 
-      var queryRange = this.editor.$search.findAll(this.editor.session)
+      var queryRange = this.editor.$search.find(this.editor.session)
 
       // Remove Previous Markers
       while (this.editorMarkers.length > 0) {
@@ -321,8 +311,8 @@ export default {
       }
 
       // Highlight Current Query
-      if (query.trim().length > 0 && queryRange.length > 0) {
-        var marker = this.editor.session.addMarker(new Range(queryRange[queryPosition]['start'].row, queryRange[queryPosition]['start'].column, queryRange[queryPosition]['end'].row, queryRange[queryPosition]['end'].column), 'ace_active-line', true)
+      if (query.trim().length > 0 && queryRange != null) {
+        var marker = this.editor.session.addMarker(new Range(queryRange['start'].row, queryRange['start'].column, queryRange['end'].row, queryRange['end'].column), 'ace_active-line', true)
         this.editorMarkers.push(marker)
       }
     },
