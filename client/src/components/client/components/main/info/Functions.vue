@@ -120,7 +120,10 @@ export default {
         this.editor.getSession().setMode("ace/mode/text")
         syntax = 'Insufficient privileges to show the Function Definition.\n\nYou must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table'
       }
-      else this.editor.getSession().setMode("ace/mode/sql")
+      else {
+        this.editor.getSession().setMode("ace/mode/sql")
+        syntax += ';'
+      }
       this.infoEditor.functions = syntax
       this.editor.setValue(syntax, -1)
       this.editor.focus()

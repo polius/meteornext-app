@@ -114,7 +114,7 @@ export default {
       }
       else {
         this.infoItems.triggers = info
-        syntax = info[0].syntax
+        syntax = info[0].syntax + ';'
       }
       // Parse Syntax
       this.infoEditor.triggers = syntax
