@@ -88,6 +88,7 @@ export default {
           this.parseInfo(response.data)
         })
         .catch((error) => {
+          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
         })

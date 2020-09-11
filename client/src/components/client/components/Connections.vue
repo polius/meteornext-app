@@ -59,7 +59,7 @@ export default {
       let oldIndex = event.oldIndex
       let newIndex = event.newIndex
       let tabActive = null;
-
+  
       if (tabNumber === oldIndex) tabActive = newIndex;
       else if (tabNumber === newIndex && tabNumber < oldIndex) tabActive = tabNumber + 1;
       else if (tabNumber === newIndex && tabNumber > oldIndex) tabActive = tabNumber - 1;

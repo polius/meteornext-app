@@ -12,6 +12,9 @@ const connection = {
 
   // Database Selector
   databaseItems: [],
+  databaseEncodings: [],
+  databaseCollations: [],
+  databaseEngines: [],
   database: '',
   tableItems: [],
   table: '',
@@ -139,7 +142,7 @@ const mutations = {
     // Change current connection
     state.currentConn = data
     // Load Client ACE Editor
-    state.components.editor.setValue(state.connections[state.currentConn].clientQuery,1)
+    state.components.editor.setValue(state.connections[state.currentConn].clientQuery, 1)
   },
   deleteConnection(state, data) {
     // Array contains only 1 element

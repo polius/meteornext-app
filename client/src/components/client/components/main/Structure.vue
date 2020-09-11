@@ -203,6 +203,7 @@ export default {
           this.parseBottomBar(data)
         })
         .catch((error) => {
+          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             let data = JSON.parse(error.response.data.data)

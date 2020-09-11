@@ -19,9 +19,9 @@
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
                   <div v-if="dialogOptions.mode == 'createTable'">
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Table Name" autofocus required style="padding-top:0px;"></v-text-field>
-                    <v-autocomplete @change="getCollations" v-model="dialogOptions.item.encoding" :items="encodings" :rules="[v => !!v || '']" label="Table Encoding" auto-select-first required style="padding-top:0px;"></v-autocomplete>
-                    <v-autocomplete :loading="loading" v-model="dialogOptions.item.collation" :items="collations" :rules="[v => !!v || '']" label="Table Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
-                    <v-select v-model="dialogOptions.item.engine" :items="engines" :rules="[v => !!v || '']" label="Table Engine" hide-details required style="padding-top:0px;"></v-select>
+                    <v-autocomplete @change="getCollations" v-model="dialogOptions.item.encoding" :items="databaseEncodings" :rules="[v => !!v || '']" label="Table Encoding" auto-select-first required style="padding-top:0px;"></v-autocomplete>
+                    <v-autocomplete :loading="loading" v-model="dialogOptions.item.collation" :items="databaseCollations" :rules="[v => !!v || '']" label="Table Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
+                    <v-select v-model="dialogOptions.item.engine" :items="databaseEngines" :rules="[v => !!v || '']" label="Table Engine" hide-details required style="padding-top:0px;"></v-select>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'renameTable'">
                     <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
@@ -69,10 +69,6 @@ export default {
       // Dialog
       dialog: false,
       dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
-      // Selectors
-      encodings: [],
-      collations: [],
-      engines: [],
     }
   },
   props: { contextMenuItem: Object },
@@ -87,18 +83,19 @@ export default {
       'headerTab',
       'headerTabSelected',
       'tabStructureSelected',
+      'databaseEncodings',
+      'databaseCollations',
+      'databaseEngines',
     ], { path: 'client/connection' }),
-  },
-  created() {
-    // Build Selectors
-    this.buildSelectors()
   },
   mounted() {
     EventBus.$on('CLICK_CONTEXTMENU_TABLE', this.contextMenuClicked);
   },
   watch: {
     database: function() {
-      this.buildSelectors()
+      this.$nextTick(() => {
+        if (this.database.length > 0 && this.databaseEncodings.length == 0) this.buildSelectors()
+      })
     },
     dialog (val) {
       if (!val) return
@@ -111,9 +108,9 @@ export default {
     buildSelectors() {
       // Build Encodings
       let db = this.databaseItems.filter(obj => { return obj.text == this.database })[0]
-      this.encodings = [{ text: 'Default (' + db.encoding + ')', value: db.encoding }]
-      this.encodings.push({ divider: true })
-      this.encodings.push(...this.server.encodings.reduce((acc, val) => { 
+      this.databaseEncodings = [{ text: 'Default (' + db.encoding + ')', value: db.encoding }]
+      this.databaseEncodings.push({ divider: true })
+      this.databaseEncodings.push(...this.server.encodings.reduce((acc, val) => { 
         acc.push({ text: val.description + ' (' + val.encoding + ')', value: val.encoding })
         return acc
       }, []))
@@ -123,9 +120,9 @@ export default {
 
       // Build Engines
       db = this.server.engines.filter(obj => { return obj.support == 'DEFAULT' })[0]
-      this.engines = [{ text: 'Default (' + db.engine + ')', value: db.engine }]
-      this.engines.push({ divider: true })
-      this.engines.push(...this.server.engines.reduce((acc, val) => { 
+      this.databaseEngines = [{ text: 'Default (' + db.engine + ')', value: db.engine }]
+      this.databaseEngines.push({ divider: true })
+      this.databaseEngines.push(...this.server.engines.reduce((acc, val) => { 
         acc.push(val.engine)
         return acc
       }, []))
@@ -142,6 +139,7 @@ export default {
           this.parseCollations(encoding, response.data.collations)
         })
         .catch((error) => {
+          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
         })
@@ -151,7 +149,7 @@ export default {
     },
     parseCollations(encoding, data) {
       let def = this.server.encodings.filter(obj => { return obj.encoding == encoding })[0]
-      this.collations = [{ text: 'Default (' + def.collation + ')', value: def.collation }, { divider: true }, ...JSON.parse(data)]
+      this.databaseCollations = [{ text: 'Default (' + def.collation + ')', value: def.collation }, { divider: true }, ...JSON.parse(data)]
     },
     contextMenuClicked(item) {
       if (item == 'Create Table') this.createTable()
@@ -167,7 +165,7 @@ export default {
         mode: 'createTable', 
         title: 'Create Table', 
         text: '', 
-        item: { name: '', encoding: this.encodings[0].value, collation: this.collations[0].value, engine: this.engines[0].value }, 
+        item: { name: '', encoding: this.databaseEncodings[0].value, collation: this.databaseCollations[0].value, engine: this.databaseEngines[0].value }, 
         submit: 'Submit', 
         cancel: 'Cancel'
       }

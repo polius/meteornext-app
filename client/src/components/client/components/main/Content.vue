@@ -248,6 +248,7 @@ export default {
           this.parseContentExecution(JSON.parse(response.data.data))          
         })
         .catch((error) => {
+          console.log(error)
           this.gridApi.content.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
@@ -378,6 +379,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
+          console.log(error)
           this.gridApi.content.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
@@ -578,6 +580,7 @@ export default {
           this.parseContentExecution(JSON.parse(response.data.data))
         })
         .catch((error) => {
+          console.log(error)
           this.gridApi.content.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
