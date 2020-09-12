@@ -31,6 +31,12 @@ class Connector:
     ####################
     # INTERNAL QUERIES #
     ####################
+    def get_default_encoding(self):
+        return self._sql.get_default_encoding()
+
+    def get_default_collation(self):
+        return self._sql.get_default_collation()
+
     def get_engines(self):
         return self._sql.get_engines()
 

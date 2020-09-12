@@ -127,6 +127,16 @@ class MySQL:
     ####################
     # INTERNAL QUERIES #
     ####################
+    def get_default_encoding(self):
+        query = "SHOW VARIABLES LIKE 'character_set_server'"
+        result = self.execute(query)['data'][0]['Value']
+        return result
+
+    def get_default_collation(self):
+        query = "SHOW VARIABLES LIKE 'collation_server'"
+        result = self.execute(query)['data'][0]['Value']
+        return result
+
     def get_engines(self):
         query = """
             SELECT engine, support 

@@ -78,9 +78,9 @@ export default {
   computed: {
     ...mapFields([
       'database',
-      'treeview',
-      'treeviewOpened',
-      'treeviewSelected',
+      'sidebar',
+      'sidebarOpened',
+      'sidebarSelected',
       'headerTab',
       'headerTabSelected',
       'tableItems',
@@ -216,10 +216,10 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select new created trigger
-          this.treeviewSelected = { id: 'trigger|' + triggerName, name: triggerName, type: 'Trigger' }
-          this.treeview = ['trigger|' + triggerName]
-          // Open treeview parent
-          this.treeviewOpened = ['triggers']
+          this.sidebarSelected = { id: 'trigger|' + triggerName, name: triggerName, type: 'Trigger' }
+          this.sidebar = ['trigger|' + triggerName]
+          // Open sidebar parent
+          this.sidebarOpened = ['triggers']
           // Change view to Info
           this.headerTab = 3
           this.headerTabSelected = 'info_trigger'
@@ -245,8 +245,8 @@ export default {
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.treeviewSelected = { id: 'trigger|' + newName, name: newName, type: 'Trigger' }
-            this.treeview = ['trigger|' + newName]
+            this.sidebarSelected = { id: 'trigger|' + newName, name: newName, type: 'Trigger' }
+            this.sidebar = ['trigger|' + newName]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_trigger'
@@ -273,8 +273,8 @@ export default {
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.treeviewSelected = { id: 'trigger|' + newName, name: newName, type: 'Trigger' }
-            this.treeview = ['trigger|' + newName]
+            this.sidebarSelected = { id: 'trigger|' + newName, name: newName, type: 'Trigger' }
+            this.sidebar = ['trigger|' + newName]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_trigger'
@@ -295,8 +295,8 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Unselect deleted view
-          this.treeviewSelected = {}
-          this.treeview = []
+          this.sidebarSelected = {}
+          this.sidebar = []
           // Change view to Client
           this.headerTab = 0
           this.headerTabSelected = 'client'

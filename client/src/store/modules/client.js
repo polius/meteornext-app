@@ -11,13 +11,10 @@ const connection = {
   headerTabSelected: 'client',
 
   // Database Selector
-  databaseItems: [],
-  databaseEncodings: [],
-  databaseCollations: [],
-  databaseEngines: [],
   database: '',
-  tableItems: [],
+  databaseItems: [],
   table: '',
+  tableItems: [],
 
   // Sidebar
   sidebar: [],
@@ -135,7 +132,7 @@ const mutations = {
     // Change connection pointer
     state.currentConn = state.connections.length - 1
     // Init servers list
-    state.connections[state.currentConn].treeviewItems = state.servers.slice(0)
+    state.connections[state.currentConn].sidebarItems = state.servers.slice(0)
     // Init Client ACE Editor
     state.components.editor.setValue('')
   },
@@ -151,7 +148,7 @@ const mutations = {
       // Re-Initialize current connection
       state.connections = [JSON.parse(JSON.stringify(connection))]
       // Init servers list
-      state.connections[state.currentConn].treeviewItems = state.servers.slice(0)
+      state.connections[state.currentConn].sidebarItems = state.servers.slice(0)
     }
     // Delete last element of array
     else if (data + 1 == state.connections.length) {

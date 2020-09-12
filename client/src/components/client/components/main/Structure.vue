@@ -76,7 +76,7 @@ export default {
         'bottomBar',
         'structureHeaders',
         'structureItems',
-        'treeviewSelected',
+        'sidebarSelected',
         'server',
         'database',
     ], { path: 'client/connection' }),
@@ -109,7 +109,7 @@ export default {
       const payload = {
         server: this.server.id, 
         database: this.database, 
-        table: this.treeviewSelected['name']
+        table: this.sidebarSelected['name']
       }
       axios.get('/client/structure', { params: payload })
         .then((response) => {

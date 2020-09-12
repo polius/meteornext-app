@@ -43,7 +43,7 @@ export default {
         'infoEditor',
         'server',
         'database',
-        'treeviewSelected',
+        'sidebarSelected',
     ], { path: 'client/connection' }),
   },
   mounted () {
@@ -81,7 +81,7 @@ export default {
         server: this.server.id,
         database: this.database,
         object: 'event',
-        name: this.treeviewSelected['name']
+        name: this.sidebarSelected['name']
       }
       axios.get('/client/info', { params: payload })
         .then((response) => {

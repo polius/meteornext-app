@@ -42,7 +42,6 @@ export default {
       'objectsHeaders',
       'objectsItems',
       'server',
-      'treeviewSelected',
       'bottomBar',
     ], { path: 'client/connection' }),
     ...mapFields([

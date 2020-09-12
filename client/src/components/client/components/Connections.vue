@@ -12,7 +12,7 @@
       </v-tabs>
     </v-col>
     <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
-      <div v-if="treeviewMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding:6px; border-bottom: 1px solid #424242;">
+      <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding:6px; border-bottom: 1px solid #424242;">
         <v-btn :loading="clientQueryExecuting" :disabled="clientQuery.length == 0" @click="runQuery()" title="Execute Query" style="margin-left:6px;"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
       </div>
     </v-col>
@@ -37,7 +37,8 @@ export default {
     ], { path: 'client/client' }),
     ...mapFields([
       'headerTabSelected',
-      'treeviewMode',
+      'sidebarMode',
+      'sidebarLoading',
       'clientQuery',
       'clientQueryExecuting',
       'server',
@@ -47,6 +48,7 @@ export default {
   methods: {
     newConnection() {
       this.$store.dispatch('client/newConnection')
+      this.sidebarLoading = false
     },
     changeConnection(index) {
       this.$store.dispatch('client/changeConnection', index)

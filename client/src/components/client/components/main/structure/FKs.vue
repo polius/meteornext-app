@@ -101,7 +101,7 @@ export default {
     ...mapFields([
       'structureHeaders',
       'structureItems',
-      'treeviewSelected',
+      'sidebarSelected',
       'server',
       'database',
       'tableItems',
@@ -120,7 +120,7 @@ export default {
       requestAnimationFrame(() => {
         if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
       })
-      if (this.dialogOptions.item.column_items.length == 0) this.getColumns(this.treeviewSelected['name'])
+      if (this.dialogOptions.item.column_items.length == 0) this.getColumns(this.sidebarSelected['name'])
     },
     headerTabSelected(val) {
       if (val == 'structure') {
@@ -191,7 +191,7 @@ export default {
         mode: 'new',
         title: 'New Foreign Key',
         text: '',
-        item: { name: '', table: this.treeviewSelected['name'], column_items: [], column: '', fk_table: '', fk_column_items: [], fk_column: '', on_update: '', on_delete: '' },
+        item: { name: '', table: this.sidebarSelected['name'], column_items: [], column: '', fk_table: '', fk_column_items: [], fk_column: '', on_update: '', on_delete: '' },
         submit: 'Save',
         cancel: 'Cancel'
       }
@@ -223,14 +223,14 @@ export default {
         }
         // Build query
         let constraintName = (this.dialogOptions.item.name.length > 0) ? 'CONSTRAINT ' + this.dialogOptions.item.name : ''
-        query = "ALTER TABLE " + this.treeviewSelected['name'] + " ADD " + constraintName + " FOREIGN KEY(" + this.dialogOptions.item.column + ") REFERENCES " + this.dialogOptions.item.fk_table + "(" + this.dialogOptions.item.fk_column + ")" 
+        query = "ALTER TABLE " + this.sidebarSelected['name'] + " ADD " + constraintName + " FOREIGN KEY(" + this.dialogOptions.item.column + ") REFERENCES " + this.dialogOptions.item.fk_table + "(" + this.dialogOptions.item.fk_column + ")" 
         if (this.dialogOptions.item.on_delete.length > 0) query += " ON DELETE " + this.dialogOptions.item.on_delete
         if (this.dialogOptions.item.on_update.length > 0) query += " ON UPDATE " + this.dialogOptions.item.on_update
         query += ';'
       }
       else if (this.dialogOptions.mode == 'delete') {
         let row = this.gridApi.structure.fks.getSelectedRows()[0]
-        query = "ALTER TABLE " + this.treeviewSelected['name'] + " DROP FOREIGN KEY " + row.Name + ";"
+        query = "ALTER TABLE " + this.sidebarSelected['name'] + " DROP FOREIGN KEY " + row.Name + ";"
       }
       // Execute query
       this.execute(query)

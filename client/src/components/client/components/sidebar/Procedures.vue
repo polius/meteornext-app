@@ -77,9 +77,9 @@ export default {
   computed: {
     ...mapFields([
       'database',
-      'treeview',
-      'treeviewOpened',
-      'treeviewSelected',
+      'sidebar',
+      'sidebarOpened',
+      'sidebarSelected',
       'headerTab',
       'headerTabSelected',
       'tableItems',
@@ -231,10 +231,10 @@ WHERE CountryCode = country;
           // Hide Dialog
           this.dialog = false
           // Select new created proceure
-          this.treeviewSelected = { id: 'procedure|' + procedureName, name: procedureName, type: 'Procedure' }
-          this.treeview = ['procedure|' + procedureName]
-          // Open treeview parent
-          this.treeviewOpened = ['procedures']
+          this.sidebarSelected = { id: 'procedure|' + procedureName, name: procedureName, type: 'Procedure' }
+          this.sidebar = ['procedure|' + procedureName]
+          // Open sidebar parent
+          this.sidebarOpened = ['procedures']
           // Change view to Info
           this.headerTab = 3
           this.headerTabSelected = 'info_procedure'
@@ -260,8 +260,8 @@ WHERE CountryCode = country;
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.treeviewSelected = { id: 'procedure|' + newName, name: newName, type: 'Procedure' }
-            this.treeview = ['procedure|' + newName]
+            this.sidebarSelected = { id: 'procedure|' + newName, name: newName, type: 'Procedure' }
+            this.sidebar = ['procedure|' + newName]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_procedure'
@@ -288,8 +288,8 @@ WHERE CountryCode = country;
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.treeviewSelected = { id: 'procedure|' + newName, name: newName, type: 'Procedure' }
-            this.treeview = ['procedure|' + newName]
+            this.sidebarSelected = { id: 'procedure|' + newName, name: newName, type: 'Procedure' }
+            this.sidebar = ['procedure|' + newName]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_procedure'
@@ -310,8 +310,8 @@ WHERE CountryCode = country;
           // Hide Dialog
           this.dialog = false
           // Unselect deleted view
-          this.treeviewSelected = {}
-          this.treeview = []
+          this.sidebarSelected = {}
+          this.sidebar = []
           // Change view to Client
           this.headerTab = 0
           this.headerTabSelected = 'client'
