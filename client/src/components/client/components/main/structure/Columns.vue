@@ -4,7 +4,7 @@
     <!-- COLUMNS -->
     <!------------->
     <div style="height:calc(100% - 84px)">
-      <ag-grid-vue ref="agGridStructureColumns" @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.columns" :rowData="structureItems.columns"></ag-grid-vue>
+      <ag-grid-vue ref="agGridStructureColumns" @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-clicked="onCellClicked" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.columns" :rowData="structureItems.columns"></ag-grid-vue>
     </div>
     <!---------------->
     <!-- BOTTOM BAR -->
@@ -14,7 +14,7 @@
         <v-col cols="auto">
           <v-btn @click="addColumn" text small title="New Column" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-          <v-btn :disabled="structureItems.columns.length == 0" @click="removeColumn" text small title="Remove Column" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+          <v-btn :disabled="!selectedRows" @click="removeColumn" text small title="Remove Column" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
           <v-btn @click="refreshColumns" text small title="Refresh Columns" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
@@ -93,7 +93,9 @@ export default {
       loading: false,
       // Dialog
       dialog: false,
-      dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' }
+      dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
+      // AG Grid
+      selectedRows: false,
     }
   },
   components: { AgGridVue },
@@ -104,6 +106,7 @@ export default {
       'treeviewSelected',
       'server',
       'bottomBar',
+      'headerTabSelected',
       'tabStructureSelected',
     ], { path: 'client/connection' }),
     ...mapFields([
@@ -118,11 +121,21 @@ export default {
         if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
       })
     },
+    headerTabSelected(val) {
+      if (val == 'structure') {
+        this.$nextTick(() => {
+          if (this.gridApi.structure.columns != null) this.resizeTable()
+        })
+      }
+    },
     tabStructureSelected(val) {
-      this.$nextTick(() => {
-        if (val == 'columns') this.resizeTable()
-      })
-    }
+      if (val == 'columns') {
+        this.$nextTick(() => { this.resizeTable() })
+      }
+    },
+    "structureItems.columns" () {
+      this.selectedRows = false
+    },
   },
   methods: {
     onGridReady(params) {
@@ -137,6 +150,7 @@ export default {
     onGridClick(event) {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.structure.columns.deselectAll()
+        this.selectedRows = false
       }
     },
     resizeTable() {
@@ -167,6 +181,9 @@ export default {
             }, 200);
         }, 200);
       }
+    },
+    onCellClicked() {
+      this.selectedRows = this.gridApi.structure.columns.getSelectedRows().length != 0
     },
     onRowDoubleClicked(event) {
       this.editColumn(event.data)

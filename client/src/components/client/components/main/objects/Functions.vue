@@ -37,6 +37,7 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'headerTabSelected',
       'tabObjectsSelected',
       'objectsHeaders',
       'objectsItems',
@@ -50,11 +51,18 @@ export default {
     ], { path: 'client/components' }),
   },
   watch: {
+    headerTabSelected(val) {
+      if (val == 'objects') {
+        this.$nextTick(() => {
+          if (this.gridApi.objects.functions != null) this.resizeTable()
+        })
+      }
+    },
     tabObjectsSelected(val) {
-      this.$nextTick(() => {
-        if (val == 'functions') this.resizeTable()
-      })
-    }
+      if (val == 'functions') {
+        this.$nextTick(() => { this.resizeTable() })
+      }
+    },
   },
   methods: {
    onGridReady(params) {
