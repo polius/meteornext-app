@@ -19,9 +19,9 @@
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
                   <div v-if="dialogOptions.mode == 'createTable'">
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Table Name" autofocus required style="padding-top:0px;"></v-text-field>
-                    <v-autocomplete @change="getCollations" v-model="dialogOptions.item.encoding" :items="databaseEncodings" :rules="[v => !!v || '']" label="Table Encoding" auto-select-first required style="padding-top:0px;"></v-autocomplete>
-                    <v-autocomplete :loading="loading" v-model="dialogOptions.item.collation" :items="databaseCollations" :rules="[v => !!v || '']" label="Table Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
-                    <v-select v-model="dialogOptions.item.engine" :items="databaseEngines" :rules="[v => !!v || '']" label="Table Engine" hide-details required style="padding-top:0px;"></v-select>
+                    <v-autocomplete @change="getCollations" v-model="dialogOptions.item.encoding" :items="encodings" :rules="[v => !!v || '']" label="Table Encoding" auto-select-first required style="padding-top:0px;"></v-autocomplete>
+                    <v-autocomplete :disabled="loading" :loading="loading" v-model="dialogOptions.item.collation" :items="collations" :rules="[v => !!v || '']" label="Table Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
+                    <v-select v-model="dialogOptions.item.engine" :items="engines" :rules="[v => !!v || '']" label="Table Engine" hide-details required style="padding-top:0px;"></v-select>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'renameTable'">
                     <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
@@ -69,6 +69,10 @@ export default {
       // Dialog
       dialog: false,
       dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
+      // Database
+      encodings: [],
+      collations: [],
+      engines: [],
     }
   },
   props: { contextMenuItem: Object },
@@ -77,26 +81,18 @@ export default {
       'server',
       'database',
       'databaseItems',
-      'treeview',
-      'treeviewOpened',
-      'treeviewSelected',
+      'sidebar',
+      'sidebarOpened',
+      'sidebarSelected',
       'headerTab',
       'headerTabSelected',
       'tabStructureSelected',
-      'databaseEncodings',
-      'databaseCollations',
-      'databaseEngines',
     ], { path: 'client/connection' }),
   },
   mounted() {
     EventBus.$on('CLICK_CONTEXTMENU_TABLE', this.contextMenuClicked);
   },
   watch: {
-    database: function() {
-      this.$nextTick(() => {
-        if (this.database.length > 0 && this.databaseEncodings.length == 0) this.buildSelectors()
-      })
-    },
     dialog (val) {
       if (!val) return
       requestAnimationFrame(() => {
@@ -108,9 +104,9 @@ export default {
     buildSelectors() {
       // Build Encodings
       let db = this.databaseItems.filter(obj => { return obj.text == this.database })[0]
-      this.databaseEncodings = [{ text: 'Default (' + db.encoding + ')', value: db.encoding }]
-      this.databaseEncodings.push({ divider: true })
-      this.databaseEncodings.push(...this.server.encodings.reduce((acc, val) => { 
+      this.encodings = [{ text: 'Default (' + db.encoding + ')', value: db.encoding }]
+      this.encodings.push({ divider: true })
+      this.encodings.push(...this.server.encodings.reduce((acc, val) => { 
         acc.push({ text: val.description + ' (' + val.encoding + ')', value: val.encoding })
         return acc
       }, []))
@@ -120,9 +116,9 @@ export default {
 
       // Build Engines
       db = this.server.engines.filter(obj => { return obj.support == 'DEFAULT' })[0]
-      this.databaseEngines = [{ text: 'Default (' + db.engine + ')', value: db.engine }]
-      this.databaseEngines.push({ divider: true })
-      this.databaseEngines.push(...this.server.engines.reduce((acc, val) => { 
+      this.engines = [{ text: 'Default (' + db.engine + ')', value: db.engine }]
+      this.engines.push({ divider: true })
+      this.engines.push(...this.server.engines.reduce((acc, val) => { 
         acc.push(val.engine)
         return acc
       }, []))
@@ -149,7 +145,8 @@ export default {
     },
     parseCollations(encoding, data) {
       let def = this.server.encodings.filter(obj => { return obj.encoding == encoding })[0]
-      this.databaseCollations = [{ text: 'Default (' + def.collation + ')', value: def.collation }, { divider: true }, ...JSON.parse(data)]
+      this.collations = [{ text: 'Default (' + def.collation + ')', value: def.collation }, { divider: true }, ...JSON.parse(data)]
+      this.dialogOptions.item.collation = this.collations[0].value
     },
     contextMenuClicked(item) {
       if (item == 'Create Table') this.createTable()
@@ -161,11 +158,12 @@ export default {
       else if (item == 'Copy Table Syntax') this.copyTableSyntaxSubmit()
     },
     createTable() {
+      this.buildSelectors()
       let dialogOptions = { 
         mode: 'createTable', 
         title: 'Create Table', 
         text: '', 
-        item: { name: '', encoding: this.databaseEncodings[0].value, collation: this.databaseCollations[0].value, engine: this.databaseEngines[0].value }, 
+        item: { name: '', encoding: this.encodings[0].value, collation: '', engine: this.engines[0].value }, 
         submit: 'Submit', 
         cancel: 'Cancel'
       }
@@ -246,10 +244,10 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select new created table
-          this.treeviewSelected = { id: 'table|' + tableName, name: tableName, type: 'Table' }
-          this.treeview = ['table|' + tableName]
-          // Open treeview parent
-          this.treeviewOpened = ['tables']
+          this.sidebarSelected = { id: 'table|' + tableName, name: tableName, type: 'Table' }
+          this.sidebar = ['table|' + tableName]
+          // Open sidebar parent
+          this.sidebarOpened = ['tables']
           // Change view to Structure (columns)
           this.headerTab = 1
           this.headerTabSelected = 'structure'
@@ -271,8 +269,8 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select renamed table
-          this.treeviewSelected = { id: 'table|' + newName, name: newName, type: 'Table' }
-          this.treeview = ['table|' + newName]
+          this.sidebarSelected = { id: 'table|' + newName, name: newName, type: 'Table' }
+          this.sidebar = ['table|' + newName]
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
@@ -291,8 +289,8 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select duplicated table
-          this.treeviewSelected = { id: 'table|' + newName, name: newName, type: 'Table' }
-          this.treeview = ['table|' + newName]
+          this.sidebarSelected = { id: 'table|' + newName, name: newName, type: 'Table' }
+          this.sidebar = ['table|' + newName]
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
@@ -322,8 +320,8 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Unselect deleted table
-          this.treeviewSelected = {}
-          this.treeview = []
+          this.sidebarSelected = {}
+          this.sidebar = []
           // Change view to Client
           this.headerTab = 0
           this.headerTabSelected = 'client'

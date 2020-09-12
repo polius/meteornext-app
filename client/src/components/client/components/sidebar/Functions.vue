@@ -78,9 +78,9 @@ export default {
   computed: {
     ...mapFields([
       'database',
-      'treeview',
-      'treeviewOpened',
-      'treeviewSelected',
+      'sidebar',
+      'sidebarOpened',
+      'sidebarSelected',
       'headerTab',
       'headerTabSelected',
       'tableItems',
@@ -239,10 +239,10 @@ RETURN (customerLevel);
           // Hide Dialog
           this.dialog = false
           // Select new created proceure
-          this.treeviewSelected = { id: 'function|' + functionName, name: functionName, type: 'Function' }
-          this.treeview = ['function|' + functionName]
-          // Open treeview parent
-          this.treeviewOpened = ['functions']
+          this.sidebarSelected = { id: 'function|' + functionName, name: functionName, type: 'Function' }
+          this.sidebar = ['function|' + functionName]
+          // Open sidebar parent
+          this.sidebarOpened = ['functions']
           // Change view to Info
           this.headerTab = 3
           this.headerTabSelected = 'info_function'
@@ -268,8 +268,8 @@ RETURN (customerLevel);
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.treeviewSelected = { id: 'function|' + newName, name: newName, type: 'Function' }
-            this.treeview = ['function|' + newName]
+            this.sidebarSelected = { id: 'function|' + newName, name: newName, type: 'Function' }
+            this.sidebar = ['function|' + newName]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_function'
@@ -296,8 +296,8 @@ RETURN (customerLevel);
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.treeviewSelected = { id: 'function|' + newName, name: newName, type: 'Function' }
-            this.treeview = ['function|' + newName]
+            this.sidebarSelected = { id: 'function|' + newName, name: newName, type: 'Function' }
+            this.sidebar = ['function|' + newName]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_function'
@@ -318,8 +318,8 @@ RETURN (customerLevel);
           // Hide Dialog
           this.dialog = false
           // Unselect deleted view
-          this.treeviewSelected = {}
-          this.treeview = []
+          this.sidebarSelected = {}
+          this.sidebar = []
           // Change view to Client
           this.headerTab = 0
           this.headerTabSelected = 'client'

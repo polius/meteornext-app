@@ -186,9 +186,9 @@ export default {
   computed: {
     ...mapFields([
       'database',
-      'treeview',
-      'treeviewOpened',
-      'treeviewSelected',
+      'sidebar',
+      'sidebarOpened',
+      'sidebarSelected',
       'headerTab',
       'headerTabSelected',
       'tableItems',
@@ -354,10 +354,10 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select new created proceure
-          this.treeviewSelected = { id: 'event|' + eventName, name: eventName, type: 'Event' }
-          this.treeview = ['event|' + eventName]
-          // Open treeview parent
-          this.treeviewOpened = ['events']
+          this.sidebarSelected = { id: 'event|' + eventName, name: eventName, type: 'Event' }
+          this.sidebar = ['event|' + eventName]
+          // Open sidebar parent
+          this.sidebarOpened = ['events']
           // Change view to Info
           this.headerTab = 3
           this.headerTabSelected = 'info_event'
@@ -383,8 +383,8 @@ export default {
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.treeviewSelected = { id: 'event|' + newName, name: newName, type: 'Event' }
-            this.treeview = ['event|' + newName]
+            this.sidebarSelected = { id: 'event|' + newName, name: newName, type: 'Event' }
+            this.sidebar = ['event|' + newName]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_event'
@@ -411,8 +411,8 @@ export default {
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.treeviewSelected = { id: 'event|' + newName, name: newName, type: 'Event' }
-            this.treeview = ['event|' + newName]
+            this.sidebarSelected = { id: 'event|' + newName, name: newName, type: 'Event' }
+            this.sidebar = ['event|' + newName]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_event'
@@ -433,8 +433,8 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Unselect deleted view
-          this.treeviewSelected = {}
-          this.treeview = []
+          this.sidebarSelected = {}
+          this.sidebar = []
           // Change view to Client
           this.headerTab = 0
           this.headerTabSelected = 'client'

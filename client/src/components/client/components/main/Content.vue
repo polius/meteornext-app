@@ -172,7 +172,7 @@ export default {
         'headerTabSelected',
         'contentHeaders',
         'contentItems',
-        'treeviewSelected',
+        'sidebarSelected',
         'server',
         'database',
         'contentSearchFilter',
@@ -249,8 +249,8 @@ export default {
       const payload = {
         server: this.server.id,
         database: this.database,
-        table: this.treeviewSelected['name'],
-        queries: ['SELECT * FROM ' + this.treeviewSelected['name'] + ' LIMIT 1000;' ]
+        table: this.sidebarSelected['name'],
+        queries: ['SELECT * FROM ' + this.sidebarSelected['name'] + ' LIMIT 1000;' ]
       }
       axios.post('/client/execute', payload)
         .then((response) => {
@@ -356,7 +356,7 @@ export default {
             if (value == null) where.push(key + ' IS NULL')
             else where.push(key + " = " + JSON.stringify(value))
           }
-          queries.push('DELETE FROM ' + this.treeviewSelected['name'] + ' WHERE ' + where.join(' AND ') + ' LIMIT 1;')
+          queries.push('DELETE FROM ' + this.sidebarSelected['name'] + ' WHERE ' + where.join(' AND ') + ' LIMIT 1;')
         }
       }
       else {
@@ -368,7 +368,7 @@ export default {
           }
           pks.push('(' + pk.join(' AND ') + ')')
         }
-        queries = ['DELETE FROM ' + this.treeviewSelected['name'] + ' WHERE ' + pks.join(' OR ') + ';']
+        queries = ['DELETE FROM ' + this.sidebarSelected['name'] + ' WHERE ' + pks.join(' OR ') + ';']
       }
       // Show overlay
       this.gridApi.content.showLoadingOverlay()
@@ -450,7 +450,7 @@ export default {
           if (node.data[keys[i]] == null) valuesToUpdate.push('NULL')
           else valuesToUpdate.push(JSON.stringify(node.data[keys[i]]))
         }
-        query = "INSERT INTO " + this.treeviewSelected['name'] + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
+        query = "INSERT INTO " + this.sidebarSelected['name'] + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
       }
       // EDIT
       else if (mode == 'edit') {
@@ -469,11 +469,11 @@ export default {
             if (values[keys[i]]['old'] == null) where.push(keys[i] + ' IS NULL')
             else where.push(keys[i] + " = " + JSON.stringify(values[keys[i]]['old']))
           }
-          query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
+          query = "UPDATE " + this.sidebarSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
         }
         else {
           for (let i = 0; i < this.contentPks.length; ++i) where.push(this.contentPks[i] + " = " + JSON.stringify(values[this.contentPks[i]]['old']))
-          query = "UPDATE " + this.treeviewSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
+          query = "UPDATE " + this.sidebarSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
         }
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
@@ -581,8 +581,8 @@ export default {
       const payload = {
         server: this.server.id,
         database: this.database,
-        table: this.treeviewSelected['name'],
-        queries: ['SELECT * FROM ' + this.treeviewSelected['name'] + condition + ' LIMIT 1000;' ]
+        table: this.sidebarSelected['name'],
+        queries: ['SELECT * FROM ' + this.sidebarSelected['name'] + condition + ' LIMIT 1000;' ]
       }
       axios.post('/client/execute', payload)
         .then((response) => {
@@ -720,7 +720,7 @@ export default {
             if (rowNode.data[columns[i]] == null) data.push('NULL')
             else data.push(JSON.stringify(rowNode.data[columns[i]]))
           }
-          exportData += "INSERT INTO " + this.treeviewSelected['name'] + ' (' + columns.join() + ") VALUES (" + data.join() + "),\n"
+          exportData += "INSERT INTO " + this.sidebarSelected['name'] + ' (' + columns.join() + ") VALUES (" + data.join() + "),\n"
         })
         exportData = exportData.slice(0, -2) + ';'
         this.download('export.sql', exportData)

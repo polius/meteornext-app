@@ -103,7 +103,7 @@ export default {
     ...mapFields([
       'structureHeaders',
       'structureItems',
-      'treeviewSelected',
+      'sidebarSelected',
       'server',
       'bottomBar',
       'headerTabSelected',
@@ -242,7 +242,7 @@ export default {
     },
     dialogSubmit(event) {
       this.loading = true
-      let query = 'ALTER TABLE ' + this.treeviewSelected['name']
+      let query = 'ALTER TABLE ' + this.sidebarSelected['name']
 
       if (['new','edit'].includes(this.dialogOptions.mode)) {
         // Parse Form Fields

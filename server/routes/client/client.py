@@ -62,7 +62,11 @@ class Client:
             databases = conn.get_all_databases()
             engines = conn.get_engines()
             encodings = conn.get_encodings()
-            return jsonify({'databases': databases, 'engines': engines, 'encodings': encodings}), 200
+            defaults = {
+                "encoding": conn.get_default_encoding(),
+                "collation": conn.get_default_collation()
+            }
+            return jsonify({'databases': databases, 'engines': engines, 'encodings': encodings, 'defaults': defaults}), 200
 
         @client_blueprint.route('/client/objects', methods=['GET'])
         @jwt_required

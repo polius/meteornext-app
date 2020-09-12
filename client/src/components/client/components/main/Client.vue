@@ -112,6 +112,7 @@ export default {
       'clientQuery',
       'clientQueryExecuting',
       'database',
+      'sidebarSelected',
     ], { path: 'client/connection' }),
     ...mapFields([
       'editor',
@@ -512,7 +513,7 @@ export default {
             if (rowNode.data[columns[i]] == null) data.push('NULL')
             else data.push(JSON.stringify(rowNode.data[columns[i]]))
           }
-          exportData += "INSERT INTO " + this.treeviewSelected['name'] + ' (' + columns.join() + ") VALUES (" + data.join() + "),\n"
+          exportData += "INSERT INTO " + this.sidebarSelected['name'] + ' (' + columns.join() + ") VALUES (" + data.join() + "),\n"
         })
         exportData = exportData.slice(0, -2) + ';'
         this.download('export.sql', exportData)

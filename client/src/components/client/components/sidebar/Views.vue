@@ -75,9 +75,9 @@ export default {
   computed: {
     ...mapFields([
       'database',
-      'treeview',
-      'treeviewOpened',
-      'treeviewSelected',
+      'sidebar',
+      'sidebarOpened',
+      'sidebarSelected',
       'headerTab',
       'headerTabSelected',
     ], { path: 'client/connection' }),
@@ -221,10 +221,10 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select new created table
-          this.treeviewSelected = { id: 'view|' + viewName, name: viewName, type: 'View' }
-          this.treeview = ['view|' + viewName]
-          // Open treeview parent
-          this.treeviewOpened = ['views']
+          this.sidebarSelected = { id: 'view|' + viewName, name: viewName, type: 'View' }
+          this.sidebar = ['view|' + viewName]
+          // Open sidebar parent
+          this.sidebarOpened = ['views']
           // Change view to Content
           this.headerTab = 2
           this.headerTabSelected = 'content'
@@ -245,8 +245,8 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select renamed table
-          this.treeviewSelected = { id: 'view|' + newName, name: newName, type: 'View' }
-          this.treeview = ['view|' + newName]
+          this.sidebarSelected = { id: 'view|' + newName, name: newName, type: 'View' }
+          this.sidebar = ['view|' + newName]
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
@@ -268,8 +268,8 @@ export default {
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.treeviewSelected = { id: 'view|' + newName, name: newName, type: 'View' }
-            this.treeview = ['view|' + newName]
+            this.sidebarSelected = { id: 'view|' + newName, name: newName, type: 'View' }
+            this.sidebar = ['view|' + newName]
             // Change view to Content
             this.headerTab = 2
             this.headerTabSelected = 'content'
@@ -290,8 +290,8 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Unselect deleted view
-          this.treeviewSelected = {}
-          this.treeview = []
+          this.sidebarSelected = {}
+          this.sidebar = []
           // Change view to Client
           this.headerTab = 0
           this.headerTabSelected = 'client'
