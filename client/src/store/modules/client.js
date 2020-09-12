@@ -19,13 +19,14 @@ const connection = {
   tableItems: [],
   table: '',
 
-  // Treeview
-  treeview: [],
-  treeviewItems: [],
-  treeviewSelected: {},
-  treeviewOpened: [],
-  treeviewMode: 'servers',
-  treeviewSearch: '',
+  // Sidebar
+  sidebar: [],
+  sidebarItems: [],
+  sidebarSelected: {},
+  sidebarOpened: [],
+  sidebarMode: 'servers',
+  sidebarSearch: '',
+  sidebarLoading: true,
 
   // Client
   clientHeaders: [],
