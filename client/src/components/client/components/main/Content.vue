@@ -169,10 +169,10 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+        'headerTabSelected',
         'contentHeaders',
         'contentItems',
         'treeviewSelected',
-        'structureHeaders',
         'server',
         'database',
         'contentSearchFilter',
@@ -190,6 +190,15 @@ export default {
   },
   mounted () {
     EventBus.$on('GET_CONTENT', this.getContent);
+  },
+  watch: {
+    headerTabSelected(val) {
+      if (val == 'content') {
+        this.$nextTick(() => {
+          if (this.gridApi.content != null) this.resizeTable()
+        })
+      }
+    },
   },
   methods: {
    onGridReady(params) {

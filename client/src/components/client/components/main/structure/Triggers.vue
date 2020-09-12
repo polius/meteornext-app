@@ -4,7 +4,7 @@
     <!-- Triggers -->
     <!--------------->
     <div style="height:calc(100% - 84px)">
-      <ag-grid-vue ref="agGridStructureTriggers" @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.triggers" :rowData="structureItems.triggers"></ag-grid-vue>
+      <ag-grid-vue ref="agGridStructureTriggers" @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-clicked="onCellClicked" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.triggers" :rowData="structureItems.triggers"></ag-grid-vue>
     </div>
     <!---------------->
     <!-- BOTTOM BAR -->
@@ -14,7 +14,7 @@
         <v-col cols="auto">
           <v-btn @click="addTrigger" text small title="New Trigger" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-          <v-btn :disabled="structureItems.triggers.length == 0" @click="removeTrigger" text small title="Remove Trigger" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+          <v-btn :disabled="!selectedRows" @click="removeTrigger" text small title="Remove Trigger" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
           <v-btn @click="refreshTriggers" text small title="Refresh Triggers" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
@@ -95,7 +95,9 @@ export default {
       // Dialog
       dialog: false,
       dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
-      dialogEditor: null
+      dialogEditor: null,
+      // AG Grid
+      selectedRows: false,
     }
   },
   components: { AgGridVue },
@@ -105,6 +107,7 @@ export default {
       'structureItems',
       'treeviewSelected',
       'bottomBar',
+      'headerTabSelected',
       'tabStructureSelected',
     ], { path: 'client/connection' }),
     ...mapFields([
@@ -120,10 +123,20 @@ export default {
         if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
       })
     },
+    headerTabSelected(val) {
+      if (val == 'structure') {
+        this.$nextTick(() => {
+          if (this.gridApi.structure.triggers != null) this.resizeTable()
+        })
+      }
+    },
     tabStructureSelected(val) {
-      this.$nextTick(() => {
-        if (val == 'triggers') this.resizeTable()
-      })
+      if (val == 'triggers') {
+        this.$nextTick(() => { this.resizeTable() })
+      }
+    },
+    "structureItems.triggers" () {
+      this.selectedRows = false
     }
   },
   methods: {
@@ -173,6 +186,7 @@ export default {
     onGridClick(event) {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.structure.triggers.deselectAll()
+        this.selectedRows = false
       }
     },
     resizeTable() {
@@ -203,6 +217,9 @@ export default {
             }, 200);
         }, 200);
       }
+    },
+    onCellClicked() {
+      this.selectedRows = this.gridApi.structure.triggers.getSelectedRows().length != 0
     },
     addTrigger() {
       this.dialogOptions = {

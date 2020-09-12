@@ -104,6 +104,7 @@ export default {
   },
   computed: {
     ...mapFields([
+      'headerTabSelected',
       'clientHeaders',
       'clientItems',
       'bottomBar',
@@ -119,6 +120,15 @@ export default {
       'gridApi',
       'columnApi',
     ], { path: 'client/components' }),
+  },
+  watch: {
+    headerTabSelected(val) {
+      if (val == 'client') {
+        this.$nextTick(() => {
+          if (this.gridApi.client != null) this.resizeTable()
+        })
+      }
+    },
   },
   methods: {
    onGridReady(params) {

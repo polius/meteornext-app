@@ -4,7 +4,7 @@
     <!-- FKs -->
     <!--------->
     <div style="height:calc(100% - 84px)">
-      <ag-grid-vue ref="agGridStructureFKs" @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.fks" :rowData="structureItems.fks"></ag-grid-vue>
+      <ag-grid-vue ref="agGridStructureFKs" @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-clicked="onCellClicked" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.fks" :rowData="structureItems.fks"></ag-grid-vue>
     </div>
     <!---------------->
     <!-- BOTTOM BAR -->
@@ -14,7 +14,7 @@
         <v-col cols="auto">
           <v-btn @click="addFK" text small title="New Foreign Key" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-          <v-btn :disabled="structureItems.fks.length == 0" @click="removeFK" text small title="Remove Foreign Key" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+          <v-btn :disabled="!selectedRows" @click="removeFK" text small title="Remove Foreign Key" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
           <v-btn @click="refreshFKs" text small title="Refresh Foreign Keys" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
@@ -92,6 +92,8 @@ export default {
       // Dialog
       dialog: false,
       dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
+      // AG Grid
+      selectedRows: false,
     }
   },
   components: { AgGridVue },
@@ -104,6 +106,7 @@ export default {
       'database',
       'tableItems',
       'bottomBar',
+      'headerTabSelected',
       'tabStructureSelected',
     ], { path: 'client/connection' }),
     ...mapFields([
@@ -119,14 +122,21 @@ export default {
       })
       if (this.dialogOptions.item.column_items.length == 0) this.getColumns(this.treeviewSelected['name'])
     },
+    headerTabSelected(val) {
+      if (val == 'structure') {
+        this.$nextTick(() => {
+          if (this.gridApi.structure.fks != null) this.resizeTable()
+        })
+      }
+    },
     tabStructureSelected(val) {
-      this.$nextTick(() => {
-        if (val == 'fks') this.resizeTable()
-      })
+      if (val == 'fks') {
+        this.$nextTick(() => { this.resizeTable() })
+      }
+    },
+    "structureItems.fks" () {
+      this.selectedRows = false
     }
-  },
-  created() {
-    
   },
   methods: {
     onGridReady(params) {
@@ -141,6 +151,7 @@ export default {
     onGridClick(event) {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.structure.fks.deselectAll()
+        this.selectedRows = false
       }
     },
     resizeTable() {
@@ -171,6 +182,9 @@ export default {
             }, 200);
         }, 200);
       }
+    },
+    onCellClicked() {
+      this.selectedRows = this.gridApi.structure.fks.getSelectedRows().length != 0
     },
     addFK() {
       this.dialogOptions = {

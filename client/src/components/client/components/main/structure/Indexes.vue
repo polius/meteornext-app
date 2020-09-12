@@ -4,7 +4,7 @@
     <!-- INDEXES -->
     <!------------->
     <div style="height:calc(100% - 84px)">
-      <ag-grid-vue ref="agGridStructureIndexes" @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.indexes" :rowData="structureItems.indexes"></ag-grid-vue>
+      <ag-grid-vue ref="agGridStructureIndexes" @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-clicked="onCellClicked" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.indexes" :rowData="structureItems.indexes"></ag-grid-vue>
     </div>
     <!---------------->
     <!-- BOTTOM BAR -->
@@ -14,7 +14,7 @@
         <v-col cols="auto">
           <v-btn @click="addIndex" text small title="New Index" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-          <v-btn :disabled="structureItems.indexes.length == 0" @click="removeIndex" text small title="Remove Index" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+          <v-btn :disabled="!selectedRows" @click="removeIndex" text small title="Remove Index" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
           <v-btn @click="refreshIndexes" text small title="Refresh Indexes" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
@@ -86,7 +86,9 @@ export default {
       loading: false,
       // Dialog
       dialog: false,
-      dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' }
+      dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
+      // AG Grid
+      selectedRows: false,
     }
   },
   components: { AgGridVue },
@@ -97,6 +99,7 @@ export default {
       'treeviewSelected',
       'server',
       'bottomBar',
+      'headerTabSelected',
       'tabStructureSelected',
     ], { path: 'client/connection' }),
     ...mapFields([
@@ -111,10 +114,20 @@ export default {
         if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
       })
     },
+    headerTabSelected(val) {
+      if (val == 'structure') {
+        this.$nextTick(() => {
+          if (this.gridApi.structure.indexes != null) this.resizeTable()
+        })
+      }
+    },
     tabStructureSelected(val) {
-      this.$nextTick(() => {
-        if (val == 'indexes') this.resizeTable()
-      })
+      if (val == 'indexes') {
+        this.$nextTick(() => { this.resizeTable() })
+      }
+    },
+    "structureItems.indexes" () {
+      this.selectedRows = false
     }
   },
   methods: {
@@ -130,6 +143,7 @@ export default {
     onGridClick(event) {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.structure.indexes.deselectAll()
+        this.selectedRows = false
       }
     },
     resizeTable() {
@@ -160,6 +174,9 @@ export default {
             }, 200);
         }, 200);
       }
+    },
+    onCellClicked() {
+      this.selectedRows = this.gridApi.structure.indexes.getSelectedRows().length != 0
     },
     addIndex() {
       this.dialogOptions = {
