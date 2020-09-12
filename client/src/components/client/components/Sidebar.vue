@@ -1,22 +1,22 @@
 <template>
   <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
     <div style="height:calc(100% - 36px)">
-      <v-select :disabled="loading || databaseItems.length == 0" v-model="database" @change="databaseChanged" solo :items="databaseItems" label="Database" hide-details background-color="#303030" height="48px" style="padding:10px;"></v-select>
-      <div v-if="treeviewMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (treeviewMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="loading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
+      <v-select :disabled="sidebarLoading || databaseItems.length == 0" v-model="database" @change="databaseChanged" solo :items="databaseItems" label="Database" hide-details background-color="#303030" height="48px" style="padding:10px;"></v-select>
+      <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
-      <div v-if="treeviewMode == 'servers' || database.length > 0" style="height:100%">
-        <v-treeview :active.sync="treeview" item-key="id" :open.sync="treeviewOpened" :items="treeviewItems" :search="treeviewSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
+      <div v-if="sidebarMode == 'servers' || database.length > 0" style="height:100%">
+        <v-treeview :active.sync="sidebar" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :search="sidebarSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
           <template v-slot:label="{item, open}">
-            <v-btn text @click="treeviewClicked(item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
+            <v-btn text @click="sidebarClicked(item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
               <v-icon v-if="!item.type" small style="padding:10px;">
                 {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
               </v-icon>
-              <v-icon v-else small :title="item.type" :color="treeviewColor[item.type]" style="padding:10px;">
-                {{ treeviewImg[item.type] }}
+              <v-icon v-else small :title="item.type" :color="sidebarColor[item.type]" style="padding:10px;">
+                {{ sidebarImg[item.type] }}
               </v-icon>
               {{item.name}}
               <v-spacer></v-spacer>
-              <v-progress-circular v-if="loadingServer && treeviewMode == 'servers' && (item.id == treeview[0] || item.id == contextMenuItem.id)" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
+              <v-progress-circular v-if="loadingServer && sidebarMode == 'servers' && (item.id == sidebar[0] || item.id == contextMenuItem.id)" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
             </v-btn>
           </template>
         </v-treeview>
@@ -32,31 +32,8 @@
             </v-list-item-group>
           </v-list>
         </v-menu>
-        <v-text-field v-if="treeviewItems.length > 0" :disabled="treeviewMode == 'objects' && database.length == 0" v-model="treeviewSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
+        <v-text-field v-if="sidebarItems.length > 0" :disabled="sidebarMode == 'objects' && database.length == 0" v-model="sidebarSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
       </div>
-    </div>
-    <!--------------------->
-    <!-- LEFT BOTTOM BAR -->
-    <!--------------------->
-    <!-- SERVERS -->
-    <div v-if="treeviewMode == 'servers'" style="height:35px; border-top:2px solid #2c2c2c;">
-      <v-btn text small title="Refresh Connections" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
-      <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
-      <v-btn text small title="New Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
-      <v-btn text small title="Delete Connection" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
-      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-    </div>
-    <!-- OBJECTS -->
-    <div v-else-if="treeviewMode == 'objects'" style="height:35px; border-top:2px solid #2c2c2c;">
-      <v-btn :loading="loading" :disabled="loading" @click="refreshObjects" text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
-      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn :disabled="loading" text small title="Create Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
-      <v-btn :disabled="loading" text small title="Drop Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
-      <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn v-if="database.length > 0" :disabled="loading" text small title="Import SQL" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-up</v-icon></v-btn>
-      <v-btn v-if="database.length > 0" :disabled="loading" text small title="Export Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-down</v-icon></v-btn>
-      <span v-if="database.length > 0" :disabled="loading" style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn v-if="database.length > 0" :disabled="loading" text small title="Database Settings" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-cog</v-icon></v-btn>
     </div>
     <!---------------------------->
     <!-- CONTEXT MENU - DIALOGs -->
@@ -68,6 +45,10 @@
     <Procedures :contextMenuItem="contextMenuItem" />
     <Functions :contextMenuItem="contextMenuItem" />
     <Events :contextMenuItem="contextMenuItem" />
+    <!--------------------->
+    <!-- LEFT BOTTOM BAR -->
+    <!--------------------->
+    <BottomBar />
     <!------------>
     <!-- DIALOG -->
     <!------------>
@@ -123,16 +104,17 @@ import Procedures from './sidebar/Procedures'
 import Functions from './sidebar/Functions'
 import Events from './sidebar/Events'
 
+import BottomBar from './BottomBar'
+
 export default {
   data() {
     return {
       // Loading
-      loading: true,
       loadingServer: false,
 
-      // Treeview
-      treeviewClick: undefined,
-      treeviewImg: {
+      // Sidebar
+      sidebarClick: undefined,
+      sidebarImg: {
         MySQL: "fas fa-server",
         PostgreSQL: "fas fa-server",
         Table: "fas fa-th",
@@ -142,7 +124,7 @@ export default {
         Procedure: "fas fa-compress",
         Event: "far fa-clock"
       },
-      treeviewColor: {
+      sidebarColor: {
         MySQL: "#F29111",
         PostgreSQL: "",
         Table: "#ec644b",
@@ -152,7 +134,7 @@ export default {
         Procedure: "#bf55ec",
         Event: "#bdc3c7"
       },
-      // Treeview - Context Menu
+      // Sidebar - Context Menu
       contextMenu: false,
       contextMenuModel: null,
       contextMenuItems: [],
@@ -164,7 +146,7 @@ export default {
       dialogText: '',
     }
   },
-  components: { Connections, Tables, Views, Triggers, Procedures, Functions, Events },
+  components: { Connections, Tables, Views, Triggers, Procedures, Functions, Events, BottomBar },
   computed: {
     ...mapFields([
       'servers',
@@ -178,12 +160,13 @@ export default {
       'database',
       'databaseItems',
       'tableItems',
-      'treeviewItems',
-      'treeview',
-      'treeviewSearch',
-      'treeviewMode',
-      'treeviewOpened',
-      'treeviewSelected',
+      'sidebarItems',
+      'sidebar',
+      'sidebarSearch',
+      'sidebarMode',
+      'sidebarOpened',
+      'sidebarSelected',
+      'sidebarLoading',
       'server',
       'headerTab',
       'headerTabSelected',
@@ -198,30 +181,31 @@ export default {
   mounted() {
     EventBus.$on('EXECUTE_SIDEBAR', this.execute);
     EventBus.$on('GET_SIDEBAR_OBJECTS', this.getObjects);
+    EventBus.$on('REFRESH_SIDEBAR_OBJECTS', this.refreshObjects);
   },
   methods: {
-    treeviewClicked(item) {
+    sidebarClicked(item) {
       if (this.loadingServer) return
       return new Promise ((resolve) => {
-        if (this.treeviewClick) {
-          clearTimeout(this.treeviewClick)
+        if (this.sidebarClick) {
+          clearTimeout(this.sidebarClick)
           resolve('double')
         }
-        this.treeviewClick = setTimeout(() => {
-          this.treeviewClick = undefined          
+        this.sidebarClick = setTimeout(() => {
+          this.sidebarClick = undefined          
           resolve('single')
         }, 200)
       }).then((data) => {
         // Single Click
         if (data == 'single' && item.children === undefined) {
-          if (this.treeviewSelected == item) {
-            this.treeviewSelected = {}
+          if (this.sidebarSelected == item) {
+            this.sidebarSelected = {}
             this.headerTab = 0
             this.headerTabSelected = 'client'
             this.editor.focus()
           }
           else {
-            this.treeviewSelected = {...item}
+            this.sidebarSelected = {...item}
             if (this.headerTabSelected == 'structure') EventBus.$emit('GET_STRUCTURE')
             else if (this.headerTabSelected == 'content') EventBus.$emit('GET_CONTENT')
             else if (this.headerTabSelected.startsWith('info_')) {
@@ -233,12 +217,12 @@ export default {
         }
         // Double Click
         else if (data == 'double' && item.children === undefined) {
-          this.treeview = [item]
-          this.treeviewSelected = {...item}
-          if (this.treeviewMode == 'servers') this.getDatabases(item)
-          else if (this.treeviewMode == 'objects') {
+          this.sidebar = [item]
+          this.sidebarSelected = {...item}
+          if (this.sidebarMode == 'servers') this.getDatabases(item)
+          else if (this.sidebarMode == 'objects') {
             if (['Table','View'].includes(item.type) && item.children === undefined) {
-              this.treeview = []
+              this.sidebar = []
               this.headerTab = 2
               this.headerTabSelected = 'content'
               EventBus.$emit('GET_CONTENT')
@@ -254,7 +238,7 @@ export default {
       })
     },
     getServers() {
-      this.loading = true
+      this.sidebarLoading = true
       axios.get('/client/servers')
         .then((response) => {
           this.parseServers(response.data.servers)
@@ -264,7 +248,7 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
         })
-        .finally(() => { this.loading = false })
+        .finally(() => { this.sidebarLoading = false })
     },
     parseServers(data) {
       var servers = []
@@ -280,7 +264,7 @@ export default {
         else servers.push({ id: 'r' + data[i]['region_id'], name: data[i]['region_name'], children: [{ id: data[i]['server_id'], name: data[i]['server_name'], type: data[i]['server_engine'], host: data[i]['server_hostname'] }] })
       }
       this.servers = servers.slice(0)
-      this.treeviewItems = servers.slice(0)
+      this.sidebarItems = servers.slice(0)
     },
     getDatabases(server) {
       this.loadingServer = true
@@ -302,9 +286,9 @@ export default {
       // Assign server
       this.server = server
 
-      // Init treeview
-      this.treeviewMode = 'objects'
-      this.treeviewSearch = ''
+      // Init sidebar
+      this.sidebarMode = 'objects'
+      this.sidebarSearch = ''
 
       // Build Databases
       this.databaseItems = []
@@ -330,16 +314,16 @@ export default {
       }
     },
     databaseChanged(database) {
-      // Clear Treeview
-      this.treeview = []
-      this.treeviewSelected = {}
-      this.treeviewOpened = []
-      this.treeviewItems = []
+      // Clear Sidebar
+      this.sidebar = []
+      this.sidebarSelected = {}
+      this.sidebarOpened = []
+      this.sidebarItems = []
       // Get Objects
       new Promise((resolve, reject) => { this.getObjects(database, resolve, reject) })
     },
     getObjects(database, resolve, reject) {
-      this.loading = true
+      this.sidebarLoading = true
       // Retrieve Tables
       const payload = {
         server: this.server.id,
@@ -357,7 +341,7 @@ export default {
           else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
           reject(error)
         })
-        .finally(() => { this.loading = false })
+        .finally(() => { this.sidebarLoading = false })
     },
     parseObjects(data) {
       // Build routines
@@ -409,7 +393,7 @@ export default {
       for (let i = 0; i < data.events.length; ++i) {
         objects[5]['children'].push({ id: 'event|' + data.events[i]['name'], ...data.events[i], type: 'Event' })
       }
-      this.treeviewItems = objects
+      this.sidebarItems = objects
 
       // Add table / view names to the editor autocompleter
       var completer = []
@@ -448,24 +432,24 @@ export default {
     },
     showContextMenu(e, item) {
       e.preventDefault()
-      this.treeviewClicked(item)
+      this.sidebarClicked(item)
       this.contextMenu = false
       this.contextMenuModel = null
       this.contextMenuX = e.clientX
       this.contextMenuY = e.clientY
-      this.treeview = [item.id]
-      this.treeviewSelected = {...item}
+      this.sidebar = [item.id]
+      this.sidebarSelected = {...item}
       this.buildContextMenu(item)
       this.$nextTick(() => { this.contextMenu = true; })
     },
     buildContextMenu(item) {
       this.contextMenuItem = item
       this.contextMenuItems = []
-      if (this.treeviewMode == 'servers') {
+      if (this.sidebarMode == 'servers') {
         if (item.children === undefined) this.contextMenuItems = ['Open Connection', '|', 'Delete Connection', 'Duplicate Connection']
         else this.contextMenuItems = ['New Connection', '|', 'New Group', 'Delete Group', 'Rename Group']
       }
-      else if (this.treeviewMode == 'objects') {
+      else if (this.sidebarMode == 'objects') {
         if (item.type == 'Table') {
           if (item.children === undefined) this.contextMenuItems = ['Create Table', '|', 'Rename Table', 'Duplicate Table', '|', 'Truncate Table', 'Delete Table', '|', 'Export', '|', 'Copy Table Syntax']
           else this.contextMenuItems = ['Create Table', '|', 'Show Table Objects']
@@ -493,11 +477,11 @@ export default {
       }
     },
     contextMenuClicked(item) {
-      if (this.treeviewMode == 'servers') {
+      if (this.sidebarMode == 'servers') {
         if (item == 'Open Connection') this.getDatabases(this.contextMenuItem)
         else EventBus.$emit('CLICK_CONTEXTMENU_CONNECTION', item)
       }
-      else if (this.treeviewMode == 'objects') {
+      else if (this.sidebarMode == 'objects') {
         if (this.contextMenuItem.type == 'Table') {
           if (item == 'Show Table Objects') this.showObjectsTab('tables')
           else EventBus.$emit('CLICK_CONTEXTMENU_TABLE', item)
