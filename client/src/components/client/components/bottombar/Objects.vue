@@ -29,16 +29,16 @@
             <v-layout wrap>
               <div v-if="dialogOptions.text.length > 0" class="text-h6" style="font-weight:400;"> {{ dialogOptions.title }}</div>
               <v-flex xs12>
-                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
+                <v-form @submit.prevent ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
                   <div v-if="dialogOptions.mode == 'createDatabase'">
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Database Name" autofocus required style="padding-top:0px;"></v-text-field>
                     <v-autocomplete @change="getCollations" v-model="dialogOptions.item.encoding" :items="encodings" :rules="[v => !!v || '']" label="Database Encoding" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                     <v-autocomplete :disabled="dialogOptions.item.collation.length == 0" :loading="loading" v-model="dialogOptions.item.collation" :items="collations" :rules="[v => !!v || '']" label="Database Collation" auto-select-first required hide-details style="padding-top:0px;"></v-autocomplete>
                   </div>
-                  <div v-if="dialogOptions.mode == 'dropDatabase'">
+                  <div v-else-if="dialogOptions.mode == 'dropDatabase'">
                     <div class="body-1" style="margin-top:15px; font-weight:300; font-size:1.05rem!important;">Type the database name to confirm.</div>
-                    <v-text-field v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Database Name" autofocus required hide-details style="margin-top:15px;"></v-text-field>
+                    <v-text-field @keyup.enter="database == dialogOptions.item.name ? dialogSubmit() : {}" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Database Name" autofocus required hide-details style="margin-top:15px;"></v-text-field>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
@@ -96,7 +96,9 @@ export default {
   },
   methods: {
     refreshObjects() {
-      EventBus.$emit('REFRESH_SIDEBAR_OBJECTS')
+      new Promise((resolve, reject) => { 
+        EventBus.$emit('REFRESH_SIDEBAR_OBJECTS', resolve, reject)
+      })
     },
     createDatabase() {
       // Build selectors
@@ -128,14 +130,14 @@ export default {
     },
     dialogSubmit() {
       // Check if all fields are filled
-      //if (!this.$refs.dialogForm.validate()) {
-        // EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
-        // this.loading = false
-        // return
-      //}
-      // this.loading = true
-      // if (this.dialogOptions.mode == 'createDatabase') this.createDatabaseSubmit()
-      // else if (this.dialogOptions.mode == 'dropDatabase') this.dropDatabaseSubmit()
+      if (!this.$refs.dialogForm.validate()) {
+        EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
+        return
+      }
+      this.loading = true
+      if (this.dialogOptions.mode == 'createDatabase') this.createDatabaseSubmit()
+      else if (this.dialogOptions.mode == 'dropDatabase') this.dropDatabaseSubmit()
     },
     createDatabaseSubmit() {
       let databaseName = this.dialogOptions.item.name
@@ -145,10 +147,10 @@ export default {
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then(() => { 
-        return new Promise((resolve, reject) => { 
+        return new Promise((resolve, reject) => {
           // Change current database
           this.database = databaseName
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('REFRESH_SIDEBAR_OBJECTS', resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -159,20 +161,20 @@ export default {
       }).catch(() => {}).finally(() => { this.loading = false })
     },
     dropDatabaseSubmit() {
-      //let databaseName = this.dialogOptions.item.name
-      // let query = "DROP DATABASE " + databaseName + ';'
-      // new Promise((resolve, reject) => { 
-      //   EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
-      // }).then(() => { 
-      //   // Change current database
-      //   this.databaseItems = this.databaseItems.filter(item => item !== databaseName)
-      //   this.database = ''
-      //   // Hide Dialog
-      //   this.dialog = false
-      //   // Change view to Client
-      //   this.headerTab = 0
-      //   this.headerTabSelected = 'client'
-      // }).catch(() => {}).finally(() => { this.loading = false })
+      let databaseName = this.dialogOptions.item.name
+      let query = "DROP DATABASE " + databaseName + ';'
+      new Promise((resolve, reject) => { 
+        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+      }).then(() => { 
+        // Change current database
+        this.databaseItems = this.databaseItems.filter(item => item.text !== databaseName)
+        this.database = ''
+        // Hide Dialog
+        this.dialog = false
+        // Change view to Client
+        this.headerTab = 0
+        this.headerTabSelected = 'client'
+      }).catch(() => {}).finally(() => { this.loading = false })
     },
     buildSelectors() {
       // Build Encodings
