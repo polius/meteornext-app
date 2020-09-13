@@ -427,9 +427,11 @@ export default {
       this.editor.completers.splice(index+1, 1)
       this.editorCompleters.splice(index, 1)
     },
-    refreshObjects() {
+    refreshObjects(resolve, reject) {
       this.getDatabases(this.server)
-      if (this.database.length > 0) new Promise((resolve, reject) => { this.getObjects(this.database, resolve, reject) })
+      if (this.database.length > 0) {
+        this.getObjects(this.database, resolve, reject)
+      }
     },
     showContextMenu(e, item) {
       e.preventDefault()
