@@ -84,6 +84,8 @@ export default {
       'database',
       'databaseItems',
       'sidebarLoading',
+      'headerTab',
+      'headerTabSelected',
     ], { path: 'client/connection' }),
   },
   watch: {
