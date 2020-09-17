@@ -9,7 +9,7 @@
       <v-btn :disabled="sidebarLoading" @click="createDatabase" text small title="Create Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
       <v-btn :disabled="sidebarLoading || database.length == 0" @click="dropDatabase" text small title="Drop Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn v-if="database.length > 0" :disabled="sidebarLoading" text small title="Import SQL" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-up</v-icon></v-btn>
+      <v-btn v-if="database.length > 0" :disabled="sidebarLoading" @click="importSQL" text small title="Import SQL" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-up</v-icon></v-btn>
       <v-btn v-if="database.length > 0" :disabled="sidebarLoading" text small title="Export Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-down</v-icon></v-btn>
       <span v-if="database.length > 0" :disabled="sidebarLoading" style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
       <v-btn v-if="database.length > 0" :disabled="sidebarLoading" text small title="Database Settings" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-cog</v-icon></v-btn>
@@ -39,6 +39,15 @@
                   <div v-else-if="dialogOptions.mode == 'dropDatabase'">
                     <div class="body-1" style="margin-top:15px; font-weight:300; font-size:1.05rem!important;">Type the database name to confirm.</div>
                     <v-text-field @keyup.enter="database == dialogOptions.item.name ? dialogSubmit() : {}" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Database Name" autofocus required hide-details style="margin-top:15px;"></v-text-field>
+                  </div>
+                  <div v-else-if="dialogOptions.mode == 'importSQL'">
+                    <!-- <div class="body-1" style="margin-top:15px; font-weight:300; font-size:1.05rem!important;">Type the database name to confirm.</div> -->
+                    <v-file-input @change="importSQLSelected" show-size accept=".sql" label="File input" style="padding:0px"></v-file-input>
+                    <v-progress-linear v-model="dialogOptions.item.progress" rounded color="light-blue" height="25">
+                      <template v-slot="{ value }">
+                        <strong>{{ Math.ceil(value) }}%</strong>
+                      </template>
+                    </v-progress-linear>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
@@ -130,6 +139,18 @@ export default {
       this.dialogOptions = dialogOptions
       this.dialog = true
     },
+    importSQL() {
+      let dialogOptions = { 
+        mode: 'importSQL', 
+        title: 'Import SQL', 
+        text: "",
+        item: { file: '', progress: 0 }, 
+        submit: 'Import',
+        cancel: 'Cancel'
+      }
+      this.dialogOptions = dialogOptions
+      this.dialog = true
+    },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
@@ -140,12 +161,14 @@ export default {
       this.loading = true
       if (this.dialogOptions.mode == 'createDatabase') this.createDatabaseSubmit()
       else if (this.dialogOptions.mode == 'dropDatabase') this.dropDatabaseSubmit()
+      else if (this.dialogOptions.mode == 'importSQL') this.importSQLSubmit()
     },
     createDatabaseSubmit() {
       let databaseName = this.dialogOptions.item.name
       let databaseEncoding = this.dialogOptions.item.encoding 
       let databaseCollation = this.dialogOptions.item.collation
       let query = "CREATE DATABASE " + databaseName + " CHARACTER SET " + databaseEncoding + " COLLATE " + databaseCollation + ';'
+      console.log(query)
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then(() => { 
@@ -165,6 +188,7 @@ export default {
     dropDatabaseSubmit() {
       let databaseName = this.dialogOptions.item.name
       let query = "DROP DATABASE " + databaseName + ';'
+      console.log(query)
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then(() => { 
@@ -217,6 +241,39 @@ export default {
         this.collations = [{ text: 'Default (' + def.collation + ')', value: def.collation }, { divider: true }, ...JSON.parse(data)]
       }
       this.dialogOptions.item.collation = this.collations[0].value
+    },
+    importSQLSelected(file) {
+      this.dialogOptions.item.file = file
+      this.dialogOptions.item.progress = 0
+    },
+    importSQLSubmit() {
+       if (!this.dialogOptions.item.file) {
+        EventBus.$emit('SEND_NOTIFICATION', 'Please select a file', 'info')
+        this.loading = false
+        return
+      }
+      const options = {
+        onUploadProgress: (progressEvent) => {
+          var percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          this.dialogOptions.item.progress = percentCompleted
+        }
+      }
+      const data = new FormData();
+      data.append('server', this.server.id)
+      data.append('database', this.database)
+      data.append('file', this.dialogOptions.item.file)
+      axios.post('client/import', data, options)
+        .then((response) => {
+          EventBus.$emit('SEND_NOTIFICATION', 'File successfully uploaded', 'success')
+          this.dialog = false
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loading = false
+        })
     },
   }
 }
