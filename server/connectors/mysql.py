@@ -8,6 +8,7 @@ import sshtunnel
 from io import StringIO
 from collections import OrderedDict
 from pymysql.cursors import DictCursorMixin, Cursor
+from pymysql.constants import CLIENT
 
 class OrderedDictCursor(DictCursorMixin, Cursor):
     dict_type = OrderedDict
@@ -41,7 +42,7 @@ class MySQL:
                 hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
                 port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-                self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False)
+                self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, client_flag=CLIENT.MULTI_STATEMENTS)
                 return
 
             except Exception as e:

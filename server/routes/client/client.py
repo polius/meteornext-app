@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import os
 import json
 import utils
 import datetime
@@ -297,6 +298,50 @@ class Client:
             collations = conn.get_collations(encoding=request.args['encoding'])
             return jsonify({'collations': self.__json(collations)}), 200
 
+        @client_blueprint.route('/client/import', methods=['POST'])
+        @jwt_required
+        def client_import_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Server Credentials + Connection
+            cred = self._client.get_credentials(user['group_id'], request.form['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = connectors.connector.Connector(cred)
+            
+            # Get uploaded file
+            if 'file' not in request.files or request.files['file'].filename == '':
+                return jsonify({"message": 'No file was uploaded'}), 400
+
+            if not self.__allowed_file(request.files['file'].filename):
+                return jsonify({"message": 'The file extension is not valid'}), 400
+
+            if request.content_length > 10 * 1024 * 1024:
+                return jsonify({"message": 'The upload file exceeds the maximum allowed size (10MB)'}), 400
+
+            # Execute uploaded file
+            try:
+                conn.execute(request.files['file'].read(), database=request.form['database'])
+                conn.commit()
+                return jsonify({'data': 'OK'}), 200
+            except Exception as e:
+                print(str(e))
+                conn.rollback()
+                return jsonify({'message': str(e)}), 200
+
+            # command = ['mysql', '-u%s' % db_settings['USER'], '-p%s' % db_settings['PASSWORD'], db_settings['NAME']]
+            # proc = subprocess.Popen(command, stdin = uploaded_file.stream)
+            # stdout, stderr = proc.communicate()
+
         return client_blueprint
 
     ####################
@@ -308,3 +353,6 @@ class Client:
     def __json_parser(self, o):
         if isinstance(o, datetime.datetime):
             return o.__str__()
+
+    def __allowed_file(self, filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'sql'}
