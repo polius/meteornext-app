@@ -332,11 +332,10 @@ class Client:
             try:
                 conn.execute(request.files['file'].read(), database=request.form['database'])
                 conn.commit()
-                return jsonify({'data': 'OK'}), 200
+                return jsonify({'message': 'File successfully uploaded'}), 200
             except Exception as e:
-                print(str(e))
                 conn.rollback()
-                return jsonify({'message': str(e)}), 200
+                return jsonify({'message': str(e)}), 400
 
             # command = ['mysql', '-u%s' % db_settings['USER'], '-p%s' % db_settings['PASSWORD'], db_settings['NAME']]
             # proc = subprocess.Popen(command, stdin = uploaded_file.stream)
