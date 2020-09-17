@@ -41,13 +41,25 @@
                     <v-text-field @keyup.enter="database == dialogOptions.item.name ? dialogSubmit() : {}" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Database Name" autofocus required hide-details style="margin-top:15px;"></v-text-field>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'importSQL'">
-                    <!-- <div class="body-1" style="margin-top:15px; font-weight:300; font-size:1.05rem!important;">Type the database name to confirm.</div> -->
-                    <v-file-input @change="importSQLSelected" show-size accept=".sql" label="File input" style="padding:0px"></v-file-input>
-                    <v-progress-linear v-model="dialogOptions.item.progress" rounded color="light-blue" height="25">
-                      <template v-slot="{ value }">
-                        <strong>{{ Math.ceil(value) }}%</strong>
-                      </template>
-                    </v-progress-linear>
+                    <v-file-input v-model="dialogOptions.item.file" show-size accept=".sql" label="File input" hide-details style="padding:0px"></v-file-input>
+                    <div v-if="dialogOptions.item.start" style="margin-top:15px">
+                      <v-progress-linear :value="dialogOptions.item.progress" rounded color="primary" height="25">
+                        <template v-slot="{ value }">
+                          {{ 'Uploading: ' + Math.ceil(value) }}%
+                        </template>
+                      </v-progress-linear>
+                      <div class="body-1" style="margin-top:10px">
+                        <v-icon v-if="dialogOptions.item.step == 'success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px; padding-right:8px;">fas fa-check-circle</v-icon>
+                        <v-icon v-else-if="dialogOptions.item.step == 'fail'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:2px; padding-right:8px;">fas fa-times-circle</v-icon>
+                        <v-icon v-else title="Loading" small style="color:rgb(250, 130, 49); padding-bottom:2px; padding-right:8px;">fas fa-circle-notch</v-icon>
+                        <span>{{ dialogOptions.item.text }}</span>  
+                      </div>
+                      <v-card v-if="dialogOptions.item.error.length != 0" style="margin-top:10px">
+                        <v-card-text>
+                          <div class="body-1">{{ dialogOptions.item.error }}</div>
+                        </v-card-text>
+                      </v-card>
+                    </div>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
@@ -144,9 +156,9 @@ export default {
         mode: 'importSQL', 
         title: 'Import SQL', 
         text: "",
-        item: { file: '', progress: 0 }, 
+        item: { file: null, text: 'Uploading file...', step: 'upload', progress: 0, start: false, error: '' }, 
         submit: 'Import',
-        cancel: 'Cancel'
+        cancel: 'Close'
       }
       this.dialogOptions = dialogOptions
       this.dialog = true
@@ -168,7 +180,6 @@ export default {
       let databaseEncoding = this.dialogOptions.item.encoding 
       let databaseCollation = this.dialogOptions.item.collation
       let query = "CREATE DATABASE " + databaseName + " CHARACTER SET " + databaseEncoding + " COLLATE " + databaseCollation + ';'
-      console.log(query)
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then(() => { 
@@ -188,7 +199,6 @@ export default {
     dropDatabaseSubmit() {
       let databaseName = this.dialogOptions.item.name
       let query = "DROP DATABASE " + databaseName + ';'
-      console.log(query)
       new Promise((resolve, reject) => { 
         EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
       }).then(() => { 
@@ -242,10 +252,6 @@ export default {
       }
       this.dialogOptions.item.collation = this.collations[0].value
     },
-    importSQLSelected(file) {
-      this.dialogOptions.item.file = file
-      this.dialogOptions.item.progress = 0
-    },
     importSQLSubmit() {
        if (!this.dialogOptions.item.file) {
         EventBus.$emit('SEND_NOTIFICATION', 'Please select a file', 'info')
@@ -256,23 +262,43 @@ export default {
         onUploadProgress: (progressEvent) => {
           var percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
           this.dialogOptions.item.progress = percentCompleted
+          if (this.dialogOptions.item.progress == 100) {
+            this.dialogOptions.item.step = 'processing'
+            this.dialogOptions.item.text = 'Processing file... Please wait.'
+          }
         }
       }
       const data = new FormData();
       data.append('server', this.server.id)
       data.append('database', this.database)
       data.append('file', this.dialogOptions.item.file)
+      this.dialogOptions.item.start = true
       axios.post('client/import', data, options)
-        .then((response) => {
-          EventBus.$emit('SEND_NOTIFICATION', 'File successfully uploaded', 'success')
-          this.dialog = false
+        .then(() => {
+          return new Promise((resolve, reject) => { 
+            EventBus.$emit('REFRESH_SIDEBAR_OBJECTS', resolve, reject)
+          }).then(() => {
+            // Show success
+            this.dialogOptions.item.step = 'success'
+            this.dialogOptions.item.text = 'File successfully imported.'
+            // Disable loading
+            this.loading = false
+          })
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
-        })
-        .finally(() => {
-          this.loading = false
+          else {
+            return new Promise((resolve, reject) => { 
+              EventBus.$emit('REFRESH_SIDEBAR_OBJECTS', resolve, reject)
+            }).then(() => {
+              // Show error
+              this.dialogOptions.item.step = 'fail'
+              this.dialogOptions.item.text = 'An error occurred importing the file.'
+              this.dialogOptions.item.error = error.response.data.message
+              // Disable loading
+              this.loading = false
+            })
+          }
         })
     },
   }
