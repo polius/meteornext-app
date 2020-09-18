@@ -10,7 +10,7 @@
       <v-btn :disabled="sidebarLoading || database.length == 0" @click="dropDatabase" text small title="Drop Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
       <v-btn v-if="database.length > 0" :disabled="sidebarLoading" @click="importSQL" text small title="Import SQL" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-up</v-icon></v-btn>
-      <v-btn v-if="database.length > 0" :disabled="sidebarLoading" text small title="Export Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-down</v-icon></v-btn>
+      <v-btn v-if="database.length > 0" :disabled="sidebarLoading" @click="exportSQLSubmit" text small title="Export Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-down</v-icon></v-btn>
       <span v-if="database.length > 0" :disabled="sidebarLoading" style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
       <v-btn v-if="database.length > 0" :disabled="sidebarLoading" text small title="Database Settings" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-cog</v-icon></v-btn>
     </div>
@@ -49,10 +49,10 @@
                         </template>
                       </v-progress-linear>
                       <div class="body-1" style="margin-top:10px">
-                        <v-icon v-if="dialogOptions.item.step == 'success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px; padding-right:8px;">fas fa-check-circle</v-icon>
-                        <v-icon v-else-if="dialogOptions.item.step == 'fail'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:2px; padding-right:8px;">fas fa-times-circle</v-icon>
-                        <v-icon v-else title="Loading" small style="color:rgb(250, 130, 49); padding-bottom:2px; padding-right:8px;">fas fa-circle-notch</v-icon>
-                        <span>{{ dialogOptions.item.text }}</span>  
+                        <v-icon v-if="dialogOptions.item.step == 'success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px;">fas fa-check-circle</v-icon>
+                        <v-icon v-else-if="dialogOptions.item.step == 'fail'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
+                        <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
+                        <span style="margin-left:8px">{{ dialogOptions.item.text }}</span>  
                       </div>
                       <v-card v-if="dialogOptions.item.error.length != 0" style="margin-top:10px">
                         <v-card-text>
@@ -174,6 +174,7 @@ export default {
       if (this.dialogOptions.mode == 'createDatabase') this.createDatabaseSubmit()
       else if (this.dialogOptions.mode == 'dropDatabase') this.dropDatabaseSubmit()
       else if (this.dialogOptions.mode == 'importSQL') this.importSQLSubmit()
+      else if (this.dialogOptions.mode == 'exportSQL') this.exportSQLSubmit()
     },
     createDatabaseSubmit() {
       let databaseName = this.dialogOptions.item.name
@@ -301,6 +302,35 @@ export default {
           }
         })
     },
+    exportSQLSubmit() {
+      const fs = require('fs')
+      axios.get('client/export', { responseType: 'stream' })
+      .then((response) => {
+        response.data.pipe(fs.createWriteStream('export.sql'))
+      })
+
+      /*
+      const httpAdapter = require('axios/lib/adapters/http');
+      const fs = require('fs');
+      const INPUT = 'client/export';
+      const OUTPUT = 'output.sql';
+
+      if (fs.existsSync(OUTPUT)) fs.unlinkSync(OUTPUT)
+      const output = fs.createWriteStream(OUTPUT);
+
+      axios.get(INPUT, {responseType: 'stream', adapter: httpAdapter})
+      .then((response) => {
+          const stream = response.data;
+          stream.on('data', (chunk) => {
+            console.log(chunk)
+            output.write(new Buffer.from(chunk));
+          });
+          stream.on('end', () => {
+            output.end();
+          });
+      });
+      */
+    }
   }
 }
 </script>

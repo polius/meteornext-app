@@ -1,5 +1,9 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
+from flask import Response
+
+from datetime import datetime
+from time import sleep
 
 import os
 import json
@@ -340,6 +344,32 @@ class Client:
             # command = ['mysql', '-u%s' % db_settings['USER'], '-p%s' % db_settings['PASSWORD'], db_settings['NAME']]
             # proc = subprocess.Popen(command, stdin = uploaded_file.stream)
             # stdout, stderr = proc.communicate()
+
+        @client_blueprint.route('/client/export', methods=['GET'])
+        @jwt_required
+        def client_export_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Server Credentials + Connection
+            # cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            # if cred is None:
+            #     return jsonify({"message": 'This server does not exist'}), 400
+            # conn = connectors.connector.Connector(cred)
+
+            def streamer():
+                while True:
+                    yield datetime.now()
+                    sleep(1)
+            return Response(streamer())
 
         return client_blueprint
 
