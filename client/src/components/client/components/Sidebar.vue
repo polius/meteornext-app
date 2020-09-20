@@ -297,7 +297,7 @@ export default {
       }
 
       // Focus Editor
-      this.editor.focus()      
+      // this.editor.focus()
 
       // Add database names to the editor autocompleter
       var completer = []
@@ -321,7 +321,9 @@ export default {
       this.sidebarOpened = []
       this.sidebarItems = []
       // Get Objects
-      new Promise((resolve, reject) => { this.getObjects(database, resolve, reject) })
+      new Promise((resolve, reject) => { 
+        this.getObjects(database, resolve, reject)
+      }).finally(() => { this.editor.focus() })
     },
     getObjects(database, resolve, reject) {
       this.sidebarLoading = true
@@ -333,7 +335,6 @@ export default {
       axios.get('/client/objects', { params: payload })
         .then((response) => {
           this.parseObjects(response.data)
-          this.editor.focus()
           resolve()
         })
         .catch((error) => {

@@ -1,9 +1,8 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
-from flask import Response
+from flask import Response, stream_with_context
 
-from datetime import datetime
-from time import sleep
+import time
 
 import os
 import json
@@ -365,11 +364,11 @@ class Client:
             #     return jsonify({"message": 'This server does not exist'}), 400
             # conn = connectors.connector.Connector(cred)
 
-            def streamer():
-                while True:
-                    yield datetime.now()
-                    sleep(1)
-            return Response(streamer())
+
+            def generate():
+                for i in range(1000):
+                    yield 'hello'
+            return Response(stream_with_context(generate()))
 
         return client_blueprint
 
