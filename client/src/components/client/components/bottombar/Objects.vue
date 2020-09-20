@@ -6,331 +6,58 @@
     <div style="height:35px; border-top:2px solid #2c2c2c;">
       <v-btn :loading="sidebarLoading" :disabled="sidebarLoading" @click="refreshObjects" text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn :disabled="sidebarLoading" @click="createDatabase" text small title="Create Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
-      <v-btn :disabled="sidebarLoading || database.length == 0" @click="dropDatabase" text small title="Drop Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+      <v-btn :disabled="sidebarLoading" @click="bottomBarClick('create')" text small title="Create Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+      <v-btn :disabled="sidebarLoading || database.length == 0" @click="bottomBarClick('drop')" text small title="Drop Database" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn v-if="database.length > 0" :disabled="sidebarLoading" @click="importSQL" text small title="Import SQL" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-up</v-icon></v-btn>
-      <v-btn v-if="database.length > 0" :disabled="sidebarLoading" @click="exportSQLSubmit" text small title="Export Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-down</v-icon></v-btn>
+      <v-btn v-if="database.length > 0" :disabled="sidebarLoading" @click="bottomBarClick('import')" text small title="Import SQL" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-up</v-icon></v-btn>
+      <v-btn v-if="database.length > 0" :disabled="sidebarLoading" @click="bottomBarClick('export')" text small title="Export Objects" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-arrow-down</v-icon></v-btn>
       <span v-if="database.length > 0" :disabled="sidebarLoading" style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
       <v-btn v-if="database.length > 0" :disabled="sidebarLoading" text small title="Database Settings" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-cog</v-icon></v-btn>
     </div>
-    <!------------>
-    <!-- DIALOG -->
-    <!------------>
-    <v-dialog v-model="dialog" persistent max-width="60%">
-      <v-card>
-        <v-toolbar v-if="dialogOptions.text.length == 0" flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
-        </v-toolbar>
-        <v-card-text style="padding:15px 15px 5px;">
-          <v-container style="padding:0px; max-width:100%;">
-            <v-layout wrap>
-              <div v-if="dialogOptions.text.length > 0" class="text-h6" style="font-weight:400;"> {{ dialogOptions.title }}</div>
-              <v-flex xs12>
-                <v-form @submit.prevent ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
-                  <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
-                  <div v-if="dialogOptions.mode == 'createDatabase'">
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Database Name" autofocus required style="padding-top:0px;"></v-text-field>
-                    <v-autocomplete @change="getCollations" v-model="dialogOptions.item.encoding" :items="encodings" :rules="[v => !!v || '']" label="Database Encoding" auto-select-first required style="padding-top:0px;"></v-autocomplete>
-                    <v-autocomplete :disabled="dialogOptions.item.collation.length == 0" :loading="loading" v-model="dialogOptions.item.collation" :items="collations" :rules="[v => !!v || '']" label="Database Collation" auto-select-first required hide-details style="padding-top:0px;"></v-autocomplete>
-                  </div>
-                  <div v-else-if="dialogOptions.mode == 'dropDatabase'">
-                    <div class="body-1" style="margin-top:15px; font-weight:300; font-size:1.05rem!important;">Type the database name to confirm.</div>
-                    <v-text-field @keyup.enter="database == dialogOptions.item.name ? dialogSubmit() : {}" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Database Name" autofocus required hide-details style="margin-top:15px;"></v-text-field>
-                  </div>
-                  <div v-else-if="dialogOptions.mode == 'importSQL'">
-                    <v-file-input v-model="dialogOptions.item.file" show-size accept=".sql" label="File input" hide-details style="padding:0px"></v-file-input>
-                    <div v-if="dialogOptions.item.start" style="margin-top:15px">
-                      <v-progress-linear :value="dialogOptions.item.progress" rounded color="primary" height="25">
-                        <template v-slot="{ value }">
-                          {{ 'Uploading: ' + Math.ceil(value) }}%
-                        </template>
-                      </v-progress-linear>
-                      <div class="body-1" style="margin-top:10px">
-                        <v-icon v-if="dialogOptions.item.step == 'success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px;">fas fa-check-circle</v-icon>
-                        <v-icon v-else-if="dialogOptions.item.step == 'fail'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
-                        <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
-                        <span style="margin-left:8px">{{ dialogOptions.item.text }}</span>  
-                      </div>
-                      <v-card v-if="dialogOptions.item.error.length != 0" style="margin-top:10px">
-                        <v-card-text>
-                          <div class="body-1">{{ dialogOptions.item.error }}</div>
-                        </v-card-text>
-                      </v-card>
-                    </div>
-                  </div>
-                </v-form>
-                <v-divider></v-divider>
-                <div style="margin-top:15px;">
-                  <v-row no-gutters>
-                    <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :disabled="dialogOptions.mode == 'dropDatabase' && database != dialogOptions.item.name" :loading="loading" @click="dialogSubmit" color="primary">{{ dialogOptions.submit }}</v-btn>
-                    </v-col>
-                    <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogOptions.cancel }}</v-btn>
-                    </v-col>
-                  </v-row>
-                </div>
-              </v-flex>
-            </v-layout>
-          </v-container>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+    <!------------->
+    <!-- DIALOGs -->
+    <!------------->
+    <Create />
+    <Drop />
+    <Import />
+    <Export />
   </div>
 </template>
 
 <script>
-import axios from 'axios'
 import EventBus from '../../js/event-bus'
 import { mapFields } from '../../js/map-fields'
+
+import Create from './objects/Create'
+import Drop from './objects/Drop'
+import Import from './objects/Import'
+import Export from './objects/Export'
 
 export default {
   data() {
     return {
       loading: false,
-      // Dialog
-      dialog: false,
-      dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
-      // Database
-      encodings: [],
-      collations: [],
     }
   },
+  components: { Create, Drop, Import, Export },
   computed: {
     ...mapFields([
-      'server',
+      'editor',
+    ], { path: 'client/components' }),
+    ...mapFields([
       'database',
-      'databaseItems',
       'sidebarLoading',
-      'headerTab',
-      'headerTabSelected',
     ], { path: 'client/connection' }),
   },
-  watch: {
-    dialog (val) {
-      if (!val) return
-      requestAnimationFrame(() => {
-        if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
-      })
-    },
-  },
   methods: {
+    bottomBarClick(option) {
+      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_' + option.toUpperCase())
+    },
     refreshObjects() {
       new Promise((resolve, reject) => { 
         EventBus.$emit('REFRESH_SIDEBAR_OBJECTS', resolve, reject)
-      })
+      }).finally(() => { this.editor.focus() })
     },
-    createDatabase() {
-      // Build selectors
-      this.buildSelectors()
-
-      // Build Dialog
-      let dialogOptions = { 
-        mode: 'createDatabase', 
-        title: 'Create Database', 
-        text: '', 
-        item: { name: '', encoding: this.encodings[0].value, collation: '' }, 
-        submit: 'Submit', 
-        cancel: 'Cancel'
-      }
-      this.dialogOptions = dialogOptions
-      this.dialog = true
-    },
-    dropDatabase() {
-      let dialogOptions = { 
-        mode: 'dropDatabase', 
-        title: 'Drop Database?', 
-        text: "Are you sure you want to drop the database '" + this.database + "'? This operation cannot be undone.",
-        item: { name: '' }, 
-        submit: 'Submit',
-        cancel: 'Cancel'
-      }
-      this.dialogOptions = dialogOptions
-      this.dialog = true
-    },
-    importSQL() {
-      let dialogOptions = { 
-        mode: 'importSQL', 
-        title: 'Import SQL', 
-        text: "",
-        item: { file: null, text: 'Uploading file...', step: 'upload', progress: 0, start: false, error: '' }, 
-        submit: 'Import',
-        cancel: 'Close'
-      }
-      this.dialogOptions = dialogOptions
-      this.dialog = true
-    },
-    dialogSubmit() {
-      // Check if all fields are filled
-      if (!this.$refs.dialogForm.validate()) {
-        EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
-        return
-      }
-      this.loading = true
-      if (this.dialogOptions.mode == 'createDatabase') this.createDatabaseSubmit()
-      else if (this.dialogOptions.mode == 'dropDatabase') this.dropDatabaseSubmit()
-      else if (this.dialogOptions.mode == 'importSQL') this.importSQLSubmit()
-      else if (this.dialogOptions.mode == 'exportSQL') this.exportSQLSubmit()
-    },
-    createDatabaseSubmit() {
-      let databaseName = this.dialogOptions.item.name
-      let databaseEncoding = this.dialogOptions.item.encoding 
-      let databaseCollation = this.dialogOptions.item.collation
-      let query = "CREATE DATABASE " + databaseName + " CHARACTER SET " + databaseEncoding + " COLLATE " + databaseCollation + ';'
-      new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
-      }).then(() => { 
-        return new Promise((resolve, reject) => {
-          // Change current database
-          this.database = databaseName
-          EventBus.$emit('REFRESH_SIDEBAR_OBJECTS', resolve, reject)
-        }).then(() => {
-          // Hide Dialog
-          this.dialog = false
-          // Change view to Client
-          this.headerTab = 0
-          this.headerTabSelected = 'client'
-        })
-      }).catch(() => {}).finally(() => { this.loading = false })
-    },
-    dropDatabaseSubmit() {
-      let databaseName = this.dialogOptions.item.name
-      let query = "DROP DATABASE " + databaseName + ';'
-      new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
-      }).then(() => { 
-        // Change current database
-        this.databaseItems = this.databaseItems.filter(item => item.text !== databaseName)
-        this.database = ''
-        // Hide Dialog
-        this.dialog = false
-        // Change view to Client
-        this.headerTab = 0
-        this.headerTabSelected = 'client'
-      }).catch(() => {}).finally(() => { this.loading = false })
-    },
-    buildSelectors() {
-      // Build Encodings
-      this.encodings = [{ text: 'Default (' + this.server.defaults.encoding + ')', value: this.server.defaults.encoding }]
-      this.encodings.push({ divider: true })
-      this.encodings.push(...this.server.encodings.reduce((acc, val) => { 
-        acc.push({ text: val.description + ' (' + val.encoding + ')', value: val.encoding })
-        return acc
-      }, []))
-
-      // Build Collations
-      this.getCollations(this.server.defaults.encoding)
-    },
-    getCollations(encoding) {
-      // Retrieve Databases
-      this.loading = true
-      const payload = {
-        server: this.server.id, 
-        encoding: encoding
-      }
-      axios.get('/client/collations', { params: payload })
-        .then((response) => {
-          this.parseCollations(encoding, response.data.collations)
-        })
-        .catch((error) => {
-          console.log(error)
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
-        })
-        .finally(() => {
-          this.loading = false
-        })
-    },
-    parseCollations(encoding, data) {
-      if (this.collations.length == 0) this.collations = [{ text: 'Default (' + this.server.defaults.collation + ')', value: this.server.defaults.collation }, { divider: true }, ...JSON.parse(data)]
-      else {
-        let def = this.server.encodings.filter(obj => { return obj.encoding == encoding })[0]
-        this.collations = [{ text: 'Default (' + def.collation + ')', value: def.collation }, { divider: true }, ...JSON.parse(data)]
-      }
-      this.dialogOptions.item.collation = this.collations[0].value
-    },
-    importSQLSubmit() {
-       if (!this.dialogOptions.item.file) {
-        EventBus.$emit('SEND_NOTIFICATION', 'Please select a file', 'info')
-        this.loading = false
-        return
-      }
-      const options = {
-        onUploadProgress: (progressEvent) => {
-          var percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          this.dialogOptions.item.progress = percentCompleted
-          if (this.dialogOptions.item.progress == 100) {
-            this.dialogOptions.item.step = 'processing'
-            this.dialogOptions.item.text = 'Processing file... Please wait.'
-          }
-        }
-      }
-      const data = new FormData();
-      data.append('server', this.server.id)
-      data.append('database', this.database)
-      data.append('file', this.dialogOptions.item.file)
-      this.dialogOptions.item.start = true
-      axios.post('client/import', data, options)
-        .then(() => {
-          return new Promise((resolve, reject) => { 
-            EventBus.$emit('REFRESH_SIDEBAR_OBJECTS', resolve, reject)
-          }).then(() => {
-            // Show success
-            this.dialogOptions.item.step = 'success'
-            this.dialogOptions.item.text = 'File successfully imported.'
-            // Disable loading
-            this.loading = false
-          })
-        })
-        .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else {
-            return new Promise((resolve, reject) => { 
-              EventBus.$emit('REFRESH_SIDEBAR_OBJECTS', resolve, reject)
-            }).then(() => {
-              // Show error
-              this.dialogOptions.item.step = 'fail'
-              this.dialogOptions.item.text = 'An error occurred importing the file.'
-              this.dialogOptions.item.error = error.response.data.message
-              // Disable loading
-              this.loading = false
-            })
-          }
-        })
-    },
-    exportSQLSubmit() {
-      const fs = require('fs')
-      axios.get('client/export', { responseType: 'stream' })
-      .then((response) => {
-        response.data.pipe(fs.createWriteStream('export.sql'))
-      })
-
-      /*
-      const httpAdapter = require('axios/lib/adapters/http');
-      const fs = require('fs');
-      const INPUT = 'client/export';
-      const OUTPUT = 'output.sql';
-
-      if (fs.existsSync(OUTPUT)) fs.unlinkSync(OUTPUT)
-      const output = fs.createWriteStream(OUTPUT);
-
-      axios.get(INPUT, {responseType: 'stream', adapter: httpAdapter})
-      .then((response) => {
-          const stream = response.data;
-          stream.on('data', (chunk) => {
-            console.log(chunk)
-            output.write(new Buffer.from(chunk));
-          });
-          stream.on('end', () => {
-            output.end();
-          });
-      });
-      */
-    }
   }
 }
 </script>
