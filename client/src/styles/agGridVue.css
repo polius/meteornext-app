@@ -1,0 +1,28 @@
+/* AG GRID */
+::v-deep .theme--dark.v-data-table.v-data-table--fixed-header thead th {
+  background-color: #252525;
+}
+::v-deep .ag-theme-alpine-dark .ag-header-row {
+  font-size: 13px;
+  font-weight: 500;
+}
+::v-deep .ag-theme-alpine-dark .ag-cell {
+  font-size: 13px;
+  line-height: 30px;
+}
+::v-deep .ag-theme-alpine-dark .ag-cell-inline-editing {
+  height: 30px;
+}
+::v-deep .ag-theme-alpine-dark {
+  --ag-foreground-color:#dcdcdc;
+  --ag-header-background-color:#272727;
+  --ag-background-color:#2c2c2c;
+  --ag-odd-row-background-color:#303030;
+  --ag-border-color:#424242;
+}
+::v-deep .ag-cell-normal {
+  color: #dcdcdc;
+}
+::v-deep .ag-cell-null {
+  color: gray;
+}

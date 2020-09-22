@@ -64,7 +64,7 @@ export default {
     },
   },
   methods: {
-   onGridReady(params) {
+    onGridReady(params) {
       this.gridApi.objects.databases = params.api
       this.columnApi.objects.databases = params.columnApi
       this.$refs['agGridObjectsDatabases'].$el.addEventListener('click', this.onGridClick)
