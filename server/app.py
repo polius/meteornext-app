@@ -19,7 +19,7 @@ setup = routes.setup.Setup(app, URL_PREFIX)
 app.register_blueprint(setup.blueprint(), url_prefix=URL_PREFIX)
 
 # Enable CORS
-CORS(app, resources={r'/*': {'origins': '*'}})
+CORS(app)
 
 # Run with python
 if __name__ == '__main__':
