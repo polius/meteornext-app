@@ -51,7 +51,7 @@
                       <v-btn :loading="loading" @click="exportObjectsSubmit" color="primary">Export</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="this.dialog = false" outlined color="#e74d3c">Close</v-btn>
+                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">Close</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -187,7 +187,8 @@ export default {
         document.body.appendChild(link)
         link.click()
         link.remove()
-      });      
+      })
+      .finally(() => { this.loading = false })
     }
   },
 }
