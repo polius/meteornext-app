@@ -61,6 +61,59 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <!-------------->
+    <!-- PROGRESS -->
+    <!-------------->
+    <v-dialog v-model="dialogProgress" persistent max-width="50%">
+      <v-card >
+        <v-card-text style="padding:10px 15px 5px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <div class="text-h6" style="font-weight:400;">Export Progress</div>
+              <v-flex xs12>
+                <div style="margin-top:10px; margin-bottom:10px;">
+                  <v-progress-linear :indeterminate="step == 'export'" value="100" rounded color="primary" height="25">
+                    <template>
+                      {{ 'Exporting: ' + this.progress }}
+                    </template>
+                  </v-progress-linear>
+                  <div class="body-1" style="margin-top:10px">
+                    <v-icon v-if="step == 'success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px;">fas fa-check-circle</v-icon>
+                    <v-icon v-else-if="step == 'fail'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
+                    <v-icon v-else-if="step == 'stop'" title="Stopped" small style="color:#fa8231; padding-bottom:2px;">fas fa-exclamation-circle</v-icon>
+                    <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
+                    <span style="margin-left:8px">{{ text }}</span>  
+                  </div>
+                  <v-card v-if="error.length != 0" style="margin-top:10px">
+                    <v-card-text>
+                      <div class="body-1">{{ error }}</div>
+                    </v-card-text>
+                  </v-card>
+                </div>
+                <v-divider></v-divider>
+                <div v-if="step == 'export'" style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn :loading="loading" @click="cancelExport" color="#e74c3c">Cancel</v-btn>
+                    </v-col>
+                    <v-col style="margin-bottom:10px;">
+                      <v-btn :disabled="loading" @click="dialogProgress = false" outlined color="#e74d3c">Close</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+                <div v-else style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn :loading="loading" @click="dialogProgress = false" color="primary">Close</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -92,6 +145,12 @@ export default {
       includeItems: ['Structure + Content','Structure','Content'],
       includeFields: true,
       nullValues: 'NULL',
+      // Progress
+      dialogProgress: false,
+      text: 'Exporting objects...', 
+      step: 'export', 
+      progress: 0,
+      error: '',
       // Axios Cancel Token
       cancelToken: null,
     }
@@ -99,6 +158,8 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'server',
+      'database',
       'objectsHeaders',
       'objectsItems',
     ], { path: 'client/connection' }),
@@ -171,14 +232,62 @@ export default {
       })
     },
     exportObjectsSubmit() {
-      // Check if all fields are filled
-      if (!this.$refs.dialogForm.validate()) {
-        EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
+      // Get selected objects
+      let tables = this.gridApi['tables'].getSelectedRows()
+      let views = this.gridApi['views'].getSelectedRows()
+      let triggers = this.gridApi['triggers'].getSelectedRows()
+      let functions = this.gridApi['functions'].getSelectedRows()
+      let procedures = this.gridApi['procedures'].getSelectedRows()
+      let events = this.gridApi['events'].getSelectedRows()
+      // Check if no objects are selected
+      if ((this.tab == 'sql' && tables.length == 0 && views.length == 0 && triggers.length == 0 && functions.length == 0 && procedures.length == 0 && events.length == 0) ||
+        (this.tab == 'csv' && tables.length == 0)) {
+        EventBus.$emit('SEND_NOTIFICATION', 'Please select at least one object to export', 'error')
         return
       }
       this.loading = true
-      axios.get('/client/export', { responseType: 'arraybuffer' })
+      // Init Dialog Progress
+      this.text = 'Exporting objects...'
+      this.step = 'export'
+      this.progress = 0
+      this.error = ''
+      this.dialogProgress = true
+      // Build request parameters
+      let objects = {}
+      if (this.tab == 'csv') {
+        objects['tables'] = tables.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+      }
+      else if (this.tab == 'sql') {
+        objects['tables'] = tables.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+        objects['views'] = views.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+        objects['triggers'] = triggers.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+        objects['functions'] = functions.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+        objects['procedures'] = procedures.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+        objects['events'] = events.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+      }
+      const payload = {
+        server: this.server.id,
+        database: this.database,
+        options: {
+          mode: this.tab,
+          objects: objects,
+          include: this.include,
+          null: this.nullValues,
+          fields: this.fields
+        }
+      }
+      const CancelToken = axios.CancelToken;
+      this.cancelToken = CancelToken.source();
+      const options = {
+        onDownloadProgress: (progressEvent) => {
+          this.progress = this.parseBytes(progressEvent.loaded)
+        },
+        responseType: 'arraybuffer',
+        cancelToken: this.cancelToken.token,
+        params: payload
+      }
+      // Start request
+      axios.get('/client/export', options)
       .then((response) => {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a')
@@ -187,9 +296,37 @@ export default {
         document.body.appendChild(link)
         link.click()
         link.remove()
+        this.step = 'success'
+        this.text = 'Objects successfully exported.'
+      })
+      .catch((error) => {
+        if (axios.isCancel(error)) {
+          this.step = 'stop'
+          this.text = 'Export stopped.'
+          this.error = ''
+          this.loading = false
+        }
+        else if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        else {
+          this.step = 'fail'
+          this.text = 'An error occurred during the export process.'
+          this.error = error.response.data.message
+          this.loading = false
+        }
       })
       .finally(() => { this.loading = false })
-    }
-  },
+    },
+    cancelExport() {
+      EventBus.$emit('SEND_NOTIFICATION', 'Stopping the export process...', 'warning')
+      this.cancelToken.cancel()
+    },
+    parseBytes(value) {
+      if (value/1024 < 1) return value + ' B'
+      else if (value/1024/1024 < 1) return Math.trunc(value/1024*100)/100 + ' KB'
+      else if (value/1024/1024/1024 < 1) return Math.trunc(value/1024/1024*100)/100 + ' MB'
+      else if (value/1024/1024/1024/1024 < 1) return Math.trunc(value/1024/1024/1024*100)/100 + ' GB'
+      else return Math.trunc(value/1024/1024/1024/1024*100)/100 + ' TB' 
+    },
+  }
 }
 </script>
