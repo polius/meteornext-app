@@ -359,11 +359,18 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
-            # cred = self._client.get_credentials(user['group_id'], request.args['server'])
-            # if cred is None:
-            #     return jsonify({"message": 'This server does not exist'}), 400
-            # conn = connectors.connector.Connector(cred)
+            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = connectors.connector.Connector(cred)
 
+            # Check mode
+            options = json.loads(request.args['options'])
+            if options['mode'] == 'csv':
+                pass
+            
+            elif options['mode'] == 'sql':
+                pass
 
             def generate():
                 for i in range(1000):

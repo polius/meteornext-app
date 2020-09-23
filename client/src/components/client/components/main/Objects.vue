@@ -118,10 +118,10 @@ export default {
     },
     parseBytes(value) {
       if (value/1024 < 1) return value + ' B'
-      else if (value/1024/1024 < 1) return value/1024 + ' KB'
-      else if (value/1024/1024/1024 < 1) return value/1024/1024 + ' MB'
-      else if (value/1024/1024/1024/1024 < 1) return value/1024/1024/1024 + ' GB'
-      else return value/1024/1024/1024/1024 + ' TB' 
+      else if (value/1024/1024 < 1) return Math.trunc(value/1024*100)/100 + ' KB'
+      else if (value/1024/1024/1024 < 1) return Math.trunc(value/1024/1024*100)/100 + ' MB'
+      else if (value/1024/1024/1024/1024 < 1) return Math.trunc(value/1024/1024/1024*100)/100 + ' GB'
+      else return Math.trunc(value/1024/1024/1024/1024*100)/100 + ' TB' 
     },
     compareValues(value1, value2) {
       // Check NULL & Empty Values
