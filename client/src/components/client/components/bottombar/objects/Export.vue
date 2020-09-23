@@ -18,22 +18,23 @@
                   <div style="padding-left:1px; padding-right:1px;">
                     <v-tabs v-model="tabObjectsSelected" show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
                       <v-tabs-slider></v-tabs-slider>
-                      <v-tab @click="tabObjects('tables')"><span class="pl-2 pr-2">Tables</span></v-tab>
+                      <v-tab><span class="pl-2 pr-2">Tables</span></v-tab>
                       <v-divider class="mx-3" inset vertical></v-divider>
-                      <v-tab v-if="tab == 'sql'" @click="tabObjects('views')"><span class="pl-2 pr-2">Views</span></v-tab>
+                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">Views</span></v-tab>
                       <v-divider v-if="tab == 'sql'" class="mx-3" inset vertical></v-divider>
-                      <v-tab v-if="tab == 'sql'" @click="tabObjects('triggers')"><span class="pl-2 pr-2">Triggers</span></v-tab>
+                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">Triggers</span></v-tab>
                       <v-divider v-if="tab == 'sql'" class="mx-3" inset vertical></v-divider>
-                      <v-tab v-if="tab == 'sql'" @click="tabObjects('functions')"><span class="pl-2 pr-2">Functions</span></v-tab>
+                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">Functions</span></v-tab>
                       <v-divider v-if="tab == 'sql'" class="mx-3" inset vertical></v-divider>
-                      <v-tab v-if="tab == 'sql'" @click="tabObjects('procedures')"><span class="pl-2 pr-2">Procedures</span></v-tab>
+                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">Procedures</span></v-tab>
                       <v-divider v-if="tab == 'sql'" class="mx-3" inset vertical></v-divider>
-                      <v-tab v-if="tab == 'sql'" @click="tabObjects('events')"><span class="pl-2 pr-2">Events</span></v-tab>
+                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">Events</span></v-tab>
                       <v-divider v-if="tab == 'sql'" class="mx-3" inset vertical></v-divider>
                     </v-tabs>
                   </div>
-                  <div style="height:50vh">
-                    <ag-grid-vue v-show="tabObjectsSelected == 0" suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('tables', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDef" :rowData="objectsItems.tables"></ag-grid-vue>
+                  <div style="height:55vh">
+                    <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'csv'" suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('tablesCsv', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDefCsv" :rowData="objectsItems.tables"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'sql'" suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('tables', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDef" :rowData="objectsItems.tables"></ag-grid-vue>
                     <ag-grid-vue v-show="tabObjectsSelected == 1" suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('views', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.views" :defaultColDef="defaultColDef" :rowData="objectsItems.views"></ag-grid-vue>
                     <ag-grid-vue v-show="tabObjectsSelected == 2" suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('triggers', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.triggers" :defaultColDef="defaultColDef" :rowData="objectsItems.triggers"></ag-grid-vue>
                     <ag-grid-vue v-show="tabObjectsSelected == 3" suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('functions', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.functions" :defaultColDef="defaultColDef" :rowData="objectsItems.functions"></ag-grid-vue>
@@ -41,7 +42,6 @@
                     <ag-grid-vue v-show="tabObjectsSelected == 5" suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('events', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.events" :defaultColDef="defaultColDef" :rowData="objectsItems.events"></ag-grid-vue>
                   </div>
                   <v-select v-if="tab == 'sql'" v-model="include" :items="includeItems" label="Include" outlined hide-details style="margin-top:15px"></v-select>
-                  <v-text-field v-if="tab == 'csv'" v-model="nullValues" label="NULL values" outlined hide-details style="margin-top:15px"></v-text-field>
                   <v-checkbox v-if="tab == 'csv'" v-model="includeFields" label="Include field names in first row" hide-details style="padding:0px; margin-top:10px"></v-checkbox>
                 </v-form>
                 <v-divider></v-divider>
@@ -94,7 +94,7 @@
                 <div v-if="step == 'export'" style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="cancelExport" color="#e74c3c">Cancel</v-btn>
+                      <v-btn @click="cancelExport" color="#e74c3c">Cancel</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
                       <v-btn :disabled="loading" @click="dialogProgress = false" outlined color="#e74d3c">Close</v-btn>
@@ -137,14 +137,26 @@ export default {
       csvColor: '#779ecb',
       tabObjectsSelected: 0,
       // AG-Grid
-      gridApi: { tables: null, views: null, triggers: null, functions: null, procedures: null, events: null },
-      columnApi: { tables: null, views: null, triggers: null, functions: null, procedures: null, events: null },
-      defaultColDef: null,
+      gridApi: { tablesCsv: null, tables: null, views: null, triggers: null, functions: null, procedures: null, events: null },
+      columnApi: { tablesCsv: null, tables: null, views: null, triggers: null, functions: null, procedures: null, events: null },
+      defaultColDef: {
+        flex: 1,
+        minWidth: 100,
+        resizable: true,
+        headerCheckboxSelection: (params) => { return params.columnApi.getAllDisplayedColumns()[0] === params.column },
+        checkboxSelection: (params) => { return params.columnApi.getAllDisplayedColumns()[0] === params.column },
+      },
+      defaultColDefCsv: {
+        flex: 1,
+        minWidth: 100,
+        resizable: true,
+        headerCheckboxSelection: false,
+        checkboxSelection: (params) => { return params.columnApi.getAllDisplayedColumns()[0] === params.column },
+      },
       // Include
       include: 'Structure + Content',
       includeItems: ['Structure + Content','Structure','Content'],
       includeFields: true,
-      nullValues: 'NULL',
       // Progress
       dialogProgress: false,
       text: 'Exporting objects...', 
@@ -167,43 +179,39 @@ export default {
   mounted() {
     EventBus.$on('SHOW_BOTTOMBAR_OBJECTS_EXPORT', this.showDialog);
   },
+  watch: {
+    tabObjectsSelected: function(val) {
+      let objects = ['tables','views','triggers','functions','procedures','events']
+      if (this.tab == 'csv') this.resizeTable('tablesCsv')
+      else if (this.tab == 'sql') this.resizeTable(objects[val])
+    },
+  },
   methods: {
     showDialog() {
       this.tabClick('sql')
       this.include = 'Structure + Content'
-      this.nullValues = 'NULL'
+      this.includeFields = true
       this.dialog = true
     },
     onGridReady(object, params) {
       this.gridApi[object] = params.api
       this.columnApi[object] = params.columnApi
-      this.defaultColDef = {
-        flex: 1,
-        minWidth: 100,
-        resizable: true,
-        headerCheckboxSelection: this.isFirstColumn,
-        checkboxSelection: this.isFirstColumn,
-      }
       if (object == 'tables') {
         this.gridApi[object].showLoadingOverlay()
         this.buildObjects()
       }
     },
-    isFirstColumn(params) {
-      let displayedColumns = params.columnApi.getAllDisplayedColumns();
-      let thisIsFirstColumn = displayedColumns[0] === params.column;
-      return thisIsFirstColumn;
-    },
     onNewColumnsLoaded(object) {
       if (this.gridApi[object] != null) this.resizeTable(object)
     },
     resizeTable(object) {
-      var allColumnIds = [];
-      this.columnApi[object].getAllColumns().forEach(function(column) {
-        allColumnIds.push(column.colId);
-      });
-      this.columnApi[object].autoSizeColumns(allColumnIds);
-      
+      this.$nextTick(() => {
+        var allColumnIds = [];
+        this.columnApi[object].getAllColumns().forEach(function(column) {
+          allColumnIds.push(column.colId);
+        });
+        this.columnApi[object].autoSizeColumns(allColumnIds);
+      })
     },
     tabClick(object) {
       if (object == 'sql') {
@@ -213,13 +221,10 @@ export default {
       else if (object == 'csv') {
         this.sqlColor = '#779ecb'
         this.csvColor = 'primary'
+        this.resizeTable('tablesCsv')
       }
       this.tab = object
       this.tabObjectsSelected = 0
-    },
-    tabObjects(object) {
-      this.tabObjectsSelected = object
-      this.$nextTick(() => { this.resizeTable(object) })
     },
     buildObjects() {
       let promise = new Promise((resolve, reject) => {
@@ -234,6 +239,7 @@ export default {
     exportObjectsSubmit() {
       // Get selected objects
       let tables = this.gridApi['tables'].getSelectedRows()
+      let tablesCsv = this.gridApi['tablesCsv'].getSelectedRows()
       let views = this.gridApi['views'].getSelectedRows()
       let triggers = this.gridApi['triggers'].getSelectedRows()
       let functions = this.gridApi['functions'].getSelectedRows()
@@ -241,7 +247,7 @@ export default {
       let events = this.gridApi['events'].getSelectedRows()
       // Check if no objects are selected
       if ((this.tab == 'sql' && tables.length == 0 && views.length == 0 && triggers.length == 0 && functions.length == 0 && procedures.length == 0 && events.length == 0) ||
-        (this.tab == 'csv' && tables.length == 0)) {
+        (this.tab == 'csv' && tablesCsv.length == 0)) {
         EventBus.$emit('SEND_NOTIFICATION', 'Please select at least one object to export', 'error')
         return
       }
@@ -255,7 +261,7 @@ export default {
       // Build request parameters
       let objects = {}
       if (this.tab == 'csv') {
-        objects['tables'] = tables.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+        objects['tables'] = tablesCsv.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
       }
       else if (this.tab == 'sql') {
         objects['tables'] = tables.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
@@ -272,8 +278,7 @@ export default {
           mode: this.tab,
           objects: objects,
           include: this.include,
-          null: this.nullValues,
-          fields: this.fields
+          fields: this.includeFields
         }
       }
       const CancelToken = axios.CancelToken;
@@ -292,7 +297,8 @@ export default {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a')
         link.href = url
-        link.setAttribute('download', 'file.sql')
+        if (this.tab == 'sql') link.setAttribute('download', 'export.sql')
+        else if (this.tab == 'csv') link.setAttribute('download', objects['tables'][0] + '.csv')
         document.body.appendChild(link)
         link.click()
         link.remove()

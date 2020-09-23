@@ -16,8 +16,14 @@ class Connector:
     def stop(self):
         self._sql.stop()
 
-    def execute(self, query, args=None, database=None):
-       return self._sql.execute(query, args, database)
+    def execute(self, query, args=None, database=None, fetch=True):
+       return self._sql.execute(query, args, database, fetch)
+
+    def fetch_one(self):
+        return self._sql.fetch_one()
+    
+    def fetch_many(self, size=None):
+        return self._sql.fetch_many(size)
 
     def begin(self):
         self._sql.begin()

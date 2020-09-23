@@ -18,6 +18,7 @@ class MySQL:
         self._server = server
         self._tunnel = None
         self._sql = None
+        self._cursor = None
 
     def start(self):
         # Close existing connections
@@ -61,6 +62,11 @@ class MySQL:
 
     def stop(self):
         try:
+            self._cursor.close()
+        except Exception:
+            pass
+
+        try:
             self._sql.close()
         except Exception:
             pass
@@ -70,10 +76,10 @@ class MySQL:
         except Exception:
             pass
 
-    def execute(self, query, args=None, database=None):
+    def execute(self, query, args=None, database=None, fetch=True):
         try:
             # Execute the query and return results
-            return self.__execute_query(query, args, database)
+            return self.__execute_query(query, args, database, fetch)
 
         except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
             raise Exception(error.args[1])
@@ -84,7 +90,7 @@ class MySQL:
 
             # Retry the query
             try:
-                return self.__execute_query(query, args, database)
+                return self.__execute_query(query, args, database, fetch)
             except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
                 raise Exception(error.args[1])
 
@@ -93,25 +99,39 @@ class MySQL:
             self.close()
             raise KeyboardInterrupt("Program Interrupted by User. Rollback successfully performed.")
 
-    def __execute_query(self, query, args, database):
+    def __execute_query(self, query, args, database, fetch):
         # Select the database
         if database:
             self._sql.select_db(database)
 
         # Prepare the cursor
-        with self._sql.cursor(OrderedDictCursor) as cursor:            
-            # Execute the SQL query ignoring warnings
+        if fetch:
+            with self._sql.cursor(OrderedDictCursor) as cursor:            
+                # Execute the SQL query ignoring warnings
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    start_time = time.time()
+                    cursor.execute(query, args)
+
+                # Get the query results
+                data = cursor.fetchall()
+
+            # Return query info
+            query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": cursor.rowcount, "time": "{0:.3f}".format(time.time() - start_time)}
+            return query_data
+        else:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                start_time = time.time()
-                cursor.execute(query, args)
+                self._cursor = self._sql.cursor(OrderedDictCursor)
+                self._cursor.execute(query, args)
 
-            # Get the query results
-            data = cursor.fetchall()
+    def fetch_one(self):
+        if self._cursor:
+            return self._cursor.fetchone()
 
-        # Return query info
-        query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": cursor.rowcount, "time": "{0:.3f}".format(time.time() - start_time)}
-        return query_data
+    def fetch_many(self, size):
+        if self._cursor:
+            return self._cursor.fetchmany(size=None)
 
     def begin(self):
         self._sql.begin()
