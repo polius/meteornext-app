@@ -369,17 +369,11 @@ class Client:
             try:
                 # Get options
                 options = json.loads(request.args['options'])
-                # Export SQL
-                def export_sql():
-                    for i in range(1000):
-                        yield 'hello'
-
                 if options['mode'] == 'csv':
                     return Response(stream_with_context(self.__export_csv(options, conn)))
                 elif options['mode'] == 'sql':
-                    return Response(stream_with_context(export_sql()))
+                    return Response(stream_with_context(export_sql(options, conn)))
             except Exception as e:
-                conn.rollback()
                 return jsonify({'message': str(e)}), 400
             finally:
                 conn.stop()
@@ -414,3 +408,7 @@ class Client:
                     first = False
                 writer.writerow(row)
                 yield output.getvalue()
+
+    def export_sql(self, options, conn):
+        for i in range(1000):
+            yield 'hello'
