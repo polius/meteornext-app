@@ -2,9 +2,8 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 from flask import Response, stream_with_context
 
-import time
-
-import os
+import io
+import csv
 import json
 import utils
 import datetime
@@ -339,6 +338,8 @@ class Client:
             except Exception as e:
                 conn.rollback()
                 return jsonify({'message': str(e)}), 400
+            finally:
+                conn.stop()
 
             # command = ['mysql', '-u%s' % db_settings['USER'], '-p%s' % db_settings['PASSWORD'], db_settings['NAME']]
             # proc = subprocess.Popen(command, stdin = uploaded_file.stream)
@@ -363,19 +364,25 @@ class Client:
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = connectors.connector.Connector(cred)
+            conn.start()
 
-            # Check mode
-            options = json.loads(request.args['options'])
-            if options['mode'] == 'csv':
-                pass
-            
-            elif options['mode'] == 'sql':
-                pass
+            try:
+                # Get options
+                options = json.loads(request.args['options'])
+                # Export SQL
+                def export_sql():
+                    for i in range(1000):
+                        yield 'hello'
 
-            def generate():
-                for i in range(1000):
-                    yield 'hello'
-            return Response(stream_with_context(generate()))
+                if options['mode'] == 'csv':
+                    return Response(stream_with_context(self.__export_csv(options, conn)))
+                elif options['mode'] == 'sql':
+                    return Response(stream_with_context(export_sql()))
+            except Exception as e:
+                conn.rollback()
+                return jsonify({'message': str(e)}), 400
+            finally:
+                conn.stop()
 
         return client_blueprint
 
@@ -391,3 +398,19 @@ class Client:
 
     def __allowed_file(self, filename):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'sql'}
+
+    def __export_csv(self, options, conn):
+        for table in options['objects']['tables']:
+            first = options['fields']
+            conn.execute(query=f"SELECT * FROM {table}", database=request.args['database'], fetch=False)
+            while True:
+                output = io.StringIO()
+                row = conn.fetch_one()
+                if row == None:
+                    break
+                writer = csv.DictWriter(output, fieldnames=row.keys())
+                if first:
+                    writer.writeheader()
+                    first = False
+                writer.writerow(row)
+                yield output.getvalue()
