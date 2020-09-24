@@ -34,6 +34,9 @@ class Connector:
     def rollback(self):
         self._sql.rollback()
 
+    def mogrify(self, query, args):
+        return self._sql.mogrify(query, args)
+
     ####################
     # INTERNAL QUERIES #
     ####################
