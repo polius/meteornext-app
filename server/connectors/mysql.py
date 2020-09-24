@@ -145,6 +145,10 @@ class MySQL:
         except Exception:
             pass
 
+    def mogrify(self, query, args):
+        with self._sql.cursor(OrderedDictCursor) as cursor:    
+            return cursor.mogrify(query, args)
+
     ####################
     # INTERNAL QUERIES #
     ####################

@@ -423,11 +423,44 @@ class Client:
         yield 'SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;\n'
         yield 'SET FOREIGN_KEY_CHECKS = 0;\n\n'
 
-        # Build objects
+        # Build Tables
+        if 'tables' in options['objects']:
+            yield '# ------------------------------------------------------------\n'
+            yield '# TABLES\n'
+            yield '# ------------------------------------------------------------\n'
+            for table in options['objects']['tables']:
+                if options['include'] in ['Structure + Content','Structure']:
+                    yield 'DROP TABLE IF EXISTS `{}`;\n\n'.format(table)
+                    yield '{};\n\n'.format(conn.get_table_syntax(request.args['database'], table))
+                if options['include'] in ['Structure + Content','Content']:
+                    first = True
+                    conn.execute(query=f"SELECT SQL_NO_CACHE * FROM {table}", database=request.args['database'], fetch=False)
+                    while True:
+                        row = conn.fetch_one()
+                        if row == None:
+                            if not first:
+                                yield ';\n\n'
+                            break
+                        args = [v for k, v in row.items()]
+                        if first:
+                            yield 'INSERT INTO `{}` ({})\nVALUES\n'.format(table, ','.join([f'`{k}`' for k, v in row.items()]))
+                            first = False
+                            yield '({})'.format(conn.mogrify(','.join(len(args)*['%s']), args))
+                        else:
+                            yield ',\n({})'.format(conn.mogrify(','.join(len(args)*['%s']), args))
 
+        # Build Views
+
+        # Build Triggers
+
+        # Build Functions
+
+        # Build Procedures
+
+        # Build Events
 
         # Build footer
         yield 'SET FOREIGN_KEY_CHECKS = 1;\n\n'
         yield '# ************************************************************\n'
-        yield '# Export Successful'
-        yield '# ************************************************************\n'
+        yield '# Export Successful\n'
+        yield '# ************************************************************'
