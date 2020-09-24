@@ -411,6 +411,7 @@ class Client:
                 yield output.getvalue()
 
     def __export_sql(self, options, cred, conn):
+        errors = {'tables': [], 'views': [], 'triggers': [], 'functions': [], 'procedures': [], 'events': []}
         # Build header
         yield '# ************************************************************\n'
         yield '# Meteor Next - Export SQL\n'
@@ -429,38 +430,136 @@ class Client:
                 yield '# ------------------------------------------------------------\n'
                 yield '# Table: {}\n'.format(table)
                 yield '# ------------------------------------------------------------\n'
-                if options['include'] in ['Structure + Content','Structure']:
-                    yield 'DROP TABLE IF EXISTS `{}`;\n\n'.format(table)
-                    yield '{};\n\n'.format(conn.get_table_syntax(request.args['database'], table))
-                if options['include'] in ['Structure + Content','Content']:
-                    first = True
+                try:
+                    syntax = conn.get_table_syntax(request.args['database'], table)
                     conn.execute(query=f"SELECT SQL_NO_CACHE * FROM {table}", database=request.args['database'], fetch=False)
-                    while True:
-                        row = conn.fetch_one()
-                        if row == None:
-                            if not first:
-                                yield ';\n\n'
-                            break
-                        args = [v for k, v in row.items()]
-                        if first:
-                            yield 'INSERT INTO `{}` ({})\nVALUES\n'.format(table, ','.join([f'`{k}`' for k, v in row.items()]))
-                            first = False
-                            yield '({})'.format(conn.mogrify(','.join(len(args)*['%s']), args))
-                        else:
-                            yield ',\n({})'.format(conn.mogrify(','.join(len(args)*['%s']), args))
+                    if options['include'] in ['Structure + Content','Structure']:
+                        yield 'DROP TABLE IF EXISTS `{}`;\n\n'.format(table)
+                        yield '{};\n\n'.format(syntax)
+                    if options['include'] in ['Structure + Content','Content']:
+                        first = True                            
+                        while True:
+                            row = conn.fetch_one()
+                            if row == None:
+                                if not first:
+                                    yield ';\n\n'
+                                break
+                            args = [v for k, v in row.items()]
+                            if first:
+                                yield 'INSERT INTO `{}` ({})\nVALUES\n'.format(table, ','.join([f'`{k}`' for k, v in row.items()]))
+                                first = False
+                                yield '({})'.format(conn.mogrify(','.join(len(args)*['%s']), args))
+                            else:
+                                yield ',\n({})'.format(conn.mogrify(','.join(len(args)*['%s']), args))
+                except Exception as e:
+                    errors['tables'].append({'k': table, 'v': str(e)})
+                    yield '# Error: {}\n\n'.format(e)
 
         # Build Views
+        if 'views' in options['objects']:
+            for view in options['objects']['views']:
+                yield '# ------------------------------------------------------------\n'
+                yield '# View: {}\n'.format(view)
+                yield '# ------------------------------------------------------------\n'
+                try:
+                    syntax = conn.get_view_syntax(request.args['database'], view)
+                    yield 'DROP VIEW IF EXISTS `{}`;\n\n'.format(view)
+                    yield '{};\n\n'.format(syntax)
+                except Exception as e:
+                    errors['views'].append({'k': view, 'v': str(e)})
+                    yield '# Error: {}\n\n'.format(e)
 
         # Build Triggers
+        if 'triggers' in options['objects']:
+            for trigger in options['objects']['triggers']:
+                yield '# ------------------------------------------------------------\n'
+                yield '# Trigger: {}\n'.format(trigger)
+                yield '# ------------------------------------------------------------\n'
+                try:
+                    syntax = conn.get_trigger_syntax(request.args['database'], trigger)
+                    yield 'DROP TRIGGER IF EXISTS `{}`;\n\n'.format(trigger)
+                    yield '{};\n\n'.format(syntax)
+                except Exception as e:
+                    errors['triggers'].append({'k': trigger, 'v': str(e)})
+                    yield '# Error: {}\n\n'.format(e)
 
         # Build Functions
+        if 'functions' in options['objects']:
+            for function in options['objects']['functions']:
+                yield '# ------------------------------------------------------------\n'
+                yield '# Function: {}\n'.format(function)
+                yield '# ------------------------------------------------------------\n'
+                try:
+                    syntax = conn.get_function_syntax(request.args['database'], function)
+                    if syntax:
+                        yield 'DROP FUNCTION IF EXISTS `{}`;\n\n'.format(function)
+                        yield '{};\n\n'.format(syntax)
+                    else:
+                        err = "Insufficient privileges to export the function '{}'. You must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table".format(function)
+                        raise Exception(err)
+                except Exception as e:
+                    errors['functions'].append({'k': function, 'v': str(e)})
+                    yield '# Error: {}\n\n'.format(e)         
 
         # Build Procedures
+        if 'procedures' in options['objects']:
+            for procedure in options['objects']['procedures']:
+                yield '# ------------------------------------------------------------\n'
+                yield '# Procedure: {}\n'.format(procedure)
+                yield '# ------------------------------------------------------------\n'
+                try:
+                    syntax = conn.get_procedure_syntax(request.args['database'], procedure)
+                    if syntax:
+                        yield 'DROP PROCEDURE IF EXISTS `{}`;\n\n'.format(procedure)
+                        yield '{};\n\n'.format(syntax)
+                    else:
+                        err = "# Error: Insufficient privileges to export the procedure '{}'. You must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table".format(procedure)
+                        raise Exception(err)
+                except Exception as e:
+                    errors['procedures'].append({'k': procedure, 'v': str(e)})
+                    yield '# Error: {}\n\n'.format(e)     
 
         # Build Events
+        if 'events' in options['objects']:
+            for event in options['objects']['events']:
+                yield '# ------------------------------------------------------------\n'
+                yield '# Event: {}\n'.format(event)
+                yield '# ------------------------------------------------------------\n'
+                try:
+                    syntax = conn.get_event_syntax(request.args['database'], event)
+                    yield 'DROP EVENT IF EXISTS `{}`;\n\n'.format(event)
+                    yield '{};\n\n'.format(syntax)
+                except Exception as e:
+                    errors['events'].append({'k': event, 'v': str(e)})
+                    yield '# Error: {}\n\n'.format(e)
 
         # Build footer
         yield 'SET FOREIGN_KEY_CHECKS = 1;\n\n'
-        yield '# ************************************************************\n'
-        yield '# Export Successful\n'
-        yield '# ************************************************************'
+
+        if len(errors['tables']) == 0 and len(errors['views']) == 0 and len(errors['triggers']) == 0 and len(errors['functions']) == 0 and len(errors['procedures']) == 0 and len(errors['events']) == 0:
+            yield '# ************************************************************\n'
+            yield '# Export Successful\n'
+            yield '# ************************************************************'
+        else:
+            yield '# ------------------------------------------------------------\n'
+            yield '# ERRORS\n'
+            yield '# ------------------------------------------------------------\n'
+            for table in errors['tables']:
+                yield '# [ TABLE: {} ]: {}\n'.format(table['k'], table['v'])
+            for view in errors['views']:
+                yield '# [ VIEW: {} ]: {}\n'.format(view['k'], view['v'])
+            for trigger in errors['triggers']:
+                yield '# [ TRIGGER: {} ]: {}\n'.format(trigger['k'], trigger['v'])
+            for function in errors['functions']:
+                yield '# [ FUNCTION: {} ]: {}\n'.format(function['k'], function['v'])
+            for procedure in errors['procedures']:
+                yield '# [ PROCEDURE: {} ]: {}\n'.format(procedure['k'], procedure['v'])
+            for event in errors['events']:
+                yield '# [ EVENT: {} ]: {}\n'.format(event['k'], event['v'])
+
+            yield '\n# ************************************************************\n'
+            yield '# Export finished with errors\n'
+            yield '# ************************************************************'
+
+        # Close connection
+        conn.stop()
