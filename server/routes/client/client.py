@@ -425,10 +425,10 @@ class Client:
 
         # Build Tables
         if 'tables' in options['objects']:
-            yield '# ------------------------------------------------------------\n'
-            yield '# TABLES\n'
-            yield '# ------------------------------------------------------------\n'
             for table in options['objects']['tables']:
+                yield '# ------------------------------------------------------------\n'
+                yield '# Table: {}\n'.format(table)
+                yield '# ------------------------------------------------------------\n'
                 if options['include'] in ['Structure + Content','Structure']:
                     yield 'DROP TABLE IF EXISTS `{}`;\n\n'.format(table)
                     yield '{};\n\n'.format(conn.get_table_syntax(request.args['database'], table))
