@@ -158,6 +158,11 @@ class MySQL:
         result = self.execute(query)['data'][0]['Value']
         return result
 
+    def get_version(self):
+        query = "SHOW VARIABLES LIKE 'version'"
+        result = self.execute(query)['data'][0]['Value']
+        return result
+
     def get_engines(self):
         query = """
             SELECT engine, support 

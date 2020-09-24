@@ -306,6 +306,7 @@ export default {
 
       // Get Column Types + Collations
       if (server.type == 'MySQL') {
+        this.server.version = data.version
         this.server.engines = data.engines
         this.server.encodings = data.encodings
         this.server.defaults = data.defaults

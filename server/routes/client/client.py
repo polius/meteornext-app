@@ -63,13 +63,14 @@ class Client:
 
             # Get Databases
             databases = conn.get_all_databases()
+            version = conn.get_version()
             engines = conn.get_engines()
             encodings = conn.get_encodings()
             defaults = {
                 "encoding": conn.get_default_encoding(),
                 "collation": conn.get_default_collation()
             }
-            return jsonify({'databases': databases, 'engines': engines, 'encodings': encodings, 'defaults': defaults}), 200
+            return jsonify({'databases': databases, 'version': version, 'engines': engines, 'encodings': encodings, 'defaults': defaults}), 200
 
         @client_blueprint.route('/client/objects', methods=['GET'])
         @jwt_required
@@ -366,15 +367,15 @@ class Client:
             conn = connectors.connector.Connector(cred)
             conn.start()
 
+            # Start export
             try:
-                # Get options
                 options = json.loads(request.args['options'])
                 if options['mode'] == 'csv':
                     return Response(stream_with_context(self.__export_csv(options, conn)))
                 elif options['mode'] == 'sql':
-                    return Response(stream_with_context(export_sql(options, conn)))
+                    return Response(stream_with_context(self.__export_sql(options, cred, conn)))
             except Exception as e:
-                return jsonify({'message': str(e)}), 400
+                return jsonify({"message": str(e)}), 400
             finally:
                 conn.stop()
 
@@ -409,6 +410,24 @@ class Client:
                 writer.writerow(row)
                 yield output.getvalue()
 
-    def export_sql(self, options, conn):
-        for i in range(1000):
-            yield 'hello'
+    def __export_sql(self, options, cred, conn):
+        # Build header
+        yield '# ************************************************************\n'
+        yield '# Meteor Next - Export SQL\n'
+        yield '# Version 1\n#\n'
+        yield '# https://meteor2.io\n#\n'
+        yield '# Host: {} ({} {})\n'.format(cred['sql']['hostname'], cred['sql']['engine'], conn.get_version())
+        yield '# Database: {}\n'.format(request.args['database'])
+        yield '# Generation Time: {} UTC\n'.format(datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+        yield '# ************************************************************\n\n'
+        yield 'SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;\n'
+        yield 'SET FOREIGN_KEY_CHECKS = 0;\n\n'
+
+        # Build objects
+
+
+        # Build footer
+        yield 'SET FOREIGN_KEY_CHECKS = 1;\n\n'
+        yield '# ************************************************************\n'
+        yield '# Export Successful'
+        yield '# ************************************************************\n'
