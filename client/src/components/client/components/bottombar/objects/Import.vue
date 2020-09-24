@@ -11,8 +11,8 @@
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form @submit.prevent ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
-                  <v-file-input v-model="file" show-size accept=".sql" label="File input" hide-details style="padding:0px"></v-file-input>
+                <v-form @submit.prevent ref="dialogForm" style="margin-top:0px; margin-bottom:15px;">
+                  <v-file-input v-model="file" outlined show-size accept=".sql" label="Click to select a .sql file" hide-details style="padding:0px"></v-file-input>
                     <div v-if="start" style="margin-top:15px">
                       <v-progress-linear :value="progress" rounded color="primary" height="25">
                         <template v-slot="{ value }">
