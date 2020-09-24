@@ -285,7 +285,7 @@ export default {
         onDownloadProgress: (progressEvent) => {
           this.progress = this.parseBytes(progressEvent.loaded)
         },
-        responseType: 'arraybuffer',
+        responseType: 'blob',
         cancelToken: this.cancelToken.token,
         params: payload,
       }
@@ -295,7 +295,7 @@ export default {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a')
         link.href = url
-        if (this.tab == 'sql') link.setAttribute('download', 'export.sql')
+        if (this.tab == 'sql') link.setAttribute('download', this.database + '.sql')
         else if (this.tab == 'csv') link.setAttribute('download', objects['tables'][0] + '.csv')
         document.body.appendChild(link)
         link.click()
