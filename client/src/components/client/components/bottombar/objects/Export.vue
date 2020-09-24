@@ -191,8 +191,11 @@ export default {
       this.tabClick('sql')
       this.include = 'Structure + Content'
       this.includeFields = true
-      this.dialog = true
-      this.buildObjects()
+      this.$nextTick(() => { this.dialog = true })
+      this.$nextTick(() => { 
+        if (this.gridApi['tables'] != null) this.gridApi['tables'].showLoadingOverlay()
+      })
+      this.$nextTick(() => { this.buildObjects() })
     },
     onGridReady(object, params) {
       this.gridApi[object] = params.api
@@ -209,8 +212,10 @@ export default {
           allColumnIds.push(column.colId);
         });
         this.columnApi[object].autoSizeColumns(allColumnIds);
-        this.gridApi[object].hideOverlay()
       })
+      let obj = (object == 'tablesCsv') ? 'tables' : object 
+      if (this.objectsItems[obj].length > 0) this.gridApi[obj].hideOverlay()
+      else this.gridApi[obj].showNoRowsOverlay()
     },
     tabClick(object) {
       if (object == 'sql') {
