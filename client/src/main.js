@@ -9,7 +9,7 @@ Vue.config.productionTip = false
 
 Vue.prototype.$http = Axios
 // Vue.prototype.$http.defaults.headers.common['Content-type'] = "application/json"
-// Vue.prototype.$http.defaults.headers.common['Access-Control-Allow-Origin'] = '*'
+Vue.prototype.$http.defaults.headers.common['Access-Control-Allow-Origin'] = '*'
 
 Vue.prototype.$http.defaults.baseURL = window.location.protocol + "//" + window.location.host + "/api"
 

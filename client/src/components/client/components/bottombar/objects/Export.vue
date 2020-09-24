@@ -192,14 +192,12 @@ export default {
       this.include = 'Structure + Content'
       this.includeFields = true
       this.dialog = true
+      this.buildObjects()
     },
     onGridReady(object, params) {
       this.gridApi[object] = params.api
       this.columnApi[object] = params.columnApi
-      if (object == 'tables') {
-        this.gridApi[object].showLoadingOverlay()
-        this.buildObjects()
-      }
+      this.gridApi[object].showLoadingOverlay()
     },
     onNewColumnsLoaded(object) {
       if (this.gridApi[object] != null) this.resizeTable(object)
@@ -211,6 +209,7 @@ export default {
           allColumnIds.push(column.colId);
         });
         this.columnApi[object].autoSizeColumns(allColumnIds);
+        this.gridApi[object].hideOverlay()
       })
     },
     tabClick(object) {
@@ -232,7 +231,6 @@ export default {
         EventBus.$emit('GET_OBJECTS', resolve, reject)
       })
       promise.finally(() => {
-        this.gridApi['tables'].hideOverlay()
         this.loading = false 
       })
     },
@@ -289,7 +287,7 @@ export default {
         },
         responseType: 'arraybuffer',
         cancelToken: this.cancelToken.token,
-        params: payload
+        params: payload,
       }
       // Start request
       axios.get('/client/export', options)
@@ -314,9 +312,11 @@ export default {
         }
         else if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
         else {
+          // Convert error from 'arraybuffer' to 'json'
+          let err = JSON.parse(Buffer.from(error.response.data).toString('utf8'))
           this.step = 'fail'
           this.text = 'An error occurred during the export process.'
-          this.error = error.response.data.message
+          this.error = err.message
           this.loading = false
         }
       })
