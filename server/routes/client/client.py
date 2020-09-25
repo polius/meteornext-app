@@ -7,6 +7,7 @@ import csv
 import json
 import utils
 import datetime
+from itertools import repeat
 import models.admin.users
 import models.client.client
 import connectors.connector
@@ -492,9 +493,9 @@ class Client:
                             if first:
                                 yield 'INSERT INTO `{}` ({})\nVALUES\n'.format(table, ','.join([f'`{k}`' for k, v in row.items()]))
                                 first = False
-                                yield '({})'.format(conn.mogrify(','.join(len(args)*['%s']), args))
+                                yield '({})'.format(conn.mogrify(','.join(repeat('%s', len(args))), args))
                             else:
-                                yield ',\n({})'.format(conn.mogrify(','.join(len(args)*['%s']), args))
+                                yield ',\n({})'.format(conn.mogrify(','.join(repeat('%s', len(args))), args))
                 except Exception as e:
                     errors['tables'].append({'k': table, 'v': str(e)})
                     yield '# Error: {}\n\n'.format(e)
