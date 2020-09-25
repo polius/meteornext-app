@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" persistent max-width="70%">
+    <v-dialog v-model="dialog" max-width="70%">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">Server Variables</v-toolbar-title>
@@ -11,7 +11,7 @@
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <v-text-field ref="field" :disabled="loading" v-model="search" solo dense label="Filter..." hide-details></v-text-field>
+                <v-text-field ref="field" :disabled="loading" v-model="search" label="Filter..." solo dense clearable hide-details></v-text-field>
                 <ag-grid-vue suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" style="width:100%; height:70vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="columns" :rowData="items"></ag-grid-vue>
               </v-flex>
             </v-layout>
