@@ -11,7 +11,19 @@
           </div>
         </Pane>
         <Pane size="50" min-size="0">
-          <ag-grid-vue ref="agGridClient" suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
+          <ag-grid-vue ref="agGridClient" suppressContextMenu preventDefaultOnContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
+          <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
+            <v-list style="padding:0px;">
+              <v-list-item-group v-model="contextMenuModel">
+                <div v-for="[index, item] of contextMenuItems.entries()" :key="index">
+                  <v-list-item v-if="item != '|'" @click="contextMenuClicked(item)">
+                    <v-list-item-title>{{item}}</v-list-item-title>
+                  </v-list-item>
+                  <v-divider v-else></v-divider>
+                </div>
+              </v-list-item-group>
+            </v-list>
+          </v-menu>
         </Pane>
       </Splitpanes>
     </div>
@@ -70,6 +82,18 @@
   </div>
 </template>
 
+<style scoped>
+  ::v-deep .v-list-item__title {
+  font-size: 0.9rem;
+}
+::v-deep .v-list-item__content {
+  padding:0px;
+}
+::v-deep .v-list-item {
+  min-height:40px;
+}
+</style>
+
 <script>
 import axios from 'axios'
 
@@ -96,6 +120,13 @@ export default {
       dialogText: '',
       dialogSubmitText: '',
       dialogCancelText: '',
+      // Context Menu
+      contextMenu: false,
+      contextMenuModel: null,
+      contextMenuItems: ['Copy SQL','Copy CSV','Copy JSON','|','Select All','Deselect All'],
+      contextMenuItem: {},
+      contextMenuX: 0,
+      contextMenuY: 0,
     }
   },
   components: { Splitpanes, Pane, AgGridVue },
@@ -164,6 +195,17 @@ export default {
             }, 200);
         }, 200);
       }
+    },
+    onContextMenu(e) {
+      console.log(e)
+      // this.contextMenuClicked(item)
+      this.contextMenuModel = null
+      this.contextMenuX = e.event.clientX
+      this.contextMenuY = e.event.clientY
+      this.contextMenu = true
+    },
+    contextMenuClicked(item) {
+      console.log(item)
     },
     initAceClient() {
       // Editor Settings

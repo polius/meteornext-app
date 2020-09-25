@@ -65,6 +65,7 @@ export default {
   },
   methods: {
     showDialog() {
+      this.search = ''
       this.dialog = true
       this.buildVariables()
       if (this.gridApi != null) {
@@ -90,7 +91,7 @@ export default {
     parseVariables(variables) {
       this.columns = [
         { headerName: 'Variable', colId: 'variable', field: 'variable', sortable: true, filter: true, resizable: true, editable: false },
-        { headerName: 'Value', colId: 'value', field: 'value', sortable: true, filter: true, resizable: true, editable: false }
+        { headerName: 'Value', colId: 'value', field: 'value', sortable: true, filter: true, resizable: true, editable: true }
       ]
       this.items = variables
       if (this.gridApi != null) {

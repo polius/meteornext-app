@@ -438,14 +438,13 @@ export default {
     showContextMenu(e, item) {
       e.preventDefault()
       this.sidebarClicked(item)
-      this.contextMenu = false
       this.contextMenuModel = null
       this.contextMenuX = e.clientX
       this.contextMenuY = e.clientY
       this.sidebar = [item.id]
       this.sidebarSelected = {...item}
       this.buildContextMenu(item)
-      this.$nextTick(() => { this.contextMenu = true; })
+      this.contextMenu = true
     },
     buildContextMenu(item) {
       this.contextMenuItem = item
