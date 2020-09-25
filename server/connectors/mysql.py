@@ -152,6 +152,14 @@ class MySQL:
     ####################
     # INTERNAL QUERIES #
     ####################
+    def get_server_variables(self):
+        query = "SHOW GLOBAL VARIABLES"
+        result = self.execute(query)['data']
+        variables = []
+        for v in result:
+            variables.append({ 'variable': v['Variable_name'], 'value': v['Value'] })
+        return variables
+
     def get_default_encoding(self):
         query = "SHOW VARIABLES LIKE 'character_set_server'"
         result = self.execute(query)['data'][0]['Value']

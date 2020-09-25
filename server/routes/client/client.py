@@ -116,6 +116,33 @@ class Client:
             finally:
                 conn.stop()
 
+        @client_blueprint.route('/client/variables', methods=['GET'])
+        @jwt_required
+        def client_variables_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Server Credentials + Connection
+            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = connectors.connector.Connector(cred)
+
+            # Get Server Variables
+            try:
+                variables = conn.get_server_variables()
+                return jsonify({'variables': variables}), 200
+            finally:
+                conn.stop()
+
         @client_blueprint.route('/client/execute', methods=['POST'])
         @jwt_required
         def client_execute_method():
