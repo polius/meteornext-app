@@ -87,7 +87,7 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
           reject()
-        })      
+        })
     },
     parseObjects(object, value) {
       let data = JSON.parse(value)

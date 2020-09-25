@@ -21,6 +21,7 @@
     <Drop />
     <Import />
     <Export />
+    <Variables />
   </div>
 </template>
 
@@ -32,6 +33,7 @@ import Create from './objects/Create'
 import Drop from './objects/Drop'
 import Import from './objects/Import'
 import Export from './objects/Export'
+import Variables from './objects/Variables'
 
 export default {
   data() {
@@ -39,7 +41,7 @@ export default {
       loading: false,
     }
   },
-  components: { Create, Drop, Import, Export },
+  components: { Create, Drop, Import, Export, Variables },
   computed: {
     ...mapFields([
       'editor',

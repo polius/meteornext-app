@@ -40,6 +40,9 @@ class Connector:
     ####################
     # INTERNAL QUERIES #
     ####################
+    def get_server_variables(self):
+        return self._sql.get_server_variables()
+
     def get_default_encoding(self):
         return self._sql.get_default_encoding()
 

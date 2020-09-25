@@ -13,7 +13,7 @@
     </v-col>
     <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
       <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
-        <v-btn :loading="clientQueryExecuting" :disabled="clientQuery.length == 0" @click="runQuery()" title="Explain Query"><v-icon small>fas fa-chart-pie</v-icon></v-btn>
+        <v-btn :loading="clientQueryExecuting" :disabled="clientQuery.length == 0" @click="explainQuery()" title="Explain Query"><v-icon small>fas fa-chart-pie</v-icon></v-btn>
       </div>
     </v-col>
     <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
@@ -79,6 +79,9 @@ export default {
     },
     runQuery() {
       EventBus.$emit('RUN_QUERY')
+    },
+    explainQuery() {
+      EventBus.$emit('EXPLAIN_QUERY')
     }
   },
 }
