@@ -101,6 +101,7 @@ export default {
   components: { Splitpanes, Pane, AgGridVue },
   mounted () {
     EventBus.$on('RUN_QUERY', this.runQuery);
+    EventBus.$on('EXPLAIN_QUERY', this.explainQuery);
   },
   computed: {
     ...mapFields([
@@ -202,6 +203,11 @@ export default {
         else if (e.key.toLowerCase() == "r" && (e.ctrlKey || e.metaKey)) {
           e.preventDefault()
           if (Object.keys(this.server).length > 0 && this.clientQuery.length > 0) this.runQuery()
+        }
+        // - Explain Query/ies -
+        else if (e.key.toLowerCase() == "e" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault()
+          if (Object.keys(this.server).length > 0 && this.clientQuery.length > 0) this.explainQuery()
         }
         // - Increase Font Size -
         else if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
@@ -327,18 +333,33 @@ export default {
         this.editorMarkers.push(marker)
       }
     },
-    runQuery() {
+    initExecution() {
       this.clientHeaders = []
       this.clientItems = []
       this.bottomBar.client = { text: '', status: '', info: '' }
       this.clientQueryExecuting = true     
       this.editor.completer.detach()
       this.gridApi.client.showLoadingOverlay()
+    },
+    runQuery() {
+      this.initExecution()
       const payload = {
         server: this.server.id,
         database: this.database,
         queries: this.parseQueries()
       }
+      this.executeQuery(payload)
+    },
+    explainQuery() {
+      this.initExecution()
+      const payload = {
+        server: this.server.id,
+        database: this.database,
+        queries: this.parseQueries().reduce((acc, val) => { acc.push('EXPLAIN ' + val); return acc }, [])
+      }
+      this.executeQuery(payload)
+    },
+    executeQuery(payload) {
       axios.post('/client/execute', payload)
         .then((response) => {
           this.parseExecution(JSON.parse(response.data.data))
