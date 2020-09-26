@@ -195,19 +195,19 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
-        'headerTabSelected',
-        'contentHeaders',
-        'contentItems',
-        'sidebarSelected',
-        'server',
-        'database',
-        'contentSearchFilter',
-        'contentSearchFilterText',
-        'contentSearchFilterText2',
-        'contentSearchFilterItems',
-        'contentSearchColumn',
-        'contentColumnsName',
-        'bottomBar'
+      'headerTabSelected',
+      'contentHeaders',
+      'contentItems',
+      'sidebarSelected',
+      'server',
+      'database',
+      'contentSearchFilter',
+      'contentSearchFilterText',
+      'contentSearchFilterText2',
+      'contentSearchFilterItems',
+      'contentSearchColumn',
+      'contentColumnsName',
+      'bottomBar'
     ], { path: 'client/connection' }),
     ...mapFields([
       'gridApi',
@@ -218,13 +218,25 @@ export default {
     EventBus.$on('GET_CONTENT', this.getContent);
   },
   watch: {
-    headerTabSelected(val) {
-      if (val == 'content') {
+    headerTabSelected(newValue, oldValue) {
+      if (newValue == 'content') {
         this.$nextTick(() => {
           if (this.gridApi.content != null) this.resizeTable()
         })
       }
+      else if (oldValue == 'content') {
+        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, this.server.id, this.database, this.sidebarSelected['name'])
+      }
     },
+    'sidebarSelected.name': function(newValue, oldValue) {
+      if (this.headerTabSelected == 'content' && oldValue != newValue) this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, this.server.id, this.database, oldValue)
+    },
+    database(newValue, oldValue) {
+      if (this.headerTabSelected == 'content' && oldValue != newValue) this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, this.server.id, oldValue, this.sidebarSelected['name'])
+    },
+    'server.id': function(newValue, oldValue) {
+      if (this.headerTabSelected == 'content' && oldValue != newValue) this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, oldValue, this.database, this.sidebarSelected['name'])
+    }
   },
   methods: {
    onGridReady(params) {
@@ -236,7 +248,7 @@ export default {
     onGridClick(event) {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.content.deselectAll()
-        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, this.server.id, this.database, this.sidebarSelected['name'])
       }
     },
     onSelectionChanged() {
@@ -244,7 +256,7 @@ export default {
     },
     onRowClicked(event) {
       if (Object.keys(this.currentCellEditNode).length != 0 && this.currentCellEditNode.rowIndex != event.rowIndex) {
-        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
+        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, this.server.id, this.database, this.sidebarSelected['name'])
       }
     },
     onCellKeyDown(e) {
@@ -501,7 +513,7 @@ export default {
       if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
       if (this.currentCellEditMode == 'edit') this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
     },
-    cellEditingSubmit(mode, node, values) {
+    cellEditingSubmit(mode, node, values, server, database, table) {
       if (Object.keys(values).length == 0) return
 
       // Clean vars
@@ -519,7 +531,7 @@ export default {
           if (node.data[keys[i]] == null) valuesToUpdate.push('NULL')
           else valuesToUpdate.push(JSON.stringify(node.data[keys[i]]))
         }
-        query = "INSERT INTO " + this.sidebarSelected['name'] + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
+        query = "INSERT INTO " + table + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
       }
       // EDIT
       else if (mode == 'edit') {
@@ -538,19 +550,19 @@ export default {
             if (values[keys[i]]['old'] == null) where.push(keys[i] + ' IS NULL')
             else where.push(keys[i] + " = " + JSON.stringify(values[keys[i]]['old']))
           }
-          query = "UPDATE " + this.sidebarSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
+          query = "UPDATE " + table + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
         }
         else {
           for (let i = 0; i < this.contentPks.length; ++i) where.push(this.contentPks[i] + " = " + JSON.stringify(values[this.contentPks[i]]['old']))
-          query = "UPDATE " + this.sidebarSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
+          query = "UPDATE " + table + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
         }
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
         this.gridApi.content.showLoadingOverlay()
         // Execute Query
         const payload = {
-          server: this.server.id,
-          database: this.database,
+          server: server,
+          database: database,
           queries: [query]
         }
         axios.post('/client/execute', payload)
