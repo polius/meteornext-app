@@ -197,15 +197,27 @@ export default {
       }
     },
     onContextMenu(e) {
-      console.log(e)
-      // this.contextMenuClicked(item)
+      e.node.setSelected(true)
       this.contextMenuModel = null
       this.contextMenuX = e.event.clientX
       this.contextMenuY = e.event.clientY
       this.contextMenu = true
     },
     contextMenuClicked(item) {
-      console.log(item)
+      if (item.startsWith('Copy')) {
+        let selected = this.gridApi.client.getSelectedRows()
+        if (item == 'Copy SQL') {
+          console.log(selected)
+        }
+        else if (item == 'Copy CSV') {
+          console.log(selected)
+        }
+        else if (item == 'Copy JSON') {
+          console.log(selected)
+        }
+      }
+      else if (item == 'Select All') this.gridApi.client.selectAll()
+      else if (item == 'Deselect All') this.gridApi.client.deselectAll()
     },
     initAceClient() {
       // Editor Settings
