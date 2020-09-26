@@ -83,10 +83,17 @@
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <div class="text-h6" style="font-weight:400;">{{ editDialogTitle }}</div>
+              <v-row no-gutters>
+                <v-col class="flex-grow-1 flex-shrink-1">
+                  <div class="text-h6" style="font-weight:400; margin-top:2px; margin-left:1px;">{{ editDialogTitle }}</div>
+                </v-col>
+                <v-col cols="2" class="flex-grow-0 flex-shrink-0">
+                  <v-select @change="editDialogApplyFormat" v-model="editDialogFormat" :items="editDialogFormatItems" label="Format" outlined dense hide-details></v-select>
+                </v-col>
+              </v-row>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
-                  <div style="margin-left:auto; margin-right:auto; height:60vh; width:100%">
+                  <div style="margin-left:auto; margin-right:auto; height:70vh; width:100%">
                     <div id="editDialogEditor" style="height:100%;"></div>
                   </div>
                 </v-form>
@@ -165,6 +172,9 @@ export default {
       // Dialog - Content Edit
       editDialog: false,
       editDialogTitle: '',
+      editDialogFormat: 'Text',
+      editDialogFormatItems: ['Text','JSON','Python'],
+      editDialogValue: '',
       editDialogEditor: null,
       // Dialog - Basic
       dialog: false,
@@ -678,9 +688,9 @@ export default {
       this.editDialogTitle = title
       this.editDialog = true
       if (this.editDialogEditor == null) {
-        setTimeout(() => {
+        this.$nextTick(() => {
           this.editDialogEditor = ace.edit("editDialogEditor", {
-            mode: "ace/mode/sql",
+            mode: "ace/mode/text",
             theme: "ace/theme/monokai",
             fontSize: 14,
             showPrintMargin: false,
@@ -701,28 +711,63 @@ export default {
               e.preventDefault()
             }
           }, false);
-          this.editDialogEditor.focus()
-          this.editDialogEditor.setValue(text, -1)
-        }, 100);
-      } else {
+        })
+      }
+      this.$nextTick(() => {
         this.editDialogEditor.focus()
         this.editDialogEditor.setValue(text, -1)
+        this.editDialogDetectFormat()
+      })
+    },
+    editDialogDetectFormat() {
+      // Detect JSON and parse it
+      try {
+        let parsed = JSON.parse(this.editDialogEditor.getValue())
+        this.editDialogEditor.session.setMode("ace/mode/json")
+        this.editDialogEditor.session.setTabSize(2)
+        this.editDialogEditor.setValue(JSON.stringify(parsed, null, '\t'), -1)
+        this.editDialogFormat = 'JSON'
+      } catch { 
+        this.editDialogFormat = 'Text'
+        this.editDialogEditor.session.setTabSize(4)
+        this.editDialogEditor.session.setMode("ace/mode/text")
+      }
+    },
+    editDialogApplyFormat(val) {
+      this.editDialogEditor.session.setMode("ace/mode/" + val.toLowerCase())
+      if (val == 'JSON') {
+        try {
+          let parsed = JSON.parse(this.editDialogEditor.getValue())
+          this.editDialogEditor.session.setTabSize(2)
+          this.editDialogEditor.setValue(JSON.stringify(parsed, null, '\t'), -1)
+        } catch { 1==1 }
+      }
+      else {
+        try {
+          let parsed = JSON.parse(this.editDialogEditor.getValue())
+          this.editDialogEditor.session.setTabSize(4)
+          this.editDialogEditor.setValue(JSON.stringify(parsed), -1)
+        } catch { 1==1 }
       }
     },
     editDialogSubmit() {
+      let value = this.editDialogEditor.getValue()
+      try {
+        value = JSON.stringify(value)
+      } catch { 1==1 }
       this.editDialog = false
       let nodes = this.gridApi.content.getSelectedNodes()
       for (let i = 0; i < nodes.length; ++i) nodes[i].setSelected(false)
       let focusedCell = this.gridApi.content.getFocusedCell()
       let currentNode = this.gridApi.content.getDisplayedRowAtIndex(focusedCell.rowIndex)
       currentNode.setSelected(true)
-      currentNode.setDataValue(focusedCell.column.colId, this.editDialogEditor.getValue())
-      setTimeout(() => {
+      currentNode.setDataValue(focusedCell.column.colId, value)
+      this.$nextTick(() => {
         this.gridApi.content.startEditingCell({
           rowIndex: focusedCell.rowIndex,
           colKey: focusedCell.column.colId
         })
-      }, 100)
+      })
     },
     editDialogCancel() {
       this.editDialog = false
