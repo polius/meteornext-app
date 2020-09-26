@@ -224,15 +224,20 @@ export default {
       rawQuery += values.slice(0,-2) + ';'
       let query = SqlString.format(rawQuery, args)
       navigator.clipboard.writeText(query)
-      // EventBus.$emit('SEND_NOTIFICATION', 'SQL copied to clipboard', '#00b16a', 2)
     },
     copyCSV() {
-      let selected = this.gridApi.client.getSelectedRows()
-      console.log(selected)
+      let selectedRows = this.gridApi.client.getSelectedRows()
+      let replacer = (key, value) => value === null ? '' : value
+      let header = Object.keys(selectedRows[0])
+      let csv = selectedRows.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+      csv.unshift(header.join(','))
+      csv = csv.join('\r\n')
+      navigator.clipboard.writeText(csv)
     },
     copyJSON() {
-      let selected = this.gridApi.client.getSelectedRows()
-      console.log(selected)
+      let selectedRows = this.gridApi.client.getSelectedRows()
+      let json = JSON.stringify(selectedRows)
+      navigator.clipboard.writeText(json)
     },
     initAceClient() {
       // Editor Settings
@@ -499,7 +504,7 @@ export default {
         var keys = Object.keys(data[data.length - 1]['data'][0])
         for (let i = 0; i < keys.length; ++i) {
           let field = keys[i].trim()
-          headers.push({ headerName: keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true })
+          headers.push({ headerName: keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: false })
         }
       }
       this.clientHeaders = headers
