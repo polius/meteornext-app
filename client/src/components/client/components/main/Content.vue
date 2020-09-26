@@ -33,7 +33,19 @@
             </v-col>
           </v-row>
         </div>
-        <ag-grid-vue ref="agGridContent" suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @row-clicked="onRowClicked" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+        <ag-grid-vue ref="agGridContent" suppressContextMenu preventDefaultOnContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @row-clicked="onRowClicked" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" @cell-context-menu="onContextMenu" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+        <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
+          <v-list style="padding:0px;">
+            <v-list-item-group v-model="contextMenuModel">
+              <div v-for="[index, item] of contextMenuItems.entries()" :key="index">
+                <v-list-item v-if="item != '|'" @click="contextMenuClicked(item)">
+                  <v-list-item-title>{{item}}</v-list-item-title>
+                </v-list-item>
+                <v-divider v-else></v-divider>
+              </div>
+            </v-list-item-group>
+          </v-list>
+        </v-menu>
       </div>
     </div>
     <!---------------->
@@ -48,7 +60,7 @@
           <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
           <v-btn @click="filterClick" text small title="Refresh rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-          <v-btn @click="exportRows('content')" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
+          <v-btn :disabled="contentItems.length == 0" @click="exportRows" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
@@ -145,18 +157,15 @@ export default {
     return {
       // Loading
       loading: false,
-
       // AG Grid
       isRowSelected: false,
       currentCellEditMode: 'edit', // edit - new
       currentCellEditNode: {},
       currentCellEditValues: {},
-
       // Dialog - Content Edit
       editDialog: false,
       editDialogTitle: '',
       editDialogEditor: null,
-
       // Dialog - Basic
       dialog: false,
       dialogMode: '',
@@ -164,6 +173,13 @@ export default {
       dialogText: '',
       dialogSubmitText: '',
       dialogCancelText: '',
+      // Context Menu
+      contextMenu: false,
+      contextMenuModel: null,
+      contextMenuItems: ['Copy SQL','Copy CSV','Copy JSON','|','Select All','Deselect All'],
+      contextMenuItem: {},
+      contextMenuX: 0,
+      contextMenuY: 0,
     }
   },
   components: { AgGridVue },
@@ -242,6 +258,49 @@ export default {
             }, 200);
         }, 200);
       }
+    },
+    onContextMenu(e) {
+      e.node.setSelected(true)
+      this.contextMenuModel = null
+      this.contextMenuX = e.event.clientX
+      this.contextMenuY = e.event.clientY
+      this.contextMenu = true
+    },
+    contextMenuClicked(item) {
+      if (item == 'Copy SQL') this.copySQL()
+      else if (item == 'Copy CSV') this.copyCSV()
+      else if (item == 'Copy JSON') this.copyJSON()
+      else if (item == 'Select All') this.gridApi.content.selectAll()
+      else if (item == 'Deselect All') this.gridApi.content.deselectAll()
+    },
+    copySQL() {
+      var SqlString = require('sqlstring');
+      let selectedRows = this.gridApi.content.getSelectedRows()
+      let rawQuery = 'INSERT INTO `' + this.sidebarSelected['name'] + '` (' + Object.keys(selectedRows[0]).map(x => '`' + x.trim() + '`').join() + ')\nVALUES\n'
+      let values = ''
+      let args = []
+      for (let row of selectedRows) {
+        let rowVal = Object.values(row)
+        args = [...args, ...rowVal];
+        values += '(' + '?,'.repeat(rowVal.length).slice(0, -1) + '),\n'
+      }
+      rawQuery += values.slice(0,-2) + ';'
+      let query = SqlString.format(rawQuery, args)
+      navigator.clipboard.writeText(query)
+    },
+    copyCSV() {
+      let selectedRows = this.gridApi.content.getSelectedRows()
+      let replacer = (key, value) => value === null ? undefined : value
+      let header = Object.keys(selectedRows[0])
+      let csv = selectedRows.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+      csv.unshift(header.join(','))
+      csv = csv.join('\r\n')
+      navigator.clipboard.writeText(csv)
+    },
+    copyJSON() {
+      let selectedRows = this.gridApi.content.getSelectedRows()
+      let json = JSON.stringify(selectedRows)
+      navigator.clipboard.writeText(json)
     },
     getContent() {
       this.bottomBar.content = { status: '', text: '', info: '' }
@@ -682,49 +741,38 @@ export default {
       this.showDialog(dialogOptions)
     },
     exportRowsSubmit() {
-      var columns = []
-      var rows = []
-
-      // Build Columns
-      let displayedColumns = this.columnApi.content.getAllDisplayedColumns()
-      for (var i = 0; i < displayedColumns.length; ++i) columns.push(displayedColumns[i]['colId']);
-
-      // Build Rows
-      if (['Meteor','JSON','CSV'].includes(this.dialogSelect)) {
-        this.gridApi.content.forEachNode(function(rowNode) {
-          rows.push(rowNode.data)
-        })
-      }
-
+      this.loading = true
       if (this.dialogSelect == 'Meteor') {
-        let exportData = 'var DATA = ' + JSON.stringify(rows) + ';\n' + 'var COLUMNS = ' + JSON.stringify(columns) + ';'
+        let exportData = 'var DATA = ' + JSON.stringify(this.contentItems) + ';\n' + 'var COLUMNS = ' + JSON.stringify(this.contentHeaders.map(x => x.headerName.trim())) + ';'
         this.download('export.js', exportData)
       }
       else if (this.dialogSelect == 'JSON') {
-        let exportData = JSON.stringify(rows)
+        let exportData = JSON.stringify(this.contentItems)
         this.download('export.json', exportData)
       }
       else if (this.dialogSelect == 'CSV') {
-        let replacer = (key, value) => value === null ? '' : value // specify how you want to handle null values here
-        let header = Object.keys(rows[0])
-        let exportData = rows.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+        let replacer = (key, value) => value === null ? undefined : value
+        let header = Object.keys(this.contentItems[0])
+        let exportData = this.contentItems.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
         exportData.unshift(header.join(','))
         exportData = exportData.join('\r\n')
-        this.download('export.csv', exportData)
+        this.download('export.csv', exportData)        
       }
       else if (this.dialogSelect == 'SQL') {
-        let exportData = ''
-        this.gridApi.content.forEachNode(rowNode => {
-          let data = []
-          for (let i = 0; i < columns.length; ++i) {
-            if (rowNode.data[columns[i]] == null) data.push('NULL')
-            else data.push(JSON.stringify(rowNode.data[columns[i]]))
-          }
-          exportData += "INSERT INTO " + this.sidebarSelected['name'] + ' (' + columns.join() + ") VALUES (" + data.join() + "),\n"
-        })
-        exportData = exportData.slice(0, -2) + ';'
+        var SqlString = require('sqlstring');
+        let rawQuery = 'INSERT INTO `<table>` (' + this.contentHeaders.map(x => '`' + x.headerName.trim() + '`').join() + ')\nVALUES\n'
+        let values = ''
+        let args = []
+        for (let row of this.contentItems) {
+          let rowVal = Object.values(row)
+          args = [...args, ...rowVal];
+          values += '(' + '?,'.repeat(rowVal.length).slice(0, -1) + '),\n'
+        }
+        rawQuery += values.slice(0,-2) + ';'
+        let exportData = SqlString.format(rawQuery, args)
         this.download('export.sql', exportData)
       }
+      this.loading = false
     },
     download(filename, text) {
       var element = document.createElement('a')

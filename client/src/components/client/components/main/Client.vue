@@ -32,8 +32,8 @@
     <!---------------->
     <div style="height:35px; background-color:#303030; border-top:2px solid #2c2c2c;">
       <v-row no-gutters style="flex-wrap: nowrap;">
-        <v-col v-if="clientItems.length > 0" cols="auto">
-          <v-btn @click="exportRows('client')" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
+        <v-col cols="auto">
+          <v-btn :disabled="clientItems.length == 0" @click="exportRows" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
@@ -227,7 +227,7 @@ export default {
     },
     copyCSV() {
       let selectedRows = this.gridApi.client.getSelectedRows()
-      let replacer = (key, value) => value === null ? '' : value
+      let replacer = (key, value) => value === null ? undefined : value
       let header = Object.keys(selectedRows[0])
       let csv = selectedRows.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
       csv.unshift(header.join(','))
@@ -504,7 +504,19 @@ export default {
         var keys = Object.keys(data[data.length - 1]['data'][0])
         for (let i = 0; i < keys.length; ++i) {
           let field = keys[i].trim()
-          headers.push({ headerName: keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: false })
+          headers.push({ headerName: keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: false,
+            valueGetter: function(params) {
+              return (params.data[field] == null) ? 'NULL' : params.data[field]
+            },
+            cellClassRules: {
+              'ag-cell-null': params => {
+                return params.data[field] == null
+              },
+              'ag-cell-normal': function(params) {
+                return params.data[field] != null
+              }
+            }
+          })
         }
       }
       this.clientHeaders = headers
@@ -570,49 +582,38 @@ export default {
       this.showDialog(dialogOptions)
     },
     exportRowsSubmit() {
-      var columns = []
-      var rows = []
-
-      // Build Columns
-      let displayedColumns = this.columnApi.content.getAllDisplayedColumns()
-      for (var i = 0; i < displayedColumns.length; ++i) columns.push(displayedColumns[i]['colId']);
-
-      // Build Rows
-      if (['Meteor','JSON','CSV'].includes(this.dialogSelect)) {
-        this.gridApi.content.forEachNode(function(rowNode) {
-          rows.push(rowNode.data)
-        })
-      }
-
+      this.loading = true
       if (this.dialogSelect == 'Meteor') {
-        let exportData = 'var DATA = ' + JSON.stringify(rows) + ';\n' + 'var COLUMNS = ' + JSON.stringify(columns) + ';'
+        let exportData = 'var DATA = ' + JSON.stringify(this.clientItems) + ';\n' + 'var COLUMNS = ' + JSON.stringify(this.clientHeaders.map(x => x.headerName.trim())) + ';'
         this.download('export.js', exportData)
       }
       else if (this.dialogSelect == 'JSON') {
-        let exportData = JSON.stringify(rows)
+        let exportData = JSON.stringify(this.clientItems)
         this.download('export.json', exportData)
       }
       else if (this.dialogSelect == 'CSV') {
-        let replacer = (key, value) => value === null ? '' : value // specify how you want to handle null values here
-        let header = Object.keys(rows[0])
-        let exportData = rows.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+        let replacer = (key, value) => value === null ? undefined : value
+        let header = Object.keys(this.clientItems[0])
+        let exportData = this.clientItems.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
         exportData.unshift(header.join(','))
         exportData = exportData.join('\r\n')
-        this.download('export.csv', exportData)
+        this.download('export.csv', exportData)        
       }
       else if (this.dialogSelect == 'SQL') {
-        let exportData = ''
-        this.gridApi.content.forEachNode(rowNode => {
-          let data = []
-          for (let i = 0; i < columns.length; ++i) {
-            if (rowNode.data[columns[i]] == null) data.push('NULL')
-            else data.push(JSON.stringify(rowNode.data[columns[i]]))
-          }
-          exportData += "INSERT INTO " + this.sidebarSelected['name'] + ' (' + columns.join() + ") VALUES (" + data.join() + "),\n"
-        })
-        exportData = exportData.slice(0, -2) + ';'
+        var SqlString = require('sqlstring');
+        let rawQuery = 'INSERT INTO `<table>` (' + this.clientHeaders.map(x => '`' + x.headerName.trim() + '`').join() + ')\nVALUES\n'
+        let values = ''
+        let args = []
+        for (let row of this.clientItems) {
+          let rowVal = Object.values(row)
+          args = [...args, ...rowVal];
+          values += '(' + '?,'.repeat(rowVal.length).slice(0, -1) + '),\n'
+        }
+        rawQuery += values.slice(0,-2) + ';'
+        let exportData = SqlString.format(rawQuery, args)
         this.download('export.sql', exportData)
       }
+      this.loading = false
     },
     download(filename, text) {
       var element = document.createElement('a')
