@@ -184,15 +184,15 @@ export default {
 
         // Add animation
         window.setTimeout(function () {
-            e.event.originalTarget.classList.remove('ag-cell-highlight')
-            e.event.originalTarget.classList.add('ag-cell-highlight-animation')
-            e.event.originalTarget.style.transition = "background-color " + 200 + "ms"
+          e.event.originalTarget.classList.remove('ag-cell-highlight')
+          e.event.originalTarget.classList.add('ag-cell-highlight-animation')
+          e.event.originalTarget.style.transition = "background-color " + 200 + "ms"
 
-            // Remove animation
-            window.setTimeout(function () {
-                e.event.originalTarget.classList.remove('ag-cell-highlight-animation')
-                e.event.originalTarget.style.transition = null;
-            }, 200);
+          // Remove animation
+          window.setTimeout(function () {
+              e.event.originalTarget.classList.remove('ag-cell-highlight-animation')
+              e.event.originalTarget.style.transition = null;
+          }, 200);
         }, 200);
       }
     },
