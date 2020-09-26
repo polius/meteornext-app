@@ -204,20 +204,35 @@ export default {
       this.contextMenu = true
     },
     contextMenuClicked(item) {
-      if (item.startsWith('Copy')) {
-        let selected = this.gridApi.client.getSelectedRows()
-        if (item == 'Copy SQL') {
-          console.log(selected)
-        }
-        else if (item == 'Copy CSV') {
-          console.log(selected)
-        }
-        else if (item == 'Copy JSON') {
-          console.log(selected)
-        }
-      }
+      if (item == 'Copy SQL') this.copySQL()
+      else if (item == 'Copy CSV') this.copyCSV()
+      else if (item == 'Copy JSON') this.copyJSON()
       else if (item == 'Select All') this.gridApi.client.selectAll()
       else if (item == 'Deselect All') this.gridApi.client.deselectAll()
+    },
+    copySQL() {
+      var SqlString = require('sqlstring');
+      let selectedRows = this.gridApi.client.getSelectedRows()
+      let rawQuery = 'INSERT INTO `<table>` (' + Object.keys(selectedRows[0]).map(x => '`' + x.trim() + '`').join() + ')\nVALUES\n'
+      let values = ''
+      let args = []
+      for (let row of selectedRows) {
+        let rowVal = Object.values(row)
+        args = [...args, ...rowVal];
+        values += '(' + '?,'.repeat(rowVal.length).slice(0, -1) + '),\n'
+      }
+      rawQuery += values.slice(0,-2) + ';'
+      let query = SqlString.format(rawQuery, args)
+      navigator.clipboard.writeText(query)
+      // EventBus.$emit('SEND_NOTIFICATION', 'SQL copied to clipboard', '#00b16a', 2)
+    },
+    copyCSV() {
+      let selected = this.gridApi.client.getSelectedRows()
+      console.log(selected)
+    },
+    copyJSON() {
+      let selected = this.gridApi.client.getSelectedRows()
+      console.log(selected)
     },
     initAceClient() {
       // Editor Settings
