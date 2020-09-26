@@ -753,7 +753,7 @@ export default {
     editDialogSubmit() {
       let value = this.editDialogEditor.getValue()
       try {
-        value = JSON.stringify(value)
+        value = JSON.stringify(JSON.parse(value))
       } catch { 1==1 }
       this.editDialog = false
       let nodes = this.gridApi.content.getSelectedNodes()
