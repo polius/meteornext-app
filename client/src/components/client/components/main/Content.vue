@@ -218,25 +218,17 @@ export default {
     EventBus.$on('GET_CONTENT', this.getContent);
   },
   watch: {
+    'sidebarSelected.name': function() {
+      if (this.headerTabSelected == 'content') this.cellEditingDiscard()
+    },
     headerTabSelected(newValue, oldValue) {
       if (newValue == 'content') {
         this.$nextTick(() => {
           if (this.gridApi.content != null) this.resizeTable()
         })
       }
-      else if (oldValue == 'content') {
-        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, this.server.id, this.database, this.sidebarSelected['name'])
-      }
+      else if (oldValue == 'content') this.cellEditingDiscard()
     },
-    'sidebarSelected.name': function(newValue, oldValue) {
-      if (this.headerTabSelected == 'content' && oldValue != newValue) this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, this.server.id, this.database, oldValue)
-    },
-    database(newValue, oldValue) {
-      if (this.headerTabSelected == 'content' && oldValue != newValue) this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, this.server.id, oldValue, this.sidebarSelected['name'])
-    },
-    'server.id': function(newValue, oldValue) {
-      if (this.headerTabSelected == 'content' && oldValue != newValue) this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, oldValue, this.database, this.sidebarSelected['name'])
-    }
   },
   methods: {
    onGridReady(params) {
@@ -248,7 +240,7 @@ export default {
     onGridClick(event) {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.content.deselectAll()
-        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, this.server.id, this.database, this.sidebarSelected['name'])
+        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
       }
     },
     onSelectionChanged() {
@@ -256,7 +248,7 @@ export default {
     },
     onRowClicked(event) {
       if (Object.keys(this.currentCellEditNode).length != 0 && this.currentCellEditNode.rowIndex != event.rowIndex) {
-        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues, this.server.id, this.database, this.sidebarSelected['name'])
+        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
       }
     },
     onCellKeyDown(e) {
@@ -279,6 +271,9 @@ export default {
                 e.event.originalTarget.style.transition = null;
             }, 200);
         }, 200);
+      }
+      else if (e.event.key == 'Enter') {
+        this.cellEditingSubmit(this.currentCellEditMode, this.currentCellEditNode, this.currentCellEditValues)
       }
     },
     onContextMenu(e) {
@@ -511,9 +506,9 @@ export default {
     cellEditingStopped(event) {
       // Store new value
       if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
-      if (this.currentCellEditMode == 'edit') this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
+      if (this.currentCellEditMode == 'edit' && this.currentCellEditValues[event.colDef.field] !== undefined) this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
     },
-    cellEditingSubmit(mode, node, values, server, database, table) {
+    cellEditingSubmit(mode, node, values) {
       if (Object.keys(values).length == 0) return
 
       // Clean vars
@@ -531,7 +526,7 @@ export default {
           if (node.data[keys[i]] == null) valuesToUpdate.push('NULL')
           else valuesToUpdate.push(JSON.stringify(node.data[keys[i]]))
         }
-        query = "INSERT INTO " + table + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
+        query = "INSERT INTO " + this.sidebarSelected['name'] + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
       }
       // EDIT
       else if (mode == 'edit') {
@@ -550,21 +545,22 @@ export default {
             if (values[keys[i]]['old'] == null) where.push(keys[i] + ' IS NULL')
             else where.push(keys[i] + " = " + JSON.stringify(values[keys[i]]['old']))
           }
-          query = "UPDATE " + table + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
+          query = "UPDATE " + this.sidebarSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
         }
         else {
           for (let i = 0; i < this.contentPks.length; ++i) where.push(this.contentPks[i] + " = " + JSON.stringify(values[this.contentPks[i]]['old']))
-          query = "UPDATE " + table + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
+          query = "UPDATE " + this.sidebarSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
         }
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
         this.gridApi.content.showLoadingOverlay()
         // Execute Query
         const payload = {
-          server: server,
-          database: database,
+          server: this.server.id,
+          database: this.database,
           queries: [query]
         }
+        console.log(payload)
         axios.post('/client/execute', payload)
           .then((response) => {
             this.gridApi.content.hideOverlay()
@@ -621,9 +617,6 @@ export default {
       this.currentCellEditMode = 'edit'
       this.currentCellEditNode = {}
       this.currentCellEditValues = {}
-
-      // Get the table data
-      this.filterClick()
     },
     cellEditingEdit() {
       // Close Dialog
@@ -691,7 +684,10 @@ export default {
       else if (this.dialogMode == 'export') this.exportRowsSubmit()
     },
     dialogCancel() {
-      if (this.dialogMode == 'cellEditingError') this.cellEditingDiscard()
+      if (this.dialogMode == 'cellEditingError') {
+        this.cellEditingDiscard()
+        this.filterClick()
+      }
       else if (this.dialogMode == 'removeRowConfirm') this.removeRowSubmit()
       else if (this.dialogMode == 'info') this.dialog = false
       else if (this.dialogMode == 'export') this.dialog = false

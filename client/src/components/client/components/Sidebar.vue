@@ -321,6 +321,9 @@ export default {
       this.sidebarSelected = {}
       this.sidebarOpened = []
       this.sidebarItems = []
+      // Clear Tab
+      this.headerTab = 0
+      this.headerTabSelected = 'client'
       // Get Objects
       new Promise((resolve, reject) => { 
         this.getObjects(database, resolve, reject)
