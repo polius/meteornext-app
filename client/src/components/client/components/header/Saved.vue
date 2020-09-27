@@ -3,7 +3,7 @@
     <v-dialog v-model="dialog" max-width="80%">
       <v-card>
         <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">Saved Queries</v-toolbar-title>
+          <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-star</v-icon>Saved Queries</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn disabled @click="save" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
@@ -122,7 +122,10 @@ export default {
           e.preventDefault()
         }
       }, false);
-    }
+    },
+    save() {
+      
+    },
   }
 }
 </script>

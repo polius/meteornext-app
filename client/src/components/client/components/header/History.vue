@@ -3,7 +3,7 @@
     <v-dialog v-model="dialog" max-width="80%">
       <v-card>
         <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">Query History</v-toolbar-title>
+          <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-history</v-icon>Query History</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="history.length == 0" @click="clear" color="primary" style="margin-right:10px;"><v-icon small style="font-size:14px; padding-right:10px; padding-bottom:2px;">fas fa-broom</v-icon>Clear</v-btn>
           <v-btn :disabled="history.length == 0" @click="save" color="primary" style="margin-right:10px;"><v-icon small style="font-size:14px; padding-right:10px;">fas fa-arrow-down</v-icon>Export</v-btn>
