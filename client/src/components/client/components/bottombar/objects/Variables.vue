@@ -71,7 +71,7 @@ export default {
       loading: false,
       // Dialog
       dialog: false,
-      // Grid Api
+      // AG Grid
       gridApi: null,
       columnApi: null,
       currentCellEditNode: {},

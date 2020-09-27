@@ -153,6 +153,9 @@ export default {
       'gridApi',
       'columnApi',
     ], { path: 'client/components' }),
+    ...mapFields([
+      'history',
+    ], { path: 'client/client' }),
   },
   watch: {
     headerTabSelected(val) {
@@ -434,6 +437,9 @@ export default {
       this.executeQuery(payload)
     },
     executeQuery(payload) {
+      // Add queries to history
+      this.$store.dispatch('client/addHistory', payload.queries)
+      // Execute queries
       axios.post('/client/execute', payload)
         .then((response) => {
           this.parseExecution(JSON.parse(response.data.data))
@@ -597,7 +603,7 @@ export default {
         let exportData = this.clientItems.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
         exportData.unshift(header.join(','))
         exportData = exportData.join('\r\n')
-        this.download('export.csv', exportData)        
+        this.download('export.csv', exportData)
       }
       else if (this.dialogSelect == 'SQL') {
         var SqlString = require('sqlstring');
