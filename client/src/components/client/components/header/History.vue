@@ -15,7 +15,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-text-field ref="field" v-model="search" label="Filter..." solo dense clearable hide-details></v-text-field>
-                <ag-grid-vue suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" style="width:100%; height:70vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="history"></ag-grid-vue>
+                <ag-grid-vue suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" style="width:100%; height:70vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="history"></ag-grid-vue>
               </v-flex>
             </v-layout>
           </v-container>
@@ -60,16 +60,27 @@ export default {
     ...mapFields([
       'history',
     ], { path: 'client/client' }),
+    ...mapFields([
+      'headerTab',
+      'headerTabSelected',
+    ], { path: 'client/connection' }),
   },
   mounted() {
     EventBus.$on('SHOW_HISTORY', this.showDialog);
+  },
+  watch: {
+    dialog: function(value) {
+      if (!value) {
+        const tab = {'client': 0, 'structure': 1, 'content': 2, 'info': 3, 'objects': 6}
+        this.headerTab = tab[this.headerTabSelected]
+      }
+    }
   },
   methods: {
     showDialog() {
       this.search = ''
       this.dialog = true
       if (this.gridApi != null) this.gridApi.sizeColumnsToFit()
-      this.$nextTick(() => { this.$refs.field.focus() })
     },
     onGridReady(params) {
       this.gridApi = params.api
@@ -78,6 +89,28 @@ export default {
     },
     onFirstDataRendered(params) {
       params.api.sizeColumnsToFit()
+    },
+    onCellKeyDown(e) {
+      if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
+        navigator.clipboard.writeText(e.value)
+
+        // Highlight cells
+        e.event.originalTarget.classList.add('ag-cell-highlight');
+        e.event.originalTarget.classList.remove('ag-cell-highlight-animation')
+
+        // Add animation
+        window.setTimeout(function () {
+            e.event.originalTarget.classList.remove('ag-cell-highlight')
+            e.event.originalTarget.classList.add('ag-cell-highlight-animation')
+            e.event.originalTarget.style.transition = "background-color " + 200 + "ms"
+
+            // Remove animation
+            window.setTimeout(function () {
+                e.event.originalTarget.classList.remove('ag-cell-highlight-animation')
+                e.event.originalTarget.style.transition = null;
+            }, 200);
+        }, 200);
+      }
     },
     clear() {
       this.history = []

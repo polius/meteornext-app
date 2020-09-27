@@ -12,7 +12,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-text-field ref="field" :disabled="loading" v-model="search" label="Filter..." solo dense clearable hide-details></v-text-field>
-                <ag-grid-vue suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:70vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="columns" :rowData="items"></ag-grid-vue>
+                <ag-grid-vue suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" :stopEditingWhenGridLosesFocus="true" style="width:100%; height:70vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="columns" :rowData="items"></ag-grid-vue>
               </v-flex>
             </v-layout>
           </v-container>

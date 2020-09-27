@@ -80,10 +80,10 @@ export default {
       EventBus.$emit('SHOW_HISTORY')
     },
     tabSaved() {
-
+      EventBus.$emit('SHOW_SAVED')
     },
     tabRights() {
-
+      EventBus.$emit('SHOW_RIGHTS')
     },
   },
 }
