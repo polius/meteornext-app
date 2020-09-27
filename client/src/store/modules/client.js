@@ -103,6 +103,7 @@ const state = {
   connections: [JSON.parse(JSON.stringify(connection))],
   currentConn: 0,
   connectionIndex: 1,
+  history: []
 }
 
 // GETTERS
