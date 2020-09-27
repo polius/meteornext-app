@@ -120,6 +120,7 @@ const actions = {
   newConnection({ commit }) { commit('newConnection') },
   changeConnection({ commit }, data) { commit('changeConnection', data) },
   deleteConnection({ commit }, data) { commit('deleteConnection', data) },
+  addHistory({ commit }, data) { commit('addHistory', data) },
 }
 
 // MUTATIONS
@@ -173,6 +174,18 @@ const mutations = {
     }
     // Load Client ACE Editor
     state.components.editor.setValue(state.connections[state.currentConn].clientQuery, 1)
+  },
+  addHistory(state, data) {
+    const moment = require('moment')
+    const server = state.connections[state.currentConn].server
+    for (let query of data) {
+      state.history.push({
+        'time': moment().format('YYYY-MM-DD HH:mm:ss'),
+        'connection': '[' + server.type + ' ' + server.version + '] ' + server.name,
+        'database': state.connections[state.currentConn].database,
+        'query': query
+      })
+    }
   },
   client(state, data) { state[data.k] = data.v },
   components(state, data) { state.components[data.k] = data.v },
