@@ -20,6 +20,8 @@
     <!-- COMPONENTS -->
     <!---------------->
     <History />
+    <Saved />
+    <Rights />
   </div>
 </template>
 
@@ -28,6 +30,8 @@ import EventBus from '../js/event-bus'
 import { mapFields } from '../js/map-fields'
 
 import History from './header/History'
+import Saved from './header/Saved'
+import Rights from './header/Rights'
 
 export default {
   data() {
@@ -51,7 +55,7 @@ export default {
       'editor',
     ], { path: 'client/components' }),
   },
-  components: { History },
+  components: { History, Saved, Rights },
   methods: {
     tabClient() {
       this.headerTab = 0
