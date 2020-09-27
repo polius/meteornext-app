@@ -35,7 +35,6 @@ export default {
       editor: null
     }
   },
-  components: {  },
   computed: {
     ...mapFields([
         'infoHeaders',
