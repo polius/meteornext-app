@@ -6,7 +6,7 @@
           <v-toolbar-title class="white--text">Query History</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="history.length == 0" @click="clear" color="primary" style="margin-right:10px;"><v-icon small style="font-size:14px; padding-right:10px; padding-bottom:2px;">fas fa-broom</v-icon>Clear</v-btn>
-          <v-btn :disabled="history.length == 0" @click="save" color="primary" style="margin-right:10px;"><v-icon small style="font-size:14px; padding-right:10px;">fas fa-arrow-down</v-icon>Save</v-btn>
+          <v-btn :disabled="history.length == 0" @click="save" color="primary" style="margin-right:10px;"><v-icon small style="font-size:14px; padding-right:10px;">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
