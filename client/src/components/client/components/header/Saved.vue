@@ -127,24 +127,37 @@ export default {
       if (event.target.tagName == 'DIV') {
         if (event.code == 'ArrowDown') {
           if (event.shiftKey) {
-            // APPEND NEW VALUE
+            let last = this.model.slice(-1)[0]
+            if ((last + 1) == this.items.length) return
+            if (this.model.includes(last+1)) this.model.pop()
+            else this.model.push((last + 1))
+            this.$refs['saved' + (last + 1)][0].$el.focus()
           }
           else {
             let max = Math.max(...this.model)
-            this.model = (this.items.length > (max+1)) ? [max + 1] : [max]
-            event.preventDefault()
-          } 
+            let newVal = ((max + 1) < this.items.length) ? max + 1 : max
+            this.model = [newVal]
+            this.$refs['saved' + newVal][0].$el.focus()
+          }
+          event.preventDefault()
         }
         else if (event.code == 'ArrowUp') {
           if (event.shiftKey) {
-            // APPEND NEW VALUE
+            let last = this.model.slice(-1)[0]
+            if (last == 0) return
+            if (this.model.includes(last-1)) this.model.pop()
+            else this.model.push((last - 1))
+            this.$refs['saved' + (last - 1)][0].$el.focus()
           }
           else {
             let min = Math.min(...this.model)
-            this.model = (min > 0) ? [min - 1] : [min]
-            event.preventDefault()
+            let newVal = (min > 0) ? min - 1 : min
+            this.model = [newVal]
+            this.$refs['saved' + newVal][0].$el.focus()
           }
+          event.preventDefault()
         }
+        console.log(this.model)
       }
     },
     onListClick(event, value) {
@@ -155,7 +168,11 @@ export default {
           if (model[0] < value) for (let i = model[0]; i <= value; ++i) this.model.push(i)
           else for (let i = model[0]; i >= value; i--) this.model.push(i)
         }
-        else if ((!event.ctrlKey && !event.metaKey) && !event.shiftKey) this.model = [value]
+        else if (event.ctrlKey || event.metaKey) {
+          if (this.model.includes(value)) this.model = this.model.filter(item => item !== value)
+          else this.model = [...this.model, value]
+        }
+        else this.model = [value]
         this.$refs['saved' + value][0].$el.focus()
       })
     },
