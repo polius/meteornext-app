@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" max-width="80%">
+    <v-dialog ref="savedDialog" v-model="dialog" @keydown="onKeyDown" max-width="80%" eager>
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-star</v-icon>Saved Queries</v-toolbar-title>
@@ -19,7 +19,7 @@
                       <v-row no-gutters style="height:calc(100% - 36px);">
                         <v-list style="width:100%; padding:0px;">
                           <v-list-item-group v-model="model" mandatory multiple>
-                            <v-list-item v-for="(item, i) in items" :key="i" dense>
+                            <v-list-item v-for="(item, i) in items" :key="i" dense :ref="'saved' + i" @click="onListClick($event, i)">
                               <v-list-item-content><v-list-item-title v-text="item"></v-list-item-title></v-list-item-content>
                             </v-list-item>
                           </v-list-item-group>
@@ -91,14 +91,13 @@ export default {
         const tab = {'client': 0, 'structure': 1, 'content': 2, 'info': 3, 'objects': 6}
         this.headerTab = tab[this.headerTabSelected]
       }
-    }
+    },
   },
   methods: {
     showDialog() {
       this.dialog = true
     },
     onSplitPaneReady() {
-      console.log("ready")
       // Init ACE Editor
       this.editor = ace.edit("savedEditor", {
         mode: "ace/mode/sql",
@@ -122,6 +121,43 @@ export default {
           e.preventDefault()
         }
       }, false);
+    },
+    onKeyDown(event) {
+      if (!this.dialog) return
+      if (event.target.tagName == 'DIV') {
+        if (event.code == 'ArrowDown') {
+          if (event.shiftKey) {
+            // APPEND NEW VALUE
+          }
+          else {
+            let max = Math.max(...this.model)
+            this.model = (this.items.length > (max+1)) ? [max + 1] : [max]
+            event.preventDefault()
+          } 
+        }
+        else if (event.code == 'ArrowUp') {
+          if (event.shiftKey) {
+            // APPEND NEW VALUE
+          }
+          else {
+            let min = Math.min(...this.model)
+            this.model = (min > 0) ? [min - 1] : [min]
+            event.preventDefault()
+          }
+        }
+      }
+    },
+    onListClick(event, value) {
+      var model = this.model
+      this.$nextTick(() => {
+        if (event.shiftKey && !event.ctrlKey && !event.metaKey) {
+          this.model = []
+          if (model[0] < value) for (let i = model[0]; i <= value; ++i) this.model.push(i)
+          else for (let i = model[0]; i >= value; i--) this.model.push(i)
+        }
+        else if ((!event.ctrlKey && !event.metaKey) && !event.shiftKey) this.model = [value]
+        this.$refs['saved' + value][0].$el.focus()
+      })
     },
     save() {
       
