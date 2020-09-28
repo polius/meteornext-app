@@ -157,7 +157,6 @@ export default {
           }
           event.preventDefault()
         }
-        console.log(this.model)
       }
     },
     onListClick(event, value) {
@@ -168,12 +167,9 @@ export default {
           if (model[0] < value) for (let i = model[0]; i <= value; ++i) this.model.push(i)
           else for (let i = model[0]; i >= value; i--) this.model.push(i)
         }
-        else if (event.ctrlKey || event.metaKey) {
-          if (this.model.includes(value)) this.model = this.model.filter(item => item !== value)
-          else this.model = [...this.model, value]
-        }
-        else this.model = [value]
-        this.$refs['saved' + value][0].$el.focus()
+        else if (!event.ctrlKey && !event.metaKey) this.model = [value]
+        if (model.includes(value)) this.$refs['saved' + value][0].$el.blur()
+        else this.$refs['saved' + value][0].$el.focus()
       })
     },
     save() {
