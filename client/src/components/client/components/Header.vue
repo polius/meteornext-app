@@ -15,8 +15,6 @@
       <v-tab @click="tabSaved" title="Saved Queries" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-star</v-icon></span></v-tab>
       <v-tab @click="tabObjects" :disabled="sidebarMode != 'objects' || database.length == 0" title="Schema Objects" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-cubes</v-icon></span></v-tab>
       <v-tab @click="tabRights" :disabled="sidebarMode == 'servers'" title="User Rights" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-shield-alt</v-icon></span></v-tab>
-      <v-divider class="mx-3" inset vertical style="margin-left:5px!important; margin-right:5px!important;"></v-divider>
-      <v-tab @click="tabFullScreen" title="Toggle Full Screen" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>{{ fullScreen ? 'fas fa-compress-alt' : 'fas fa-expand-alt' }}</v-icon></span></v-tab>
     </v-tabs>
     <!---------------->
     <!-- COMPONENTS -->
@@ -38,7 +36,6 @@ import Rights from './header/Rights'
 export default {
   data() {
     return {
-      fullScreen: false,
     }
   },
   computed: {
@@ -91,17 +88,6 @@ export default {
     },
     tabRights() {
       EventBus.$emit('SHOW_RIGHTS')
-    },
-    tabFullScreen() {
-      if (this.fullScreen) {
-        document.exitFullscreen()
-        this.fullScreen = false
-      }
-      else {
-        document.body.requestFullscreen()
-        .then(() => { this.fullScreen = true })
-        .catch(err => { EventBus.$emit('SEND_NOTIFICATION', `Error attempting to enable full-screen mode: ${err.message} (${err.name})`, 'error') })
-      }
     },
   },
 }
