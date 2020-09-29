@@ -184,12 +184,14 @@ export default {
       if (triggers_items.length == 0) this.gridApi.structure.triggers.showNoRowsOverlay()
       else this.gridApi.structure.triggers.hideOverlay()
     },
-    execute(query, resolve, reject) {
-      // Execute Query
+    execute(queries, resolve, reject) {
+      // Add queries to history
+      this.$store.dispatch('client/addHistory', [queries])
+      // Execute Queries
       const payload = {
         server: this.server.id,
         database: this.database,
-        queries: [query]
+        queries: [queries]
       }
       axios.post('/client/execute', payload)
         .then((response) => {

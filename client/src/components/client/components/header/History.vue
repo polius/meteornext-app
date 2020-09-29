@@ -15,7 +15,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-text-field ref="field" v-model="search" label="Filter..." solo dense clearable hide-details></v-text-field>
-                <ag-grid-vue suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" style="width:100%; height:70vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="history"></ag-grid-vue>
+                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:70vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="history"></ag-grid-vue>
               </v-flex>
             </v-layout>
           </v-container>
@@ -44,8 +44,6 @@ export default {
       // AG Grid
       gridApi: null,
       columnApi: null,
-      columns: [],
-      items: [],
       search: '',
       header: [
         { headerName: 'Time', colId: 'time', field: 'time', sortable: true, filter: true, resizable: true, editable: false },
@@ -80,15 +78,24 @@ export default {
     showDialog() {
       this.search = ''
       this.dialog = true
-      if (this.gridApi != null) this.gridApi.sizeColumnsToFit()
+      this.resizeTable()
     },
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
-      this.gridApi.sizeColumnsToFit()
+      this.resizeTable()
     },
-    onFirstDataRendered(params) {
-      params.api.sizeColumnsToFit()
+    resizeTable() {
+      this.$nextTick(() => {
+        if (this.gridApi != null) {
+          if (this.history.length == 0) this.gridApi.sizeColumnsToFit()
+          else {
+            let allColumnIds = []
+            this.columnApi.getAllColumns().forEach((column) => allColumnIds.push(column.colId))
+            this.columnApi.autoSizeColumns(allColumnIds)
+          }
+        }
+      })
     },
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
