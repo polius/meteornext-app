@@ -63,6 +63,11 @@
         <v-btn icon><v-icon>fas fa-ankh</v-icon></v-btn>
       </router-link>
 
+      <!-- FULL SCREEN -->
+      <v-btn icon :title="fullScreenEnabled ? 'Exit Full Screen' : 'Full Screen'" @click="fullScreen">
+        <v-icon>{{ fullScreenEnabled ? 'fas fa-compress' : 'fas fa-expand' }}</v-icon>
+      </v-btn>
+
       <!-- LOGOUT -->
       <v-btn icon title="Logout" @click="logout()">
         <v-icon>fas fa-sign-out-alt</v-icon>
@@ -129,6 +134,7 @@ export default {
     rightDrawer: false,
     notifications: [],
     loading: false,
+    fullScreenEnabled: false,
 
     // Snackbar
     snackbar: false,
@@ -150,6 +156,18 @@ export default {
     this.getNotifications(true)
   },
   methods: {
+    fullScreen() {
+      if (this.fullScreenEnabled) {
+        document.exitFullscreen()
+        .catch(() => {})
+        .finally(() => this.fullScreenEnabled = false)
+      }
+      else {
+        document.body.requestFullscreen()
+        .catch(() => this.notification('This browser does not support full screen', 'error'))
+        .finally(() => this.fullScreenEnabled = true)
+      }
+    },
     logout() {
       this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
     },
