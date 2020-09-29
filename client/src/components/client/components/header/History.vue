@@ -90,9 +90,8 @@ export default {
         if (this.gridApi != null) {
           if (this.history.length == 0) this.gridApi.sizeColumnsToFit()
           else {
-            let allColumnIds = []
-            this.columnApi.getAllColumns().forEach((column) => allColumnIds.push(column.colId))
-            this.columnApi.autoSizeColumns(allColumnIds)
+            let allColIds = this.columnApi.getAllColumns().map(column => column.colId)
+            this.columnApi.autoSizeColumns(allColIds)
           }
         }
       })
