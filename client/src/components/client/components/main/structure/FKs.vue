@@ -4,7 +4,7 @@
     <!-- FKs -->
     <!--------->
     <div style="height:calc(100% - 84px)">
-      <ag-grid-vue ref="agGridStructureFKs" suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-clicked="onCellClicked" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.fks" :rowData="structureItems.fks"></ag-grid-vue>
+      <ag-grid-vue ref="agGridStructureFKs" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-clicked="onCellClicked" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.fks" :rowData="structureItems.fks"></ag-grid-vue>
     </div>
     <!---------------->
     <!-- BOTTOM BAR -->
