@@ -5,7 +5,7 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-star</v-icon>Saved Queries</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn :disabled="!saveButton" :loading="loading" @click="editSaved" color="primary" style="margin-right:10px;">Save</v-btn>
+          <v-btn :disabled="selected.length != 1" :loading="loading" @click="editSaved" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -35,7 +35,7 @@
                   </Pane>
                   <Pane size="80" min-size="0" style="background-color:#484848">
                     <div style="height:100%; width:100%">
-                      <v-text-field ref="name" :disabled="selected.length == 0" v-model="name" outlined dense label="Name" hide-details style="margin:10px"></v-text-field>
+                      <v-text-field ref="name" :disabled="selected.length != 1" v-model="name" outlined dense label="Name" hide-details style="margin:10px"></v-text-field>
                       <div style="height:calc(100% - 60px)">
                         <div id="savedEditor" style="float:left; width:100%; height:100%"></div>
                       </div>
@@ -56,10 +56,10 @@
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <div class="text-h6" style="font-weight:400;">Delete saved query?</div>
+              <div class="text-h6" style="font-weight:400;">Remove selected saved queries?</div>
               <v-flex xs12>
                 <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
-                  <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">Are you sure you want to remove all selected query favorites? This action cannot be undone.</div>
+                  <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">Are you sure you want to remove all selected saved queries? This action cannot be undone.</div>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -106,7 +106,6 @@ export default {
       selected: [],
       name: '',
       editor: null,
-      saveButton: false,
     }
   },
   components: { Splitpanes, Pane },
@@ -130,7 +129,6 @@ export default {
   methods: {
     showDialog() {
       this.dialog = true
-      this.saveButton = false
       this.getSaved()
     },
     getSaved() {
@@ -154,7 +152,6 @@ export default {
           this.name = payload['name']
           this.editor.setReadOnly(false)
           this.editor.setValue(payload['query'], -1)
-          this.saveButton = true
           this.$nextTick(() => {
             this.$refs.list.scrollTop = this.$refs.list.scrollHeight
             this.$refs.name.focus()
@@ -170,9 +167,8 @@ export default {
     editSaved() {
       this.loading = true
       axios.put('/client/saved', this.selected[0])
-        .then(() => {
-          //this.getSaved()
-          this.saveButton = false
+        .then((response) => {
+         console.log(response)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -186,9 +182,9 @@ export default {
       this.loading = true
       const payload = this.selected.reduce((acc, item) => { acc.push(item['id']); return acc }, []) 
       axios.delete('/client/saved', { data: payload })
-        .then(() => {
+        .then((response) => {
+          console.log(response)
           this.confirmDialog = false
-          this.getSaved()
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -240,7 +236,6 @@ export default {
             this.selected = [newVal]
             this.$refs['saved' + newVal][0].$el.focus()
           }
-          event.preventDefault()
         }
         else if (event.code == 'ArrowUp') {
           if (event.shiftKey) {
@@ -256,6 +251,16 @@ export default {
             this.selected = [newVal]
             this.$refs['saved' + newVal][0].$el.focus()
           }
+        }
+        if (['ArrowDown','ArrowUp'].includes(event.code)) {
+          if (this.selected.length > 0) {
+            let current = this.items[this.selected[this.selected.length - 1]]
+            this.name = current['name']
+            this.editor.setValue(current['query'], -1)
+            if (this.selected.length == 1) this.editor.setReadOnly(false)
+            else this.editor.setReadOnly(true)
+          }
+          else this.editor.setReadOnly(true)
           event.preventDefault()
         }
       }
@@ -271,6 +276,14 @@ export default {
         else if (!event.ctrlKey && !event.metaKey) this.selected = [value]
         if (selected.includes(value)) this.$refs['saved' + value][0].$el.blur()
         else this.$refs['saved' + value][0].$el.focus()
+        if (this.selected.length > 0) {
+          let current = this.items[this.selected[this.selected.length - 1]]
+          this.name = current['name']
+          this.editor.setValue(current['query'], -1)
+          if (this.selected.length == 1) this.editor.setReadOnly(false)
+          else this.editor.setReadOnly(true)
+        }
+        else this.editor.setReadOnly(true)
       })
     },
   }
