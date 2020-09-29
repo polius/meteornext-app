@@ -385,3 +385,14 @@ CREATE TABLE `monitoring_events` (
   INDEX `created` (`created`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
 );
+
+CREATE TABLE `client_saved_queries` (
+  `id` INT UNSIGNED AUTO_INCREMENT,
+  `name` VARCHAR(191) NOT NULL,
+  `query` TEXT NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `name` (`name`),
+  INDEX `user_id` (`user_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+);

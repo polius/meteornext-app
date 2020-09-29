@@ -423,6 +423,36 @@ class Client:
             finally:
                 conn.stop()
 
+        @client_blueprint.route('/client/saved', methods=['GET','POST','PUT','DELETE'])
+        @jwt_required
+        def client_saved_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            saved_json = request.get_json()
+
+            if request.method == 'GET':
+                saved_queries = self._client.get_saved_queries(user['id'])
+                return jsonify({'saved': saved_queries}), 200
+            elif request.method == 'POST':
+                qid = self._client.add_saved_query(saved_json, user['id'])
+                return jsonify({'data': qid, 'message': 'Saved query added successfully'}), 200
+            elif request.method == 'PUT':
+                qid = self._client.edit_saved_query(saved_json, user['id'])
+                return jsonify({'data' 'message': 'Saved query edited successfully'}), 200
+            elif request.method == 'DELETE':
+                self._client.delete_saved_queries(saved_json, user['id'])
+                return jsonify({'message': 'Selected saved queries deleted successfully'}), 200
+
         return client_blueprint
 
     ####################

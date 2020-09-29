@@ -41,4 +41,33 @@ class Client:
             }
         }
         return credentials
-    
+
+    def get_saved_queries(self, user_id):
+        query = """
+            SELECT *
+            FROM client_saved_queries
+            WHERE user_id = %s
+        """
+        return self._sql.execute(query, (user_id))
+
+    def add_saved_query(self, data, user_id):
+        query = """
+            INSERT INTO client_saved_queries (`name`, `query`, `user_id`)
+            VALUES (%s, %s, %s)
+        """
+        return self._sql.execute(query, (data['name'], data['query'], user_id))
+
+    def edit_saved_query(self, data, user_id):
+        query = """
+            UPDATE client_saved_queries
+            SET name = %s,
+            query = %s
+            WHERE id = %s
+            AND user_id = %s
+        """
+        return self._sql.execute(query, (data['name'], data['query'], data['id'], user_id))
+
+    def delete_saved_queries(self, data, user_id):
+        for s in data:
+            query = "DELETE FROM client_saved_queries WHERE id = %s AND user_id = %s"
+            self._sql.execute(query, (s, user_id))
