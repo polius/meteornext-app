@@ -5,7 +5,7 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-star</v-icon>Saved Queries</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn :disabled="selected.length != 1" :loading="loading" @click="editSaved" color="primary" style="margin-right:10px;">Save</v-btn>
+          <v-btn :disabled="selected.length != 1 || saveButtonDisabled" :loading="loading" @click="editSaved" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -35,7 +35,7 @@
                   </Pane>
                   <Pane size="80" min-size="0" style="background-color:#484848">
                     <div style="height:100%; width:100%">
-                      <v-text-field ref="name" :disabled="selected.length != 1" v-model="name" outlined dense label="Name" hide-details style="margin:10px"></v-text-field>
+                      <v-text-field ref="name" @input="checkValues" :disabled="selected.length != 1" v-model="name" outlined dense label="Name" hide-details style="margin:10px"></v-text-field>
                       <div style="height:calc(100% - 60px)">
                         <div id="savedEditor" style="float:left; width:100%; height:100%"></div>
                       </div>
@@ -106,6 +106,7 @@ export default {
       selected: [],
       name: '',
       editor: null,
+      saveButtonDisabled: true,
     }
   },
   components: { Splitpanes, Pane },
@@ -137,10 +138,16 @@ export default {
         .then((response) => {
           this.items = response.data.saved
           if (this.items.length == 0) this.editor.setReadOnly(true)
+          else {
+            let current = this.items[0]
+            this.name = current['name']
+            this.editor.setValue(current['query'], -1)
+            this.editor.setReadOnly(false)
+          }
         })
         .catch((error) => {
-          console.log(error)
-          EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
         })
     },
     addSaved() {      
@@ -159,16 +166,19 @@ export default {
           })
         })
         .catch((error) => {
-          console.log(error)
-          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          // else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
         })
     },
     editSaved() {
       this.loading = true
-      axios.put('/client/saved', this.selected[0])
-        .then((response) => {
-         console.log(response)
+      let curr = this.selected[0]
+      const payload = {'id': this.items[curr]['id'], 'name': this.name, 'query': this.editor.getValue()}
+      axios.put('/client/saved', payload)
+        .then(() => {
+          this.items[curr]['name'] = payload['name']
+          this.items[curr]['query'] = payload['query']
+          this.saveButtonDisabled = true
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -180,10 +190,21 @@ export default {
     },
     deleteSaved() {
       this.loading = true
-      const payload = this.selected.reduce((acc, item) => { acc.push(item['id']); return acc }, []) 
+      const payload = this.selected.reduce((acc, item) => { acc.push(this.items[item]['id']); return acc }, [])
       axios.delete('/client/saved', { data: payload })
-        .then((response) => {
-          console.log(response)
+        .then(() => {
+          if (payload.length < this.items.length) {
+            let sel = (this.selected[0] - 1 < 0) ? this.selected[this.selected.length-1] + 1 : this.selected[0] - 1
+            this.$refs['saved' + sel][0].$el.focus()
+            this.name = this.items[sel]['name']
+            this.editor.setValue(this.items[sel]['query'], -1)
+          }
+          else {
+            this.name = ''
+            this.editor.setValue('', -1)
+          }
+          this.selected = []
+          this.items = this.items.filter(item => !payload.includes(item.id))
           this.confirmDialog = false
         })
         .catch((error) => {
@@ -204,6 +225,7 @@ export default {
         wrap: true,
         showLineNumbers: true
       });
+      this.editor.on("changeSelection", this.checkValues)
       this.editor.container.addEventListener("keydown", (e) => {
         // - Increase Font Size -
         if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
@@ -221,7 +243,7 @@ export default {
     },
     onKeyDown(event) {
       if (!this.dialog) return
-      if (event.target.tagName == 'DIV') {
+      if (event.target.tagName == 'DIV' && this.items.length > 0) {
         if (event.code == 'ArrowDown') {
           if (event.shiftKey) {
             let last = this.selected.slice(-1)[0]
@@ -285,6 +307,11 @@ export default {
         }
         else this.editor.setReadOnly(true)
       })
+    },
+    checkValues() {
+      if (this.items[this.selected[0]] == undefined) return
+      if (this.items[this.selected[0]]['name'] == this.name && this.items[this.selected[0]]['query'] == this.editor.getValue()) this.saveButtonDisabled = true
+      else this.saveButtonDisabled = false
     },
   }
 }

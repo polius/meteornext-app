@@ -448,7 +448,7 @@ class Client:
                 return jsonify({'data': qid, 'message': 'Saved query added successfully'}), 200
             elif request.method == 'PUT':
                 qid = self._client.edit_saved_query(saved_json, user['id'])
-                return jsonify({'data' 'message': 'Saved query edited successfully'}), 200
+                return jsonify({'message': 'Saved query edited successfully'}), 200
             elif request.method == 'DELETE':
                 self._client.delete_saved_queries(saved_json, user['id'])
                 return jsonify({'message': 'Selected saved queries deleted successfully'}), 200
