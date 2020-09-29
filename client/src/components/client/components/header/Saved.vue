@@ -19,7 +19,7 @@
                       <v-row ref="list" no-gutters style="height:calc(100% - 36px); overflow:auto;">
                         <v-list style="width:100%; padding:0px;">
                           <v-list-item-group v-model="selected" mandatory multiple>
-                            <v-list-item v-for="(item, i) in items" :key="i" dense :ref="'saved' + i" @click="onListClick($event, i)">
+                            <v-list-item v-for="(item, i) in items" :key="i" dense :ref="'saved' + i" @click="onListClick($event, i)" @contextmenu="onListRightClick">
                               <v-list-item-content><v-list-item-title v-text="item.name"></v-list-item-title></v-list-item-content>
                             </v-list-item>
                           </v-list-item-group>
@@ -307,6 +307,9 @@ export default {
         }
         else this.editor.setReadOnly(true)
       })
+    },
+    onListRightClick(event) {
+      event.preventDefault()
     },
     checkValues() {
       if (this.items[this.selected[0]] == undefined) return
