@@ -5,7 +5,7 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-star</v-icon>Saved Queries</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn disabled @click="save" color="primary" style="margin-right:10px;">Save</v-btn>
+          <v-btn :disabled="!saveButton" :loading="loading" @click="editSaved" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -16,32 +16,62 @@
                 <Splitpanes @ready="onSplitPaneReady" style="height:80vh">
                   <Pane size="20" min-size="0" style="align-items:inherit">
                     <v-container fluid style="padding:0px;">
-                      <v-row no-gutters style="height:calc(100% - 36px);">
+                      <v-row ref="list" no-gutters style="height:calc(100% - 36px); overflow:auto;">
                         <v-list style="width:100%; padding:0px;">
-                          <v-list-item-group v-model="model" mandatory multiple>
+                          <v-list-item-group v-model="selected" mandatory multiple>
                             <v-list-item v-for="(item, i) in items" :key="i" dense :ref="'saved' + i" @click="onListClick($event, i)">
-                              <v-list-item-content><v-list-item-title v-text="item"></v-list-item-title></v-list-item-content>
+                              <v-list-item-content><v-list-item-title v-text="item.name"></v-list-item-title></v-list-item-content>
                             </v-list-item>
                           </v-list-item-group>
                         </v-list>
                       </v-row>
                       <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; width:100%">
-                        <v-btn text small title="New Saved Query" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+                        <v-btn @click="addSaved" text small title="New Saved Query" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
                         <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                        <v-btn text small title="Delete Save Query" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+                        <v-btn @click="confirmDialog = true" text small title="Delete Save Query" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
                         <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
                       </v-row>
                     </v-container>
                   </Pane>
                   <Pane size="80" min-size="0" style="background-color:#484848">
                     <div style="height:100%; width:100%">
-                      <v-text-field v-model="textModel" outlined dense label="Name" hide-details style="margin:10px"></v-text-field>
+                      <v-text-field ref="name" :disabled="selected.length == 0" v-model="name" outlined dense label="Name" hide-details style="margin:10px"></v-text-field>
                       <div style="height:calc(100% - 60px)">
                         <div id="savedEditor" style="float:left; width:100%; height:100%"></div>
                       </div>
                     </div>
                   </Pane>
                 </Splitpanes>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!-------------------->
+    <!-- CONFIRM DIALOG -->
+    <!-------------------->
+    <v-dialog v-model="confirmDialog" persistent max-width="60%">
+      <v-card>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <div class="text-h6" style="font-weight:400;">Delete saved query?</div>
+              <v-flex xs12>
+                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
+                  <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">Are you sure you want to remove all selected query favorites? This action cannot be undone.</div>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn :loading="loading" @click="deleteSaved" color="primary">Confirm</v-btn>
+                    </v-col>
+                    <v-col style="margin-bottom:10px;">
+                      <v-btn :disabled="loading" @click="confirmDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
               </v-flex>
             </v-layout>
           </v-container>
@@ -64,15 +94,19 @@ import * as ace from 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import 'ace-builds/src-noconflict/ext-language_tools';
 
+import axios from 'axios'
+
 export default {
   data() {
     return {
       loading: false,
       dialog: false,
-      items: ['Wifi','Bluetooth','Data Usage'],
-      model: [],
-      textModel: '',
+      confirmDialog: false,
+      items: [],
+      selected: [],
+      name: '',
       editor: null,
+      saveButton: false,
     }
   },
   components: { Splitpanes, Pane },
@@ -96,6 +130,73 @@ export default {
   methods: {
     showDialog() {
       this.dialog = true
+      this.saveButton = false
+      this.getSaved()
+    },
+    getSaved() {
+      // Get Saved queries
+      axios.get('/client/saved')
+        .then((response) => {
+          this.items = response.data.saved
+          if (this.items.length == 0) this.editor.setReadOnly(true)
+        })
+        .catch((error) => {
+          console.log(error)
+          EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+        })
+    },
+    addSaved() {      
+      const payload = {'name': 'New Saved Query', 'query': ''}
+      axios.post('/client/saved', payload)
+        .then((response) => {
+          this.items.push({'id': response.data.data, 'name': payload['name'], 'query': payload['query']})
+          this.selected = [this.items.length - 1]
+          this.name = payload['name']
+          this.editor.setReadOnly(false)
+          this.editor.setValue(payload['query'], -1)
+          this.saveButton = true
+          this.$nextTick(() => {
+            this.$refs.list.scrollTop = this.$refs.list.scrollHeight
+            this.$refs.name.focus()
+            this.$refs.name.$el.querySelector('input').setSelectionRange(0, this.name.length)
+          })
+        })
+        .catch((error) => {
+          console.log(error)
+          // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          // else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+        })
+    },
+    editSaved() {
+      this.loading = true
+      axios.put('/client/saved', this.selected[0])
+        .then(() => {
+          //this.getSaved()
+          this.saveButton = false
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    },
+    deleteSaved() {
+      this.loading = true
+      const payload = this.selected.reduce((acc, item) => { acc.push(item['id']); return acc }, []) 
+      axios.delete('/client/saved', { data: payload })
+        .then(() => {
+          this.confirmDialog = false
+          this.getSaved()
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loading = false
+        })
     },
     onSplitPaneReady() {
       // Init ACE Editor
@@ -127,32 +228,32 @@ export default {
       if (event.target.tagName == 'DIV') {
         if (event.code == 'ArrowDown') {
           if (event.shiftKey) {
-            let last = this.model.slice(-1)[0]
+            let last = this.selected.slice(-1)[0]
             if ((last + 1) == this.items.length) return
-            if (this.model.includes(last+1)) this.model.pop()
-            else this.model.push((last + 1))
+            if (this.selected.includes(last+1)) this.selected.pop()
+            else this.selected.push((last + 1))
             this.$refs['saved' + (last + 1)][0].$el.focus()
           }
           else {
-            let max = Math.max(...this.model)
+            let max = Math.max(...this.selected)
             let newVal = ((max + 1) < this.items.length) ? max + 1 : max
-            this.model = [newVal]
+            this.selected = [newVal]
             this.$refs['saved' + newVal][0].$el.focus()
           }
           event.preventDefault()
         }
         else if (event.code == 'ArrowUp') {
           if (event.shiftKey) {
-            let last = this.model.slice(-1)[0]
+            let last = this.selected.slice(-1)[0]
             if (last == 0) return
-            if (this.model.includes(last-1)) this.model.pop()
-            else this.model.push((last - 1))
+            if (this.selected.includes(last-1)) this.selected.pop()
+            else this.selected.push((last - 1))
             this.$refs['saved' + (last - 1)][0].$el.focus()
           }
           else {
-            let min = Math.min(...this.model)
+            let min = Math.min(...this.selected)
             let newVal = (min > 0) ? min - 1 : min
-            this.model = [newVal]
+            this.selected = [newVal]
             this.$refs['saved' + newVal][0].$el.focus()
           }
           event.preventDefault()
@@ -160,20 +261,17 @@ export default {
       }
     },
     onListClick(event, value) {
-      var model = this.model
+      var selected = this.selected
       this.$nextTick(() => {
         if (event.shiftKey && !event.ctrlKey && !event.metaKey) {
-          this.model = []
-          if (model[0] < value) for (let i = model[0]; i <= value; ++i) this.model.push(i)
-          else for (let i = model[0]; i >= value; i--) this.model.push(i)
+          this.selected = []
+          if (selected[0] < value) for (let i = selected[0]; i <= value; ++i) this.selected.push(i)
+          else for (let i = selected[0]; i >= value; i--) this.selected.push(i)
         }
-        else if (!event.ctrlKey && !event.metaKey) this.model = [value]
-        if (model.includes(value)) this.$refs['saved' + value][0].$el.blur()
+        else if (!event.ctrlKey && !event.metaKey) this.selected = [value]
+        if (selected.includes(value)) this.$refs['saved' + value][0].$el.blur()
         else this.$refs['saved' + value][0].$el.focus()
       })
-    },
-    save() {
-      
     },
   }
 }
