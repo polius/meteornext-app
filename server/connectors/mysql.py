@@ -225,7 +225,7 @@ class MySQL:
 
     def get_all_columns(self, db):
         query = """
-            SELECT DISTINCT column_name AS 'name'
+            SELECT DISTINCT column_name AS 'name', column_type AS 'type'
             FROM information_schema.columns
             WHERE table_schema = %s
         """
