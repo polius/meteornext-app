@@ -133,6 +133,7 @@ export default {
   mounted () {
     EventBus.$on('RUN_QUERY', this.runQuery);
     EventBus.$on('EXPLAIN_QUERY', this.explainQuery);
+    EventBus.$on('STOP_QUERY', this.stopQuery);
   },
   computed: {
     ...mapFields([
@@ -142,7 +143,7 @@ export default {
       'bottomBar',
       'server',
       'clientQuery',
-      'clientQueryExecuting',
+      'clientExecuting',
       'database',
       'sidebarSelected',
     ], { path: 'client/connection' }),
@@ -417,12 +418,12 @@ export default {
     initExecution() {
       this.clientHeaders = []
       this.clientItems = []
-      this.bottomBar.client = { text: '', status: '', info: '' }
-      this.clientQueryExecuting = true     
+      this.bottomBar.client = { text: '', status: '', info: '' }   
       this.editor.completer.detach()
       this.gridApi.client.showLoadingOverlay()
     },
     runQuery() {
+      this.clientExecuting = 'query'
       this.initExecution()
       const payload = {
         server: this.server.id,
@@ -432,6 +433,7 @@ export default {
       this.executeQuery(payload)
     },
     explainQuery() {
+      this.clientExecuting = 'explain'
       this.initExecution()
       const payload = {
         server: this.server.id,
@@ -439,6 +441,9 @@ export default {
         queries: this.parseQueries().reduce((acc, val) => { acc.push('EXPLAIN ' + val); return acc }, [])
       }
       this.executeQuery(payload)
+    },
+    stopQuery() {
+
     },
     executeQuery(payload) {
       // Add queries to history
@@ -474,7 +479,7 @@ export default {
           }
         })
         .finally(() => {
-          this.clientQueryExecuting = false
+          this.clientExecuting = null
         })
     },
     parseQueries() {

@@ -13,12 +13,17 @@
     </v-col>
     <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
       <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
-        <v-btn :disabled="clientQueryExecuting || clientQuery.length == 0" @click="explainQuery()" title="Explain Query"><v-icon small>fas fa-chart-pie</v-icon></v-btn>
+        <v-btn :disabled="['stop',null].includes(clientExecuting)" :loading="clientExecuting == 'stop'" @click="stopQuery()" title="Stop Query" style="min-width:52px"><v-icon small>fas fa-stop</v-icon></v-btn>
+      </div>
+    </v-col>
+    <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
+      <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
+        <v-btn :loading="clientExecuting == 'explain'" :disabled="['query','stop'].includes(clientExecuting) || clientQuery.length == 0" @click="explainQuery()" title="Explain Query" style="min-width:52px"><v-icon small>fas fa-chart-pie</v-icon></v-btn>
       </div>
     </v-col>
     <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
       <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding:6px; border-bottom: 1px solid #424242;">
-        <v-btn :loading="clientQueryExecuting" :disabled="clientQuery.length == 0" @click="runQuery()" title="Run Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
+        <v-btn :loading="clientExecuting == 'query'" :disabled="['explain','stop'].includes(clientExecuting) || clientQuery.length == 0" @click="runQuery()" title="Run Query"><v-icon small style="padding-right:10px;">fas fa-bolt</v-icon>Run</v-btn>
       </div>
     </v-col>
   </v-row>
@@ -45,7 +50,7 @@ export default {
       'sidebarMode',
       'sidebarLoading',
       'clientQuery',
-      'clientQueryExecuting',
+      'clientExecuting',
       'server',
       'index',
     ], { path: 'client/connection' }),
@@ -82,7 +87,10 @@ export default {
     },
     explainQuery() {
       EventBus.$emit('EXPLAIN_QUERY')
-    }
+    },
+    stopQuery() {
+      EventBus.$emit('STOP_QUERY')
+    },
   },
 }
 </script>
