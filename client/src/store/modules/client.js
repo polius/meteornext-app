@@ -29,7 +29,7 @@ const connection = {
   clientHeaders: [],
   clientItems: [],
   clientQuery: '',
-  clientQueryExecuting: false,
+  clientExecuting: null, // query, explain, stop
 
   // Structure
   tabStructureSelected: 'columns',
