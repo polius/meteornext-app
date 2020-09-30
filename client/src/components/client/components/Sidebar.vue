@@ -292,16 +292,13 @@ export default {
 
       // Build Databases
       this.databaseItems = []
+      var completer = []
       for (let i = 0; i < data.databases.length; ++i) {
         this.databaseItems.push({ text: data.databases[i]['name'], encoding: data.databases[i]['encoding'], collation: data.databases[i]['collation'] })
+        completer.push({ value: data.databases[i]['name'], meta: 'Database' })
       }
 
-      // Focus Editor
-      // this.editor.focus()
-
       // Add database names to the editor autocompleter
-      var completer = []
-      for (let i = 0; i < data.length; ++i) completer.push({ value: data[i], meta: 'database' })
       this.editorAddCompleter(completer)
 
       // Get Column Types + Collations
@@ -367,6 +364,7 @@ export default {
       this.tableItems = tables.reduce((acc, val) => { acc.push(val['name']); return acc; }, [])
 
       // Build objects
+      var completer = []
       var objects = [
         { id: 'tables', 'name': 'Tables (' + tables.length + ')', type: 'Table', children: [] },
         { id: 'views', 'name': 'Views (' + views.length + ')',  type: 'View', children: [] },
@@ -375,36 +373,43 @@ export default {
         { id: 'procedures', 'name': 'Procedures (' + procedures.length + ')', type: 'Procedure', children: [] },
         { id: 'events', 'name': 'Events (' + data.events.length + ')',  type: 'Event', children: [] }
       ]
+      // Parse Columns
+      for (let i = 0; i < data.columns.length; ++i) {
+        completer.push({ value: data.columns[i]['name'], meta: 'Column: ' + data.columns[i]['type'] })
+      }
       // Parse Tables
       for (let i = 0; i < tables.length; ++i) {
         objects[0]['children'].push({ id: 'table|' + tables[i]['name'], ...tables[i], type: 'Table' })
+        completer.push({ value: tables[i]['name'], meta: 'Table' })
       }
       // Parse Views
       for (let i = 0; i < views.length; ++i) {
         objects[1]['children'].push({ id: 'view|' + views[i]['name'], ...views[i], type: 'View' })
+        completer.push({ value: views[i]['name'], meta: 'View' })
       }
       // Parse Triggers
       for (let i = 0; i < data.triggers.length; ++i) {
         objects[2]['children'].push({ id: 'trigger|' + data.triggers[i]['name'], ...data.triggers[i], type: 'Trigger' })
+        completer.push({ value: data.triggers[i]['name'], meta: 'Trigger' })
       }
       // Parse Functions
       for (let i = 0; i < functions.length; ++i) {
         objects[3]['children'].push({ id: 'function|' + functions[i]['name'], ...functions[i], type: 'Function' })
+        completer.push({ value: functions[i]['name'], meta: 'Function' })
       }
       // Parse Procedures
       for (let i = 0; i < procedures.length; ++i) {
         objects[4]['children'].push({ id: 'procedure|' + procedures[i]['name'], ...procedures[i], type: 'Procedure' })
+        completer.push({ value: procedures[i]['name'], meta: 'Procedure' })
       }
       // Parse Events
       for (let i = 0; i < data.events.length; ++i) {
         objects[5]['children'].push({ id: 'event|' + data.events[i]['name'], ...data.events[i], type: 'Event' })
+        completer.push({ value: data.events[i]['name'], meta: 'Event' })
       }
       this.sidebarItems = objects
 
-      // Add table / view names to the editor autocompleter
-      var completer = []
-      for (let i = 0; i < data.tables.length; ++i) completer.push({ value: data.tables[i]['name'], meta: data.tables[i]['type'] })
-      for (let i = 0; i < data.columns.length; ++i) completer.push({ value: data.columns[i]['name'], meta: 'column' })
+      // Add objects to the editor autocompleter
       if (this.editorCompleters.length > 1) this.editorRemoveCompleter(1)
       this.editorAddCompleter(completer)
     },
@@ -427,6 +432,10 @@ export default {
       }
       this.editor.completers.push(newCompleter)
       this.editorCompleters.push(newCompleter)
+
+      // // Calculate autocomplete width
+      // let width = Math.max(...(list.map(el => el.value.length + el.meta.length)))
+      // this.editor.completer.popup.container.style.width='min(35vw, ' + (width*9+50) + 'px)'
     },
     editorRemoveCompleter(index) {
       this.editor.completers.splice(index+1, 1)

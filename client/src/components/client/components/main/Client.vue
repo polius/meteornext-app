@@ -83,7 +83,7 @@
 </template>
 
 <style scoped>
-  ::v-deep .v-list-item__title {
+::v-deep .v-list-item__title {
   font-size: 0.9rem;
 }
 ::v-deep .v-list-item__content {
@@ -269,12 +269,12 @@ export default {
         // - New Connection -
         if (e.key.toLowerCase() == "t" && (e.ctrlKey || e.metaKey)) {
           e.preventDefault()
-          this.newConnection()
+          // this.newConnection()
         }
         // - Remove Connection -
         else if (e.key.toLowerCase() == "w" && (e.ctrlKey || e.metaKey)) {
           e.preventDefault()
-          this.removeConnection(this.currentConn)
+          // this.removeConnection(this.currentConn)
         }
         // - Run Query/ies -
         else if (e.key.toLowerCase() == "r" && (e.ctrlKey || e.metaKey)) {
@@ -304,24 +304,28 @@ export default {
       const defaultUpperCase = {
         getCompletions(editor, session, pos, prefix, callback) {
           if (session.$mode.completer) {
-            return session.$mode.completer.getCompletions(editor, session, pos, prefix, callback);
+            return session.$mode.completer.getCompletions(editor, session, pos, prefix, callback)
           }
-          const state = editor.session.getState(pos.row);
-          let keywordCompletions;
-          // if (prefix === prefix.toUpperCase()) {
-            keywordCompletions = session.$mode.getCompletions(state, session, pos, prefix);
-            keywordCompletions = keywordCompletions.map((obj) => {
-              const copy = obj;
-              copy.value = obj.value.toUpperCase();
-              return copy;
-            });
-          // } else {
-          //   keywordCompletions = session.$mode.getCompletions(state, session, pos, prefix);
-          // }
-          return callback(null, keywordCompletions);
+          const state = editor.session.getState(pos.row)
+          let keywordCompletions = session.$mode.getCompletions(state, session, pos, prefix)
+          keywordCompletions = keywordCompletions.map((obj) => {
+            obj.value = obj.value.toUpperCase()
+            obj.meta = obj.meta.charAt(0).toUpperCase() + obj.meta.slice(1)
+            return obj
+          })
+          return callback(null, keywordCompletions)
         },
       };
       this.editor.completers = [defaultUpperCase]
+
+      // Init Autocompleter
+      var Autocomplete = ace.require("ace/autocomplete").Autocomplete
+      this.editor.completer = new Autocomplete()
+      this.editor.completer.editor = this.editor
+      this.editor.completer.$init()
+
+      // Resize autocompleter
+      this.editor.completer.popup.container.style.width='35vw'
 
       // Resize after Renderer
       this.editor.renderer.on('afterRender', () => { this.editor.resize() });
