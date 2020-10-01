@@ -85,6 +85,9 @@ export default {
       'gridApi',
       'columnApi',
     ], { path: 'client/components' }),
+    ...mapFields([
+      'connections',
+    ], { path: 'client/client' }),
   },
   mounted () {
     EventBus.$on('GET_STRUCTURE', this.getStructure);
@@ -190,6 +193,7 @@ export default {
       // Add queries to history
       this.$store.dispatch('client/addHistory', [queries])
       // Execute Queries
+      const index = this.index
       const payload = {
         connection: this.index,
         server: this.server.id,
@@ -198,6 +202,8 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
+          let current = this.connections.find(c => c['index'] == index)
+          if (current === undefined) return
           // Show Loading Overlay
           this.gridApi.structure[this.tabStructureSelected].showLoadingOverlay()
           // Get Response Data
@@ -205,15 +211,16 @@ export default {
           // Get Structure
           this.getStructure()
           // Build BottomBar
-          this.parseBottomBar(data)
+          this.parseBottomBar(data, current)
         })
         .catch((error) => {
-          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
+            let current = this.connections.find(c => c['index'] == index)
+            if (current === undefined) return
             let data = JSON.parse(error.response.data.data)
             // Build BottomBar
-            this.parseBottomBar(data)
+            this.parseBottomBar(data, current)
             // Show error
             this.dialogText = data[0]['error']
             this.dialog = true
@@ -223,7 +230,7 @@ export default {
         })
         .finally(() => { resolve() })
     },
-    parseBottomBar(data) {
+    parseBottomBar(data, current) {
       var elapsed = null
       if (data[data.length-1]['time'] !== undefined) {
         elapsed = 0
@@ -232,9 +239,9 @@ export default {
         }
         elapsed /= data.length
       }
-      this.bottomBar.structure[this.tabStructureSelected]['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
-      this.bottomBar.structure[this.tabStructureSelected]['text'] = data[0]['query']
-      if (elapsed != null) this.bottomBar.structure[this.tabStructureSelected]['info'] = elapsed.toString() + 's elapsed'
+      current.bottomBar.structure[current.tabStructureSelected]['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
+      current.bottomBar.structure[current.tabStructureSelected]['text'] = data[0]['query']
+      if (elapsed != null) current.bottomBar.structure[current.tabStructureSelected]['info'] = elapsed.toString() + 's elapsed'
     },
   },
 }
