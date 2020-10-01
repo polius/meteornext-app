@@ -130,19 +130,32 @@ export default {
     }
   },
   components: { Splitpanes, Pane, AgGridVue },
+  created() {
+    // Browser Tab or Browser closes 
+    window.addEventListener('beforeunload', this.closeConnection)
+  },
   mounted () {
     EventBus.$on('RUN_QUERY', this.runQuery);
     EventBus.$on('EXPLAIN_QUERY', this.explainQuery);
     EventBus.$on('STOP_QUERY', this.stopQuery);
+    EventBus.$on('CLOSE_CONNECTION', this.closeConnection);
+  },
+  beforeDestroy() {
+    // Meteor Client Tab closes
+    this.closeConnection()
+  },
+  destroyed() {
+    window.removeEventListener('beforeunload', this.closeConnection)
   },
   computed: {
     ...mapFields([
+      'index',
       'headerTabSelected',
       'clientHeaders',
       'clientItems',
+      'clientQuery',
       'bottomBar',
       'server',
-      'clientQuery',
       'clientExecuting',
       'database',
       'sidebarSelected',
@@ -426,6 +439,7 @@ export default {
       this.clientExecuting = 'query'
       this.initExecution()
       const payload = {
+        connection: this.index,
         server: this.server.id,
         database: this.database,
         queries: this.parseQueries()
@@ -436,6 +450,7 @@ export default {
       this.clientExecuting = 'explain'
       this.initExecution()
       const payload = {
+        connection: this.index,
         server: this.server.id,
         database: this.database,
         queries: this.parseQueries().reduce((acc, val) => { acc.push('EXPLAIN ' + val); return acc }, [])
@@ -443,7 +458,16 @@ export default {
       this.executeQuery(payload)
     },
     stopQuery() {
-
+      this.clientExecuting = 'stop'
+      const payload = { connection: this.index }
+      axios.get('/client/stop_query', payload).finally(() => this.clientExecuting = null )
+      // AXIOS --> /client/stop ... KILL QUERY { SELECT CONNECTION_ID() }  or  CALL mysql.rds_kill_query(99); 
+    },
+    closeConnection(event) {
+      var payload = {}
+      // if (event !== undefined) event.preventDefault()
+      if (event === undefined) payload = { connection: this.index }
+      axios.get('/client/close', payload).then(() => this.clientExecuting = null )
     },
     executeQuery(payload) {
       // Add queries to history
@@ -458,7 +482,6 @@ export default {
           this.editor.moveCursorTo(cur.row, cur.column);
         })
         .catch((error) => {
-          console.log(error)
           this.gridApi.client.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {

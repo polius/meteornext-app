@@ -99,6 +99,7 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'index',
       'structureHeaders',
       'structureItems',
       'sidebarSelected',
@@ -253,6 +254,7 @@ export default {
         this.dialogOptions.item.column = ''
       }
       const payload = {
+        connection: this.index,
         server: this.server.id,
         database: this.database,
         table: table

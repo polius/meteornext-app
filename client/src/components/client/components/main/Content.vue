@@ -195,6 +195,7 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'index',
       'headerTabSelected',
       'contentHeaders',
       'contentItems',
@@ -323,6 +324,7 @@ export default {
       this.bottomBar.content = { status: '', text: '', info: '' }
       this.gridApi.content.showLoadingOverlay()
       const payload = {
+        connection: this.index,
         server: this.server.id,
         database: this.database,
         table: this.sidebarSelected['name'],
@@ -450,6 +452,7 @@ export default {
       this.gridApi.content.showLoadingOverlay()
       // Execute Query/ies
       const payload = {
+        connection: this.index,
         server: this.server.id,
         database: this.database,
         queries: queries
@@ -556,11 +559,11 @@ export default {
         this.gridApi.content.showLoadingOverlay()
         // Execute Query
         const payload = {
+          connection: this.index,
           server: this.server.id,
           database: this.database,
           queries: [query]
         }
-        console.log(payload)
         axios.post('/client/execute', payload)
           .then((response) => {
             this.gridApi.content.hideOverlay()
@@ -653,6 +656,7 @@ export default {
       this.gridApi.content.showLoadingOverlay()
       // Build payload
       const payload = {
+        connection: this.index,
         server: this.server.id,
         database: this.database,
         table: this.sidebarSelected['name'],

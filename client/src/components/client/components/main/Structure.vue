@@ -72,13 +72,14 @@ export default {
   components: { Columns, Indexes, FKs, Triggers },
   computed: {
     ...mapFields([
-        'tabStructureSelected',
-        'bottomBar',
-        'structureHeaders',
-        'structureItems',
-        'sidebarSelected',
-        'server',
-        'database',
+      'index',
+      'tabStructureSelected',
+      'bottomBar',
+      'structureHeaders',
+      'structureItems',
+      'sidebarSelected',
+      'server',
+      'database',
     ], { path: 'client/connection' }),
     ...mapFields([
       'gridApi',
@@ -107,6 +108,7 @@ export default {
       this.bottomBar.structure[this.tabStructureSelected] = { status: '', text: '', info: '' }
       // Retrieve Tables
       const payload = {
+        connection: this.index,
         server: this.server.id, 
         database: this.database, 
         table: this.sidebarSelected['name']
@@ -189,6 +191,7 @@ export default {
       this.$store.dispatch('client/addHistory', [queries])
       // Execute Queries
       const payload = {
+        connection: this.index,
         server: this.server.id,
         database: this.database,
         queries: [queries]

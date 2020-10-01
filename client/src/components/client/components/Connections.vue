@@ -64,7 +64,7 @@ export default {
       this.$store.dispatch('client/changeConnection', index)
     },
     dragConnectionStart(event) {
-      this.currentConn = event.oldIndex
+      this.$store.dispatch('client/changeConnection', event.oldIndex)
     },
     dragConnectionEnd(event) {
       let tabNumber = this.currentConn
@@ -80,6 +80,7 @@ export default {
       this.currentConn = tabActive;
     },
     deleteConnection(index) {
+      EventBus.$emit('CLOSE_CONNECTION')
       this.$store.dispatch('client/deleteConnection', index)
     },
     runQuery() {

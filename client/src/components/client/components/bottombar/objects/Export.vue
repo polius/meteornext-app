@@ -170,6 +170,7 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'index',
       'server',
       'database',
       'objectsHeaders',
@@ -275,6 +276,7 @@ export default {
         objects['events'] = events.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
       }
       const payload = {
+        connection: this.index,
         server: this.server.id,
         database: this.database,
         options: {

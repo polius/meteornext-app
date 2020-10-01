@@ -78,6 +78,7 @@ export default {
   props: { contextMenuItem: Object },
   computed: {
     ...mapFields([
+      'index',
       'server',
       'database',
       'databaseItems',
@@ -127,6 +128,7 @@ export default {
       // Retrieve Databases
       this.loading = true
       const payload = {
+        connection: this.index,
         server: this.server.id, 
         encoding: encoding
       }

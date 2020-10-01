@@ -157,6 +157,7 @@ export default {
       'gridApi',
     ], { path: 'client/components' }),
     ...mapFields([
+      'index',
       'database',
       'databaseItems',
       'tableItems',
@@ -269,7 +270,11 @@ export default {
     getDatabases(server) {
       this.loadingServer = true
       // Retrieve Databases
-      axios.get('/client/databases', { params: { server: server.id } })
+      const payload = {
+        connection: this.index,
+        server: server.id,
+      }
+      axios.get('/client/databases', { params: payload })
         .then((response) => {
           this.parseDatabases(server, response.data)
         })
@@ -330,6 +335,7 @@ export default {
       this.sidebarLoading = true
       // Retrieve Tables
       const payload = {
+        connection: this.index,
         server: this.server.id,
         database: database
       }
@@ -544,6 +550,7 @@ export default {
     execute(queries, resolve, reject) {
       // Execute Query
       const payload = {
+        connection: this.index,
         server: this.server.id,
         database: this.database,
         queries: queries
