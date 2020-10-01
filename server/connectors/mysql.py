@@ -82,28 +82,19 @@ class MySQL:
             return self.__execute_query(query, args, database, fetch)
 
         except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
-            print("1")
-            print(str(error))
             raise Exception(error.args[1])
+
+        # except (pymysql.OperationalError) as error:
+        #     print("1")
+        #     print(str(e))
+        #     raise Exception(error.args[1])
 
         except Exception as e:
             print("2")
             print(str(e))
             # Reconnect SSH + SQL <----- [TODO] ONLY IF SERVER TIMEOUT, NOT IF QUERY FAILS
             self.connect()
-
-            # Retry the query
-            try:
-                return self.__execute_query(query, args, database, fetch)
-            except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
-                print("3")
-                print(str(error))
-                raise Exception(error.args[1])
-
-        except KeyboardInterrupt:
-            self.rollback()
-            self.close()
-            raise KeyboardInterrupt("Program Interrupted by User. Rollback successfully performed.")
+            
 
     def __execute_query(self, query, args, database, fetch):
         # Select the database

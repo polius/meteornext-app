@@ -169,6 +169,8 @@ export default {
     ], { path: 'client/components' }),
     ...mapFields([
       'history',
+      'currentConn',
+      'connections',
     ], { path: 'client/client' }),
   },
   watch: {
@@ -179,6 +181,9 @@ export default {
         })
       }
     },
+    currentConn() {
+      if (this.headerTabSelected == 'client') this.editor.focus()
+    }
   },
   methods: {
    onGridReady(params) {
@@ -473,21 +478,29 @@ export default {
       // Add queries to history
       this.$store.dispatch('client/addHistory', payload.queries)
       // Execute queries
+      const index = this.index
       axios.post('/client/execute', payload)
         .then((response) => {
-          this.parseExecution(JSON.parse(response.data.data))
+          let current = this.connections.find(c => c['index'] == index)
+          if (current === undefined) return
+          let data = JSON.parse(response.data.data)
+          this.parseExecution(data, current)
+          this.parseClientBottomBar(data, current)
           // Focus Editor
-          let cur = this.editor.getCursorPosition()
+          let cursor = this.editor.getCursorPosition()
           this.editor.focus()
-          this.editor.moveCursorTo(cur.row, cur.column);
+          this.editor.moveCursorTo(cursor.row, cursor.column)
+          current.clientExecuting = null
         })
         .catch((error) => {
+          let current = this.connections.find(c => c['index'] == index)
+          if (current === undefined) return
           this.gridApi.client.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             // Get Response Data
             let data = JSON.parse(error.response.data.data)
-            this.parseClientBottomBar(data)
+            this.parseClientBottomBar(data, current)
             // Close Editor Completer
             this.editor.blur()
             // Show confirmation dialog
@@ -499,10 +512,8 @@ export default {
               'button2': ''
             }
             this.showDialog(dialogOptions)
+            current.clientExecuting = null
           }
-        })
-        .finally(() => {
-          this.clientExecuting = null
         })
     },
     parseQueries() {
@@ -533,7 +544,7 @@ export default {
       // Return parsed queries
       return queries
     },
-    parseExecution(data) {
+    parseExecution(data, current) {
       // Build Data Table
       var headers = []
       var items = data[data.length - 1]['data']
@@ -557,15 +568,14 @@ export default {
           })
         }
       }
-      this.clientHeaders = headers
-      this.clientItems = items
+      current.clientHeaders = headers
+      current.clientItems = items
 
       // Resize Table
-      this.gridApi.client.setColumnDefs(headers)
-      this.resizeTable()
-
-      // Build BottomBar
-      this.parseClientBottomBar(data)
+      if (this.index == current.index) {
+        this.gridApi.client.setColumnDefs(headers)
+        this.resizeTable()
+      }
     },
     resizeTable() {
       var allColumnIds = [];
@@ -574,7 +584,7 @@ export default {
       });
       this.columnApi.client.autoSizeColumns(allColumnIds);
     },
-    parseClientBottomBar(data) {
+    parseClientBottomBar(data, current) {
       var elapsed = null
       if (data[data.length-1]['time'] !== undefined) {
         elapsed = 0
@@ -583,11 +593,11 @@ export default {
         }
         elapsed /= data.length
       }
-      this.bottomBar.client['status'] = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
-      this.bottomBar.client['text'] = data[data.length-1]['query'].endsWith(';') ? data[data.length-1]['query'] : data[data.length-1]['query'] + ';'
-      this.bottomBar.client['info'] = (data[data.length-1]['data'] !== undefined && data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['data'].length + ' records | ' : ''
-      this.bottomBar.client['info'] += data.length + ' queries'
-      if (elapsed != null) this.bottomBar.client['info'] += ' | ' + elapsed.toString() + 's elapsed'
+      current.bottomBar.client['status'] = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
+      current.bottomBar.client['text'] = data[data.length-1]['query'].endsWith(';') ? data[data.length-1]['query'] : data[data.length-1]['query'] + ';'
+      current.bottomBar.client['info'] = (data[data.length-1]['data'] !== undefined && data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['data'].length + ' records | ' : ''
+      current.bottomBar.client['info'] += data.length + ' queries'
+      if (elapsed != null) current.bottomBar.client['info'] += ' | ' + elapsed.toString() + 's elapsed'
     },
     showDialog(options) {
       this.dialogMode = options.mode

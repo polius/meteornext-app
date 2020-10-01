@@ -1,10 +1,13 @@
 <template>
   <v-row no-gutters>
     <v-col class="flex-grow-1 flex-shrink-1">
-      <v-tabs v-model="currentConn" v-if="Object.keys(server).length != 0 || connections.length > 1" show-arrows dense background-color="#2c2c2c" color="white" slider-color="#969696" slider-size="1" slot="extension" class="elevation-2" style="border-bottom: 1px solid #424242;">
+      <v-tabs v-model="currentConn" v-if="Object.keys(server).length != 0 || connections.length > 1" hide-slider show-arrows dense background-color="#2c2c2c" color="white" slider-color="#969696" slider-size="1" slot="extension" class="elevation-2" style="border-bottom: 1px solid #424242;">
         <draggable v-model="connections" class="v-tabs__container" @start="dragConnectionStart" @end="dragConnectionEnd">
-          <v-tab v-for="(conn, index) in connections" :key="index" @click="changeConnection(index)" :title="Object.keys(conn.server).length > 0 ? '[' + conn.server.type + ' ' + conn.server.version + '] ' + conn.server.host : ''" style="padding:0px 10px 0px 0px; float:left; height:100%; text-transform:none;">
-            <span class="pl-2 pr-2" style="padding:0px!important; margin-left:15px;">{{ Object.keys(conn.server).length > 0 ? conn.server.name : 'Connection ' + (conn.index) }}<v-btn title="Close Connection" small icon @click.prevent.stop="deleteConnection(index)" style="margin-left:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn></span>
+          <v-tab v-for="(conn, index) in connections" :key="index" @click="changeConnection(index)" :title="Object.keys(conn.server).length > 0 ? '[' + conn.server.type + ' ' + conn.server.version + '] ' + conn.server.host : ''" active-class="v-tabs-active" style="padding:0px 10px 0px 0px; float:left; height:100%; text-transform:none;">
+            <span class="pl-2 pr-2" style="padding:0px!important; margin-left:15px;">
+              <v-progress-circular v-if="conn.clientExecuting != null" indeterminate color="white" size="15" width="1.5" style="margin-right:5px; margin-bottom:2px"></v-progress-circular>
+              {{ Object.keys(conn.server).length > 0 ? conn.server.name : 'Connection ' + (conn.index) }}
+              <v-btn title="Close Connection" small icon @click.prevent.stop="deleteConnection(index)" style="margin-left:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn></span>
           </v-tab>
         </draggable>
         <v-divider class="mx-3" inset vertical></v-divider>
@@ -28,6 +31,12 @@
     </v-col>
   </v-row>
 </template>
+
+<style scoped>
+.v-tabs-active {
+  background-color:#303030;
+}
+</style>
 
 <script>
 import draggable from "vuedraggable";
@@ -54,6 +63,9 @@ export default {
       'server',
       'index',
     ], { path: 'client/connection' }),
+    ...mapFields([
+      'connections',
+    ], { path: 'client/client' }),
   },
   methods: {
     newConnection() {
