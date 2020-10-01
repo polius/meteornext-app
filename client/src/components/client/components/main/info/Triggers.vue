@@ -37,12 +37,13 @@ export default {
   },
   computed: {
     ...mapFields([
-        'infoHeaders',
-        'infoItems',
-        'infoEditor',
-        'server',
-        'database',
-        'sidebarSelected',
+      'index',
+      'infoHeaders',
+      'infoItems',
+      'infoEditor',
+      'server',
+      'database',
+      'sidebarSelected',
     ], { path: 'client/connection' }),
   },
   mounted () {
@@ -77,6 +78,7 @@ export default {
   methods: {
     getInfo() {
       const payload = {
+        connection: this.index,
         server: this.server.id,
         database: this.database,
         object: 'trigger',

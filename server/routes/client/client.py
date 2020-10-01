@@ -10,7 +10,7 @@ import datetime
 from itertools import repeat
 import models.admin.users
 import models.client.client
-import connectors.connector
+from connectors.connector import Connections
 
 class Client:
     def __init__(self, app, sql, license):
@@ -19,6 +19,8 @@ class Client:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._client = models.client.client.Client(sql)
+        # Init connections
+        self._connections = Connections()
 
     def blueprint(self):
         # Init blueprint
@@ -60,21 +62,18 @@ class Client:
             cred = self._client.get_credentials(user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
-            conn = connectors.connector.Connector(cred)
+            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Databases
-            try:
-                databases = conn.get_all_databases()
-                version = conn.get_version()
-                engines = conn.get_engines()
-                encodings = conn.get_encodings()
-                defaults = {
-                    "encoding": conn.get_default_encoding(),
-                    "collation": conn.get_default_collation()
-                }
-                return jsonify({'databases': databases, 'version': version, 'engines': engines, 'encodings': encodings, 'defaults': defaults}), 200
-            finally:
-                conn.stop()
+            databases = conn.get_all_databases()
+            version = conn.get_version()
+            engines = conn.get_engines()
+            encodings = conn.get_encodings()
+            defaults = {
+                "encoding": conn.get_default_encoding(),
+                "collation": conn.get_default_collation()
+            }
+            return jsonify({'databases': databases, 'version': version, 'engines': engines, 'encodings': encodings, 'defaults': defaults}), 200
 
         @client_blueprint.route('/client/objects', methods=['GET'])
         @jwt_required
@@ -94,28 +93,25 @@ class Client:
             cred = self._client.get_credentials(user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
-            conn = connectors.connector.Connector(cred)
+            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Database Objects
-            try:
-                if 'detailed' in request.args:
-                    databases = conn.get_database_info()
-                    tables = conn.get_table_info(db=request.args['database'])
-                    views = conn.get_view_info(db=request.args['database'])
-                    triggers = conn.get_trigger_info(db=request.args['database'])
-                    functions = conn.get_function_info(db=request.args['database'])
-                    procedures = conn.get_procedure_info(db=request.args['database'])
-                    events = conn.get_event_info(db=request.args['database'])
-                    return jsonify({'databases': self.__json(databases), 'tables': self.__json(tables), 'views': self.__json(views), 'triggers': self.__json(triggers), 'functions': self.__json(functions), 'procedures': self.__json(procedures), 'events': self.__json(events)}), 200
-                else:
-                    tables = conn.get_all_tables(db=request.args['database'])
-                    columns = conn.get_all_columns(db=request.args['database'])
-                    triggers = conn.get_all_triggers(db=request.args['database'])
-                    events = conn.get_all_events(db=request.args['database'])
-                    routines = conn.get_all_routines(db=request.args['database'])
-                    return jsonify({'tables': tables, 'columns': columns, 'triggers': triggers, 'events': events, 'routines': routines}), 200
-            finally:
-                conn.stop()
+            if 'detailed' in request.args:
+                databases = conn.get_database_info()
+                tables = conn.get_table_info(db=request.args['database'])
+                views = conn.get_view_info(db=request.args['database'])
+                triggers = conn.get_trigger_info(db=request.args['database'])
+                functions = conn.get_function_info(db=request.args['database'])
+                procedures = conn.get_procedure_info(db=request.args['database'])
+                events = conn.get_event_info(db=request.args['database'])
+                return jsonify({'databases': self.__json(databases), 'tables': self.__json(tables), 'views': self.__json(views), 'triggers': self.__json(triggers), 'functions': self.__json(functions), 'procedures': self.__json(procedures), 'events': self.__json(events)}), 200
+            else:
+                tables = conn.get_all_tables(db=request.args['database'])
+                columns = conn.get_all_columns(db=request.args['database'])
+                triggers = conn.get_all_triggers(db=request.args['database'])
+                events = conn.get_all_events(db=request.args['database'])
+                routines = conn.get_all_routines(db=request.args['database'])
+                return jsonify({'tables': tables, 'columns': columns, 'triggers': triggers, 'events': events, 'routines': routines}), 200
 
         @client_blueprint.route('/client/variables', methods=['GET'])
         @jwt_required
@@ -135,14 +131,11 @@ class Client:
             cred = self._client.get_credentials(user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
-            conn = connectors.connector.Connector(cred)
+            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Server Variables
-            try:
-                variables = conn.get_server_variables()
-                return jsonify({'variables': variables}), 200
-            finally:
-                conn.stop()
+            variables = conn.get_server_variables()
+            return jsonify({'variables': variables}), 200
 
         @client_blueprint.route('/client/execute', methods=['POST'])
         @jwt_required
@@ -165,7 +158,7 @@ class Client:
             cred = self._client.get_credentials(user['group_id'], client_json['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
-            conn = connectors.connector.Connector(cred)
+            conn = self._connections.connect(user['id'], client_json['connection'], cred)
 
             # Execute all queries
             execution = []
@@ -189,8 +182,6 @@ class Client:
                     result = {'query': q, 'error': str(e)}
                     execution.append(result)
                     return jsonify({'data': self.__json(execution)}), 400
-                finally:
-                    conn.stop()
 
             return jsonify({'data': self.__json(execution)}), 200
 
@@ -212,17 +203,14 @@ class Client:
             cred = self._client.get_credentials(user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
-            conn = connectors.connector.Connector(cred)
+            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Structure
-            try:
-                columns = conn.get_columns(db=request.args['database'], table=request.args['table'])
-                indexes = conn.get_indexes(db=request.args['database'], table=request.args['table'])
-                fks = conn.get_fks(db=request.args['database'], table=request.args['table'])
-                triggers = conn.get_triggers(db=request.args['database'], table=request.args['table'])
-                return jsonify({'columns': self.__json(columns), 'indexes': self.__json(indexes), 'fks': self.__json(fks), 'triggers': self.__json(triggers)}), 200
-            finally:
-                conn.stop()
+            columns = conn.get_columns(db=request.args['database'], table=request.args['table'])
+            indexes = conn.get_indexes(db=request.args['database'], table=request.args['table'])
+            fks = conn.get_fks(db=request.args['database'], table=request.args['table'])
+            triggers = conn.get_triggers(db=request.args['database'], table=request.args['table'])
+            return jsonify({'columns': self.__json(columns), 'indexes': self.__json(indexes), 'fks': self.__json(fks), 'triggers': self.__json(triggers)}), 200
 
         @client_blueprint.route('/client/structure/columns', methods=['GET'])
         @jwt_required
@@ -242,14 +230,11 @@ class Client:
             cred = self._client.get_credentials(user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
-            conn = connectors.connector.Connector(cred)
+            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Columns
-            try:
-                columns = conn.get_columns_definition(db=request.args['database'], table=request.args['table'])
-                return jsonify({'columns': self.__json(columns)}), 200
-            finally:
-                conn.stop()
+            columns = conn.get_columns_definition(db=request.args['database'], table=request.args['table'])
+            return jsonify({'columns': self.__json(columns)}), 200
 
         @client_blueprint.route('/client/info', methods=['GET'])
         @jwt_required
@@ -269,55 +254,52 @@ class Client:
             cred = self._client.get_credentials(user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
-            conn = connectors.connector.Connector(cred)
+            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Info
-            try:
-                if request.args['object'] == 'table':
-                    info = conn.get_table_info(db=request.args['database'], table=request.args['name'])
-                    if len(info) > 0:
-                        try:
-                            info[0]['syntax'] = conn.get_table_syntax(db=request.args['database'], table=request.args['name'])
-                        except Exception:
-                            info[0]['syntax'] = ''
-                elif request.args['object'] == 'view':
-                    info = conn.get_view_info(db=request.args['database'], view=request.args['name'])
-                    if len(info) > 0:
-                        try:
-                            info[0]['syntax'] = conn.get_view_syntax(db=request.args['database'], view=request.args['name'])
-                        except Exception as e:
-                            info[0]['syntax'] = ''
-                elif request.args['object'] == 'trigger':
-                    info = conn.get_trigger_info(db=request.args['database'], trigger=request.args['name'])
-                    if len(info) > 0:
-                        try:
-                            info[0]['syntax'] = conn.get_trigger_syntax(db=request.args['database'], trigger=request.args['name'])
-                        except Exception:
-                            info[0]['syntax'] = ''
-                elif request.args['object'] == 'function':
-                    info = conn.get_function_info(db=request.args['database'], function=request.args['name'])
-                    if len(info) > 0:
-                        try:
-                            info[0]['syntax'] = conn.get_function_syntax(db=request.args['database'], function=request.args['name'])
-                        except Exception:
-                            info[0]['syntax'] = ''
-                elif request.args['object'] == 'procedure':
-                    info = conn.get_procedure_info(db=request.args['database'], procedure=request.args['name'])
-                    if len(info) > 0:
-                        try:
-                            info[0]['syntax'] = conn.get_procedure_syntax(db=request.args['database'], procedure=request.args['name'])
-                        except Exception:
-                            info[0]['syntax'] = ''
-                elif request.args['object'] == 'event':
-                    info = conn.get_event_info(db=request.args['database'], event=request.args['name'])
-                    if len(info) > 0:
-                        try:
-                            info[0]['syntax'] = conn.get_event_syntax(db=request.args['database'], event=request.args['name'])
-                        except Exception:
-                            info[0]['syntax'] = ''
-                return jsonify({'info': self.__json(info)}), 200
-            finally:
-                conn.stop()
+            if request.args['object'] == 'table':
+                info = conn.get_table_info(db=request.args['database'], table=request.args['name'])
+                if len(info) > 0:
+                    try:
+                        info[0]['syntax'] = conn.get_table_syntax(db=request.args['database'], table=request.args['name'])
+                    except Exception:
+                        info[0]['syntax'] = ''
+            elif request.args['object'] == 'view':
+                info = conn.get_view_info(db=request.args['database'], view=request.args['name'])
+                if len(info) > 0:
+                    try:
+                        info[0]['syntax'] = conn.get_view_syntax(db=request.args['database'], view=request.args['name'])
+                    except Exception as e:
+                        info[0]['syntax'] = ''
+            elif request.args['object'] == 'trigger':
+                info = conn.get_trigger_info(db=request.args['database'], trigger=request.args['name'])
+                if len(info) > 0:
+                    try:
+                        info[0]['syntax'] = conn.get_trigger_syntax(db=request.args['database'], trigger=request.args['name'])
+                    except Exception:
+                        info[0]['syntax'] = ''
+            elif request.args['object'] == 'function':
+                info = conn.get_function_info(db=request.args['database'], function=request.args['name'])
+                if len(info) > 0:
+                    try:
+                        info[0]['syntax'] = conn.get_function_syntax(db=request.args['database'], function=request.args['name'])
+                    except Exception:
+                        info[0]['syntax'] = ''
+            elif request.args['object'] == 'procedure':
+                info = conn.get_procedure_info(db=request.args['database'], procedure=request.args['name'])
+                if len(info) > 0:
+                    try:
+                        info[0]['syntax'] = conn.get_procedure_syntax(db=request.args['database'], procedure=request.args['name'])
+                    except Exception:
+                        info[0]['syntax'] = ''
+            elif request.args['object'] == 'event':
+                info = conn.get_event_info(db=request.args['database'], event=request.args['name'])
+                if len(info) > 0:
+                    try:
+                        info[0]['syntax'] = conn.get_event_syntax(db=request.args['database'], event=request.args['name'])
+                    except Exception:
+                        info[0]['syntax'] = ''
+            return jsonify({'info': self.__json(info)}), 200
 
         @client_blueprint.route('/client/collations', methods=['GET'])
         @jwt_required
@@ -337,14 +319,11 @@ class Client:
             cred = self._client.get_credentials(user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
-            conn = connectors.connector.Connector(cred)
+            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Collations
-            try:
-                collations = conn.get_collations(encoding=request.args['encoding'])
-                return jsonify({'collations': self.__json(collations)}), 200
-            finally:
-                conn.stop()
+            collations = conn.get_collations(encoding=request.args['encoding'])
+            return jsonify({'collations': self.__json(collations)}), 200
 
         @client_blueprint.route('/client/import', methods=['POST'])
         @jwt_required
@@ -364,7 +343,7 @@ class Client:
             cred = self._client.get_credentials(user['group_id'], request.form['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
-            conn = connectors.connector.Connector(cred)
+            conn = self._connections.connect(user['id'], request.form['connection'], cred)
             
             # Get uploaded file
             if 'file' not in request.files or request.files['file'].filename == '':
@@ -384,8 +363,6 @@ class Client:
             except Exception as e:
                 conn.rollback()
                 return jsonify({'message': str(e)}), 400
-            finally:
-                conn.stop()
 
             # command = ['mysql', '-u%s' % db_settings['USER'], '-p%s' % db_settings['PASSWORD'], db_settings['NAME']]
             # proc = subprocess.Popen(command, stdin = uploaded_file.stream)
@@ -409,7 +386,7 @@ class Client:
             cred = self._client.get_credentials(user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
-            conn = connectors.connector.Connector(cred)
+            conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Start export
             try:
@@ -420,8 +397,6 @@ class Client:
                     return Response(stream_with_context(self.__export_sql(options, cred, conn)))
             except Exception as e:
                 return jsonify({"message": str(e)}), 400
-            finally:
-                conn.stop()
 
         @client_blueprint.route('/client/saved', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
@@ -452,6 +427,43 @@ class Client:
             elif request.method == 'DELETE':
                 self._client.delete_saved_queries(saved_json, user['id'])
                 return jsonify({'message': 'Selected saved queries deleted successfully'}), 200
+
+        @client_blueprint.route('/client/close', methods=['GET'])
+        @jwt_required
+        def client_close_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Close Connection
+            connection = request.args['connection'] if 'connection' in request.args else None
+            self._connections.close(user['id'], connection)
+            return jsonify({'message': 'Connection successfully closed'}), 200
+
+        @client_blueprint.route('/client/stop_query', methods=['GET'])
+        @jwt_required
+        def client_stop_query_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Stop Query
+            self._connections.stop_query(user['id'], request.args['connection'])
+            return jsonify({'message': 'Query successfully stopped'}), 200
 
         return client_blueprint
 

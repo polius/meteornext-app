@@ -20,9 +20,9 @@ class MySQL:
         self._sql = None
         self._cursor = None
 
-    def start(self):
+    def connect(self):
         # Close existing connections
-        self.stop()
+        self.close()
 
         # Supress Errors Output
         sys_stderr = sys.stderr
@@ -47,7 +47,7 @@ class MySQL:
                 return
 
             except Exception as e:
-                self.stop()
+                self.close()
                 error = e
                 time.sleep(1)
 
@@ -57,10 +57,10 @@ class MySQL:
 
         # Check errors
         if error is not None:
-            self.stop()
+            self.close()
             raise error
 
-    def stop(self):
+    def close(self):
         try:
             self._cursor.close()
         except Exception:
@@ -82,16 +82,22 @@ class MySQL:
             return self.__execute_query(query, args, database, fetch)
 
         except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
+            print("1")
+            print(str(error))
             raise Exception(error.args[1])
 
         except Exception as e:
-            # Reconnect SSH + SQL
-            self.start()
+            print("2")
+            print(str(e))
+            # Reconnect SSH + SQL <----- [TODO] ONLY IF SERVER TIMEOUT, NOT IF QUERY FAILS
+            self.connect()
 
             # Retry the query
             try:
                 return self.__execute_query(query, args, database, fetch)
             except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
+                print("3")
+                print(str(error))
                 raise Exception(error.args[1])
 
         except KeyboardInterrupt:

@@ -23,11 +23,12 @@ const connection = {
   sidebarOpened: [],
   sidebarMode: 'servers',
   sidebarSearch: '',
-  sidebarLoading: true,
+  sidebarLoading: false,
 
   // Client
   clientHeaders: [],
   clientItems: [],
+  clientQueries: '',
   clientQuery: '',
   clientExecuting: null, // query, explain, stop
 
@@ -126,8 +127,10 @@ const actions = {
 // MUTATIONS
 const mutations = {
   newConnection(state) {
-    state.connectionIndex += 1
+    // Store Client ACE Editor (current connection)
+    state.connections[state.currentConn].clientQueries = state.components.editor.getValue()
     // Add new connection
+    state.connectionIndex += 1
     let conn = JSON.parse(JSON.stringify(connection))
     conn.index = state.connectionIndex
     state.connections.push(conn)
@@ -139,10 +142,12 @@ const mutations = {
     state.components.editor.setValue('')
   },
   changeConnection(state, data) {
+    // Store Client ACE Editor (current connection)
+    state.connections[state.currentConn].clientQueries = state.components.editor.getValue()
     // Change current connection
     state.currentConn = data
-    // Load Client ACE Editor
-    state.components.editor.setValue(state.connections[state.currentConn].clientQuery, 1)
+    // Load Client ACE Editor (new connection)
+    state.components.editor.setValue(state.connections[state.currentConn].clientQueries, 1)
   },
   deleteConnection(state, data) {
     // Array contains only 1 element
@@ -173,7 +178,7 @@ const mutations = {
       }
     }
     // Load Client ACE Editor
-    state.components.editor.setValue(state.connections[state.currentConn].clientQuery, 1)
+    state.components.editor.setValue(state.connections[state.currentConn].clientQueries, 1)
   },
   addHistory(state, data) {
     const moment = require('moment')

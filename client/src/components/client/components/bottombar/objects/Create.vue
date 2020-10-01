@@ -57,6 +57,7 @@ export default {
   },
   computed: {
     ...mapFields([
+      'index',
       'server',
       'database',
       'headerTab',
@@ -123,6 +124,7 @@ export default {
       // Retrieve Databases
       this.loading = true
       const payload = {
+        connection: this.index,
         server: this.server.id, 
         encoding: encoding
       }

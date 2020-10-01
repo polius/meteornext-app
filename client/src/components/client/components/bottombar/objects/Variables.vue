@@ -86,6 +86,7 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'index',
       'server',
     ], { path: 'client/connection' }),
   },
@@ -110,6 +111,7 @@ export default {
       if (this.gridApi != null) this.gridApi.showLoadingOverlay()
       this.loading = true
       const payload = {
+        connection: this.index,
         server: this.server.id
       }
       axios.get('/client/variables', { params: payload })

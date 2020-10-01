@@ -54,6 +54,7 @@ export default {
   components: { Databases, Tables, Views, Triggers, Functions, Procedures, Events },
   computed: {
     ...mapFields([
+      'index',
       'objectsTab',
       'tabObjectsSelected',
       'server',
@@ -73,6 +74,7 @@ export default {
     },
     getObjects(resolve, reject) {
       const payload = {
+        connection: this.index,
         server: this.server.id,
         database: this.database,
         detailed: true

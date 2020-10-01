@@ -1,8 +1,39 @@
 from connectors.mysql import MySQL
 from connectors.postgresql import PostgreSQL
 
-class Connector:
+class Connections:
+    def __init__(self):
+        self._connections = {}
+    
+    def connect(self, user_id, conn_id, server):
+        if user_id not in self._connections or conn_id not in self._connections[user_id]:
+            conn = Connection(server)
+            conn.connect()
+            if user_id not in self._connections:
+                self._connections[user_id] = {} 
+            self._connections[user_id][conn_id] = conn
+        return self._connections[user_id][conn_id]
+
+    def close(self, user_id, conn_id=None):
+        if conn_id:
+            conn = self._connections[user_id][conn_id]
+            conn.close()
+            del self._connections[user_id][conn_id]
+        else:
+            for conn in self._connections[user_id].values():
+                conn.close()
+            del self._connections[user_id]
+
+    def stop_query(self, user_id, conn_id):
+        server = self._connections[user_id][conn_id].server
+        conn = Connection(server)
+        conn.connect()
+        conn.execute()
+        conn.close()
+
+class Connection:
     def __init__(self, server):
+        self._server = server
         self._sql = None
 
         if server['sql']['engine'] == 'MySQL':
@@ -10,11 +41,15 @@ class Connector:
         elif server['sql']['engine'] == 'PostgreSQL':
             self._sql = PostgreSQL(server)
 
-    def start(self):
-        self._sql.start()
+    @property
+    def server(self):
+        return self._server
 
-    def stop(self):
-        self._sql.stop()
+    def connect(self):
+        self._sql.connect()
+
+    def close(self):
+        self._sql.close()
 
     def execute(self, query, args=None, database=None, fetch=True):
        return self._sql.execute(query, args, database, fetch)
