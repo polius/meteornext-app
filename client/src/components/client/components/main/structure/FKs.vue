@@ -167,19 +167,19 @@ export default {
         navigator.clipboard.writeText(e.value)
 
         // Highlight cells
-        e.event.originalTarget.classList.add('ag-cell-highlight');
-        e.event.originalTarget.classList.remove('ag-cell-highlight-animation')
+        e.event.target.classList.add('ag-cell-highlight');
+        e.event.target.classList.remove('ag-cell-highlight-animation')
 
         // Add animation
         window.setTimeout(function () {
-            e.event.originalTarget.classList.remove('ag-cell-highlight')
-            e.event.originalTarget.classList.add('ag-cell-highlight-animation')
-            e.event.originalTarget.style.transition = "background-color " + 200 + "ms"
+            e.event.target.classList.remove('ag-cell-highlight')
+            e.event.target.classList.add('ag-cell-highlight-animation')
+            e.event.target.style.transition = "background-color " + 200 + "ms"
 
             // Remove animation
             window.setTimeout(function () {
-                e.event.originalTarget.classList.remove('ag-cell-highlight-animation')
-                e.event.originalTarget.style.transition = null;
+                e.event.target.classList.remove('ag-cell-highlight-animation')
+                e.event.target.style.transition = null;
             }, 200);
         }, 200);
       }
