@@ -52,7 +52,7 @@ export default {
 
     // Init ACE Editor
     this.editor = ace.edit("infoTablesEditor", {
-      mode: "ace/mode/sql",
+      mode: "ace/mode/mysql",
       theme: "ace/theme/monokai",
       fontSize: 14,
       showPrintMargin: false,

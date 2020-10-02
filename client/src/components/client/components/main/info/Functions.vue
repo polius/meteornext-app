@@ -52,7 +52,7 @@ export default {
 
     // Init ACE Editor
     this.editor = ace.edit("infoFunctionsEditor", {
-      mode: "ace/mode/sql",
+      mode: "ace/mode/mysql",
       theme: "ace/theme/monokai",
       fontSize: 14,
       showPrintMargin: false,
@@ -122,7 +122,7 @@ export default {
         syntax = 'Insufficient privileges to show the Function Definition.\n\nYou must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table'
       }
       else {
-        this.editor.getSession().setMode("ace/mode/sql")
+        this.editor.getSession().setMode("ace/mode/mysql")
         syntax += ';'
       }
       this.infoEditor.functions = syntax
