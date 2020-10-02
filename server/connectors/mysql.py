@@ -15,10 +15,13 @@ class OrderedDictCursor(DictCursorMixin, Cursor):
 
 class MySQL:
     def __init__(self, server):
+        # Server Credentials
         self._server = server
+        # Objects
         self._tunnel = None
         self._sql = None
         self._cursor = None
+        # Internal variables
         self._connection_id = None
         self._last_execution = None
         self._is_executing = False
