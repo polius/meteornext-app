@@ -430,25 +430,6 @@ class Client:
 
         @client_blueprint.route('/client/close', methods=['GET'])
         @jwt_required
-        def client_close_method():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Get User
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if not user['client_enabled']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Close Connection
-            connection = request.args['connection'] if 'connection' in request.args else None
-            self._connections.close(user['id'], connection)
-            return jsonify({'message': 'Connection successfully closed'}), 200
-
-        @client_blueprint.route('/client/stop_query', methods=['GET'])
-        @jwt_required
         def client_stop_query_method():
             # Check license
             if not self._license.validated:
@@ -461,9 +442,9 @@ class Client:
             if not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Stop Query
-            self._connections.stop_query(user['id'], request.args['connection'])
-            return jsonify({'message': 'Query successfully stopped'}), 200
+            # Close Connection
+            self._connections.kill(user['id'], request.args['connection'])
+            return jsonify({'message': 'Connection successfully stopped'}), 200
 
         return client_blueprint
 

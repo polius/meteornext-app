@@ -19,6 +19,21 @@ class MySQL:
         self._tunnel = None
         self._sql = None
         self._cursor = None
+        self._connection_id = None
+        self._last_execution = None
+        self._is_executing = False
+
+    @property
+    def last_execution(self):
+        return self._last_execution
+
+    @property
+    def is_executing(self):
+        return self._is_executing
+
+    @property
+    def connection_id(self):
+        return self._connection_id
 
     def connect(self):
         # Close existing connections
@@ -45,8 +60,8 @@ class MySQL:
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
                 self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, client_flag=CLIENT.MULTI_STATEMENTS)
                 self.execute('SET wait_timeout = 10')
+                self._connection_id = self.execute('SELECT CONNECTION_ID()')['data'][0]['CONNECTION_ID()']
                 return
-
             except Exception as e:
                 self.close()
                 error = e
@@ -79,7 +94,13 @@ class MySQL:
 
     def execute(self, query, args=None, database=None, fetch=True):
         try:
+            try:
+                self._sql.ping(reconnect=False)
+            except Exception as e:
+                self.connect()
+
             # Execute the query and return results
+            self._is_executing = True
             return self.__execute_query(query, args, database, fetch)
 
         except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
@@ -87,9 +108,13 @@ class MySQL:
 
         except (pymysql.OperationalError) as error:
             print(str(error))
-            print("reconnect")
-            self.connect()
-            return self.__execute_query(query, args, database, fetch)
+            raise
+        except Exception as e:
+            print(str(e))
+            raise
+        finally:
+            self._last_execution = time.time()
+            self._is_executing = False
 
     def __execute_query(self, query, args, database, fetch):
         # Select the database
@@ -140,6 +165,12 @@ class MySQL:
     def mogrify(self, query, args):
         with self._sql.cursor(OrderedDictCursor) as cursor:    
             return cursor.mogrify(query, args)
+    
+    def kill(self, connection_id):
+        try:
+            self.execute('CALL mysql.rds_kill_query({})'.format(connection_id))
+        except Exception:
+            self.execute('KILL QUERY {}'.format(connection_id))
 
     ####################
     # INTERNAL QUERIES #

@@ -92,9 +92,7 @@ export default {
       this.currentConn = tabActive;
     },
     deleteConnection(index, connIndex) {
-      let current = this.connections.find(c => c['index'] == connIndex)
-      if (current !== undefined && current.sidebarMode == 'objects') EventBus.$emit('CLOSE_CONNECTION', current.index)
-      this.$store.dispatch('client/deleteConnection', index)
+      this.$store.dispatch('client/deleteConnection', connIndex)
     },
     runQuery() {
       EventBus.$emit('RUN_QUERY')
