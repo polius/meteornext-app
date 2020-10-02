@@ -559,7 +559,7 @@ export default {
       // Resize Table
       if (this.index == current.index) {
         this.gridApi.client.setColumnDefs(headers)
-        this.resizeTable()
+        this.$nextTick(() => { this.resizeTable() })        
       }
     },
     resizeTable() {
