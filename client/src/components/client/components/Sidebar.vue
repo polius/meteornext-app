@@ -420,6 +420,10 @@ export default {
       this.editorAddCompleter(completer)
     },
     editorAddCompleter(list) {
+      // Create custom keywords to the autocompletor
+      var keywords = ['SHOW','FULL','PROCESSLIST','KILL','QUERY','SLEEP','CALL']
+      for (let k of keywords) list.push({ value: k, meta: 'Keyword' })
+
       const newCompleter = {
         identifierRegexps: [/[^\s]+/],
         getCompletions: function(editor, session, pos, prefix, callback) {

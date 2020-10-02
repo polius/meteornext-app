@@ -130,10 +130,6 @@ export default {
     }
   },
   components: { Splitpanes, Pane, AgGridVue },
-  created() {
-    // Browser Tab or Browser closes 
-    window.addEventListener('beforeunload', this.closeConnection)
-  },
   mounted () {
     EventBus.$on('RUN_QUERY', this.runQuery);
     EventBus.$on('EXPLAIN_QUERY', this.explainQuery);
@@ -141,11 +137,7 @@ export default {
     EventBus.$on('CLOSE_CONNECTION', this.closeConnection);
   },
   beforeDestroy() {
-    // Meteor Client Tab closes
-    this.closeConnection()
-  },
-  destroyed() {
-    window.removeEventListener('beforeunload', this.closeConnection)
+    this.closeAllConnections()
   },
   computed: {
     ...mapFields([
@@ -465,14 +457,16 @@ export default {
     stopQuery() {
       this.clientExecuting = 'stop'
       const payload = { connection: this.index }
-      axios.get('/client/stop_query', payload).finally(() => this.clientExecuting = null )
+      axios.get('/client/stop_query', { params: payload }).finally(() => this.clientExecuting = null )
       // AXIOS --> /client/stop ... KILL QUERY { SELECT CONNECTION_ID() }  or  CALL mysql.rds_kill_query(99); 
     },
-    closeConnection(event) {
-      var payload = {}
-      // if (event !== undefined) event.preventDefault()
-      if (event === undefined) payload = { connection: this.index }
-      axios.get('/client/close', payload).then(() => this.clientExecuting = null )
+    closeAllConnections() {
+      axios.get('/client/close')
+    },
+    closeConnection(connection) {
+      console.log("close")
+      const payload = { connection: connection }
+      axios.get('/client/close', { params: payload }).then(() => this.clientExecuting = null )
     },
     executeQuery(payload) {
       // Add queries to history
