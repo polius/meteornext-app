@@ -44,6 +44,7 @@ class MySQL:
                 port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
                 self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, client_flag=CLIENT.MULTI_STATEMENTS)
+                self.execute('SET wait_timeout = 10')
                 return
 
             except Exception as e:
@@ -84,17 +85,11 @@ class MySQL:
         except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
             raise Exception(error.args[1])
 
-        # except (pymysql.OperationalError) as error:
-        #     print("1")
-        #     print(str(e))
-        #     raise Exception(error.args[1])
-
-        except Exception as e:
-            print("2")
-            print(str(e))
-            # Reconnect SSH + SQL <----- [TODO] ONLY IF SERVER TIMEOUT, NOT IF QUERY FAILS
+        except (pymysql.OperationalError) as error:
+            print(str(error))
+            print("reconnect")
             self.connect()
-            
+            return self.__execute_query(query, args, database, fetch)
 
     def __execute_query(self, query, args, database, fetch):
         # Select the database

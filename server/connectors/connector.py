@@ -1,11 +1,35 @@
+import time
+import schedule
+import threading
 from connectors.mysql import MySQL
 from connectors.postgresql import PostgreSQL
 
 class Connections:
     def __init__(self):
         self._connections = {}
-    
+        # Scheduler
+        self._time_to_live = 10
+        t = threading.Thread(target=self.__scheduler)
+        t.start()
+
+    def __scheduler(self):
+        schedule.every(self._time_to_live).seconds.do(self.__scheduler_clean)
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
+
+    def __scheduler_clean(self):
+        now = time.time()
+        total = 0
+        for user_id, conn_id in self._connections.items():
+            if self._connections[user_id][conn_id].start + self._time_to_live < now:
+                total += 1
+                del self._connections[user_id][conn_id]
+        if total > 0:
+            print("Connections cleaned: {}".format(total))
+
     def connect(self, user_id, conn_id, server):
+        conn_id = int(conn_id)
         if user_id not in self._connections or conn_id not in self._connections[user_id]:
             conn = Connection(server)
             conn.connect()
@@ -16,6 +40,9 @@ class Connections:
 
     def close(self, user_id, conn_id=None):
         if conn_id:
+            conn_id = int(conn_id)
+            print(self._connections)
+            print(conn_id)
             conn = self._connections[user_id][conn_id]
             conn.close()
             del self._connections[user_id][conn_id]
@@ -25,21 +52,28 @@ class Connections:
             del self._connections[user_id]
 
     def stop_query(self, user_id, conn_id):
+        conn = self._connections[user_id][conn_id]
+        conn
         server = self._connections[user_id][conn_id].server
-        conn = Connection(server)
-        conn.connect()
-        conn.execute()
-        conn.close()
+        newConn = Connection(server)
+        newConn.connect()
+        newConn.execute("SELECT host FROM information_schema.processlist WHERE ID = CONNECTION_ID()")
+        newConn.close()
 
 class Connection:
     def __init__(self, server):
         self._server = server
         self._sql = None
+        self._start = time()
 
         if server['sql']['engine'] == 'MySQL':
             self._sql = MySQL(server)
         elif server['sql']['engine'] == 'PostgreSQL':
             self._sql = PostgreSQL(server)
+
+    @property
+    def start(self):
+        return self._start
 
     @property
     def server(self):

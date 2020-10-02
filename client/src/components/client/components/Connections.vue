@@ -7,7 +7,7 @@
             <span class="pl-2 pr-2" style="padding:0px!important; margin-left:15px;">
               <v-progress-circular v-if="conn.clientExecuting != null" indeterminate color="white" size="15" width="1.5" style="margin-right:5px; margin-bottom:2px"></v-progress-circular>
               {{ Object.keys(conn.server).length > 0 ? conn.server.name : 'Connection ' + (conn.index) }}
-              <v-btn title="Close Connection" small icon @click.prevent.stop="deleteConnection(index)" style="margin-left:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn></span>
+              <v-btn title="Close Connection" small icon @click.prevent.stop="deleteConnection(index, conn.index)" style="margin-left:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn></span>
           </v-tab>
         </draggable>
         <v-divider class="mx-3" inset vertical></v-divider>
@@ -91,8 +91,9 @@ export default {
       else if (tabNumber > oldIndex) tabActive = tabNumber - 1;
       this.currentConn = tabActive;
     },
-    deleteConnection(index) {
-      EventBus.$emit('CLOSE_CONNECTION')
+    deleteConnection(index, connIndex) {
+      let current = this.connections.find(c => c['index'] == connIndex)
+      if (current !== undefined && current.sidebarMode == 'objects') EventBus.$emit('CLOSE_CONNECTION', current.index)
       this.$store.dispatch('client/deleteConnection', index)
     },
     runQuery() {
