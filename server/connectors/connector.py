@@ -13,20 +13,23 @@ class Connections:
         t.start()
 
     def __scheduler(self):
-        schedule.every(self._time_to_live).seconds.do(self.__scheduler_clean)
+        schedule.every(self._time_to_live).seconds.do(self.__close_connections)
         while True:
             schedule.run_pending()
             time.sleep(1)
 
-    def __scheduler_clean(self):
+    def __close_connections(self):
         now = time.time()
         total = 0
-        for user_id, conn_id in self._connections.items():
-            if self._connections[user_id][conn_id].start + self._time_to_live < now:
-                total += 1
-                del self._connections[user_id][conn_id]
+        collector = {k:k2 for k,v in self._connections.items() for k2,v2 in v.items() if (not v2.is_executing and v2.last_execution + self._time_to_live < now)}
+        for user_id, conn_id in collector.items():
+            self._connections[user_id][conn_id].close()
+            del self._connections[user_id][conn_id]
+            total += 1
+        for user_id in collector.keys():
+            del self._connections[user_id]
         if total > 0:
-            print("Connections cleaned: {}".format(total))
+            print("- [CLIENT] Connections closed: {}".format(total))
 
     def connect(self, user_id, conn_id, server):
         conn_id = int(conn_id)
@@ -38,33 +41,19 @@ class Connections:
             self._connections[user_id][conn_id] = conn
         return self._connections[user_id][conn_id]
 
-    def close(self, user_id, conn_id=None):
-        if conn_id:
-            conn_id = int(conn_id)
-            print(self._connections)
-            print(conn_id)
-            conn = self._connections[user_id][conn_id]
+    def kill(self, user_id, conn_id):
+        try:
+            connection = self._connections[int(user_id)][int(conn_id)]
+            conn = Connection(connection.server)
+            conn.kill(connection.connection_id)
             conn.close()
-            del self._connections[user_id][conn_id]
-        else:
-            for conn in self._connections[user_id].values():
-                conn.close()
-            del self._connections[user_id]
-
-    def stop_query(self, user_id, conn_id):
-        conn = self._connections[user_id][conn_id]
-        conn
-        server = self._connections[user_id][conn_id].server
-        newConn = Connection(server)
-        newConn.connect()
-        newConn.execute("SELECT host FROM information_schema.processlist WHERE ID = CONNECTION_ID()")
-        newConn.close()
+        finally:
+            pass
 
 class Connection:
     def __init__(self, server):
         self._server = server
         self._sql = None
-        self._start = time()
 
         if server['sql']['engine'] == 'MySQL':
             self._sql = MySQL(server)
@@ -72,15 +61,28 @@ class Connection:
             self._sql = PostgreSQL(server)
 
     @property
-    def start(self):
-        return self._start
+    def last_execution(self):
+        return self._sql.last_execution
+
+    @property
+    def is_executing(self):
+        return self._sql.is_executing
+
+    @property
+    def connection_id(self):
+        return self._sql.connection_id
+
+    @property
+    def last_execution(self):
+        return self._sql.last_execution
 
     @property
     def server(self):
         return self._server
 
     def connect(self):
-        self._sql.connect()
+        self._start = time.time()
+        self._connection_id = self._sql.connect()
 
     def close(self):
         self._sql.close()
@@ -105,6 +107,9 @@ class Connection:
 
     def mogrify(self, query, args):
         return self._sql.mogrify(query, args)
+
+    def kill(self, connection_id):
+        self._sql.kill(connection_id)
 
     ####################
     # INTERNAL QUERIES #

@@ -134,10 +134,6 @@ export default {
     EventBus.$on('RUN_QUERY', this.runQuery);
     EventBus.$on('EXPLAIN_QUERY', this.explainQuery);
     EventBus.$on('STOP_QUERY', this.stopQuery);
-    EventBus.$on('CLOSE_CONNECTION', this.closeConnection);
-  },
-  beforeDestroy() {
-    this.closeAllConnections()
   },
   computed: {
     ...mapFields([
@@ -457,16 +453,11 @@ export default {
     stopQuery() {
       this.clientExecuting = 'stop'
       const payload = { connection: this.index }
-      axios.get('/client/stop_query', { params: payload }).finally(() => this.clientExecuting = null )
-      // AXIOS --> /client/stop ... KILL QUERY { SELECT CONNECTION_ID() }  or  CALL mysql.rds_kill_query(99); 
-    },
-    closeAllConnections() {
-      axios.get('/client/close')
-    },
-    closeConnection(connection) {
-      console.log("close")
-      const payload = { connection: connection }
-      axios.get('/client/close', { params: payload }).then(() => this.clientExecuting = null )
+      axios.get('/client/close', { params: payload })
+      .finally(() => {
+        let current = this.connections.find(c => c['index'] == payload.connection)
+        if (current !== undefined) current.clientExecuting = null
+      })
     },
     executeQuery(payload) {
       // Add queries to history
@@ -505,7 +496,7 @@ export default {
               'button1': 'Close',
               'button2': ''
             }
-            this.showDialog(dialogOptions)
+            if (this.index == index) this.showDialog(dialogOptions)
             current.clientExecuting = null
           }
         })
