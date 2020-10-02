@@ -102,7 +102,7 @@ export default {
       this.$nextTick(() => {
         // Editor Settings
         this.dialogEditor = ace.edit("dialogEditor", {
-          mode: "ace/mode/sql",
+          mode: "ace/mode/mysql",
           theme: "ace/theme/monokai",
           fontSize: 14,
           showPrintMargin: false,

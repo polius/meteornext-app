@@ -13,12 +13,12 @@ class Connections:
         t.start()
 
     def __scheduler(self):
-        schedule.every(self._time_to_live).seconds.do(self.__close_connections)
+        schedule.every(self._time_to_live).seconds.do(self.__close_active_connections)
         while True:
             schedule.run_pending()
             time.sleep(1)
 
-    def __close_connections(self):
+    def __close_active_connections(self):
         now = time.time()
         total = 0
         collector = {k:k2 for k,v in self._connections.items() for k2,v2 in v.items() if (not v2.is_executing and v2.last_execution + self._time_to_live < now)}
