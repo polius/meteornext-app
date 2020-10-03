@@ -156,7 +156,7 @@ export default {
       else if (item == 'Duplicate Table') this.duplicateTable()
       else if (item == 'Truncate Table') this.truncateTable()
       else if (item == 'Delete Table') this.deleteTable()
-      else if (item == 'Export') 1 == 1
+      else if (item == 'Export') this.exportTable()
       else if (item == 'Copy Table Syntax') this.copyTableSyntaxSubmit()
     },
     createTable() {
@@ -219,6 +219,9 @@ export default {
       }
       this.dialogOptions = dialogOptions
       this.dialog = true
+    },
+    exportTable() {
+      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_EXPORT', { object: 'tables', name: this.contextMenuItem.name })
     },
     dialogSubmit() {
       // Check if all fields are filled

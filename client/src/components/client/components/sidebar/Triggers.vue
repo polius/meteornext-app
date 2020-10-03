@@ -138,7 +138,7 @@ export default {
       else if (item == 'Rename Trigger') this.renameTrigger()
       else if (item == 'Duplicate Trigger') this.duplicateTrigger()
       else if (item == 'Delete Trigger') this.deleteTrigger()
-      else if (item == 'Export') 1 == 1
+      else if (item == 'Export') this.exportTrigger()
       else if (item == 'Copy Trigger Syntax') this.copyTriggerSyntaxSubmit()
     },
     createTrigger() {
@@ -189,6 +189,9 @@ export default {
       }
       this.dialogOptions = dialogOptions
       this.dialog = true
+    },
+    exportTrigger() {
+      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_EXPORT', { object: 'triggers', name: this.contextMenuItem.name })
     },
     dialogSubmit() {
       // Check if all fields are filled

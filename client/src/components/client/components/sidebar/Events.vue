@@ -249,7 +249,7 @@ export default {
       else if (item == 'Rename Event') this.renameEvent()
       else if (item == 'Duplicate Event') this.duplicateEvent()
       else if (item == 'Delete Event') this.deleteEvent()
-      else if (item == 'Export') 1 == 1
+      else if (item == 'Export') this.exportEvent()
       else if (item == 'Copy Event Syntax') this.copyEventSyntaxSubmit()
     },
     createEvent() {
@@ -308,6 +308,9 @@ export default {
       }
       this.dialogOptions = dialogOptions
       this.dialog = true
+    },
+    exportEvent() {
+      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_EXPORT', { object: 'events', name: this.contextMenuItem.name })
     },
     dialogSubmit() {
       // Check if all fields are filled

@@ -144,7 +144,7 @@ export default {
       else if (item == 'Rename View') this.renameView()
       else if (item == 'Duplicate View') this.duplicateView()
       else if (item == 'Delete View') this.deleteView()
-      else if (item == 'Export') 1 == 1
+      else if (item == 'Export') this.exportView()
       else if (item == 'Copy View Syntax') this.copyViewSyntaxSubmit()
     },
     createView() {
@@ -196,6 +196,9 @@ export default {
       this.dialogOptions = dialogOptions
       this.dialog = true
     },
+    exportView() {
+      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_EXPORT', { object: 'views', name: this.contextMenuItem.name })
+    },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
@@ -207,7 +210,7 @@ export default {
       if (this.dialogOptions.mode == 'createView') this.createViewSubmit()
       else if (this.dialogOptions.mode == 'renameView') this.renameViewSubmit() 
       else if (this.dialogOptions.mode == 'duplicateView') this.duplicateViewSubmit() 
-      else if (this.dialogOptions.mode == 'deleteView') this.deleteViewSubmit() 
+      else if (this.dialogOptions.mode == 'deleteView') this.deleteViewSubmit()
     },
     createViewSubmit() {
       let viewName = this.dialogOptions.item.name
