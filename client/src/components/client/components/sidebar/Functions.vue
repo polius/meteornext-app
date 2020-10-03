@@ -158,7 +158,7 @@ RETURN (customerLevel);
       else if (item == 'Rename Function') this.renameFunction()
       else if (item == 'Duplicate Function') this.duplicateFunction()
       else if (item == 'Delete Function') this.deleteFunction()
-      else if (item == 'Export') 1 == 1
+      else if (item == 'Export') this.exportFunction()
       else if (item == 'Copy Function Syntax') this.copyFunctionSyntaxSubmit()
     },
     createFunction() {
@@ -209,6 +209,9 @@ RETURN (customerLevel);
       }
       this.dialogOptions = dialogOptions
       this.dialog = true
+    },
+    exportFunction() {
+      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_EXPORT', { object: 'functions', name: this.contextMenuItem.name })
     },
     dialogSubmit() {
       // Check if all fields are filled

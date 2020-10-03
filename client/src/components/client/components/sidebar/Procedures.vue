@@ -151,7 +151,7 @@ WHERE CountryCode = country;
       else if (item == 'Rename Procedure') this.renameProcedure()
       else if (item == 'Duplicate Procedure') this.duplicateProcedure()
       else if (item == 'Delete Procedure') this.deleteProcedure()
-      else if (item == 'Export') 1 == 1
+      else if (item == 'Export') this.exportProcedure()
       else if (item == 'Copy Procedure Syntax') this.copyProcedureSyntaxSubmit()
     },
     createProcedure() {
@@ -202,6 +202,9 @@ WHERE CountryCode = country;
       }
       this.dialogOptions = dialogOptions
       this.dialog = true
+    },
+    exportProcedure() {
+      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_EXPORT', { object: 'procedures', name: this.contextMenuItem.name })
     },
     dialogSubmit() {
       // Check if all fields are filled
