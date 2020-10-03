@@ -30,16 +30,18 @@
                       <v-divider v-if="tab == 'sql'" class="mx-3" inset vertical></v-divider>
                       <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">Events</span></v-tab>
                       <v-divider v-if="tab == 'sql'" class="mx-3" inset vertical></v-divider>
+                      <v-spacer></v-spacer>
+                      <v-btn :disabled="loading" :loading="loading" @click="buildObjects()" title="Refresh" text style="font-size:16px; padding:0px; min-width:36px; height:36px; margin-top:6px; margin-right:8px;"><v-icon small>fas fa-redo-alt</v-icon></v-btn>
                     </v-tabs>
                   </div>
                   <div style="height:55vh">
                     <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'csv'" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('tablesCsv', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDefCsv" :rowData="objectsItems.tables"></ag-grid-vue>
-                    <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'sql'" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('tables', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" @row-data-changed="selectRow('views')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDef" :rowData="objectsItems.tables"></ag-grid-vue>
-                    <ag-grid-vue v-show="tabObjectsSelected == 1" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('views', $event)" @row-data-changed="selectRow('views')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.views" :defaultColDef="defaultColDef" :rowData="objectsItems.views"></ag-grid-vue>
-                    <ag-grid-vue v-show="tabObjectsSelected == 2" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('triggers', $event)" @row-data-changed="selectRow('triggers')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.triggers" :defaultColDef="defaultColDef" :rowData="objectsItems.triggers"></ag-grid-vue>
-                    <ag-grid-vue v-show="tabObjectsSelected == 3" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('functions', $event)" @row-data-changed="selectRow('functions')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.functions" :defaultColDef="defaultColDef" :rowData="objectsItems.functions"></ag-grid-vue>
-                    <ag-grid-vue v-show="tabObjectsSelected == 4" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('procedures', $event)" @row-data-changed="selectRow('procedures')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.procedures" :defaultColDef="defaultColDef" :rowData="objectsItems.procedures"></ag-grid-vue>
-                    <ag-grid-vue v-show="tabObjectsSelected == 5" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('events', $event)" @row-data-changed="selectRow('events')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.events" :defaultColDef="defaultColDef" :rowData="objectsItems.events"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'sql'" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('tables', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDef" :rowData="objectsItems.tables"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 1" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('views', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.views" :defaultColDef="defaultColDef" :rowData="objectsItems.views"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 2" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('triggers', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.triggers" :defaultColDef="defaultColDef" :rowData="objectsItems.triggers"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 3" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('functions', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.functions" :defaultColDef="defaultColDef" :rowData="objectsItems.functions"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 4" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('procedures', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.procedures" :defaultColDef="defaultColDef" :rowData="objectsItems.procedures"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 5" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('events', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.events" :defaultColDef="defaultColDef" :rowData="objectsItems.events"></ag-grid-vue>
                   </div>
                   <v-select v-if="tab == 'sql'" v-model="include" :items="includeItems" label="Include" outlined hide-details style="margin-top:15px"></v-select>
                   <v-checkbox v-if="tab == 'csv'" v-model="includeFields" label="Include field names in first row" hide-details style="padding:0px; margin-top:10px"></v-checkbox>
@@ -153,6 +155,7 @@ export default {
         headerCheckboxSelection: false,
         checkboxSelection: (params) => { return params.columnApi.getAllDisplayedColumns()[0] === params.column },
       },
+      objects: ['tables','views','triggers','functions','procedures','events'],
       // Include
       include: 'Structure + Content',
       includeItems: ['Structure + Content','Structure','Content'],
@@ -183,44 +186,44 @@ export default {
   },
   watch: {
     tabObjectsSelected: function(val) {
-      let objects = ['tables','views','triggers','functions','procedures','events']
-      if (this.tab == 'csv') this.resizeTable('tablesCsv')
-      else if (this.tab == 'sql') this.resizeTable(objects[val])
+      if (this.tab == 'csv') this.resizeTable('tablesCsv', false)
+      else if (this.tab == 'sql') this.resizeTable(this.objects[val], false)
     },
   },
   methods: {
     showDialog(selected) {
-      this.selected = selected
-      this.tabClick('sql')
-      if (selected === undefined) this.tabObjectsSelected = 0
       this.include = 'Structure + Content'
       this.includeFields = true
-      this.$nextTick(() => { this.dialog = true })
+      this.selected = selected
+      this.dialog = true
+      this.tabClick('sql')
       this.$nextTick(() => { 
-        if (this.gridApi['tables'] != null) this.gridApi['tables'].showLoadingOverlay()
+        if (this.objectsHeaders.tables.length == 0) this.buildObjects()
+        for (let obj of this.objects) {
+          if (this.gridApi[obj] != null) this.gridApi[obj].deselectAll()
+        }
+        if (selected === undefined) this.tabObjectsSelected = 0
+        else this.selectRow()
       })
-      this.$nextTick(() => { this.buildObjects() })
     },
     onGridReady(object, params) {
       this.gridApi[object] = params.api
       this.columnApi[object] = params.columnApi
       this.gridApi[object].showLoadingOverlay()
-      this.selectRow(object)
     },
     onNewColumnsLoaded(object) {
-      if (this.gridApi[object] != null) this.resizeTable(object)
+      if (this.gridApi[object] != null) this.resizeTable(object, true)
     },
-    selectRow(object) {
-      if (this.selected === undefined || this.gridApi[object] == null || object != this.selected['object']) return
-      let objects = ['tables','views','triggers','functions','procedures','events']
-      this.$nextTick(() => { this.tabObjectsSelected = objects.indexOf(object) })
-      this.$nextTick(() => {
-        this.gridApi[object].forEachNode((node) => {
+    selectRow() {
+      if (this.selected === undefined || this.gridApi[this.selected['object']] == null) return
+      this.$nextTick(() => { 
+        this.tabObjectsSelected = this.objects.indexOf(this.selected['object'])
+        this.gridApi[this.selected['object']].forEachNode((node) => {
           if (node.data.name == this.selected['name']) node.setSelected(true)
         })
       })
     },
-    resizeTable(object) {
+    resizeTable(object, selectRow) {
       this.$nextTick(() => {
         var allColumnIds = [];
         this.columnApi[object].getAllColumns().forEach(function(column) {
@@ -231,6 +234,7 @@ export default {
       let obj = (object == 'tablesCsv') ? 'tables' : object 
       if (this.objectsItems[obj].length > 0) this.gridApi[obj].hideOverlay()
       else this.gridApi[obj].showNoRowsOverlay()
+      if (selectRow) this.selectRow()
     },
     tabClick(object) {
       if (object == 'sql') {
@@ -240,17 +244,23 @@ export default {
       else if (object == 'csv') {
         this.sqlColor = '#779ecb'
         this.csvColor = 'primary'
-        this.resizeTable('tablesCsv')
+        this.resizeTable('tablesCsv', false)
       }
       this.tab = object
       this.tabObjectsSelected = 0
     },
     buildObjects() {
+      for (let obj of this.objects) {
+        if (this.gridApi[obj] != null) this.gridApi[obj].showLoadingOverlay()
+      }
       let promise = new Promise((resolve, reject) => {
         this.loading = true
         EventBus.$emit('GET_OBJECTS', resolve, reject)
       })
       promise.finally(() => {
+        for (let obj of this.objects) {
+          if (this.gridApi[obj] != null) this.gridApi[obj].hideOverlay()
+        }
         this.loading = false 
       })
     },
