@@ -106,15 +106,9 @@ class MySQL:
             self._is_executing = True
             return self.__execute_query(query, args, database, fetch)
 
-        except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
+        except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError, pymysql.OperationalError) as error:
             raise Exception(error.args[1])
 
-        except (pymysql.OperationalError) as error:
-            print(str(error))
-            raise
-        except Exception as e:
-            print(str(e))
-            raise
         finally:
             self._last_execution = time.time()
             self._is_executing = False
@@ -587,3 +581,57 @@ class MySQL:
         for c in result:
             columns.append(c['column'])
         return columns
+
+    def get_all_rights(self):
+        query = "SELECT `user`, `host` FROM mysql.`user` ORDER BY `user`, `host`"
+        return self.execute(query)['data']
+
+    def get_server_rights(self, user, host):
+        query = """
+            SELECT *
+            FROM `user`
+            WHERE `user` = %s
+            AND `host` = %s
+            ORDER BY db;
+        """
+        return self.execute(query, args=(user, host), database='mysql')['data']
+
+    def get_db_rights(self, user, host):
+        query = """
+            SELECT *
+            FROM db
+            WHERE `user` = %s
+            AND `host` = %s
+            ORDER BY db;
+        """
+        return self.execute(query, args=(user, host), database='mysql')['data']
+
+    def get_table_rights(self, user, host):
+        query = """
+            SELECT db, table_name, table_priv 
+            FROM tables_priv
+            WHERE `user` = %s
+            AND `host` = %s
+            ORDER BY db, table_name;
+        """
+        return self.execute(query, args=(user, host), database='mysql')['data']
+
+    def get_column_rights(self, user, host):
+        query = """
+            SELECT db, table_name, column_name, column_priv
+            FROM columns_priv
+            WHERE `user` = %s
+            AND `host` = %s
+            ORDER BY db, table_name, column_name;
+        """
+        return self.execute(query, args=(user, host), database='mysql')['data']
+
+    def get_proc_rights(self, user, host):
+        query = """
+            SELECT db, routine_name, routine_type, proc_priv
+            FROM procs_priv
+            WHERE `user` = %s
+            AND `host` = %s
+            ORDER BY db, routine_name
+        """
+        return self.execute(query, args=(user, host), database='mysql')['data']

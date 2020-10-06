@@ -1,0 +1,10 @@
+/* TREEVIEW */
+::v-deep .v-treeview-node__root {
+  min-height:30px;
+}
+::v-deep .v-treeview-node__toggle {
+  width: 15px;
+}
+::v-deep .v-treeview-node__level {
+  width: 10px;
+}
