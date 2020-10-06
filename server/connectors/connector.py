@@ -266,3 +266,21 @@ class Connection:
 
     def get_columns_definition(self, db, table):
         return self._sql.get_columns_definition(db, table)
+
+    def get_all_rights(self):
+        return self._sql.get_all_rights()
+
+    def get_server_rights(self, user, host):
+        return self._sql.get_server_rights(user, host)
+
+    def get_db_rights(self, user, host):
+        return self._sql.get_db_rights(user, host)
+
+    def get_table_rights(self, user, host):
+        return self._sql.get_table_rights(user, host)
+
+    def get_column_rights(self, user, host):
+        return self._sql.get_column_rights(user, host)
+
+    def get_proc_rights(self, user, host):
+        return self._sql.get_proc_rights(user, host)

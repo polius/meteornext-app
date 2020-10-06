@@ -61,6 +61,9 @@ const connection = {
   objectsHeaders: { databases: [], tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
   objectsItems: { databases: [], tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
 
+  // Rights
+  rightsItems: [],
+
   // Bottom Bar
   bottomBar: {
     client: { text: '', status: '', info: '' },

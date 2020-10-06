@@ -453,7 +453,7 @@ export default {
     stopQuery() {
       this.clientExecuting = 'stop'
       const payload = { connection: this.index }
-      axios.get('/client/close', { params: payload })
+      axios.get('/client/stop', { params: payload })
       .finally(() => {
         let current = this.connections.find(c => c['index'] == payload.connection)
         if (current !== undefined) current.clientExecuting = null

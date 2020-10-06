@@ -428,7 +428,7 @@ class Client:
                 self._client.delete_saved_queries(saved_json, user['id'])
                 return jsonify({'message': 'Selected saved queries deleted successfully'}), 200
 
-        @client_blueprint.route('/client/close', methods=['GET'])
+        @client_blueprint.route('/client/stop', methods=['GET'])
         @jwt_required
         def client_stop_query_method():
             # Check license
@@ -445,6 +445,41 @@ class Client:
             # Close Connection
             self._connections.kill(user['id'], request.args['connection'])
             return jsonify({'message': 'Connection successfully stopped'}), 200
+
+        @client_blueprint.route('/client/rights', methods=['GET'])
+        @jwt_required
+        def client_rights_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Server Credentials + Connection
+            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+            # Get Rights
+            try:
+                if 'host' not in request.args and 'user' not in request.args:
+                    rights = conn.get_all_rights()
+                    return jsonify({'rights': rights}), 200
+                else:
+                    server = conn.get_server_rights(request.args['host'], request.args['user'])
+                    db = conn.get_db_rights(request.args['host'], request.args['user'])
+                    table = conn.get_table_rights(request.args['host'], request.args['user'])
+                    column = conn.get_column_rights(request.args['host'], request.args['user'])
+                    proc = conn.get_proc_rights(request.args['host'], request.args['user'])
+                    return jsonify({'server': server, 'db': db, 'table': table, 'column': column, 'proc': proc}), 200
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
 
         return client_blueprint
 
