@@ -1,9 +1,9 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" max-width="80%">
+    <v-dialog v-model="dialog" max-width="85%">
       <v-card>
         <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:5px">fas fa-shield-alt</v-icon>User Rights</v-toolbar-title>
+          <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-shield-alt</v-icon>User Rights</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <!-- <v-btn :disabled="selected.length != 1 || saveButtonDisabled" :loading="loading" @click="editSaved" color="primary" style="margin-right:10px;">Save</v-btn> -->
           <v-spacer></v-spacer>
@@ -37,8 +37,33 @@
                       </v-row>
                     </v-container>
                   </Pane>
-                  <Pane size="80" min-size="0" style="background-color:#484848">
-                   
+                  <Pane size="80" min-size="0" style="background-color:#484848; align-items:inherit;">
+                    <v-container fluid style="padding:0px;">
+                      <div>
+                        <v-tabs show-arrows dense background-color="#3b3b3b" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
+                          <v-tabs-slider></v-tabs-slider>
+                          <v-tab><span class="pl-2 pr-2">Login</span></v-tab>
+                          <v-divider class="mx-3" inset vertical></v-divider>
+                          <v-tab><span class="pl-2 pr-2">Global Privileges</span></v-tab>
+                          <v-divider class="mx-3" inset vertical></v-divider>
+                          <v-tab><span class="pl-2 pr-2">Schema Privileges</span></v-tab>
+                          <v-divider class="mx-3" inset vertical></v-divider>
+                          <v-tab><span class="pl-2 pr-2">Resources</span></v-tab>
+                          <v-divider class="mx-3" inset vertical></v-divider>
+                        </v-tabs>
+                      </div>
+                      <div style="height: calc(100% - 84px)">
+
+                      </div>
+                      <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; width:100%">
+                        <v-btn text small title="New User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+                        <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+                        <v-btn text small title="Delete User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+                        <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+                        <v-btn text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+                        <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+                      </v-row>
+                    </v-container>
                   </Pane>
                 </Splitpanes>
               </v-flex>
