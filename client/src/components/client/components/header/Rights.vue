@@ -47,6 +47,38 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <!------------------>
+    <!-- DIALOG: info -->
+    <!------------------>
+    <v-dialog v-model="infoDialog" persistent max-width="50%">
+      <v-card>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <div class="text-h6" style="font-weight:400;">An error occurred</div>
+              <v-flex xs12>
+                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
+                  <div class="body-2" style="font-weight:300; font-size:1.05rem!important; margin-top:12px;">{{ infoDialogText }}</div>
+                  <v-card style="margin-top:20px;">
+                    <v-card-text style="padding:10px;">
+                      <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ infoDialogError }}</div>
+                    </v-card-text>
+                  </v-card>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn @click="infoDialog = false" color="primary">Close</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -71,6 +103,9 @@ export default {
       rightsSelected: {},
       rightsOpened: [],
       rightsSearch: '',
+      // Info Dialog
+      infoDialog: false,
+      infoDialogText: '',
     }
   },
   components: { Splitpanes, Pane },
@@ -113,8 +148,10 @@ export default {
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
-            // Show Dialog (error.response.data.message)
-
+            // Show Dialog
+            this.infoDialogText = 'Cannot retrieve the user permissions. Please check if the current user has SELECT privileges on the mysql.user table.'
+            this.infoDialogError = error.response.data.message
+            this.infoDialog = true
           }
         })
         .finally(() => {  })
