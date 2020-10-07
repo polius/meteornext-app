@@ -110,6 +110,12 @@
 <style scoped src="@/styles/splitPanes.css"></style>
 <style scoped src="@/styles/treeview.css"></style>
 
+<style scoped>
+.v-input__slot {
+  background-color:#484848;
+}
+</style>
+
 <script>
 import axios from 'axios'
 
