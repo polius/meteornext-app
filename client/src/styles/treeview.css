@@ -1,6 +1,7 @@
 /* TREEVIEW */
 ::v-deep .v-treeview-node__root {
   min-height:30px;
+  padding-right:0px;
 }
 ::v-deep .v-treeview-node__toggle {
   width: 15px;

@@ -3,7 +3,7 @@
     <v-dialog v-model="dialog" max-width="80%">
       <v-card>
         <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-shield-alt</v-icon>User Rights</v-toolbar-title>
+          <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:5px">fas fa-shield-alt</v-icon>User Rights</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <!-- <v-btn :disabled="selected.length != 1 || saveButtonDisabled" :loading="loading" @click="editSaved" color="primary" style="margin-right:10px;">Save</v-btn> -->
           <v-spacer></v-spacer>
@@ -17,10 +17,10 @@
                   <Pane size="20" min-size="0" style="align-items:inherit">
                     <v-container fluid style="padding:0px;">
                       <v-row ref="list" no-gutters style="height:calc(100% - 36px); overflow:auto;">
-                        <v-treeview :active.sync="rights" item-key="id" :open.sync="rightsOpened" :items="rightsItems" :search="rightsSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
+                        <v-treeview :active.sync="rights" item-key="id" :open.sync="rightsOpened" :items="rightsItems" :search="rightsSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 62px); width:100%; overflow-y:auto;">
                           <template v-slot:label="{item}">
-                            <v-btn text style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
-                              <v-icon small style="padding:10px;">fas fa-user</v-icon>
+                            <v-btn text style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding-left:10px;"> 
+                              <v-icon v-if="'children' in item" small style="padding-right:10px">fas fa-user</v-icon>
                               {{ item.name }}
                             </v-btn>
                           </template>
@@ -106,6 +106,7 @@ export default {
       // Info Dialog
       infoDialog: false,
       infoDialogText: '',
+      infoDialogError: '',
     }
   },
   components: { Splitpanes, Pane },
