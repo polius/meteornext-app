@@ -89,6 +89,7 @@
 ::v-deep .v-list-item {
   min-height:40px;
 }
+
 </style>
 
 <script>
