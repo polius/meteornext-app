@@ -2,7 +2,7 @@
   <div>
     <v-tabs v-model="headerTab" show-arrows background-color="#9b59b6" color="white" slider-color="white" slot="extension" class="elevation-2">
       <v-tabs-slider></v-tabs-slider>
-      <v-tab @click="tabClient"><span class="pl-2 pr-2" style="min-width:110px"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>CLIENT</span></v-tab>
+      <v-tab @click="tabClient"><span class="pl-2 pr-2" style="min-width:100px"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>CLIENT</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
       <v-tab @click="tabStructure" :disabled="sidebarMode != 'objects' || sidebarSelected['type'] != 'Table'"><span class="pl-2 pr-2" style="min-width:130px"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-dice-d6</v-icon>Structure</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
