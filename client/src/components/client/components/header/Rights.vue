@@ -15,32 +15,12 @@
               <v-flex xs12>
                 <Splitpanes @ready="onSplitPaneReady" style="height:80vh">
                   <Pane size="20" min-size="0" style="align-items:inherit">
-                    <v-container fluid style="padding:0px;">
-                      <v-row ref="list" no-gutters style="height:calc(100% - 36px); overflow:auto;">
-                        <v-treeview :active.sync="rights" item-key="id" :open.sync="rightsOpened" :items="rightsItems" :search="rightsSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 62px); width:100%; overflow-y:auto;">
-                          <template v-slot:label="{item}">
-                            <v-btn text style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding-left:10px;"> 
-                              <v-icon v-if="'children' in item" small style="padding-right:10px">fas fa-user</v-icon>
-                              {{ item.name }}
-                            </v-btn>
-                          </template>
-                        </v-treeview>
-                        <v-text-field v-if="rightsItems.length > 0" v-model="rightsSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
-                      </v-row>
-                      <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; width:100%">
-                        <v-btn text small title="New User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
-                        <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                        <v-btn text small title="Delete User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
-                        <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                        <v-btn text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
-                        <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                      </v-row>
-                    </v-container>
+                    <Sidebar />
                   </Pane>
                   <Pane size="80" min-size="0" style="background-color:#484848; align-items:inherit;">
                     <v-container fluid style="padding:0px;">
                       <div>
-                        <v-tabs show-arrows dense background-color="#3b3b3b" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
+                        <v-tabs v-model="tab" show-arrows dense background-color="#3b3b3b" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
                           <v-tabs-slider></v-tabs-slider>
                           <v-tab><span class="pl-2 pr-2">Login</span></v-tab>
                           <v-divider class="mx-3" inset vertical></v-divider>
@@ -52,17 +32,10 @@
                           <v-divider class="mx-3" inset vertical></v-divider>
                         </v-tabs>
                       </div>
-                      <div style="height: calc(100% - 84px)">
-
-                      </div>
-                      <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; width:100%">
-                        <v-btn text small title="New User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
-                        <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                        <v-btn text small title="Delete User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
-                        <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                        <v-btn text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
-                        <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-                      </v-row>
+                      <Login v-show="tab == 0" />
+                      <Global v-show="tab == 1" />
+                      <Schema v-show="tab == 2" />
+                      <Resources v-show="tab == 3"/>
                     </v-container>
                   </Pane>
                 </Splitpanes>
@@ -108,13 +81,6 @@
 </template>
 
 <style scoped src="@/styles/splitPanes.css"></style>
-<style scoped src="@/styles/treeview.css"></style>
-
-<style scoped>
-.v-input__slot {
-  background-color:#484848;
-}
-</style>
 
 <script>
 import axios from 'axios'
@@ -125,22 +91,25 @@ import { mapFields } from '../../js/map-fields'
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 
+import Sidebar from './rights/Sidebar'
+import Login from './rights/Login'
+import Global from './rights/Global'
+import Schema from './rights/Schema'
+import Resources from './rights/Resources'
+
 export default {
   data() {
     return {
       dialog: false,
-      // Rights
-      rights: [],
-      rightsSelected: {},
-      rightsOpened: [],
-      rightsSearch: '',
+      // Tab
+      tab: 0,
       // Info Dialog
       infoDialog: false,
       infoDialogText: '',
       infoDialogError: '',
     }
   },
-  components: { Splitpanes, Pane },
+  components: { Splitpanes, Pane, Sidebar, Login, Global, Schema, Resources },
   computed: {
     ...mapFields([
       'index',
