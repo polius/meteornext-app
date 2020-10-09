@@ -591,8 +591,7 @@ class MySQL:
             SELECT *
             FROM `user`
             WHERE `user` = %s
-            AND `host` = %s
-            ORDER BY db;
+            AND `host` = %s;
         """
         return self.execute(query, args=(user, host), database='mysql')['data']
 
@@ -609,9 +608,10 @@ class MySQL:
     def get_table_rights(self, user, host):
         query = """
             SELECT db, table_name, table_priv 
-            FROM tables_priv
+            FROM mysql.tables_priv
             WHERE `user` = %s
             AND `host` = %s
+            AND table_priv != ''
             ORDER BY db, table_name;
         """
         return self.execute(query, args=(user, host), database='mysql')['data']
@@ -634,4 +634,8 @@ class MySQL:
             AND `host` = %s
             ORDER BY db, routine_name
         """
+        return self.execute(query, args=(user, host), database='mysql')['data']
+
+    def get_rights_syntax(self, user, host):
+        query = "SHOW GRANTS FOR %s@%s"
         return self.execute(query, args=(user, host), database='mysql')['data']

@@ -467,19 +467,35 @@ class Client:
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Get Rights
-            try:
-                if 'host' not in request.args and 'user' not in request.args:
+            if 'host' not in request.args and 'user' not in request.args:
+                try:
                     rights = conn.get_all_rights()
                     return jsonify({'rights': rights}), 200
-                else:
-                    server = conn.get_server_rights(request.args['host'], request.args['user'])
-                    db = conn.get_db_rights(request.args['host'], request.args['user'])
-                    table = conn.get_table_rights(request.args['host'], request.args['user'])
-                    column = conn.get_column_rights(request.args['host'], request.args['user'])
-                    proc = conn.get_proc_rights(request.args['host'], request.args['user'])
-                    return jsonify({'server': server, 'db': db, 'table': table, 'column': column, 'proc': proc}), 200
-            except Exception as e:
-                return jsonify({"message": str(e)}), 400
+                except Exception as e:
+                    return jsonify({"message": "Cannot retrieve the user permissions. Please check if the current user has SELECT privileges on the 'mysql.user' table.", "error": str(e)}), 400
+            else:
+                try:
+                    server = conn.get_server_rights(request.args['user'], request.args['host'])
+                except Exception as e:
+                    return jsonify({"message": "Cannot retrieve the user permissions. Please check if the current user has SELECT privileges on the 'mysql.user' table.", "error": str(e)}), 400
+                try:
+                    db = conn.get_db_rights(request.args['user'], request.args['host'])
+                except Exception as e:
+                    return jsonify({"message": "Cannot retrieve the user permissions. Please check if the current user has SELECT privileges on the 'mysql.db' table.", "error": str(e)}), 400
+                try:
+                    table = conn.get_table_rights(request.args['user'], request.args['host'])
+                except Exception as e:
+                    return jsonify({"message": "Cannot retrieve the user permissions. Please check if the current user has SELECT privileges on the 'mysql.tables_priv' table.", "error": str(e)}), 400
+                try:
+                    column = conn.get_column_rights(request.args['user'], request.args['host'])
+                except Exception as e:
+                    return jsonify({"message": "Cannot retrieve the user permissions. Please check if the current user has SELECT privileges on the 'mysql.columns_priv' table.", "error": str(e)}), 400
+                try:
+                    proc = conn.get_proc_rights(request.args['user'], request.args['host'])
+                except Exception as e:
+                    return jsonify({"message": "Cannot retrieve the user permissions. Please check if the current user has SELECT privileges on the 'mysql.procs_priv' table.", "error": str(e)}), 400
+                syntax = conn.get_rights_syntax(request.args['user'], request.args['host'])
+                return jsonify({'server': server, 'db': db, 'table': table, 'column': column, 'proc': proc, 'syntax': syntax}), 200
 
         return client_blueprint
 
