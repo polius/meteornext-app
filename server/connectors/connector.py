@@ -284,3 +284,6 @@ class Connection:
 
     def get_proc_rights(self, user, host):
         return self._sql.get_proc_rights(user, host)
+
+    def get_rights_syntax(self, user, host):
+        return self._sql.get_rights_syntax(user, host)

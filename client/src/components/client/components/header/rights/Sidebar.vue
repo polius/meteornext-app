@@ -1,15 +1,15 @@
 <template>
   <v-container fluid style="padding:0px;">
     <v-row ref="list" no-gutters style="height:calc(100% - 36px); overflow:auto;">
-      <v-treeview :active.sync="sidebar" item-key="id" :open.sync="sidebarOpened" :items="rightsItems" :search="sidebarSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 62px); width:100%; overflow-y:auto;">
+      <v-treeview :active.sync="sidebar" item-key="id" :open.sync="sidebarOpened" :items="rights['sidebar']" :search="sidebarSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 62px); width:100%; overflow-y:auto;">
         <template v-slot:label="{item}">
-          <v-btn text style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding-left:10px;"> 
+          <v-btn @click="sidebarClick(item)" text style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding-left:10px;"> 
             <v-icon v-if="'children' in item" small style="padding-right:10px">fas fa-user</v-icon>
             {{ item.name }}
           </v-btn>
         </template>
       </v-treeview>
-      <v-text-field v-if="rightsItems.length > 0" v-model="sidebarSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
+      <v-text-field v-if="rights['sidebar'].length > 0" v-model="sidebarSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
     </v-row>
     <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; width:100%">
       <v-btn text small title="New User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
@@ -32,6 +32,7 @@
 
 <script>
 import { mapFields } from '../../../js/map-fields'
+import EventBus from '../../../js/event-bus'
 
 export default {
   data() {
@@ -45,11 +46,15 @@ export default {
   },
   computed: {
     ...mapFields([
-      'rightsItems',
+      'rights',
     ], { path: 'client/connection' }),
   },
   methods: {
-
+    sidebarClick(item) {
+      if ('children' in item) return
+      console.log(item)
+      EventBus.$emit('GET_RIGHTS', item['user'], item['name'])
+    },
   }
 }
 </script>

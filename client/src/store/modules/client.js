@@ -62,7 +62,7 @@ const connection = {
   objectsItems: { databases: [], tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
 
   // Rights
-  rightsItems: [],
+  rights: { sidebar: [], login: {}, server: {}, schema: [], resources: {}, syntax: '' },
 
   // Bottom Bar
   bottomBar: {
