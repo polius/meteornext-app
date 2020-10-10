@@ -38,7 +38,7 @@
                       <Server v-show="tab == 1" />
                       <Schema :tab="tab" v-show="tab == 2" />
                       <Resources v-show="tab == 3"/>
-                      <Syntax v-show="tab == 4"/>
+                      <Syntax :tab="tab" v-show="tab == 4"/>
                     </v-container>
                   </Pane>
                 </Splitpanes>
