@@ -3,9 +3,11 @@
     <v-row ref="list" no-gutters style="height:calc(100% - 36px); overflow:auto;">
       <v-treeview :active.sync="sidebar" item-key="id" :open.sync="sidebarOpened" :items="rights['sidebar']" :search="sidebarSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 62px); width:100%; overflow-y:auto;">
         <template v-slot:label="{item}">
-          <v-btn @click="sidebarClick(item)" text style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding-left:10px;"> 
+          <v-btn @click="sidebarClick(item)" @contextmenu="onRightClick" text style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding-left:10px;"> 
             <v-icon v-if="'children' in item" small style="padding-right:10px">fas fa-user</v-icon>
             {{ item.name }}
+            <v-spacer></v-spacer>
+            <v-progress-circular v-if="rightsLoading && item.id == sidebar[0]" indeterminate size="16" width="2" color="white"></v-progress-circular>
           </v-btn>
         </template>
       </v-treeview>
@@ -47,14 +49,17 @@ export default {
   computed: {
     ...mapFields([
       'rights',
+      'rightsLoading',
     ], { path: 'client/connection' }),
   },
   methods: {
     sidebarClick(item) {
       if ('children' in item) return
-      console.log(item)
       EventBus.$emit('GET_RIGHTS', item['user'], item['name'])
     },
+    onRightClick(event) {
+      event.preventDefault()
+    }
   }
 }
 </script>

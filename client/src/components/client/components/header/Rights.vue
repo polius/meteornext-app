@@ -34,11 +34,11 @@
                           <v-divider class="mx-3" inset vertical></v-divider>
                         </v-tabs>
                       </div>
-                      <Login :tab="tab" v-show="tab == 0" />
-                      <Server :tab="tab" v-show="tab == 1" />
+                      <Login v-show="tab == 0" />
+                      <Server v-show="tab == 1" />
                       <Schema :tab="tab" v-show="tab == 2" />
-                      <Resources :tab="tab" v-show="tab == 3"/>
-                      <Syntax :tab="tab" v-show="tab == 4"/>
+                      <Resources v-show="tab == 3"/>
+                      <Syntax v-show="tab == 4"/>
                     </v-container>
                   </Pane>
                 </Splitpanes>
@@ -121,6 +121,7 @@ export default {
       'headerTab',
       'headerTabSelected',
       'rights',
+      'rightsLoading',
     ], { path: 'client/connection' }),
   },
   mounted() {
@@ -138,7 +139,7 @@ export default {
   methods: {
     showDialog() {
       this.dialog = true
-      if (this.rights['sidebar'] .length == 0) this.getRights()
+      if (this.rights['sidebar'].length == 0) this.getRights()
     },
     onSplitPaneReady() {
     },
@@ -151,12 +152,7 @@ export default {
       }
       axios.get('/client/rights', { params: payload })
         .then((response) => {
-          try {
-            this.parseRightsSidebar(response.data)
-          }
-          catch(error) {
-            console.log(error)
-          }
+          this.parseRightsSidebar(response.data)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -167,10 +163,11 @@ export default {
             this.infoDialog = true
           }
         })
-        .finally(() => {  })
+        .finally(() => {
+          this.$nextTick(() => { })          
+        })
     },
     parseRightsSidebar(data) {
-      console.log(data)
       if ('rights' in data) {
         var rights = []
         for (let right of data['rights']) {
@@ -193,7 +190,7 @@ export default {
         const serverRights = [
           'select','insert','update','delete','references','create','drop','alter','index','trigger',
           'create_view','show_view', 'create_routine','alter_routine','execute',
-          'reload','shutdown','file','process','super','create_temp_table','lock_tables','show_databases','create_user','grant','event','replication_client','replication_slave'
+          'reload','shutdown','file','process','super','create_tmp_table','lock_tables','show_db','create_user','grant','event','repl_client','repl_slave'
         ]
         for (let i of serverRights) this.rights['server'][i] = data['server'][0][i.charAt(0).toUpperCase() + i.replaceAll(' ','_').substr(1) + '_priv'] == 'Y'
         // Schema
@@ -232,6 +229,9 @@ export default {
         this.rights['syntax'] = syntax
         console.log(this.rights)
         console.log(this.rights['server']['select'])
+
+        // Reload Rights
+        EventBus.$emit('RELOAD_RIGHTS')
       }
     },
   }
