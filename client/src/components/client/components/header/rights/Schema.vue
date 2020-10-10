@@ -58,7 +58,7 @@
                               <v-checkbox v-model="dialogOptions.item.rights.select" dense label="Select" hide-details style="margin:0px;"></v-checkbox>
                               <v-checkbox v-model="dialogOptions.item.rights.insert" dense label="Insert" hide-details style="margin:0px;"></v-checkbox>
                               <v-checkbox v-model="dialogOptions.item.rights.update" dense label="Update" hide-details style="margin:0px;"></v-checkbox>
-                              <v-checkbox v-model="dialogOptions.item.rights.delete" dense label="Delete" hide-details style="margin:0px;"></v-checkbox>
+                              <v-checkbox :disabled="dialogOptions.item.type == 'Column'" v-model="dialogOptions.item.rights.delete" dense label="Delete" hide-details style="margin:0px;"></v-checkbox>
                             </v-card-text>
                           </v-card>
                         </v-col>
