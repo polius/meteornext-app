@@ -21,6 +21,7 @@ export default {
       'rights',
     ], { path: 'client/connection' }),
   },
+  props: { tab: Number },
   mounted() {
     EventBus.$on('RELOAD_RIGHTS', this.reloadRights);
     // Init ACE Editor
@@ -47,7 +48,11 @@ export default {
         e.preventDefault()
       }
     }, false);
-    this.editor.setValue(this.rights['syntax'], -1)
+  },
+  watch: {
+    tab(value) {
+      if (value == 4) this.reloadRights()
+    }
   },
   methods: {
     reloadRights() {
