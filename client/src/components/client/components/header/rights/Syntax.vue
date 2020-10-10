@@ -3,6 +3,7 @@
 </template>
 
 <script>
+import EventBus from '../../../js/event-bus'
 import { mapFields } from '../../../js/map-fields'
 
 import * as ace from 'ace-builds';
@@ -12,16 +13,16 @@ import 'ace-builds/src-noconflict/ext-language_tools';
 export default {
   data() {
     return {
-      editor: null
+      editor: null,
     }
   },
-  props: { tab: Number },
   computed: {
     ...mapFields([
       'rights',
     ], { path: 'client/connection' }),
   },
   mounted() {
+    EventBus.$on('RELOAD_RIGHTS', this.reloadRights);
     // Init ACE Editor
     this.editor = ace.edit("rightsSyntax", {
       mode: "ace/mode/mysql",
@@ -48,13 +49,10 @@ export default {
     }, false);
     this.editor.setValue(this.rights['syntax'], -1)
   },
-  watch: {
-    tab: function(value) {
-      if (value == 4) this.editor.setValue(this.rights['syntax'], -1)
-    }
-  },
   methods: {
-
+    reloadRights() {
+      this.editor.setValue(this.rights['syntax'], -1)
+    },
   }
 }
 </script>

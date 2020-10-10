@@ -1,22 +1,114 @@
 <template>
   <div style="height:100%">
     <div style="height: calc(100% - 84px)">
-      <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="rights['schema']"></ag-grid-vue>
+      <ag-grid-vue suppressDragLeaveHidesColumns suppressContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-double-clicked="onRowDoubleClicked" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :columnDefs="header" :rowData="schema"></ag-grid-vue>
     </div>
     <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; width:100%">
-      <v-btn text small title="New User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+      <v-btn @click="addRights" text small title="Grant Rights" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
       <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn text small title="Delete User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
-      <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+      <v-btn @click="removeRights" text small title="Revoke Rights" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
       <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
     </v-row>
+    <!------------>
+    <!-- DIALOG -->
+    <!------------>
+    <v-dialog v-model="dialog" persistent max-width="60%">
+      <v-card>
+        <v-toolbar v-if="dialogOptions.mode != 'delete'" flat color="primary">
+          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <div v-if="dialogOptions.mode == 'delete'" class="text-h6" style="font-weight:400;">{{ dialogOptions.title }}</div>
+              <v-flex xs12>
+                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
+                  <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
+                  <div v-if="Object.keys(dialogOptions.item).length > 0">
+                    <v-select v-model="dialogOptions.item.type" @change="onChangeType" :items="['Database','Table','Column']" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-select>
+                    <v-row no-gutters>
+                      <v-col><v-text-field v-model="dialogOptions.item.database" :rules="[v => !!v || '']" label="Database" required style="padding-top:0px;"></v-text-field></v-col>
+                      <v-col v-if="['Table','Column'].includes(dialogOptions.item.type)" style="margin-left:10px"><v-text-field v-model="dialogOptions.item.table" :rules="[v => !!v || '']" label="Table" required style="padding-top:0px;"></v-text-field></v-col>
+                      <v-col v-if="dialogOptions.item.type == 'Column'" style="margin-left:10px;"><v-text-field v-model="dialogOptions.item.column" :rules="[v => !!v || '']" label="Column" required style="padding-top:0px;"></v-text-field></v-col>
+                    </v-row>
+                    <v-row no-gutters>
+                      <v-col style="margin-right:15px;">
+                        <div class="body-2" style="margin-bottom:5px;">Database</div>
+                        <v-card>
+                          <v-card-text style="padding:10px; padding-bottom:15px">
+                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.create" dense label="Create" hide-details style="margin:0px;"></v-checkbox>
+                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.drop" dense label="Drop" hide-details style="margin:0px;"></v-checkbox>
+                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.alter" dense label="Alter" hide-details style="margin:0px;"></v-checkbox>
+                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.index" dense label="Index" hide-details style="margin:0px;"></v-checkbox>
+                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.trigger" dense label="Trigger" hide-details style="margin:0px;"></v-checkbox>
+                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.event" dense label="Event" hide-details style="margin:0px;"></v-checkbox>
+                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.references" dense label="References" hide-details style="margin:0px;"></v-checkbox>
+                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.create_tmp_table" dense label="Create Temporary Table" hide-details style="margin:0px;"></v-checkbox>
+                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.lock_tables" dense label="Lock Tables" hide-details style="margin:0px;"></v-checkbox>
+                          </v-card-text>
+                        </v-card>
+                      </v-col>
+                      <v-col style="margin-right:15px;">
+                        <v-col style="padding:0px;">
+                          <div class="body-2" style="margin-bottom:5px;">Tables</div>
+                          <v-card>
+                            <v-card-text style="padding:10px; padding-bottom:15px">
+                              <v-checkbox v-model="dialogOptions.item.rights.select" dense label="Select" hide-details style="margin:0px;"></v-checkbox>
+                              <v-checkbox v-model="dialogOptions.item.rights.insert" dense label="Insert" hide-details style="margin:0px;"></v-checkbox>
+                              <v-checkbox v-model="dialogOptions.item.rights.update" dense label="Update" hide-details style="margin:0px;"></v-checkbox>
+                              <v-checkbox v-model="dialogOptions.item.rights.delete" dense label="Delete" hide-details style="margin:0px;"></v-checkbox>
+                            </v-card-text>
+                          </v-card>
+                        </v-col>
+                        <v-col style="padding:0px; margin-top:10px">
+                          <div class="body-2" style="margin-bottom:5px;">Views</div>
+                          <v-card>
+                            <v-card-text style="padding:10px; padding-bottom:15px">
+                              <v-checkbox :disabled="dialogOptions.item.type == 'Column'" v-model="dialogOptions.item.rights.show_view" dense label="Show View" hide-details style="margin:0px;"></v-checkbox>
+                              <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.create_view" dense label="Create View" hide-details style="margin:0px;"></v-checkbox>
+                            </v-card-text>
+                          </v-card>
+                        </v-col>
+                      </v-col>
+                      <v-col style="padding:0px;">
+                        <div class="body-2" style="margin-bottom:5px;">Routines</div>
+                        <v-card>
+                          <v-card-text style="padding:10px; padding-bottom:15px">
+                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.create_routine" dense label="Create Routine" hide-details style="margin:0px;"></v-checkbox>
+                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.alter_routine" dense label="Alter Routine" hide-details style="margin:0px;"></v-checkbox>
+                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.execute" dense label="Execute" hide-details style="margin:0px;"></v-checkbox>
+                          </v-card-text>
+                        </v-card>
+                      </v-col>
+                    </v-row>
+                  </div>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogOptions.submit }}</v-btn>
+                    </v-col>
+                    <v-col style="margin-bottom:10px;">
+                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogOptions.cancel }}</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <style scoped src="@/styles/agGridVue.css"></style>
 
 <script>
+import EventBus from '../../../js/event-bus'
 import { mapFields } from '../../../js/map-fields'
 import {AgGridVue} from "ag-grid-vue";
 
@@ -41,21 +133,40 @@ export default {
         { headerName: 'Schema', colId: 'schema', field: 'schema', sortable: true, filter: true, resizable: true, editable: false },
         { headerName: 'Rights', colId: 'rights', field: 'rights', sortable: true, filter: true, resizable: true, editable: false }
       ],
+      schema: [],
+      // Dialog
+      dialog: false,
+      dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
+      // Loading
+      loading: false,
     }
   },
-  components: { AgGridVue },
   props: { tab: Number },
+  components: { AgGridVue },
   computed: {
     ...mapFields([
       'rights',
     ], { path: 'client/connection' }),
   },
+  mounted() {
+    EventBus.$on('RELOAD_RIGHTS', this.reloadRights);
+  },
   watch: {
-    tab: function(value) {
+    schema: {
+      handler() {
+        let change = JSON.stringify(this.rights['schema']) !== JSON.stringify(this.schema)
+        console.log("change: " + change.toString())
+      },
+      deep: true
+    },
+    tab(value) {
       if (value == 2) this.resizeTable()
     }
   },
   methods: {
+    reloadRights() {
+      this.schema = JSON.parse(JSON.stringify(this.rights['schema']))
+    },
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
@@ -93,6 +204,58 @@ export default {
             }, 200);
         }, 200);
       }
+    },
+    onRowDoubleClicked(event) {
+      this.editRights(event.data)
+    },
+    onChangeType() {
+
+    },
+    addRights() {
+      this.dialogOptions = {
+        mode: 'new',
+        title: 'Grant Rights',
+        text: '',
+        item: { type: 'Database', database: '', table: '', column: '', rights: '' },
+        submit: 'Save',
+        cancel: 'Cancel'
+      }
+      this.dialog = true
+    },
+    editRights(data) {
+      // Build rights
+      let rights = {}
+      data['rights'].split(',').forEach((item) => { rights[item.trim().replaceAll(' ', '_').toLowerCase()] = true })
+      // Build dialogOptions
+      this.dialogOptions = {
+        mode: 'edit',
+        title: 'Edit Rights',
+        text: '',
+        item: {
+          type: data['type'] == 'db' ? 'Database' : data['type'].charAt(0).toUpperCase() + data['type'].slice(1), 
+          database: data['schema'].split('.')[0], 
+          table: ['table','column'].includes(data['type']) ? data['schema'].split('.')[1] : '',
+          column: data['type'] == 'column' ? data['schema'].split('.')[2] : '',
+          rights,
+        },
+        submit: 'Save',
+        cancel: 'Cancel'
+      }
+      this.dialog = true
+    },
+    removeRights() {
+      this.dialogOptions = {
+        mode: 'delete',
+        title: 'Revoke rights?',
+        text: "Are you sure you want remove the selected rights? This action cannot be undone.",
+        item: {},
+        submit: 'Delete',
+        cancel: 'Cancel'
+      }
+      this.dialog = true
+    },
+    dialogSubmit() {
+
     },
   }
 }
