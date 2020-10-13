@@ -479,7 +479,7 @@ class Client:
                 except Exception as e:
                     return jsonify({"message": "Cannot retrieve the user permissions. Please check if the current user has SELECT privileges on the 'mysql.user' table.", "error": str(e)}), 400
                 try:
-                    db = conn.get_db_rights(request.args['user'], request.args['host'])
+                    database = conn.get_db_rights(request.args['user'], request.args['host'])
                 except Exception as e:
                     return jsonify({"message": "Cannot retrieve the user permissions. Please check if the current user has SELECT privileges on the 'mysql.db' table.", "error": str(e)}), 400
                 try:
@@ -495,7 +495,7 @@ class Client:
                 except Exception as e:
                     return jsonify({"message": "Cannot retrieve the user permissions. Please check if the current user has SELECT privileges on the 'mysql.procs_priv' table.", "error": str(e)}), 400
                 syntax = conn.get_rights_syntax(request.args['user'], request.args['host'])
-                return jsonify({'server': server, 'db': db, 'table': table, 'column': column, 'proc': proc, 'syntax': syntax}), 200
+                return jsonify({'server': server, 'database': database, 'table': table, 'column': column, 'proc': proc, 'syntax': syntax}), 200
 
         return client_blueprint
 
