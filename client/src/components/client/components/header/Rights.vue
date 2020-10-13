@@ -195,12 +195,12 @@ export default {
         for (let i of serverRights) this.rights['server'][i] = data['server'][0][i.charAt(0).toUpperCase() + i.replaceAll(' ','_').substr(1) + '_priv'] == 'Y'
         // Schema
         let schema = []
-        for (let db of data['db']) {
-          let row = { type: 'db', schema: db['Db'], rights: [] }
-          for (const [key, val] of Object.entries(db)) {
+        for (let database of data['database']) {
+          let row = { type: 'database', schema: database['Db'], rights: [] }
+          for (const [key, val] of Object.entries(database)) {
             if (key.endsWith('_priv') && val == 'Y') row['rights'].push(' ' + key.slice(0,-5).replaceAll('_', ' '))
           }
-          row['rights'] = row['rights'].join()
+          row['rights'] = row['rights'].join().trim()
           schema.push(row)
         }
         for (let table of data['table']) {
