@@ -187,32 +187,30 @@ export default {
         }
         this.rights['login'] = login
         // Server
-        const serverRights = [
-          'select','insert','update','delete','references','create','drop','alter','index','trigger',
-          'create_view','show_view', 'create_routine','alter_routine','execute',
-          'reload','shutdown','file','process','super','create_tmp_table','lock_tables','show_db','create_user','grant','event','repl_client','repl_slave'
-        ]
-        for (let i of serverRights) this.rights['server'][i] = data['server'][0][i.charAt(0).toUpperCase() + i.replaceAll(' ','_').substr(1) + '_priv'] == 'Y'
+        let server = {}
+        for (const [key, val] of Object.entries(data['server'][0])) {
+          if (key.endsWith('_priv')) server[key.toLowerCase().slice(0,-5)] = val == 'Y'
+        }
+        this.rights['server'] = server
         // Schema
         let schema = []
         for (let database of data['database']) {
           let row = { type: 'database', schema: database['Db'], rights: [] }
           for (const [key, val] of Object.entries(database)) {
-            if (key.endsWith('_priv') && val == 'Y') row['rights'].push(' ' + key.slice(0,-5).replaceAll('_', ' '))
+            if (key.endsWith('_priv') && val == 'Y') row['rights'].push(key.toLowerCase().slice(0,-5))
           }
-          row['rights'] = row['rights'].join().trim()
           schema.push(row)
         }
         for (let table of data['table']) {
-          let row = { type: 'table', schema: table['db'] + '.' + table['table_name'], rights: table['table_priv'].replaceAll(',', ', ') }
+          let row = { type: 'table', schema: table['db'] + '.' + table['table_name'], rights: table['table_priv'].split(',').map((item) => { return item.toLowerCase().trim() }) }
           schema.push(row)
         }
         for (let column of data['column']) {
-          let row = { type: 'column', schema: column['db'] + '.' + column['table_name'] + '.' + column['column_name'], rights: column['column_priv'].replaceAll(',', ', ') }
+          let row = { type: 'column', schema: column['db'] + '.' + column['table_name'] + '.' + column['column_name'], rights: column['column_priv'].split(',').map((item) => { return item.toLowerCase().trim() }) }
           schema.push(row)
         }
         for (let proc of data['proc']) {
-          let row = { type: 'column', schema: '[' + proc['routine_type'] + '] ' + proc['db'] + '.' + proc['routine_name'], rights: proc['proc_priv'].replaceAll(',', ', ') }
+          let row = { type: 'column', schema: '[' + proc['routine_type'] + '] ' + proc['db'] + '.' + proc['routine_name'], rights: proc['proc_priv'].split(',').map((item) => { return item.toLowerCase().trim() }) }
           schema.push(row)
         }
         this.rights['schema'] = schema.slice(0)
@@ -228,7 +226,6 @@ export default {
         let syntax = data['syntax'].map(x => Object.values(x)).join(';\n') + ';'
         this.rights['syntax'] = syntax
         console.log(this.rights)
-        console.log(this.rights['server']['select'])
 
         // Reload Rights
         EventBus.$emit('RELOAD_RIGHTS')
