@@ -127,7 +127,11 @@ export default {
           }
         },
         { headerName: 'Schema', colId: 'schema', field: 'schema', sortable: true, filter: true, resizable: true, editable: false },
-        { headerName: 'Rights', colId: 'rights', field: 'rights', sortable: true, filter: true, resizable: true, editable: false }
+        { headerName: 'Rights', colId: 'rights', field: 'rights', sortable: true, filter: true, resizable: true, editable: false,
+          valueGetter: function(params) {
+            return params.data.rights.map((value) => { return value.charAt(0).toUpperCase() + value.slice(1).replaceAll('_', ' ') }).join(', ')
+          }
+        }
       ],
       schema: [],
       // Dialog
@@ -145,6 +149,7 @@ export default {
   computed: {
     ...mapFields([
       'rights',
+      'rightsItem',
     ], { path: 'client/connection' }),
   },
   mounted() {
@@ -228,7 +233,7 @@ export default {
     editRights(data, index) {
       // Build rights
       let rights = {}
-      data['rights'].split(',').forEach((item) => { rights[item.trim().replaceAll(' ', '_').toLowerCase()] = true })
+      data['rights'].forEach((item) => { rights[item] = true })
       // Build dialogOptions
       this.dialogOptions = {
         mode: 'edit',
@@ -291,6 +296,8 @@ export default {
         this.gridApi.applyTransaction({ remove: selectedData })
         this.selectedRows = false
       }
+      // Get diff
+      this.getDiff()
       // Close dialog
       this.dialog = false
     },
@@ -303,9 +310,9 @@ export default {
       // Parse rights
       let rights = []
       Object.entries(this.dialogOptions.item.rights).forEach(([key, value]) => {
-        if (value) rights.push(' ' + key.charAt(0).toUpperCase() + key.replaceAll('_',' ').substr(1))
+        if (value) rights.push(key)
       })
-      item['rights'] = rights.join().trim()
+      item['rights'] = rights
       // Return item
       return item
     },
@@ -315,7 +322,22 @@ export default {
       else if (this.dialogOptions.item.type.toLowerCase() == 'column') return this.dialogOptions.item.database + '.' + this.dialogOptions.item.table + '.' + this.dialogOptions.item.column
     },
     getDiff() {
-      
+      let diff = { add: [], remove: [], update: [] }
+      // Diff between this.rights['schema'] and this.schema: (add | update | remove) and build SQL stmts
+      console.log(this.rights['schema'])
+      console.log(this.schema)
+
+      // add
+      for (let i of this.rights['schema']) {
+        //this.schema.find(x => x.investor === investor)
+      }
+      // remove
+
+      // update
+      // newData.find(x => x.investor === investor)
+
+      console.log(diff)
+
     }
   }
 }
