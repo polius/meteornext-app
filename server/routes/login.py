@@ -53,7 +53,6 @@ class Login:
                     'deployments_enabled': user[0]['deployments_enabled'],
                     'deployments_basic': user[0]['deployments_basic'],
                     'deployments_pro': user[0]['deployments_pro'],
-                    'deployments_inbenta': user[0]['deployments_inbenta'],
                     'monitoring_enabled': user[0]['monitoring_enabled'],
                     'utils_enabled': user[0]['utils_enabled'],
                     'client_enabled': user[0]['client_enabled']

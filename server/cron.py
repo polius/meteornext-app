@@ -8,7 +8,6 @@ import threading
 import routes.deployments.deployments
 import routes.deployments.views.basic
 import routes.deployments.views.pro
-import routes.deployments.views.inbenta
 
 import apps.monitoring.monitoring
 
@@ -47,11 +46,6 @@ class Cron:
         pro.check_finished()
         pro.check_scheduled()
 
-        # Inbenta Deployments
-        inbenta = routes.deployments.views.inbenta.Inbenta(self._app, self._sql, self._license)
-        inbenta.check_finished()
-        inbenta.check_scheduled()
-
         # Deployments
         deployments = routes.deployments.deployments.Deployments(self._app, self._sql, self._license)
         deployments.check_queued()
@@ -86,11 +80,6 @@ class Cron:
                     UNION ALL
                     SELECT id, uri, 'pro' AS 'mode'
                     FROM deployments_pro
-                    WHERE DATE_ADD(DATE(created), INTERVAL {0} DAY) <= CURRENT_DATE
-                    AND expired = 0
-                    UNION ALL
-                    SELECT id, uri, 'inbenta' AS 'mode'
-                    FROM deployments_inbenta
                     WHERE DATE_ADD(DATE(created), INTERVAL {0} DAY) <= CURRENT_DATE
                     AND expired = 0
                 """.format(setting['local']['expire'])

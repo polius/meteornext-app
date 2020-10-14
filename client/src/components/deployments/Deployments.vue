@@ -11,58 +11,60 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
-        <template v-slot:item.name="props">
-          <v-edit-dialog :return-value.sync="props.item.name" lazy @open="openName(props.item)" @save="saveName(props.item)"> 
-            {{ props.item.name }}
+        <template v-slot:[`item.name`]="{ item }">
+          <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)"> 
+            {{ item.name }}
             <template v-slot:input>
               <v-text-field v-model="inline_editing_name" label="Name" single-line hide-details style="margin-bottom:20px;"></v-text-field>
             </template>
           </v-edit-dialog>
         </template>
-        <template v-slot:item.release="props">
-          <v-edit-dialog :return-value.sync="props.item.release" large @open="openRelease(props.item)" @save="saveRelease(props.item)"> 
-            {{ props.item.release }}
+        <template v-slot:[`item.release`]="{ item }">
+          <v-edit-dialog :return-value.sync="item.release" large @open="openRelease(item)" @save="saveRelease(item)"> 
+            {{ item.release }}
             <template v-slot:input>
               <v-select v-model="inline_editing_release" :items="releases_items" label="Releases" hide-details style="margin-top:15px; margin-bottom:5px;"></v-select>
             </template>
           </v-edit-dialog>
         </template>
-        <template v-slot:item.mode="props">
-          <v-chip :color="getModeColor(props.item.mode)">{{ props.item.mode }}</v-chip>
+        <template v-slot:[`item.mode`]="{ item }">
+          <v-chip :color="getModeColor(item.mode)">{{ item.mode }}</v-chip>
         </template>
-        <template v-slot:item.method="props">
-          <span :style="'color: ' + getMethodColor(props.item.method)" style="font-weight:500">{{ props.item.method }}</span>
+        <template v-slot:[`item.method`]="{ item }">
+          <span :style="'color: ' + getMethodColor(item.method)" style="font-weight:500">{{ item.method }}</span>
         </template>
-        <template v-slot:item.status="props">
-          <v-icon v-if="props.item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
-          <v-icon v-else-if="props.item.status == 'SCHEDULED'" title="Scheduled" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
-          <v-icon v-else-if="props.item.status == 'QUEUED'" :title="`${'Queued: ' + props.item.queue}`" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
-          <v-icon v-else-if="props.item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
-          <v-icon v-else-if="props.item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
-          <v-icon v-else-if="props.item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
-          <v-icon v-else-if="props.item.status == 'WARNING'" title="Some queries failed" small style="color: #ff9800; margin-left:9px;">fas fa-check</v-icon>
-          <v-icon v-else-if="props.item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
-          <v-icon v-else-if="props.item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
-          <v-icon v-else-if="props.item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:8px;">fas fa-ban</v-icon>
+        <template v-slot:[`item.status`]="{ item }">
+          <v-icon v-if="item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
+          <v-icon v-else-if="item.status == 'SCHEDULED'" title="Scheduled" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
+          <v-icon v-else-if="item.status == 'QUEUED'" :title="`${'Queued: ' + item.queue}`" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
+          <v-icon v-else-if="item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
+          <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
+          <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
+          <v-icon v-else-if="item.status == 'WARNING'" title="Some queries failed" small style="color: #ff9800; margin-left:9px;">fas fa-check</v-icon>
+          <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
+          <v-icon v-else-if="item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
+          <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:8px;">fas fa-ban</v-icon>
         </template>
-        <template v-slot:item.created="props">
-          <span>{{ dateFormat(props.item.created) }}</span>
+        <template v-slot:[`item.created`]="{ item }">
+          <span>{{ dateFormat(item.created) }}</span>
         </template>
-        <template v-slot:item.scheduled="props">
-          <span>{{ props.item.scheduled === null ? '' : dateFormat(props.item.scheduled).slice(0,-3) }}</span>
+        <template v-slot:[`item.scheduled`]="{ item }">
+          <span>{{ item.scheduled === null ? '' : dateFormat(item.scheduled).slice(0,-3) }}</span>
         </template>
-        <template v-slot:item.started="props">
-          <span>{{ dateFormat(props.item.started) }}</span>
+        <template v-slot:[`item.started`]="{ item }">
+          <span>{{ dateFormat(item.started) }}</span>
         </template>
-        <template v-slot:item.ended="props">
-          <span>{{ dateFormat(props.item.ended) }}</span>
+        <template v-slot:[`item.ended`]="{ item }">
+          <span>{{ dateFormat(item.ended) }}</span>
         </template>
       </v-data-table>
     </v-card>
 
-    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
-      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
+      </template>
     </v-snackbar>
   </div>
 </template>
@@ -116,7 +118,7 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         });
     },
@@ -157,7 +159,7 @@ export default {
           this.getDeployments()
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         }) 
     },
@@ -183,7 +185,7 @@ export default {
           this.getDeployments()
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         }) 
     },

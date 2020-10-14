@@ -46,35 +46,35 @@
         <!-- INFORMATION -->
         <v-card>
           <v-data-table :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1">
-            <template v-slot:item.mode="props">
-              <v-chip :color="getModeColor(props.item.mode)">{{ props.item.mode }}</v-chip>
+            <template v-slot:[`item.mode`]="{ item }">
+              <v-chip :color="getModeColor(item.mode)">{{ item.mode }}</v-chip>
             </template>
-            <template v-slot:item.method="props">
-              <span :style="'color: ' + getMethodColor(props.item.method.toUpperCase())" style="font-weight:500">{{ props.item.method.toUpperCase() }}</span>
+            <template v-slot:[`item.method`]="{ item }">
+              <span :style="'color: ' + getMethodColor(item.method.toUpperCase())" style="font-weight:500">{{ item.method.toUpperCase() }}</span>
             </template>
-            <template v-slot:item.status="props">
-              <v-icon v-if="props.item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
-              <v-icon v-else-if="props.item.status == 'SCHEDULED'" title="Scheduled" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
-              <v-icon v-else-if="props.item.status == 'QUEUED'" :title="`${'Queued: ' + props.item.queue}`" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
-              <v-icon v-else-if="props.item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
-              <v-icon v-else-if="props.item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
-              <v-icon v-else-if="props.item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
-              <v-icon v-else-if="props.item.status == 'WARNING'" title="Some queries failed" small style="color: #ff9800; margin-left:9px;">fas fa-check</v-icon>
-              <v-icon v-else-if="props.item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
-              <v-icon v-else-if="props.item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
-              <v-icon v-else-if="props.item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:8px;">fas fa-ban</v-icon>
+            <template v-slot:[`item.status`]="{ item }">
+              <v-icon v-if="item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
+              <v-icon v-else-if="item.status == 'SCHEDULED'" title="Scheduled" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
+              <v-icon v-else-if="item.status == 'QUEUED'" :title="`${'Queued: ' + item.queue}`" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
+              <v-icon v-else-if="item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
+              <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
+              <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
+              <v-icon v-else-if="item.status == 'WARNING'" title="Some queries failed" small style="color: #ff9800; margin-left:9px;">fas fa-check</v-icon>
+              <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
+              <v-icon v-else-if="item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
+              <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:8px;">fas fa-ban</v-icon>
             </template>
-            <template v-slot:item.created="props">
-              <span>{{ dateFormat(props.item.created) }}</span>
+            <template v-slot:[`item.created`]="{ item }">
+              <span>{{ dateFormat(item.created) }}</span>
             </template>
-            <template v-slot:item.scheduled="props">
-              <span>{{ props.item.scheduled === null ? '' : dateFormat(props.item.scheduled).slice(0,-3) }}</span>
+            <template v-slot:[`item.scheduled`]="{ item }">
+              <span>{{ item.scheduled === null ? '' : dateFormat(item.scheduled).slice(0,-3) }}</span>
             </template>
-            <template v-slot:item.started="props">
-              <span>{{ dateFormat(props.item.started) }}</span>
+            <template v-slot:[`item.started`]="{ item }">
+              <span>{{ dateFormat(item.started) }}</span>
             </template>
-            <template v-slot:item.ended="props">
-              <span>{{ dateFormat(props.item.ended) }}</span>
+            <template v-slot:[`item.ended`]="{ item }">
+              <span>{{ dateFormat(item.ended) }}</span>
             </template>
           </v-data-table>
         </v-card>
@@ -213,14 +213,14 @@
           <v-flex v-if="deployment['ended'] !== null && queries_data.length > 0" xs4 style="padding-left:5px;">
             <v-card>
               <v-data-table :headers="queries_headers" :items="queries_data" hide-default-footer>
-                <template v-slot:item.succeeded="props">
-                  <span class="font-weight-medium" style="color: rgb(0, 177, 106)">{{ props.item.succeeded }}</span>
+                <template v-slot:[`item.succeeded`]="{ item }">
+                  <span class="font-weight-medium" style="color: rgb(0, 177, 106)">{{ item.succeeded }}</span>
                 </template>
-                <template v-slot:item.failed="props">
-                  <span class="font-weight-medium" style="color: rgb(231, 76, 60)">{{ props.item.failed }}</span>
+                <template v-slot:[`item.failed`]="{ item }">
+                  <span class="font-weight-medium" style="color: rgb(231, 76, 60)">{{ item.failed }}</span>
                 </template>
-                <template v-slot:item.rollback="props">
-                  <span class="font-weight-medium" style="color: rgb(250, 130, 49)">{{ props.item.rollback }}</span>
+                <template v-slot:[`item.rollback`]="{ item }">
+                  <span class="font-weight-medium" style="color: rgb(250, 130, 49)">{{ item.rollback }}</span>
                 </template>
               </v-data-table>
             </v-card>
@@ -454,9 +454,11 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
-      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
+      </template>
     </v-snackbar>
   </div>
 </template>
@@ -701,7 +703,7 @@
             }
           })
           .catch((error) => {
-            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
           })
       },

@@ -12,17 +12,17 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
-        <template v-slot:item.ssh_tunnel="props">
-          <v-icon v-if="props.item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
+        <template v-slot:[`item.ssh_tunnel`]="{ item }">
+          <v-icon v-if="item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
           <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>
         </template>
-        <template v-slot:item.password="props">
-          <v-icon v-if="props.item.ssh_tunnel && (props.item.password || '').length != 0" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
-          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:20px">fas fa-circle</v-icon>
+        <template v-slot:[`item.password`]="{ item }">
+          <v-icon v-if="item.ssh_tunnel && (item.password || '').length != 0" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
+          <v-icon v-else-if="item.ssh_tunnel" small color="error" style="margin-left:20px">fas fa-circle</v-icon>
         </template>
-        <template v-slot:item.key="props">
-          <v-icon v-if="props.item.ssh_tunnel && (props.item.key || '').length != 0" small color="#00b16a" style="margin-left:22px">fas fa-circle</v-icon>
-          <v-icon v-else-if="props.item.ssh_tunnel" small color="error" style="margin-left:22px">fas fa-circle</v-icon>
+        <template v-slot:[`item.key`]="{ item }">
+          <v-icon v-if="item.ssh_tunnel && (item.key || '').length != 0" small color="#00b16a" style="margin-left:22px">fas fa-circle</v-icon>
+          <v-icon v-else-if="item.ssh_tunnel" small color="error" style="margin-left:22px">fas fa-circle</v-icon>
         </template>
       </v-data-table>
     </v-card>
@@ -64,9 +64,11 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
-      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
+      </template>
     </v-snackbar>
   </div>
 </template>
@@ -113,7 +115,7 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },
@@ -149,7 +151,7 @@ export default {
       }
       // Add item in the DB
       this.notification('Adding Region...', 'info', true)
-      const payload = JSON.stringify(this.item);
+      const payload = this.item
       axios.post('/inventory/regions', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -157,7 +159,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
@@ -177,7 +179,7 @@ export default {
       }
       // Edit item in the DB
       this.notification('Editing Region...', 'info', true)
-      const payload = JSON.stringify(this.item)
+      const payload = this.item
       axios.put('/inventory/regions', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -187,7 +189,7 @@ export default {
           this.selected = []
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
@@ -217,7 +219,7 @@ export default {
           this.selected = []
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
@@ -235,13 +237,13 @@ export default {
       // Test Connection
       this.notification('Testing Region...', 'info', true)
       this.loading = true
-      const payload = JSON.stringify(this.item)
+      const payload = this.item
       axios.post('/inventory/regions/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {

@@ -36,7 +36,7 @@
             </div>
 
             <!-- INVENTORY -->
-            <v-card v-if="tabs==0" style="margin-bottom:10px;">
+            <v-card v-show="tabs==0" style="margin-bottom:10px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">INVENTORY</v-toolbar-title>
               </v-toolbar>
@@ -47,7 +47,7 @@
             </v-card>
 
             <!-- DEPLOYMENTS -->
-            <v-card v-if="tabs==1" style="margin-bottom:10px;">
+            <v-card v-show="tabs==1" style="margin-bottom:10px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">DEPLOYMENTS</v-toolbar-title>
               </v-toolbar>
@@ -56,7 +56,6 @@
                 <v-switch v-model="group.deployments_enabled" label="Perform Deployments" color="info" style="margin-top:0px; margin-bottom:15px;" hide-details></v-switch>
                 <v-switch v-if="group.deployments_enabled" v-model="group.deployments_basic" label="BASIC" color="#eb974e" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
                 <v-switch v-if="group.deployments_enabled" v-model="group.deployments_pro" label="PRO" color="rgb(235, 95, 93)" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
-                <v-switch v-if="group.deployments_enabled" v-model="group.deployments_inbenta" label="INBENTA" color="#049372" style="margin-top:0px; margin-left:20px; margin-bottom:15px;" hide-details></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
                   LIMITS
                 <v-tooltip right>
@@ -80,7 +79,7 @@
             </v-card>
 
             <!-- MONITORING -->
-            <v-card v-if="tabs==2" style="margin-bottom:10px;">
+            <v-card v-show="tabs==2" style="margin-bottom:10px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">MONITORING</v-toolbar-title>
               </v-toolbar>
@@ -91,7 +90,7 @@
             </v-card>
 
             <!-- UTILS -->
-            <v-card v-if="tabs==3" style="margin-bottom:10px;">
+            <v-card v-show="tabs==3" style="margin-bottom:10px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">UTILS</v-toolbar-title>
               </v-toolbar>
@@ -102,7 +101,7 @@
             </v-card>
 
             <!-- CLIENT -->
-            <v-card v-if="tabs==4" style="margin-bottom:10px;">
+            <v-card v-show="tabs==4" style="margin-bottom:10px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">CLIENT</v-toolbar-title>
               </v-toolbar>
@@ -123,9 +122,11 @@
       </v-card-text>
     </v-card>
 
-    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
-      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
+      </template>
     </v-snackbar>
   </div>
 </template>
@@ -139,12 +140,12 @@ export default {
     // +--------+
     // | GROUPS |
     // +--------+
-    group: { 
+    group: {
       'inventory_enabled': false,
       'deployments_enabled': false,
       'deployments_basic': false,
       'deployments_pro': false,
-      'deployments_inbenta': false,
+      'coins_execution': 10,
       'deployments_execution_threads': 10,
       'deployments_execution_limit': null,
       'deployments_execution_concurrent': null,
@@ -192,13 +193,13 @@ export default {
           }
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },
     submitGroup() {
       this.loading = true
-      if (this.group['id'] == null) this.newGroupSubmit()
+      if (this.group['id'] == 'new') this.newGroupSubmit()
       else this.editGroupSubmit()
     },
     newGroupSubmit() {
@@ -225,7 +226,7 @@ export default {
           this.$router.push({ name: 'admin.groups', params: { msg: response.data.message, color: '#00b16a' }})
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
@@ -256,7 +257,7 @@ export default {
           this.$router.push({ name: 'admin.groups', params: { msg: response.data.message, color: '#00b16a' }})
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {

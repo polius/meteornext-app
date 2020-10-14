@@ -30,7 +30,6 @@ import routes.deployments.releases
 import routes.deployments.deployments
 import routes.deployments.views.basic
 import routes.deployments.views.pro
-import routes.deployments.views.inbenta
 import routes.monitoring.monitoring
 import routes.monitoring.views.parameters
 import routes.monitoring.views.processlist
@@ -159,7 +158,7 @@ class Setup:
 
                     # Create group
                     groups = models.admin.groups.Groups(sql)
-                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enabled": 1, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_inbenta": 1, "deployments_execution_threads": 10, "deployments_execution_limit": None, "deployments_execution_concurrent": None, "monitoring_enabled": 1, "utils_enabled": 1, "client_enabled": 1}
+                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enabled": 1, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_execution_threads": 10, "deployments_execution_limit": None, "deployments_execution_concurrent": None, "monitoring_enabled": 1, "utils_enabled": 1, "client_enabled": 1}
                     groups.post(1, group)
 
                     # Create user
@@ -241,14 +240,13 @@ class Setup:
         deployments = routes.deployments.deployments.Deployments(self._app, sql, self._license)
         deployments_basic = routes.deployments.views.basic.Basic(self._app, sql, self._license)
         deployments_pro = routes.deployments.views.pro.Pro(self._app, sql, self._license)
-        deployments_inbenta = routes.deployments.views.inbenta.Inbenta(self._app, sql, self._license)
         monitoring = routes.monitoring.monitoring.Monitoring(self._app, sql, self._license)
         monitoring_parameters = routes.monitoring.views.parameters.Parameters(self._app, sql, self._license)
         monitoring_processlist = routes.monitoring.views.processlist.Processlist(self._app, sql, self._license)
         monitoring_queries = routes.monitoring.views.queries.Queries(self._app, sql, self._license)
         client = routes.client.client.Client(self._app, sql, self._license)
 
-        self._blueprints = [login, profile, notifications, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, slack, releases, deployments, deployments_basic, deployments_pro, deployments_inbenta, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client]
+        self._blueprints = [login, profile, notifications, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, slack, releases, deployments, deployments_basic, deployments_pro, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client]
 
         # Register all blueprints
         for i in self._blueprints:

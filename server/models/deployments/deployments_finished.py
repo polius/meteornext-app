@@ -27,17 +27,6 @@ class Deployments_Finished:
         """
         return self._sql.execute(query)
 
-    def getInbenta(self):
-        query = """
-            SELECT i.id, d.name, d.user_id, e.name AS 'environment', i.status, i.method, CONCAT(TIMEDIFF(i.ended, i.started)) AS 'overall'
-            FROM deployments_finished f
-            JOIN deployments_inbenta i ON i.id = f.deployment_id AND f.deployment_mode = 'INBENTA' AND i.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
-            JOIN deployments d ON d.id = i.deployment_id
-            JOIN releases r ON r.id = d.release_id
-            JOIN environments e ON e.id = i.environment_id
-        """
-        return self._sql.execute(query)
-
     def post(self, deployment):
         self._sql.execute("INSERT INTO deployments_finished (deployment_mode, deployment_id) VALUES (%s, %s)", (deployment['mode'], deployment['id']))
 

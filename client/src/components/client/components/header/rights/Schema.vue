@@ -328,9 +328,9 @@ export default {
       console.log(this.schema)
 
       // add
-      for (let i of this.rights['schema']) {
-        //this.schema.find(x => x.investor === investor)
-      }
+      // for (let i of this.schema) {
+      //   let found = this.rights['schema'].find(x => x.type == i.type && x.schema == i.schema && )
+      // }
       // remove
 
       // update

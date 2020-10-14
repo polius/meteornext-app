@@ -1,6 +1,6 @@
 <template>
   <div style="height:100%" v-if="available">
-    <v-content style="height:100%; padding-top:10px;" :style="{ backgroundImage: 'url(' + require('@/assets/bg.jpg') + ')', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }">
+    <v-main style="height:100%; padding-top:10px;" :style="{ backgroundImage: 'url(' + require('@/assets/bg.jpg') + ')', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }">
       <v-container grid-list-xl text-center style="padding-top:0px;">
         <v-layout row wrap align-center style="max-width:500px; margin: 0 auto;">
           <v-flex>
@@ -56,7 +56,7 @@
           </v-flex>
         </v-layout>
       </v-container>
-    </v-content>
+    </v-main>
 
     <v-dialog v-model="setupDialog" persistent max-width="768px">
       <v-card>
@@ -83,9 +83,11 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
-      <v-btn hover text color="white" @click="snackbar = false">Close</v-btn>
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
+      </template>
     </v-snackbar>
   </div>
 </template>
@@ -147,7 +149,7 @@
           return
         }
         this.loading = true
-        const payload = JSON.stringify(this.license)
+        const payload = this.license
         axios.post('/setup/license', payload)
           .then((response) => {
             this.notification(response.data.message, '#00b16a')
@@ -167,7 +169,7 @@
           return
         }
         this.loading = true
-        const payload = JSON.stringify(this.sql)
+        const payload = this.sql
         axios.post('/setup/sql', payload)
           .then((response) => {
             this.notification('Connection successful', '#00b16a')
@@ -203,7 +205,7 @@
           sql: this.sql,
           account: this.account
         }
-        axios.post('/setup', JSON.stringify(payload))
+        axios.post('/setup', payload)
           .then((response) => {
             this.notification(response.data.message, '#00b16a')
             this.setup_part = 'login'
