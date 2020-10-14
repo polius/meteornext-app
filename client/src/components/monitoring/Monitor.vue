@@ -38,10 +38,10 @@
         <!-- SUMMARY -->
         <v-card v-show="tabs == 0">
           <v-data-table :headers="summary_headers" :items="summary_items" hide-default-footer class="elevation-1">
-            <template v-slot:item.available="props">
-              <span v-if="props.item.available == 1">Yes</span>
-              <span v-else-if="props.item.available == 0">No</span>
-              <span v-else-if="props.item.available == -1">Loading</span>
+            <template v-slot:[`item.available`]="{ item }">
+              <span v-if="item.available == 1">Yes</span>
+              <span v-else-if="item.available == 0">No</span>
+              <span v-else-if="item.available == -1">Loading</span>
             </template>
           </v-data-table>
         </v-card>
@@ -49,12 +49,12 @@
         <!-- LOGS -->
         <v-card v-show="tabs == 1">
           <v-data-table :headers="logs_headers" :items="logs_items" hide-default-footer class="elevation-1">
-            <template v-slot:item.general_log="props">
-              <span v-if="props.item.general_log == 'ON'"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>On</span>
+            <template v-slot:[`item.general_log`]="{ item }">
+              <span v-if="item.general_log == 'ON'"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>On</span>
               <span v-else><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Off</span>
             </template>
-            <template v-slot:item.slow_log="props">
-              <span v-if="props.item.slow_log == 'ON'"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>On</span>
+            <template v-slot:[`item.slow_log`]="{ item }">
+              <span v-if="item.slow_log == 'ON'"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>On</span>
               <span v-else><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Off</span>
             </template>
           </v-data-table>
@@ -102,9 +102,11 @@
       </v-card-text>
     </v-card>
 
-    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
-      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
+      </template>
     </v-snackbar>
   </div>
 </template>
@@ -232,7 +234,7 @@ export default {
           setTimeout(this.getMonitor, refreshRate)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },

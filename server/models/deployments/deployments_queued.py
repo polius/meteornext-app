@@ -14,8 +14,6 @@ class Deployments_Queued:
                 SELECT 'basic' AS execution_mode, id AS execution_id, created, IFNULL(scheduled, created) AS time FROM deployments_basic WHERE status = 'QUEUED'
                 UNION
                 SELECT 'pro' AS execution_mode, id AS execution_id, created, IFNULL(scheduled, created) AS time FROM deployments_pro WHERE status = 'QUEUED'
-                UNION
-                SELECT 'inbenta' AS execution_mode, id AS execution_id, created, IFNULL(scheduled, created) AS time FROM deployments_inbenta WHERE status = 'QUEUED'
 				ORDER BY time, created
             ) t
         """
@@ -32,11 +30,6 @@ class Deployments_Queued:
             FROM deployments_pro p
             JOIN deployments_queued q ON q.execution_mode = 'pro' AND q.execution_id = p.id
             WHERE p.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
-            UNION
-            SELECT q.id, 'inbenta' AS 'execution_mode', i.id AS 'execution_id'
-            FROM deployments_inbenta i
-            JOIN deployments_queued q ON q.execution_mode = 'inbenta' AND q.execution_id = i.id
-            WHERE i.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
         """
         return self._sql.execute(query)
 
@@ -48,8 +41,6 @@ class Deployments_Queued:
                 SELECT q.id, q.execution_mode, q.execution_id, b.status, b.deployment_id FROM deployments_queued q JOIN deployments_basic b ON b.id = q.execution_id AND q.execution_mode = 'basic'
                 UNION
                 SELECT q.id, q.execution_mode, q.execution_id, p.status, p.deployment_id FROM deployments_queued q JOIN deployments_pro p ON p.id = q.execution_id AND q.execution_mode = 'pro'
-                UNION
-                SELECT q.id, q.execution_mode, q.execution_id, i.status, i.deployment_id FROM deployments_queued q JOIN deployments_inbenta i ON i.id = q.execution_id AND q.execution_mode = 'inbenta'
                 ORDER BY id
             ) q
             JOIN deployments d ON d.id = q.deployment_id

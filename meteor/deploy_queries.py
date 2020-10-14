@@ -60,8 +60,16 @@ class deploy_queries:
         server_sql = self._server['name'] if auxiliary is None else auxiliary['auxiliary_connection']
         region = self._region['name']
 
+        # Get Query Syntax
+        query_syntax = self.__get_query_type(query_parsed, show_output=False)
+
+        # Apply the execution plan factor
+        if self._imports.config['params']['limit'] and query_syntax == 'Select':
+            query_parsed = query_parsed[:-1] + ' LIMIT ' if query_parsed.endswith(';') else query_parsed + ' LIMIT '
+            query_parsed += str(self._imports.config['params']['limit']) + ';'
+
         # Query Alias
-        if alias is None:
+        if alias is None:               
             query_alias = query_parsed if args is None else query_parsed % args
         else:
             query_alias = '[ALIAS] {}'.format(alias)
@@ -96,9 +104,6 @@ class deploy_queries:
         if self._transaction:
             execution_row['transaction'] = True
 
-        # Get Query Syntax
-        query_syntax = self.__get_query_type(query_parsed, show_output=False)
-
         # If Test Run --> Syntax Checks + Execution Checks
         if not self._args.deploy:
             # Execution Checks
@@ -115,22 +120,10 @@ class deploy_queries:
                 execution_row['meteor_response'] = self.__parse_error(str(e))
                 self._execution_log['output'].append(execution_row)
                 return
-        
+
         # Execute Query (if --deploy or --test with SELECT queries)
         if self._args.deploy or query_syntax == 'Select':
             try:
-                # Apply the execution plan factor
-                if self._imports.config['params']['limit'] and query_syntax == 'Select':
-                    execution_limit = 0
-                    explain = conn.execute(query='EXPLAIN ' + query_parsed, args=args, database=database_name)['query_result']
-
-                    for i in explain:
-                        if i['rows'] > execution_limit:
-                            execution_limit = i['rows']
-
-                    if execution_limit > int(self._imports.config['params']['limit']):
-                        raise Exception('Maximum number of rows [{}] exceeded. Please use LIMIT along with ORDER BY'.format(self._imports.config['params']['limit']))
-
                 # Execute query
                 query_info = conn.execute(query=query_parsed, args=args, database=database_name)
 

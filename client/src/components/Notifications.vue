@@ -1,6 +1,6 @@
 <template>
   <v-container fluid>
-    <v-content>
+    <v-main>
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">NOTIFICATIONS</v-toolbar-title>
@@ -12,19 +12,19 @@
           <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
         </v-toolbar>
         <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
-          <template v-slot:item.name="props">
-            <span><v-icon small :color="props.item.status.toLowerCase()" :title="props.item.status.charAt(0).toUpperCase() + props.item.status.slice(1).toLowerCase()" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ props.item.name }}</span>
+          <template v-slot:[`item.name`]="{ item }">
+            <span><v-icon small :color="item.status.toLowerCase()" :title="item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase()" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ item.name }}</span>
           </template>
-          <template v-slot:item.category="props">
-            <v-icon v-if="props.item.category == 'deployment'" small color="#e74c3c" :title="props.item.category.charAt(0).toUpperCase() + props.item.category.slice(1)" style="margin-left:14px;">fas fa-meteor</v-icon>
-            <v-icon v-if="props.item.category == 'monitoring'" small color="#fa8231" :title="props.item.category.charAt(0).toUpperCase() + props.item.category.slice(1)" style="margin-left:14px;">fas fa-desktop</v-icon>
+          <template v-slot:[`item.category`]="{ item }">
+            <v-icon v-if="item.category == 'deployment'" small color="#e74c3c" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-left:14px;">fas fa-meteor</v-icon>
+            <v-icon v-if="item.category == 'monitoring'" small color="#fa8231" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-left:14px;">fas fa-desktop</v-icon>
           </template>
-          <template v-slot:item.date="props">
-            <span>{{ dateFormat(props.item.date) }}</span>
+          <template v-slot:[`item.date`]="{ item }">
+            <span>{{ dateFormat(item.date) }}</span>
           </template>
-          <template v-slot:item.show="props">
-            <v-btn icon small @click="changeSeen(props.item)">
-              <v-icon small :title="props.item.show ? 'Show in the notification bar' : 'Don\'t show in the notification bar'" :color="props.item.show ? '#00b16a' : 'error'">fas fa-circle</v-icon>
+          <template v-slot:[`item.show`]="{ item }">
+            <v-btn icon small @click="changeSeen(item)">
+              <v-icon small :title="item.show ? 'Show in the notification bar' : 'Don\'t show in the notification bar'" :color="item.show ? '#00b16a' : 'error'">fas fa-circle</v-icon>
             </v-btn>
           </template>
         </v-data-table>
@@ -92,11 +92,13 @@
         </v-card>
       </v-dialog>
 
-      <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
-        {{ snackbarText }}
-        <v-btn color="white" text @click="snackbar = false">Close</v-btn>
-      </v-snackbar>
-    </v-content>
+      <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
+      {{ snackbarText }}
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
+      </template>
+    </v-snackbar>
+    </v-main>
   </v-container>
 </template>
 
@@ -138,7 +140,7 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },
@@ -185,7 +187,7 @@ export default {
           this.selected = []
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
@@ -195,13 +197,13 @@ export default {
     },
     changeSeen(item) {
       // Add item in the DB
-      const payload = JSON.stringify({ id: item.id })
+      const payload = { id: item.id }
       axios.put('/notifications', payload)
         .then(() => {
           this.getNotifications()
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },

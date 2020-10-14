@@ -1,5 +1,5 @@
 <template>
-  <v-content>
+  <v-main>
     <div>
       <v-tabs background-color="#3a539b" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
         <v-tab to="/inventory"><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-layer-group</v-icon>INVENTORY</span></v-tab>
@@ -12,13 +12,13 @@
       </v-tabs>
     </div>
     <v-container fluid>
-        <v-content style="padding-top:0px;">
+        <v-main style="padding-top:0px;">
           <v-slide-y-transition mode="out-in">
             <router-view/>
           </v-slide-y-transition>
-        </v-content>
+        </v-main>
     </v-container>      
-  </v-content>
+  </v-main>
 </template>
 
 <script>

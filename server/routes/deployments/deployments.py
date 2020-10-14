@@ -12,7 +12,6 @@ import models.deployments.releases
 import models.deployments.deployments
 import models.deployments.deployments_basic
 import models.deployments.deployments_pro
-import models.deployments.deployments_inbenta
 import models.deployments.deployments_queued
 import models.deployments.deployments_finished
 import models.admin.settings
@@ -27,7 +26,6 @@ class Deployments:
         self._deployments = models.deployments.deployments.Deployments(sql)
         self._deployments_basic = models.deployments.deployments_basic.Deployments_Basic(sql)
         self._deployments_pro = models.deployments.deployments_pro.Deployments_Pro(sql)
-        self._deployments_inbenta = models.deployments.deployments_inbenta.Deployments_Inbenta(sql)
         self._deployments_queued = models.deployments.deployments_queued.Deployments_Queued(sql)
         self._deployments_finished = models.deployments.deployments_finished.Deployments_Finished(sql)
         self._settings = models.admin.settings.Settings(sql)
@@ -143,7 +141,7 @@ class Deployments:
 
         # Build dictionary of executions
         executions_raw = self._deployments_queued.getNext()
-        executions = {'basic':{},'pro':{},'inbenta':{}}
+        executions = {'basic':{},'pro':{}}
         if len(executions_raw) == 1 and executions_raw[0]['executions'] is None:
             return
 
@@ -165,13 +163,6 @@ class Deployments:
                     if p['execution_id'] == e:
                         executions['pro'][e] = p
                         break
-        if executions['inbenta']:
-            inbenta = self._deployments_inbenta.getExecutionsN(','.join(str(i) for i in executions['inbenta'].keys()))
-            for i in inbenta:
-                for e in executions['inbenta'].keys():
-                    if i['execution_id'] == e:
-                        executions['inbenta'][e] = i
-                        break
 
         # Start Queued Executions
         for i in [i for i in executions_raw if i['executions'].split('|')[2] == 'QUEUED']:
@@ -181,8 +172,6 @@ class Deployments:
                 self._deployments_basic.updateStatus(execution[1], 'STARTING')
             elif execution[0] == 'pro':
                 self._deployments_pro.updateStatus(execution[1], 'STARTING')
-            elif execution[0] == 'inbenta':
-                self._deployments_inbenta.updateStatus(execution[1], 'STARTING')
             self._meteor.execute(deployment)
 
     ####################

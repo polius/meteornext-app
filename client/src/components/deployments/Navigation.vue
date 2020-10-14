@@ -1,5 +1,5 @@
 <template>
-  <v-content>
+  <v-main>
     <div>
       <v-tabs background-color="#EB5F5D" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
         <v-tabs-slider></v-tabs-slider>
@@ -9,13 +9,13 @@
       </v-tabs>
     </div>
     <v-container fluid>
-      <v-content style="padding-top:0px; padding-bottom:0px;">
+      <v-main style="padding-top:0px; padding-bottom:0px;">
         <v-slide-y-transition mode="out-in">
           <router-view/>
         </v-slide-y-transition>
-      </v-content>
+      </v-main>
     </v-container>
-  </v-content>
+  </v-main>
 </template>
 
 <script>

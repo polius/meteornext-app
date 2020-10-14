@@ -158,9 +158,11 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
-      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
+      </template>
     </v-snackbar>
   </div>
 </template>
@@ -250,7 +252,7 @@
             if (mode != 2) setTimeout(this.getMonitoring, 10000, 1)
           })
           .catch((error) => {
-            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
           })
         }
@@ -326,7 +328,7 @@
       },
       submitServers() {
         this.loading = true
-        const payload = JSON.stringify(this.treeviewSelected)
+        const payload = this.treeviewSelected
         axios.put('/monitoring', payload)
           .then((response) => {
             this.pending_servers = true
@@ -338,7 +340,7 @@
             this.getMonitoring(2)
           })
           .catch((error) => {
-            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
           })
       },
@@ -351,7 +353,7 @@
           return
         }
         // Update settings        
-        const payload = JSON.stringify(this.settings)
+        const payload = this.settings
         axios.put('/monitoring/settings', payload)
           .then((response) => {
             this.align = this.settings.monitor_align
@@ -361,7 +363,7 @@
             this.loading = false
           })
           .catch((error) => {
-            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')
           })
       },

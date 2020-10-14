@@ -12,9 +12,9 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
-        <template v-slot:item.active="props">
-          <v-btn icon small @click="changeActive(props.item)">
-            <v-icon v-if="props.item.active" small title="Active" color="#00b16a">fas fa-circle</v-icon>
+        <template v-slot:[`item.active`]="{ item }">
+          <v-btn icon small @click="changeActive(item)">
+            <v-icon v-if="item.active" small title="Active" color="#00b16a">fas fa-circle</v-icon>
             <v-icon v-else small title="Inactive" color="error">fas fa-circle</v-icon>
           </v-btn>
         </template>
@@ -47,9 +47,11 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
-      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
+      </template>
     </v-snackbar>
   </div>
 </template>
@@ -94,7 +96,7 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         });
     },
@@ -139,7 +141,7 @@ export default {
         }
       }
       // Add item in the DB
-      const payload = JSON.stringify({ name: this.name, active: this.active })
+      const payload = { name: this.name, active: this.active }
       axios.post('/deployments/releases', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -147,7 +149,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
@@ -174,18 +176,17 @@ export default {
         }
       }
       // Edit item in the DB
-      const item = { id: this.selected[0]['id'], name: this.name, active: this.active }
-      const payload = JSON.stringify(item)
+      const payload = { id: this.selected[0]['id'], name: this.name, active: this.active }
       axios.put('/deployments/releases', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
-          this.items.splice(i, 1, item)
+          this.items.splice(i, 1, payload)
           this.dialog = false
           this.selected = []
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
@@ -214,7 +215,7 @@ export default {
           this.selected = []
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
         .finally(() => {
@@ -224,13 +225,13 @@ export default {
     },
     changeActive(item) {
       // Add item in the DB
-      const payload = JSON.stringify({ id: item.id, active: !item.active })
+      const payload = { id: item.id, active: !item.active }
       axios.put('/deployments/releases/active', payload)
         .then(() => {
           this.getReleases()
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('logout').then(() => this.$router.push('/login'))
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
     },

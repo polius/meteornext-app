@@ -12,15 +12,15 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="username" show-select class="elevation-1" style="padding-top:3px;">
-        <template v-slot:item.admin="props">
-          <v-icon v-if="props.item.admin" small color="#00b16a" style="margin-left:8px;">fas fa-circle</v-icon>
+        <template v-slot:[`item.admin`]="{ item }">
+          <v-icon v-if="item.admin" small color="#00b16a" style="margin-left:8px;">fas fa-circle</v-icon>
           <v-icon v-else small color="error" style="margin-left:8px;">fas fa-circle</v-icon>
         </template>
-        <template v-slot:item.created_at="props">
-          <span>{{ dateFormat(props.item.created_at) }}</span>
+        <template v-slot:[`item.created_at`]="{ item }">
+          <span>{{ dateFormat(item.created_at) }}</span>
         </template>
-        <template v-slot:item.last_login="props">
-          <span>{{ dateFormat(props.item.last_login) }}</span>
+        <template v-slot:[`item.last_login`]="{ item }">
+          <span>{{ dateFormat(item.last_login) }}</span>
         </template>
       </v-data-table>
     </v-card>
@@ -57,9 +57,11 @@
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snackbar" :timeout="snackbarTimeout" :color="snackbarColor" top>
+    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
-      <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
+      </template>
     </v-snackbar>
   </div>
 </template>
@@ -152,7 +154,7 @@ export default {
         }
       }
       // Add item to the DB
-      const payload = JSON.stringify(this.item);
+      const payload = this.item
       axios.post('/admin/users', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
