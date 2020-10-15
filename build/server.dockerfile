@@ -11,7 +11,6 @@ RUN yum update -y && \
     python3 -m pip install paramiko && \
     python3 -m pip install sshtunnel && \
     python3 -m pip install pymysql && \
-    python3 -m pip install uuid && \
     python3 -m pip install bcrypt && \
     python3 -m pip install flask && \
     python3 -m pip install flask_cors && \
