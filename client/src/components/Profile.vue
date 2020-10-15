@@ -14,7 +14,7 @@
                   <v-form ref="form" @submit.prevent>
                     <v-text-field v-model="email" :disabled="loading" label="Email" type="email" append-icon="email" style="margin-top:10px;"></v-text-field>
                     <v-text-field v-model="newPassword" :disabled="loading" label="Password" type="password" :placeholder="password" append-icon="lock" hide-details style="padding-top:0px;"></v-text-field>
-                    <v-switch v-model="mfa" flat label="Enable MFA" style="margin-top:20px"></v-switch>
+                    <v-switch v-model="mfa" flat label="Multi-Factor Authentication (MFA)" style="margin-top:20px"></v-switch>
                     <v-card v-if="mfa && !mfaOrigin" style="width:232px; margin-bottom:20px;">
                       <v-card-text>
                         <qrcode-vue :value="mfaUri" size="200" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
