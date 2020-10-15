@@ -34,12 +34,25 @@ class Profile:
                 return jsonify({'data': user}), 200
 
             elif request.method == 'PUT':
+                # Check password
                 if len(profile_json['password']) > 0 and len(profile_json['password']) < 8:
                     return jsonify({'message': 'Password must have at least 8 characters'}), 400
-                else:
-                    if len(profile_json['password']) != 0:
-                        profile_json['password'] = bcrypt.hashpw(profile_json['password'].encode('utf8'), bcrypt.gensalt())
-                    self._users.put_profile({'username': get_jwt_identity(), 'email': profile_json['email'], 'password': profile_json['password'], 'mfa': profile_json['mfa']})
-                    return jsonify({'message': 'Changes saved successfully'}), 200
+
+                # Check MFA
+                mfa = profile_json['mfa']
+                if profile_json['mfa'] and len(profile_json['mfaValue']) > 0 and not self._mfa.verify(profile_json['mfaValue']):
+                    return jsonify({'message': 'Invalid MFA Code'}), 400
+
+                # Parse password
+                if len(profile_json['password']) != 0:
+                    profile_json['password'] = bcrypt.hashpw(profile_json['password'].encode('utf8'), bcrypt.gensalt())
+
+                # Parse mfa
+                if profile_json['mfa'] and len(profile_json['mfaValue']) == 0:
+                    mfa = user['mfa']
+
+                # Update profile
+                self._users.put_profile({'username': get_jwt_identity(), 'email': profile_json['email'], 'password': profile_json['password'], 'mfa': mfa})
+                return jsonify({'message': 'Changes saved successfully'}), 200
 
         return profile_blueprint

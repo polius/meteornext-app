@@ -19,7 +19,7 @@
                       </v-col>
                     </v-row>
                   </v-alert>
-                  <v-form ref="form" style="margin-top:20px">
+                  <v-form ref="form" @submit.prevent style="margin-top:20px">
                     <div v-if="mode == 0">
                       <v-text-field filled v-model="username" name="username" label="Username" required append-icon="person" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
                       <v-text-field filled v-model="password" name="password" label="Password" required append-icon="lock" type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
