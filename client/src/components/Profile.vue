@@ -11,10 +11,17 @@
               <v-layout row wrap>
                 <v-flex xs12>
                   <div class="headline font-weight-regular">Hello <span class="font-weight-medium">{{ this.username }}</span> <v-chip color="teal" text-color="white" style="margin-left:10px; letter-spacing: 1px;">{{ this.group.toUpperCase() }}</v-chip></div>
-                  <v-text-field v-model="email" :disabled="loading" label="Email" type="email" append-icon="email" style="margin-top:10px;"></v-text-field>
-                  <v-text-field v-model="newPassword" :disabled="loading" label="Password" type="password" :placeholder="password" append-icon="lock" hide-details style="padding-top:0px;"></v-text-field>
-                  <v-switch v-model="mfa" flat label="Enable MFA" style="margin-top:20px"></v-switch>
-                  <qrcode-vue v-if="mfa" :value="mfaUri" size="200" level="H" style="margin-bottom:20px"></qrcode-vue>
+                  <v-form ref="form" @submit.prevent>
+                    <v-text-field v-model="email" :disabled="loading" label="Email" type="email" append-icon="email" style="margin-top:10px;"></v-text-field>
+                    <v-text-field v-model="newPassword" :disabled="loading" label="Password" type="password" :placeholder="password" append-icon="lock" hide-details style="padding-top:0px;"></v-text-field>
+                    <v-switch v-model="mfa" flat label="Enable MFA" style="margin-top:20px"></v-switch>
+                    <v-card v-if="mfa && !mfaOrigin" style="width:232px; margin-bottom:20px;">
+                      <v-card-text>
+                        <qrcode-vue :value="mfaUri" size="200" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
+                        <v-text-field outlined v-model="mfaValue" v-on:keyup.enter="saveProfile()" label="MFA Code" append-icon="vpn_key" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px"></v-text-field>
+                      </v-card-text>
+                    </v-card>
+                  </v-form>
                   <v-btn color="primary" :loading="loading" @click="saveProfile()" style="margin-left:0px;">Save</v-btn>    
                 </v-flex>
               </v-layout>
@@ -44,7 +51,9 @@ export default {
     password: '',
     newPassword: '',
     mfa: false,
+    mfaOrigin: false,
     mfaUri: '',
+    mfaValue: '',
     loading: true,
 
     // Snackbar
@@ -67,10 +76,9 @@ export default {
           var hiddenPassword = ''
           for (var i = 0; i < response.data.data['password'].length; ++i) hiddenPassword += '·'
           this.password = hiddenPassword
-          this.mfa = response.data.data['mfa']
+          this.mfa = this.mfaOrigin = response.data.data['mfa']
           this.mfaUri = response.data.data['mfaUri']
           this.loading = false
-          console.log(this.mfaUri)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -78,16 +86,24 @@ export default {
         })
     },
     saveProfile() {
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
       // Disable the fields while updating fields to the DB
       this.loading = true
       // Edit item in the DB
       const payload = { 
         email: this.email,
         password: this.newPassword,
-        mfa: this.mfa
+        mfa: this.mfa,
+        mfaValue: this.mfaValue
       }
       axios.put('/profile', payload)
         .then((response) => {
+          this.mfaOrigin = this.mfa
+          this.mfaValue = ''
           this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {

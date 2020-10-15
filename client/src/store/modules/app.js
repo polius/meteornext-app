@@ -136,7 +136,7 @@ const actions = {
 const mutations = {
   auth(state, data) {
     state.username = data.username
-    state.mfa = data.mfa
+    state.mfa = data.mfa == 1
     state.token = data.token
     state.coins = data.coins
     state.admin = data.admin == 1
