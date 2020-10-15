@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import uuid
+import pyotp
 import bcrypt
 import hashlib
 import requests
@@ -48,6 +49,7 @@ class Setup:
         self._logs_folder = "{}/logs".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/logs".format(os.path.dirname(sys.executable))
         self._blueprints = []
         self._license = None
+        self._mfa = None
         self._cron = None
         
         # Start Setup
@@ -62,6 +64,8 @@ class Setup:
             # Init license
             self._license = License(self._conf['license'])
             self._license.validate()
+            # Init Time-based OTP
+            self._mfa = pyotp.TOTP('WEMTWY757Z3ZCVODEHDL2YWHJAEGZABK', interval=30)
             # Register blueprints
             self.__register_blueprints(sql)
         except Exception:
@@ -224,8 +228,8 @@ class Setup:
 
     def __register_blueprints(self, sql):
         # Init all blueprints
-        login = routes.login.Login(self._app, sql, self._license)
-        profile = routes.profile.Profile(self._app, sql, self._license)
+        login = routes.login.Login(self._app, sql, self._license, self._mfa)
+        profile = routes.profile.Profile(self._app, sql, self._license, self._mfa)
         notifications = routes.notifications.Notifications(self._app, sql, self._license)
         settings = routes.admin.settings.Settings(self._app, sql, self._license, self._conf)
         groups = routes.admin.groups.Groups(self._app, sql, self._license)

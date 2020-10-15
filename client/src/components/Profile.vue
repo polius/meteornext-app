@@ -12,7 +12,9 @@
                 <v-flex xs12>
                   <div class="headline font-weight-regular">Hello <span class="font-weight-medium">{{ this.username }}</span> <v-chip color="teal" text-color="white" style="margin-left:10px; letter-spacing: 1px;">{{ this.group.toUpperCase() }}</v-chip></div>
                   <v-text-field v-model="email" :disabled="loading" label="Email" type="email" append-icon="email" style="margin-top:10px;"></v-text-field>
-                  <v-text-field v-model="newPassword" :disabled="loading" label="Password" type="password" :placeholder="password" append-icon="lock" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="newPassword" :disabled="loading" label="Password" type="password" :placeholder="password" append-icon="lock" hide-details style="padding-top:0px;"></v-text-field>
+                  <v-switch v-model="mfa" flat label="Enable MFA" style="margin-top:20px"></v-switch>
+                  <qrcode-vue v-if="mfa" :value="mfaUri" size="200" level="H" style="margin-bottom:20px"></qrcode-vue>
                   <v-btn color="primary" :loading="loading" @click="saveProfile()" style="margin-left:0px;">Save</v-btn>    
                 </v-flex>
               </v-layout>
@@ -32,6 +34,7 @@
 
 <script>
 import axios from 'axios';
+import QrcodeVue from 'qrcode.vue'
 
 export default {
   data: () => ({
@@ -40,6 +43,8 @@ export default {
     email: '',
     password: '',
     newPassword: '',
+    mfa: false,
+    mfaUri: '',
     loading: true,
 
     // Snackbar
@@ -48,6 +53,7 @@ export default {
     snackbarColor: '',
     snackbarText: ''
   }),
+  components: { QrcodeVue },
   created() {
     this.getProfile()
   },
@@ -55,13 +61,16 @@ export default {
     getProfile() {
       axios.get('/profile')
         .then((response) => {
-          this.username = response.data.data[0]['username']
-          this.group = response.data.data[0]['group']
-          this.email = response.data.data[0]['email']
+          this.username = response.data.data['username']
+          this.group = response.data.data['group']
+          this.email = response.data.data['email']
           var hiddenPassword = ''
-          for (var i = 0; i < response.data.data[0]['password'].length; ++i) hiddenPassword += '·'
+          for (var i = 0; i < response.data.data['password'].length; ++i) hiddenPassword += '·'
           this.password = hiddenPassword
+          this.mfa = response.data.data['mfa']
+          this.mfaUri = response.data.data['mfaUri']
           this.loading = false
+          console.log(this.mfaUri)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -74,7 +83,8 @@ export default {
       // Edit item in the DB
       const payload = { 
         email: this.email,
-        password: this.newPassword
+        password: this.newPassword,
+        mfa: this.mfa
       }
       axios.put('/profile', payload)
         .then((response) => {

@@ -17,6 +17,7 @@
     "core-js": "^3.6.5",
     "form-data": "^3.0.0",
     "moment": "^2.29.1",
+    "qrcode.vue": "^1.7.0",
     "sass-loader": "^8.0.2",
     "splitpanes": "^2.3.3",
     "sqlstring": "^2.3.2",
@@ -25,8 +26,8 @@
     "vue-codemirror": "^4.0.6",
     "vue-property-decorator": "^8.5.1",
     "vue-router": "^3.4.6",
-    "vuedraggable": "^2.24.1",
-    "vuetify": "^2.3.13",
+    "vuedraggable": "^2.24.2",
+    "vuetify": "^2.3.14",
     "vuex": "^3.5.1"
   },
   "devDependencies": {

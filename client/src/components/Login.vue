@@ -19,9 +19,14 @@
                       </v-col>
                     </v-row>
                   </v-alert>
-                  <v-form ref="form">
-                    <v-text-field filled v-model="username" name="username" label="Username" required append-icon="person" v-on:keyup.enter="login()" style="margin-top:20px; margin-bottom:20px;" hide-details></v-text-field>
-                    <v-text-field filled v-model="password" name="password" label="Password" required append-icon="lock" type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                  <v-form ref="form" style="margin-top:20px">
+                    <div v-if="mode == 0">
+                      <v-text-field filled v-model="username" name="username" label="Username" required append-icon="person" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                      <v-text-field filled v-model="password" name="password" label="Password" required append-icon="lock" type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                    </div>
+                    <div v-else-if="mode == 1">
+                      <v-text-field ref="mfa" filled v-model="mfa" name="mfa" label="MFA Code" append-icon="vpn_key" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                    </div>
                   </v-form>
                   <v-btn x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()">LOGIN</v-btn>
                 </v-card-text>
@@ -47,8 +52,10 @@
   export default {
     data: () => ({
       // Login Form
+      mode: 0,
       username: '',
       password: '',
+      mfa: '',
       loading: false,
       show_alert: false,
 
@@ -75,11 +82,18 @@
           return
         }
         this.loading = true
-        let username = this.username 
-        let password = this.password
-        this.$store.dispatch('app/login', { username, password })
-        .then(() => {
-          this.login_success()
+        const payload = {
+          username: this.username,
+          password: this.password,
+          mfa: this.mfa
+        }
+        this.$store.dispatch('app/login', payload)
+        .then((response) => {
+          if (response.status == 202) {
+            this.mode = 1
+            this.$nextTick(() => { this.$refs.mfa.focus() })
+          }
+          else this.login_success()
         })
         .catch((error) => {
           if (error.response.status == 401) this.notification(error.response.data.message, 'error')
