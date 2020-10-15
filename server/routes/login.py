@@ -6,9 +6,10 @@ from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_r
 import routes.admin.settings
 
 class Login:
-    def __init__(self, app, sql, license):
+    def __init__(self, app, sql, license, mfa):
         self._app = app
         self._license = license
+        self._mfa = mfa
         # Init models
         self._users = models.admin.users.Users(sql)
         # Init routes
@@ -36,28 +37,36 @@ class Login:
             # Get User from Database
             user = self._users.get(login_json['username'])
 
+            # Check user & password
             if len(user) == 0 or not bcrypt.checkpw(login_json['password'].encode('utf-8'), user[0]['password'].encode('utf-8')):
                 return jsonify({"message": "Invalid username or password"}), 401
-            else:
-                # Update user last_login
-                self._users.put_last_login(login_json['username'])
 
-                # Build return data
-                ret = {
-                    'access_token': create_access_token(identity=user[0]['username']),
-                    'refresh_token': create_refresh_token(identity=user[0]['username']),
-                    'username': user[0]['username'],
-                    'coins': user[0]['coins'],
-                    'admin': user[0]['admin'] and valid_url,
-                    'inventory_enabled': user[0]['inventory_enabled'],
-                    'deployments_enabled': user[0]['deployments_enabled'],
-                    'deployments_basic': user[0]['deployments_basic'],
-                    'deployments_pro': user[0]['deployments_pro'],
-                    'monitoring_enabled': user[0]['monitoring_enabled'],
-                    'utils_enabled': user[0]['utils_enabled'],
-                    'client_enabled': user[0]['client_enabled']
-                }
-                return jsonify({'data': ret}), 200
+            # Check MFA
+            if len(login_json['mfa']) == 0 and user[0]['mfa'] == 1:
+                return jsonify({"message": "Requesting MFA credentials"}), 202
+            if user[0]['mfa'] == 1 and not self._mfa.verify(login_json['mfa']):
+                return jsonify({"message": "Invalid MFA Code"}), 401
+
+            # Update user last_login
+            self._users.put_last_login(login_json['username'])
+
+            # Build return data
+            ret = {
+                'access_token': create_access_token(identity=user[0]['username']),
+                'refresh_token': create_refresh_token(identity=user[0]['username']),
+                'username': user[0]['username'],
+                'mfa': user[0]['mfa'],
+                'coins': user[0]['coins'],
+                'admin': user[0]['admin'] and valid_url,
+                'inventory_enabled': user[0]['inventory_enabled'],
+                'deployments_enabled': user[0]['deployments_enabled'],
+                'deployments_basic': user[0]['deployments_basic'],
+                'deployments_pro': user[0]['deployments_pro'],
+                'monitoring_enabled': user[0]['monitoring_enabled'],
+                'utils_enabled': user[0]['utils_enabled'],
+                'client_enabled': user[0]['client_enabled']
+            }
+            return jsonify({'data': ret}), 200
 
         @login_blueprint.route('/login/check', methods=['GET'])
         @jwt_required
