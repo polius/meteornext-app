@@ -12,6 +12,7 @@ RUN yum update -y && \
     python3 -m pip install sshtunnel && \
     python3 -m pip install pymysql && \
     python3 -m pip install bcrypt && \
+    python3 -m pip install pyotp && \
     python3 -m pip install flask && \
     python3 -m pip install flask_cors && \
     python3 -m pip install flask_jwt_extended && \
