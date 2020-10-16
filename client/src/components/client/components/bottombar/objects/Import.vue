@@ -83,7 +83,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('SHOW_BOTTOMBAR_OBJECTS_IMPORT', this.showDialog);
+    EventBus.$on('show-bottombar-objects-import', this.showDialog);
   },
   methods: {
     showDialog() {
@@ -95,7 +95,7 @@ export default {
     importSubmit() {
       // Check input file
       if (!this.file) {
-        EventBus.$emit('SEND_NOTIFICATION', 'Please select a file', 'info')
+        EventBus.$emit('send-notification', 'Please select a file', 'info')
         return
       }
       // Init vars
@@ -129,7 +129,7 @@ export default {
       axios.post('client/import', data, options)
         .then(() => {
           return new Promise((resolve, reject) => { 
-            EventBus.$emit('REFRESH_SIDEBAR_OBJECTS', resolve, reject)
+            EventBus.$emit('refresh-sidebar-objects', resolve, reject)
           }).then(() => {
             // Show success
             this.step = 'success'
@@ -140,7 +140,7 @@ export default {
         }).catch((error) => {
           if (axios.isCancel(error)) {
             return new Promise((resolve, reject) => { 
-              EventBus.$emit('REFRESH_SIDEBAR_OBJECTS', resolve, reject)
+              EventBus.$emit('refresh-sidebar-objects', resolve, reject)
             }).then(() => {
               this.step = 'stop'
               this.text = 'Import stopped.'
@@ -151,7 +151,7 @@ export default {
           else if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             return new Promise((resolve, reject) => { 
-              EventBus.$emit('REFRESH_SIDEBAR_OBJECTS', resolve, reject)
+              EventBus.$emit('refresh-sidebar-objects', resolve, reject)
             }).then(() => {
               this.step = 'fail'
               this.text = 'An error occurred importing the file.'
@@ -162,7 +162,7 @@ export default {
         })
     },
     cancelImport() {
-      EventBus.$emit('SEND_NOTIFICATION', 'Stopping the import process...', 'warning')
+      EventBus.$emit('send-notification', 'Stopping the import process...', 'warning')
       this.cancelToken.cancel()
     },
   }

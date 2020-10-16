@@ -65,30 +65,30 @@ export default {
     },
     tabStructure() {
       this.headerTabSelected = 'structure'
-      if (this.structureHeaders.columns.length == 0) EventBus.$emit('GET_STRUCTURE')
+      if (this.structureHeaders.columns.length == 0) EventBus.$emit('get-structure')
     },
     tabContent() {
       this.headerTabSelected = 'content'
-      if (this.contentHeaders.length == 0) EventBus.$emit('GET_CONTENT')
+      if (this.contentHeaders.length == 0) EventBus.$emit('get-content')
     },
     tabInfo(object) {
       this.headerTabSelected = 'info_' + object
-      if (this.infoHeaders[object + 's'].length == 0) EventBus.$emit('GET_INFO', object)
+      if (this.infoHeaders[object + 's'].length == 0) EventBus.$emit('get-info', object)
     },
     tabObjects() {
       this.headerTabSelected = 'objects'
       if (this.objectsHeaders.databases.length == 0) {
-        new Promise((resolve, reject) => { EventBus.$emit('GET_OBJECTS', resolve, reject) })
+        new Promise((resolve, reject) => { EventBus.$emit('get-objects', resolve, reject) })
       }
     },
     tabHistory() {
-      EventBus.$emit('SHOW_HISTORY')
+      EventBus.$emit('show-history')
     },
     tabSaved() {
-      EventBus.$emit('SHOW_SAVED')
+      EventBus.$emit('show-saved')
     },
     tabRights() {
-      EventBus.$emit('SHOW_RIGHTS')
+      EventBus.$emit('show-rights')
     },
   },
 }

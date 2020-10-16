@@ -91,7 +91,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('SHOW_BOTTOMBAR_OBJECTS_VARIABLES', this.showDialog);
+    EventBus.$on('show-bottombar-objects-variables', this.showDialog);
   },
   watch: {
     search: function(val) {
@@ -121,7 +121,7 @@ export default {
         .catch((error) => {
           console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
     },
     parseVariables(variables) {
@@ -162,14 +162,14 @@ export default {
       this.loading = true
       let query = "SET GLOBAL " + this.currentCellValues['variable'] + ' = ' + this.currentCellValues['new']
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         // Change Variable
         this.currentCellEditNode.setDataValue('value', this.currentCellValues['new'])
         // Hide Confirm Dialog
         this.confirmDialog = false
         // Send notification
-        EventBus.$emit('SEND_NOTIFICATION', 'Server variable changed successfully', 'success')
+        EventBus.$emit('send-notification', 'Server variable changed successfully', 'success')
       }).catch(() => {}).finally(() => { this.loading = false })
     },
     confirmDialogCancel() {

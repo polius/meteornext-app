@@ -91,7 +91,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('CLICK_CONTEXTMENU_TABLE', this.contextMenuClicked);
+    EventBus.$on('click-contextmenu-table', this.contextMenuClicked);
   },
   watch: {
     dialog (val) {
@@ -139,7 +139,7 @@ export default {
         .catch((error) => {
           console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
         .finally(() => {
           this.loading = false
@@ -221,12 +221,12 @@ export default {
       this.dialog = true
     },
     exportTable() {
-      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_EXPORT', { object: 'tables', name: this.contextMenuItem.name })
+      EventBus.$emit('show-bottombar-objects-export', { object: 'tables', name: this.contextMenuItem.name })
     },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
-        EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
         this.loading = false
         return
       }
@@ -241,10 +241,10 @@ export default {
       let tableName = this.dialogOptions.item.name
       let query = "CREATE TABLE " + tableName + " (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) ENGINE=" + this.dialogOptions.item.engine + " DEFAULT CHARSET=" + this.dialogOptions.item.encoding + " COLLATE= " + this.dialogOptions.item.collation + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -257,7 +257,7 @@ export default {
           this.headerTab = 1
           this.headerTabSelected = 'structure'
           this.tabStructureSelected = 'columns'
-          EventBus.$emit('GET_STRUCTURE')
+          EventBus.$emit('get-structure')
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
@@ -266,10 +266,10 @@ export default {
       let newName = this.dialogOptions.item.newName
       let query = "RENAME TABLE " + currentName + " TO " + newName + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -286,10 +286,10 @@ export default {
       let queries = ["CREATE TABLE " + newName + " LIKE " + currentName + ";"]
       if (duplicateContent) queries.push("INSERT INTO " + newName + " SELECT * FROM " + currentName + ";")
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -303,7 +303,7 @@ export default {
       let name = this.contextMenuItem.name
       let query = "TRUNCATE TABLE " + name + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         // Hide Dialog
         this.dialog = false
@@ -317,10 +317,10 @@ export default {
       queries.push("DROP TABLE " + name + ";")
       if (force) queries.push("SET FOREIGN_KEY_CHECKS = 1")
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -337,11 +337,11 @@ export default {
       let name = this.contextMenuItem.name
       let query = "SHOW CREATE TABLE " + name + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Table'] + ';'
         navigator.clipboard.writeText(syntax)
-        EventBus.$emit('SEND_NOTIFICATION', "Syntax copied to clipboard", 'info')
+        EventBus.$emit('send-notification', "Syntax copied to clipboard", 'info')
       }).catch(() => {}).finally(() => { this.loading = false })
     },
   }

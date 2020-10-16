@@ -131,9 +131,9 @@ export default {
   },
   components: { Splitpanes, Pane, AgGridVue },
   mounted () {
-    EventBus.$on('RUN_QUERY', this.runQuery);
-    EventBus.$on('EXPLAIN_QUERY', this.explainQuery);
-    EventBus.$on('STOP_QUERY', this.stopQuery);
+    EventBus.$on('run-query', this.runQuery);
+    EventBus.$on('explain-query', this.explainQuery);
+    EventBus.$on('stop-query', this.stopQuery);
   },
   computed: {
     ...mapFields([

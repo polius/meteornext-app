@@ -195,7 +195,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('CLICK_CONTEXTMENU_EVENT', this.contextMenuClicked);
+    EventBus.$on('click-contextmenu-event', this.contextMenuClicked);
   },
   watch: {
     dialog (val) {
@@ -310,12 +310,12 @@ export default {
       this.dialog = true
     },
     exportEvent() {
-      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_EXPORT', { object: 'events', name: this.contextMenuItem.name })
+      EventBus.$emit('show-bottombar-objects-export', { object: 'events', name: this.contextMenuItem.name })
     },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
-        EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
         this.loading = false
         return
       }
@@ -349,10 +349,10 @@ export default {
       query += '\nDO\nBEGIN\n' + eventCode + '\nEND;'
 
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -364,7 +364,7 @@ export default {
           // Change view to Info
           this.headerTab = 3
           this.headerTabSelected = 'info_event'
-          EventBus.$emit('GET_INFO', 'event')
+          EventBus.$emit('get-info', 'event')
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
@@ -373,15 +373,15 @@ export default {
       let newName = this.dialogOptions.item.newName
       let queries = ["SHOW CREATE EVENT " + currentName, "DROP EVENT IF EXISTS " + currentName]
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Event'].split(' EVENT `' + currentName + '`')[1]
         let query = "CREATE EVENT " + newName + syntax
         return new Promise((resolve, reject) => {
-          EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+          EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
           return new Promise((resolve, reject) => { 
-            EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+            EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
           }).then(() => {
             // Hide Dialog
             this.dialog = false
@@ -391,7 +391,7 @@ export default {
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_event'
-            EventBus.$emit('GET_INFO', 'event')
+            EventBus.$emit('get-info', 'event')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
@@ -401,15 +401,15 @@ export default {
       let newName = this.dialogOptions.item.newName
       let queries = ["SHOW CREATE EVENT " + currentName]
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Event'].split(' EVENT `' + currentName + '`')[1]
         let query = "CREATE EVENT " + newName + " " + syntax
         return new Promise((resolve, reject) => {
-          EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+          EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
           return new Promise((resolve, reject) => { 
-            EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+            EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
           }).then(() => {
             // Hide Dialog
             this.dialog = false
@@ -419,7 +419,7 @@ export default {
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_event'
-            EventBus.$emit('GET_INFO', 'event')
+            EventBus.$emit('get-info', 'event')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
@@ -428,10 +428,10 @@ export default {
       let name = this.contextMenuItem.name
       let query = "DROP EVENT " + name + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -448,11 +448,11 @@ export default {
       let name = this.contextMenuItem.name
       let query = "SHOW CREATE EVENT " + name + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Event'] + ';'
         navigator.clipboard.writeText(syntax)
-        EventBus.$emit('SEND_NOTIFICATION', "Syntax copied to clipboard", 'info')
+        EventBus.$emit('send-notification', "Syntax copied to clipboard", 'info')
       }).catch(() => {}).finally(() => { this.loading = false })
     },
     // SCHEDULE

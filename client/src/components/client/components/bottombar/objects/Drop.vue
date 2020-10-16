@@ -63,7 +63,7 @@ export default {
     },
   },
   mounted() {
-    EventBus.$on('SHOW_BOTTOMBAR_OBJECTS_DROP', this.showDialog);
+    EventBus.$on('show-bottombar-objects-drop', this.showDialog);
   },
   methods: {
     showDialog() {
@@ -72,7 +72,7 @@ export default {
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
-        EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
         this.loading = false
         return
       }
@@ -80,7 +80,7 @@ export default {
       let databaseName = this.name
       let query = "DROP DATABASE " + databaseName + ';'
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         // Change current database
         this.databaseItems = this.databaseItems.filter(item => item.text !== databaseName)

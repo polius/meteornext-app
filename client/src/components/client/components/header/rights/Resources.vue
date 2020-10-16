@@ -29,7 +29,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('RELOAD_RIGHTS', this.reloadRights);
+    EventBus.$on('reload-rights', this.reloadRights);
   },
   watch: {
     resources: {

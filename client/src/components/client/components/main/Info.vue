@@ -37,12 +37,12 @@ export default {
   },
   methods: {
     getInfo(object) {
-      if (object == 'table') EventBus.$emit('GET_INFO_TABLE')
-      else if (object == 'view') EventBus.$emit('GET_INFO_VIEW')
-      else if (object == 'trigger') EventBus.$emit('GET_INFO_TRIGGER')
-      else if (object == 'function') EventBus.$emit('GET_INFO_FUNCTION')
-      else if (object == 'procedure') EventBus.$emit('GET_INFO_PROCEDURE')
-      else if (object == 'event') EventBus.$emit('GET_INFO_EVENT')
+      if (object == 'table') EventBus.$emit('get-info-table')
+      else if (object == 'view') EventBus.$emit('get-info-view')
+      else if (object == 'trigger') EventBus.$emit('get-info-trigger')
+      else if (object == 'function') EventBus.$emit('get-info-function')
+      else if (object == 'procedure') EventBus.$emit('get-info-procedure')
+      else if (object == 'event') EventBus.$emit('get-info-event')
     },
   }
 }

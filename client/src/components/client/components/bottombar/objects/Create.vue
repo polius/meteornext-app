@@ -73,7 +73,7 @@ export default {
     },
   },
   mounted() {
-    EventBus.$on('SHOW_BOTTOMBAR_OBJECTS_CREATE', this.showDialog);
+    EventBus.$on('show-bottombar-objects-create', this.showDialog);
   },
   methods: {
     showDialog() {
@@ -83,7 +83,7 @@ export default {
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
-        EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
         this.loading = false
         return
       }
@@ -93,12 +93,12 @@ export default {
       let databaseCollation = this.collation
       let query = "CREATE DATABASE " + databaseName + " CHARACTER SET " + databaseEncoding + " COLLATE " + databaseCollation + ';'
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => {
           // Change current database
           this.database = databaseName
-          EventBus.$emit('REFRESH_SIDEBAR_OBJECTS', resolve, reject)
+          EventBus.$emit('refresh-sidebar-objects', resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -135,7 +135,7 @@ export default {
         .catch((error) => {
           console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
         .finally(() => {
           this.loading = false

@@ -23,7 +23,7 @@ export default {
   },
   props: { tab: Number },
   mounted() {
-    EventBus.$on('RELOAD_RIGHTS', this.reloadRights);
+    EventBus.$on('reload-rights', this.reloadRights);
     // Init ACE Editor
     this.editor = ace.edit("rightsSyntax", {
       mode: "ace/mode/mysql",

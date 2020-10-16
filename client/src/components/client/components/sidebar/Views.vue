@@ -83,7 +83,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('CLICK_CONTEXTMENU_VIEW', this.contextMenuClicked);
+    EventBus.$on('click-contextmenu-view', this.contextMenuClicked);
   },
   watch: {
     dialog (val) {
@@ -197,12 +197,12 @@ export default {
       this.dialog = true
     },
     exportView() {
-      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_EXPORT', { object: 'views', name: this.contextMenuItem.name })
+      EventBus.$emit('show-bottombar-objects-export', { object: 'views', name: this.contextMenuItem.name })
     },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
-        EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
         this.loading = false
         return
       }
@@ -216,10 +216,10 @@ export default {
       let viewName = this.dialogOptions.item.name
       let query = "CREATE VIEW " + viewName + " AS " + this.dialogEditor.getValue()
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -231,7 +231,7 @@ export default {
           // Change view to Content
           this.headerTab = 2
           this.headerTabSelected = 'content'
-          EventBus.$emit('GET_CONTENT')
+          EventBus.$emit('get-content')
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
@@ -240,10 +240,10 @@ export default {
       let newName = this.dialogOptions.item.newName
       let query = "RENAME TABLE " + currentName + " TO " + newName + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -258,15 +258,15 @@ export default {
       let newName = this.dialogOptions.item.newName
       let query = "SHOW CREATE VIEW " + currentName + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => { 
         let syntax = 'SELECT ' + JSON.parse(res.data)[0].data[0]['Create View'].split(' AS select ')[1]
         let query = "CREATE VIEW " + newName + " AS " + syntax
         return new Promise((resolve, reject) => {
-          EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+          EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
           return new Promise((resolve, reject) => { 
-            EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+            EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
           }).then(() => {
             // Hide Dialog
             this.dialog = false
@@ -276,7 +276,7 @@ export default {
             // Change view to Content
             this.headerTab = 2
             this.headerTabSelected = 'content'
-            EventBus.$emit('GET_CONTENT')
+            EventBus.$emit('get-content')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
@@ -285,10 +285,10 @@ export default {
       let name = this.contextMenuItem.name
       let query = "DROP VIEW " + name + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -305,11 +305,11 @@ export default {
       let name = this.contextMenuItem.name
       let query = "SHOW CREATE VIEW " + name + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create View'] + ';'
         navigator.clipboard.writeText(syntax)
-        EventBus.$emit('SEND_NOTIFICATION', "Syntax copied to clipboard", 'info')
+        EventBus.$emit('send-notification', "Syntax copied to clipboard", 'info')
       }).catch(() => {}).finally(() => { this.loading = false })
     },
   }

@@ -95,13 +95,13 @@ export default {
       this.$store.dispatch('client/deleteConnection', index)
     },
     runQuery() {
-      EventBus.$emit('RUN_QUERY')
+      EventBus.$emit('run-query')
     },
     explainQuery() {
-      EventBus.$emit('EXPLAIN_QUERY')
+      EventBus.$emit('explain-query')
     },
     stopQuery() {
-      EventBus.$emit('STOP_QUERY')
+      EventBus.$emit('stop-query')
     },
   },
 }

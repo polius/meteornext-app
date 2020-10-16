@@ -48,7 +48,7 @@ export default {
   },
   mounted () {
     // Register Event
-    EventBus.$on('GET_INFO_FUNCTION', this.getInfo);
+    EventBus.$on('get-info-function', this.getInfo);
 
     // Init ACE Editor
     this.editor = ace.edit("infoFunctionsEditor", {
@@ -91,7 +91,7 @@ export default {
         .catch((error) => {
           console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
     },
     parseInfo(data) {
@@ -110,7 +110,7 @@ export default {
       if (info.length == 0) {
         this.infoItems.functions = []
         syntax = ''
-        EventBus.$emit('SEND_NOTIFICATION', 'This function does not longer exist', 'error')
+        EventBus.$emit('send-notification', 'This function does not longer exist', 'error')
       }
       else {
         this.infoItems.functions = info

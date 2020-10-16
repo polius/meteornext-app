@@ -55,7 +55,7 @@ export default {
   methods: {
     sidebarClick(item) {
       if ('children' in item) return
-      EventBus.$emit('GET_RIGHTS', item['user'], item['name'])
+      EventBus.$emit('get-rights', item['user'], item['name'])
     },
     onRightClick(event) {
       event.preventDefault()

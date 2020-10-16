@@ -90,8 +90,8 @@ export default {
     ], { path: 'client/client' }),
   },
   mounted () {
-    EventBus.$on('GET_STRUCTURE', this.getStructure);
-    EventBus.$on('EXECUTE_STRUCTURE', this.execute);
+    EventBus.$on('get-structure', this.getStructure);
+    EventBus.$on('execute-structure', this.execute);
   },
   methods: {
     tabStructureColumns() {
@@ -123,7 +123,7 @@ export default {
         .catch((error) => {
           console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
     },
     parseStructure(data) {
@@ -138,7 +138,7 @@ export default {
         }
         columns_headers[0]['rowDrag'] = true
       }
-      else EventBus.$emit('SEND_NOTIFICATION', "This table no longer exists", 'error')
+      else EventBus.$emit('send-notification', "This table no longer exists", 'error')
       this.structureHeaders.columns = columns_headers
       this.structureItems.columns = columns_items
       if (columns_items.length == 0) this.gridApi.structure.columns.showNoRowsOverlay()

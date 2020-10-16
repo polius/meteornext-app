@@ -64,7 +64,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('SHOW_HISTORY', this.showDialog);
+    EventBus.$on('show-history', this.showDialog);
   },
   watch: {
     dialog: function(value) {
