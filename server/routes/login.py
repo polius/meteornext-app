@@ -1,3 +1,4 @@
+import pyotp
 import bcrypt
 import models.admin.users
 from flask import request, jsonify, Blueprint
@@ -6,10 +7,9 @@ from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_r
 import routes.admin.settings
 
 class Login:
-    def __init__(self, app, sql, license, mfa):
+    def __init__(self, app, sql, license):
         self._app = app
         self._license = license
-        self._mfa = mfa
         # Init models
         self._users = models.admin.users.Users(sql)
         # Init routes
@@ -44,7 +44,7 @@ class Login:
             # Check MFA
             if len(login_json['mfa']) == 0 and user[0]['mfa'] == 1:
                 return jsonify({"message": "Requesting MFA credentials"}), 202
-            if user[0]['mfa'] == 1 and not self._mfa.verify(login_json['mfa']):
+            if user[0]['mfa'] == 1 and not pyotp.TOTP(user[0]['mfa_hash'], interval=30).verify(login_json['mfa']):
                 return jsonify({"message": "Invalid MFA Code"}), 401
 
             # Update user last_login
@@ -55,7 +55,6 @@ class Login:
                 'access_token': create_access_token(identity=user[0]['username']),
                 'refresh_token': create_refresh_token(identity=user[0]['username']),
                 'username': user[0]['username'],
-                'mfa': user[0]['mfa'],
                 'coins': user[0]['coins'],
                 'admin': user[0]['admin'] and valid_url,
                 'inventory_enabled': user[0]['inventory_enabled'],
