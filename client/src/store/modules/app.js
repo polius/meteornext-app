@@ -44,7 +44,6 @@ const actions = {
           if (response.status == 202) resolve(response)
           var data = {
             username: response.data.data.username,
-            mfa: response.data.data.mfa,
             token: response.data.data.access_token,
             coins: response.data.data.coins,
             admin: response.data.data.admin,
@@ -59,7 +58,6 @@ const actions = {
           }
           // Store variables to the local storage
           localStorage.setItem('username', data['username'])
-          localStorage.setItem('mfa', data['mfa'])
           localStorage.setItem('token', data['token'])
           localStorage.setItem('coins', data['coins'])
           localStorage.setItem('admin', data['admin'])
@@ -83,7 +81,6 @@ const actions = {
           commit('logout')
           // Remove variables from the local storage
           localStorage.removeItem('username')
-          localStorage.removeItem('mfa')
           localStorage.removeItem('token')
           localStorage.removeItem('coins')
           localStorage.removeItem('admin')
@@ -112,7 +109,6 @@ const actions = {
       commit('logout')
       // Remove variables from the local storage
       localStorage.removeItem('username')
-      localStorage.removeItem('mfa')
       localStorage.removeItem('token')
       localStorage.removeItem('coins')
       localStorage.removeItem('admin')
@@ -136,7 +132,6 @@ const actions = {
 const mutations = {
   auth(state, data) {
     state.username = data.username
-    state.mfa = data.mfa == 1
     state.token = data.token
     state.coins = data.coins
     state.admin = data.admin == 1
@@ -151,7 +146,6 @@ const mutations = {
   },
   logout(state) {
     state.username = ''
-    state.mfa = 0
     state.token = ''
     state.coins = 0
     state.admin = 0

@@ -12,13 +12,14 @@
                 <v-flex xs12>
                   <div class="headline font-weight-regular">Hello <span class="font-weight-medium">{{ this.username }}</span> <v-chip color="teal" text-color="white" style="margin-left:10px; letter-spacing: 1px;">{{ this.group.toUpperCase() }}</v-chip></div>
                   <v-form ref="form" @submit.prevent>
-                    <v-text-field v-model="email" :disabled="loading" label="Email" type="email" append-icon="email" style="margin-top:10px;"></v-text-field>
-                    <v-text-field v-model="newPassword" :disabled="loading" label="Password" type="password" :placeholder="password" append-icon="lock" hide-details style="padding-top:0px;"></v-text-field>
-                    <v-switch v-model="mfa" flat label="Multi-Factor Authentication (MFA)" style="margin-top:20px"></v-switch>
-                    <v-card v-if="mfa && !mfaOrigin" style="width:232px; margin-bottom:20px;">
+                    <v-text-field v-model="email" :loading="loading" :disabled="loading" label="Email" type="email" append-icon="email" style="margin-top:10px;"></v-text-field>
+                    <v-text-field v-model="newPassword" :loading="loading" :disabled="loading" label="Password" type="password" :placeholder="password" append-icon="lock" hide-details style="padding-top:0px;"></v-text-field>
+                    <v-switch v-model="mfa['enabled']" @change="onMFAChange" :loading="loading" :disabled="loading" flat label="Multi-Factor Authentication (MFA)" style="margin-top:20px"></v-switch>
+                    <v-card v-if="mfa['enabled'] && !mfa['origin']" style="width:232px; margin-bottom:20px;">
                       <v-card-text>
-                        <qrcode-vue :value="mfaUri" size="200" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
-                        <v-text-field outlined v-model="mfaValue" v-on:keyup.enter="saveProfile()" label="MFA Code" append-icon="vpn_key" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px"></v-text-field>
+                        <v-progress-circular v-if="mfa['uri'] == null" indeterminate color="primary"></v-progress-circular>
+                        <qrcode-vue v-else :value="mfa['uri']" size="200" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
+                        <v-text-field outlined v-model="mfa['value']" v-on:keyup.enter="saveProfile()" label="MFA Code" append-icon="vpn_key" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px"></v-text-field>
                       </v-card-text>
                     </v-card>
                   </v-form>
@@ -50,10 +51,13 @@ export default {
     email: '',
     password: '',
     newPassword: '',
-    mfa: false,
-    mfaOrigin: false,
-    mfaUri: '',
-    mfaValue: '',
+    mfa: {
+      enabled: false,
+      origin: false,
+      hash: null,
+      uri: null,
+      value: ''
+    },
     loading: true,
 
     // Snackbar
@@ -76,8 +80,22 @@ export default {
           var hiddenPassword = ''
           for (var i = 0; i < response.data.data['password'].length; ++i) hiddenPassword += '·'
           this.password = hiddenPassword
-          this.mfa = this.mfaOrigin = response.data.data['mfa']
-          this.mfaUri = response.data.data['mfaUri']
+          this.mfa['enabled'] = this.mfa['origin'] = response.data.data['mfa']
+          this.loading = false
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+    },
+    onMFAChange(val) {
+      if (val && !this.mfa['origin'] && this.mfa['uri'] == null) this.getMFA()
+    },
+    getMFA() {
+      axios.get('/profile/mfa')
+        .then((response) => {
+          this.mfa['hash'] = response.data['mfa_hash']
+          this.mfa['uri'] = response.data['mfa_uri']
           this.loading = false
         })
         .catch((error) => {
@@ -97,13 +115,16 @@ export default {
       const payload = { 
         email: this.email,
         password: this.newPassword,
-        mfa: this.mfa,
-        mfaValue: this.mfaValue
+        mfa: this.mfa['enabled'],
+        mfaHash: this.mfa['hash'],
+        mfaValue: this.mfa['value']
       }
       axios.put('/profile', payload)
         .then((response) => {
-          this.mfaOrigin = this.mfa
-          this.mfaValue = ''
+          this.mfa['origin'] = this.mfa['enabled']
+          this.mfa['hash'] = null
+          this.mfa['uri'] = null
+          this.mfa['value'] = ''
           this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
