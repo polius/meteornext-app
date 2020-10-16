@@ -211,7 +211,7 @@ export default {
       let promise = new Promise((resolve, reject) => {
         this.loading = true
         this.gridApi.objects.events.showLoadingOverlay()
-        EventBus.$emit('GET_OBJECTS', resolve, reject)
+        EventBus.$emit('get-objects', resolve, reject)
       })
       promise.then(() => {})
         .catch(() => {})

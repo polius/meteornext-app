@@ -182,7 +182,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('SHOW_BOTTOMBAR_OBJECTS_EXPORT', this.showDialog);
+    EventBus.$on('show-bottombar-objects-export', this.showDialog);
   },
   watch: {
     tabObjectsSelected: function(val) {
@@ -255,7 +255,7 @@ export default {
       }
       let promise = new Promise((resolve, reject) => {
         this.loading = true
-        EventBus.$emit('GET_OBJECTS', resolve, reject)
+        EventBus.$emit('get-objects', resolve, reject)
       })
       promise.finally(() => {
         for (let obj of this.objects) {
@@ -276,7 +276,7 @@ export default {
       // Check if no objects are selected
       if ((this.tab == 'sql' && tables.length == 0 && views.length == 0 && triggers.length == 0 && functions.length == 0 && procedures.length == 0 && events.length == 0) ||
         (this.tab == 'csv' && tablesCsv.length == 0)) {
-        EventBus.$emit('SEND_NOTIFICATION', 'Please select at least one object to export', 'error')
+        EventBus.$emit('send-notification', 'Please select at least one object to export', 'error')
         return
       }
       this.loading = true
@@ -354,7 +354,7 @@ export default {
       .finally(() => { this.loading = false })
     },
     cancelExport() {
-      EventBus.$emit('SEND_NOTIFICATION', 'Stopping the export process...', 'warning')
+      EventBus.$emit('send-notification', 'Stopping the export process...', 'warning')
       this.cancelToken.cancel()
     },
     parseBytes(value) {

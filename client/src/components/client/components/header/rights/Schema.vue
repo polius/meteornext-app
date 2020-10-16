@@ -153,7 +153,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('RELOAD_RIGHTS', this.reloadRights);
+    EventBus.$on('reload-rights', this.reloadRights);
   },
   watch: {
     schema: {
@@ -271,7 +271,7 @@ export default {
         let validated = true
         this.gridApi.forEachNode((node) => {
           if (node.rowIndex != this.dialogOptions.index && node.data['type'] == this.dialogOptions.item.type.toLowerCase() && node.data['schema'] == this.getSchema()) {
-            EventBus.$emit('SEND_NOTIFICATION', 'This right type + schema currently exists in the table.', 'error')
+            EventBus.$emit('send-notification', 'This right type + schema currently exists in the table.', 'error')
             validated = false
             return
           }

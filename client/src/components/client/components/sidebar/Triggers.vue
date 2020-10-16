@@ -87,7 +87,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('CLICK_CONTEXTMENU_TRIGGER', this.contextMenuClicked);
+    EventBus.$on('click-contextmenu-trigger', this.contextMenuClicked);
   },
   watch: {
     dialog (val) {
@@ -191,12 +191,12 @@ export default {
       this.dialog = true
     },
     exportTrigger() {
-      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_EXPORT', { object: 'triggers', name: this.contextMenuItem.name })
+      EventBus.$emit('show-bottombar-objects-export', { object: 'triggers', name: this.contextMenuItem.name })
     },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
-        EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
         this.loading = false
         return
       }
@@ -211,10 +211,10 @@ export default {
       let triggerCode = this.dialogEditor.getValue().endsWith(';') ? this.dialogEditor.getValue() : this.dialogEditor.getValue() + ';'
       let query = "CREATE TRIGGER " + triggerName + ' ' + this.dialogOptions.item.time + ' ' + this.dialogOptions.item.event + ' ON ' + this.dialogOptions.item.table + ' FOR EACH ROW BEGIN\n' + triggerCode + '\nEND;'
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -226,7 +226,7 @@ export default {
           // Change view to Info
           this.headerTab = 3
           this.headerTabSelected = 'info_trigger'
-          EventBus.$emit('GET_INFO', 'trigger')
+          EventBus.$emit('get-info', 'trigger')
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
@@ -235,15 +235,15 @@ export default {
       let newName = this.dialogOptions.item.newName
       let queries = ["SHOW CREATE TRIGGER " + currentName, "DROP TRIGGER IF EXISTS " + currentName]
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['SQL Original Statement'].split(' TRIGGER ' + currentName + ' ')[1]
         let query = "CREATE TRIGGER " + newName + " " + syntax
         return new Promise((resolve, reject) => {
-          EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+          EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
           return new Promise((resolve, reject) => { 
-            EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+            EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
           }).then(() => {
             // Hide Dialog
             this.dialog = false
@@ -253,7 +253,7 @@ export default {
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_trigger'
-            EventBus.$emit('GET_INFO', 'trigger')
+            EventBus.$emit('get-info', 'trigger')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
@@ -263,15 +263,15 @@ export default {
       let newName = this.dialogOptions.item.newName
       let queries = ["SHOW CREATE TRIGGER " + currentName]
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['SQL Original Statement'].split(' TRIGGER ' + currentName + ' ')[1]
         let query = "CREATE TRIGGER " + newName + " " + syntax
         return new Promise((resolve, reject) => {
-          EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+          EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
           return new Promise((resolve, reject) => { 
-            EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+            EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
           }).then(() => {
             // Hide Dialog
             this.dialog = false
@@ -281,7 +281,7 @@ export default {
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_trigger'
-            EventBus.$emit('GET_INFO', 'trigger')
+            EventBus.$emit('get-info', 'trigger')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
@@ -290,10 +290,10 @@ export default {
       let name = this.contextMenuItem.name
       let query = "DROP TRIGGER " + name + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -310,11 +310,11 @@ export default {
       let name = this.contextMenuItem.name
       let query = "SHOW CREATE TRIGGER " + name + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['SQL Original Statement'] + ';'
         navigator.clipboard.writeText(syntax)
-        EventBus.$emit('SEND_NOTIFICATION', "Syntax copied to clipboard", 'info')
+        EventBus.$emit('send-notification', "Syntax copied to clipboard", 'info')
       }).catch(() => {}).finally(() => { this.loading = false })
     },
   }

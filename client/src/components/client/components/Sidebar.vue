@@ -181,9 +181,9 @@ export default {
     this.getServers()
   },
   mounted() {
-    EventBus.$on('EXECUTE_SIDEBAR', this.execute);
-    EventBus.$on('GET_SIDEBAR_OBJECTS', this.getObjects);
-    EventBus.$on('REFRESH_SIDEBAR_OBJECTS', this.refreshObjects);
+    EventBus.$on('execute-sidebar', this.execute);
+    EventBus.$on('get-sidebar-objects', this.getObjects);
+    EventBus.$on('refresh-sidebar-objects', this.refreshObjects);
   },
   methods: {
     sidebarClicked(item) {
@@ -208,12 +208,12 @@ export default {
           }
           else {
             this.sidebarSelected = {...item}
-            if (this.headerTabSelected == 'structure') EventBus.$emit('GET_STRUCTURE')
-            else if (this.headerTabSelected == 'content') EventBus.$emit('GET_CONTENT')
+            if (this.headerTabSelected == 'structure') EventBus.$emit('get-structure')
+            else if (this.headerTabSelected == 'content') EventBus.$emit('get-content')
             else if (this.headerTabSelected.startsWith('info_')) {
               let type = item.type.toLowerCase()
               this.headerTabSelected = 'info_' + type
-              EventBus.$emit('GET_INFO', type)
+              EventBus.$emit('get-info', type)
             }
           }
         }
@@ -227,13 +227,13 @@ export default {
               this.sidebar = []
               this.headerTab = 2
               this.headerTabSelected = 'content'
-              EventBus.$emit('GET_CONTENT')
+              EventBus.$emit('get-content')
             }
             else if (['Trigger','Function','Procedure','Event'].includes(item.type) && item.children === undefined) {
               let type = item.type.toLowerCase()
               this.headerTab = 3
               this.headerTabSelected = 'info_' + type
-              EventBus.$emit('GET_INFO', type)
+              EventBus.$emit('get-info', type)
             }
           }
         }
@@ -248,7 +248,7 @@ export default {
         .catch((error) => {
           console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
         .finally(() => { this.sidebarLoading = false })
     },
@@ -282,7 +282,7 @@ export default {
         .catch((error) => {
           console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
         .finally(() => {
           this.loadingServer = false
@@ -348,7 +348,7 @@ export default {
         .catch((error) => {
           console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
           reject(error)
         })
         .finally(() => { this.sidebarLoading = false })
@@ -502,32 +502,32 @@ export default {
     contextMenuClicked(item) {
       if (this.sidebarMode == 'servers') {
         if (item == 'Open Connection') this.getDatabases(this.contextMenuItem)
-        else EventBus.$emit('CLICK_CONTEXTMENU_CONNECTION', item)
+        else EventBus.$emit('click-contextmenu-connection', item)
       }
       else if (this.sidebarMode == 'objects') {
         if (this.contextMenuItem.type == 'Table') {
           if (item == 'Show Table Objects') this.showObjectsTab('tables')
-          else EventBus.$emit('CLICK_CONTEXTMENU_TABLE', item)
+          else EventBus.$emit('click-contextmenu-table', item)
         }
         else if (this.contextMenuItem.type == 'View') {
           if (item == 'Show View Objects') this.showObjectsTab('views')
-          else EventBus.$emit('CLICK_CONTEXTMENU_VIEW', item)
+          else EventBus.$emit('click-contextmenu-view', item)
         }
         else if (this.contextMenuItem.type == 'Trigger') {
           if (item == 'Show Trigger Objects') this.showObjectsTab('triggers')
-          else EventBus.$emit('CLICK_CONTEXTMENU_TRIGGER', item)
+          else EventBus.$emit('click-contextmenu-trigger', item)
         }
         else if (this.contextMenuItem.type == 'Function') {
           if (item == 'Show Function Objects') this.showObjectsTab('functions')
-          else EventBus.$emit('CLICK_CONTEXTMENU_FUNCTION', item)
+          else EventBus.$emit('click-contextmenu-function', item)
         }
         else if (this.contextMenuItem.type == 'Procedure') {
           if (item == 'Show Procedure Objects') this.showObjectsTab('procedures')
-          else EventBus.$emit('CLICK_CONTEXTMENU_PROCEDURE', item)
+          else EventBus.$emit('click-contextmenu-procedure', item)
         }
         else if (this.contextMenuItem.type == 'Event') {
           if (item == 'Show Event Objects') this.showObjectsTab('events')
-          else EventBus.$emit('CLICK_CONTEXTMENU_EVENT', item)
+          else EventBus.$emit('click-contextmenu-event', item)
         }
       }
     },
@@ -540,7 +540,7 @@ export default {
         setTimeout(() => {
           let promise = new Promise((resolve, reject) => {
             this.gridApi.objects[object].showLoadingOverlay()
-            EventBus.$emit('GET_OBJECTS', resolve, reject)
+            EventBus.$emit('get-objects', resolve, reject)
           })
           promise.then(() => {})
             .catch(() => {})

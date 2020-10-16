@@ -216,7 +216,7 @@ export default {
     ], { path: 'client/components' }),
   },
   mounted () {
-    EventBus.$on('GET_CONTENT', this.getContent);
+    EventBus.$on('get-content', this.getContent);
   },
   watch: {
     'sidebarSelected.name': function() {

@@ -87,7 +87,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('CLICK_CONTEXTMENU_FUNCTION', this.contextMenuClicked);
+    EventBus.$on('click-contextmenu-function', this.contextMenuClicked);
   },
   watch: {
     dialog (val) {
@@ -211,12 +211,12 @@ RETURN (customerLevel);
       this.dialog = true
     },
     exportFunction() {
-      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_EXPORT', { object: 'functions', name: this.contextMenuItem.name })
+      EventBus.$emit('show-bottombar-objects-export', { object: 'functions', name: this.contextMenuItem.name })
     },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
-        EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
         this.loading = false
         return
       }
@@ -234,10 +234,10 @@ RETURN (customerLevel);
       let functionDeterministic = this.dialogOptions.item.deterministic ? '\nDETERMINISTIC' : ''
       let query = "CREATE FUNCTION " + functionName + ' (' + functionParams + ')\nRETURNS ' + functionReturns + functionDeterministic + '\nBEGIN\n' + functionCode + '\nEND;'
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -249,7 +249,7 @@ RETURN (customerLevel);
           // Change view to Info
           this.headerTab = 3
           this.headerTabSelected = 'info_function'
-          EventBus.$emit('GET_INFO', 'function')
+          EventBus.$emit('get-info', 'function')
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
@@ -258,15 +258,15 @@ RETURN (customerLevel);
       let newName = this.dialogOptions.item.newName
       let queries = ["SHOW CREATE FUNCTION " + currentName, "DROP FUNCTION IF EXISTS " + currentName]
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Function'].split(' FUNCTION `' + currentName + '`')[1]
         let query = "CREATE FUNCTION " + newName + " " + syntax
         return new Promise((resolve, reject) => {
-          EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+          EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
           return new Promise((resolve, reject) => { 
-            EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+            EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
           }).then(() => {
             // Hide Dialog
             this.dialog = false
@@ -276,7 +276,7 @@ RETURN (customerLevel);
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_function'
-            EventBus.$emit('GET_INFO', 'function')
+            EventBus.$emit('get-info', 'function')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
@@ -286,15 +286,15 @@ RETURN (customerLevel);
       let newName = this.dialogOptions.item.newName
       let queries = ["SHOW CREATE FUNCTION " + currentName]
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Function'].split(' FUNCTION `' + currentName + '`')[1]
         let query = "CREATE FUNCTION " + newName + " " + syntax
         return new Promise((resolve, reject) => {
-          EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+          EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
           return new Promise((resolve, reject) => { 
-            EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+            EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
           }).then(() => {
             // Hide Dialog
             this.dialog = false
@@ -304,7 +304,7 @@ RETURN (customerLevel);
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_function'
-            EventBus.$emit('GET_INFO', 'function')
+            EventBus.$emit('get-info', 'function')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
@@ -313,10 +313,10 @@ RETURN (customerLevel);
       let name = this.contextMenuItem.name
       let query = "DROP FUNCTION " + name + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -333,10 +333,10 @@ RETURN (customerLevel);
       let name = this.contextMenuItem.name
       let query = "SHOW CREATE FUNCTION " + name + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Function']
-        if (syntax == null) EventBus.$emit('SEND_NOTIFICATION', "Insufficient privileges to copy the function syntax", 'error')
+        if (syntax == null) EventBus.$emit('send-notification', "Insufficient privileges to copy the function syntax", 'error')
         else navigator.clipboard.writeText(syntax) + ';'
       }).catch(() => {}).finally(() => { this.loading = false })
     },

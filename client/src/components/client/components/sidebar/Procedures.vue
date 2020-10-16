@@ -86,7 +86,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('CLICK_CONTEXTMENU_PROCEDURE', this.contextMenuClicked);
+    EventBus.$on('click-contextmenu-procedure', this.contextMenuClicked);
   },
   watch: {
     dialog (val) {
@@ -204,12 +204,12 @@ WHERE CountryCode = country;
       this.dialog = true
     },
     exportProcedure() {
-      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_EXPORT', { object: 'procedures', name: this.contextMenuItem.name })
+      EventBus.$emit('show-bottombar-objects-export', { object: 'procedures', name: this.contextMenuItem.name })
     },
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
-        EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
         this.loading = false
         return
       }
@@ -226,10 +226,10 @@ WHERE CountryCode = country;
       let procedureDeterministic = this.dialogOptions.item.deterministic ? '\nDETERMINISTIC' : ''
       let query = "CREATE PROCEDURE " + procedureName + ' (' + procedureParams + ')' + procedureDeterministic + '\nBEGIN\n' + procedureCode + '\nEND;'
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -241,7 +241,7 @@ WHERE CountryCode = country;
           // Change view to Info
           this.headerTab = 3
           this.headerTabSelected = 'info_procedure'
-          EventBus.$emit('GET_INFO', 'procedure')
+          EventBus.$emit('get-info', 'procedure')
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
@@ -250,15 +250,15 @@ WHERE CountryCode = country;
       let newName = this.dialogOptions.item.newName
       let queries = ["SHOW CREATE PROCEDURE " + currentName, "DROP PROCEDURE IF EXISTS " + currentName]
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure'].split(' PROCEDURE `' + currentName + '`')[1]
         let query = "CREATE PROCEDURE " + newName + " " + syntax
         return new Promise((resolve, reject) => {
-          EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+          EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
           return new Promise((resolve, reject) => { 
-            EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+            EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
           }).then(() => {
             // Hide Dialog
             this.dialog = false
@@ -268,7 +268,7 @@ WHERE CountryCode = country;
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_procedure'
-            EventBus.$emit('GET_INFO', 'procedure')
+            EventBus.$emit('get-info', 'procedure')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
@@ -278,15 +278,15 @@ WHERE CountryCode = country;
       let newName = this.dialogOptions.item.newName
       let queries = ["SHOW CREATE PROCEDURE " + currentName]
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', queries, resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure'].split(' PROCEDURE `' + currentName + '`')[1]
         let query = "CREATE PROCEDURE " + newName + " " + syntax
         return new Promise((resolve, reject) => {
-          EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+          EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
           return new Promise((resolve, reject) => { 
-            EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+            EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
           }).then(() => {
             // Hide Dialog
             this.dialog = false
@@ -296,7 +296,7 @@ WHERE CountryCode = country;
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_procedure'
-            EventBus.$emit('GET_INFO', 'procedure')
+            EventBus.$emit('get-info', 'procedure')
           })
         }).catch(() => {})
       }).catch(() => {}).finally(() => { this.loading = false })
@@ -305,10 +305,10 @@ WHERE CountryCode = country;
       let name = this.contextMenuItem.name
       let query = "DROP PROCEDURE " + name + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
-          EventBus.$emit('GET_SIDEBAR_OBJECTS', this.database, resolve, reject)
+          EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
         }).then(() => {
           // Hide Dialog
           this.dialog = false
@@ -325,12 +325,12 @@ WHERE CountryCode = country;
       let name = this.contextMenuItem.name
       let query = "SHOW CREATE PROCEDURE " + name + ";"
       new Promise((resolve, reject) => { 
-        EventBus.$emit('EXECUTE_SIDEBAR', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure']
-        if (syntax == null) EventBus.$emit('SEND_NOTIFICATION', "Insufficient privileges to copy the procedure syntax", 'error')
+        if (syntax == null) EventBus.$emit('send-notification', "Insufficient privileges to copy the procedure syntax", 'error')
         else navigator.clipboard.writeText(syntax) + ';'
-        EventBus.$emit('SEND_NOTIFICATION', "Syntax copied to clipboard", 'info')
+        EventBus.$emit('send-notification', "Syntax copied to clipboard", 'info')
       }).catch(() => {}).finally(() => { this.loading = false })
     },
   }

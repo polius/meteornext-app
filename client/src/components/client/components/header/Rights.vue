@@ -125,8 +125,8 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('SHOW_RIGHTS', this.showDialog);
-    EventBus.$on('GET_RIGHTS', this.getRights);
+    EventBus.$on('show-rights', this.showDialog);
+    EventBus.$on('get-rights', this.getRights);
   },
   watch: {
     dialog: function(value) {
@@ -228,7 +228,7 @@ export default {
         console.log(this.rights)
 
         // Reload Rights
-        EventBus.$emit('RELOAD_RIGHTS')
+        EventBus.$emit('reload-rights')
       }
     },
   }

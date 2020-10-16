@@ -152,7 +152,7 @@ export default {
     ...mapFields(['server'], { path: 'client/connection' }),
   },
   mounted () {
-    EventBus.$on('SEND_NOTIFICATION', this.notification);
+    EventBus.$on('send-notification', this.notification);
   },
   methods: {
     notification(message, color='', timeout=5) {

@@ -238,7 +238,7 @@ export default {
       this.dialog = true
     },
     refreshColumns() {
-      EventBus.$emit('GET_STRUCTURE')
+      EventBus.$emit('get-structure')
     },
     dialogSubmit(event) {
       this.loading = true
@@ -253,7 +253,7 @@ export default {
 
         // Check if all fields are filled
         if (!this.$refs.dialogForm.validate()) {
-          EventBus.$emit('SEND_NOTIFICATION', 'Please make sure all required fields are filled out correctly', 'error')
+          EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
           this.loading = false
           return
         }
@@ -292,7 +292,7 @@ export default {
     },
     execute(query) {
       let promise = new Promise((resolve, reject) => {
-        EventBus.$emit('EXECUTE_STRUCTURE', query, resolve, reject)
+        EventBus.$emit('execute-structure', query, resolve, reject)
       })
       promise.then(() => { this.dialog = false })
         .catch(() => { if (this.dialogOptions.mode == 'delete') this.dialog = false })

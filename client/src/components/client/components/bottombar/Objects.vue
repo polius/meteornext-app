@@ -53,11 +53,11 @@ export default {
   },
   methods: {
     bottomBarClick(option) {
-      EventBus.$emit('SHOW_BOTTOMBAR_OBJECTS_' + option.toUpperCase())
+      EventBus.$emit('show-bottombar-objects-' + option)
     },
     refreshObjects() {
       new Promise((resolve, reject) => { 
-        EventBus.$emit('REFRESH_SIDEBAR_OBJECTS', resolve, reject)
+        EventBus.$emit('refresh-sidebar-objects', resolve, reject)
       }).finally(() => { this.editor.focus() })
     },
   }

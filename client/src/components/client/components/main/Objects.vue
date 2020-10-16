@@ -66,7 +66,7 @@ export default {
   },
   mounted() {
     // Register Event
-    EventBus.$on('GET_OBJECTS', this.getObjects);
+    EventBus.$on('get-objects', this.getObjects);
   },
   methods: {
     tabObjects(object) {
@@ -87,7 +87,7 @@ export default {
         .catch((error) => {
           console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('SEND_NOTIFICATION', error.response.data.message, 'error')
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
           reject()
         })
     },
