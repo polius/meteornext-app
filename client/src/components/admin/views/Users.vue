@@ -12,6 +12,10 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="username" show-select class="elevation-1" style="padding-top:3px;">
+        <template v-slot:[`item.mfa`]="{ item }">
+          <v-icon v-if="item.mfa" small color="#00b16a" style="margin-left:2px;">fas fa-circle</v-icon>
+          <v-icon v-else small color="error" style="margin-left:2px;">fas fa-circle</v-icon>
+        </template>
         <template v-slot:[`item.admin`]="{ item }">
           <v-icon v-if="item.admin" small color="#00b16a" style="margin-left:8px;">fas fa-circle</v-icon>
           <v-icon v-else small color="error" style="margin-left:8px;">fas fa-circle</v-icon>
@@ -42,7 +46,14 @@
                   <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" type="password" required append-icon="lock" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" label="Coins" required append-icon="monetization_on" style="padding-top:0px;"></v-text-field>
                   <v-select v-model="item.group" :items="groups" :rules="[v => !!v || '']" label="Group" required hide-details style="padding-top:0px;"></v-select>
-                  <v-switch v-model="item.mfa" label="Multi-Factor Authentication (MFA)" hide-details></v-switch>
+                  <v-switch v-model="item.mfa.enabled" @change="onMFAChange" :loading="loading" :disabled="loading" flat label="Multi-Factor Authentication (MFA)" hide-details style="margin-top:20px; margin-bottom:10px;"></v-switch>
+                  <v-card v-if="item.mfa.enabled && !item.mfa.origin" style="width:232px; margin-bottom:20px;">
+                    <v-card-text>
+                      <v-progress-circular v-if="item.mfa.uri == null" indeterminate style="margin-left:auto; margin-right:auto; display:table;"></v-progress-circular>
+                      <qrcode-vue v-else :value="item.mfa.uri" size="200" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
+                      <v-text-field outlined v-model="item.mfa.value" v-on:keyup.enter="submitUser()" label="MFA Code" append-icon="vpn_key" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px"></v-text-field>
+                    </v-card-text>
+                  </v-card>
                   <v-switch v-model="item.admin" label="Administrator" color="info" style="margin-top:5px;" hide-details></v-switch>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
@@ -70,6 +81,7 @@
 <script>
 import axios from 'axios';
 import moment from 'moment';
+import QrcodeVue from 'qrcode.vue'
 
 export default {
   data: () => ({
@@ -81,12 +93,13 @@ export default {
       { text: 'Created', align: 'left', value: 'created_at'},
       { text: 'Last login', align: 'left', value: 'last_login'},
       { text: 'Coins', align: 'left', value: 'coins'},
+      { text: 'MFA', align: 'left', value: 'mfa'},
       { text: 'Admin', align: 'left', value: 'admin'},
     ],
     items: [],
     selected: [],
     search: '',
-    item: { username: '', email: '', password: '', coins: '', group: '', mfa: false, admin: false },
+    item: { username: '', email: '', password: '', coins: '', group: '', mfa: { enabled: false, origin: false, hash: null, uri: null, value: ''}, admin: false },
     mode: '',
     loading: true,
     dialog: false,
@@ -100,6 +113,7 @@ export default {
     snackbarText: '',
     snackbarColor: ''
   }),
+  components: { QrcodeVue },
   created() {
     this.getUsers()
   },
@@ -109,22 +123,24 @@ export default {
         .then((response) => {
           this.items = response.data.data.users
           for (var i = 0; i < response.data.data.groups.length; ++i) this.groups.push(response.data.data.groups[i]['name'])
-          this.loading = false
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
+        .finally(() => { this.loading = false })
     },
     newUser() {
       this.mode = 'new'
-      this.item = { username: '', email: '', password: '', group: '', mfa: false, admin: false }
+      this.item = { username: '', email: '', password: '', coins: '', group: '', mfa: { enabled: false, origin: false, hash: null, uri: null, value: ''}, admin: false }
       this.dialog_title = 'New User'
       this.dialog = true
     },
     editUser() {
       this.mode = 'edit'
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      let item = JSON.parse(JSON.stringify(this.selected[0]))
+      item.mfa = { enabled: item.mfa, origin: item.mfa, hash: this.item.mfa_hash, uri: null, value: ''}
+      this.item = item
       this.dialog_title = 'Edit User'
       this.dialog = true
     },
@@ -134,7 +150,6 @@ export default {
       this.dialog = true
     },
     submitUser() {
-      this.loading = true
       if (this.mode == 'new') this.newUserSubmit()
       else if (this.mode == 'edit') this.editUserSubmit()
       else if (this.mode == 'delete') this.deleteUserSubmit()
@@ -143,18 +158,17 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
       // Check if new item already exists
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['username'] == this.item.username) {
           this.notification('This user currently exists', 'error')
-          this.loading = false
           return
         }
       }
       // Add item to the DB
+      this.loading = true
       const payload = this.item
       axios.post('/admin/users', payload)
         .then((response) => {
@@ -164,7 +178,6 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          this.loading = false
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
@@ -190,6 +203,7 @@ export default {
         }
       }
       // Add item to the DB
+      this.loading = true
       const payload = { 
         current_username: this.selected[0]['username'], 
         username: this.item.username, 
@@ -197,15 +211,22 @@ export default {
         password: this.item.password,
         coins: this.item.coins,
         group: this.item.group,
-        mfa: this.item.mfa,
+        mfa: {
+          enabled: this.item.mfa.enabled,
+          hash: this.item.mfa.hash,
+          value: this.item.mfa.value
+        },
         admin: this.item.admin 
       }
       axios.put('/admin/users', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
+          let mfa = this.item.mfa
+          this.item['mfa'] = mfa['enabled']
+          this.item['mfa_hash'] = mfa['mfa_hash']
           this.items.splice(i, 1, this.item)
-          this.selected[0] = this.item
+          this.selected = []
           this.dialog = false
         })
         .catch((error) => {
@@ -214,10 +235,10 @@ export default {
         })
         .finally(() => {
           this.loading = false
-          this.selected = []
         })
     },
     deleteUserSubmit() {
+      this.loading = true
       // Get Selected Items
       var payload = []
       for (var i = 0; i < this.selected.length; ++i) {
@@ -247,6 +268,23 @@ export default {
         .finally(() => {
           this.loading = false
           this.dialog = false
+        })
+    },
+    onMFAChange(val) {
+      if (val && !this.item.mfa.origin && this.item.mfa.uri == null) this.getMFA()
+    },
+    getMFA() {
+      const payload = {
+        username: this.item.username
+      } 
+      axios.get('/admin/users/mfa', { params: payload })
+        .then((response) => {
+          this.item.mfa.hash = response.data['mfa_hash']
+          this.item.mfa.uri = response.data['mfa_uri']
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
         })
     },
     dateFormat(date) {
