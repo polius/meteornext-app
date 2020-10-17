@@ -5,7 +5,7 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-shield-alt</v-icon>User Rights</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn disabled color="primary" style="margin-right:10px;">Save</v-btn>
+          <v-btn :disabled="saveEnabled" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -105,6 +105,7 @@ export default {
   data() {
     return {
       dialog: false,
+      saveEnabled: false,
       // Tab
       tab: 0,
       // Info Dialog
@@ -121,6 +122,7 @@ export default {
       'headerTab',
       'headerTabSelected',
       'rights',
+      'rightsItem',
       'rightsLoading',
     ], { path: 'client/connection' }),
   },
@@ -134,7 +136,20 @@ export default {
         const tab = {'client': 0, 'structure': 1, 'content': 2, 'info': 3, 'objects': 6}
         this.headerTab = tab[this.headerTabSelected]
       }
-    }
+    },
+    rightsItem: {
+      handler(val) {
+        console.log(this.rightsItem)
+        if (
+          Object.keys(val['login']).length == 0 && 
+          Object.keys(val['server']).length == 0 && 
+          val['schema']['grant'].length == 0 && val['schema']['revoke'].length == 0 &&
+          Object.keys(val['resources']).length == 0
+        ) this.saveEnabled = false
+        else this.saveEnabled = true
+      },
+      deep: true
+    },
   },
   methods: {
     showDialog() {
@@ -225,8 +240,6 @@ export default {
         // Syntax
         let syntax = data['syntax'].map(x => Object.values(x)).join(';\n') + ';'
         this.rights['syntax'] = syntax
-        console.log(this.rights)
-
         // Reload Rights
         EventBus.$emit('reload-rights')
       }
