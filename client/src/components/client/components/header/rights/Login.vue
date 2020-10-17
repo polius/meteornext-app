@@ -43,7 +43,6 @@ export default {
       handler(obj) {
         // Compute diff
         let diff = {}
-        console.log(this.rights['login'])
         for (let [key, value] of Object.entries(obj)) {
           if (value.length > 0 && value != this.rights['login'][key]) diff[key] = value
         }
