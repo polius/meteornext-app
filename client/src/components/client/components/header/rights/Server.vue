@@ -1,6 +1,6 @@
 <template>
   <div style="height:100%">
-    <div style="height: calc(100% - 84px);">
+    <div style="height: calc(100% - 84px); position:relative; overflow-y:auto;">
       <v-row no-gutters style="padding:max(2%, 20px);">
         <v-col style="margin-right:10px;">
           <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Database and Tables</div>
@@ -53,7 +53,7 @@
         </v-col>
       </v-row>
     </div>
-    <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; width:100%">
+    <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; position:relative; background-color:#484848; width:100%">
       <v-btn @click="selectAll" text small title="Select All" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-check-square</v-icon></v-btn>
       <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
       <v-btn @click="deselectAll" text small title="Deselect All" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">far fa-square</v-icon></v-btn>
@@ -75,6 +75,7 @@ export default {
   computed: {
     ...mapFields([
       'rights',
+      'rightsItem',
     ], { path: 'client/connection' }),
   },
   mounted() {
@@ -82,9 +83,13 @@ export default {
   },
   watch: {
     server: {
-      handler() {
-        let change = JSON.stringify(this.rights['server']) !== JSON.stringify(this.server)
-        console.log("change: " + change.toString())
+      handler(obj) {
+        // Compute diff
+        let diff = {}
+        for (let [key, value] of Object.entries(obj)) {
+          if (value.length > 0) diff[key] = value
+        }
+        this.rightsItem['server'] = diff
       },
       deep: true
     },

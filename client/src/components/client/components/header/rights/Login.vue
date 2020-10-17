@@ -32,6 +32,7 @@ export default {
   computed: {
     ...mapFields([
       'rights',
+      'rightsItem',
     ], { path: 'client/connection' }),
   },
   mounted() {
@@ -39,9 +40,13 @@ export default {
   },
   watch: {
     login: {
-      handler() {
-        let change = JSON.stringify(this.rights['login']) !== JSON.stringify(this.login)
-        console.log("change: " + change.toString())
+      handler(obj) {
+        // Compute diff
+        let diff = {}
+        for (let [key, value] of Object.entries(obj)) {
+          if (value.length > 0) diff[key] = value
+        }
+        this.rightsItem['login'] = diff
       },
       deep: true
     },

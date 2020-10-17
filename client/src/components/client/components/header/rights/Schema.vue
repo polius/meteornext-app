@@ -27,12 +27,14 @@
                 <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
                   <div v-if="Object.keys(dialogOptions.item).length > 0">
-                    <v-select v-model="dialogOptions.item.type" @change="onChangeType" :items="['Database','Table','Column']" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-select>
-                    <v-row no-gutters>
-                      <v-col><v-text-field v-model="dialogOptions.item.database" :rules="[v => !!v || '']" label="Database" required style="padding-top:0px;"></v-text-field></v-col>
-                      <v-col v-if="['Table','Column'].includes(dialogOptions.item.type)" style="margin-left:10px"><v-text-field v-model="dialogOptions.item.table" :rules="[v => !!v || '']" label="Table" required style="padding-top:0px;"></v-text-field></v-col>
-                      <v-col v-if="dialogOptions.item.type == 'Column'" style="margin-left:10px;"><v-text-field v-model="dialogOptions.item.column" :rules="[v => !!v || '']" label="Column" required style="padding-top:0px;"></v-text-field></v-col>
-                    </v-row>
+                    <v-select v-model="dialogOptions.item.type" :items="['Database','Table','Column']" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-select>
+                    <v-form ref="form" @submit.prevent>
+                      <v-row no-gutters>
+                        <v-col><v-text-field v-model="dialogOptions.item.database" :rules="[v => !!v || '']" label="Database" required style="padding-top:0px;"></v-text-field></v-col>
+                        <v-col v-if="['Table','Column'].includes(dialogOptions.item.type)" style="margin-left:10px"><v-text-field v-model="dialogOptions.item.table" :rules="[v => !!v || '']" label="Table" required style="padding-top:0px;"></v-text-field></v-col>
+                        <v-col v-if="dialogOptions.item.type == 'Column'" style="margin-left:10px;"><v-text-field v-model="dialogOptions.item.column" :rules="[v => !!v || '']" label="Column" required style="padding-top:0px;"></v-text-field></v-col>
+                      </v-row>
+                    </v-form>
                     <v-row no-gutters>
                       <v-col style="margin-right:15px;">
                         <div class="body-2" style="margin-bottom:5px;">Database</div>
@@ -156,12 +158,11 @@ export default {
     EventBus.$on('reload-rights', this.reloadRights);
   },
   watch: {
-    schema: {
-      handler() {
-        let change = JSON.stringify(this.rights['schema']) !== JSON.stringify(this.schema)
-        console.log("change: " + change.toString())
-      },
-      deep: true
+    dialog (val) {
+      if (val) return
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
+      })
     },
     tab(value) {
       if (value == 2) this.resizeTable()
@@ -215,9 +216,6 @@ export default {
     onRowDoubleClicked(event) {
       this.editRights(event.data, event.rowIndex)
     },
-    onChangeType() {
-
-    },
     addRights() {
       this.dialogOptions = {
         mode: 'new',
@@ -265,26 +263,39 @@ export default {
       }
       this.dialog = true
     },
-    dialogSubmit() {     
+    dialogSubmit() {    
+      let item = null 
       // Check constraints
       if (['new','edit'].includes(this.dialogOptions.mode)) {
-        let validated = true
+        // Check unique (rightType, rightSchema) 
         this.gridApi.forEachNode((node) => {
           if (node.rowIndex != this.dialogOptions.index && node.data['type'] == this.dialogOptions.item.type.toLowerCase() && node.data['schema'] == this.getSchema()) {
             EventBus.$emit('send-notification', 'This right type + schema currently exists in the table.', 'error')
-            validated = false
             return
           }
         })
-        if (!validated) return
+        // Retrieve current item
+        item = this.getItem()
+        // Check if all fields are filled
+        if (!this.$refs.form.validate()) {
+          EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+          return
+        }
+        // Check if some right is selected
+        if (item.rights.length == 0) {
+          EventBus.$emit('send-notification', 'Please select at least one right', 'error')
+          return
+        }
       }
       // Add element
       if (this.dialogOptions.mode == 'new') {
-        this.gridApi.applyTransaction({ add: [this.getItem()] })
+        this.schema.push(item)
+        this.gridApi.applyTransaction({ add: [item] })
       }
       // Update element
       else if (this.dialogOptions.mode == 'edit') {
-        let item = this.getItem()
+        const index = this.schema.findIndex((x) => x['type'] == this.currentItem.type && x['schema'] == this.currentItem.schema)
+        this.schema[index] = JSON.parse(JSON.stringify(item))
         this.currentItem.type = item.type
         this.currentItem.schema = item.schema
         this.currentItem.rights = item.rights
@@ -292,12 +303,13 @@ export default {
       }
       // Remove element
       else if (this.dialogOptions.mode == 'delete') {
-        let selectedData = this.gridApi.getSelectedRows();
-        this.gridApi.applyTransaction({ remove: selectedData })
+        let selectedData = this.gridApi.getSelectedRows()[0]
+        const index = this.schema.findIndex((x) => x['type'] == selectedData.type && x['schema'] == selectedData.schema && JSON.stringify(x['rights']) == JSON.stringify(selectedData.rights))
+        this.schema.splice(index, 1);
         this.selectedRows = false
       }
       // Get diff
-      this.getDiff()
+      this.computeDiff()
       // Close dialog
       this.dialog = false
     },
@@ -321,23 +333,28 @@ export default {
       else if (this.dialogOptions.item.type.toLowerCase() == 'table') return this.dialogOptions.item.database + '.' + this.dialogOptions.item.table
       else if (this.dialogOptions.item.type.toLowerCase() == 'column') return this.dialogOptions.item.database + '.' + this.dialogOptions.item.table + '.' + this.dialogOptions.item.column
     },
-    getDiff() {
-      let diff = { add: [], remove: [], update: [] }
-      // Diff between this.rights['schema'] and this.schema: (add | update | remove) and build SQL stmts
-      console.log(this.rights['schema'])
-      console.log(this.schema)
+    computeDiff() {
+      let diff = this.schema.reduce((acc, val) => {
+        // Check added
+        let added = !this.rights['schema'].some(val2 => val.type == val2.type && val.schema == val2.schema && JSON.stringify(val.rights) == JSON.stringify(val2.rights))
+        if (added) { acc['grant'].push(val); return acc; }
+        // Check matching
+        let matching = this.rights['schema'].find((val2) => val.type == val2.type && val.schema == val2.schema && JSON.stringify(val.rights) != JSON.stringify(val2.rights))
+        if (matching) {
+          let rightsGrant = val.rights.filter(x => !matching.rights.includes(x))
+          let rightsRevoke = matching.rights.filter(x => !val.rights.includes(x))
+          if (rightsGrant.length > 0) acc['grant'].push({type: val.type, schema: val.schema, rights: rightsGrant})
+          if (rightsRevoke.length > 0) acc['revoke'].push({type: val.type, schema: val.schema, rights: rightsRevoke})
+        }
+        return acc
+      }, {'grant': [], 'revoke': []})
 
-      // add
-      // for (let i of this.schema) {
-      //   let found = this.rights['schema'].find(x => x.type == i.type && x.schema == i.schema && )
-      // }
-      // remove
-
-      // update
-      // newData.find(x => x.investor === investor)
-
-      console.log(diff)
-
+      // Revokes
+      let revokes = this.rights['schema'].filter((val) => !this.schema.some((val2) => 
+        val.type == val2.type && val.schema == val2.schema && JSON.stringify(val.rights) == JSON.stringify(val2.rights)
+      ))
+      diff['revoke'] = diff['revoke'].concat(revokes)
+      this.rightsItem['schema'] = diff
     }
   }
 }
