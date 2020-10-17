@@ -5,7 +5,7 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-shield-alt</v-icon>User Rights</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn :disabled="saveEnabled" color="primary" style="margin-right:10px;">Save</v-btn>
+          <v-btn :disabled="!saveEnabled" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -139,7 +139,6 @@ export default {
     },
     rightsItem: {
       handler(val) {
-        console.log(this.rightsItem)
         if (
           Object.keys(val['login']).length == 0 && 
           Object.keys(val['server']).length == 0 && 
