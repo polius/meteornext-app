@@ -84,12 +84,14 @@ export default {
   watch: {
     server: {
       handler(obj) {
+        console.log(this.rights['server'])
         // Compute diff
         let diff = {}
         for (let [key, value] of Object.entries(obj)) {
-          if (value.length > 0) diff[key] = value
+          if (value != this.rights['server'][key]) diff[key] = value
         }
         this.rightsItem['server'] = diff
+        console.log(this.rightsItem['server'])
       },
       deep: true
     },
