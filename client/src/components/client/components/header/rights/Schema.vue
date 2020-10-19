@@ -4,9 +4,9 @@
       <ag-grid-vue suppressDragLeaveHidesColumns suppressContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @cell-clicked="onCellClicked" @row-double-clicked="onRowDoubleClicked" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :columnDefs="header" :rowData="schema"></ag-grid-vue>
     </div>
     <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; width:100%">
-      <v-btn @click="addRights" text small title="Grant Rights" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+      <v-btn :disabled="disabled" @click="addRights" text small title="Grant Rights" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
       <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn :disabled="!selectedRows" @click="removeRights" text small title="Revoke Rights" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+      <v-btn :disabled="disabled || !selectedRows" @click="removeRights" text small title="Revoke Rights" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
       <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
     </v-row>
     <!------------>
@@ -117,6 +117,7 @@ import {AgGridVue} from "ag-grid-vue";
 export default {
   data() {
     return {
+      disabled: true,
       // AG Grid
       gridApi: null,
       columnApi: null,
@@ -152,12 +153,16 @@ export default {
     ...mapFields([
       'rights',
       'rightsItem',
+      'rightsSelected',
     ], { path: 'client/connection' }),
   },
   mounted() {
     EventBus.$on('reload-rights', this.reloadRights);
   },
   watch: {
+    rightsSelected: function(val) {
+      this.disabled = Object.keys(val).length == 0 ? true : false
+    },
     dialog (val) {
       if (val) return
       requestAnimationFrame(() => {

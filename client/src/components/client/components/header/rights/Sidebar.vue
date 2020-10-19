@@ -41,7 +41,6 @@ export default {
     return {
       // Rights
       sidebar: [],
-      sidebarSelected: {},
       sidebarOpened: [],
       sidebarSearch: '',
     }
@@ -50,11 +49,13 @@ export default {
     ...mapFields([
       'rights',
       'rightsLoading',
+      'rightsSelected',
     ], { path: 'client/connection' }),
   },
   methods: {
     sidebarClick(item) {
       if ('children' in item) return
+      this.rightsSelected = item
       EventBus.$emit('get-rights', item['user'], item['name'])
     },
     onRightClick(event) {
