@@ -6,6 +6,7 @@
           <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-shield-alt</v-icon>User Rights</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="!saveEnabled" @click="saveClick" color="primary" style="margin-right:10px;">Save</v-btn>
+          <v-progress-circular v-if="loading" indeterminate size="20" width="2" style="margin-left:5px"></v-progress-circular>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -104,6 +105,7 @@ import Syntax from './rights/Syntax'
 export default {
   data() {
     return {
+      loading: true,
       dialog: false,
       saveEnabled: false,
       // Tab
@@ -158,6 +160,7 @@ export default {
     onSplitPaneReady() {
     },
     getRights(user, host) {
+      this.loading = true
       const payload = {
         connection: this.index,
         server: this.server.id,
@@ -177,9 +180,7 @@ export default {
             this.infoDialog = true
           }
         })
-        .finally(() => {
-          this.$nextTick(() => { })          
-        })
+        .finally(() => { this.loading = false })
     },
     parseRightsSidebar(data) {
       if ('rights' in data) {
@@ -189,7 +190,7 @@ export default {
           if (index == -1) rights.push({ id: right['user'], name: right['user'], children: [{ id: right['user'] + '|' + right['host'], user: right['user'], name: right['host'] }] })
           else rights[index]['children'].push({ id: right['user'] + '|' + right['host'], user: right['user'], name: right['host'] })
         }
-        this.rights['sidebar']= rights.slice(0)
+        this.rights = { sidebar: rights.slice(0), login: {}, server: {}, schema: [], resources: {}, syntax: '' }
       }
       else {
         // Login
@@ -239,9 +240,9 @@ export default {
         // Syntax
         let syntax = data['syntax'].map(x => Object.values(x)).join(';\n') + ';'
         this.rights['syntax'] = syntax
-        // Reload Rights
-        EventBus.$emit('reload-rights')
       }
+      // Reload Rights
+      EventBus.$emit('reload-rights')
     },
     saveClick() {
       console.log(this.rightsItem)
