@@ -1,4 +1,5 @@
 import sys
+import json
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -44,7 +45,7 @@ class Regions:
             elif request.method == 'PUT':
                 return self.put(user['id'], user['group_id'], region_json)
             elif request.method == 'DELETE':
-                return self.delete(user['group_id'], region_json)
+                return self.delete(user['group_id'])
 
         @regions_blueprint.route('/inventory/regions/test', methods=['POST'])
         @jwt_required
@@ -96,7 +97,8 @@ class Regions:
         self._regions.put(user_id, group_id, data)
         return jsonify({'message': 'Region edited successfully'}), 200
 
-    def delete(self, group_id, data):
+    def delete(self, group_id):
+        data = json.loads(request.args['regions'])
         # Check inconsistencies
         for region in data:
             if self._servers.exist_by_region(group_id, region):

@@ -22,7 +22,7 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="dialog" persistent max-width="1280px">
+    <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">Delete Group</v-toolbar-title>
@@ -121,13 +121,11 @@ export default {
       this.dialog = true
     },
     deleteGroupSubmit() {
-      // Get Selected Items
-      var payload = []
-      for (var i = 0; i < this.selected.length; ++i) {
-        payload.push(this.selected[i]['id'])
-      }
+      this.loading = true
+      // Build payload
+      const payload = { groups: JSON.stringify(this.selected.map((x) => x.id)) }
       // Delete items to the DB
-      axios.delete('/admin/groups', { data: payload })
+      axios.delete('/admin/groups', { params: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Delete items from the data table

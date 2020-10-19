@@ -1,3 +1,4 @@
+import json
 import pyotp
 import bcrypt
 from flask import Blueprint, jsonify, request
@@ -48,7 +49,7 @@ class Users:
             elif request.method == 'PUT':
                 return self.put(user['id'], user_json)
             elif request.method == 'DELETE':
-                return self.delete(user_json)
+                return self.delete()
 
         @users_blueprint.route('/admin/users/mfa', methods=['GET'])
         @jwt_required
@@ -86,22 +87,29 @@ class Users:
 
     def post(self, user_id, data):
         user = self._users.get(data['username'])
+        # Check unique user
         if len(user) > 0:
             return jsonify({'message': 'This user currently exists'}), 400
-        else:
-            data['password'] = bcrypt.hashpw(data['password'].encode('utf8'), bcrypt.gensalt())
-            self._users.post(user_id, data)
-            return jsonify({'message': 'User added successfully'}), 200
+        
+        # Hash password
+        data['password'] = bcrypt.hashpw(data['password'].encode('utf8'), bcrypt.gensalt())
+
+        # Add user
+        self._users.post(user_id, data)
+        return jsonify({'message': 'User added successfully'}), 200
 
     def put(self, user_id, data):
         user = self._users.get(data['current_username'])
+        # Check unique user
         if len(user) == 0:
             return jsonify({'message': 'This user does not exist'}), 400
+
         # Check password
         elif data['current_username'] != data['username'] and self._users.exist(data['username']):
             return jsonify({'message': 'This user currently exists'}), 400
         elif data['password'] != user[0]['password']:
             data['password'] = bcrypt.hashpw(data['password'].encode('utf8'), bcrypt.gensalt())
+
         # Check & Parse MFA
         if data['mfa']['enabled']:
             if 'hash' in data['mfa']:
@@ -113,9 +121,12 @@ class Users:
                 data['mfa']['hash'] = user[0]['mfa_hash']
         else:
             data['mfa']['hash'] = None
+
+        # Edit user
         self._users.put(user_id, data)
         return jsonify({'message': 'User edited successfully'}), 200
 
-    def delete(self, data):
-        self._users.delete(data)
+    def delete(self):
+        users = json.loads(request.args['users'])
+        self._users.delete(users)
         return jsonify({'message': 'Selected users deleted successfully'}), 200

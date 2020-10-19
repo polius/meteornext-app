@@ -238,11 +238,10 @@ export default {
         })
     },
     deleteServerSubmit() {
-      // Get Selected Items
-      var payload = []
-      for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
+      // Build payload
+      const payload = { servers: JSON.stringify(this.selected.map((x) => x.id)) }
       // Delete items to the DB
-      axios.delete('/inventory/servers', { data: payload })
+      axios.delete('/inventory/servers', { params: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Delete items from the data table

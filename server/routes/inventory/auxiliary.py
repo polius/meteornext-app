@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import json
 import utils
 import models.admin.users
 import models.inventory.auxiliary
@@ -41,7 +42,7 @@ class Auxiliary:
             elif request.method == 'PUT':
                 return self.put(user['id'], user['group_id'], auxiliary_json)
             elif request.method == 'DELETE':
-                return self.delete(user['group_id'], auxiliary_json)
+                return self.delete(user['group_id'])
 
         @auxiliary_blueprint.route('/inventory/auxiliary/test', methods=['POST'])
         @jwt_required
@@ -97,7 +98,8 @@ class Auxiliary:
             self._auxiliary.put(user_id, group_id, data)
             return jsonify({'message': 'Auxiliary connection edited successfully'}), 200
 
-    def delete(self, group_id, data):
+    def delete(self, group_id):
+        data = json.loads(request.args['auxiliary'])
         for auxiliary in data:
             self._auxiliary.delete(group_id, auxiliary)
         return jsonify({'message': 'Selected auxiliary connections deleted successfully'}), 200

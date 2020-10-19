@@ -46,7 +46,7 @@ class Groups:
         self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_limit'], group['deployments_execution_concurrent'], group['monitoring_enabled'], group['utils_enabled'], group['client_enabled'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group['id']))
 
     def delete(self, group):
-        self._sql.execute("DELETE FROM groups WHERE name = %s", (group))
+        self._sql.execute("DELETE FROM groups WHERE id = %s", (group))
     
     def exist(self, group):
         if 'id' in group:
