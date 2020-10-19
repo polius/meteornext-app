@@ -57,7 +57,7 @@ class Groups:
             elif request.method == 'PUT':
                 return self.put(user['id'], group_json)
             elif request.method == 'DELETE':
-                return self.delete(group_json)
+                return self.delete()
 
         return groups_blueprint
 
@@ -96,8 +96,9 @@ class Groups:
         self._groups.put(user_id, group)
         return jsonify({'message': 'Group edited'}), 200
 
-    def delete(self, data):
-        for group in data:
+    def delete(self):
+        groups = json.loads(request.args['groups'])
+        for group in groups:
             # Get group ID
             group_id = self._groups.get(group_id=group)[0]['id']
 

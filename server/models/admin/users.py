@@ -20,7 +20,7 @@ class Users:
         return self._sql.execute("SELECT * FROM users WHERE id = user_id")
 
     def post(self, user_id, user):
-        self._sql.execute("INSERT INTO users (username, password, mfa, email, coins, group_id, admin, created_by, created_at) SELECT %s, %s, %s, %s, %s, id, %s, %s, %s FROM groups WHERE name = %s", (user['username'], user['password'], user['mfa'], user['email'], user['coins'], user['admin'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['group']))
+        self._sql.execute("INSERT INTO users (username, password, mfa, email, coins, group_id, admin, created_by, created_at) SELECT %s, %s, %s, %s, %s, id, %s, %s, %s FROM groups WHERE name = %s", (user['username'], user['password'], user['mfa']['enabled'], user['email'], user['coins'], user['admin'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['group']))
 
     def put(self, user_id, user):
         self._sql.execute("UPDATE users SET username = %s, password = %s, mfa = %s, mfa_hash = %s, email = %s, coins = %s, admin = %s, group_id = (SELECT id FROM groups WHERE `name` = %s), updated_by = %s, updated_at = %s WHERE username = %s", (user['username'], user['password'], user['mfa']['enabled'], user['mfa']['hash'], user['email'], user['coins'], user['admin'], user['group'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['current_username']))

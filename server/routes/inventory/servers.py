@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import json
 import utils
 import models.admin.users
 import models.inventory.regions
@@ -43,7 +44,7 @@ class Servers:
             elif request.method == 'PUT':
                 return self.put(user['id'], user['group_id'], server_json)
             elif request.method == 'DELETE':
-                return self.delete(user['group_id'], server_json)
+                return self.delete(user['group_id'])
 
         @servers_blueprint.route('/inventory/servers/test', methods=['POST'])
         @jwt_required
@@ -99,7 +100,8 @@ class Servers:
             self._servers.put(user_id, group_id, data)
             return jsonify({'message': 'Server edited successfully'}), 200
 
-    def delete(self, group_id, data):
+    def delete(self, group_id):
+        data = json.loads(request.args['servers'])
         # Check inconsistencies
         for environment in data:
             exist = self._servers.exist_in_environment(group_id, environment)

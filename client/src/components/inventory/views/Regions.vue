@@ -197,12 +197,11 @@ export default {
         })
     },
     deleteRegionSubmit() {
-      // Get Selected Items
-      var payload = []
-      for (var i = 0; i < this.selected.length; ++i) payload.push(this.selected[i]['id'])
+      // Build payload
+      const payload = { regions: JSON.stringify(this.selected.map((x) => x.id)) }
       // Delete items to the DB
       this.notification('Deleting Region...', 'info', true)
-      axios.delete('/inventory/regions', { data: payload })
+      axios.delete('/inventory/regions', { params: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Delete items from the data table

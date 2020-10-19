@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -43,7 +44,7 @@ class Environments:
             elif request.method == 'PUT':
                 return self.put(user['id'], user['group_id'], environment_json)
             elif request.method == 'DELETE':
-                return self.delete(user['group_id'], environment_json)
+                return self.delete(user['group_id'])
 
         @environments_blueprint.route('/inventory/environments/list', methods=['GET'])
         @jwt_required
@@ -85,7 +86,8 @@ class Environments:
             self._environments.put(user_id, group_id, data)
             return jsonify({'message': 'Environment edited successfully'}), 200
 
-    def delete(self, group_id, data):
+    def delete(self, group_id):
+        data = json.loads(request.args['environments'])
         # Check inconsistencies
         exist = True
         for environment in data:

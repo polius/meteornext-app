@@ -239,13 +239,10 @@ export default {
     },
     deleteUserSubmit() {
       this.loading = true
-      // Get Selected Items
-      var payload = []
-      for (var i = 0; i < this.selected.length; ++i) {
-        payload.push(this.selected[i]['username'])
-      }
+      // Build payload
+      const payload = { users: JSON.stringify(this.selected.map((x) => x.username)) }
       // Delete items to the DB
-      axios.delete('/admin/users', { data: payload })
+      axios.delete('/admin/users', { params: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Delete items from the data table
