@@ -3,40 +3,49 @@
     <div style="height: calc(100% - 84px); position:relative; overflow-y:auto;">
       <v-row no-gutters style="padding:max(2%, 20px);">
         <v-col style="margin-right:10px;">
-          <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Database and Tables</div>
-          <v-card>
+          <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Database</div>
+          <v-card style="height:337px">
             <v-card-text style="padding:10px; padding-bottom:15px">
-              <v-checkbox :disabled="disabled" v-model="server['select']" dense label="Select" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['insert']" dense label="Insert" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['update']" dense label="Update" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['delete']" dense label="Delete" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['references']" dense label="References" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['create']" dense label="Create" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['drop']" dense label="Drop" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['alter']" dense label="Alter" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['index']" dense label="Index" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['trigger']" dense label="Trigger" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['event']" dense label="Event" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server['references']" dense label="References" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['create_tmp_table']" dense label="Create Temporary Table" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['lock_tables']" dense label="Lock Tables" hide-details style="margin:0px;"></v-checkbox>
             </v-card-text>
           </v-card>
         </v-col>
         <v-col style="margin-left:10px; margin-right:10px;">
-          <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Views and Routines</div>
-          <v-card>
-            <v-card-text style="padding:10px; padding-bottom:15px">
-              <v-checkbox :disabled="disabled" v-model="server['show_view']" dense label="Show View" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['create_view']" dense label="Create View" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['create_routine']" dense label="Create Routine" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['alter_routine']" dense label="Alter Routine" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['execute']" dense label="Execute" hide-details style="margin:0px;"></v-checkbox>
-            </v-card-text>
-          </v-card>
+          <v-col style="padding:0px">
+            <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Tables</div>
+            <v-card>
+              <v-card-text style="padding:10px; padding-bottom:15px">
+                <v-checkbox :disabled="disabled" v-model="server['select']" dense label="Select" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server['insert']" dense label="Insert" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server['update']" dense label="Update" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server['delete']" dense label="Delete" hide-details style="margin:0px;"></v-checkbox>
+              </v-card-text>
+            </v-card>
+          </v-col>
+          <v-col style="padding:0px">
+            <div class="body-2" style="margin-left:10px; margin-bottom:5px; margin-top:10px">Views and Routines</div>
+            <v-card>
+              <v-card-text style="padding:10px; padding-bottom:15px">
+                <v-checkbox :disabled="disabled" v-model="server['show_view']" dense label="Show View" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server['create_view']" dense label="Create View" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server['create_routine']" dense label="Create Routine" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server['alter_routine']" dense label="Alter Routine" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server['execute']" dense label="Execute" hide-details style="margin:0px;"></v-checkbox>
+              </v-card-text>
+            </v-card>
+          </v-col>
         </v-col>
         <v-col style="margin-left:10px;">
           <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Administration and Replication</div>
-          <v-card>
+          <v-card style="height:337px">
             <v-card-text style="padding:10px; padding-bottom:15px">
               <v-checkbox :disabled="disabled" v-model="server['reload']" dense label="Reload" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['shutdown']" dense label="Shutdown" hide-details style="margin:0px;"></v-checkbox>
