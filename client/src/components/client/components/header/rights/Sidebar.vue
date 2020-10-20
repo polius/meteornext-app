@@ -1,26 +1,57 @@
 <template>
-  <v-container fluid style="padding:0px;">
-    <v-row ref="list" no-gutters style="height:calc(100% - 36px); overflow:auto;">
-      <v-treeview :active.sync="sidebar" item-key="id" :open.sync="sidebarOpened" :items="rights['sidebar']" :search="sidebarSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 62px); width:100%; overflow-y:auto;">
-        <template v-slot:label="{item, active}">
-          <v-btn @click="sidebarClick($event, item, active)" @contextmenu="onRightClick" text style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding-left:10px;"> 
-            <v-icon v-if="'children' in item" small style="padding-right:10px">fas fa-user</v-icon>
-            {{ item.name }}
-            <v-spacer></v-spacer>
-            <v-progress-circular v-if="rightsLoading && item.id == sidebar[0]" indeterminate size="16" width="2" color="white"></v-progress-circular>
-          </v-btn>
-        </template>
-      </v-treeview>
-      <v-text-field v-if="rights['sidebar'].length > 0" v-model="sidebarSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
-    </v-row>
-    <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; width:100%">
-      <v-btn @click="addRight" text small title="New User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
-      <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn @click="removeRight" text small title="Delete User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
-      <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-      <v-btn @click="refreshRights" text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
-      <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-    </v-row>
+    <v-container fluid style="padding:0px;">
+      <v-row ref="list" no-gutters style="height:calc(100% - 36px); overflow:auto;">
+        <v-treeview :active.sync="sidebar" item-key="id" :open.sync="sidebarOpened" :items="rights['sidebar']" :search="sidebarSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 62px); width:100%; overflow-y:auto;">
+          <template v-slot:label="{item, active}">
+            <v-btn @click="sidebarClick($event, item, active)" @contextmenu="onRightClick" text style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding-left:10px;"> 
+              <v-icon v-if="'children' in item" small style="padding-right:10px">fas fa-user</v-icon>
+              {{ item.name }}
+              <v-spacer></v-spacer>
+              <v-progress-circular v-if="rightsLoading && item.id == sidebar[0]" indeterminate size="16" width="2" color="white"></v-progress-circular>
+            </v-btn>
+          </template>
+        </v-treeview>
+        <v-text-field v-if="rights['sidebar'].length > 0" v-model="sidebarSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
+      </v-row>
+      <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; width:100%">
+        <v-btn @click="addRight" text small title="New User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
+        <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+        <v-btn :disabled="Object.keys(rightsSelected).length == 0" @click="removeRight" text small title="Delete User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+        <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+        <v-btn @click="refreshRights" text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+        <span style="background-color:#3b3b3b; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+      </v-row>
+    
+    <!------------>
+    <!-- DIALOG -->
+    <!------------>
+    <v-dialog v-model="sidebarDialog" persistent max-width="60%">
+      <v-card>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <div class="text-h6" style="font-weight:400;">Delete user</div>
+              <v-flex xs12>
+                <v-form style="margin-top:10px; margin-bottom:15px;">
+                  <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ "Are you sure you want to delete the user '" + rightsSelected['user'] + "'@'" + rightsSelected['name'] + "'? This action cannot be undone." }}</div>                  
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn @click="removeRightSubmit" color="primary">Delete</v-btn>
+                    </v-col>
+                    <v-col style="margin-bottom:10px;">
+                      <v-btn @click="sidebarDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -43,8 +74,11 @@ export default {
       sidebar: [],
       sidebarOpened: [],
       sidebarSearch: '',
+      // Dialog
+      sidebarDialog: false,
     }
   },
+  props: { dialog: Boolean },
   computed: {
     ...mapFields([
       'rights',
@@ -52,6 +86,20 @@ export default {
       'rightsSelected',
       'rightsItem',
     ], { path: 'client/connection' }),
+  },
+  watch: {
+    dialog: function(val) {
+      if (!val) {
+        // Init Rights data
+        this.sidebar = []
+        this.sidebarOpened = []
+        this.sidebarSearch = ''
+        this.rightsSelected = {}
+        this.rights = { sidebar: [], login: {}, server: {}, schema: [], resources: {}, syntax: '' }
+        this.rightsItem = { login: {}, server: {}, schema: { grant: [], revoke: [] }, resources: {} }
+        EventBus.$emit('reload-rights', 'edit')
+      }
+    }
   },
   methods: {
     sidebarClick(event, item, active) {
@@ -64,17 +112,21 @@ export default {
       event.preventDefault()
     },
     addRight() {
-
+      this.sidebar = []
+      this.rightsSelected = {}
+      this.rights = { sidebar: this.rights['sidebar'], login: {}, server: {}, schema: [], resources: {}, syntax: '' }
+      this.rightsItem = { login: {}, server: {}, schema: { grant: [], revoke: [] }, resources: {} }
+      EventBus.$emit('reload-rights', 'new')
     },
     removeRight() {
-
+      this.sidebarDialog = true
+    },
+    removeRightSubmit() {
+      this.sidebarDialog = false
     },
     refreshRights() {
-      this.sidebar = []
-      this.sidebarOpened = []
-      this.sidebarSearch = '',
-      this.rightsSelected = {}
-      EventBus.$emit('get-rights')
+      if (Object.keys(this.rightsSelected).length == 0) EventBus.$emit('get-rights')
+      else EventBus.$emit('get-rights', this.rightsSelected['user'], this.rightsSelected['name'])
     },
   }
 }
