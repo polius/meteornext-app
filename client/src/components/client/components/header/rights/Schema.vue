@@ -1,7 +1,7 @@
 <template>
   <div style="height:100%">
     <div style="height: calc(100% - 84px)">
-      <ag-grid-vue suppressDragLeaveHidesColumns suppressContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @cell-clicked="onCellClicked" @row-double-clicked="onRowDoubleClicked" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :columnDefs="header" :rowData="schema"></ag-grid-vue>
+      <ag-grid-vue suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @cell-clicked="onCellClicked" @row-double-clicked="onRowDoubleClicked" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :columnDefs="header" :rowData="schema"></ag-grid-vue>
     </div>
     <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; width:100%">
       <v-btn :disabled="disabled" @click="addRights" text small title="Grant Rights" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
@@ -182,7 +182,6 @@ export default {
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
-      // this.resizeTable()
     },
     resizeTable() {
       this.$nextTick(() => {
