@@ -117,6 +117,7 @@ import {AgGridVue} from "ag-grid-vue";
 export default {
   data() {
     return {
+      mode: '',
       disabled: true,
       // AG Grid
       gridApi: null,
@@ -161,7 +162,7 @@ export default {
   },
   watch: {
     rightsSelected: function(val) {
-      this.disabled = Object.keys(val).length == 0 ? true : false
+      this.disabled = (Object.keys(val).length == 0 && this.mode == 'edit') ? true : false
     },
     dialog (val) {
       if (val) return
@@ -174,7 +175,8 @@ export default {
     }
   },
   methods: {
-    reloadRights() {
+    reloadRights(mode) {
+      this.mode = mode
       this.schema = JSON.parse(JSON.stringify(this.rights['schema']))
     },
     onGridReady(params) {

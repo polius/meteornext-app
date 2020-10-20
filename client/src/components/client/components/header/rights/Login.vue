@@ -3,16 +3,18 @@
     <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Login Information</div>
     <v-card>
       <v-card-text style="padding-left:20px;">
-        <v-text-field :disabled="disabled" v-model="login['username']" label="Username" required></v-text-field>
-        <v-row no-gutters>
-          <v-col class="flex-grow-1 flex-shrink-1">
-            <v-text-field :disabled="disabled" v-model="login['password']" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" required style="padding-top:0px;"></v-text-field>
-          </v-col>
-          <v-col cols="3" class="flex-grow-0 flex-shrink-1" style="margin-left:10px">
-            <v-select :disabled="disabled" v-model="login['passwordType']" label="Type" :items="['String','Hash']" hide-details style="padding:0px; margin-bottom:5px;"></v-select>
-          </v-col>
-        </v-row>
-        <v-text-field :disabled="disabled" v-model="login['hostname']" label="Hostname" required style="padding-top:0px;"></v-text-field>
+        <v-form ref="form">
+          <v-text-field ref="username" :disabled="disabled" v-model="login['username']" label="Username" :rules="[v => !!v || '']" required></v-text-field>
+          <v-row no-gutters>
+            <v-col class="flex-grow-1 flex-shrink-1">
+              <v-text-field :disabled="disabled" v-model="login['password']" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+            </v-col>
+            <v-col cols="3" class="flex-grow-0 flex-shrink-1" style="margin-left:10px">
+              <v-select :disabled="disabled" v-model="login['passwordType']" label="Type" :items="['String','Hash']" hide-details :rules="[v => !!v || '']" style="padding:0px; margin-bottom:5px;"></v-select>
+            </v-col>
+          </v-row>
+          <v-text-field :disabled="disabled" v-model="login['hostname']" label="Hostname" required :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
+        </v-form>
       </v-card-text>
     </v-card>
   </div>
@@ -25,6 +27,7 @@ import { mapFields } from '../../../js/map-fields'
 export default {
   data() {
     return {
+      mode: '',
       disabled: true,
       login: {},
       showPassword: false,
@@ -35,6 +38,7 @@ export default {
       'rights',
       'rightsItem',
       'rightsSelected',
+      'rightsLoginForm',
     ], { path: 'client/connection' }),
   },
   mounted() {
@@ -42,7 +46,7 @@ export default {
   },
   watch: {
     rightsSelected: function(val) {
-      this.disabled = Object.keys(val).length == 0 ? true : false
+      this.disabled = (Object.keys(val).length == 0 && this.mode == 'edit') ? true : false
     },
     login: {
       handler(obj) {
@@ -57,8 +61,12 @@ export default {
     },
   },
   methods: {
-    reloadRights() {
+    reloadRights(mode) {
+      this.mode = mode
+      this.rightsLoginForm = this.$refs.form
       this.login = JSON.parse(JSON.stringify(this.rights['login']))
+      if (mode == 'new')  this.$nextTick(() => { this.$refs.username.focus() })
+      requestAnimationFrame(() => { this.$refs.form.resetValidation() })
     },
   }
 }

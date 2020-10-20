@@ -16,7 +16,7 @@
               <v-flex xs12>
                 <Splitpanes @ready="onSplitPaneReady" style="height:80vh">
                   <Pane size="20" min-size="0" style="align-items:inherit">
-                    <Sidebar />
+                    <Sidebar :dialog="dialog" />
                   </Pane>
                   <Pane size="80" min-size="0" style="background-color:#484848; align-items:inherit;">
                     <v-container fluid style="padding:0px;">
@@ -125,11 +125,13 @@ export default {
       'headerTabSelected',
       'rights',
       'rightsItem',
-      'rightsLoading',
+      'rightsSelected',
+      'rightsLoginForm',
     ], { path: 'client/connection' }),
   },
   mounted() {
     EventBus.$on('show-rights', this.showDialog);
+    EventBus.$on('reload-rights', this.reloadRights);
     EventBus.$on('get-rights', this.getRights);
   },
   watch: {
@@ -191,6 +193,7 @@ export default {
           else rights[index]['children'].push({ id: right['user'] + '|' + right['host'], user: right['user'], name: right['host'] })
         }
         this.rights = { sidebar: rights.slice(0), login: {}, server: {}, schema: [], resources: {}, syntax: '' }
+        this.rightsSelected = {}
       }
       else {
         // Login
@@ -242,11 +245,19 @@ export default {
         this.rights['syntax'] = syntax
       }
       // Reload Rights
-      EventBus.$emit('reload-rights')
+      EventBus.$emit('reload-rights', 'edit')
     },
     saveClick() {
       console.log(this.rightsItem)
+      // Check if all fields are filled
+      if (!this.rightsLoginForm.validate()) {
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
     },
+    reloadRights(mode) {
+      if (mode == 'new') this.tab = 0
+    }
   }
 }
 </script>

@@ -69,6 +69,7 @@ import { mapFields } from '../../../js/map-fields'
 export default {
   data() {
     return {
+      mode: '',
       disabled: true,
       server: {},
     }
@@ -85,7 +86,7 @@ export default {
   },
   watch: {
     rightsSelected: function(val) {
-      this.disabled = Object.keys(val).length == 0 ? true : false
+      this.disabled = (Object.keys(val).length == 0 && this.mode == 'edit') ? true : false
     },
     server: {
       handler(obj) {
@@ -100,7 +101,8 @@ export default {
     },
   },  
   methods: {
-    reloadRights() {
+    reloadRights(mode) {
+      this.mode = mode
       this.server = JSON.parse(JSON.stringify(this.rights['server']))
     },
     selectAll() {
