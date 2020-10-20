@@ -1,7 +1,7 @@
 <template>
   <div style="height:100%">
     <div style="height: calc(100% - 84px); position:relative; overflow-y:auto;">
-      <v-row no-gutters style="padding:max(2%, 20px);">
+      <v-row no-gutters style="padding:max(3%, 20px);">
         <v-col style="margin-right:10px;">
           <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Database</div>
           <v-card style="height:337px">
