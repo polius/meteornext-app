@@ -106,6 +106,7 @@ export default {
   data() {
     return {
       loading: true,
+      mode: '',
       dialog: false,
       saveEnabled: false,
       // Tab
@@ -247,17 +248,20 @@ export default {
       // Reload Rights
       EventBus.$emit('reload-rights', 'edit')
     },
+    reloadRights(mode) {
+      this.mode = mode
+      if (mode == 'new') this.tab = 0
+    },
     saveClick() {
+      console.log(this.mode)
       console.log(this.rightsItem)
-      // Check if all fields are filled
+      // Check if all login fields are filled
       if (!this.rightsLoginForm.validate()) {
         EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
         return
       }
+      
     },
-    reloadRights(mode) {
-      if (mode == 'new') this.tab = 0
-    }
   }
 }
 </script>
