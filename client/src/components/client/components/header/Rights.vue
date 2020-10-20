@@ -204,6 +204,7 @@ export default {
       if (!value) {
         const tab = {'client': 0, 'structure': 1, 'content': 2, 'info': 3, 'objects': 6}
         this.headerTab = tab[this.headerTabSelected]
+        this.tab = 0
       }
     },
     checkDialog: function(val) {
