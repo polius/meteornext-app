@@ -59,7 +59,7 @@
             <v-layout wrap>
               <div class="text-h6" style="font-weight:400;">An error occurred</div>
               <v-flex xs12>
-                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
+                <v-form style="margin-top:10px; margin-bottom:15px;">
                   <div class="body-2" style="font-weight:300; font-size:1.05rem!important; margin-top:12px;">{{ infoDialogText }}</div>
                   <v-card style="margin-top:20px;">
                     <v-card-text style="padding:10px;">
@@ -81,9 +81,41 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <!------------------->
+    <!-- DIALOG: check -->
+    <!------------------->
+    <v-dialog v-model="checkDialog" persistent max-width="85%">
+      <v-card>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <!-- <div class="text-h6" style="font-weight:400;">Confirmation</div> -->
+              <v-flex xs12>
+                <v-form style="margin-top:10px; margin-bottom:15px;">
+                  <div class="body-2" style="font-weight:400; font-size:1.05rem!important; margin-top:12px; margin-left:2px;">{{ "Preview changes for: '" + rightsSelected['user'] + "'@'" + rightsSelected['name'] + "'" }}</div>
+                  <ag-grid-vue suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:69vh; margin-top:20px" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" :columnDefs="checkHeaders" :rowData="checkItems"></ag-grid-vue>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn @click="checkSubmit" color="primary">Submit</v-btn>
+                    </v-col>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn @click="checkDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
+<style scoped src="@/styles/agGridVue.css"></style>
 <style scoped src="@/styles/splitPanes.css"></style>
 
 <script>
@@ -92,6 +124,7 @@ import axios from 'axios'
 import EventBus from '../../js/event-bus'
 import { mapFields } from '../../js/map-fields'
 
+import {AgGridVue} from "ag-grid-vue"
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 
@@ -115,9 +148,40 @@ export default {
       infoDialog: false,
       infoDialogText: '',
       infoDialogError: '',
+      // Check Dialog
+      checkDialog: false,
+      checkHeaders: [
+        { headerName: 'Section', colId: 'section', field: 'section', sortable: false, filter: false, resizable: true, editable: false },
+        { headerName: 'Action', colId: 'action', field: 'action', sortable: false, filter: false, resizable: true, editable: false, 
+          cellStyle: function(params) {
+            if (params.value == 'Grant') return { color: '#00b16a' }
+            else if (params.value == 'Revoke') return { color: '#e74d3c' }
+            else return { color: '#fa8131' }
+          }
+        },
+        { headerName: 'Field', colId: 'field', field: 'field', sortable: false, filter: false, resizable: true, editable: false },
+        { headerName: 'Before', colId: 'before', field: 'before', sortable: false, filter: false, resizable: true, editable: false,
+          cellRenderer: function(params) {
+            if (params.value === true) return '<i class="far fa-check-square" title="true"></i>'
+            else if (params.value === false) return '<i class="far fa-square" title="false"></i>'
+            else return params.value
+          }
+        },
+        { headerName: 'After', colId: 'after', field: 'after', sortable: false, filter: false, resizable: true, editable: false,
+          cellRenderer: function(params) {
+            if (params.value === true) return '<i class="far fa-check-square" title="true"></i>'
+            else if (params.value === false) return '<i class="far fa-square" title="false"></i>'
+            else return params.value
+          }
+        },
+        { headerName: 'Status', colId: 'status', field: 'status', sortable: false, filter: false, resizable: true, editable: false },
+      ],
+      checkItems: [],
+      gridApi: null,
+      columnApi: null,
     }
   },
-  components: { Splitpanes, Pane, Sidebar, Login, Server, Schema, Resources, Syntax },
+  components: { Splitpanes, Pane, AgGridVue, Sidebar, Login, Server, Schema, Resources, Syntax },
   computed: {
     ...mapFields([
       'index',
@@ -142,6 +206,9 @@ export default {
         this.headerTab = tab[this.headerTabSelected]
       }
     },
+    checkDialog: function(val) {
+      if (val) this.resizeTable()
+    },
     rightsItem: {
       handler(val) {
         if (
@@ -159,6 +226,20 @@ export default {
     showDialog() {
       this.dialog = true
       if (this.rights['sidebar'].length == 0) this.getRights()
+    },
+    onGridReady(params) {
+      this.gridApi = params.api
+      this.columnApi = params.columnApi
+      this.resizeTable()
+    },
+    resizeTable() {
+      this.$nextTick(() => {
+        if (this.gridApi != null) {
+          this.gridApi.sizeColumnsToFit()
+          // let allColIds = this.columnApi.getAllColumns().map(column => column.colId)
+          // this.columnApi.autoSizeColumns(allColIds)
+        }
+      })
     },
     onSplitPaneReady() {
     },
@@ -254,13 +335,34 @@ export default {
     },
     saveClick() {
       console.log(this.mode)
+      console.log(this.rights)
       console.log(this.rightsItem)
       // Check if all login fields are filled
       if (!this.rightsLoginForm.validate()) {
         EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
         return
       }
-      
+      // Build check dialog
+      this.checkItems = []
+      for (let [key, value] of Object.entries(this.rightsItem['login'])) {
+        this.checkItems.push({ section: 'Login', action: 'Modify', field: key, before: this.rights['login'][key], after: value, status: '' })        
+      }
+      for (let [key, value] of Object.entries(this.rightsItem['server'])) {
+        this.checkItems.push({ section: 'Server', action: value ? 'Grant' : 'Revoke', field: key, before: this.rights['server'][key], after: value, status: '' })        
+      }
+      // for (let [key, value] of Object.entries(this.rightsItem['schema']['grant'])) {
+      //   this.checkItems.push({ section: 'Schema', action: 'Grant', field: key, before: JSON.stringify(this.rights['schema']['grant'][key]), after: JSON.stringify(value), status: '' })        
+      // }
+      // for (let [key, value] of Object.entries(this.rightsItem['schema']['revoke'])) {
+      //   this.checkItems.push({ section: 'Schema', action: 'Revoke', field: key, before: JSON.stringify(this.rights['schema']['revoke'][key]), after: JSON.stringify(value), status: '' })        
+      // }
+      for (let [key, value] of Object.entries(this.rightsItem['resources'])) {
+        this.checkItems.push({ section: 'Resources', action: 'Modify', field: key, before: this.rights['resources'][key], after: value, status: '' })        
+      }
+      this.checkDialog = true
+    },
+    checkSubmit() {
+
     },
   }
 }
