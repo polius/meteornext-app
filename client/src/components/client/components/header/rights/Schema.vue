@@ -35,7 +35,7 @@
                         <v-col v-if="dialogOptions.item.type == 'Column'" style="margin-left:10px;"><v-text-field v-model="dialogOptions.item.column" :rules="[v => !!v || '']" label="Column" required style="padding-top:0px;"></v-text-field></v-col>
                       </v-row>
                     </v-form>
-                    <v-row no-gutters>
+                    <v-row no-gutters style="margin-top:10px">
                       <v-col style="margin-right:15px;">
                         <div class="body-2" style="margin-bottom:5px;">Database</div>
                         <v-card>
