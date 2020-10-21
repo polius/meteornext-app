@@ -96,7 +96,7 @@ export default {
         this.sidebarSearch = ''
         this.rightsSelected = {}
         this.rights = { sidebar: [], login: {}, server: {}, schema: [], resources: {}, syntax: '' }
-        this.rightsItem = { login: {}, server: {}, schema: { grant: [], revoke: [] }, resources: {} }
+        this.rightsItem = { login: {}, server: { grant: [], revoke: [] }, schema: { grant: [], revoke: [] }, resources: {} }
         EventBus.$emit('reload-rights', 'edit')
       }
     }
