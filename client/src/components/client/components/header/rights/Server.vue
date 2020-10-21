@@ -54,9 +54,9 @@
               <v-checkbox :disabled="disabled" v-model="server['super']" dense label="Super" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['show_db']" dense label="Show Databases" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['create_user']" dense label="Create User" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['grant']" dense label="Grant" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['repl_client']" dense label="Replication Client" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['repl_slave']" dense label="Replication Slave" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server['grant_option']" dense label="Grant" hide-details style="margin:0px;"></v-checkbox>
             </v-card-text>
           </v-card>
         </v-col>

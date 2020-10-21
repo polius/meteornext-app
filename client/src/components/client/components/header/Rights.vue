@@ -93,7 +93,7 @@
               <v-flex xs12>
                 <v-form style="margin-top:10px; margin-bottom:15px;">
                   <div class="body-2" style="font-weight:400; font-size:1.05rem!important; margin-top:12px; margin-left:2px;">{{ "Preview changes for: '" + rightsSelected['user'] + "'@'" + rightsSelected['name'] + "'" }}</div>
-                  <ag-grid-vue suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" style="width:100%; height:69vh; margin-top:20px" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" :columnDefs="checkHeaders" :rowData="checkItems"></ag-grid-vue>
+                  <ag-grid-vue suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:69vh; margin-top:20px" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" :columnDefs="checkHeaders" :rowData="checkItems"></ag-grid-vue>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -276,6 +276,28 @@ export default {
         }
       })
     },
+    onCellKeyDown(e) {
+      if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
+        navigator.clipboard.writeText(e.value)
+
+        // Highlight cells
+        e.event.target.classList.add('ag-cell-highlight');
+        e.event.target.classList.remove('ag-cell-highlight-animation')
+
+        // Add animation
+        window.setTimeout(function () {
+            e.event.target.classList.remove('ag-cell-highlight')
+            e.event.target.classList.add('ag-cell-highlight-animation')
+            e.event.target.style.transition = "background-color " + 200 + "ms"
+
+            // Remove animation
+            window.setTimeout(function () {
+                e.event.target.classList.remove('ag-cell-highlight-animation')
+                e.event.target.style.transition = null;
+            }, 200);
+        }, 200);
+      }
+    },
     onSplitPaneReady() {
     },
     getRights(user, host) {
@@ -327,6 +349,7 @@ export default {
         for (const [key, val] of Object.entries(data['server'][0])) {
           if (key.endsWith('_priv')) server[key.toLowerCase().slice(0,-5)] = val == 'Y'
         }
+        server['grant_option'] = data['server'][0]['Grant_priv'] == 'Y'
         this.rights['server'] = server
         // Schema
         let schema = []
