@@ -162,6 +162,7 @@ class Client:
 
             # Execute all queries
             execution = []
+            errors = False
             for q in client_json['queries']:
                 try:
                     result = conn.execute(query=q, database=client_json['database'])
@@ -179,11 +180,13 @@ class Client:
                     execution.append(result)
 
                 except Exception as e:
+                    errors = True
                     result = {'query': q, 'error': str(e)}
                     execution.append(result)
-                    return jsonify({'data': self.__json(execution)}), 400
+                    if ('executeAll' not in client_json or not client_json['executeAll']):
+                        return jsonify({'data': self.__json(execution)}), 400
 
-            return jsonify({'data': self.__json(execution)}), 200
+            return jsonify({'data': self.__json(execution)}), 200 if not errors else 400
 
         @client_blueprint.route('/client/structure', methods=['GET'])
         @jwt_required

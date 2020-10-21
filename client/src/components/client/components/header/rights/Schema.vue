@@ -30,7 +30,7 @@
                     <v-select v-model="dialogOptions.item.type" :items="['Database','Table','Column']" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-select>
                     <v-form ref="form" @submit.prevent>
                       <v-row no-gutters>
-                        <v-col><v-text-field v-model="dialogOptions.item.database" :rules="[v => !!v || '']" label="Database" required style="padding-top:0px;"></v-text-field></v-col>
+                        <v-col><v-text-field v-model="dialogOptions.item.database" :rules="[v => !!v || '']" label="Database" hint="Wildcards allowed: % _" required style="padding-top:0px;"></v-text-field></v-col>
                         <v-col v-if="['Table','Column'].includes(dialogOptions.item.type)" style="margin-left:10px"><v-text-field v-model="dialogOptions.item.table" :rules="[v => !!v || '']" label="Table" required style="padding-top:0px;"></v-text-field></v-col>
                         <v-col v-if="dialogOptions.item.type == 'Column'" style="margin-left:10px;"><v-text-field v-model="dialogOptions.item.column" :rules="[v => !!v || '']" label="Column" required style="padding-top:0px;"></v-text-field></v-col>
                       </v-row>

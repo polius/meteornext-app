@@ -6,6 +6,7 @@
           <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-shield-alt</v-icon>User Rights</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="!saveEnabled" @click="saveClick" color="primary" style="margin-right:10px;">Save</v-btn>
+          <v-btn v-if="errors['login'].length > 0 || errors['server'].length > 0 || errors['schema'].length > 0 || errors['resources'].length > 0" @click="errorDialog = true" outlined style="margin-right:10px;" title="Show errors"><v-icon small style="padding-right:10px">fas fa-exclamation-triangle</v-icon>Show errors</v-btn>
           <v-progress-circular v-if="loading" indeterminate size="20" width="2" style="margin-left:5px"></v-progress-circular>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
@@ -89,7 +90,6 @@
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <!-- <div class="text-h6" style="font-weight:400;">Confirmation</div> -->
               <v-flex xs12>
                 <v-form style="margin-top:10px; margin-bottom:15px;">
                   <div class="body-2" style="font-weight:400; font-size:1.05rem!important; margin-top:12px; margin-left:2px;">{{ "Preview changes for: '" + rightsSelected['user'] + "'@'" + rightsSelected['name'] + "'" }}</div>
@@ -99,10 +99,47 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn @click="checkSubmit" color="primary">Submit</v-btn>
+                      <v-btn :disabled="loading" :loading="loading" @click="checkSubmit" color="primary">Confirm</v-btn>
                     </v-col>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn @click="checkDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="checkDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!------------------->
+    <!-- DIALOG: error -->
+    <!------------------->
+    <v-dialog v-model="errorDialog" persistent max-width="70%">
+      <v-card>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <div class="text-h6" style="font-weight:400;">Some errors have occurred</div>
+              <v-flex xs12>
+                <v-form style="margin-bottom:15px;">
+                  <div v-for="key in Object.keys(errors)" :key="key">
+                    <div v-for="(item, index) in errors[key]" :key="index" style="margin-top:15px;">
+                      <div class="body-1" style="font-size:1.05rem; font-weight:400; color:#fa8131">{{ key.toUpperCase() }}</div>
+                      <v-card style="margin-top:10px; margin-bottom:10px">
+                        <v-card-text style="padding: 11px 10px 10px 10px">
+                          {{ item.query }}
+                        </v-card-text>
+                      </v-card>
+                      <div class="body-2" style="font-weight:400; margin-top:15px; margin-bottom:10px; margin-left:2px;">{{ item.error }}</div>
+                    </div>
+                  </div>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn @click="errorDialog = false" color="primary">Close</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -151,7 +188,11 @@ export default {
       // Check Dialog
       checkDialog: false,
       checkHeaders: [
-        { headerName: 'Section', colId: 'section', field: 'section', sortable: false, filter: false, resizable: true, editable: false },
+        { headerName: 'Section', colId: 'section', field: 'section', sortable: false, filter: false, resizable: true, editable: false,
+          valueGetter: (params) => {
+            return params.data.section.toUpperCase()
+          }
+        },
         { headerName: 'Action', colId: 'action', field: 'action', sortable: false, filter: false, resizable: true, editable: false, 
           cellStyle: function(params) {
             if (params.value == 'Grant') return { color: '#00b16a' }
@@ -162,11 +203,15 @@ export default {
         { headerName: 'Object', colId: 'object', field: 'object', sortable: false, filter: false, resizable: true, editable: false },
         { headerName: 'Right', colId: 'right', field: 'right', sortable: false, filter: false, resizable: true, editable: false },
         { headerName: 'Before', colId: 'before', field: 'before', sortable: false, filter: false, resizable: true, editable: false },
-        { headerName: 'After', colId: 'after', field: 'after', sortable: false, filter: false, resizable: true, editable: false }
+        { headerName: 'After', colId: 'after', field: 'after', sortable: false, filter: false, resizable: true, editable: false },
+        { headerName: 'Query', colId: 'query', field: 'query', sortable: false, filter: false, resizable: true, editable: false }
       ],
       checkItems: [],
       gridApi: null,
       columnApi: null,
+      // Error Dialog
+      errorDialog: false,
+      errors: { login: [], server: [], schema: [], resources: [] }
     }
   },
   components: { Splitpanes, Pane, AgGridVue, Sidebar, Login, Server, Schema, Resources, Syntax },
@@ -174,6 +219,7 @@ export default {
     ...mapFields([
       'index',
       'server',
+      'database',
       'headerTab',
       'headerTabSelected',
       'rights',
@@ -224,9 +270,9 @@ export default {
     resizeTable() {
       this.$nextTick(() => {
         if (this.gridApi != null) {
-          this.gridApi.sizeColumnsToFit()
-          // let allColIds = this.columnApi.getAllColumns().map(column => column.colId)
-          // this.columnApi.autoSizeColumns(allColIds)
+          // this.gridApi.sizeColumnsToFit()
+          let allColIds = this.columnApi.getAllColumns().map(column => column.colId)
+          this.columnApi.autoSizeColumns(allColIds)
         }
       })
     },
@@ -242,6 +288,7 @@ export default {
       }
       axios.get('/client/rights', { params: payload })
         .then((response) => {
+          this.errors = { login: [], server: [], schema: [], resources: [] }
           this.parseRightsSidebar(response.data)
         })
         .catch((error) => {
@@ -330,49 +377,99 @@ export default {
       }
       // Build check dialog
       this.checkItems = []
-      for (let [key, value] of Object.entries(this.rightsItem['login'])) {
-        this.checkItems.push({ section: 'Login', action: 'Modify', object: this.parseObjects(key), right: '', before: this.rights['login'][key], after: value })        
+      // - Login -
+      if (Object.keys(this.rightsItem['login']).length != 0) {
+        let passwordType = 'passwordType' in this.rightsItem['login'] ? this.rightsItem['login']['passwordType'] : this.rights['login']['passwordType']
+        let query = "GRANT USAGE ON *.* TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "' IDENTIFIED " + (passwordType == 'Hash' ? 'BY PASSWORD' : 'BY') + " '" + this.rightsItem['login']['password'] + "';"
+        this.checkItems.push({ section: 'login', action: 'Modify', object: 'Password', right: '', before: this.rights['login']['password'], after: this.rightsItem['login']['password'], query })        
       }
+      // - Server -
       let serverRights = Object.keys(this.rights['server']).reduce((acc, val) => { if (this.rights['server'][val]) acc.push(val); return acc; }, [])
       let newServerRights = serverRights.concat(this.rightsItem['server']['grant'])
       if (this.rightsItem['server']['grant'].length > 0) {
-        this.checkItems.push({ section: 'Server', action: 'Grant', object: '*', right: this.parseRights(this.rightsItem['server']['grant']), before: this.parseRights(serverRights), after: this.parseRights(newServerRights) })        
+        let query = "GRANT " + this.parseRights(this.rightsItem['server']['grant']) + " ON *.* TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "';"
+        this.checkItems.push({ section: 'server', action: 'Grant', object: '*', right: this.parseRights(this.rightsItem['server']['grant']), before: this.parseRights(serverRights), after: this.parseRights(newServerRights), query })        
       }
       if (this.rightsItem['server']['revoke'].length > 0) {
-        this.checkItems.push({ section: 'Server', action: 'Revoke', object: '*', right: this.parseRights(this.rightsItem['server']['revoke']), before: this.parseRights(newServerRights), after: this.parseRights(newServerRights.filter(x => !this.rightsItem['server']['revoke'].includes(x))) })        
+        let query = "REVOKE " + this.parseRights(this.rightsItem['server']['revoke']) + " ON *.* FROM '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "';"
+        this.checkItems.push({ section: 'server', action: 'Revoke', object: '*', right: this.parseRights(this.rightsItem['server']['revoke']), before: this.parseRights(newServerRights), after: this.parseRights(newServerRights.filter(x => !this.rightsItem['server']['revoke'].includes(x))), query })        
       }
+      // - Schema -
       for (let item of this.rightsItem['schema']['grant']) {
         let old = 'old' in item ? item['old'] : []
-        this.checkItems.push({ section: 'Schema', action: 'Grant', object: item['schema'], right: this.parseRights(item['rights']), before: this.parseRights(old), after: this.parseRights(old.concat(item['rights'])) })        
+        let query = "GRANT " + this.parseSchemaRights(item) + " TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "';"
+        this.checkItems.push({ section: 'schema', action: 'Grant', object: item['schema'], right: this.parseRights(item['rights']), before: this.parseRights(old), after: this.parseRights(old.concat(item['rights'])), query })        
       }
       for (let item of this.rightsItem['schema']['revoke']) {
         let old = 'old' in item ? item['old'] : []
-        this.checkItems.push({ section: 'Schema', action: 'Revoke', object: item['schema'], right: this.parseRights(item['rights']), before: this.parseRights(old), after: this.parseRights(old.filter(x => !item.rights.includes(x))) })        
+        let query = "REVOKE " + this.parseSchemaRights(item) + " FROM '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "';"
+        this.checkItems.push({ section: 'schema', action: 'Revoke', object: item['schema'], right: this.parseRights(item['rights']), before: this.parseRights(old), after: this.parseRights(old.filter(x => !item.rights.includes(x))), query })        
       }
-      for (let [key, value] of Object.entries(this.rightsItem['resources'])) {
-        this.checkItems.push({ section: 'Resources', action: 'Modify', object: this.parseObjects(key), right: '', before: this.rights['resources'][key], after: value })        
+      // - Resources -
+      if ('max_queries' in this.rightsItem['resources']) {
+        let query = "GRANT USAGE ON *.* TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "' WITH MAX_QUERIES_PER_HOUR " + this.rightsItem['resources']['max_queries'] + ";"
+        this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Queries', right: '', before: this.rights['resources']['max_queries'], after: this.rightsItem['resources']['max_queries'], query })
+      }
+      if ('max_updates' in this.rightsItem['resources']) {
+        let query = "GRANT USAGE ON *.* TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "' WITH MAX_UPDATES_PER_HOUR " + this.rightsItem['resources']['max_updates'] + ";"
+        this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Updates', right: '', before: this.rights['resources']['max_updates'], after: this.rightsItem['resources']['max_updates'], query })
+      }
+      if ('max_connections' in this.rightsItem['resources']) {
+        let query = "GRANT USAGE ON *.* TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "' WITH MAX_CONNECTIONS_PER_HOUR " + this.rightsItem['resources']['max_connections'] + ";"
+        this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Connections', right: '', before: this.rights['resources']['max_connections'], after: this.rightsItem['resources']['max_connections'], query })
+      }
+      if ('max_simultaneous' in this.rightsItem['resources']) {
+        let query = "GRANT USAGE ON *.* TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "' WITH MAX_USER_CONNECTIONS " + this.rightsItem['resources']['max_simultaneous'] + ";"
+        this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Simultaneous Connections', right: '', before: this.rights['resources']['max_simultaneous'], after: this.rightsItem['resources']['max_simultaneous'], query })
       }
       this.checkDialog = true
     },
-    parseObjects(object) {
-      let matching = {
-        'username': 'Username',
-        'hostname': 'Hostname',
-        'password': 'Password',
-        'passwordType': 'Password Type',
-        'max_queries': 'Max Queries / Hour',
-        'max_updates': 'Max Updates / Hour',
-        'max_connections': 'Max Connections / Hour',
-        'max_simultaneous': 'Max Simultaneous Connections / Hour'
+    checkSubmit() {
+      // Execute generated queries
+      this.loading = true
+      const payload = {
+        connection: this.index,
+        server: this.server.id,
+        database: null,
+        queries: this.checkItems.map((x) => { return x.query }),
+        executeAll: true,
       }
-      if (object in matching) return matching[object]
-      return object
+      axios.post('/client/execute', payload)
+        .then(() => {
+          this.checkDialog = false
+          EventBus.$emit('send-notification', 'Rights saved successfully', 'success')
+          this.getRights(this.rightsSelected['user'], this.rightsSelected['name'])
+        })
+        .catch((error) => {
+          this.checkDialog = false
+          // Build error dialog
+          this.errors = { login: [], server: [], schema: [], resources: [] }
+          let data = JSON.parse(error.response.data.data)
+          for (let obj of data) {
+            let item = this.checkItems.find(x => x.query == obj.query )
+            this.errors[item['section']].push(obj)
+          }
+          this.errorDialog = true
+        })
+        .finally(() => { this.loading = false })
     },
     parseRights(rights) {
-      return rights.map((x) => { return x.charAt(0).toUpperCase() + x.slice(1) }).join(', ')
+      return rights.map((x) => { return x.charAt(0).toUpperCase() + x.slice(1).replaceAll('_', ' ') }).join(', ')
     },
-    checkSubmit() {
-      
+    parseSchemaRights(resource) {
+      if (resource.type == 'database') {
+        return this.parseRights(resource.rights) + ' ON `' + resource.schema + '`.*'
+      }
+      else if (resource.type == 'table') {
+        return this.parseRights(resource.rights) + ' ON `' + resource.schema.split('.')[0] + '`.' + resource.schema.split('.')[1]
+      }
+      else if (resource.type == 'column') {
+        let rights = resource.rights.map((x) => { return x.charAt(0).toUpperCase() + x.slice(1).replaceAll('_', ' ') + ' (`' + resource.schema.split('.')[2] + '`)' }).join(', ')
+        return rights + ' ON `' + resource.schema.split('.')[0] + '`.' + resource.schema.split('.')[1]
+      }
+    },
+    capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1);
     },
   }
 }

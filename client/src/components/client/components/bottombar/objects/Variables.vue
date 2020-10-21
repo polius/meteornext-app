@@ -12,7 +12,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-text-field ref="field" :disabled="loading" v-model="search" label="Filter..." solo dense clearable hide-details></v-text-field>
-                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" :stopEditingWhenGridLosesFocus="true" style="width:100%; height:70vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="columns" :rowData="items"></ag-grid-vue>
+                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" :stopEditingWhenGridLosesFocus="true" style="width:100%; height:70vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="columns" :rowData="items"></ag-grid-vue>
               </v-flex>
             </v-layout>
           </v-container>
@@ -145,6 +145,28 @@ export default {
     },
     onFirstDataRendered(params) {
       params.api.sizeColumnsToFit()
+    },
+    onCellKeyDown(e) {
+      if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
+        navigator.clipboard.writeText(e.value)
+
+        // Highlight cells
+        e.event.target.classList.add('ag-cell-highlight');
+        e.event.target.classList.remove('ag-cell-highlight-animation')
+
+        // Add animation
+        window.setTimeout(function () {
+          e.event.target.classList.remove('ag-cell-highlight')
+          e.event.target.classList.add('ag-cell-highlight-animation')
+          e.event.target.style.transition = "background-color " + 200 + "ms"
+
+          // Remove animation
+          window.setTimeout(function () {
+              e.event.target.classList.remove('ag-cell-highlight-animation')
+              e.event.target.style.transition = null;
+          }, 200);
+        }, 200);
+      }
     },
     cellEditingStarted(event) {
       // Store row node
