@@ -92,7 +92,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form style="margin-top:10px; margin-bottom:15px;">
-                  <div class="body-2" style="font-weight:400; font-size:1.05rem!important; margin-top:12px; margin-left:2px;">{{ "Preview changes for: '" + rightsSelected['user'] + "'@'" + rightsSelected['name'] + "'" }}</div>
+                  <div class="body-2" style="font-weight:400; font-size:1.05rem!important; margin-top:12px; margin-left:2px;">{{ "Preview changes for: " + this.getUserParsed() }}</div>
                   <ag-grid-vue suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:69vh; margin-top:20px" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" :columnDefs="checkHeaders" :rowData="checkItems"></ag-grid-vue>
                 </v-form>
                 <v-divider></v-divider>
@@ -195,7 +195,7 @@ export default {
         },
         { headerName: 'Action', colId: 'action', field: 'action', sortable: false, filter: false, resizable: true, editable: false, 
           cellStyle: function(params) {
-            if (params.value == 'Grant') return { color: '#00b16a' }
+            if (['Grant','Create'].includes(params.value)) return { color: '#00b16a' }
             else if (params.value == 'Revoke') return { color: '#e74d3c' }
             else return { color: '#fa8131' }
           }
@@ -404,46 +404,50 @@ export default {
       // - Login -
       if (Object.keys(this.rightsItem['login']).length != 0) {
         let passwordType = 'passwordType' in this.rightsItem['login'] ? this.rightsItem['login']['passwordType'] : this.rights['login']['passwordType']
-        let query = "GRANT USAGE ON *.* TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "' IDENTIFIED " + (passwordType == 'Hash' ? 'BY PASSWORD' : 'BY') + " '" + this.rightsItem['login']['password'] + "';"
-        this.checkItems.push({ section: 'login', action: 'Modify', object: 'Password', right: '', before: this.rights['login']['password'], after: this.rightsItem['login']['password'], query })        
+        let action = 'username' in this.rightsItem['login'] ? 'Create' : 'Modify'
+        let object = 'username' in this.rightsItem['login'] ? 'User' : 'Password'
+        let before = 'username' in this.rightsItem['login'] ? '' : this.rights['login']['password']
+        let after = 'username' in this.rightsItem['login'] ? '' : this.rightsItem['login']['password']
+        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " IDENTIFIED " + (passwordType == 'Hash' ? 'BY PASSWORD' : 'BY') + " '" + this.rightsItem['login']['password'] + "';"
+        this.checkItems.push({ section: 'login', action, object, right: '', before, after, query })        
       }
       // - Server -
       let serverRights = Object.keys(this.rights['server']).reduce((acc, val) => { if (this.rights['server'][val]) acc.push(val); return acc; }, [])
       let newServerRights = serverRights.concat(this.rightsItem['server']['grant'])
       if (this.rightsItem['server']['grant'].length > 0) {
-        let query = "GRANT " + this.parseRights(this.rightsItem['server']['grant']) + " ON *.* TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "';"
+        let query = "GRANT " + this.parseRights(this.rightsItem['server']['grant']) + " ON *.* TO " + this.getUserParsed() + ";"
         this.checkItems.push({ section: 'server', action: 'Grant', object: '*', right: this.parseRights(this.rightsItem['server']['grant']), before: this.parseRights(serverRights), after: this.parseRights(newServerRights), query })        
       }
       if (this.rightsItem['server']['revoke'].length > 0) {
-        let query = "REVOKE " + this.parseRights(this.rightsItem['server']['revoke']) + " ON *.* FROM '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "';"
+        let query = "REVOKE " + this.parseRights(this.rightsItem['server']['revoke']) + " ON *.* FROM " + this.getUserParsed() + ";"
         this.checkItems.push({ section: 'server', action: 'Revoke', object: '*', right: this.parseRights(this.rightsItem['server']['revoke']), before: this.parseRights(newServerRights), after: this.parseRights(newServerRights.filter(x => !this.rightsItem['server']['revoke'].includes(x))), query })        
       }
       // - Schema -
       for (let item of this.rightsItem['schema']['grant']) {
         let old = 'old' in item ? item['old'] : []
-        let query = "GRANT " + this.parseSchemaRights(item) + " TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "';"
+        let query = "GRANT " + this.parseSchemaRights(item) + " TO " + this.getUserParsed() + ";"
         this.checkItems.push({ section: 'schema', action: 'Grant', object: item['schema'], right: this.parseRights(item['rights']), before: this.parseRights(old), after: this.parseRights(old.concat(item['rights'])), query })        
       }
       for (let item of this.rightsItem['schema']['revoke']) {
         let old = 'old' in item ? item['old'] : item.rights
-        let query = "REVOKE " + this.parseSchemaRights(item) + " FROM '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "';"
+        let query = "REVOKE " + this.parseSchemaRights(item) + " FROM " + this.getUserParsed() + ";"
         this.checkItems.push({ section: 'schema', action: 'Revoke', object: item['schema'], right: this.parseRights(item['rights']), before: this.parseRights(old), after: this.parseRights(old.filter(x => !item.rights.includes(x))), query })        
       }
       // - Resources -
       if ('max_queries' in this.rightsItem['resources']) {
-        let query = "GRANT USAGE ON *.* TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "' WITH MAX_QUERIES_PER_HOUR " + this.rightsItem['resources']['max_queries'] + ";"
+        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " WITH MAX_QUERIES_PER_HOUR " + this.rightsItem['resources']['max_queries'] + ";"
         this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Queries', right: '', before: this.rights['resources']['max_queries'], after: this.rightsItem['resources']['max_queries'], query })
       }
       if ('max_updates' in this.rightsItem['resources']) {
-        let query = "GRANT USAGE ON *.* TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "' WITH MAX_UPDATES_PER_HOUR " + this.rightsItem['resources']['max_updates'] + ";"
+        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " WITH MAX_UPDATES_PER_HOUR " + this.rightsItem['resources']['max_updates'] + ";"
         this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Updates', right: '', before: this.rights['resources']['max_updates'], after: this.rightsItem['resources']['max_updates'], query })
       }
       if ('max_connections' in this.rightsItem['resources']) {
-        let query = "GRANT USAGE ON *.* TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "' WITH MAX_CONNECTIONS_PER_HOUR " + this.rightsItem['resources']['max_connections'] + ";"
+        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " WITH MAX_CONNECTIONS_PER_HOUR " + this.rightsItem['resources']['max_connections'] + ";"
         this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Connections', right: '', before: this.rights['resources']['max_connections'], after: this.rightsItem['resources']['max_connections'], query })
       }
       if ('max_simultaneous' in this.rightsItem['resources']) {
-        let query = "GRANT USAGE ON *.* TO '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "' WITH MAX_USER_CONNECTIONS " + this.rightsItem['resources']['max_simultaneous'] + ";"
+        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " WITH MAX_USER_CONNECTIONS " + this.rightsItem['resources']['max_simultaneous'] + ";"
         this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Simultaneous Connections', right: '', before: this.rights['resources']['max_simultaneous'], after: this.rightsItem['resources']['max_simultaneous'], query })
       }
       this.checkDialog = true
@@ -462,7 +466,8 @@ export default {
         .then(() => {
           this.checkDialog = false
           EventBus.$emit('send-notification', 'Rights saved successfully', '#00b16a')
-          this.getRights(this.rightsSelected['user'], this.rightsSelected['name'])
+          let user = this.getUser()
+          this.getRights(user.username, user.hostname)
         })
         .catch((error) => {
           this.checkDialog = false
@@ -494,6 +499,14 @@ export default {
     },
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1);
+    },
+    getUser() {
+      if (this.rightsSelected['user'] === undefined) return { username: this.rightsItem['login']['username'], hostname: this.rightsItem['login']['hostname'] }
+      else return { username: this.rightsSelected['user'], hostname: this.rightsSelected['name'] }
+    },
+    getUserParsed() {
+      if (this.rightsSelected['user'] === undefined) return "'" + this.rightsItem['login']['username'] + "'@'" + this.rightsItem['login']['hostname'] + "'"
+      else return "'" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "'"
     },
   }
 }
