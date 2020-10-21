@@ -159,22 +159,10 @@ export default {
             else return { color: '#fa8131' }
           }
         },
-        { headerName: 'Field', colId: 'field', field: 'field', sortable: false, filter: false, resizable: true, editable: false },
-        { headerName: 'Before', colId: 'before', field: 'before', sortable: false, filter: false, resizable: true, editable: false,
-          cellRenderer: function(params) {
-            if (params.value === true) return '<i class="far fa-check-square" title="true"></i>'
-            else if (params.value === false) return '<i class="far fa-square" title="false"></i>'
-            else return params.value
-          }
-        },
-        { headerName: 'After', colId: 'after', field: 'after', sortable: false, filter: false, resizable: true, editable: false,
-          cellRenderer: function(params) {
-            if (params.value === true) return '<i class="far fa-check-square" title="true"></i>'
-            else if (params.value === false) return '<i class="far fa-square" title="false"></i>'
-            else return params.value
-          }
-        },
-        { headerName: 'Status', colId: 'status', field: 'status', sortable: false, filter: false, resizable: true, editable: false },
+        { headerName: 'Object', colId: 'object', field: 'object', sortable: false, filter: false, resizable: true, editable: false },
+        { headerName: 'Right', colId: 'right', field: 'right', sortable: false, filter: false, resizable: true, editable: false },
+        { headerName: 'Before', colId: 'before', field: 'before', sortable: false, filter: false, resizable: true, editable: false },
+        { headerName: 'After', colId: 'after', field: 'after', sortable: false, filter: false, resizable: true, editable: false }
       ],
       checkItems: [],
       gridApi: null,
@@ -214,7 +202,7 @@ export default {
       handler(val) {
         if (
           Object.keys(val['login']).length == 0 && 
-          Object.keys(val['server']).length == 0 && 
+          val['server']['grant'].length == 0 && val['server']['revoke'].length == 0 &&
           val['schema']['grant'].length == 0 && val['schema']['revoke'].length == 0 &&
           Object.keys(val['resources']).length == 0
         ) this.saveEnabled = false
@@ -335,9 +323,6 @@ export default {
       if (mode == 'new') this.tab = 0
     },
     saveClick() {
-      console.log(this.mode)
-      console.log(this.rights)
-      console.log(this.rightsItem)
       // Check if all login fields are filled
       if (!this.rightsLoginForm.validate()) {
         EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
@@ -346,24 +331,48 @@ export default {
       // Build check dialog
       this.checkItems = []
       for (let [key, value] of Object.entries(this.rightsItem['login'])) {
-        this.checkItems.push({ section: 'Login', action: 'Modify', field: key, before: this.rights['login'][key], after: value, status: '' })        
+        this.checkItems.push({ section: 'Login', action: 'Modify', object: this.parseObjects(key), right: '', before: this.rights['login'][key], after: value })        
       }
-      for (let [key, value] of Object.entries(this.rightsItem['server'])) {
-        this.checkItems.push({ section: 'Server', action: value ? 'Grant' : 'Revoke', field: key, before: this.rights['server'][key], after: value, status: '' })        
+      let serverRights = Object.keys(this.rights['server']).reduce((acc, val) => { if (this.rights['server'][val]) acc.push(val); return acc; }, [])
+      let newServerRights = serverRights.concat(this.rightsItem['server']['grant'])
+      if (this.rightsItem['server']['grant'].length > 0) {
+        this.checkItems.push({ section: 'Server', action: 'Grant', object: '*', right: this.parseRights(this.rightsItem['server']['grant']), before: this.parseRights(serverRights), after: this.parseRights(newServerRights) })        
       }
-      // for (let [key, value] of Object.entries(this.rightsItem['schema']['grant'])) {
-      //   this.checkItems.push({ section: 'Schema', action: 'Grant', field: key, before: JSON.stringify(this.rights['schema']['grant'][key]), after: JSON.stringify(value), status: '' })        
-      // }
-      // for (let [key, value] of Object.entries(this.rightsItem['schema']['revoke'])) {
-      //   this.checkItems.push({ section: 'Schema', action: 'Revoke', field: key, before: JSON.stringify(this.rights['schema']['revoke'][key]), after: JSON.stringify(value), status: '' })        
-      // }
+      if (this.rightsItem['server']['revoke'].length > 0) {
+        this.checkItems.push({ section: 'Server', action: 'Revoke', object: '*', right: this.parseRights(this.rightsItem['server']['revoke']), before: this.parseRights(newServerRights), after: this.parseRights(newServerRights.filter(x => !this.rightsItem['server']['revoke'].includes(x))) })        
+      }
+      for (let item of this.rightsItem['schema']['grant']) {
+        let old = 'old' in item ? item['old'] : []
+        this.checkItems.push({ section: 'Schema', action: 'Grant', object: item['schema'], right: this.parseRights(item['rights']), before: this.parseRights(old), after: this.parseRights(old.concat(item['rights'])) })        
+      }
+      for (let item of this.rightsItem['schema']['revoke']) {
+        let old = 'old' in item ? item['old'] : []
+        this.checkItems.push({ section: 'Schema', action: 'Revoke', object: item['schema'], right: this.parseRights(item['rights']), before: this.parseRights(old), after: this.parseRights(old.filter(x => !item.rights.includes(x))) })        
+      }
       for (let [key, value] of Object.entries(this.rightsItem['resources'])) {
-        this.checkItems.push({ section: 'Resources', action: 'Modify', field: key, before: this.rights['resources'][key], after: value, status: '' })        
+        this.checkItems.push({ section: 'Resources', action: 'Modify', object: this.parseObjects(key), right: '', before: this.rights['resources'][key], after: value })        
       }
       this.checkDialog = true
     },
+    parseObjects(object) {
+      let matching = {
+        'username': 'Username',
+        'hostname': 'Hostname',
+        'password': 'Password',
+        'passwordType': 'Password Type',
+        'max_queries': 'Max Queries / Hour',
+        'max_updates': 'Max Updates / Hour',
+        'max_connections': 'Max Connections / Hour',
+        'max_simultaneous': 'Max Simultaneous Connections / Hour'
+      }
+      if (object in matching) return matching[object]
+      return object
+    },
+    parseRights(rights) {
+      return rights.map((x) => { return x.charAt(0).toUpperCase() + x.slice(1) }).join(', ')
+    },
     checkSubmit() {
-
+      
     },
   }
 }

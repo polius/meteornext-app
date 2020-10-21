@@ -165,7 +165,7 @@ export default {
       this.disabled = (Object.keys(val).length == 0 && this.mode == 'edit') ? true : false
     },
     dialog (val) {
-      if (val) return
+      if (!val) return
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
       })
@@ -273,13 +273,18 @@ export default {
       let item = null 
       // Check constraints
       if (['new','edit'].includes(this.dialogOptions.mode)) {
-        // Check unique (rightType, rightSchema) 
+        // Check unique (rightType, rightSchema)
+        let error = false
         this.gridApi.forEachNode((node) => {
           if (node.rowIndex != this.dialogOptions.index && node.data['type'] == this.dialogOptions.item.type.toLowerCase() && node.data['schema'] == this.getSchema()) {
-            EventBus.$emit('send-notification', 'This right type + schema currently exists in the table.', 'error')
+            error = true
             return
           }
         })
+        if (error) {
+          EventBus.$emit('send-notification', 'This schema currently exists', 'error')
+          return
+        }
         // Retrieve current item
         item = this.getItem()
         // Check if all fields are filled
@@ -341,23 +346,24 @@ export default {
     },
     computeDiff() {
       let diff = this.schema.reduce((acc, val) => {
-        // Check added
-        let added = !this.rights['schema'].some(val2 => val.type == val2.type && val.schema == val2.schema && JSON.stringify(val.rights) == JSON.stringify(val2.rights))
-        if (added) { acc['grant'].push(val); return acc; }
         // Check matching
         let matching = this.rights['schema'].find((val2) => val.type == val2.type && val.schema == val2.schema && JSON.stringify(val.rights) != JSON.stringify(val2.rights))
         if (matching) {
           let rightsGrant = val.rights.filter(x => !matching.rights.includes(x))
           let rightsRevoke = matching.rights.filter(x => !val.rights.includes(x))
-          if (rightsGrant.length > 0) acc['grant'].push({type: val.type, schema: val.schema, rights: rightsGrant})
-          if (rightsRevoke.length > 0) acc['revoke'].push({type: val.type, schema: val.schema, rights: rightsRevoke})
+          if (rightsGrant.length > 0) acc['grant'].push({type: val.type, schema: val.schema, rights: rightsGrant, old: matching.rights})
+          if (rightsRevoke.length > 0) acc['revoke'].push({type: val.type, schema: val.schema, rights: rightsRevoke, old: matching.rights})
+          return acc
         }
+        // Check added
+        let added = !this.rights['schema'].some(val2 => val.type == val2.type && val.schema == val2.schema && JSON.stringify(val.rights) == JSON.stringify(val2.rights))
+        if (added) acc['grant'].push(val)
         return acc
       }, {'grant': [], 'revoke': []})
 
       // Revokes
       let revokes = this.rights['schema'].filter((val) => !this.schema.some((val2) => 
-        val.type == val2.type && val.schema == val2.schema && JSON.stringify(val.rights) == JSON.stringify(val2.rights)
+        val.type == val2.type && val.schema == val2.schema
       ))
       diff['revoke'] = diff['revoke'].concat(revokes)
       this.rightsItem['schema'] = diff

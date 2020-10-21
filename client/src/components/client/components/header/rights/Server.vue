@@ -99,12 +99,7 @@ export default {
     },
     server: {
       handler(obj) {
-        // Compute diff
-        let diff = {}
-        for (let [key, value] of Object.entries(obj)) {
-          if (value != this.rights['server'][key]) diff[key] = value
-        }
-        this.rightsItem['server'] = diff
+        this.computeDiff(obj)
       },
       deep: true
     },
@@ -113,6 +108,16 @@ export default {
     reloadRights(mode) {
       this.mode = mode
       this.server = JSON.parse(JSON.stringify(this.rights['server']))
+    },
+    computeDiff(obj) {
+      let diff = { grant: [], revoke: [] }
+      for (let [key, value] of Object.entries(obj)) {
+        if (value != this.rights['server'][key]) {
+          if (value) diff['grant'].push(key)
+          else diff['revoke'].push(key)
+        }
+      }
+      this.rightsItem['server'] = diff
     },
     selectAll() {
       for (let key of Object.keys(this.server)) this.server[key] = true
