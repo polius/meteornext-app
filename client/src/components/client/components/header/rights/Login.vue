@@ -4,8 +4,8 @@
     <v-card>
       <v-card-text style="padding-left:20px;">
         <v-form ref="form">
-          <v-text-field ref="username" readonly :disabled="disabled" v-model="login['username']" label="Username" :rules="[v => !!v || '']" required></v-text-field>
-          <v-text-field readonly :disabled="disabled" v-model="login['hostname']" label="Hostname" required :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
+          <v-text-field ref="username" :readonly="mode == 'edit'" :disabled="disabled" v-model="login['username']" label="Username" :rules="[v => !!v || '']" required></v-text-field>
+          <v-text-field :readonly="mode == 'edit'" :disabled="disabled" v-model="login['hostname']" label="Hostname" required :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
           <v-row no-gutters>
             <v-col class="flex-grow-1 flex-shrink-1">
               <v-text-field :disabled="disabled" v-model="login['password']" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
@@ -65,7 +65,10 @@ export default {
       this.mode = mode
       this.rightsLoginForm = this.$refs.form
       this.login = JSON.parse(JSON.stringify(this.rights['login']))
-      if (mode == 'new') this.$nextTick(() => { this.$refs.username.focus() })
+      if (mode == 'new') {
+        this.login['passwordType'] = 'String'
+        this.$nextTick(() => { this.$refs.username.focus() })
+      }
       requestAnimationFrame(() => { this.$refs.form.resetValidation() })
     },
   }
