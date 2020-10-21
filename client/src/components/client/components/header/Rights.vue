@@ -425,7 +425,7 @@ export default {
         this.checkItems.push({ section: 'schema', action: 'Grant', object: item['schema'], right: this.parseRights(item['rights']), before: this.parseRights(old), after: this.parseRights(old.concat(item['rights'])), query })        
       }
       for (let item of this.rightsItem['schema']['revoke']) {
-        let old = 'old' in item ? item['old'] : []
+        let old = 'old' in item ? item['old'] : item.rights
         let query = "REVOKE " + this.parseSchemaRights(item) + " FROM '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "';"
         this.checkItems.push({ section: 'schema', action: 'Revoke', object: item['schema'], right: this.parseRights(item['rights']), before: this.parseRights(old), after: this.parseRights(old.filter(x => !item.rights.includes(x))), query })        
       }
