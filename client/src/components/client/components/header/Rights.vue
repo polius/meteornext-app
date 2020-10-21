@@ -310,6 +310,7 @@ export default {
       }
       axios.get('/client/rights', { params: payload })
         .then((response) => {
+          this.rightsItem = { login: {}, server: { grant: [], revoke: [] }, schema: { grant: [], revoke: [] }, resources: {} }
           this.errors = { login: [], server: [], schema: [], resources: [] }
           this.parseRightsSidebar(response.data)
         })
@@ -460,7 +461,7 @@ export default {
       axios.post('/client/execute', payload)
         .then(() => {
           this.checkDialog = false
-          EventBus.$emit('send-notification', 'Rights saved successfully', 'success')
+          EventBus.$emit('send-notification', 'Rights saved successfully', '#00b16a')
           this.getRights(this.rightsSelected['user'], this.rightsSelected['name'])
         })
         .catch((error) => {
