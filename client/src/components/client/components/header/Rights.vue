@@ -232,6 +232,7 @@ export default {
     EventBus.$on('show-rights', this.showDialog);
     EventBus.$on('reload-rights', this.reloadRights);
     EventBus.$on('get-rights', this.getRights);
+    EventBus.$on('apply-rights', this.applyRights);
   },
   watch: {
     dialog: function(value) {
@@ -456,32 +457,43 @@ export default {
       this.checkDialog = true
     },
     checkSubmit() {
+      let queries = this.checkItems.map((x) => { return x.query })
+      new Promise((resolve) => { this.applyRights(resolve, queries) })
+    },
+    applyRights(resolve, queries) {
       // Execute generated queries
       this.loading = true
       const payload = {
         connection: this.index,
         server: this.server.id,
         database: null,
-        queries: this.checkItems.map((x) => { return x.query }),
+        queries,
         executeAll: true,
       }
       axios.post('/client/execute', payload)
         .then(() => {
           this.checkDialog = false
           EventBus.$emit('send-notification', 'Rights saved successfully', '#00b16a')
-          let user = this.getUser()
-          this.getRights(user.username, user.hostname)
+          if (queries[0].startsWith('DROP USER')) this.getRights()
+          else {
+            let user = this.getUser()
+            this.getRights(user.username, user.hostname)
+          }
+          resolve()
         })
         .catch((error) => {
           this.checkDialog = false
-          // Build error dialog
-          this.errors = { login: [], server: [], schema: [], resources: [] }
           let data = JSON.parse(error.response.data.data)
-          for (let obj of data) {
-            let item = this.checkItems.find(x => x.query == obj.query )
-            this.errors[item['section']].push(obj)
+          if (queries[0].startsWith('DROP USER')) EventBus.$emit('send-notification', data[0].error, 'error')
+          else {
+            // Build error dialog
+            this.errors = { login: [], server: [], schema: [], resources: [] }
+            for (let obj of data) {
+              let item = this.checkItems.find(x => x.query == obj.query )
+              this.errors[item['section']].push(obj)
+            }
+            this.errorDialog = true
           }
-          this.errorDialog = true
         })
         .finally(() => { this.loading = false })
     },

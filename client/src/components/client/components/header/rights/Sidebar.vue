@@ -123,6 +123,9 @@ export default {
     },
     removeRightSubmit() {
       this.sidebarDialog = false
+      let query = "DROP USER '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "';"
+      new Promise((resolve) => { EventBus.$emit('apply-rights', resolve, [query]) })
+        .then(() => { this.sidebar = [] })  
     },
     refreshRights() {
       if (Object.keys(this.rightsSelected).length == 0) EventBus.$emit('get-rights')
