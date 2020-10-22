@@ -199,12 +199,6 @@ let router = new VueRouter({
           meta: { requiresUtils: true }
         },
         {
-          path: 'manage',
-          name: 'utils.manage',
-          component: () => import('../components/utils/views/Manage'),
-          meta: { requiresUtils: true }
-        },
-        {
           path: 'restore',
           name: 'utils.restore',
           component: () => import('../components/utils/views/Restore'),
