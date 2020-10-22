@@ -350,6 +350,7 @@ export default {
         for (const [key, val] of Object.entries(data['server'][0])) {
           if (key.endsWith('_priv')) server[key.toLowerCase().slice(0,-5)] = val == 'Y'
         }
+        delete server['grant']
         server['grant_option'] = data['server'][0]['Grant_priv'] == 'Y'
         this.rights['server'] = server
         // Schema
@@ -430,6 +431,8 @@ export default {
       }
       for (let item of this.rightsItem['schema']['revoke']) {
         let old = 'old' in item ? item['old'] : item.rights
+        let find = this.rightsItem['schema']['grant'].find(x => x.schema = item.schema)
+        if (find) old = old.concat(find['rights'])
         let query = "REVOKE " + this.parseSchemaRights(item) + " FROM " + this.getUserParsed() + ";"
         this.checkItems.push({ section: 'schema', action: 'Revoke', object: item['schema'], right: this.parseRights(item['rights']), before: this.parseRights(old), after: this.parseRights(old.filter(x => !item.rights.includes(x))), query })        
       }
