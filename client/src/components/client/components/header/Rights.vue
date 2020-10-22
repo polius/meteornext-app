@@ -393,7 +393,10 @@ export default {
     },
     reloadRights(mode) {
       this.mode = mode
-      if (mode == 'new') this.tab = 0
+      if (mode == 'new') {
+        this.tab = 0
+        this.errors = { login: [], server: [], schema: [], resources: [] }
+      }
     },
     saveClick() {
       // Check if all login fields are filled
