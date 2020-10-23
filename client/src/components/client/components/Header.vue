@@ -14,7 +14,7 @@
       <v-tab @click="tabHistory" title="Query History" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-history</v-icon></span></v-tab>
       <v-tab @click="tabSaved" title="Saved Queries" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-star</v-icon></span></v-tab>
       <v-tab @click="tabObjects" :disabled="sidebarMode != 'objects' || database.length == 0" title="Schema Objects" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small style="font-size:17px; margin-top:3px;">fas fa-cubes</v-icon></span></v-tab>
-      <v-tab :disabled="sidebarMode == 'servers'" title="Processlist" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-server</v-icon></span></v-tab>
+      <v-tab @click="tabProcesslist" :disabled="sidebarMode == 'servers'" title="Processlist" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-server</v-icon></span></v-tab>
       <v-tab @click="tabRights" :disabled="sidebarMode == 'servers'" title="User Rights" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-shield-alt</v-icon></span></v-tab>
     </v-tabs>
     <!---------------->
@@ -22,6 +22,7 @@
     <!---------------->
     <History />
     <Saved />
+    <Processlist />
     <Rights />
   </div>
 </template>
@@ -32,6 +33,7 @@ import { mapFields } from '../js/map-fields'
 
 import History from './header/History'
 import Saved from './header/Saved'
+import Processlist from './header/Processlist'
 import Rights from './header/Rights'
 
 export default {
@@ -56,7 +58,7 @@ export default {
       'editor',
     ], { path: 'client/components' }),
   },
-  components: { History, Saved, Rights },
+  components: { History, Saved, Processlist, Rights },
   methods: {
     tabClient() {
       this.headerTab = 0
@@ -86,6 +88,9 @@ export default {
     },
     tabSaved() {
       EventBus.$emit('show-saved')
+    },
+    tabProcesslist() {
+      EventBus.$emit('show-processlist')
     },
     tabRights() {
       EventBus.$emit('show-rights')
