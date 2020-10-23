@@ -28,7 +28,7 @@ export default {
   computed: {
     ...mapFields([
       'rights',
-      'rightsItem',
+      'rightsDiff',
       'rightsSelected',
     ], { path: 'client/connection' }),
   },
@@ -46,7 +46,7 @@ export default {
         for (let [key, value] of Object.entries(obj)) {
           if (value.length > 0 && value != this.rights['resources'][key]) diff[key] = value
         }
-        this.rightsItem['resources'] = diff
+        this.rightsDiff['resources'] = diff
       },
       deep: true
     },

@@ -223,9 +223,11 @@ export default {
       'headerTab',
       'headerTabSelected',
       'rights',
-      'rightsItem',
+      'rightsDiff',
       'rightsSelected',
       'rightsLoginForm',
+      'rightsSidebarSelected',
+      'rightsSidebarOpened',
     ], { path: 'client/connection' }),
   },
   mounted() {
@@ -245,7 +247,7 @@ export default {
     checkDialog: function(val) {
       if (val) this.resizeTable()
     },
-    rightsItem: {
+    rightsDiff: {
       handler(val) {
         if (
           Object.keys(val['login']).length == 0 && 
@@ -261,7 +263,7 @@ export default {
   methods: {
     showDialog() {
       this.dialog = true
-      if (this.rights['sidebar'].length == 0) this.getRights()
+      if (this.rights['sidebar'].length == 0) new Promise((resolve) => { this.getRights(resolve) })
     },
     onGridReady(params) {
       this.gridApi = params.api
@@ -301,19 +303,20 @@ export default {
     },
     onSplitPaneReady() {
     },
-    getRights(user, host) {
+    getRights(resolve, user, host) {
       this.loading = true
       const payload = {
         connection: this.index,
         server: this.server.id,
         user,
-        host
+        host,
       }
       axios.get('/client/rights', { params: payload })
         .then((response) => {
-          this.rightsItem = { login: {}, server: { grant: [], revoke: [] }, schema: { grant: [], revoke: [] }, resources: {} }
+          this.rightsDiff = { login: {}, server: { grant: [], revoke: [] }, schema: { grant: [], revoke: [] }, resources: {} }
           this.errors = { login: [], server: [], schema: [], resources: [] }
           this.parseRightsSidebar(response.data)
+          resolve()
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -349,7 +352,8 @@ export default {
         // Server
         let server = {}
         for (const [key, val] of Object.entries(data['server'][0])) {
-          if (key.endsWith('_priv')) server[key.toLowerCase().slice(0,-5)] = val == 'Y'
+          let right = this.matchRight(key)
+          if (right != null) server[right] = val == 'Y'
         }
         delete server['grant']
         server['grant_option'] = data['server'][0]['Grant_priv'] == 'Y'
@@ -387,6 +391,10 @@ export default {
         // Syntax
         let syntax = data['syntax'].map(x => Object.values(x)).join(';\n') + ';'
         this.rights['syntax'] = syntax
+        // Update Rights Sidebar
+        this.rightsSidebarSelected = [data['server'][0]['User'] + '|' + data['server'][0]['Host']]
+        this.rightsSelected = {id: data['server'][0]['User'] + '|' + data['server'][0]['Host'], user: data['server'][0]['User'], name: data['server'][0]['Host']}
+        if (!(data['server'][0]['User'] in this.rightsSidebarOpened)) this.rightsSidebarOpened.push(data['server'][0]['User'])
       }
       // Reload Rights
       EventBus.$emit('reload-rights', 'edit')
@@ -407,55 +415,55 @@ export default {
       // Build check dialog
       this.checkItems = []
       // - Login -
-      if (Object.keys(this.rightsItem['login']).length != 0) {
-        let passwordType = 'passwordType' in this.rightsItem['login'] ? this.rightsItem['login']['passwordType'] : this.rights['login']['passwordType']
-        let action = 'username' in this.rightsItem['login'] ? 'Create' : 'Modify'
-        let object = 'username' in this.rightsItem['login'] ? 'User' : 'Password'
-        let before = 'username' in this.rightsItem['login'] ? '' : this.rights['login']['password']
-        let after = 'username' in this.rightsItem['login'] ? '' : this.rightsItem['login']['password']
-        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " IDENTIFIED " + (passwordType == 'Hash' ? 'BY PASSWORD' : 'BY') + " '" + this.rightsItem['login']['password'] + "';"
+      if (Object.keys(this.rightsDiff['login']).length != 0) {
+        let passwordType = 'passwordType' in this.rightsDiff['login'] ? this.rightsDiff['login']['passwordType'] : this.rights['login']['passwordType']
+        let action = 'username' in this.rightsDiff['login'] ? 'Create' : 'Modify'
+        let object = 'username' in this.rightsDiff['login'] ? 'User' : 'Password'
+        let before = 'username' in this.rightsDiff['login'] ? '' : this.rights['login']['password']
+        let after = 'username' in this.rightsDiff['login'] ? '' : this.rightsDiff['login']['password']
+        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " IDENTIFIED " + (passwordType == 'Hash' ? 'BY PASSWORD' : 'BY') + " '" + this.rightsDiff['login']['password'] + "';"
         this.checkItems.push({ section: 'login', action, object, right: '', before, after, query })        
       }
       // - Server -
       let serverRights = Object.keys(this.rights['server']).reduce((acc, val) => { if (this.rights['server'][val]) acc.push(val); return acc; }, [])
-      let newServerRights = serverRights.concat(this.rightsItem['server']['grant'])
-      if (this.rightsItem['server']['grant'].length > 0) {
-        let query = "GRANT " + this.parseRights(this.rightsItem['server']['grant']) + " ON *.* TO " + this.getUserParsed() + ";"
-        this.checkItems.push({ section: 'server', action: 'Grant', object: '*', right: this.parseRights(this.rightsItem['server']['grant']), before: this.parseRights(serverRights), after: this.parseRights(newServerRights), query })        
+      let newServerRights = serverRights.concat(this.rightsDiff['server']['grant'])
+      if (this.rightsDiff['server']['grant'].length > 0) {
+        let query = "GRANT " + this.parseRights(this.rightsDiff['server']['grant']) + " ON *.* TO " + this.getUserParsed() + ";"
+        this.checkItems.push({ section: 'server', action: 'Grant', object: '*', right: this.parseRights(this.rightsDiff['server']['grant']), before: this.parseRights(serverRights), after: this.parseRights(newServerRights), query })        
       }
-      if (this.rightsItem['server']['revoke'].length > 0) {
-        let query = "REVOKE " + this.parseRights(this.rightsItem['server']['revoke']) + " ON *.* FROM " + this.getUserParsed() + ";"
-        this.checkItems.push({ section: 'server', action: 'Revoke', object: '*', right: this.parseRights(this.rightsItem['server']['revoke']), before: this.parseRights(newServerRights), after: this.parseRights(newServerRights.filter(x => !this.rightsItem['server']['revoke'].includes(x))), query })        
+      if (this.rightsDiff['server']['revoke'].length > 0) {
+        let query = "REVOKE " + this.parseRights(this.rightsDiff['server']['revoke']) + " ON *.* FROM " + this.getUserParsed() + ";"
+        this.checkItems.push({ section: 'server', action: 'Revoke', object: '*', right: this.parseRights(this.rightsDiff['server']['revoke']), before: this.parseRights(newServerRights), after: this.parseRights(newServerRights.filter(x => !this.rightsDiff['server']['revoke'].includes(x))), query })        
       }
       // - Schema -
-      for (let item of this.rightsItem['schema']['grant']) {
+      for (let item of this.rightsDiff['schema']['grant']) {
         let old = 'old' in item ? item['old'] : []
         let query = "GRANT " + this.parseSchemaRights(item) + " TO " + this.getUserParsed() + ";"
         this.checkItems.push({ section: 'schema', action: 'Grant', object: item['schema'], right: this.parseRights(item['rights']), before: this.parseRights(old), after: this.parseRights(old.concat(item['rights'])), query })        
       }
-      for (let item of this.rightsItem['schema']['revoke']) {
+      for (let item of this.rightsDiff['schema']['revoke']) {
         let old = 'old' in item ? item['old'] : item.rights
-        let find = this.rightsItem['schema']['grant'].find(x => x.schema = item.schema)
+        let find = this.rightsDiff['schema']['grant'].find(x => x.schema = item.schema)
         if (find) old = old.concat(find['rights'])
         let query = "REVOKE " + this.parseSchemaRights(item) + " FROM " + this.getUserParsed() + ";"
         this.checkItems.push({ section: 'schema', action: 'Revoke', object: item['schema'], right: this.parseRights(item['rights']), before: this.parseRights(old), after: this.parseRights(old.filter(x => !item.rights.includes(x))), query })        
       }
       // - Resources -
-      if ('max_queries' in this.rightsItem['resources']) {
-        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " WITH MAX_QUERIES_PER_HOUR " + this.rightsItem['resources']['max_queries'] + ";"
-        this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Queries', right: '', before: this.rights['resources']['max_queries'], after: this.rightsItem['resources']['max_queries'], query })
+      if ('max_queries' in this.rightsDiff['resources']) {
+        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " WITH MAX_QUERIES_PER_HOUR " + this.rightsDiff['resources']['max_queries'] + ";"
+        this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Queries', right: '', before: this.rights['resources']['max_queries'], after: this.rightsDiff['resources']['max_queries'], query })
       }
-      if ('max_updates' in this.rightsItem['resources']) {
-        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " WITH MAX_UPDATES_PER_HOUR " + this.rightsItem['resources']['max_updates'] + ";"
-        this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Updates', right: '', before: this.rights['resources']['max_updates'], after: this.rightsItem['resources']['max_updates'], query })
+      if ('max_updates' in this.rightsDiff['resources']) {
+        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " WITH MAX_UPDATES_PER_HOUR " + this.rightsDiff['resources']['max_updates'] + ";"
+        this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Updates', right: '', before: this.rights['resources']['max_updates'], after: this.rightsDiff['resources']['max_updates'], query })
       }
-      if ('max_connections' in this.rightsItem['resources']) {
-        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " WITH MAX_CONNECTIONS_PER_HOUR " + this.rightsItem['resources']['max_connections'] + ";"
-        this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Connections', right: '', before: this.rights['resources']['max_connections'], after: this.rightsItem['resources']['max_connections'], query })
+      if ('max_connections' in this.rightsDiff['resources']) {
+        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " WITH MAX_CONNECTIONS_PER_HOUR " + this.rightsDiff['resources']['max_connections'] + ";"
+        this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Connections', right: '', before: this.rights['resources']['max_connections'], after: this.rightsDiff['resources']['max_connections'], query })
       }
-      if ('max_simultaneous' in this.rightsItem['resources']) {
-        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " WITH MAX_USER_CONNECTIONS " + this.rightsItem['resources']['max_simultaneous'] + ";"
-        this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Simultaneous Connections', right: '', before: this.rights['resources']['max_simultaneous'], after: this.rightsItem['resources']['max_simultaneous'], query })
+      if ('max_simultaneous' in this.rightsDiff['resources']) {
+        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " WITH MAX_USER_CONNECTIONS " + this.rightsDiff['resources']['max_simultaneous'] + ";"
+        this.checkItems.push({ section: 'resources', action: 'Modify', object: 'Max Simultaneous Connections', right: '', before: this.rights['resources']['max_simultaneous'], after: this.rightsDiff['resources']['max_simultaneous'], query })
       }
       this.checkDialog = true
     },
@@ -477,10 +485,11 @@ export default {
         .then(() => {
           this.checkDialog = false
           EventBus.$emit('send-notification', 'Rights saved successfully', '#00b16a')
-          if (queries[0].startsWith('DROP USER')) this.getRights()
+          if (queries[0].startsWith('DROP USER')) new Promise((resolve) => { this.getRights(resolve) })
           else {
+            if (this.mode == 'new') new Promise((resolve) => { this.getRights(resolve) })
             let user = this.getUser()
-            this.getRights(user.username, user.hostname)
+            new Promise((resolve) => { this.getRights(resolve, user.username, user.hostname) })
           }
           resolve()
         })
@@ -492,8 +501,10 @@ export default {
             // Build error dialog
             this.errors = { login: [], server: [], schema: [], resources: [] }
             for (let obj of data) {
-              let item = this.checkItems.find(x => x.query == obj.query )
-              this.errors[item['section']].push(obj)
+              if ('error' in obj) {
+                let item = this.checkItems.find(x => x.query == obj.query )
+                this.errors[item['section']].push(obj)
+              }
             }
             this.errorDialog = true
           }
@@ -502,6 +513,40 @@ export default {
     },
     parseRights(rights) {
       return rights.map((x) => { return x.charAt(0).toUpperCase() + x.slice(1).replaceAll('_', ' ') }).join(', ')
+    },
+    matchRight(right) {
+      let matching = {
+        'Alter_priv': 'ALTER',
+        'Alter_routine_priv': 'ALTER ROUTINE',
+        'Create_priv': 'CREATE',
+        'Create_routine_priv': 'CREATE ROUTINE',
+        'Create_tmp_table_priv': 'CREATE TEMPORARY TABLES',
+        'Create_user_priv': 'CREATE USER',
+        'Create_view_priv': 'CREATE VIEW',
+        'Delete_priv': 'DELETE',
+        'Drop_priv': 'DROP',
+        'Event_priv': 'EVENT',
+        'Execute_priv': 'EXECUTE',
+        'File_priv': 'FILE',
+        'Grant_priv': 'GRANT OPTION',
+        'Index_priv': 'INDEX',
+        'Insert_priv': 'INSERT',
+        'Lock_tables_priv': 'LOCK TABLES',
+        'Process_priv': 'PROCESS',
+        'References_priv': 'REFERENCES',
+        'Reload_priv': 'RELOAD',
+        'Repl_client_priv': 'REPLICATION CLIENT',
+        'Repl_slave_priv': 'REPLICATION SLAVE',
+        'Select_priv': 'SELECT',
+        'Show_db_priv': 'SHOW DATABASES',
+        'Show_view_priv': 'SHOW VIEW',
+        'Shutdown_priv': 'SHUTDOWN',
+        'Super_priv': 'SUPER',
+        'Trigger_priv': 'TRIGGER',
+        'Update_priv': 'UPDATE',
+      }
+      if (right in matching) return matching[right].toLowerCase().replaceAll(' ', '_')
+      return null
     },
     parseSchemaRights(resource) {
       if (resource.type == 'database') {
@@ -519,11 +564,11 @@ export default {
       return string.charAt(0).toUpperCase() + string.slice(1);
     },
     getUser() {
-      if (this.rightsSelected['user'] === undefined) return { username: this.rightsItem['login']['username'], hostname: this.rightsItem['login']['hostname'] }
+      if (this.rightsSelected['user'] === undefined) return { username: this.rightsDiff['login']['username'], hostname: this.rightsDiff['login']['hostname'] }
       else return { username: this.rightsSelected['user'], hostname: this.rightsSelected['name'] }
     },
     getUserParsed() {
-      if (this.rightsSelected['user'] === undefined) return "'" + this.rightsItem['login']['username'] + "'@'" + this.rightsItem['login']['hostname'] + "'"
+      if (this.rightsSelected['user'] === undefined) return "'" + this.rightsDiff['login']['username'] + "'@'" + this.rightsDiff['login']['hostname'] + "'"
       else return "'" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "'"
     },
   }

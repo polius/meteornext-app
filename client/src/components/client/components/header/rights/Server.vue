@@ -13,7 +13,7 @@
               <v-checkbox :disabled="disabled" v-model="server['trigger']" dense label="Trigger" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['event']" dense label="Event" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['references']" dense label="References" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['create_tmp_table']" dense label="Create Temporary Table" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server['create_temporary_tables']" dense label="Create Temporary Tables" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['lock_tables']" dense label="Lock Tables" hide-details style="margin:0px;"></v-checkbox>
             </v-card-text>
           </v-card>
@@ -52,10 +52,10 @@
               <v-checkbox :disabled="disabled" v-model="server['file']" dense label="File" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['process']" dense label="Process" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['super']" dense label="Super" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['show_db']" dense label="Show Databases" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server['show_databases']" dense label="Show Databases" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['create_user']" dense label="Create User" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['repl_client']" dense label="Replication Client" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['repl_slave']" dense label="Replication Slave" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server['replication_client']" dense label="Replication Client" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server['replication_slave']" dense label="Replication Slave" hide-details style="margin:0px;"></v-checkbox>
               <v-checkbox :disabled="disabled" v-model="server['grant_option']" dense label="Grant" hide-details style="margin:0px;"></v-checkbox>
             </v-card-text>
           </v-card>
@@ -86,7 +86,7 @@ export default {
   computed: {
     ...mapFields([
       'rights',
-      'rightsItem',
+      'rightsDiff',
       'rightsSelected',
     ], { path: 'client/connection' }),
   },
@@ -117,7 +117,7 @@ export default {
           else diff['revoke'].push(key)
         }
       }
-      this.rightsItem['server'] = diff
+      this.rightsDiff['server'] = diff
     },
     selectAll() {
       for (let key of Object.keys(this.server)) this.server[key] = true
