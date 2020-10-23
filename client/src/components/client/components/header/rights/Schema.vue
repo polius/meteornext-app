@@ -153,7 +153,7 @@ export default {
   computed: {
     ...mapFields([
       'rights',
-      'rightsItem',
+      'rightsDiff',
       'rightsSelected',
     ], { path: 'client/connection' }),
   },
@@ -366,7 +366,7 @@ export default {
         val.type == val2.type && val.schema == val2.schema
       ))
       diff['revoke'] = diff['revoke'].concat(revokes)
-      this.rightsItem['schema'] = diff
+      this.rightsDiff['schema'] = diff
     }
   }
 }

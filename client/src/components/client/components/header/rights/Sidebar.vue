@@ -1,7 +1,7 @@
 <template>
     <v-container fluid style="padding:0px;">
       <v-row ref="list" no-gutters style="height:calc(100% - 36px); overflow:auto;">
-        <v-treeview :active.sync="sidebar" item-key="id" :open.sync="sidebarOpened" :items="rights['sidebar']" :search="sidebarSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 62px); width:100%; overflow-y:auto;">
+        <v-treeview :active.sync="rightsSidebarSelected" item-key="id" :open.sync="rightsSidebarOpened" :items="rights['sidebar']" :search="rightsSidebarSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 62px); width:100%; overflow-y:auto;">
           <template v-slot:label="{item, active}">
             <v-btn @click="sidebarClick($event, item, active)" @contextmenu="onRightClick" text style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding-left:10px;"> 
               <v-icon v-if="'children' in item" small style="padding-right:10px">fas fa-user</v-icon>
@@ -11,7 +11,7 @@
             </v-btn>
           </template>
         </v-treeview>
-        <v-text-field v-if="rights['sidebar'].length > 0" v-model="sidebarSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
+        <v-text-field v-if="rights['sidebar'].length > 0" v-model="rightsSidebarSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
       </v-row>
       <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; width:100%">
         <v-btn @click="addRight" text small title="New User Right" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
@@ -71,9 +71,7 @@ export default {
   data() {
     return {
       // Rights
-      sidebar: [],
-      sidebarOpened: [],
-      sidebarSearch: '',
+      rightsSidebarSearch: '',
       // Dialog
       sidebarDialog: false,
     }
@@ -84,19 +82,21 @@ export default {
       'rights',
       'rightsLoading',
       'rightsSelected',
-      'rightsItem',
+      'rightsDiff',
+      'rightsSidebarSelected',
+      'rightsSidebarOpened',
     ], { path: 'client/connection' }),
   },
   watch: {
     dialog: function(val) {
       if (!val) {
         // Init Rights data
-        this.sidebar = []
-        this.sidebarOpened = []
-        this.sidebarSearch = ''
+        this.rightsSidebarSelected = []
+        this.rightsSidebarOpened = []
+        this.rightsSidebarSearch = ''
         this.rightsSelected = {}
         this.rights = { sidebar: [], login: {}, server: {}, schema: [], resources: {}, syntax: '' }
-        this.rightsItem = { login: {}, server: { grant: [], revoke: [] }, schema: { grant: [], revoke: [] }, resources: {} }
+        this.rightsDiff = { login: {}, server: { grant: [], revoke: [] }, schema: { grant: [], revoke: [] }, resources: {} }
         EventBus.$emit('reload-rights', 'edit')
       }
     }
@@ -106,16 +106,16 @@ export default {
       if ('children' in item) return
       if (active) event.stopPropagation()
       this.rightsSelected = {...item}
-      EventBus.$emit('get-rights', item['user'], item['name'])
+      new Promise((resolve) => { EventBus.$emit('get-rights', resolve, item['user'], item['name']) })
     },
     onRightClick(event) {
       event.preventDefault()
     },
     addRight() {
-      this.sidebar = []
+      this.rightsSidebarSelected = []
       this.rightsSelected = {}
       this.rights = { sidebar: this.rights['sidebar'], login: {}, server: {}, schema: [], resources: {}, syntax: '' }
-      this.rightsItem = { login: {}, server: { grant: [], revoke: [] }, schema: { grant: [], revoke: [] }, resources: {} }
+      this.rightsDiff = { login: {}, server: { grant: [], revoke: [] }, schema: { grant: [], revoke: [] }, resources: {} }
       EventBus.$emit('reload-rights', 'new')
     },
     removeRight() {
@@ -125,11 +125,11 @@ export default {
       this.sidebarDialog = false
       let query = "DROP USER '" + this.rightsSelected['user'] + "'@'" + this.rightsSelected['name'] + "';"
       new Promise((resolve) => { EventBus.$emit('apply-rights', resolve, [query]) })
-        .then(() => { this.sidebar = [] })  
+        .then(() => { this.rightsSidebarSelected = [] })  
     },
     refreshRights() {
-      if (Object.keys(this.rightsSelected).length == 0) EventBus.$emit('get-rights')
-      else EventBus.$emit('get-rights', this.rightsSelected['user'], this.rightsSelected['name'])
+      if (Object.keys(this.rightsSelected).length == 0) new Promise((resolve) => { EventBus.$emit('get-rights', resolve) })  
+      else new Promise((resolve) => { EventBus.$emit('get-rights', resolve, this.rightsSelected['user'], this.rightsSelected['name']) })
     },
   }
 }
