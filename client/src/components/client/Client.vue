@@ -5,14 +5,14 @@
       <v-main style="padding-top:0px; padding-bottom:0px;">
         <div style="margin: -12px;">
           <div ref="masterDiv" style="height: calc(100vh - 112px);">
-            <Connections/>
+            <Connections />
             <Splitpanes :style="(Object.keys(server).length != 0 || connections.length > 1) ? 'height:calc(100% - 49px)' : 'height:100%'">
               <Pane size="20" min-size="0">
-                <Sidebar/>
+                <Sidebar />
               </Pane>
               <Pane size="80" min-size="0">
                 <div style="height:100%; width:100%">
-                  <Main/>
+                  <Main />
                 </div>
               </Pane>
             </Splitpanes>
@@ -125,6 +125,7 @@
 </style>
 
 <script>
+
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 

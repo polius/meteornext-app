@@ -19,7 +19,7 @@ const connection = {
   // Sidebar
   sidebar: [],
   sidebarItems: [],
-  sidebarSelected: {},
+  sidebarSelected: [],
   sidebarOpened: [],
   sidebarMode: 'servers',
   sidebarSearch: '',
