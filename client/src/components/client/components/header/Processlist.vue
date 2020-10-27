@@ -9,7 +9,6 @@
           <v-btn color="primary"><v-icon small style="font-size:14px; padding-right:10px;">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field v-model="refreshRate" label="Refresh rate (seconds)" outlined dense color="white" hide-details></v-text-field>
-
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>

@@ -5,9 +5,9 @@
       <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
       <div v-if="sidebarMode == 'servers' || database.length > 0" style="height:100%">
-        <v-treeview :active.sync="sidebar" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :search="sidebarSearch" activatable open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
+        <v-treeview :active.sync="sidebar" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :search="sidebarSearch" activatable multiple-active open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
           <template v-slot:label="{item, open}">
-            <v-btn text @click="sidebarClicked(item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
+            <v-btn text @click="sidebarClicked($event, item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
               <v-icon v-if="!item.type" small style="padding:10px;">
                 {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
               </v-icon>
@@ -186,28 +186,29 @@ export default {
     EventBus.$on('refresh-sidebar-objects', this.refreshObjects);
   },
   methods: {
-    sidebarClicked(item) {
+    sidebarClicked(event, item) {
       if (this.loadingServer) return
+      // this.clickHandler(event, item)
       return new Promise ((resolve) => {
         if (this.sidebarClick) {
           clearTimeout(this.sidebarClick)
           resolve('double')
         }
         this.sidebarClick = setTimeout(() => {
-          this.sidebarClick = undefined          
+          this.sidebarClick = undefined
           resolve('single')
         }, 200)
       }).then((data) => {
         // Single Click
         if (data == 'single' && item.children === undefined) {
           if (this.sidebarSelected == item) {
-            this.sidebarSelected = {}
+            this.sidebarSelected = []
             this.headerTab = 0
             this.headerTabSelected = 'client'
             this.editor.focus()
           }
           else {
-            this.sidebarSelected = {...item}
+            this.sidebarSelected = [...item]
             if (this.headerTabSelected == 'structure') EventBus.$emit('get-structure')
             else if (this.headerTabSelected == 'content') EventBus.$emit('get-content')
             else if (this.headerTabSelected.startsWith('info_')) {
@@ -239,6 +240,29 @@ export default {
         }
       })
     },
+    clickHandler(event, item) {
+      if ('children' in item) return
+      this.$nextTick(() => {
+        if (event.shiftKey && !event.ctrlKey && !event.metaKey) {
+          // this.sidebarSelected = {}
+          // Find new index
+          console.log(this.sidebar)
+          console.log(item)
+          // let newIndex = this.sidebar.findIndex(x => x.id = item.id)
+          // Find last index
+          // let lastIndex = this.sidebarItems.length == 0 ? 0 : this.sidebarItems.findIndex(x => x.id == this.sidebarItems[0].id )
+          // console.log(newIndex)
+          // console.log(lastIndex)
+          // if (newIndex > lastIndex) 
+        }
+        else if (!event.ctrlKey && !event.metaKey) {
+          console.log(this.sidebar)
+          this.sidebar = []
+          console.log(this.sidebar)        
+        }
+        // console.log(this.sidebar)
+      })
+    },
     getServers() {
       this.sidebarLoading = true
       axios.get('/client/servers')
@@ -262,8 +286,8 @@ export default {
             break
           }
         }
-        if (found) servers[j]['children'].push({ id: data[i]['server_id'], name: data[i]['server_name'], type: data[i]['server_engine'], host: data[i]['server_hostname'] })
-        else servers.push({ id: 'r' + data[i]['region_id'], name: data[i]['region_name'], children: [{ id: data[i]['server_id'], name: data[i]['server_name'], type: data[i]['server_engine'], host: data[i]['server_hostname'] }] })
+        if (found) servers[j]['children'].push({ id: data[i]['server_id'], parentId: servers[j]['id'], name: data[i]['server_name'], type: data[i]['server_engine'], host: data[i]['server_hostname'] })
+        else servers.push({ id: ('r' + data[i]['region_id']), name: data[i]['region_name'], children: [{ id: data[i]['server_id'], parentId: ('r' + data[i]['region_id']), name: data[i]['server_name'], type: data[i]['server_engine'], host: data[i]['server_hostname'] }] })
       }
       this.servers = servers.slice(0)
       this.sidebarItems = servers.slice(0)
@@ -456,12 +480,13 @@ export default {
     },
     showContextMenu(e, item) {
       e.preventDefault()
-      this.sidebarClicked(item)
+      //this.sidebarClicked(e, item)
       this.contextMenuModel = null
       this.contextMenuX = e.clientX
       this.contextMenuY = e.clientY
-      this.sidebar = [item.id]
-      this.sidebarSelected = {...item}
+      // If no element selected => select current one
+      // this.sidebar = [item.id]
+      // this.sidebarSelected = {...item}
       this.buildContextMenu(item)
       this.contextMenu = true
     },
