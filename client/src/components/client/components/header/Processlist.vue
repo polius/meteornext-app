@@ -116,6 +116,7 @@ export default {
       }
     },
     getProcesslist() {
+      if (this.stopped) return
       const payload = {
         connection: 0,
         server: this.server.id,
@@ -146,7 +147,7 @@ export default {
       // Resize table
       this.resizeTable()
       // Repeat processlist request
-      if (!this.stopped) this.timer = setTimeout(this.getProcesslist, this.refreshRate * 1000)
+      this.timer = setTimeout(this.getProcesslist, this.refreshRate * 1000)
     },
     stop() {
       this.stopped = !this.stopped
