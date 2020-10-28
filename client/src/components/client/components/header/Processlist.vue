@@ -9,17 +9,15 @@
           <v-btn color="primary" style="margin-right:10px;"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-btn color="primary"><v-icon small style="padding-right:10px; font-size:14px;">fas fa-cog</v-icon>Settings</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-text-field v-model="search" label="Search" outlined dense color="white" clearable hide-details></v-text-field>
+          <v-text-field @input="onSearch" v-model="search" label="Search" outlined dense color="white" hide-details></v-text-field>
           <!-- <v-text-field v-model="refreshRate" label="Refresh rate (seconds)" outlined dense color="white" hide-details></v-text-field> -->
-          <!-- <v-spacer></v-spacer> -->
           <v-btn @click="dialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <!-- <v-text-field ref="field" v-model="search" label="Filter..." solo dense clearable hide-details></v-text-field> -->
-                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:70vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="items"></ag-grid-vue>
+                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:80vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="items"></ag-grid-vue>
               </v-flex>
             </v-layout>
           </v-container>
@@ -115,6 +113,9 @@ export default {
         }, 200);
       }
     },
+    onSearch(value) {
+      this.gridApi.setQuickFilter(value)
+    },
     getProcesslist() {
       if (this.stopped) return
       const payload = {
@@ -152,7 +153,7 @@ export default {
     stop() {
       this.stopped = !this.stopped
       if (!this.stopped) this.getProcesslist() 
-    }
+    },
   }
 }
 </script>
