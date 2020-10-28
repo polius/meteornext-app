@@ -4,6 +4,7 @@ import secrets
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from flask_compress import Compress
 import routes.setup
 
 # Instantiate Flask App
@@ -12,6 +13,9 @@ app.config.from_object(__name__)
 app.config['JWT_SECRET_KEY'] = secrets.token_urlsafe(nbytes=64)
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=12)
 jwt = JWTManager(app)
+
+# Compress Flask application's responses with gzip, deflate or brotli
+Compress(app)
 
 # Instantiate & Register Settings Blueprint
 URL_PREFIX = "/api"
