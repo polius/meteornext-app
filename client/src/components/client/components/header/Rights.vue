@@ -217,7 +217,6 @@ export default {
   components: { Splitpanes, Pane, AgGridVue, Sidebar, Login, Server, Schema, Resources, Syntax },
   computed: {
     ...mapFields([
-      'index',
       'server',
       'database',
       'headerTab',
@@ -306,7 +305,7 @@ export default {
     getRights(resolve, user, host) {
       this.loading = true
       const payload = {
-        connection: this.index,
+        connection: 0,
         server: this.server.id,
         user,
         host,
@@ -475,7 +474,7 @@ export default {
       // Execute generated queries
       this.loading = true
       const payload = {
-        connection: this.index,
+        connection: 0,
         server: this.server.id,
         database: null,
         queries,

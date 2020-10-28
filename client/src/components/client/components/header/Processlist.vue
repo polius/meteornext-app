@@ -1,15 +1,15 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" max-width="80%">
+    <v-dialog v-model="dialog" max-width="90%">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-server</v-icon>Processlist</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn color="primary" :title="stopped ? 'Start processlist retrieval' : 'Stop processlist retrieval'" style="margin-right:10px;"><v-icon small style="padding-right:10px">{{ stopped ? 'fas fa-play' : 'fas fa-stop'}}</v-icon>{{ stopped ? 'START' : 'STOP' }}</v-btn>
+          <v-btn @click="stop" color="primary" :title="stopped ? 'Start processlist retrieval' : 'Stop processlist retrieval'" style="margin-right:10px;"><v-icon small style="padding-right:10px">{{ stopped ? 'fas fa-play' : 'fas fa-stop'}}</v-icon>{{ stopped ? 'START' : 'STOP' }}</v-btn>
           <v-btn color="primary" style="margin-right:10px;"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-btn color="primary"><v-icon small style="padding-right:10px; font-size:14px;">fas fa-cog</v-icon>Settings</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-text-field v-model="search" label="Search" outlined dense color="white" hide-details></v-text-field>
+          <v-text-field v-model="search" label="Search" outlined dense color="white" clearable hide-details></v-text-field>
           <!-- <v-text-field v-model="refreshRate" label="Refresh rate (seconds)" outlined dense color="white" hide-details></v-text-field> -->
           <!-- <v-spacer></v-spacer> -->
           <v-btn @click="dialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>
@@ -19,7 +19,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <!-- <v-text-field ref="field" v-model="search" label="Filter..." solo dense clearable hide-details></v-text-field> -->
-                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:70vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="items"></ag-grid-vue>
+                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:70vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="items"></ag-grid-vue>
               </v-flex>
             </v-layout>
           </v-container>
@@ -36,12 +36,15 @@ import EventBus from '../../js/event-bus'
 import { mapFields } from '../../js/map-fields'
 import {AgGridVue} from "ag-grid-vue";
 
+import axios from 'axios'
+
 export default {
   data() {
     return {
       dialog: false,
       stopped: false,
-      refreshRate: '5',
+      refreshRate: 5,
+      timer: null,
       // AG Grid
       gridApi: null,
       columnApi: null,
@@ -55,6 +58,7 @@ export default {
     ...mapFields([
       'headerTab',
       'headerTabSelected',
+      'server',
     ], { path: 'client/connection' }),
   },
   mounted() {
@@ -65,12 +69,16 @@ export default {
       if (!value) {
         const tab = {'client': 0, 'structure': 1, 'content': 2, 'info': 3, 'objects': 6}
         this.headerTab = tab[this.headerTabSelected]
+        clearTimeout(this.timer)
       }
     }
   },
   methods: {
     showDialog() {
       this.dialog = true
+      this.stopped = false
+      this.search = ''
+      this.getProcesslist()
     },
     onGridReady(params) {
       this.gridApi = params.api
@@ -80,11 +88,8 @@ export default {
     resizeTable() {
       this.$nextTick(() => {
         if (this.gridApi != null) {
-          if (this.items.length == 0) this.gridApi.sizeColumnsToFit()
-          else {
-            let allColIds = this.columnApi.getAllColumns().map(column => column.colId)
-            this.columnApi.autoSizeColumns(allColIds)
-          }
+          let allColIds = this.columnApi.getAllColumns().map(column => column.colId)
+          this.columnApi.autoSizeColumns(allColIds)
         }
       })
     },
@@ -110,6 +115,43 @@ export default {
         }, 200);
       }
     },
+    getProcesslist() {
+      const payload = {
+        connection: 0,
+        server: this.server.id,
+        database: null,
+        queries: ['SHOW FULL PROCESSLIST'],
+      }
+      axios.post('/client/execute', payload)
+        .then((response) => {
+          let data = JSON.parse(response.data.data)[0].data
+          this.parseProcesslist(data)
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
+        })
+    },
+    parseProcesslist(data) {
+      // Build header
+      if (this.header.length == 0 && data.length > 0) {
+        let keys = Object.keys(data[0])
+        let header = []
+        for (let key of keys) header.push({ headerName: key, colId: key, field: key, sortable: true, filter: true, resizable: true, editable: false })
+        this.header = header.slice(0)
+      }
+      // Build items
+      this.items = data
+      this.gridApi.setRowData(data)
+      // Resize table
+      this.resizeTable()
+      // Repeat processlist request
+      if (!this.stopped) this.timer = setTimeout(this.getProcesslist, this.refreshRate * 1000)
+    },
+    stop() {
+      this.stopped = !this.stopped
+      if (!this.stopped) this.getProcesslist() 
+    }
   }
 }
 </script>
