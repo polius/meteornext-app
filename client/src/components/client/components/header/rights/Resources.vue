@@ -3,11 +3,13 @@
     <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Resource Limits</div>
     <v-card>
       <v-card-text style="padding-left:20px;">
-        <v-text-field :disabled="disabled" v-model="resources['max_queries']" label="Max Queries / Hour" required></v-text-field>
-        <v-text-field :disabled="disabled" v-model="resources['max_updates']" label="Max Updates / Hour" required style="padding-top:0px;"></v-text-field>
-        <v-text-field :disabled="disabled" v-model="resources['max_connections']" label="Max Connections / Hour" required style="padding-top:0px;"></v-text-field>
-        <v-text-field :disabled="disabled" v-model="resources['max_simultaneous']" label="Max Simultaneous Connections / Hour" required style="padding-top:0px;"></v-text-field>
-        <div class="body-2">Remarks: 0 (default) = no limit</div>
+        <v-form ref="form">
+          <v-text-field :disabled="disabled" v-model="resources['max_queries']" label="Max Queries / Hour" required :rules="[v => v == parseInt(v) && v >= 0 || '']"></v-text-field>
+          <v-text-field :disabled="disabled" v-model="resources['max_updates']" label="Max Updates / Hour" required :rules="[v => v == parseInt(v) && v >= 0 || '']" style="padding-top:0px;"></v-text-field>
+          <v-text-field :disabled="disabled" v-model="resources['max_connections']" label="Max Connections / Hour" required :rules="[v => v == parseInt(v) && v >= 0 || '']" style="padding-top:0px;"></v-text-field>
+          <v-text-field :disabled="disabled" v-model="resources['max_simultaneous']" label="Max Simultaneous Connections / Hour" required :rules="[v => v == parseInt(v) && v >= 0 || '']" style="padding-top:0px;"></v-text-field>
+          <div class="body-2">Remarks: 0 (default) = no limit</div>
+        </v-form>
       </v-card-text>
     </v-card>
   </div>
@@ -30,6 +32,7 @@ export default {
       'rights',
       'rightsDiff',
       'rightsSelected',
+      'rightsForm',
     ], { path: 'client/connection' }),
   },
   mounted() {
@@ -54,7 +57,9 @@ export default {
   methods: {
     reloadRights(mode) {
       this.mode = mode
+      this.rightsForm['resources'] = this.$refs.form
       this.resources = JSON.parse(JSON.stringify(this.rights['resources']))
+      requestAnimationFrame(() => { this.$refs.form.resetValidation() })
     },
   }
 }

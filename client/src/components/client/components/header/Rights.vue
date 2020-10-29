@@ -224,7 +224,7 @@ export default {
       'rights',
       'rightsDiff',
       'rightsSelected',
-      'rightsLoginForm',
+      'rightsForm',
       'rightsSidebarSelected',
       'rightsSidebarOpened',
     ], { path: 'client/connection' }),
@@ -407,8 +407,13 @@ export default {
     },
     saveClick() {
       // Check if all login fields are filled
-      if (!this.rightsLoginForm.validate()) {
-        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+      if (!this.rightsForm.login.validate()) {
+        EventBus.$emit('send-notification', 'Please make sure all required login fields are filled out correctly', 'error')
+        return
+      }
+      // Check if all resources fields are filled
+      if (!this.rightsForm.resources.validate()) {
+        EventBus.$emit('send-notification', 'Please make sure all required resources fields are filled out correctly', 'error')
         return
       }
       // Build check dialog
