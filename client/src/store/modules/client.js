@@ -65,7 +65,7 @@ const connection = {
   rights: { sidebar: [], login: {}, server: {}, schema: [], resources: {}, syntax: '' },
   rightsDiff: { login: {}, server: { grant: [], revoke: [] }, schema: { grant: [], revoke: [] }, resources: {} },
   rightsSelected: {},
-  rightsLoginForm: null,
+  rightsForm: { login: null, resources: null },
   rightsSidebarSelected: [],
   rightsSidebarOpened: [],
 

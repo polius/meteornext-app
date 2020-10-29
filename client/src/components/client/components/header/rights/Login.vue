@@ -38,7 +38,7 @@ export default {
       'rights',
       'rightsDiff',
       'rightsSelected',
-      'rightsLoginForm',
+      'rightsForm',
     ], { path: 'client/connection' }),
   },
   mounted() {
@@ -63,7 +63,7 @@ export default {
   methods: {
     reloadRights(mode) {
       this.mode = mode
-      this.rightsLoginForm = this.$refs.form
+      this.rightsForm['login'] = this.$refs.form
       this.login = JSON.parse(JSON.stringify(this.rights['login']))
       if (mode == 'new') {
         this.login['passwordType'] = 'String'
