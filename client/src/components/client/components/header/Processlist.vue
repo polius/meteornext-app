@@ -12,7 +12,6 @@
           <v-text-field @input="onSearch" v-model="search" label="Search" outlined dense color="white" hide-details></v-text-field>
           <v-btn @click="dialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-progress-linear value="100" :indeterminate="loading" style="margin-top:-2px"></v-progress-linear>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
@@ -58,10 +57,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px;">
-                      <v-btn :loading="loadingDialog" :disabled="loadingDialog" @click="settingsProcesslistSubmit" color="primary">Save</v-btn>
+                      <v-btn :loading="loading" :disabled="loading" @click="settingsProcesslistSubmit" color="primary">Save</v-btn>
                     </v-col>
                     <v-col>
-                      <v-btn :disabled="loadingDialog" @click="settingsDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="settingsDialog = false" outlined color="#e74d3c">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -88,10 +87,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loadingDialog" @click="killQuerySubmit" color="primary">Kill</v-btn>
+                      <v-btn :loading="loading" @click="killQuerySubmit" color="primary">Kill</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loadingDialog" @click="killDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="killDialog = false" outlined color="#e74d3c">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -117,7 +116,6 @@ export default {
   data() {
     return {
       loading: false,
-      loadingDialog: false,
       // Dialog
       dialog: false,
       stopped: false,
@@ -227,7 +225,6 @@ export default {
     },
     getProcesslist() {
       if (this.stopped) return
-      this.loading = true
       const payload = {
         connection: 0,
         server: this.server.id,
@@ -282,17 +279,18 @@ export default {
             else data[i]['scanned'] = null
           }
         }
-        let selectedNodes = this.gridApi.getSelectedNodes().map(node => node.data.Id)
+        const selectedNodes = this.gridApi.getSelectedNodes().map(node => node.data.Id)
+        const filterModel = this.gridApi.getFilterModel()
         this.items = data
         this.gridApi.setRowData(data)
         this.$nextTick(() => {
           this.gridApi.forEachNode((node) => node.setSelected(selectedNodes.includes(node.data.Id)))
+          this.gridApi.setFilterModel(filterModel)
         })
         // Resize table
         this.resizeTable()
         // Repeat processlist request
         this.timer = setTimeout(this.getProcesslist, this.refreshRate * 1000)
-        this.loading = false
       })
     },
     analyzeQueries(resolve, data) {
@@ -377,7 +375,7 @@ export default {
         EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
         return
       }
-      this.loadingDialog = true
+      this.loading = true
       const payload = {
         refresh_rate: this.settings['refresh'],
         analyze_queries: this.settings['analyze']
@@ -394,7 +392,7 @@ export default {
           else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
         .finally(() => {
-          this.loadingDialog = false
+          this.loading = false
         })
     },
     download(filename, text) {
@@ -410,7 +408,7 @@ export default {
 
     },
     killQuery() {
-      this.killDialog = true      
+      this.killDialog = true
     },
     killQuerySubmit() {
       let selectedRows = this.gridApi.getSelectedRows()
