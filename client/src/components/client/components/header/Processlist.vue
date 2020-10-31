@@ -170,13 +170,17 @@ export default {
       this.search = ''
       this.getProcesslist()
       this.getSettings()
+      this.$nextTick(() => this.resizeTable())
     },
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
     },
     onFirstDataRendered() {
-      this.gridApi.sizeColumnsToFit()
+      this.resizeTable()
+    },
+    resizeTable() {
+      if (this.gridApi != null) this.gridApi.sizeColumnsToFit()
     },
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
