@@ -419,8 +419,8 @@ export default {
         'mode': 'removeRowConfirm',
         'title': 'Delete rows?',
         'text': 'Are you sure you want to delete the selected ' + this.gridApi.content.getSelectedNodes().length + ' rows from this table? This action cannot be undone.',
-        'button1': 'Cancel',
-        'button2': 'Delete'
+        'button1': 'Delete',
+        'button2': 'Cancel'
       }
       this.showDialog(dialogOptions)
     },
@@ -683,7 +683,7 @@ export default {
     },
     dialogSubmit() {
       if (this.dialogMode == 'cellEditingError') this.cellEditingEdit()
-      else if (this.dialogMode == 'removeRowConfirm') this.dialog = false
+      else if (this.dialogMode == 'removeRowConfirm') this.removeRowSubmit()
       else if (this.dialogMode == 'info') this.dialog = false
       else if (this.dialogMode == 'export') this.exportRowsSubmit()
     },
@@ -692,7 +692,7 @@ export default {
         this.cellEditingDiscard()
         this.filterClick()
       }
-      else if (this.dialogMode == 'removeRowConfirm') this.removeRowSubmit()
+      else if (this.dialogMode == 'removeRowConfirm') this.dialog = false
       else if (this.dialogMode == 'info') this.dialog = false
       else if (this.dialogMode == 'export') this.dialog = false
     },

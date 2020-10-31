@@ -17,7 +17,19 @@
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:80vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="header" :rowData="items"></ag-grid-vue>
+                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:80vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="header" :rowData="items"></ag-grid-vue>
+                <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
+                  <v-list style="padding:0px;">
+                    <v-list-item-group v-model="contextMenuModel">
+                      <div v-for="[index, item] of contextMenuItems.entries()" :key="index">
+                        <v-list-item v-if="item != '|'" @click="contextMenuClicked(item)">
+                          <v-list-item-title>{{item}}</v-list-item-title>
+                        </v-list-item>
+                        <v-divider v-else></v-divider>
+                      </div>
+                    </v-list-item-group>
+                  </v-list>
+                </v-menu>
               </v-flex>
             </v-layout>
           </v-container>
@@ -59,6 +71,36 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <!----------------->
+    <!-- Kill Dialog -->
+    <!----------------->
+    <v-dialog v-model="killDialog" persistent max-width="50%">
+      <v-card>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <div class="text-h6" style="font-weight:400;">Kill queries</div>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
+                  <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">Are you sure you want to kill the selected queries?</div>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn :loading="loadingDialog" @click="killQuerySubmit" color="primary">Kill</v-btn>
+                    </v-col>
+                    <v-col style="margin-bottom:10px;">
+                      <v-btn :disabled="loadingDialog" @click="killDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -91,6 +133,16 @@ export default {
       // Settings Dialog
       settingsDialog: false,
       settings: {},
+      // Context Menu
+      contextMenu: false,
+      contextMenuModel: null,
+      contextMenuItems: [],
+      contextMenuItem: {},
+      contextMenuX: 0,
+      contextMenuY: 0,
+      // Kill Dialog
+      killDialog: false,
+      killDialogText: '',
     }
   },
   components: { AgGridVue },
@@ -156,6 +208,20 @@ export default {
         }, 200);
       }
     },
+    onContextMenu(e) {
+      e.node.setSelected(true)
+      this.contextMenuModel = null
+      this.contextMenuX = e.event.clientX
+      this.contextMenuY = e.event.clientY
+      this.contextMenuItems = ['Analyze','Kill','|','Select All','Deselect All']
+      this.contextMenu = true
+    },
+    contextMenuClicked(item) {
+      if (item == 'Analyze') this.analyzeQuery()
+      else if (item == 'Kill') this.killQuery()
+      else if (item == 'Select All') this.gridApi.selectAll()
+      else if (item == 'Deselect All') this.gridApi.deselectAll()
+    },
     onSearch(value) {
       this.gridApi.setQuickFilter(value)
     },
@@ -216,8 +282,12 @@ export default {
             else data[i]['scanned'] = null
           }
         }
+        let selectedNodes = this.gridApi.getSelectedNodes().map(node => node.data.Id)
         this.items = data
         this.gridApi.setRowData(data)
+        this.$nextTick(() => {
+          this.gridApi.forEachNode((node) => node.setSelected(selectedNodes.includes(node.data.Id)))
+        })
         // Resize table
         this.resizeTable()
         // Repeat processlist request
@@ -336,6 +406,16 @@ export default {
       element.click()
       document.body.removeChild(element)
     },
+    analyzeQuery() {
+
+    },
+    killQuery() {
+      this.killDialog = true      
+    },
+    killQuerySubmit() {
+      let selectedRows = this.gridApi.getSelectedRows()
+      console.log(selectedRows)
+    }
   }
 }
 </script>
