@@ -12,11 +12,12 @@
           <v-text-field @input="onSearch" v-model="search" label="Search" outlined dense color="white" hide-details></v-text-field>
           <v-btn @click="dialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
+        <v-progress-linear value="100" :indeterminate="loading" style="margin-top:-2px"></v-progress-linear>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:80vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="items"></ag-grid-vue>
+                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:80vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="header" :rowData="items"></ag-grid-vue>
               </v-flex>
             </v-layout>
           </v-container>
@@ -39,7 +40,7 @@
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
                   <v-text-field v-model="settings.refresh" label="Refresh Rate (seconds)" :rules="[v => v == parseInt(v) && v > 0 || '']" filled hide-details></v-text-field>
-                  <v-switch v-model="settings.analyze" label="Analyze SELECT queries" hide-details></v-switch>
+                  <v-switch v-model="settings.analyze" label="Analyze scanned rows" hide-details></v-switch>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -73,10 +74,11 @@ import axios from 'axios'
 export default {
   data() {
     return {
+      loading: false,
       // Dialog
       dialog: false,
       stopped: false,
-      refreshRate: 3,
+      refreshRate: 5,
       analyze: false,
       timer: null,
       // AG Grid
@@ -157,6 +159,7 @@ export default {
     },
     getProcesslist() {
       if (this.stopped) return
+      this.loading = true
       const payload = {
         connection: 0,
         server: this.server.id,
@@ -176,55 +179,97 @@ export default {
     parseProcesslist(data) {
       new Promise((resolve) => {
         if (!this.analyze) { resolve(); return }
-        console.log("PROMISE")
-        let queries = data.reduce((acc, val) => {
-          if (val.Info != null && val.Info.toLowerCase().startsWith('select')) acc.push(val.Info)
-          return acc
-        },[])
-        if (queries.length == 0) resolve()
-        else this.analyzeQueries(queries, resolve)
+        else this.analyzeQueries(resolve, data)
       }).then((result) => {
-        console.log("OK")
-        console.log(result)
         // Build header
-        if (this.header.length == 0 && data.length > 0) {
+        let header = []
+        if (data.length > 0) {
           let keys = Object.keys(data[0])
-          let header = []
           for (let key of keys) header.push({ headerName: key, colId: key, field: key, sortable: true, filter: true, resizable: true, editable: false })
-          this.header = header.slice(0)
+          if (this.analyze) header.push({ headerName: 'Scanned Rows', colId: 'scanned', field: 'scanned', sortable: true, filter: true, resizable: true, editable: false,
+            cellRenderer: function(params) {
+              if (params.value != null) {
+                if (params.value < 10000) return '<i class="fas fa-circle" style="color:#00b16a; margin-right:10px"></i>' + params.value
+                else if (params.value < 1000000) return '<i class="fas fa-circle" style="color:#fa8131; margin-right:10px"></i>' + params.value
+                else return '<i class="fas fa-circle" style="color:#e74d3c; margin-right:10px"></i>' + params.value 
+              }
+              return '<i class="fas fa-circle" style="color:grey; margin-right:10px"></i>Not a DML query'
+            }
+          })
         }
+        this.header = header.slice(0)
+        this.gridApi.setColumnDefs(this.header)
         // Build items
+        if (result !== undefined) {
+          for (let i = 0; i < data.length; ++i) {
+            if (i in result) {
+              data[i]['scanned'] = result[i].reduce((acc, val) => {
+                console.log(val['rows'])
+                if (val['rows'] != null) {
+                  if (acc == null)  acc = val['rows']
+                  else acc *= val['rows']
+                }
+                return acc
+              }, null)
+            }
+            else data[i]['scanned'] = null
+          }
+        }
         this.items = data
         this.gridApi.setRowData(data)
         // Resize table
         this.resizeTable()
         // Repeat processlist request
         this.timer = setTimeout(this.getProcesslist, this.refreshRate * 1000)
+        this.loading = false
       })
     },
-    analyzeQueries(queries, resolve) {
+    analyzeQueries(resolve, data) {
+      // Build data
+      let match = {}
+      let queries = []
+      let database = []
+      data.forEach((val, index) => {
+        if (val.Info != null && (val.Info.toLowerCase().startsWith('select') || val.Info.toLowerCase().startsWith('insert') || val.Info.toLowerCase().startsWith('update') || val.Info.toLowerCase().startsWith('delete'))) {
+          queries.push('EXPLAIN ' + val.Info)
+          database.push(val.db)
+          match[queries.length - 1] = index
+        }
+      })
+      if (queries.length == 0) resolve()
+      // Build payload
       const payload = {
         connection: 0,
         server: this.server.id,
-        database: null,
+        database,
         queries,
         executeAll: true,
       }
+      // Get explain
       axios.post('/client/execute', payload)
         .then((response) => {
-          let data = JSON.parse(response.data.data)[0].data
-          this.parseAnalyzer(data)
-          resolve(data)
+          let data = JSON.parse(response.data.data)
+          resolve(this.parseAnalyzer(data, match))
         })
         .catch((error) => {
+          console.log(error.response.data)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message, 'error')
+          else {
+            let data = JSON.parse(error.response.data.data)
+            resolve(this.parseAnalyzer(data, match))
+          }
         })
     },
-    parseAnalyzer(data) {
-      console.log(data)
+    parseAnalyzer(data, match) {
+      let parsedData = {}
+      for (const [i, v] of data.entries()) {
+        if ('error' in v) parsedData[match[i]] = v['error']
+        else parsedData[match[i]] = v['data']
+      }
+      return parsedData
     },
     stopProcesslist() {
+      if (this.stopped) clearTimeout(this.timer)
       this.stopped = !this.stopped
       if (!this.stopped) this.getProcesslist() 
     },

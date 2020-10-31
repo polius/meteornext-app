@@ -163,15 +163,18 @@ class Client:
             # Execute all queries
             execution = []
             errors = False
-            for q in client_json['queries']:
+            multiple = type(client_json['database']) == list and len(client_json['database']) == len(client_json['queries'])
+
+            for index, query in enumerate(client_json['queries']):
                 try:
-                    result = conn.execute(query=q, database=client_json['database'])
-                    result['query'] = q
+                    database = client_json['database'][index] if multiple else client_json['database']
+                    result = conn.execute(query=query, database=database)
+                    result['query'] = query
 
                     # Get table metadata
                     if 'table' in client_json:
-                        columns = conn.get_column_names(db=client_json['database'], table=client_json['table'])
-                        pks = conn.get_pk_names(db=client_json['database'], table=client_json['table'])
+                        columns = conn.get_column_names(db=database, table=client_json['table'])
+                        pks = conn.get_pk_names(db=database, table=client_json['table'])
                         # Get table column names & column type
                         result['columns'] = columns
                         result['pks'] = pks
@@ -181,7 +184,7 @@ class Client:
 
                 except Exception as e:
                     errors = True
-                    result = {'query': q, 'error': str(e)}
+                    result = {'query': query, 'error': str(e)}
                     execution.append(result)
                     if ('executeAll' not in client_json or not client_json['executeAll']):
                         return jsonify({'data': self.__json(execution)}), 400

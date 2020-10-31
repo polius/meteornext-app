@@ -19,7 +19,7 @@ module.exports = {
   },
   configureWebpack: {
     plugins: [
-      new CompressionWebpackPlugin()
+      new CompressionWebpackPlugin({ cache: false }) // Remove "{ cache: false }" for Production
     ]
   }
 }
