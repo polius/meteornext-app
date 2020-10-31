@@ -4,14 +4,14 @@
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">Server Variables</v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-text-field ref="field" :disabled="loading" v-model="search" label="Search" color="white" outlined dense hide-details></v-text-field>
+          <v-btn :disabled="loading" @click="dialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <v-text-field ref="field" :disabled="loading" v-model="search" label="Filter..." solo dense clearable hide-details></v-text-field>
                 <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" :stopEditingWhenGridLosesFocus="true" style="width:100%; height:70vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="columns" :rowData="items"></ag-grid-vue>
               </v-flex>
             </v-layout>
@@ -132,7 +132,7 @@ export default {
       this.items = variables
       if (this.gridApi != null) {
         this.loading = false
-        this.$nextTick(() => { this.$refs.field.focus() })      
+        // this.$nextTick(() => { this.$refs.field.focus() })      
         this.gridApi.hideOverlay()  
       }
     },
@@ -141,7 +141,7 @@ export default {
       this.columnApi = params.columnApi
       this.gridApi.showLoadingOverlay()
       this.loading = false
-      this.$refs.field.focus()
+      // this.$refs.field.focus()
     },
     onFirstDataRendered(params) {
       params.api.sizeColumnsToFit()
