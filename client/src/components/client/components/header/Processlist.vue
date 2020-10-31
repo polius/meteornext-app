@@ -16,7 +16,7 @@
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:80vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="header" :rowData="items"></ag-grid-vue>
+                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:80vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="header" :rowData="items"></ag-grid-vue>
                 <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
                   <v-list style="padding:0px;">
                     <v-list-item-group v-model="contextMenuModel">
@@ -174,15 +174,9 @@ export default {
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
-      this.resizeTable()
     },
-    resizeTable() {
-      this.$nextTick(() => {
-        if (this.gridApi != null) {
-          let allColIds = this.columnApi.getAllColumns().map(column => column.colId)
-          this.columnApi.autoSizeColumns(allColIds)
-        }
-      })
+    onFirstDataRendered() {
+      this.gridApi.sizeColumnsToFit()
     },
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
@@ -279,16 +273,17 @@ export default {
             else data[i]['scanned'] = null
           }
         }
+        // Preserve selected / filtered nodes
         const selectedNodes = this.gridApi.getSelectedNodes().map(node => node.data.Id)
         const filterModel = this.gridApi.getFilterModel()
+        // Reload new items
         this.items = data
         this.gridApi.setRowData(data)
+        // Apply selected / filtered nodes
         this.$nextTick(() => {
           this.gridApi.forEachNode((node) => node.setSelected(selectedNodes.includes(node.data.Id)))
           this.gridApi.setFilterModel(filterModel)
         })
-        // Resize table
-        this.resizeTable()
         // Repeat processlist request
         this.timer = setTimeout(this.getProcesslist, this.refreshRate * 1000)
       })
@@ -413,6 +408,7 @@ export default {
     killQuerySubmit() {
       let selectedRows = this.gridApi.getSelectedRows()
       console.log(selectedRows)
+      // Make axios KILL QUERY (AWS Aurora?)
     }
   }
 }
