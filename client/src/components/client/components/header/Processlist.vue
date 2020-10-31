@@ -46,10 +46,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px;">
-                      <v-btn @click="settingsProcesslistSubmit" color="primary">Save</v-btn>
+                      <v-btn :loading="loadingDialog" :disabled="loadingDialog" @click="settingsProcesslistSubmit" color="primary">Save</v-btn>
                     </v-col>
                     <v-col>
-                      <v-btn @click="settingsDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                      <v-btn :disabled="loadingDialog" @click="settingsDialog = false" outlined color="#e74d3c">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -75,6 +75,7 @@ export default {
   data() {
     return {
       loading: false,
+      loadingDialog: false,
       // Dialog
       dialog: false,
       stopped: false,
@@ -118,6 +119,7 @@ export default {
       this.stopped = false
       this.search = ''
       this.getProcesslist()
+      this.getSettings()
     },
     onGridReady(params) {
       this.gridApi = params.api
@@ -204,7 +206,6 @@ export default {
           for (let i = 0; i < data.length; ++i) {
             if (i in result) {
               data[i]['scanned'] = result[i].reduce((acc, val) => {
-                console.log(val['rows'])
                 if (val['rows'] != null) {
                   if (acc == null)  acc = val['rows']
                   else acc *= val['rows']
@@ -252,7 +253,6 @@ export default {
           resolve(this.parseAnalyzer(data, match))
         })
         .catch((error) => {
-          console.log(error.response.data)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             let data = JSON.parse(error.response.data.data)
@@ -281,6 +281,21 @@ export default {
       exportData = exportData.join('\r\n')
       this.download('processlist.csv', exportData)
     },
+    getSettings() {
+      // Get processlist settings
+      axios.get('/client/processlist')
+        .then((response) => {
+          let data = response.data.processlist
+          if (data.length != 0) {
+            this.refreshRate = data[0].refresh_rate
+            this.analyze = data[0].analyze_queries
+          }
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
+        })
+    },
     settingsProcesslist() {
       this.settings['refresh'] = this.refreshRate
       this.settings['analyze'] = this.analyze
@@ -292,10 +307,25 @@ export default {
         EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
         return
       }
-      this.refreshRate = this.settings['refresh']
-      this.analyze = this.settings['analyze']
-      this.settingsDialog = false
-      EventBus.$emit('send-notification', 'Changes saved', '#00b16a', 1)
+      this.loadingDialog = true
+      const payload = {
+        refresh_rate: this.settings['refresh'],
+        analyze_queries: this.settings['analyze']
+      }
+      axios.put('/client/processlist', payload)
+        .then((response) => {
+           this.refreshRate = this.settings['refresh']
+            this.analyze = this.settings['analyze']
+            this.settingsDialog = false
+            EventBus.$emit('send-notification', response.data.message, '#00b16a', 1)
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loadingDialog = false
+        })
     },
     download(filename, text) {
       var element = document.createElement('a')

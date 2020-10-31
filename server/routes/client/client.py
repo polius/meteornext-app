@@ -434,6 +434,30 @@ class Client:
                 self._client.delete_saved_queries(saved_json, user['id'])
                 return jsonify({'message': 'Selected saved queries deleted successfully'}), 200
 
+        @client_blueprint.route('/client/processlist', methods=['GET','PUT'])
+        @jwt_required
+        def client_processlist_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            processlist_json = request.get_json()
+
+            if request.method == 'GET':
+                processlist_settings = self._client.get_processlist_settings(user['id'])
+                return jsonify({'processlist': processlist_settings}), 200
+            elif request.method == 'PUT':
+                self._client.save_processlist_settings(processlist_json, user['id'])
+                return jsonify({'message': 'Changes saved'}), 200
+
         @client_blueprint.route('/client/stop', methods=['GET'])
         @jwt_required
         def client_stop_query_method():
