@@ -80,8 +80,9 @@
             <v-layout wrap>
               <div class="text-h6" style="font-weight:400;">Kill queries</div>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
+                <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
                   <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">Are you sure you want to kill the selected queries?</div>
+                  <v-checkbox v-model="killDialogCheckbox" label="Terminate the connection" hide-details style="margin-top:15px;"></v-checkbox>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -140,7 +141,7 @@ export default {
       contextMenuY: 0,
       // Kill Dialog
       killDialog: false,
-      killDialogText: '',
+      killDialogCheckbox: false,
     }
   },
   components: { AgGridVue },
@@ -205,6 +206,8 @@ export default {
       }
     },
     onContextMenu(e) {
+      const selectedNodes = this.gridApi.getSelectedNodes().map(node => node.data.Id)
+      if (!selectedNodes.includes(e.node.data.Id)) this.gridApi.deselectAll()
       e.node.setSelected(true)
       this.contextMenuModel = null
       this.contextMenuX = e.event.clientX
@@ -407,12 +410,39 @@ export default {
 
     },
     killQuery() {
+      this.killDialogCheckbox = false
       this.killDialog = true
     },
     killQuerySubmit() {
-      let selectedRows = this.gridApi.getSelectedRows()
-      console.log(selectedRows)
-      // Make axios KILL QUERY (AWS Aurora?)
+      // Build queries
+      let queries = this.gridApi.getSelectedRows().map(x => x.Id)
+      if (this.server.type == 'Aurora MySQL') {
+        if (this.killDialogCheckbox) queries = queries.map(x => 'CALL mysql.rds_kill(' + x + ')')
+        else queries = queries.map(x => 'CALL mysql.rds_kill_query(' + x + ')')
+      }
+      else {
+        if (this.killDialogCheckbox) queries = queries.map(x => 'KILL ' + x)
+        else queries = queries.map(x => 'KILL QUERY ' + x)
+      } 
+      // Build payload
+      const payload = {
+        connection: 0,
+        server: this.server.id,
+        database: null,
+        queries,
+        executeAll: true,
+      }
+      // Kill queries
+      axios.post('/client/execute', payload)
+        .then(() => {
+          EventBus.$emit('send-notification', 'Queries killed', '#00b16a', 2)
+          this.killDialog = false
+          clearTimeout(this.timer)
+          this.getProcesslist()
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        })
     }
   }
 }
