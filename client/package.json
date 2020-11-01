@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@sqltools/formatter": "^1.2.2",
     "@vue/reactivity": "^3.0.2",
     "ace-builds": "^1.4.12",
     "ag-grid-community": "^24.1.0",
