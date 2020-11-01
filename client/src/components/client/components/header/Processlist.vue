@@ -109,7 +109,7 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">Analyze queries</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn @click="exportAnalyze" color="primary" style="margin-right:10px;"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
+          <v-btn @click="exportAnalyze" color="primary"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field @input="onAnalyzeSearch" v-model="analyzeDialogSearch" label="Search" outlined dense color="white" hide-details></v-text-field>
           <v-btn @click="analyzeDialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>

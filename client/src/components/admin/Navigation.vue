@@ -1,7 +1,7 @@
 <template>
   <v-main>
     <div>
-      <v-tabs background-color="#3a539b" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
+      <v-tabs background-color="#323133" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
         <v-tab to="/admin"><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-ankh</v-icon>ADMINISTRATION</span></v-tab>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-tab to="/admin/settings"><span class="pl-2 pr-2">Settings</span></v-tab>
