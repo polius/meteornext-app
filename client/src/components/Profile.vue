@@ -3,16 +3,16 @@
     <v-container fluid>
       <v-main>
         <v-card>
-          <v-toolbar flat color="primary">
-            <v-toolbar-title>PROFILE</v-toolbar-title>
+          <v-toolbar flat dense color="primary">
+            <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-user</v-icon>PROFILE</v-toolbar-title>
           </v-toolbar>
           <v-card-text style="padding: 20px 20px 20px;">
             <v-container fluid grid-list-lg style="padding:0px">
               <v-layout row wrap>
                 <v-flex xs12>
-                  <div class="headline font-weight-regular">Hello <span class="font-weight-medium">{{ this.username }}</span> <v-chip color="teal" text-color="white" style="margin-left:10px; letter-spacing: 1px;">{{ this.group.toUpperCase() }}</v-chip></div>
-                  <v-form ref="form" @submit.prevent>
-                    <v-text-field v-model="email" :loading="loading" :disabled="loading" label="Email" type="email" append-icon="email" style="margin-top:10px;"></v-text-field>
+                  <div class="text-h6 font-weight-regular">Hello <span class="font-weight-medium">{{ this.username }}</span> <v-chip color="teal" label text-color="white" style="margin-left:10px; margin-bottom:2px; letter-spacing: 1px;">{{ this.group.toUpperCase() }}</v-chip></div>
+                  <v-form ref="form" @submit.prevent style="margin-top:15px">
+                    <v-text-field v-model="email" :loading="loading" :disabled="loading" label="Email" type="email" append-icon="email"></v-text-field>
                     <v-text-field v-model="newPassword" :loading="loading" :disabled="loading" label="Password" type="password" :placeholder="password" append-icon="lock" hide-details style="padding-top:0px;"></v-text-field>
                     <v-switch v-model="mfa['enabled']" @change="onMFAChange" :loading="loading" :disabled="loading" flat label="Multi-Factor Authentication (MFA)" style="margin-top:20px"></v-switch>
                     <v-card v-if="mfa['enabled'] && !mfa['origin']" style="width:232px; margin-bottom:20px;">

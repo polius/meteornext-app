@@ -2,8 +2,8 @@
   <v-container fluid>
     <v-main>
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">NOTIFICATIONS</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-bell</v-icon>NOTIFICATIONS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-toolbar-items class="hidden-sm-and-down">
             <v-btn v-if="selected.length == 1" text @click="openNotification()"><v-icon small style="padding-right:10px">fas fa-envelope-open</v-icon>OPEN</v-btn>
