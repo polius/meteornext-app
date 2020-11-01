@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" max-width="90%">
+    <v-dialog v-model="dialog" persistent max-width="90%">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-server</v-icon>Processlist</v-toolbar-title>
@@ -101,6 +101,30 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <!-------------------->
+    <!-- Analyze Dialog -->
+    <!-------------------->
+    <v-dialog v-model="analyzeDialog" max-width="90%">
+      <v-card>
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">Analyze queries</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="exportAnalyze" color="primary" style="margin-right:10px;"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-text-field @input="onAnalyzeSearch" v-model="analyzeDialogSearch" label="Search" outlined dense color="white" hide-details></v-text-field>
+          <v-btn @click="analyzeDialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:0px">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <v-flex xs12>
+                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressContextMenu preventDefaultOnContextMenu @grid-ready="onAnalyzeGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:80vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="analyzeColumns" :rowData="analyzeItems"></ag-grid-vue>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -142,6 +166,13 @@ export default {
       // Kill Dialog
       killDialog: false,
       killDialogCheckbox: false,
+      // Analyze Dialog
+      analyzeDialog: false,
+      analyzeDialogSearch: '',
+      analyzeGridApi: null,
+      analyzeColumnApi: null,
+      analyzeColumns: [],
+      analyzeItems: [],
     }
   },
   components: { AgGridVue },
@@ -176,6 +207,10 @@ export default {
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
+    },
+    onAnalyzeGridReady(params) {
+      this.analyzeGridApi = params.api
+      this.analyzeColumnApi = params.columnApi
     },
     onFirstDataRendered() {
       this.resizeTable()
@@ -223,6 +258,9 @@ export default {
     },
     onSearch(value) {
       this.gridApi.setQuickFilter(value)
+    },
+    onAnalyzeSearch(value) {
+      this.analyzeGridApi.setQuickFilter(value)
     },
     getProcesslist() {
       if (this.stopped) return
@@ -351,6 +389,14 @@ export default {
       exportData = exportData.join('\r\n')
       this.download('processlist.csv', exportData)
     },
+    exportAnalyze() {
+      let replacer = (key, value) => value === null ? undefined : value
+      let header = Object.keys(this.analyzeItems[0])
+      let exportData = this.analyzeItems.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+      exportData.unshift(this.analyzeColumns.map(row => row['headerName']).join(','))
+      exportData = exportData.join('\r\n')
+      this.download('processlist_analyze.csv', exportData)
+    },
     getSettings() {
       // Get processlist settings
       axios.get('/client/processlist')
@@ -407,7 +453,8 @@ export default {
       document.body.removeChild(element)
     },
     analyzeQuery() {
-
+      // Build analyze table
+      this.analyzeDialog = true
     },
     killQuery() {
       this.killDialogCheckbox = false
