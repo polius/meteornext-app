@@ -108,6 +108,8 @@ import {AgGridVue} from "ag-grid-vue";
 import EventBus from '../../js/event-bus'
 import { mapFields } from '../../js/map-fields'
 
+import sqlFormatter from '@sqltools/formatter';
+
 export default {
   data() {
     return {
@@ -134,6 +136,7 @@ export default {
     EventBus.$on('run-query', this.runQuery);
     EventBus.$on('explain-query', this.explainQuery);
     EventBus.$on('stop-query', this.stopQuery);
+    EventBus.$on('beautify-query', this.beautifyQuery);
   },
   computed: {
     ...mapFields([
@@ -293,6 +296,11 @@ export default {
           e.preventDefault()
           if (Object.keys(this.server).length > 0 && this.clientQuery.length > 0) this.explainQuery()
         }
+        // - Beautify Query -
+        else if (e.key.toLowerCase() == "b" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault()
+          if (Object.keys(this.server).length > 0 && this.clientQuery.length > 0) this.beautifyQuery()
+        }
         // - Increase Font Size -
         else if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
           e.preventDefault()
@@ -449,6 +457,17 @@ export default {
         queries: this.parseQueries().reduce((acc, val) => { acc.push('EXPLAIN ' + val); return acc }, [])
       }
       this.executeQuery(payload)
+    },
+    beautifyQuery() {
+      const queries = this.parseQueries()
+      const parsedQueries = queries.map(x => sqlFormatter.format(x))
+      console.log(queries)
+      console.log(parsedQueries)
+
+      // const text = 'Text replacement';
+      // const selectedContent = this.editor.getSelectedText();
+      // const range = this.editor.selection.getRange();
+      // this.editor.session.replace(range, text);
     },
     stopQuery() {
       this.clientExecuting = 'stop'

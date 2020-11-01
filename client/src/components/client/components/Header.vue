@@ -13,7 +13,7 @@
       <v-spacer></v-spacer>
       <v-tab @click="tabHistory" title="Query History" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-history</v-icon></span></v-tab>
       <v-tab @click="tabSaved" title="Saved Queries" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-star</v-icon></span></v-tab>
-      <v-tab @click="tabObjects" :disabled="sidebarMode != 'objects' || database.length == 0" title="Schema Objects" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small style="font-size:17px; margin-top:3px;">fas fa-cubes</v-icon></span></v-tab>
+      <v-tab @click="tabObjects" :disabled="sidebarMode != 'objects' || database.length == 0" title="Schema Objects" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small style="font-size:17px; margin-top:3px;">fas fa-cube</v-icon></span></v-tab>
       <v-tab @click="tabProcesslist" :disabled="sidebarMode == 'servers'" title="Processlist" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-server</v-icon></span></v-tab>
       <v-tab @click="tabRights" :disabled="sidebarMode == 'servers'" title="User Rights" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-shield-alt</v-icon></span></v-tab>
     </v-tabs>
