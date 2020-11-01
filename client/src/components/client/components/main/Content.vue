@@ -87,6 +87,9 @@
                 <v-col class="flex-grow-1 flex-shrink-1">
                   <div class="text-h6" style="font-weight:400; margin-top:2px; margin-left:1px;">{{ editDialogTitle }}</div>
                 </v-col>
+                <v-col v-if="editDialogFormat == 'JSON'" cols="auto" class="flex-grow-0 flex-shrink-0" style="margin-right:15px">
+                  <v-btn @click="editDialogValidate" hide-details style="margin-top:2px">Validate</v-btn>
+                </v-col>
                 <v-col cols="2" class="flex-grow-0 flex-shrink-0">
                   <v-select @change="editDialogApplyFormat" v-model="editDialogFormat" :items="editDialogFormatItems" label="Format" outlined dense hide-details></v-select>
                 </v-col>
@@ -124,8 +127,8 @@
             <v-layout wrap>
               <div class="text-h6" style="font-weight:400;">{{ dialogTitle }}</div>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
-                  <div v-if="dialogText.length>0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
+                  <div v-if="dialogText.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
                   <v-select v-if="dialogMode=='export'" outlined v-model="dialogSelect" :items="['Meteor','JSON','CSV','SQL']" label="Format" hide-details></v-select>
                 </v-form>
                 <v-divider></v-divider>
@@ -338,7 +341,7 @@ export default {
           console.log(error)
           this.gridApi.content.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
     },
     parseContentExecution(data) {
@@ -670,7 +673,7 @@ export default {
           console.log(error)
           this.gridApi.content.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
     },
     showDialog(options) {
@@ -707,7 +710,7 @@ export default {
             fontSize: 14,
             showPrintMargin: false,
             wrap: true,
-            showLineNumbers: false
+            showLineNumbers: true
           })
           this.editDialogEditor.container.addEventListener("keydown", (e) => {
             // - Increase Font Size -
@@ -760,6 +763,21 @@ export default {
           this.editDialogEditor.session.setTabSize(4)
           this.editDialogEditor.setValue(JSON.stringify(parsed), -1)
         } catch { 1==1 }
+      }
+    },
+    editDialogValidate() {
+      try {
+        JSON.parse(this.editDialogEditor.getValue())
+        EventBus.$emit('send-notification', 'JSON is valid', '#00b16a', 1)
+      } catch (error) {
+        var dialogOptions = {
+          'mode': 'info',
+          'title': 'JSON is not valid',
+          'text': error.toString(),
+          'button1': 'Close',
+          'button2': ''
+        }
+        this.showDialog(dialogOptions)
       }
     },
     editDialogSubmit() {
