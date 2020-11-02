@@ -200,9 +200,7 @@ export default {
       this.dialog = true
       this.stopped = false
       this.search = ''
-      this.getProcesslist()
       this.getSettings()
-      this.$nextTick(() => this.resizeTable())
     },
     onGridReady(params) {
       this.gridApi = params.api
@@ -282,7 +280,7 @@ export default {
     },
     parseProcesslist(data) {
       new Promise((resolve) => {
-        if (!this.analyze) { resolve(); return }
+        if (!this.analyze) resolve()
         else this.analyzeQueries(resolve, data)
       }).then((result) => {
         // Build header
@@ -301,8 +299,13 @@ export default {
             }
           })
         }
+        // Check if resize columns is needed
+        const scannedIn = this.header.some(x => x.colId == 'scanned')
+        const shouldResize = (this.analyze && !scannedIn) || (!this.analyze && scannedIn) 
+        // Apply new columns
         this.header = header.slice(0)
         this.gridApi.setColumnDefs(this.header)
+        if (shouldResize) this.resizeTable()
         // Build items
         if (result !== undefined) {
           for (let i = 0; i < data.length; ++i) {
@@ -401,11 +404,14 @@ export default {
       // Get processlist settings
       axios.get('/client/processlist')
         .then((response) => {
+          // Get stored user values
           let data = response.data.processlist
           if (data.length != 0) {
             this.refreshRate = data[0].refresh_rate
             this.analyze = data[0].analyze_queries
           }
+          // Start processlist retrieval
+          this.getProcesslist()
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -430,7 +436,7 @@ export default {
       }
       axios.put('/client/processlist', payload)
         .then((response) => {
-           this.refreshRate = this.settings['refresh']
+            this.refreshRate = this.settings['refresh']
             this.analyze = this.settings['analyze']
             this.settingsDialog = false
             EventBus.$emit('send-notification', response.data.message, '#00b16a', 1)
