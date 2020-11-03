@@ -29,7 +29,7 @@ const connection = {
   clientHeaders: [],
   clientItems: [],
   clientQueries: '',
-  clientQuery: '',
+  clientQuery: { query: '', range: null },
   clientExecuting: null, // query, explain, stop
 
   // Structure

@@ -21,17 +21,17 @@
     </v-col>
     <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
       <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
-        <v-btn :disabled="['query','stop'].includes(clientExecuting) || clientQuery.length == 0" @click="beautifyQuery()" title="Beautify Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-stream</v-icon></v-btn>
+        <v-btn :disabled="['query','stop'].includes(clientExecuting) || clientQuery['query'].length == 0" @click="beautifyQuery()" title="Beautify Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-stream</v-icon></v-btn>
       </div>
     </v-col>
     <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
       <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
-        <v-btn :loading="clientExecuting == 'explain'" :disabled="['query','stop'].includes(clientExecuting) || clientQuery.length == 0" @click="explainQuery()" title="Explain Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-chart-pie</v-icon></v-btn>
+        <v-btn :loading="clientExecuting == 'explain'" :disabled="['query','stop'].includes(clientExecuting) || clientQuery['query'].length == 0" @click="explainQuery()" title="Explain Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-chart-pie</v-icon></v-btn>
       </div>
     </v-col>
     <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
       <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding:6px; border-bottom: 1px solid #424242;">
-        <v-btn :loading="clientExecuting == 'query'" :disabled="['explain','stop'].includes(clientExecuting) || clientQuery.length == 0" @click="runQuery()" title="Run Query"><v-icon small style="padding-right:10px; font-size:15px;">fas fa-bolt</v-icon>Run</v-btn>
+        <v-btn :loading="clientExecuting == 'query'" :disabled="['explain','stop'].includes(clientExecuting) || clientQuery['query'].length == 0" @click="runQuery()" title="Run Query"><v-icon small style="padding-right:10px; font-size:15px;">fas fa-bolt</v-icon>Run</v-btn>
       </div>
     </v-col>
   </v-row>
