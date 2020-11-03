@@ -118,7 +118,7 @@
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressContextMenu preventDefaultOnContextMenu @grid-ready="onAnalyzeGridReady" @cell-key-down="onCellKeyDown" style="width:100%; height:80vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="analyzeColumns" :rowData="analyzeItems"></ag-grid-vue>
+                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressContextMenu preventDefaultOnContextMenu @grid-ready="onAnalyzeGridReady" @cell-key-down="onCellKeyDown" @first-data-rendered="onFirstAnalyzeDataRendered" style="width:100%; height:80vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="analyzeColumns" :rowData="analyzeItems"></ag-grid-vue>
               </v-flex>
             </v-layout>
           </v-container>
@@ -173,6 +173,7 @@ export default {
       analyzeColumnApi: null,
       analyzeColumns: [],
       analyzeItems: [],
+      analyzeData: {},
     }
   },
   components: { AgGridVue },
@@ -213,6 +214,9 @@ export default {
     onFirstDataRendered() {
       this.resizeTable()
     },
+    onFirstAnalyzeDataRendered() {
+      if (this.analyzeGridApi != null) this.analyzeGridApi.sizeColumnsToFit()
+    },
     resizeTable() {
       if (this.gridApi != null) this.gridApi.sizeColumnsToFit()
     },
@@ -245,7 +249,8 @@ export default {
       this.contextMenuModel = null
       this.contextMenuX = e.event.clientX
       this.contextMenuY = e.event.clientY
-      this.contextMenuItems = ['Analyze','Kill','|','Select All','Deselect All']
+      this.contextMenuItems = ['Kill','|','Select All','Deselect All']
+      if (this.analyze) this.contextMenuItems.unshift('Analyze')
       this.contextMenu = true
     },
     contextMenuClicked(item) {
@@ -280,9 +285,9 @@ export default {
     },
     parseProcesslist(data) {
       new Promise((resolve) => {
-        if (!this.analyze) resolve()
+        if (!this.analyze) { this.analyzeData = {}; resolve() }
         else this.analyzeQueries(resolve, data)
-      }).then((result) => {
+      }).then(() => {
         // Build header
         let header = []
         if (data.length > 0) {
@@ -307,10 +312,10 @@ export default {
         this.gridApi.setColumnDefs(this.header)
         if (shouldResize) this.resizeTable()
         // Build items
-        if (result !== undefined) {
-          for (let i = 0; i < data.length; ++i) {
-            if (i in result) {
-              data[i]['scanned'] = result[i].reduce((acc, val) => {
+        if (Object.keys(this.analyzeData).length != 0) {
+          for (let row of data) {
+            if (row['Id'] in this.analyzeData) {
+              row['scanned'] = this.analyzeData[row['Id']].reduce((acc, val) => {
                 if (val['rows'] != null) {
                   if (acc == null)  acc = val['rows']
                   else acc *= val['rows']
@@ -318,7 +323,7 @@ export default {
                 return acc
               }, null)
             }
-            else data[i]['scanned'] = null
+            else row['scanned'] = null
           }
         }
         // Preserve selected / filtered nodes
@@ -341,11 +346,11 @@ export default {
       let match = {}
       let queries = []
       let database = []
-      data.forEach((val, index) => {
+      data.forEach((val) => {
         if (val.Info != null && (val.Info.toLowerCase().startsWith('select') || val.Info.toLowerCase().startsWith('insert') || val.Info.toLowerCase().startsWith('update') || val.Info.toLowerCase().startsWith('delete'))) {
           queries.push('EXPLAIN ' + val.Info)
           database.push(val.db)
-          match[queries.length - 1] = index
+          match[queries.length - 1] = val.Id
         }
       })
       if (queries.length == 0) resolve()
@@ -361,13 +366,15 @@ export default {
       axios.post('/client/execute', payload)
         .then((response) => {
           let data = JSON.parse(response.data.data)
-          resolve(this.parseAnalyzer(data, match))
+          this.parseAnalyzer(data, match)
+          resolve()
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             let data = JSON.parse(error.response.data.data)
-            resolve(this.parseAnalyzer(data, match))
+            this.parseAnalyzer(data, match)
+            resolve()
           }
         })
     },
@@ -377,7 +384,7 @@ export default {
         if ('error' in v) parsedData[match[i]] = v['error']
         else parsedData[match[i]] = v['data']
       }
-      return parsedData
+      this.analyzeData = JSON.parse(JSON.stringify(parsedData))
     },
     stopProcesslist() {
       if (this.stopped) clearTimeout(this.timer)
@@ -459,8 +466,26 @@ export default {
       document.body.removeChild(element)
     },
     analyzeQuery() {
-      // Build analyze table
-      this.analyzeDialog = true
+      const selectedIds = this.gridApi.getSelectedRows().map(x => x.Id.toString())
+      const selectedData = Object.keys(this.analyzeData).filter(key => selectedIds.includes(key)).reduce((obj, key) => { return {...obj, [key]: this.analyzeData[key] }}, {})
+      if (Object.keys(selectedData) == 0) EventBus.$emit('send-notification', 'The selected queries can\'t be analyzed (not a DML query)', 'error')
+      else {
+        // Build columns
+        if (this.analyzeColumns.length == 0) {
+          let header = []
+          let keys = Object.keys(Object.values(selectedData)[0][0])
+          for (let key of keys) header.push({ headerName: key, colId: key, field: key, sortable: true, filter: true, resizable: true, editable: false })
+          this.analyzeColumns = header
+        }
+        // Build items
+        let items = []
+        for (let query of Object.values(selectedData)) {
+          for (let row of query) items.push(row)
+        }
+        this.analyzeItems = items.slice(0)
+        if (this.analyzeGridApi != null) this.analyzeGridApi.sizeColumnsToFit()
+        this.analyzeDialog = true
+      }
     },
     killQuery() {
       this.killDialogCheckbox = false
