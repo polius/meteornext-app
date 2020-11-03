@@ -289,17 +289,17 @@ export default {
         // - Run Query/ies -
         else if (e.key.toLowerCase() == "r" && (e.ctrlKey || e.metaKey)) {
           e.preventDefault()
-          if (Object.keys(this.server).length > 0 && this.clientQuery.length > 0) this.runQuery()
+          if (Object.keys(this.server).length > 0 && this.clientQuery['query'].length > 0) this.runQuery()
         }
         // - Explain Query/ies -
         else if (e.key.toLowerCase() == "e" && (e.ctrlKey || e.metaKey)) {
           e.preventDefault()
-          if (Object.keys(this.server).length > 0 && this.clientQuery.length > 0) this.explainQuery()
+          if (Object.keys(this.server).length > 0 && this.clientQuery['query'].length > 0) this.explainQuery()
         }
         // - Beautify Query -
         else if (e.key.toLowerCase() == "b" && (e.ctrlKey || e.metaKey)) {
           e.preventDefault()
-          if (Object.keys(this.server).length > 0 && this.clientQuery.length > 0) this.beautifyQuery()
+          if (Object.keys(this.server).length > 0 && this.clientQuery['query'].length > 0) this.beautifyQuery()
         }
         // - Increase Font Size -
         else if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
@@ -405,7 +405,6 @@ export default {
           break
         }
       }
-      this.clientQuery = query
 
       // Find Current Query in Ace Editor
       let queryPosition = this.editor.session.doc.indexToPosition(queryStart)
@@ -417,6 +416,9 @@ export default {
         start: queryPosition
       }); 
       var queryRange = this.editor.$search.find(this.editor.session)
+
+      // Store Current Query (+ range)
+      this.clientQuery = { query, range: queryRange }
 
       // Remove Previous Markers
       while (this.editorMarkers.length > 0) {
@@ -459,15 +461,24 @@ export default {
       this.executeQuery(payload)
     },
     beautifyQuery() {
-      const queries = this.parseQueries()
-      const parsedQueries = queries.map(x => sqlFormatter.format(x))
-      console.log(queries)
-      console.log(parsedQueries)
-
-      // const text = 'Text replacement';
-      // const selectedContent = this.editor.getSelectedText();
-      // const range = this.editor.selection.getRange();
-      // this.editor.session.replace(range, text);
+      let query = ''
+      let range = null
+      const selectedText = this.editor.getSelectedText()
+      // Get editor query (+ range)
+      if (selectedText.length == 0) {
+        query = sqlFormatter.format(this.clientQuery['query'], { reservedWordCase: 'upper' })
+        range = this.clientQuery['range']
+      }
+      else {
+        query = sqlFormatter.format(selectedText, { reservedWordCase: 'upper' })
+        range = this.editor.selection.getRange()
+      }
+      // Replace selected queries with beautified format
+      this.editor.session.replace(range, query)
+      // Focus Editor
+      let cursor = this.editor.getCursorPosition()
+      this.editor.focus()
+      this.editor.moveCursorTo(cursor.row, cursor.column)
     },
     stopQuery() {
       this.clientExecuting = 'stop'
@@ -524,7 +535,7 @@ export default {
       // Get Query/ies (selected or highlighted)
       const selectedText = this.editor.getSelectedText()
       var queries = []
-      if (selectedText.length == 0) queries = [this.clientQuery]
+      if (selectedText.length == 0) queries = [this.clientQuery['query']]
       else {
         // Build multi-queries
         let start = 0;
