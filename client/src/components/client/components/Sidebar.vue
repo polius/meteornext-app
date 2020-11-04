@@ -488,9 +488,10 @@ export default {
       this.contextMenuModel = null
       this.contextMenuX = e.clientX
       this.contextMenuY = e.clientY
+      console.log(item)
       // If no element selected => select current one
-      // this.sidebar = [item.id]
-      // this.sidebarSelected = {...item}
+      const found = this.sidebarSelected.find((x) => x.id == item.id)
+      if (!found) this.sidebarSelected = [item]
       this.buildContextMenu(item)
       this.contextMenu = true
     },
