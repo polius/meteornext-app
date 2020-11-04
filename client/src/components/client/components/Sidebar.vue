@@ -1,8 +1,8 @@
 <template>
   <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
     <div style="height:calc(100% - 36px)">
-      <v-autocomplete ref="database" :disabled="sidebarLoading || databaseItems.length == 0" v-model="database" @change="databaseChanged" solo :items="databaseItems" label="Database" hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete>
-      <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
+      <v-autocomplete ref="database" :disabled="sidebarLoading || databaseItems.length == 0" v-model="database" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete>
+      <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'CONNECTIONS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
       <div v-if="sidebarMode == 'servers' || database.length > 0" style="height:100%">
         <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :search="sidebarSearch" activatable multiple-active open-on-click transition return-object class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
@@ -25,8 +25,8 @@
           <v-list style="padding:0px;">
             <v-list-item-group v-model="contextMenuModel">
               <div v-for="[index, item] of contextMenuItems.entries()" :key="index">
-                <v-list-item v-if="item != '|'" @click="contextMenuClicked(item)">
-                  <v-list-item-title>{{item}}</v-list-item-title>
+                <v-list-item :disabled="sidebarSelected.length > 1 && !item.m" v-if="item.i != '|'" @click="contextMenuClicked(item.i)">
+                  <v-list-item-title>{{ sidebarSelected.length > 1 && item.s ? item.i + 's' : item.i }}</v-list-item-title>
                 </v-list-item>
                 <v-divider v-else></v-divider>
               </div>
@@ -236,8 +236,10 @@ export default {
       })
     },
     clickHandler(event, item) {
-      if ('children' in item || event.ctrlKey || event.metaKey ) return
-      if (event.shiftKey) {
+      if ('children' in item || event.ctrlKey || event.metaKey ) {
+        return
+      }
+      else if (event.shiftKey) {
         // Find last index
         let lastParentIndex = -1
         let lastIndex = -1
@@ -273,7 +275,6 @@ export default {
           this.parseServers(response.data.servers)
         })
         .catch((error) => {
-          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
@@ -307,7 +308,6 @@ export default {
           this.parseDatabases(server, response.data)
         })
         .catch((error) => {
-          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
@@ -375,7 +375,6 @@ export default {
           resolve()
         })
         .catch((error) => {
-          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message, 'error')
           reject(error)
@@ -415,32 +414,32 @@ export default {
       }
       // Parse Tables
       for (let i = 0; i < tables.length; ++i) {
-        objects[0]['children'].push({ id: 'table|' + tables[i]['name'], ...tables[i], type: 'Table' })
+        objects[0]['children'].push({ id: 'table|' + tables[i]['name'], ...tables[i], type: 'Table', parentId: 'tables' })
         completer.push({ value: tables[i]['name'], meta: 'Table' })
       }
       // Parse Views
       for (let i = 0; i < views.length; ++i) {
-        objects[1]['children'].push({ id: 'view|' + views[i]['name'], ...views[i], type: 'View' })
+        objects[1]['children'].push({ id: 'view|' + views[i]['name'], ...views[i], type: 'View', parentId: 'views' })
         completer.push({ value: views[i]['name'], meta: 'View' })
       }
       // Parse Triggers
       for (let i = 0; i < data.triggers.length; ++i) {
-        objects[2]['children'].push({ id: 'trigger|' + data.triggers[i]['name'], ...data.triggers[i], type: 'Trigger' })
+        objects[2]['children'].push({ id: 'trigger|' + data.triggers[i]['name'], ...data.triggers[i], type: 'Trigger', parentId: 'triggers' })
         completer.push({ value: data.triggers[i]['name'], meta: 'Trigger' })
       }
       // Parse Functions
       for (let i = 0; i < functions.length; ++i) {
-        objects[3]['children'].push({ id: 'function|' + functions[i]['name'], ...functions[i], type: 'Function' })
+        objects[3]['children'].push({ id: 'function|' + functions[i]['name'], ...functions[i], type: 'Function', parentId: 'functions' })
         completer.push({ value: functions[i]['name'], meta: 'Function' })
       }
       // Parse Procedures
       for (let i = 0; i < procedures.length; ++i) {
-        objects[4]['children'].push({ id: 'procedure|' + procedures[i]['name'], ...procedures[i], type: 'Procedure' })
+        objects[4]['children'].push({ id: 'procedure|' + procedures[i]['name'], ...procedures[i], type: 'Procedure', parentId: 'procedures' })
         completer.push({ value: procedures[i]['name'], meta: 'Procedure' })
       }
       // Parse Events
       for (let i = 0; i < data.events.length; ++i) {
-        objects[5]['children'].push({ id: 'event|' + data.events[i]['name'], ...data.events[i], type: 'Event' })
+        objects[5]['children'].push({ id: 'event|' + data.events[i]['name'], ...data.events[i], type: 'Event', parentId: 'events' })
         completer.push({ value: data.events[i]['name'], meta: 'Event' })
       }
       this.sidebarItems = objects
@@ -488,8 +487,6 @@ export default {
       this.contextMenuModel = null
       this.contextMenuX = e.clientX
       this.contextMenuY = e.clientY
-      console.log(item)
-      // If no element selected => select current one
       const found = this.sidebarSelected.find((x) => x.id == item.id)
       if (!found) this.sidebarSelected = [item]
       this.buildContextMenu(item)
@@ -498,34 +495,35 @@ export default {
     buildContextMenu(item) {
       this.contextMenuItem = item
       this.contextMenuItems = []
+      const m = true, s = true
       if (this.sidebarMode == 'servers') {
-        if (item.children === undefined) this.contextMenuItems = ['Open Connection', '|', 'Delete Connection', 'Duplicate Connection']
-        else this.contextMenuItems = ['New Connection', '|', 'New Group', 'Delete Group', 'Rename Group']
+        if (item.children === undefined) this.contextMenuItems = [{i:'Open Connection'}, {i:'|'}, {i:'Delete Connection',m,s}, {i:'Duplicate Connection'}]
+        else this.contextMenuItems = [{i:'New Connection'}, {i:'|'}, {i:'New Group'}, {i:'Delete Group'}, {i:'Rename Group'}]
       }
       else if (this.sidebarMode == 'objects') {
         if (item.type == 'Table') {
-          if (item.children === undefined) this.contextMenuItems = ['Create Table', '|', 'Rename Table', 'Duplicate Table', '|', 'Truncate Table', 'Delete Table', '|', 'Export', '|', 'Copy Table Syntax']
-          else this.contextMenuItems = ['Create Table', '|', 'Show Table Objects']
+          if (item.children === undefined) this.contextMenuItems = [{i:'Create Table',m}, {i:'|'}, {i:'Rename Table'}, {i:'Duplicate Table'}, {i:'|'}, {i:'Truncate Table'}, {i:'Delete Table',m,s}, {i:'|'}, {i:'Export',m}, {i:'|'}, {i:'Copy Table Syntax'}]
+          else this.contextMenuItems = [{i:'Create Table'}, {i:'|'}, {i:'Show Table Objects'}]
         }
         else if (item.type == 'View') {
-          if (item.children === undefined) this.contextMenuItems = ['Create View', '|', 'Rename View', 'Duplicate View', '|', 'Delete View', '|', 'Export', '|', 'Copy View Syntax']
-          else this.contextMenuItems = ['Create View', '|', 'Show View Objects']
+          if (item.children === undefined) this.contextMenuItems = [{i:'Create View',m}, {i:'|'}, {i:'Rename View'}, {i:'Duplicate View'}, {i:'|'}, {i:'Delete View',m,s}, {i:'|'}, {i:'Export',m}, {i:'|'}, {i:'Copy View Syntax'}]
+          else this.contextMenuItems = [{i:'Create View'}, {i:'|'}, {i:'Show View Objects'}]
         }
         else if (item.type == 'Trigger') {
-          if (item.children === undefined) this.contextMenuItems = ['Create Trigger', '|', 'Rename Trigger', 'Duplicate Trigger', '|', 'Delete Trigger', '|', 'Export', '|', 'Copy Trigger Syntax']
-          else this.contextMenuItems = ['Create Trigger', '|', 'Show Trigger Objects']
+          if (item.children === undefined) this.contextMenuItems = [{i:'Create Trigger',m}, {i:'|'}, {i:'Rename Trigger'}, {i:'Duplicate Trigger'}, {i:'|'}, {i:'Delete Trigger',m,s}, {i:'|'}, {i:'Export',m}, {i:'|'}, {i:'Copy Trigger Syntax'}]
+          else this.contextMenuItems = [{i:'Create Trigger'}, {i:'|'}, {i:'Show Trigger Objects'}]
         }
         else if (item.type == 'Function') {
-          if (item.children === undefined) this.contextMenuItems = ['Create Function', '|', 'Rename Function', 'Duplicate Function', '|', 'Delete Function', '|', 'Export', '|', 'Copy Function Syntax']
-          else this.contextMenuItems = ['Create Function', '|', 'Show Function Objects']
+          if (item.children === undefined) this.contextMenuItems = [{i:'Create Function',m}, {i:'|'}, {i:'Rename Function'}, {i:'Duplicate Function'}, {i:'|'}, {i:'Delete Function',m,s}, {i:'|'}, {i:'Export',m}, {i:'|'}, {i:'Copy Function Syntax'}]
+          else this.contextMenuItems = [{i:'Create Function'}, {i:'|'}, {i:'Show Function Objects'}]
         }
         else if (item.type == 'Procedure') {
-          if (item.children === undefined) this.contextMenuItems = ['Create Procedure', '|', 'Rename Procedure', 'Duplicate Procedure', '|', 'Delete Procedure', '|', 'Export', '|', 'Copy Procedure Syntax']
-          else this.contextMenuItems = ['Create Procedure', '|', 'Show Procedure Objects']
+          if (item.children === undefined) this.contextMenuItems = [{i:'Create Procedure',m}, {i:'|'}, {i:'Rename Procedure'}, {i:'Duplicate Procedure'}, {i:'|'}, {i:'Delete Procedure',m,s}, {i:'|'}, {i:'Export',m}, {i:'|'}, {i:'Copy Procedure Syntax'}]
+          else this.contextMenuItems = [{i:'Create Procedure'}, {i:'|'}, {i:'Show Procedure Objects'}]
         }
         else if (item.type == 'Event') {
-          if (item.children === undefined) this.contextMenuItems = ['Create Event', '|', 'Rename Event', 'Duplicate Event', '|', 'Delete Event', '|', 'Export', '|', 'Copy Event Syntax']
-          else this.contextMenuItems = ['Create Event', '|', 'Show Event Objects']
+          if (item.children === undefined) this.contextMenuItems = [{i:'Create Event',m}, {i:'|'}, {i:'Rename Event'}, {i:'Duplicate Event'}, {i:'|'}, {i:'Delete Event',m,s}, {i:'|'}, {i:'Export',m}, {i:'|'}, {i:'Copy Event Syntax'}]
+          else this.contextMenuItems = [{i:'Create Event'}, {i:'|'}, {i:'Show Event Objects'}]
         }
       }
     },
@@ -591,7 +589,6 @@ export default {
           resolve(response.data)
         })
         .catch((error) => {
-          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             let data = JSON.parse(error.response.data.data)

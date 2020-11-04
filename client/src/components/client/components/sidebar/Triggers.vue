@@ -78,7 +78,6 @@ export default {
   computed: {
     ...mapFields([
       'database',
-      'sidebar',
       'sidebarOpened',
       'sidebarSelected',
       'headerTab',
@@ -219,8 +218,7 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select new created trigger
-          this.sidebarSelected = { id: 'trigger|' + triggerName, name: triggerName, type: 'Trigger' }
-          this.sidebar = ['trigger|' + triggerName]
+          this.sidebarSelected = [{ id: 'trigger|' + triggerName, name: triggerName, type: 'Trigger' }]
           // Open sidebar parent
           this.sidebarOpened = ['triggers']
           // Change view to Info
@@ -248,8 +246,7 @@ export default {
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.sidebarSelected = { id: 'trigger|' + newName, name: newName, type: 'Trigger' }
-            this.sidebar = ['trigger|' + newName]
+            this.sidebarSelected = [{ id: 'trigger|' + newName, name: newName, type: 'Trigger' }]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_trigger'
@@ -276,8 +273,7 @@ export default {
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.sidebarSelected = { id: 'trigger|' + newName, name: newName, type: 'Trigger' }
-            this.sidebar = ['trigger|' + newName]
+            this.sidebarSelected = [{ id: 'trigger|' + newName, name: newName, type: 'Trigger' }]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_trigger'
@@ -298,8 +294,7 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Unselect deleted view
-          this.sidebarSelected = {}
-          this.sidebar = []
+          this.sidebarSelected = []
           // Change view to Client
           this.headerTab = 0
           this.headerTabSelected = 'client'

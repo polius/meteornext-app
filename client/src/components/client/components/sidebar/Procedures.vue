@@ -77,7 +77,6 @@ export default {
   computed: {
     ...mapFields([
       'database',
-      'sidebar',
       'sidebarOpened',
       'sidebarSelected',
       'headerTab',
@@ -234,8 +233,7 @@ WHERE CountryCode = country;
           // Hide Dialog
           this.dialog = false
           // Select new created proceure
-          this.sidebarSelected = { id: 'procedure|' + procedureName, name: procedureName, type: 'Procedure' }
-          this.sidebar = ['procedure|' + procedureName]
+          this.sidebarSelected = [{ id: 'procedure|' + procedureName, name: procedureName, type: 'Procedure' }]
           // Open sidebar parent
           this.sidebarOpened = ['procedures']
           // Change view to Info
@@ -263,8 +261,7 @@ WHERE CountryCode = country;
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.sidebarSelected = { id: 'procedure|' + newName, name: newName, type: 'Procedure' }
-            this.sidebar = ['procedure|' + newName]
+            this.sidebarSelected = [{ id: 'procedure|' + newName, name: newName, type: 'Procedure' }]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_procedure'
@@ -291,8 +288,7 @@ WHERE CountryCode = country;
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.sidebarSelected = { id: 'procedure|' + newName, name: newName, type: 'Procedure' }
-            this.sidebar = ['procedure|' + newName]
+            this.sidebarSelected = [{ id: 'procedure|' + newName, name: newName, type: 'Procedure' }]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_procedure'
@@ -313,8 +309,7 @@ WHERE CountryCode = country;
           // Hide Dialog
           this.dialog = false
           // Unselect deleted view
-          this.sidebarSelected = {}
-          this.sidebar = []
+          this.sidebarSelected = []
           // Change view to Client
           this.headerTab = 0
           this.headerTabSelected = 'client'

@@ -78,7 +78,6 @@ export default {
   computed: {
     ...mapFields([
       'database',
-      'sidebar',
       'sidebarOpened',
       'sidebarSelected',
       'headerTab',
@@ -242,8 +241,7 @@ RETURN (customerLevel);
           // Hide Dialog
           this.dialog = false
           // Select new created proceure
-          this.sidebarSelected = { id: 'function|' + functionName, name: functionName, type: 'Function' }
-          this.sidebar = ['function|' + functionName]
+          this.sidebarSelected = [{ id: 'function|' + functionName, name: functionName, type: 'Function' }]
           // Open sidebar parent
           this.sidebarOpened = ['functions']
           // Change view to Info
@@ -271,8 +269,7 @@ RETURN (customerLevel);
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.sidebarSelected = { id: 'function|' + newName, name: newName, type: 'Function' }
-            this.sidebar = ['function|' + newName]
+            this.sidebarSelected = [{ id: 'function|' + newName, name: newName, type: 'Function' }]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_function'
@@ -299,8 +296,7 @@ RETURN (customerLevel);
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.sidebarSelected = { id: 'function|' + newName, name: newName, type: 'Function' }
-            this.sidebar = ['function|' + newName]
+            this.sidebarSelected = [{ id: 'function|' + newName, name: newName, type: 'Function' }]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_function'
@@ -321,8 +317,7 @@ RETURN (customerLevel);
           // Hide Dialog
           this.dialog = false
           // Unselect deleted view
-          this.sidebarSelected = {}
-          this.sidebar = []
+          this.sidebarSelected = []
           // Change view to Client
           this.headerTab = 0
           this.headerTabSelected = 'client'

@@ -82,7 +82,6 @@ export default {
       'server',
       'database',
       'databaseItems',
-      'sidebar',
       'sidebarOpened',
       'sidebarSelected',
       'headerTab',
@@ -249,8 +248,7 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select new created table
-          this.sidebarSelected = { id: 'table|' + tableName, name: tableName, type: 'Table' }
-          this.sidebar = ['table|' + tableName]
+          this.sidebarSelected = [{ id: 'table|' + tableName, name: tableName, type: 'Table' }]
           // Open sidebar parent
           this.sidebarOpened = ['tables']
           // Change view to Structure (columns)
@@ -274,8 +272,7 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select renamed table
-          this.sidebarSelected = { id: 'table|' + newName, name: newName, type: 'Table' }
-          this.sidebar = ['table|' + newName]
+          this.sidebarSelected = [{ id: 'table|' + newName, name: newName, type: 'Table' }]
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
@@ -294,8 +291,7 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select duplicated table
-          this.sidebarSelected = { id: 'table|' + newName, name: newName, type: 'Table' }
-          this.sidebar = ['table|' + newName]
+          this.sidebarSelected = [{ id: 'table|' + newName, name: newName, type: 'Table' }]
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
@@ -325,8 +321,7 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Unselect deleted table
-          this.sidebarSelected = {}
-          this.sidebar = []
+          this.sidebarSelected = []
           // Change view to Client
           this.headerTab = 0
           this.headerTabSelected = 'client'

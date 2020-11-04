@@ -186,7 +186,6 @@ export default {
   computed: {
     ...mapFields([
       'database',
-      'sidebar',
       'sidebarOpened',
       'sidebarSelected',
       'headerTab',
@@ -357,8 +356,7 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select new created proceure
-          this.sidebarSelected = { id: 'event|' + eventName, name: eventName, type: 'Event' }
-          this.sidebar = ['event|' + eventName]
+          this.sidebarSelected = [{ id: 'event|' + eventName, name: eventName, type: 'Event' }]
           // Open sidebar parent
           this.sidebarOpened = ['events']
           // Change view to Info
@@ -386,8 +384,7 @@ export default {
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.sidebarSelected = { id: 'event|' + newName, name: newName, type: 'Event' }
-            this.sidebar = ['event|' + newName]
+            this.sidebarSelected = [{ id: 'event|' + newName, name: newName, type: 'Event' }]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_event'
@@ -414,8 +411,7 @@ export default {
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.sidebarSelected = { id: 'event|' + newName, name: newName, type: 'Event' }
-            this.sidebar = ['event|' + newName]
+            this.sidebarSelected = [{ id: 'event|' + newName, name: newName, type: 'Event' }]
             // Change view to Info
             this.headerTab = 3
             this.headerTabSelected = 'info_event'
@@ -436,8 +432,7 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Unselect deleted view
-          this.sidebarSelected = {}
-          this.sidebar = []
+          this.sidebarSelected = []
           // Change view to Client
           this.headerTab = 0
           this.headerTabSelected = 'client'
