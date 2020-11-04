@@ -465,11 +465,11 @@ export default {
       const selectedText = this.editor.getSelectedText()
       // Get editor query (+ range)
       if (selectedText.length == 0) {
-        query = sqlFormatter.format(this.clientQuery['query'], { reservedWordCase: 'upper' })
+        query = sqlFormatter.format(this.clientQuery['query'], { reservedWordCase: 'upper', linesBetweenQueries: 2 })
         range = this.clientQuery['range']
       }
       else {
-        query = sqlFormatter.format(selectedText, { reservedWordCase: 'upper' })
+        query = sqlFormatter.format(selectedText, { reservedWordCase: 'upper', linesBetweenQueries: 2 })
         range = this.editor.selection.getRange()
       }
       // Replace selected queries with beautified format

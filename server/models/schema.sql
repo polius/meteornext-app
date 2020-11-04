@@ -372,3 +372,24 @@ CREATE TABLE `client_processlist` (
   PRIMARY KEY (`user_id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 );
+
+CREATE TABLE `client_folders` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(191) NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE `user_id__name` (`user_id`, `name`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+);
+
+CREATE TABLE `client_servers` (
+  `user_id` INT UNSIGNED NOT NULL,
+  `server_id` INT UNSIGNED NOT NULL,
+  `folder_id` INT UNSIGNED NULL,
+  PRIMARY KEY (`user_id`, `server_id`),
+  INDEX `server_id` (`server_id`),
+  INDEX `folder_id` (`folder_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`),
+  FOREIGN KEY (`folder_id`) REFERENCES `client_folders` (`id`)
+);
