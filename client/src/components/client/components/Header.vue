@@ -45,7 +45,6 @@ export default {
     ...mapFields([
       'headerTab',
       'headerTabSelected',
-      'sidebar',
       'sidebarMode',
       'sidebarSelected',
       'structureHeaders',

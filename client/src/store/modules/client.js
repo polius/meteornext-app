@@ -17,7 +17,6 @@ const connection = {
   tableItems: [],
 
   // Sidebar
-  sidebar: [],
   sidebarItems: [],
   sidebarSelected: [],
   sidebarOpened: [],

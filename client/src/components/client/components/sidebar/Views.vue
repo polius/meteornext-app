@@ -75,7 +75,6 @@ export default {
   computed: {
     ...mapFields([
       'database',
-      'sidebar',
       'sidebarOpened',
       'sidebarSelected',
       'headerTab',
@@ -224,8 +223,7 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select new created table
-          this.sidebarSelected = { id: 'view|' + viewName, name: viewName, type: 'View' }
-          this.sidebar = ['view|' + viewName]
+          this.sidebarSelected = [{ id: 'view|' + viewName, name: viewName, type: 'View' }]
           // Open sidebar parent
           this.sidebarOpened = ['views']
           // Change view to Content
@@ -248,8 +246,7 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Select renamed table
-          this.sidebarSelected = { id: 'view|' + newName, name: newName, type: 'View' }
-          this.sidebar = ['view|' + newName]
+          this.sidebarSelected = [{ id: 'view|' + newName, name: newName, type: 'View' }]
         })
       }).catch(() => {}).finally(() => { this.loading = false })
     },
@@ -271,8 +268,7 @@ export default {
             // Hide Dialog
             this.dialog = false
             // Select duplicated view
-            this.sidebarSelected = { id: 'view|' + newName, name: newName, type: 'View' }
-            this.sidebar = ['view|' + newName]
+            this.sidebarSelected = [{ id: 'view|' + newName, name: newName, type: 'View' }]
             // Change view to Content
             this.headerTab = 2
             this.headerTabSelected = 'content'
@@ -293,8 +289,7 @@ export default {
           // Hide Dialog
           this.dialog = false
           // Unselect deleted view
-          this.sidebarSelected = {}
-          this.sidebar = []
+          this.sidebarSelected = []
           // Change view to Client
           this.headerTab = 0
           this.headerTabSelected = 'client'
