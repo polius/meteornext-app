@@ -5,7 +5,7 @@
       <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
       <div v-if="sidebarMode == 'servers' || database.length > 0" style="height:100%">
-        <v-treeview :active.sync="sidebar" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :search="sidebarSearch" activatable multiple-active open-on-click transition class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
+        <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :search="sidebarSearch" activatable multiple-active open-on-click transition return-object class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
           <template v-slot:label="{item, open}">
             <v-btn text @click="sidebarClicked($event, item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
               <v-icon v-if="!item.type" small style="padding:10px;">
@@ -16,7 +16,7 @@
               </v-icon>
               {{item.name}}
               <v-spacer></v-spacer>
-              <v-progress-circular v-if="loadingServer && sidebarMode == 'servers' && (item.id == sidebar[0] || item.id == contextMenuItem.id)" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
+              <!-- <v-progress-circular v-if="loadingServer && sidebarMode == 'servers' && (item.id == sidebarSelected[0] || item.id == contextMenuItem.id)" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular> -->
               <!-- <v-chip label outlined small style="margin-left:10px; margin-right:10px;">Prod</v-chip> -->
             </v-btn>
           </template>
@@ -164,7 +164,6 @@ export default {
       'databaseItems',
       'tableItems',
       'sidebarItems',
-      'sidebar',
       'sidebarSearch',
       'sidebarMode',
       'sidebarOpened',
@@ -189,7 +188,7 @@ export default {
   methods: {
     sidebarClicked(event, item) {
       if (this.loadingServer) return
-      // this.clickHandler(event, item)
+      this.clickHandler(event, item)
       return new Promise ((resolve) => {
         if (this.sidebarClick) {
           clearTimeout(this.sidebarClick)
@@ -203,13 +202,11 @@ export default {
         // Single Click
         if (data == 'single' && item.children === undefined) {
           if (this.sidebarSelected == item) {
-            this.sidebarSelected = []
             this.headerTab = 0
             this.headerTabSelected = 'client'
             this.editor.focus()
           }
           else {
-            this.sidebarSelected = [...item]
             if (this.headerTabSelected == 'structure') EventBus.$emit('get-structure')
             else if (this.headerTabSelected == 'content') EventBus.$emit('get-content')
             else if (this.headerTabSelected.startsWith('info_')) {
@@ -221,12 +218,9 @@ export default {
         }
         // Double Click
         else if (data == 'double' && item.children === undefined) {
-          this.sidebar = [item]
-          this.sidebarSelected = {...item}
           if (this.sidebarMode == 'servers') this.getDatabases(item)
           else if (this.sidebarMode == 'objects') {
             if (['Table','View'].includes(item.type) && item.children === undefined) {
-              this.sidebar = []
               this.headerTab = 2
               this.headerTabSelected = 'content'
               EventBus.$emit('get-content')
@@ -242,27 +236,35 @@ export default {
       })
     },
     clickHandler(event, item) {
-      if ('children' in item) return
-      this.$nextTick(() => {
-        if (event.shiftKey && !event.ctrlKey && !event.metaKey) {
-          // this.sidebarSelected = {}
-          // Find new index
-          console.log(this.sidebar)
-          console.log(item)
-          // let newIndex = this.sidebar.findIndex(x => x.id = item.id)
-          // Find last index
-          // let lastIndex = this.sidebarItems.length == 0 ? 0 : this.sidebarItems.findIndex(x => x.id == this.sidebarItems[0].id )
-          // console.log(newIndex)
-          // console.log(lastIndex)
-          // if (newIndex > lastIndex) 
+      if ('children' in item || event.ctrlKey || event.metaKey ) return
+      if (event.shiftKey) {
+        // Find last index
+        let lastParentIndex = -1
+        let lastIndex = -1
+        if (this.sidebarSelected.length != 0) {
+          const lastElement = this.sidebarSelected[this.sidebarSelected.length - 1]
+          lastParentIndex = this.sidebarItems.findIndex(x => x.id == lastElement.parentId)
+          lastIndex = this.sidebarItems[lastParentIndex]['children'].findIndex(x => x.id == lastElement.id)
         }
-        else if (!event.ctrlKey && !event.metaKey) {
-          console.log(this.sidebar)
-          this.sidebar = []
-          console.log(this.sidebar)        
-        }
-        // console.log(this.sidebar)
-      })
+        // Find new index
+        let newParentIndex = this.sidebarItems.findIndex(x => x.id == item.parentId)
+        let newIndex = this.sidebarItems[newParentIndex]['children'].findIndex(x => x.id == item.id)
+        setTimeout(() => {
+          this.sidebarSelected = []
+          // Select all rows from 0 to selected
+          if (lastIndex == -1) {
+            for (let i = 0; i <= newIndex; ++i) this.sidebarSelected.push(this.sidebarItems[newParentIndex]['children'][i])
+          }
+          // Select rows between
+          else if (lastParentIndex == newParentIndex) {
+            if (lastIndex < newIndex) for (let i = lastIndex; i <= newIndex; ++i) this.sidebarSelected.push(this.sidebarItems[newParentIndex]['children'][i])
+            else for (let i = lastIndex; i >= newIndex; --i) this.sidebarSelected.push(this.sidebarItems[newParentIndex]['children'][i])
+          }
+          // Select selected row
+          else this.sidebarSelected.push(this.sidebarItems[newParentIndex]['children'][newIndex])
+        }, 10)
+      }
+      else this.sidebarSelected = []
     },
     getServers() {
       this.sidebarLoading = true
@@ -348,8 +350,7 @@ export default {
     },
     databaseChanged(database) {
       // Clear Sidebar
-      this.sidebar = []
-      this.sidebarSelected = {}
+      this.sidebarSelected = []
       this.sidebarOpened = []
       this.sidebarItems = []
       // Clear Tab
@@ -484,7 +485,6 @@ export default {
     },
     showContextMenu(e, item) {
       e.preventDefault()
-      //this.sidebarClicked(e, item)
       this.contextMenuModel = null
       this.contextMenuX = e.clientX
       this.contextMenuY = e.clientY
