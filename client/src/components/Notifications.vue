@@ -9,7 +9,8 @@
             <v-btn v-if="selected.length == 1" text @click="openNotification()"><v-icon small style="padding-right:10px">fas fa-envelope-open</v-icon>OPEN</v-btn>
             <v-btn v-if="selected.length > 0" text @click="deleteNotification()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           </v-toolbar-items>
-          <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
+          <v-divider v-if="selected.length > 0" class="mx-3" inset vertical></v-divider>
+          <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
         </v-toolbar>
         <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
           <template v-slot:[`item.name`]="{ item }">

@@ -21,8 +21,8 @@
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
           <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            <v-icon v-if="bottomBar.structure.triggers['status'] == 'success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
-            <v-icon v-else-if="bottomBar.structure.triggers['status'] == 'failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
+            <v-icon v-if="bottomBar.structure.triggers['status'] == 'success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:7px;">fas fa-check-circle</v-icon>
+            <v-icon v-else-if="bottomBar.structure.triggers['status'] == 'failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:7px;">fas fa-times-circle</v-icon>
             <span :title="bottomBar.structure.triggers['text']">{{ bottomBar.structure.triggers['text'] }}</span>
           </div>
         </v-col>

@@ -46,10 +46,18 @@ export default {
       columnApi: null,
       search: '',
       header: [
+        { headerName: 'Section', colId: 'section', field: 'section', sortable: true, filter: true, resizable: true, editable: false, valueGetter: function(params) { return params.data.section.toUpperCase() }},
         { headerName: 'Time', colId: 'time', field: 'time', sortable: true, filter: true, resizable: true, editable: false },
         { headerName: 'Connection', colId: 'connection', field: 'connection', sortable: true, filter: true, resizable: true, editable: false },
         { headerName: 'Database', colId: 'database', field: 'database', sortable: true, filter: true, resizable: true, editable: false },
-        { headerName: 'Query', colId: 'query', field: 'query', sortable: true, filter: true, resizable: true, editable: false }
+        { headerName: 'Query', colId: 'query', field: 'query', sortable: true, filter: true, resizable: true, editable: false },
+        { headerName: 'Status', colId: 'status', field: 'status', sortable: true, filter: true, resizable: true, editable: false,
+          cellRenderer: function(params) {
+            if (params.value) return '<i class="fas fa-check-circle" title="Success" style="color:#00b16a; margin-right:8px;"></i>Success'
+            else return '<i class="fas fa-times-circle" title="Failed" style="color:#e74d3c; margin-right:8px;"></i>Failed'
+          }
+        },
+        { headerName: 'Error', colId: 'error', field: 'error', sortable: true, filter: true, resizable: true, editable: false },
       ]
     }
   },

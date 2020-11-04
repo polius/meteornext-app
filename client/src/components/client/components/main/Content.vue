@@ -65,8 +65,8 @@
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
           <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            <v-icon v-if="bottomBar.content['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:5px;">fas fa-check-circle</v-icon>
-            <v-icon v-else-if="bottomBar.content['status']=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:5px;">fas fa-times-circle</v-icon>
+            <v-icon v-if="bottomBar.content['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:7px;">fas fa-check-circle</v-icon>
+            <v-icon v-else-if="bottomBar.content['status']=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:7px;">fas fa-times-circle</v-icon>
             <span :title="bottomBar.content['text']">{{ bottomBar.content['text'] }}</span>
           </div>
         </v-col>
@@ -335,13 +335,15 @@ export default {
       }
       axios.post('/client/execute', payload)
         .then((response) => {
-          this.parseContentExecution(JSON.parse(response.data.data))          
+          this.parseContentExecution(JSON.parse(response.data.data))
         })
         .catch((error) => {
-          console.log(error)
           this.gridApi.content.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message, 'error')
+          else {
+            let data = JSON.parse(error.response.data.data)
+            EventBus.$emit('send-notification', data[0]['error'], 'error')
+          }
         })
     },
     parseContentExecution(data) {
@@ -468,6 +470,9 @@ export default {
           this.parseContentBottomBar(JSON.parse(response.data.data))
           // Close Dialog
           this.dialog = false
+          // Add execution to history
+          const history = { section: 'content', queries: payload.queries, status: true, error: null } 
+          this.$store.dispatch('client/addHistory', history)
         })
         .catch((error) => {
           console.log(error)
@@ -486,6 +491,9 @@ export default {
             this.showDialog(dialogOptions)
             // Build BottomBar
             this.parseContentBottomBar(data)
+            // Add execution to history
+            const history = { section: 'content', queries: payload.queries, status: false, error: data[0]['error'] } 
+            this.$store.dispatch('client/addHistory', history)
           }
         })
     },
@@ -575,6 +583,9 @@ export default {
             this.parseContentBottomBar(data)
             // Check AUTO_INCREMENTs
             if (data[0].query.startsWith('INSERT') && this.contentPks.length > 0) node.setDataValue(this.contentPks[0], data[0].lastRowId)
+            // Add execution to history
+            const history = { section: 'content', queries: payload.queries, status: true, error: null } 
+            this.$store.dispatch('client/addHistory', history)
           })
           .catch((error) => {
             console.log(error)
@@ -597,6 +608,9 @@ export default {
               this.currentCellEditMode = mode
               this.currentCellEditNode = node
               this.currentCellEditValues = values
+              // Add execution to history
+              const history = { section: 'content', queries: payload.queries, status: false, error: data[0]['error'] } 
+              this.$store.dispatch('client/addHistory', history)
             }
           })
       }
@@ -668,12 +682,21 @@ export default {
       axios.post('/client/execute', payload)
         .then((response) => {
           this.parseContentExecution(JSON.parse(response.data.data))
+          // Add execution to history
+          const history = { section: 'content', queries: payload.queries, status: true, error: null } 
+          this.$store.dispatch('client/addHistory', history)
         })
         .catch((error) => {
-          console.log(error)
           this.gridApi.content.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message, 'error')
+          else {
+            // Show error
+            let data = JSON.parse(error.response.data.data)
+            EventBus.$emit('send-notification', data[0]['error'], 'error')
+            // Add execution to history
+            const history = { section: 'content', queries: payload.queries, status: false, error: data[0]['error'] } 
+            this.$store.dispatch('client/addHistory', history)
+          }
         })
     },
     showDialog(options) {
