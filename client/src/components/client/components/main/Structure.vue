@@ -190,8 +190,6 @@ export default {
       else this.gridApi.structure.triggers.hideOverlay()
     },
     execute(queries, resolve, reject) {
-      // Add queries to history
-      this.$store.dispatch('client/addHistory', [queries])
       // Execute Queries
       const index = this.index
       const payload = {
@@ -212,6 +210,11 @@ export default {
           this.getStructure()
           // Build BottomBar
           this.parseBottomBar(data, current)
+          // Add execution to history
+          const history = { section: 'structure', queries: payload.queries, status: true, error: null } 
+          this.$store.dispatch('client/addHistory', history)
+          // Resolve promise
+          resolve()
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -224,11 +227,13 @@ export default {
             // Show error
             this.dialogText = data[0]['error']
             this.dialog = true
+            // Add execution to history
+            const history = { section: 'structure', queries: payload.queries, status: false, error: data[0]['error'] } 
+            this.$store.dispatch('client/addHistory', history)
             // Reject promise
             reject()
           }
         })
-        .finally(() => { resolve() })
     },
     parseBottomBar(data, current) {
       var elapsed = null
