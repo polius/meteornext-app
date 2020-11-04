@@ -114,8 +114,8 @@ export default {
     addRight() {
       this.rightsSidebarSelected = []
       this.rightsSelected = {}
-      this.rights = { sidebar: this.rights['sidebar'], login: {}, server: {}, schema: [], resources: {}, syntax: '' }
-      this.rightsDiff = { login: {}, server: { grant: [], revoke: [] }, schema: { grant: [], revoke: [] }, resources: {} }
+      this.rights = { sidebar: this.rights['sidebar'], login: {}, server: {}, schema: [], resources: { max_queries: '0', max_updates: '0', max_connections: '0', max_simultaneous: '0' }, syntax: '' }
+      this.rightsDiff = { login: {}, server: { grant: [], revoke: [] }, schema: { grant: [], revoke: [] }, resources: {}}
       EventBus.$emit('reload-rights', 'new')
     },
     removeRight() {

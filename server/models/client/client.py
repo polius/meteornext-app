@@ -13,7 +13,7 @@ class Client:
     def get_credentials(self, group_id, server_id):
         query = """
             SELECT 
-                s.engine, s.hostname, s.port, s.username, s.password,
+                s.id, s.engine, s.hostname, s.port, s.username, s.password,
                 r.ssh_tunnel AS 'rtunnel', r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key AS 'rkey'
             FROM servers s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %s
@@ -24,6 +24,7 @@ class Client:
             return None
 
         credentials = {
+            'id': result[0]['id'],
             'ssh': {
                 'enabled': result[0]['rtunnel'],
                 'hostname': result[0]['rhostname'],
