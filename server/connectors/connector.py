@@ -33,7 +33,7 @@ class Connections:
 
     def connect(self, user_id, conn_id, server):
         conn_id = int(conn_id)
-        if user_id not in self._connections or conn_id not in self._connections[user_id]:
+        if user_id not in self._connections or conn_id not in self._connections[user_id] or server['id'] != self._connections[user_id][conn_id].server['id']:
             conn = Connection(server)
             conn.connect()
             if user_id not in self._connections:

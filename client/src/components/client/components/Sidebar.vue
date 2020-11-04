@@ -17,6 +17,7 @@
               {{item.name}}
               <v-spacer></v-spacer>
               <v-progress-circular v-if="loadingServer && sidebarMode == 'servers' && (item.id == sidebar[0] || item.id == contextMenuItem.id)" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
+              <!-- <v-chip label outlined small style="margin-left:10px; margin-right:10px;">Production</v-chip> -->
             </v-btn>
           </template>
         </v-treeview>

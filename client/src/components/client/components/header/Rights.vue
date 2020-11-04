@@ -320,6 +320,8 @@ export default {
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
+            // Clean Rights
+            this.rights = { sidebar: [], login: {}, server: {}, schema: [], resources: {}, syntax: '' }
             // Show Dialog
             this.infoDialogText = error.response.data.message
             this.infoDialogError = error.response.data.error
