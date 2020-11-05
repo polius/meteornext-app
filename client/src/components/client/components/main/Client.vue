@@ -149,7 +149,6 @@ export default {
       'server',
       'clientExecuting',
       'database',
-      'sidebarSelected',
     ], { path: 'client/connection' }),
     ...mapFields([
       'editor',

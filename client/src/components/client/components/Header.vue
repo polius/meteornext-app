@@ -8,7 +8,7 @@
       <v-divider class="mx-3" inset vertical></v-divider>
       <v-tab @click="tabContent" :disabled="sidebarMode != 'objects' || sidebarSelected.length != 1 || 'children' in sidebarSelected[0] || !['Table','View'].includes(sidebarSelected[0]['type'])"><span class="pl-2 pr-2" style="min-width:112px"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-bars</v-icon>Content</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
-      <v-tab @click="tabInfo(sidebarSelected[0]['type'].toLowerCase())" :disabled="sidebarMode != 'objects' || sidebarSelected.length != 1 || 'children' in sidebarSelected[0] || !['Table','View','Trigger','Function','Procedure','Event'].includes(sidebarSelected[0]['type'])"><span class="pl-2 pr-2" style="min-width:100px"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-cube</v-icon>Info</span></v-tab>
+      <v-tab @click="tabInfo" :disabled="sidebarMode != 'objects' || sidebarSelected.length != 1 || 'children' in sidebarSelected[0] || !['Table','View','Trigger','Function','Procedure','Event'].includes(sidebarSelected[0]['type'])"><span class="pl-2 pr-2" style="min-width:100px"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-cube</v-icon>Info</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
       <v-spacer></v-spacer>
       <v-tab @click="tabHistory" title="Query History" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-history</v-icon></span></v-tab>
@@ -66,15 +66,16 @@ export default {
     },
     tabStructure() {
       this.headerTabSelected = 'structure'
-      if (this.structureHeaders.columns.length == 0) EventBus.$emit('get-structure')
+      EventBus.$emit('get-structure', false)
     },
     tabContent() {
       this.headerTabSelected = 'content'
-      if (this.contentHeaders.length == 0) EventBus.$emit('get-content')
+      EventBus.$emit('get-content')
     },
-    tabInfo(object) {
+    tabInfo() {
+      const object = this.sidebarSelected[0]['type'].toLowerCase()
       this.headerTabSelected = 'info_' + object
-      if (this.infoHeaders[object + 's'].length == 0) EventBus.$emit('get-info', object)
+      EventBus.$emit('get-info', object)
     },
     tabObjects() {
       this.headerTabSelected = 'objects'

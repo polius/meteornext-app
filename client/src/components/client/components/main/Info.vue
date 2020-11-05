@@ -33,7 +33,7 @@ export default {
   },
   mounted() {
     // Register Event
-    EventBus.$on('GET_INFO', this.getInfo);
+    EventBus.$on('get-info', this.getInfo);
   },
   methods: {
     getInfo(object) {

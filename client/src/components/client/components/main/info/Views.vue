@@ -77,12 +77,13 @@ export default {
   },
   methods: {
     getInfo() {
+      if (this.infoConnection == this.sidebarSelected[0]['id']) return
       const payload = {
         connection: this.index,
         server: this.server.id,
         database: this.database,
         object: 'view',
-        name: this.sidebarSelected['name']
+        name: this.sidebarSelected[0]['name']
       }
       axios.get('/client/info', { params: payload })
         .then((response) => {
@@ -119,6 +120,8 @@ export default {
       this.infoEditor.views = syntax
       this.editor.setValue(syntax, -1)
       this.editor.focus()
+      // Store the current connection
+      this.infoConnection = this.sidebarSelected[0]['id']
     },
   },
 }

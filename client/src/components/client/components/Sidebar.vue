@@ -199,40 +199,42 @@ export default {
           resolve('single')
         }, 200)
       }).then((data) => {
-        // Single Click
-        if (data == 'single' && item.children === undefined) {
-          if (this.sidebarSelected == item) {
-            this.headerTab = 0
-            this.headerTabSelected = 'client'
-            this.editor.focus()
-          }
-          else {
-            if (this.headerTabSelected == 'structure') EventBus.$emit('get-structure')
-            else if (this.headerTabSelected == 'content') EventBus.$emit('get-content')
-            else if (this.headerTabSelected.startsWith('info_')) {
-              let type = item.type.toLowerCase()
-              this.headerTabSelected = 'info_' + type
-              EventBus.$emit('get-info', type)
+        setTimeout(() => {
+          // Single Click
+          if (data == 'single' && item.children === undefined) {
+            if (this.sidebarSelected.length > 1) {
+              this.headerTab = 0
+              this.headerTabSelected = 'client'
+              this.editor.focus()
+            }
+            else {
+              if (this.headerTabSelected == 'structure') EventBus.$emit('get-structure')
+              else if (this.headerTabSelected == 'content') EventBus.$emit('get-content')
+              else if (this.headerTabSelected.startsWith('info_')) {
+                let type = item.type.toLowerCase()
+                this.headerTabSelected = 'info_' + type
+                EventBus.$emit('get-info', type)
+              }
             }
           }
-        }
-        // Double Click
-        else if (data == 'double' && item.children === undefined) {
-          if (this.sidebarMode == 'servers') this.getDatabases(item)
-          else if (this.sidebarMode == 'objects') {
-            if (['Table','View'].includes(item.type) && item.children === undefined) {
-              this.headerTab = 2
-              this.headerTabSelected = 'content'
-              EventBus.$emit('get-content')
-            }
-            else if (['Trigger','Function','Procedure','Event'].includes(item.type) && item.children === undefined) {
-              let type = item.type.toLowerCase()
-              this.headerTab = 3
-              this.headerTabSelected = 'info_' + type
-              EventBus.$emit('get-info', type)
+          // Double Click
+          else if (data == 'double' && item.children === undefined) {
+            if (this.sidebarMode == 'servers') this.getDatabases(item)
+            else if (this.sidebarMode == 'objects') {
+              if (['Table','View'].includes(item.type) && item.children === undefined) {
+                this.headerTab = 2
+                this.headerTabSelected = 'content'
+                EventBus.$emit('get-content')
+              }
+              else if (['Trigger','Function','Procedure','Event'].includes(item.type) && item.children === undefined) {
+                let type = item.type.toLowerCase()
+                this.headerTab = 3
+                this.headerTabSelected = 'info_' + type
+                EventBus.$emit('get-info', type)
+              }
             }
           }
-        }
+        }, 10)
       })
     },
     clickHandler(event, item) {

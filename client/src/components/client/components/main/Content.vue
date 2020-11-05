@@ -211,6 +211,7 @@ export default {
       'contentSearchFilterItems',
       'contentSearchColumn',
       'contentColumnsName',
+      'contentConnection',
       'bottomBar'
     ], { path: 'client/connection' }),
     ...mapFields([
@@ -222,8 +223,14 @@ export default {
     EventBus.$on('get-content', this.getContent);
   },
   watch: {
-    'sidebarSelected.name': function() {
-      if (this.headerTabSelected == 'content') this.cellEditingDiscard()
+    // 'sidebarSelected.name': function() {
+    //   if (this.headerTabSelected == 'content') this.cellEditingDiscard()
+    // },
+    sidebarSelected: {
+      handler: function () {
+        if (this.headerTabSelected == 'content') this.cellEditingDiscard()
+      },
+      deep: true
     },
     headerTabSelected(newValue, oldValue) {
       if (newValue == 'content') {
@@ -297,7 +304,7 @@ export default {
     copySQL() {
       var SqlString = require('sqlstring');
       let selectedRows = this.gridApi.content.getSelectedRows()
-      let rawQuery = 'INSERT INTO `' + this.sidebarSelected['name'] + '` (' + Object.keys(selectedRows[0]).map(x => '`' + x.trim() + '`').join() + ')\nVALUES\n'
+      let rawQuery = 'INSERT INTO `' + this.sidebarSelected[0]['name'] + '` (' + Object.keys(selectedRows[0]).map(x => '`' + x.trim() + '`').join() + ')\nVALUES\n'
       let values = ''
       let args = []
       for (let row of selectedRows) {
@@ -324,14 +331,15 @@ export default {
       navigator.clipboard.writeText(json)
     },
     getContent() {
+      if (this.contentConnection == this.sidebarSelected[0]['id']) return
       this.bottomBar.content = { status: '', text: '', info: '' }
       this.gridApi.content.showLoadingOverlay()
       const payload = {
         connection: this.index,
         server: this.server.id,
         database: this.database,
-        table: this.sidebarSelected['name'],
-        queries: ['SELECT * FROM ' + this.sidebarSelected['name'] + ' LIMIT 1000;' ]
+        table: this.sidebarSelected[0]['name'],
+        queries: ['SELECT * FROM ' + this.sidebarSelected[0]['name'] + ' LIMIT 1000;' ]
       }
       axios.post('/client/execute', payload)
         .then((response) => {
@@ -386,6 +394,9 @@ export default {
 
       // Build BottomBar
       this.parseContentBottomBar(data)
+
+      // Store the current connection
+      this.contentConnection = this.sidebarSelected[0]['id']
     },
     resizeTable() {
       var allColumnIds = [];
@@ -439,7 +450,7 @@ export default {
             if (value == null) where.push(key + ' IS NULL')
             else where.push(key + " = " + JSON.stringify(value))
           }
-          queries.push('DELETE FROM ' + this.sidebarSelected['name'] + ' WHERE ' + where.join(' AND ') + ' LIMIT 1;')
+          queries.push('DELETE FROM ' + this.sidebarSelected[0]['name'] + ' WHERE ' + where.join(' AND ') + ' LIMIT 1;')
         }
       }
       else {
@@ -451,7 +462,7 @@ export default {
           }
           pks.push('(' + pk.join(' AND ') + ')')
         }
-        queries = ['DELETE FROM ' + this.sidebarSelected['name'] + ' WHERE ' + pks.join(' OR ') + ';']
+        queries = ['DELETE FROM ' + this.sidebarSelected[0]['name'] + ' WHERE ' + pks.join(' OR ') + ';']
       }
       // Show overlay
       this.gridApi.content.showLoadingOverlay()
@@ -540,7 +551,7 @@ export default {
           if (node.data[keys[i]] == null) valuesToUpdate.push('NULL')
           else valuesToUpdate.push(JSON.stringify(node.data[keys[i]]))
         }
-        query = "INSERT INTO " + this.sidebarSelected['name'] + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
+        query = "INSERT INTO " + this.sidebarSelected[0]['name'] + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
       }
       // EDIT
       else if (mode == 'edit') {
@@ -559,11 +570,11 @@ export default {
             if (values[keys[i]]['old'] == null) where.push(keys[i] + ' IS NULL')
             else where.push(keys[i] + " = " + JSON.stringify(values[keys[i]]['old']))
           }
-          query = "UPDATE " + this.sidebarSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
+          query = "UPDATE " + this.sidebarSelected[0]['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
         }
         else {
           for (let i = 0; i < this.contentPks.length; ++i) where.push(this.contentPks[i] + " = " + JSON.stringify(values[this.contentPks[i]]['old']))
-          query = "UPDATE " + this.sidebarSelected['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
+          query = "UPDATE " + this.sidebarSelected[0]['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
         }
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
@@ -676,8 +687,8 @@ export default {
         connection: this.index,
         server: this.server.id,
         database: this.database,
-        table: this.sidebarSelected['name'],
-        queries: ['SELECT * FROM ' + this.sidebarSelected['name'] + condition + ' LIMIT 1000;' ]
+        table: this.sidebarSelected[0]['name'],
+        queries: ['SELECT * FROM ' + this.sidebarSelected[0]['name'] + condition + ' LIMIT 1000;' ]
       }
       axios.post('/client/execute', payload)
         .then((response) => {
