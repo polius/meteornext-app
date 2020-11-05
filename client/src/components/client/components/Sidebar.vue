@@ -237,7 +237,10 @@ export default {
     },
     clickHandler(event, item) {
       const lastElement = this.sidebarSelected.length == 0 ? undefined : this.sidebarSelected[this.sidebarSelected.length - 1]
-      if ('children' in item || event.ctrlKey || event.metaKey ) {
+      if ('children' in item) {
+        if (item.children.length == 0) this.sidebarSelected = []
+      }
+      else if (event.ctrlKey || event.metaKey ) {
         if (lastElement !== undefined && lastElement.parentId != item.parentId) this.sidebarSelected = [] 
       }
       else if (event.shiftKey) {
