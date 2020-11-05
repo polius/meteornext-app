@@ -16,7 +16,7 @@
               </v-icon>
               {{item.name}}
               <v-spacer></v-spacer>
-              <!-- <v-progress-circular v-if="loadingServer && sidebarMode == 'servers' && (item.id == sidebarSelected[0] || item.id == contextMenuItem.id)" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular> -->
+              <v-progress-circular v-if="loadingServer && sidebarMode == 'servers' && ((sidebarSelected.length > 0 && item.id == sidebarSelected[0].id) || item.id == contextMenuItem.id)" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
               <!-- <v-chip label outlined small style="margin-left:10px; margin-right:10px;">Prod</v-chip> -->
             </v-btn>
           </template>
@@ -236,15 +236,15 @@ export default {
       })
     },
     clickHandler(event, item) {
+      const lastElement = this.sidebarSelected.length == 0 ? undefined : this.sidebarSelected[this.sidebarSelected.length - 1]
       if ('children' in item || event.ctrlKey || event.metaKey ) {
-        return
+        if (lastElement !== undefined && lastElement.parentId != item.parentId) this.sidebarSelected = [] 
       }
       else if (event.shiftKey) {
         // Find last index
         let lastParentIndex = -1
         let lastIndex = -1
         if (this.sidebarSelected.length != 0) {
-          const lastElement = this.sidebarSelected[this.sidebarSelected.length - 1]
           lastParentIndex = this.sidebarItems.findIndex(x => x.id == lastElement.parentId)
           lastIndex = this.sidebarItems[lastParentIndex]['children'].findIndex(x => x.id == lastElement.id)
         }
@@ -490,7 +490,6 @@ export default {
       const found = this.sidebarSelected.find((x) => x.id == item.id)
       if (!found) this.sidebarSelected = [item]
       this.buildContextMenu(item)
-      this.contextMenu = true
     },
     buildContextMenu(item) {
       this.contextMenuItem = item
@@ -526,6 +525,7 @@ export default {
           else this.contextMenuItems = [{i:'Create Event'}, {i:'|'}, {i:'Show Event Objects'}]
         }
       }
+      this.contextMenu = true
     },
     contextMenuClicked(item) {
       if (this.sidebarMode == 'servers') {
