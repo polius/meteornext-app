@@ -238,11 +238,11 @@ export default {
       this.dialog = true
     },
     refreshColumns() {
-      EventBus.$emit('get-structure')
+      EventBus.$emit('get-structure', true)
     },
     dialogSubmit(event) {
       this.loading = true
-      let query = 'ALTER TABLE ' + this.sidebarSelected['name']
+      let query = 'ALTER TABLE ' + this.sidebarSelected[0]['name']
 
       if (['new','edit'].includes(this.dialogOptions.mode)) {
         // Parse Form Fields

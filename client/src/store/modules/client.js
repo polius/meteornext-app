@@ -35,6 +35,7 @@ const connection = {
   tabStructureSelected: 'columns',
   structureHeaders: { columns: [], indexes: [], fks: [], triggers: [] },
   structureItems: { columns: [], indexes: [], fks: [], triggers: [] },
+  structureConnection: null,
 
   // Content
   contentColumnsName: [],
@@ -48,11 +49,13 @@ const connection = {
   contentSearchFilterText2: '',
   contentHeaders: [],
   contentItems: [],
+  contentConnection: null,
 
   // Info
   infoHeaders: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
   infoItems: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
   infoEditor: { tables: '', views: '', triggers: '', functions: '', procedures: '', events: '' },
+  infoConnection: null,
 
   // Objecs
   objectsTab: 0,

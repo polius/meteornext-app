@@ -77,6 +77,7 @@ export default {
       'bottomBar',
       'structureHeaders',
       'structureItems',
+      'structureConnection',
       'sidebarSelected',
       'server',
       'database',
@@ -106,7 +107,8 @@ export default {
     tabStructureTriggers() {
       this.tabStructureSelected = 'triggers'
     },
-    getStructure() {
+    getStructure(refresh) {
+      if (!refresh && this.structureConnection == this.sidebarSelected[0]['id']) return
       this.gridApi.structure[this.tabStructureSelected].showLoadingOverlay()
       this.bottomBar.structure[this.tabStructureSelected] = { status: '', text: '', info: '' }
       // Retrieve Tables
@@ -114,7 +116,7 @@ export default {
         connection: this.index,
         server: this.server.id, 
         database: this.database, 
-        table: this.sidebarSelected['name']
+        table: this.sidebarSelected[0]['name']
       }
       axios.get('/client/structure', { params: payload })
         .then((response) => {
@@ -188,6 +190,9 @@ export default {
       this.structureItems.triggers = triggers_items
       if (triggers_items.length == 0) this.gridApi.structure.triggers.showNoRowsOverlay()
       else this.gridApi.structure.triggers.hideOverlay()
+
+      // Store the current connection
+      this.structureConnection = this.sidebarSelected[0]['id']
     },
     execute(queries, resolve, reject) {
       // Execute Queries

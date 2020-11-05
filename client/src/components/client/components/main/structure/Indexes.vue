@@ -201,7 +201,7 @@ export default {
       this.dialog = true
     },
     refreshIndexes() {
-      EventBus.$emit('get-structure')
+      EventBus.$emit('get-structure', true)
     },
     dialogSubmit() {
       this.loading = true
@@ -214,13 +214,13 @@ export default {
           return
         }
         // Build query
-        if (this.dialogOptions.item.type == 'PRIMARY') query = "ALTER TABLE " + this.sidebarSelected['name'] + " ADD PRIMARY KEY (" + this.dialogOptions.item.fields + ");"
-        else query = "ALTER TABLE " + this.sidebarSelected['name'] + " ADD " + this.dialogOptions.item.type + ' ' + this.dialogOptions.item.name + "(" + this.dialogOptions.item.fields + ");"
+        if (this.dialogOptions.item.type == 'PRIMARY') query = "ALTER TABLE " + this.sidebarSelected[0]['name'] + " ADD PRIMARY KEY (" + this.dialogOptions.item.fields + ");"
+        else query = "ALTER TABLE " + this.sidebarSelected[0]['name'] + " ADD " + this.dialogOptions.item.type + ' ' + this.dialogOptions.item.name + "(" + this.dialogOptions.item.fields + ");"
       }
       else if (this.dialogOptions.mode == 'delete') {
         let row = this.gridApi.structure.indexes.getSelectedRows()[0]
-        if (row.Type == 'PRIMARY') query = "ALTER TABLE " + this.sidebarSelected['name'] + " DROP PRIMARY KEY;"
-        else query = "ALTER TABLE " + this.sidebarSelected['name'] + " DROP INDEX " + row.Name + ';'
+        if (row.Type == 'PRIMARY') query = "ALTER TABLE " + this.sidebarSelected[0]['name'] + " DROP PRIMARY KEY;"
+        else query = "ALTER TABLE " + this.sidebarSelected[0]['name'] + " DROP INDEX " + row.Name + ';'
       }
       // Execute query
       this.execute(query)
