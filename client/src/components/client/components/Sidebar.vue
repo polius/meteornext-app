@@ -39,7 +39,6 @@
     <!---------------------------->
     <!-- CONTEXT MENU - DIALOGs -->
     <!---------------------------->
-    <Connections :contextMenuItem="contextMenuItem" />
     <Tables :contextMenuItem="contextMenuItem" />
     <Views :contextMenuItem="contextMenuItem" />
     <Triggers :contextMenuItem="contextMenuItem" />
@@ -98,7 +97,6 @@ import axios from 'axios'
 import EventBus from '../js/event-bus'
 import { mapFields } from '../js/map-fields'
 
-import Connections from './sidebar/Connections'
 import Tables from './sidebar/Tables'
 import Views from './sidebar/Views'
 import Triggers from './sidebar/Triggers'
@@ -148,7 +146,7 @@ export default {
       dialogText: '',
     }
   },
-  components: { Connections, Tables, Views, Triggers, Procedures, Functions, Events, BottomBar },
+  components: { Tables, Views, Triggers, Procedures, Functions, Events, BottomBar },
   computed: {
     ...mapFields([
       'servers',
@@ -503,7 +501,7 @@ export default {
       const m = true, s = true
       if (this.sidebarMode == 'servers') {
         if (item.children === undefined) this.contextMenuItems = [{i:'Open Connection'}, {i:'|'}, {i:'New Connection',m}, {i:'Remove Connection',m,s}]
-        else this.contextMenuItems = [{i:'New Connection'}, {i:'|'}, {i:'New Folder'}, {i:'Delete Folder'}, {i:'Rename Folder'}]
+        else this.contextMenuItems = [{i:'New Connection'}, {i:'|'}, {i:'New Folder'}, {i:'Rename Folder'}, {i:'Remove Folder'}]
       }
       else if (this.sidebarMode == 'objects') {
         if (item.type == 'Table') {
@@ -536,7 +534,11 @@ export default {
     contextMenuClicked(item) {
       if (this.sidebarMode == 'servers') {
         if (item == 'Open Connection') this.getDatabases(this.contextMenuItem)
-        else EventBus.$emit('click-contextmenu-connection', item)
+        else if (item == 'New Connection') EventBus.$emit('show-bottombar-connections-new')
+        else if (item == 'Remove Connection') EventBus.$emit('show-bottombar-connections-remove')
+        else if (item == 'New Folder') EventBus.$emit('show-bottombar-connections-new-folder')
+        else if (item == 'Rename Folder') EventBus.$emit('show-bottombar-connections-rename-folder')
+        else if (item == 'Remove Folder') EventBus.$emit('show-bottombar-connections-remove-folder')
       }
       else if (this.sidebarMode == 'objects') {
         if (this.contextMenuItem.type == 'Table') {
