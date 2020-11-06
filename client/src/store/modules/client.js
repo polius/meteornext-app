@@ -167,6 +167,8 @@ const mutations = {
       state.connections = [JSON.parse(JSON.stringify(connection))]
       // Init servers list
       state.connections[state.currentConn].sidebarItems = state.servers.slice(0)
+      // Clean selected database
+      state.connections[state.currentConn].database = ''
     }
     // Delete last element of array
     else if (data + 1 == state.connections.length) {
