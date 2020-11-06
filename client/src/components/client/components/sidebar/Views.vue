@@ -15,21 +15,30 @@
             <v-layout wrap>
               <div v-if="dialogOptions.text.length > 0" class="text-h6" style="font-weight:400;"> {{ dialogOptions.title }}</div>
               <v-flex xs12>
-                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
+                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:10px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
                   <div v-if="dialogOptions.mode == 'createView'">
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="View Name" autofocus required style="padding-top:0px;"></v-text-field>
-                    <div style="margin-left:auto; margin-right:auto; height:40vh; width:100%">
+                    <div style="margin-left:auto; margin-right:auto; height:40vh; width:100%; margin-bottom:15px;">
                       <div id="dialogEditor" style="height:100%;"></div>
                     </div>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'renameView'">
                     <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px;"></v-text-field>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'duplicateView'">
                     <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px;"></v-text-field>
+                  </div>
+                  <div v-else-if="dialogOptions.mode == 'deleteView'">
+                    <v-list style="padding-bottom:0px;">
+                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:10px;">
+                        <v-list-item-content style="padding:0px">
+                          <v-list-item-title style="font-weight:300;"><span style="margin-right:10px;">-</span>{{ item.name }}</v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
@@ -186,8 +195,8 @@ export default {
     deleteView() {
       let dialogOptions = { 
         mode: 'deleteView', 
-        title: 'Delete View?', 
-        text: "Are you sure you want to delete the view '" + this.contextMenuItem.name + "'? This operation cannot be undone.",
+        title: 'Delete View', 
+        text: "Are you sure you want to delete the following views? This operation cannot be undone.",
         item: {}, 
         submit: 'Submit',
         cancel: 'Cancel'
@@ -278,10 +287,10 @@ export default {
       }).catch(() => {}).finally(() => { this.loading = false })
     },
     deleteViewSubmit() {
-      let name = this.contextMenuItem.name
-      let query = "DROP VIEW " + name + ";"
+      let queries = []
+      for (let item of this.sidebarSelected) queries.push("DROP VIEW " + item.name + ";")
       new Promise((resolve, reject) => { 
-        EventBus.$emit('execute-sidebar', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
           EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)

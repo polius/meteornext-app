@@ -1,7 +1,7 @@
 <template>
   <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
     <div style="height:calc(100% - 36px)">
-      <v-autocomplete ref="database" :disabled="sidebarLoading || databaseItems.length == 0" v-model="database" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete>
+      <v-autocomplete ref="database" :disabled="sidebarLoading || databaseItems.length == 0" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete>
       <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'CONNECTIONS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
       <div v-if="sidebarMode == 'servers' || database.length > 0" style="height:100%">
@@ -354,6 +354,9 @@ export default {
       this.$nextTick(() => { this.$refs.database.focus() })
     },
     databaseChanged(database) {
+      if (database === undefined) return
+      // Assign new value
+      this.database = database
       // Clear Sidebar
       this.sidebarSelected = []
       this.sidebarOpened = []
@@ -506,7 +509,7 @@ export default {
       }
       else if (this.sidebarMode == 'objects') {
         if (item.type == 'Table') {
-          if (item.children === undefined) this.contextMenuItems = [{i:'Create Table',m}, {i:'|'}, {i:'Rename Table'}, {i:'Duplicate Table'}, {i:'|'}, {i:'Truncate Table'}, {i:'Delete Table',m,s}, {i:'|'}, {i:'Export',m}, {i:'|'}, {i:'Copy Table Syntax'}]
+          if (item.children === undefined) this.contextMenuItems = [{i:'Create Table',m}, {i:'|'}, {i:'Rename Table'}, {i:'Duplicate Table'}, {i:'|'}, {i:'Truncate Table',m,s}, {i:'Delete Table',m,s}, {i:'|'}, {i:'Export',m}, {i:'|'}, {i:'Copy Table Syntax'}]
           else this.contextMenuItems = [{i:'Create Table'}, {i:'|'}, {i:'Show Table Objects'}]
         }
         else if (item.type == 'View') {
