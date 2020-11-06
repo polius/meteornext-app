@@ -16,12 +16,22 @@
     </v-col>
     <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
       <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
-        <v-btn :disabled="['stop',null].includes(clientExecuting)" :loading="clientExecuting == 'stop'" @click="stopQuery()" title="Stop Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-stop</v-icon></v-btn>
+        <v-btn :disabled="['query','stop'].includes(clientExecuting) || clientQuery['query'].length == 0" @click="beautifyQuery()" title="Beautify Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-stream</v-icon></v-btn>
       </div>
     </v-col>
     <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
       <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
-        <v-btn :disabled="['query','stop'].includes(clientExecuting) || clientQuery['query'].length == 0" @click="beautifyQuery()" title="Beautify Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-stream</v-icon></v-btn>
+        <v-btn :disabled="['query','stop'].includes(clientExecuting) || clientQuery['query'].length == 0" @click="minifyQuery()" title="Minify Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-remove-format</v-icon></v-btn>
+      </div>
+    </v-col>
+    <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
+      <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
+        <v-divider class="mx-3" inset vertical style="height:29px; padding:0px; margin-top:4px; margin-left:5px!important; margin-right:5px!important;"></v-divider>
+      </div>
+    </v-col>
+    <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
+      <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
+        <v-btn :disabled="['stop',null].includes(clientExecuting)" :loading="clientExecuting == 'stop'" @click="stopQuery()" title="Stop Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-stop</v-icon></v-btn>
       </div>
     </v-col>
     <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
@@ -113,6 +123,9 @@ export default {
     },
     beautifyQuery() {
       EventBus.$emit('beautify-query')
+    },
+    minifyQuery() {
+      EventBus.$emit('minify-query')
     },
   },
 }
