@@ -39,7 +39,7 @@
     <!---------------------------->
     <!-- CONTEXT MENU - DIALOGs -->
     <!---------------------------->
-    <Connections v-if="1 == 2" :contextMenuItem="contextMenuItem" />
+    <Connections :contextMenuItem="contextMenuItem" />
     <Tables :contextMenuItem="contextMenuItem" />
     <Views :contextMenuItem="contextMenuItem" />
     <Triggers :contextMenuItem="contextMenuItem" />
@@ -504,8 +504,8 @@ export default {
       this.contextMenuItems = []
       const m = true, s = true
       if (this.sidebarMode == 'servers') {
-        if (item.children === undefined) this.contextMenuItems = [{i:'Open Connection'}, {i:'|'}, {i:'Delete Connection',m,s}, {i:'Duplicate Connection'}]
-        else this.contextMenuItems = [{i:'New Connection'}, {i:'|'}, {i:'New Group'}, {i:'Delete Group'}, {i:'Rename Group'}]
+        if (item.children === undefined) this.contextMenuItems = [{i:'Open Connection'}, {i:'|'}, {i:'New Connection'}, {i:'Remove Connection',m,s}]
+        else this.contextMenuItems = [{i:'New Connection'}, {i:'|'}, {i:'New Folder'}, {i:'Delete Folder'}, {i:'Rename Folder'}]
       }
       else if (this.sidebarMode == 'objects') {
         if (item.type == 'Table') {

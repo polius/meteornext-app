@@ -212,7 +212,8 @@ WHERE CountryCode = country;
       this.dialog = true
     },
     exportProcedure() {
-      EventBus.$emit('show-bottombar-objects-export', { object: 'procedures', name: this.contextMenuItem.name })
+      const items = this.sidebarSelected.map(x => x.name)
+      EventBus.$emit('show-bottombar-objects-export', { object: 'procedures', items })
     },
     dialogSubmit() {
       // Check if all fields are filled

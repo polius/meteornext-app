@@ -177,6 +177,7 @@ export default {
       'index',
       'server',
       'database',
+      'databasePrev',
       'objectsHeaders',
       'objectsItems',
     ], { path: 'client/connection' }),
@@ -198,7 +199,7 @@ export default {
       this.dialog = true
       this.tabClick('sql')
       this.$nextTick(() => { 
-        if (this.objectsHeaders.tables.length == 0) this.buildObjects()
+        if (this.database != this.databasePrev) this.buildObjects()
         for (let obj of this.objects) {
           if (this.gridApi[obj] != null) this.gridApi[obj].deselectAll()
         }
@@ -219,7 +220,7 @@ export default {
       this.$nextTick(() => { 
         this.tabObjectsSelected = this.objects.indexOf(this.selected['object'])
         this.gridApi[this.selected['object']].forEachNode((node) => {
-          if (node.data.name == this.selected['name']) node.setSelected(true)
+          if (this.selected['items'].includes(node.data.name)) node.setSelected(true)
         })
       })
     },
@@ -261,7 +262,8 @@ export default {
         for (let obj of this.objects) {
           if (this.gridApi[obj] != null) this.gridApi[obj].hideOverlay()
         }
-        this.loading = false 
+        this.loading = false
+        this.databasePrev = this.database
       })
     },
     exportObjectsSubmit() {

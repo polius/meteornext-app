@@ -205,7 +205,8 @@ export default {
       this.dialog = true
     },
     exportView() {
-      EventBus.$emit('show-bottombar-objects-export', { object: 'views', name: this.contextMenuItem.name })
+      const items = this.sidebarSelected.map(x => x.name)
+      EventBus.$emit('show-bottombar-objects-export', { object: 'views', items })
     },
     dialogSubmit() {
       // Check if all fields are filled

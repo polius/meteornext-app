@@ -12,6 +12,7 @@ const connection = {
 
   // Database Selector
   database: '',
+  databasePrev: '',
   databaseItems: [],
   table: '',
   tableItems: [],

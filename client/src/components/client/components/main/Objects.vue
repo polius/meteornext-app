@@ -59,6 +59,7 @@ export default {
       'tabObjectsSelected',
       'server',
       'database',
+      'databasePrev',
       'objectsHeaders',
       'objectsItems',
       'bottomBar',
@@ -73,6 +74,7 @@ export default {
       this.tabObjectsSelected = object
     },
     getObjects(resolve, reject) {
+      if (this.database == this.databasePrev) { resolve(); return; }
       const payload = {
         connection: this.index,
         server: this.server.id,
@@ -82,6 +84,7 @@ export default {
       axios.get('/client/objects', { params: payload })
         .then((response) => {
           for (let [key, value] of Object.entries(response.data)) this.parseObjects(key, value)
+          this.databasePrev = this.database
           resolve()
         })
         .catch((error) => {

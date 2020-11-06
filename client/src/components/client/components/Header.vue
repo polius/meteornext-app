@@ -79,9 +79,7 @@ export default {
     },
     tabObjects() {
       this.headerTabSelected = 'objects'
-      if (this.objectsHeaders.databases.length == 0) {
-        new Promise((resolve, reject) => { EventBus.$emit('get-objects', resolve, reject) })
-      }
+      new Promise((resolve, reject) => { EventBus.$emit('get-objects', resolve, reject) })
     },
     tabHistory() {
       EventBus.$emit('show-history')
