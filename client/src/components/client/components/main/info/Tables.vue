@@ -29,6 +29,8 @@ import * as ace from 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import 'ace-builds/src-noconflict/ext-language_tools';
 
+import sqlFormatter from '@sqltools/formatter'
+
 export default {
   data() {
     return {
@@ -124,7 +126,7 @@ export default {
         info.create_time = (info.create_time == null) ? 'Not available' : info.create_time
         info.update_time = (info.update_time == null) ? 'Not available' : info.update_time
         this.infoItems.tables = [info]
-        syntax = info.syntax + ';'
+        syntax = sqlFormatter.format(info.syntax + ';', { reservedWordCase: 'upper'})
       }
       // Parse Syntax
       this.infoEditor.tables = syntax

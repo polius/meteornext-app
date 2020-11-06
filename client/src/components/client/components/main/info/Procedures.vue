@@ -29,6 +29,8 @@ import * as ace from 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import 'ace-builds/src-noconflict/ext-language_tools';
 
+import sqlFormatter from '@sqltools/formatter'
+
 export default {
   data() {
     return {
@@ -123,7 +125,7 @@ export default {
       }
       else {
         this.editor.getSession().setMode("ace/mode/mysql")
-        syntax += ';'
+        syntax = sqlFormatter.format(syntax + ';', { reservedWordCase: 'upper'})
       }
       this.infoEditor.procedures = syntax
       this.editor.setValue(syntax, -1)

@@ -20,6 +20,7 @@
     "core-js": "^3.6.5",
     "form-data": "^3.0.0",
     "moment": "^2.29.1",
+    "pg-minify": "^1.6.1",
     "qrcode.vue": "^1.7.0",
     "sass-loader": "^10.0.4",
     "splitpanes": "^2.3.4",

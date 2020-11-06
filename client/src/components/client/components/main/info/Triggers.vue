@@ -29,6 +29,8 @@ import * as ace from 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import 'ace-builds/src-noconflict/ext-language_tools';
 
+import sqlFormatter from '@sqltools/formatter'
+
 export default {
   data() {
     return {
@@ -116,7 +118,7 @@ export default {
       }
       else {
         this.infoItems.triggers = info
-        syntax = info[0].syntax + ';'
+        syntax = sqlFormatter.format(info[0].syntax + ';', { reservedWordCase: 'upper'})        
       }
       // Parse Syntax
       this.infoEditor.triggers = syntax

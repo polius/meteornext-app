@@ -108,7 +108,7 @@ import {AgGridVue} from "ag-grid-vue";
 import EventBus from '../../js/event-bus'
 import { mapFields } from '../../js/map-fields'
 
-import sqlFormatter from '@sqltools/formatter';
+import sqlFormatter from '@sqltools/formatter'
 
 export default {
   data() {
@@ -137,6 +137,7 @@ export default {
     EventBus.$on('explain-query', this.explainQuery);
     EventBus.$on('stop-query', this.stopQuery);
     EventBus.$on('beautify-query', this.beautifyQuery);
+    EventBus.$on('minify-query', this.minifyQuery);
   },
   computed: {
     ...mapFields([
@@ -298,6 +299,11 @@ export default {
         else if (e.key.toLowerCase() == "b" && (e.ctrlKey || e.metaKey)) {
           e.preventDefault()
           if (Object.keys(this.server).length > 0 && this.clientQuery['query'].length > 0) this.beautifyQuery()
+        }
+        // - Minify Query -
+        else if (e.key.toLowerCase() == "m" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault()
+          if (Object.keys(this.server).length > 0 && this.clientQuery['query'].length > 0) this.minifyQuery()
         }
         // - Increase Font Size -
         else if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
@@ -469,6 +475,27 @@ export default {
       }
       else {
         query = sqlFormatter.format(selectedText, { reservedWordCase: 'upper', linesBetweenQueries: 2 })
+        range = this.editor.selection.getRange()
+      }
+      // Replace selected queries with beautified format
+      this.editor.session.replace(range, query)
+      // Focus Editor
+      let cursor = this.editor.getCursorPosition()
+      this.editor.focus()
+      this.editor.moveCursorTo(cursor.row, cursor.column)
+    },
+    minifyQuery() {
+      const minify = require('pg-minify')
+      let query = ''
+      let range = null
+      const selectedText = this.editor.getSelectedText()
+      // Get editor query (+ range)
+      if (selectedText.length == 0) {
+        query = minify(this.clientQuery['query'])
+        range = this.clientQuery['range']
+      }
+      else {
+        query = minify(selectedText)
         range = this.editor.selection.getRange()
       }
       // Replace selected queries with beautified format
