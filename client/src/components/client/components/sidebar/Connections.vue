@@ -17,6 +17,15 @@
               <v-flex xs12>
                 <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
+                  <div v-if="dialogOptions.mode == 'removeConnection'">
+                    <v-list style="padding-bottom:0px;">
+                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:10px;">
+                        <v-list-item-content style="padding:0px">
+                          <v-list-item-title style="font-weight:300;"><span style="margin-right:10px;">-</span>{{ item.name }}</v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list>
+                  </div>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -58,6 +67,7 @@ export default {
     ...mapFields([
       'index',
       'server',
+      'sidebarSelected',
     ], { path: 'client/connection' }),
   },
   mounted() {
@@ -76,7 +86,17 @@ export default {
       if (item == 'Remove Connection') this.removeConnection()
     },
     removeConnection() {
-
+      let dialogOptions = { 
+        mode: 'removeConnection', 
+        title: 'Remove Connection', 
+        text: "Are you sure you want to remove the following connections?",
+        item: {}, 
+        submit: 'Submit',
+        cancel: 'Cancel'
+      }
+      this.dialogOptions = dialogOptions
+      this.dialog = true
     },
   }
 }
+</script>

@@ -3,7 +3,7 @@
     <!---------------------->
     <!-- BOTTOMBAR - LEFT -->
     <!---------------------->
-    <Servers v-if="sidebarMode == 'servers'" />
+    <Connections v-if="sidebarMode == 'servers'" />
     <Objects v-else-if="sidebarMode == 'objects'" />
   </div>
 </template>
@@ -11,7 +11,7 @@
 <script>
 import { mapFields } from '../js/map-fields'
 
-import Servers from './bottombar/Servers'
+import Connections from './bottombar/Connections'
 import Objects from './bottombar/Objects'
 
 export default {
@@ -19,7 +19,7 @@ export default {
     return {
     }
   },
-  components: { Servers, Objects },
+  components: { Connections, Objects },
   computed: {
     ...mapFields([
       'sidebarMode',

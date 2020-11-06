@@ -502,7 +502,7 @@ export default {
       this.contextMenuItems = []
       const m = true, s = true
       if (this.sidebarMode == 'servers') {
-        if (item.children === undefined) this.contextMenuItems = [{i:'Open Connection'}, {i:'|'}, {i:'New Connection'}, {i:'Remove Connection',m,s}]
+        if (item.children === undefined) this.contextMenuItems = [{i:'Open Connection'}, {i:'|'}, {i:'New Connection',m}, {i:'Remove Connection',m,s}]
         else this.contextMenuItems = [{i:'New Connection'}, {i:'|'}, {i:'New Folder'}, {i:'Delete Folder'}, {i:'Rename Folder'}]
       }
       else if (this.sidebarMode == 'objects') {
