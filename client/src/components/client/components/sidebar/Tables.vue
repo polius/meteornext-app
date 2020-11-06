@@ -32,8 +32,25 @@
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                     <v-checkbox v-model="dialogOptions.item.duplicateContent" label="Duplicate table content" hide-details class="body-1" style="padding:0px; font-weight:300;"></v-checkbox>
                   </div>
+                  <div v-else-if="dialogOptions.mode == 'truncateTable'">
+                    <v-list style="margin-top:2px">
+                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:10px;">
+                        <v-list-item-content style="padding:0px">
+                          <v-list-item-title style="font-weight:300;"><span style="margin-right:10px;">-</span>{{ item.name }}</v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list>
+                    <v-checkbox v-model="dialogOptions.item.force" label="Force truncate (disable integrity checks)" hide-details class="body-1" style="padding:0px; margin-top:5px; font-weight:300;"></v-checkbox>
+                  </div>
                   <div v-else-if="dialogOptions.mode == 'deleteTable'">
-                    <v-checkbox v-model="dialogOptions.item.force" label="Force delete (disable integrity checks)" hide-details class="body-1" style="padding:0px; font-weight:300;"></v-checkbox>
+                    <v-list style="margin-top:2px">
+                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:10px;">
+                        <v-list-item-content style="padding:0px">
+                          <v-list-item-title style="font-weight:300;"><span style="margin-right:10px;">-</span>{{ item.name }}</v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list>
+                    <v-checkbox v-model="dialogOptions.item.force" label="Force delete (disable integrity checks)" hide-details class="body-1" style="padding:0px; margin-top:5px; font-weight:300;"></v-checkbox>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
@@ -198,9 +215,9 @@ export default {
     truncateTable() {
       let dialogOptions = { 
         mode: 'truncateTable', 
-        title: 'Truncate Table?', 
-        text: "Are you sure you want to delete ALL records in the table '" + this.contextMenuItem.name + "'? This operation cannot be undone.", 
-        item: {}, 
+        title: 'Truncate Tables', 
+        text: "Are you sure you want to delete ALL records in the following tables? This operation cannot be undone.", 
+        item: { force: false }, 
         submit: 'Submit',
         cancel: 'Cancel'
       }
@@ -208,10 +225,11 @@ export default {
       this.dialog = true
     },
     deleteTable() {
+      console.log(this.sidebarSelected)
       let dialogOptions = { 
         mode: 'deleteTable', 
-        title: 'Delete Table?', 
-        text: "Are you sure you want to delete the table '" + this.contextMenuItem.name + "'? This operation cannot be undone.",
+        title: 'Delete Tables', 
+        text: "Are you sure you want to delete the following tables? This operation cannot be undone.",
         item: { force: false }, 
         submit: 'Submit',
         cancel: 'Cancel'
@@ -296,21 +314,23 @@ export default {
       }).catch(() => {}).finally(() => { this.loading = false })
     },
     truncateTableSubmit() {
-      let name = this.contextMenuItem.name
-      let query = "TRUNCATE TABLE " + name + ";"
+      let force = this.dialogOptions.item.force
+      let queries = []
+      if (force) queries.push("SET FOREIGN_KEY_CHECKS = 0")
+      for (let item of this.sidebarSelected) queries.push("TRUNCATE TABLE " + item.name + ";")
+      if (force) queries.push("SET FOREIGN_KEY_CHECKS = 1")
       new Promise((resolve, reject) => { 
-        EventBus.$emit('execute-sidebar', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
         // Hide Dialog
         this.dialog = false
       }).catch(() => {}).finally(() => { this.loading = false })
     },
     deleteTableSubmit() {
-      let name = this.contextMenuItem.name
       let force = this.dialogOptions.item.force
       let queries = []
       if (force) queries.push("SET FOREIGN_KEY_CHECKS = 0")
-      queries.push("DROP TABLE " + name + ";")
+      for (let item of this.sidebarSelected) queries.push("DROP TABLE " + item.name + ";")
       if (force) queries.push("SET FOREIGN_KEY_CHECKS = 1")
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)

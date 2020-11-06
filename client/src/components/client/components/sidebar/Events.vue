@@ -15,7 +15,7 @@
             <v-layout wrap>
               <div v-if="dialogOptions.text.length > 0" class="text-h6" style="font-weight:400;"> {{ dialogOptions.title }}</div>
               <v-flex xs12>
-                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
+                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:10px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
                   <div v-if="dialogOptions.mode == 'createEvent'">
                     <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus :rules="[v => !!v || '']" required hide-details style="padding-top:0px;"></v-text-field>
@@ -32,88 +32,95 @@
                         </v-col>
                       </v-row>
                     </v-radio-group>
-                    <v-card style="margin-top:15px;">
-                      <v-card-text>
-                        <div v-if="dialogOptions.item.timing == 'at'">
-                          <v-row no-gutters style="height:50px;">
-                            <v-col cols="auto">
-                              <div class="body-1" style="margin-top:14px">Execute at:</div>
-                            </v-col>
-                            <v-col cols="3" style="margin-top:2px; margin-left:10px">
-                              <v-text-field @click="scheduleOpen('executedAt')" solo readonly v-model="dialogOptions.item.executedAt" :rules="[v => !!v || '']" required hide-details style="padding-top:0px;"></v-text-field>
-                            </v-col>
-                            <v-col cols="auto" style="margin-left:10px">
-                              <v-checkbox @change="$nextTick(() => $refs.executedAtInterval.focus())" v-model="dialogOptions.item.executedAtInterval" label="Interval" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
-                            </v-col>
-                            <v-col style="margin-top:2px; margin-left:12px;">
-                              <v-text-field ref="executedAtInterval" :disabled="!dialogOptions.item.executedAtInterval" solo v-model="dialogOptions.item.executeAtIntervalValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-                            </v-col>
-                            <v-col style="margin-top:2px; margin-left:10px;">
-                              <v-select :disabled="!dialogOptions.item.executedAtInterval" solo v-model="dialogOptions.item.executeAtIntervalOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
-                            </v-col>
-                          </v-row>
-                        </div>
-                        <div v-else>
-                          <v-row no-gutters style="height:50px;">
-                            <v-col cols="auto" style="margin-right:10px;">
-                              <div class="body-1" style="margin-top:14px">Execute every:</div>
-                            </v-col>
-                            <v-col cols="3">
-                              <v-text-field solo v-model="dialogOptions.item.executedEvery" label="" :rules="[v => !!v || '']" required hide-details style="padding-top:0px;"></v-text-field>
-                            </v-col>
-                            <v-col style="margin-top:2px; margin-left:10px;">
-                              <v-select solo v-model="dialogOptions.item.executedEveryOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
-                            </v-col>
-                          </v-row>
-                          <v-row no-gutters style="height:50px; margin-top:5px;">
-                            <v-col cols="auto" style="margin-right:10px; margin-left:31px;">
-                              <v-checkbox @click="dialogOptions.item.executedEveryStarts && dialogOptions.item.executedEveryStartsValue.length == 0 ? scheduleOpen('executedEveryStartsValue') : {}" @change="dialogOptions.item.executedEveryStartsInterval = false" v-model="dialogOptions.item.executedEveryStarts" label="Starts" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
-                            </v-col>
-                            <v-col cols="3" style="margin-top:2px;">
-                              <v-text-field @click="scheduleOpen('executedEveryStartsValue')" :disabled="!dialogOptions.item.executedEveryStarts" solo v-model="dialogOptions.item.executedEveryStartsValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-                            </v-col>
-                            <v-col cols="auto" style="margin-left:10px;">
-                              <v-checkbox @change="$nextTick(() => $refs.executedEveryStartsIntervalValue.focus())" :disabled="!dialogOptions.item.executedEveryStarts" v-model="dialogOptions.item.executedEveryStartsInterval" label="Interval" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
-                            </v-col>
-                            <v-col style="margin-top:2px; margin-left:12px;">
-                              <v-text-field ref="executedEveryStartsIntervalValue" :disabled="!dialogOptions.item.executedEveryStartsInterval" solo v-model="dialogOptions.item.executedEveryStartsIntervalValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-                            </v-col>
-                            <v-col style="margin-top:2px; margin-left:10px;">
-                              <v-select :disabled="!dialogOptions.item.executedEveryStartsInterval" solo v-model="dialogOptions.item.executedEveryStartsIntervalOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
-                            </v-col>
-                          </v-row>
-                          <v-row no-gutters style="height:50px; margin-top:5px;">
-                            <v-col cols="auto" style="margin-right:10px; margin-left:5px;">
-                              <v-checkbox @click="dialogOptions.item.executedEveryEnds && dialogOptions.item.executedEveryEndsValue.length == 0 ? scheduleOpen('executedEveryEndsValue') : {}" @change="dialogOptions.item.executedEveryEndsInterval = false" v-model="dialogOptions.item.executedEveryEnds" label="Ends" hide-details class="body-1" style="padding:0px; margin-top:14px; margin-left:26px; margin-right:9px;"></v-checkbox>
-                            </v-col>
-                            <v-col cols="3" style="margin-top:2px;">
-                              <v-text-field @click="scheduleOpen('executedEveryEndsValue')" :disabled="!dialogOptions.item.executedEveryEnds" solo v-model="dialogOptions.item.executedEveryEndsValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-                            </v-col>
-                            <v-col cols="auto" style="margin-left:10px;">
-                              <v-checkbox @change="$nextTick(() => $refs.executedEveryEndsIntervalValue.focus())" :disabled="!dialogOptions.item.executedEveryEnds" v-model="dialogOptions.item.executedEveryEndsInterval" label="Interval" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
-                            </v-col>
-                            <v-col style="margin-top:2px; margin-left:12px;">
-                              <v-text-field ref="executedEveryEndsIntervalValue" :disabled="!dialogOptions.item.executedEveryEndsInterval" solo v-model="dialogOptions.item.executedEveryEndsIntervalValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
-                            </v-col>
-                            <v-col style="margin-top:2px; margin-left:10px;">
-                              <v-select :disabled="!dialogOptions.item.executedEveryEndsInterval" solo v-model="dialogOptions.item.executedEveryEndsIntervalOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
-                            </v-col>
-                          </v-row>
-                        </div>
-                      </v-card-text>
-                    </v-card>
+                    <div style="margin-top:15px">
+                      <div v-if="dialogOptions.item.timing == 'at'">
+                        <v-row no-gutters style="height:50px;">
+                          <v-col cols="auto">
+                            <div class="body-1" style="margin-top:14px">Execute at:</div>
+                          </v-col>
+                          <v-col cols="3" style="margin-top:2px; margin-left:10px">
+                            <v-text-field @click="scheduleOpen('executedAt')" solo readonly v-model="dialogOptions.item.executedAt" :rules="[v => !!v || '']" required hide-details style="padding-top:0px;"></v-text-field>
+                          </v-col>
+                          <v-col cols="auto" style="margin-left:10px">
+                            <v-checkbox @change="$nextTick(() => $refs.executedAtInterval.focus())" v-model="dialogOptions.item.executedAtInterval" label="Interval" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
+                          </v-col>
+                          <v-col style="margin-top:2px; margin-left:12px;">
+                            <v-text-field ref="executedAtInterval" :disabled="!dialogOptions.item.executedAtInterval" solo v-model="dialogOptions.item.executeAtIntervalValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                          </v-col>
+                          <v-col style="margin-top:2px; margin-left:10px;">
+                            <v-select :disabled="!dialogOptions.item.executedAtInterval" solo v-model="dialogOptions.item.executeAtIntervalOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                          </v-col>
+                        </v-row>
+                      </div>
+                      <div v-else>
+                        <v-row no-gutters style="height:50px;">
+                          <v-col cols="auto" style="margin-right:10px;">
+                            <div class="body-1" style="margin-top:14px">Execute every:</div>
+                          </v-col>
+                          <v-col cols="3">
+                            <v-text-field solo v-model="dialogOptions.item.executedEvery" label="" :rules="[v => !!v || '']" required hide-details style="padding-top:0px;"></v-text-field>
+                          </v-col>
+                          <v-col style="margin-top:2px; margin-left:10px;">
+                            <v-select solo v-model="dialogOptions.item.executedEveryOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                          </v-col>
+                        </v-row>
+                        <v-row no-gutters style="height:50px; margin-top:5px;">
+                          <v-col cols="auto" style="margin-right:10px; margin-left:31px;">
+                            <v-checkbox @click="dialogOptions.item.executedEveryStarts && dialogOptions.item.executedEveryStartsValue.length == 0 ? scheduleOpen('executedEveryStartsValue') : {}" @change="dialogOptions.item.executedEveryStartsInterval = false" v-model="dialogOptions.item.executedEveryStarts" label="Starts" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
+                          </v-col>
+                          <v-col cols="3" style="margin-top:2px;">
+                            <v-text-field @click="scheduleOpen('executedEveryStartsValue')" :disabled="!dialogOptions.item.executedEveryStarts" solo v-model="dialogOptions.item.executedEveryStartsValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                          </v-col>
+                          <v-col cols="auto" style="margin-left:10px;">
+                            <v-checkbox @change="$nextTick(() => $refs.executedEveryStartsIntervalValue.focus())" :disabled="!dialogOptions.item.executedEveryStarts" v-model="dialogOptions.item.executedEveryStartsInterval" label="Interval" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
+                          </v-col>
+                          <v-col style="margin-top:2px; margin-left:12px;">
+                            <v-text-field ref="executedEveryStartsIntervalValue" :disabled="!dialogOptions.item.executedEveryStartsInterval" solo v-model="dialogOptions.item.executedEveryStartsIntervalValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                          </v-col>
+                          <v-col style="margin-top:2px; margin-left:10px;">
+                            <v-select :disabled="!dialogOptions.item.executedEveryStartsInterval" solo v-model="dialogOptions.item.executedEveryStartsIntervalOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                          </v-col>
+                        </v-row>
+                        <v-row no-gutters style="height:50px; margin-top:5px;">
+                          <v-col cols="auto" style="margin-right:10px; margin-left:5px;">
+                            <v-checkbox @click="dialogOptions.item.executedEveryEnds && dialogOptions.item.executedEveryEndsValue.length == 0 ? scheduleOpen('executedEveryEndsValue') : {}" @change="dialogOptions.item.executedEveryEndsInterval = false" v-model="dialogOptions.item.executedEveryEnds" label="Ends" hide-details class="body-1" style="padding:0px; margin-top:14px; margin-left:26px; margin-right:9px;"></v-checkbox>
+                          </v-col>
+                          <v-col cols="3" style="margin-top:2px;">
+                            <v-text-field @click="scheduleOpen('executedEveryEndsValue')" :disabled="!dialogOptions.item.executedEveryEnds" solo v-model="dialogOptions.item.executedEveryEndsValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                          </v-col>
+                          <v-col cols="auto" style="margin-left:10px;">
+                            <v-checkbox @change="$nextTick(() => $refs.executedEveryEndsIntervalValue.focus())" :disabled="!dialogOptions.item.executedEveryEnds" v-model="dialogOptions.item.executedEveryEndsInterval" label="Interval" hide-details class="body-1" style="padding:0px; margin-top:14px;"></v-checkbox>
+                          </v-col>
+                          <v-col style="margin-top:2px; margin-left:12px;">
+                            <v-text-field ref="executedEveryEndsIntervalValue" :disabled="!dialogOptions.item.executedEveryEndsInterval" solo v-model="dialogOptions.item.executedEveryEndsIntervalValue" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                          </v-col>
+                          <v-col style="margin-top:2px; margin-left:10px;">
+                            <v-select :disabled="!dialogOptions.item.executedEveryEndsInterval" solo v-model="dialogOptions.item.executedEveryEndsIntervalOption" :items="intervalItems" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                          </v-col>
+                        </v-row>
+                      </div>
+                    </div>
                     <div style="margin-left:auto; margin-right:auto; margin-top:15px; height:30vh; width:100%">
                       <div id="dialogEditor" style="height:100%;"></div>
                     </div>
-                    <v-select v-model="dialogOptions.item.onCompletion" label="On Completion" :items="['PRESERVE','NOT PRESERVE']" :rules="[v => !!v || '']" required hide-details style="margin-top:15px;"></v-select>
+                    <v-select v-model="dialogOptions.item.onCompletion" label="On Completion" :items="['PRESERVE','NOT PRESERVE']" :rules="[v => !!v || '']" required hide-details style="margin-top:15px; padding-bottom:5px"></v-select>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'renameEvent'">
                     <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px"></v-text-field>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'duplicateEvent'">
                     <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px"></v-text-field>
+                  </div>
+                  <div v-else-if="dialogOptions.mode == 'deleteEvent'">
+                    <v-list style="padding-bottom:0px;">
+                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:10px;">
+                        <v-list-item-content style="padding:0px">
+                          <v-list-item-title style="font-weight:300;"><span style="margin-right:10px;">-</span>{{ item.name }}</v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
@@ -299,8 +306,8 @@ export default {
     deleteEvent() {
       let dialogOptions = { 
         mode: 'deleteEvent', 
-        title: 'Delete Event?', 
-        text: "Are you sure you want to delete the event '" + this.contextMenuItem.name + "'? This operation cannot be undone.",
+        title: 'Delete Events', 
+        text: "Are you sure you want to delete the following events? This operation cannot be undone.",
         item: {}, 
         submit: 'Submit',
         cancel: 'Cancel'
@@ -421,10 +428,10 @@ export default {
       }).catch(() => {}).finally(() => { this.loading = false })
     },
     deleteEventSubmit() {
-      let name = this.contextMenuItem.name
-      let query = "DROP EVENT " + name + ";"
+      let queries = []
+      for (let item of this.sidebarSelected) queries.push("DROP EVENT " + item.name + ";")
       new Promise((resolve, reject) => { 
-        EventBus.$emit('execute-sidebar', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
           EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)

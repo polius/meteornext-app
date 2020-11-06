@@ -15,7 +15,7 @@
             <v-layout wrap>
               <div v-if="dialogOptions.text.length > 0" class="text-h6" style="font-weight:400;"> {{ dialogOptions.title }}</div>
               <v-flex xs12>
-                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
+                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:10px;">
                   <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
                   <div v-if="dialogOptions.mode == 'createFunction'">
                     <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
@@ -24,15 +24,24 @@
                     <div style="margin-left:auto; margin-right:auto; height:35vh; width:100%">
                       <div id="dialogEditor" style="height:100%;"></div>
                     </div>
-                    <v-checkbox v-model="dialogOptions.item.deterministic" label="Deterministic" hide-details class="body-1" style="padding:0px"></v-checkbox>
+                    <v-checkbox v-model="dialogOptions.item.deterministic" label="Deterministic" hide-details class="body-1" style="padding:0px; padding-bottom:5px"></v-checkbox>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'renameFunction'">
-                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
+                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px"></v-text-field>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'duplicateFunction'">
-                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
+                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px"></v-text-field>
+                  </div>
+                  <div v-else-if="dialogOptions.mode == 'deleteFunction'">
+                    <v-list style="padding-bottom:0px;">
+                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:10px;">
+                        <v-list-item-content style="padding:0px">
+                          <v-list-item-title style="font-weight:300;"><span style="margin-right:10px;">-</span>{{ item.name }}</v-list-item-title>
+                        </v-list-item-content>
+                      </v-list-item>
+                    </v-list>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
@@ -200,8 +209,8 @@ RETURN (customerLevel);
     deleteFunction() {
       let dialogOptions = { 
         mode: 'deleteFunction', 
-        title: 'Delete Function?', 
-        text: "Are you sure you want to delete the function '" + this.contextMenuItem.name + "'? This operation cannot be undone.",
+        title: 'Delete Function', 
+        text: "Are you sure you want to delete the following functions? This operation cannot be undone.",
         item: {}, 
         submit: 'Submit',
         cancel: 'Cancel'
@@ -306,10 +315,10 @@ RETURN (customerLevel);
       }).catch(() => {}).finally(() => { this.loading = false })
     },
     deleteFunctionSubmit() {
-      let name = this.contextMenuItem.name
-      let query = "DROP FUNCTION " + name + ";"
+      let queries = []
+      for (let item of this.sidebarSelected) queries.push("DROP FUNCTION " + item.name + ";")
       new Promise((resolve, reject) => { 
-        EventBus.$emit('execute-sidebar', [query], resolve, reject)
+        EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
         return new Promise((resolve, reject) => { 
           EventBus.$emit('get-sidebar-objects', this.database, resolve, reject)
