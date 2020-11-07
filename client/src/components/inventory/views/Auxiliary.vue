@@ -24,6 +24,9 @@
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn title="Create the auxiliary connection only for you" :color="item.scope == 'personal' ? 'primary' : '#779ecb'" @click="item.scope = 'personal'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn title="Create the auxiliary connection for all users in your group" :color="item.scope == 'shared' ? 'primary' : '#779ecb'" @click="item.scope = 'shared'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -104,7 +107,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' },
+    item: { scope: 'personal', name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' },
     mode: '',
     loading: true,
     engines: ['MySQL', 'PostgreSQL', 'Aurora MySQL'],
@@ -141,19 +144,19 @@ export default {
     },
     newAuxiliary() {
       this.mode = 'new'
-      this.item = { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' }
-      this.dialog_title = 'New Auxiliary Connection'
+      this.item = { scope: 'personal', name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' }
+      this.dialog_title = 'New Auxiliary'
       this.dialog = true
     },
     editAuxiliary() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.dialog_title = 'Edit Auxiliary Connection'
+      this.dialog_title = 'Edit Auxiliary'
       this.dialog = true
     },
     deleteAuxiliary() {
       this.mode = 'delete'
-      this.dialog_title = 'Delete Auxiliary Connection'
+      this.dialog_title = 'Delete Auxiliary'
       this.dialog = true
     },
     submitAuxiliary() {

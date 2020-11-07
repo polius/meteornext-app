@@ -25,6 +25,9 @@
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn title="Create the environment only for you" :color="scope == 'personal' ? 'primary' : '#779ecb'" @click="scope = 'personal'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn title="Create the environment for all users in your group" :color="scope == 'shared' ? 'primary' : '#779ecb'" @click="scope = 'shared'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -96,6 +99,7 @@ export default {
     dialog: false,
     dialog_title: '',
     // Dialog items
+    scope: 'personal',
     environment_name: '',
     environment_servers: {},
     treeviewItems: [],
@@ -224,6 +228,7 @@ export default {
     },
     newEnvironment() {
       this.mode = 'new'
+      this.scope = 'personal'
       this.environment_name = ''
       this.treeviewSelected = []
       this.treeviewOpened = []
