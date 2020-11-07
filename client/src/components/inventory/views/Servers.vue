@@ -25,19 +25,47 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
-                  <!-- METADATA -->
-                  <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <v-select v-model="item.region" :rules="[v => !!v || '']" :items="regions" label="Region" required style="margin-top:0px; padding-top:0px;"></v-select>
-                  <!-- SQL -->
-                  <div class="title font-weight-regular">SQL</div>
-                  <v-select v-model="item.engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
-                  <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;" append-icon="cloud"></v-text-field>
-                  <v-text-field v-model="item.port" :rules="[v => v == parseInt(v) || '']" label="Port" required style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
-                  <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;" append-icon="person"></v-text-field>
-                  <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:20px; margin-bottom:20px;">
+                  <v-row no-gutters>
+                    <v-col cols="8" style="padding-right:10px">
+                      <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:10px">
+                      <v-select v-model="item.region" :rules="[v => !!v || '']" :items="regions" label="Region" required style="padding-top:0px;"></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row no-gutters>
+                    <v-col cols="8" style="padding-right:10px">
+                      <v-select v-model="item.engine" :items="engines" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:10px">
+                      <v-select v-model="item.version" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row no-gutters>
+                    <v-col cols="8" style="padding-right:10px">
+                      <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:10px">
+                      <v-text-field v-model="item.port" :rules="[v => v == parseInt(v) || '']" label="Port" required style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" hide-details></v-text-field>
+                  <v-switch v-model="item.ssl" flat label="Use SSL" style="margin-top:20px" hide-details></v-switch>
+                  <v-row no-gutters v-if="item.ssl" style="margin-top:20px">
+                    <v-col style="padding-right:10px;">
+                      <v-file-input v-model="item.ssl_client_key" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
+                    </v-col>
+                    <v-col style="padding-right:5px; padding-left:5px;">
+                      <v-file-input v-model="item.ssl_client_certificate" filled dense label="Client Certificate" prepend-icon="" hide-details></v-file-input>
+                    </v-col>
+                    <v-col style="padding-left:10px;">
+                      <v-file-input v-model="item.ssl_client_ca_certificate" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
+                    </v-col>
+                  </v-row>
                 </v-form>
-                <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected servers?</div>
+                <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px" >Are you sure you want to delete the selected servers?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitServer()">CONFIRM</v-btn>
@@ -72,7 +100,7 @@ export default {
       { text: 'Hostname', align: 'left', value: 'hostname'},
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
-      { text: 'Password', align: 'left', value: 'password'}
+      // { text: 'Password', align: 'left', value: 'password'}
     ],
     items: [],
     selected: [],
@@ -80,7 +108,8 @@ export default {
     item: { name: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' },
     mode: '',
     loading: true,
-    engines_items: ['MySQL', 'PostgreSQL'],
+    engines: ['MySQL', 'PostgreSQL', 'Aurora MySQL'],
+    versions: ['MySQL 5.6', 'MySQL 5.7', 'MySQL 8.x'],
     aws_regions: [
       { code: 'us-east-1', name: 'US East (N. Virginia)' },
       { code: 'us-east-2', name: 'US East (Ohio)' },

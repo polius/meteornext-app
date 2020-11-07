@@ -15,8 +15,8 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:5px; margin-bottom:15px;">
-                  <div class="body-1" style="margin-left:2px;">Select servers from the <router-link class="nav-link" to="/inventory/servers" target="_blank">inventory</router-link> to add.</div>
-                  <v-card style="margin-top:12px">
+                  <div class="body-1" style="margin-left:3px;">Select servers from the <router-link class="nav-link" to="/inventory/servers" target="_blank">inventory</router-link> to add.</div>
+                  <v-card style="margin-top:15px">
                     <v-toolbar flat dense color="#2e3131">
                       <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
                       <v-divider class="mx-3" inset vertical></v-divider>

@@ -2,7 +2,7 @@
   <div>
     <v-card style="margin-bottom:7px;">
       <v-toolbar dense flat color="primary">
-        <v-toolbar-items class="hidden-sm-and-down">
+        <v-toolbar-items class="hidden-sm-and-down" style="margin-left:-16px">
           <v-btn :disabled="loading" text title="Define monitoring rules and settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
           <v-btn :disabled="loading" text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
           <v-btn :disabled="loading" text title="Filter servers" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
@@ -164,12 +164,6 @@
     </v-snackbar>
   </div>
 </template>
-
-<style scoped>
-::v-deep .v-toolbar__content {
-  padding-left:0px;
-}
-</style>
 
 <script>
   import axios from 'axios'

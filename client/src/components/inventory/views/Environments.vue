@@ -34,7 +34,6 @@
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
                   <v-text-field v-if="mode!='delete'" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="environment_name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  
                   <v-card v-if="mode!='delete'">
                     <v-toolbar flat dense color="#2e3131">
                       <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
@@ -49,8 +48,7 @@
                       </v-treeview>
                     </v-card-text>
                   </v-card>
-
-                  <div style="padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected environments?</div>
+                  <div v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected environments?</div>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
