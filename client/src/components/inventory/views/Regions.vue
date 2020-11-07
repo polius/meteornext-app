@@ -38,17 +38,20 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
-                  <!-- METADATA -->
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <!-- SSH -->
-                  <v-switch v-model="item.ssh_tunnel" label="SSH Tunnel" color="info" hide-details style="margin-top:0px;"></v-switch>
-                  <div v-if="item.ssh_tunnel" style="margin-top:15px;">
-                    <div class="title font-weight-regular">SSH</div>
-                    <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
-                    <v-text-field v-model="item.port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
-                    <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
-                    <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
-                    <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
+                  <v-switch v-model="item.ssh_tunnel" label="Use SSH Tunnel" color="info" hide-details style="margin-top:0px;"></v-switch>
+                  <div v-if="item.ssh_tunnel" style="margin-top:25px;">
+                    <v-row no-gutters>
+                      <v-col cols="8" style="padding-right:10px">
+                        <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                      <v-col cols="4" style="padding-left:10px">
+                        <v-text-field v-model="item.port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                    </v-row>
+                    <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="item.password" label="Password" style="padding-top:0px;"></v-text-field>
+                    <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
                   </div>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>

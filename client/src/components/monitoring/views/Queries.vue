@@ -107,49 +107,49 @@
           <v-spacer></v-spacer>
           <v-btn icon @click="filter_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 15px;">
+        <v-card-text style="padding: 10px 15px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:10px;">
                   <v-row>
-                    <v-col cols="8" style="padding-top:5px;">
+                    <v-col cols="8" style="padding-right:5px;">
                       <v-text-field text v-model="filter.query_text" label="Query" required style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
-                    <v-col cols="4" style="padding-top:5px;">
+                    <v-col cols="4" style="padding-left:5px;">
                       <v-select text v-model="filter.query_text_options" label="Filter" :items="filter_options" :rules="[v => ((filter.query_text === undefined || filter.query_text.length == 0) || (filter.query_text.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
                     </v-col>
                   </v-row>
                   <v-row>
-                    <v-col cols="8" style="padding-top:0px;">
-                      <v-text-field text v-model="filter.db" label="Database" required hide-details></v-text-field>
+                    <v-col cols="8" style="padding-right:5px;">
+                      <v-text-field text v-model="filter.db" label="Database" required style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
-                    <v-col cols="4" style="padding-top:0px;">
-                      <v-select text v-model="filter.db_options" label="Filter" :items="filter_options" :rules="[v => ((filter.db === undefined || filter.db.length == 0) || (filter.db.length > 0 && !!v)) || '']" hide-details></v-select>
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col cols="8" style="padding-top:0px;">
-                      <v-text-field text v-model="filter.server" label="Server" required hide-details></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-top:0px;">
-                      <v-select text v-model="filter.server_options" label="Filter" :items="filter_options" :rules="[v => ((filter.server === undefined || filter.server.length == 0) || (filter.server.length > 0 && !!v)) || '']" hide-details></v-select>
+                    <v-col cols="4" style="padding-left:5px;">
+                      <v-select text v-model="filter.db_options" label="Filter" :items="filter_options" :rules="[v => ((filter.db === undefined || filter.db.length == 0) || (filter.db.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
                     </v-col>
                   </v-row>
                   <v-row>
-                    <v-col cols="8" style="padding-top:0px;">
-                      <v-text-field text v-model="filter.user" label="User" required hide-details></v-text-field>
+                    <v-col cols="8" style="padding-right:5px;">
+                      <v-text-field text v-model="filter.server" label="Server" required style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
-                    <v-col cols="4" style="padding-top:0px;">
-                      <v-select text v-model="filter.user_options" label="Filter" :items="filter_options" :rules="[v => ((filter.user === undefined || filter.user.length == 0) || (filter.user.length > 0 && !!v)) || '']" hide-details></v-select>
+                    <v-col cols="4" style="padding-left:5px;">
+                      <v-select text v-model="filter.server_options" label="Filter" :items="filter_options" :rules="[v => ((filter.server === undefined || filter.server.length == 0) || (filter.server.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
                     </v-col>
                   </v-row>
                   <v-row>
-                    <v-col cols="8" style="padding-top:0px;">
-                      <v-text-field text v-model="filter.host" label="Host" required hide-details></v-text-field>
+                    <v-col cols="8" style="padding-right:5px;">
+                      <v-text-field text v-model="filter.user" label="User" required style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
-                    <v-col cols="4" style="padding-top:0px;">
-                      <v-select text v-model="filter.host_options" label="Filter" :items="filter_options" :rules="[v => ((filter.host === undefined || filter.host.length == 0) || (filter.host.length > 0 && !!v)) || '']" hide-details></v-select>
+                    <v-col cols="4" style="padding-left:5px;">
+                      <v-select text v-model="filter.user_options" label="Filter" :items="filter_options" :rules="[v => ((filter.user === undefined || filter.user.length == 0) || (filter.user.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="8" style="padding-right:5px;">
+                      <v-text-field text v-model="filter.host" label="Host" required style="padding-top:0px;" hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:5px;">
+                      <v-select text v-model="filter.host_options" label="Filter" :items="filter_options" :rules="[v => ((filter.host === undefined || filter.host.length == 0) || (filter.host.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
                     </v-col>
                   </v-row>
                 </v-form>

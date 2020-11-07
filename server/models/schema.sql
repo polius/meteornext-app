@@ -91,7 +91,7 @@ CREATE TABLE `regions` (
 CREATE TABLE `servers` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `engine` enum('MySQL','PostgreSQL') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `engine` enum('MySQL','PostgreSQL', 'Aurora MySQL') COLLATE utf8mb4_unicode_ci NOT NULL,
   `region_id` int(10) unsigned NOT NULL,
   `hostname` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `port` INT UNSIGNED NOT NULL,
@@ -382,7 +382,7 @@ CREATE TABLE `client_folders` (
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 );
 
-CREATE TABLE `client_servers` (
+CREATE TABLE `client_connections` (
   `user_id` INT UNSIGNED NOT NULL,
   `server_id` INT UNSIGNED NOT NULL,
   `folder_id` INT UNSIGNED NULL,

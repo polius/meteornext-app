@@ -30,24 +30,38 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
-                  <!-- METADATA -->
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <!-- SQL -->
-                  <div class="title font-weight-regular">SQL</div>
-                  <v-select v-model="item.sql_engine" :items="engines_items" label="Engine" :rules="[v => !!v || '']" required v-on:change="selectEngine"></v-select>
-                  <v-text-field v-model="item.sql_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;" append-icon="cloud"></v-text-field>
-                  <v-text-field v-model="item.sql_port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
-                  <v-text-field v-model="item.sql_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
-                  <v-text-field v-model="item.sql_password" label="Password" style="padding-top:0px;" hide-details append-icon="lock"></v-text-field>
-                  <!-- SSH -->
-                  <v-switch v-model="item.ssh_tunnel" label="SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
+                  <v-row no-gutters>
+                    <v-col cols="8" style="padding-right:10px">
+                      <v-select v-model="item.sql_engine" :items="engines" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:10px">
+                      <v-select v-model="item.sql_version" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row no-gutters>
+                    <v-col cols="8" style="padding-right:10px">
+                      <v-text-field v-model="item.sql_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:10px">
+                      <v-text-field v-model="item.sql_port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-text-field v-model="item.sql_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="item.sql_password" label="Password" style="padding-top:0px;" hide-details></v-text-field>
+                  <v-switch v-model="item.ssh_tunnel" label="Use SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
                   <div v-if="item.ssh_tunnel" style="margin-top:15px;">
-                    <div class="title font-weight-regular">SSH</div>
-                    <v-text-field v-model="item.ssh_hostname" :rules="[v => !!v || '']" label="Hostname" append-icon="cloud"></v-text-field>
-                    <v-text-field v-model="item.ssh_port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;" append-icon="directions_boat"></v-text-field>
-                    <v-text-field v-model="item.ssh_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;" append-icon="person"></v-text-field>
-                    <v-text-field v-model="item.ssh_password" label="Password" style="padding-top:0px;" append-icon="lock"></v-text-field>
-                    <v-textarea v-model="item.ssh_key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" append-icon="vpn_key" hide-details></v-textarea>
+                    <v-row no-gutters>
+                      <v-col cols="8" style="padding-right:10px">
+                        <v-text-field v-model="item.ssh_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                      <v-col cols="4" style="padding-left:10px">
+                        <v-text-field v-model="item.ssh_port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                    </v-row>
+                    <v-text-field v-model="item.ssh_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="item.ssh_password" label="Password" style="padding-top:0px;"></v-text-field>
+                    <v-textarea v-model="item.ssh_key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
                   </div>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected auxiliary connections?</div>
@@ -84,7 +98,7 @@ export default {
       { text: 'Hostname', align: 'left', value: 'sql_hostname'},
       { text: 'Port', align: 'left', value: 'sql_port'},
       { text: 'Username', align: 'left', value: 'sql_username'},
-      { text: 'Password', align: 'left', value: 'sql_password'},
+      // { text: 'Password', align: 'left', value: 'sql_password'},
       { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'}
     ],
     items: [],
@@ -93,7 +107,8 @@ export default {
     item: { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' },
     mode: '',
     loading: true,
-    engines_items: ['MySQL', 'PostgreSQL'],
+    engines: ['MySQL', 'PostgreSQL', 'Aurora MySQL'],
+    versions: ['MySQL 5.6', 'MySQL 5.7', 'MySQL 8.x'],
     dialog: false,
     dialog_title: '',
     dialog_valid: false,

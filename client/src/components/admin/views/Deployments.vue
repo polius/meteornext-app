@@ -53,18 +53,36 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
-                  <v-text-field v-model="filter_dialog_data.name" label="Name"></v-text-field>
-                  <v-text-field v-model="filter_dialog_data.release" label="Release" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="filter_dialog_data.username" label="Username" style="padding-top:0px;"></v-text-field>
-                  <v-select v-model="filter_dialog_data.mode" :items="deployment_modes" multiple label="Mode" style="padding-top:0px;"></v-select>
-                  <v-select v-model="filter_dialog_data.status" :items="deployment_status" multiple label="Status" style="padding-top:0px;"></v-select>
-                  <v-text-field v-model="filter_dialog_data.created_from" label="Created (From)" placeholder="YYYY-MM-DD hh:mm:ss" @click="picker_change('created_from')" readonly style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="filter_dialog_data.created_to" label="Created (To)" placeholder="YYYY-MM-DD hh:mm:ss" @click="picker_change('created_to')" readonly style="padding-top:0px;"></v-text-field>
+                <v-form ref="form" style="margin-top:25px; margin-bottom:25px;">
+                  <v-text-field v-model="filter_dialog_data.name" label="Name" style="padding-top:0px;"></v-text-field>
+                  <v-row no-gutters style="margin-top:5px">
+                    <v-col style="padding-right:10px">
+                      <v-text-field v-model="filter_dialog_data.username" label="Username" style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                    <v-col style="padding-left:10px">
+                      <v-text-field v-model="filter_dialog_data.release" label="Release" style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row no-gutters style="margin-top:5px">
+                    <v-col style="padding-right:10px">
+                      <v-select v-model="filter_dialog_data.mode" :items="deployment_modes" multiple label="Mode" style="padding-top:0px;"></v-select>
+                    </v-col>
+                    <v-col style="padding-left:10px">
+                      <v-select v-model="filter_dialog_data.status" :items="deployment_status" multiple label="Status" style="padding-top:0px;"></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row no-gutters style="margin-top:5px">
+                    <v-col style="padding-right:10px">
+                      <v-text-field v-model="filter_dialog_data.created_from" label="Created (From)" placeholder="YYYY-MM-DD hh:mm:ss" @click="picker_change('created_from')" readonly style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                    <v-col style="padding-left:10px">
+                      <v-text-field v-model="filter_dialog_data.created_to" label="Created (To)" placeholder="YYYY-MM-DD hh:mm:ss" @click="picker_change('created_to')" readonly style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                  </v-row>
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn :loading="loading" color="#00b16a" @click="filterDeployments()">Confirm</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="closeFilter()" style="margin-left:10px;">Cancel</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="closeFilter()" style="margin-left:5px;">Cancel</v-btn>
                     <v-btn v-if="filter_applied" :disabled="loading" color="info" @click="clearFilter()" style="float:right;">Remove Filter</v-btn>
                   </div>
                 </v-form>

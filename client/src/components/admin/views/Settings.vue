@@ -28,9 +28,9 @@
             <div class="text-h6 font-weight-regular" style="margin-left:10px;">SQL</div>
             <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">The SQL credentials where Meteor Next is stored</div>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.hostname" label="Hostname" style="margin-left:10px; padding-top:25px;" required :rules="[v => !!v || '']"></v-text-field>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.port" label="Port" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.username" label="Username" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.password" label="Password" style="margin-left:10px; padding-top:0px;" @click:append="show_password = !show_password" :append-icon="show_password ? 'visibility' : 'visibility_off'" :type="show_password ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.port" label="Port" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.database" label="Database" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
           </v-flex>
 
@@ -45,7 +45,7 @@
                 <v-toolbar-title class="white--text">LOCAL</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-toolbar-items class="hidden-sm-and-down">
-                 <v-btn text :disabled="loading" color="primary" @click="saveLogs()" style="margin-left:0px;">SAVE</v-btn>
+                <v-btn text :disabled="loading" color="primary" @click="saveLogs()" style="margin-left:0px;">SAVE</v-btn>
                 </v-toolbar-items>
               </v-toolbar>
               <v-divider></v-divider>

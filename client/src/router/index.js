@@ -143,12 +143,6 @@ let router = new VueRouter({
           meta: { requiresMonitoring: true }
         },
         {
-          path: 'settings',
-          name: 'monitoring.settings',
-          component: () => import('../components/monitoring/views/Settings'),
-          meta: { requiresMonitoring: true }
-        },
-        {
           path: 'parameters',
           name: 'monitoring.parameters',
           component: () => import('../components/monitoring/views/Parameters'),
