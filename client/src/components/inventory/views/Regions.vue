@@ -32,6 +32,9 @@
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn title="Create the region only for you" :color="item.scope == 'personal' ? 'primary' : '#779ecb'" @click="item.scope = 'personal'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn title="Create the region for all users in your group" :color="item.scope == 'shared' ? 'primary' : '#779ecb'" @click="item.scope = 'shared'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -95,7 +98,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '' },
+    item: { scope: 'personal', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '' },
     mode: '',
     loading: true,
     dialog: false,
@@ -125,7 +128,7 @@ export default {
     },
     newRegion() {
       this.mode = 'new'
-      this.item = { name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '' }
+      this.item = { scope: 'personal', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '' }
       this.dialog_title = 'New Region'
       this.dialog = true
     },
