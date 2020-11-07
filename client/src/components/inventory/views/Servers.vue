@@ -20,13 +20,16 @@
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn title="Create the server only for you" :color="item.scope == 'personal' ? 'primary' : '#779ecb'" @click="item.scope = 'personal'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn title="Create the server for all users in your group" :color="item.scope == 'shared' ? 'primary' : '#779ecb'" @click="item.scope = 'shared'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:20px; margin-bottom:20px;">
-                  <v-row no-gutters>
+                  <v-row no-gutters style="margin-top:15px">
                     <v-col cols="8" style="padding-right:10px">
                       <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
                     </v-col>
@@ -105,7 +108,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' },
+    item: { scope: 'personal', name: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' },
     mode: '',
     loading: true,
     engines: ['MySQL', 'PostgreSQL', 'Aurora MySQL'],
@@ -177,7 +180,7 @@ export default {
     },
     newServer() {
       this.mode = 'new'
-      this.item = { name: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' }
+      this.item = { scope: 'personal', name: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' }
       this.dialog_title = 'New Server'
       this.dialog = true
     },
