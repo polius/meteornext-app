@@ -17,6 +17,11 @@
           <v-icon v-if="item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
           <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>
         </template>
+        <template v-slot:[`item.shared`]="{ item }">
+          <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
+          <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
+          {{ !item.shared ? 'Personal' : 'Shared' }}
+        </template>
       </v-data-table>
     </v-card>
 
@@ -25,8 +30,8 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn title="Create the auxiliary connection only for you" :color="item.scope == 'personal' ? 'primary' : '#779ecb'" @click="item.scope = 'personal'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn title="Create the auxiliary connection for all users in your group" :color="item.scope == 'shared' ? 'primary' : '#779ecb'" @click="item.scope = 'shared'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn title="Create the auxiliary only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn title="Create the auxiliary for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -36,7 +41,7 @@
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
-                      <v-select v-model="item.sql_engine" :items="engines" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
+                      <v-select v-model="item.sql_engine" :items="Object.keys(engines)" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
                       <v-select v-model="item.sql_version" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
@@ -101,17 +106,20 @@ export default {
       { text: 'Hostname', align: 'left', value: 'sql_hostname'},
       { text: 'Port', align: 'left', value: 'sql_port'},
       { text: 'Username', align: 'left', value: 'sql_username'},
-      // { text: 'Password', align: 'left', value: 'sql_password'},
-      { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'}
+      { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'},
+      { text: 'Scope', align: 'left', value: 'shared' },
     ],
     items: [],
     selected: [],
     search: '',
-    item: { scope: 'personal', name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' },
+    item: { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', shared: false },
     mode: '',
     loading: true,
-    engines: ['MySQL', 'PostgreSQL', 'Aurora MySQL'],
-    versions: ['MySQL 5.6', 'MySQL 5.7', 'MySQL 8.x'],
+    engines: {
+      'MySQL': ['MySQL 5.6', 'MySQL 5.7', 'MySQL 8.x'],
+      'Aurora MySQL': ['Aurora MySQL 5.6', 'Aurora MySQL 5.7']
+    },
+    versions: [],
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
@@ -141,10 +149,11 @@ export default {
         if (value == 'MySQL') this.item['sql_port'] = '3306'
         else if (value == 'PostgreSQL') this.item['sql_port'] = '5432'
       }
+      this.versions = this.engines[value]
     },
     newAuxiliary() {
       this.mode = 'new'
-      this.item = { scope: 'personal', name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '' }
+      this.item = { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', shared: false }
       this.dialog_title = 'New Auxiliary'
       this.dialog = true
     },

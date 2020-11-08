@@ -23,10 +23,10 @@ class Regions:
 
     def post(self, user_id, group_id, region):
         query = """
-            INSERT INTO regions (name, group_id, ssh_tunnel, hostname, port, username, password, `key`, created_by, created_at)             
-            SELECT %s, %s, %s, IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), %s, %s
+            INSERT INTO regions (name, group_id, ssh_tunnel, hostname, port, username, password, `key`, shared, owner_id, created_by, created_at)             
+            SELECT %s, %s, %s, IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), %s, IF(%s = 1, NULL, %s), %s, %s
         """
-        self._sql.execute(query, (region['name'], group_id, region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'], region['username'], region['password'], region['password'], region['key'], region['key'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        self._sql.execute(query, (region['name'], group_id, region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'], region['username'], region['password'], region['password'], region['key'], region['key'], region['shared'], region['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user_id, group_id, region):
         query = """
@@ -38,12 +38,14 @@ class Regions:
                 username = IF(%s = '', NULL, %s),
                 password = IF(%s = '', NULL, %s),
                 `key` = IF(%s = '', NULL, %s),
+                shared = %s,
+                owner_id = IF(%s = 1, NULL, %s),
                 updated_by = %s,
                 updated_at = %s
             WHERE group_id = %s 
             AND id = %s
         """
-        self._sql.execute(query, (region['name'], region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, region['id']))
+        self._sql.execute(query, (region['name'], region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['shared'], region['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, region['id']))
 
     def delete(self, group_id, region_id):
         query = """

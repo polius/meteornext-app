@@ -17,7 +17,11 @@ class Environments:
             return self._sql.execute(query)
 
     def post(self, user_id, group_id, environment):
-        environment_id = self._sql.execute("INSERT INTO environments (name, group_id, created_by, created_at) VALUES (%s, %s, %s, %s)", (environment['name'], group_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        query = """
+            INSERT INTO environments (name, group_id, shared, owner_id, created_by, created_at) 
+            SELECT %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
+        """
+        environment_id = self._sql.execute(query, (environment['name'], group_id, environment['shared'], environment['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
         if len(environment['servers']) > 0:
             values = ''
             for server in environment['servers']:
@@ -26,7 +30,17 @@ class Environments:
 
     def put(self, user_id, group_id, environment):
         # Update environment
-        self._sql.execute("UPDATE environments SET name = %s, updated_by = %s, updated_at = %s WHERE id = %s AND group_id = %s", (environment['name'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), environment['id'], group_id))
+        query = """
+            UPDATE environments 
+            SET name = %s,
+                shared = %s,
+                owner_id = IF(%s = 1, NULL, %s),
+                updated_by = %s, 
+                updated_at = %s
+            WHERE id = %s
+            AND group_id = %s;
+        """
+        self._sql.execute(query, (environment['name'], environment['shared'], environment['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), environment['id'], group_id))
 
         # Clean environment servers
         query = """
