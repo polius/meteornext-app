@@ -4,7 +4,7 @@ class Servers:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, group_id, server_id=None):
+    def get(self, user_id, group_id, server_id=None):
         if server_id is None:
             query = """
                 SELECT s.*, r.name AS 'region' 
@@ -12,7 +12,7 @@ class Servers:
                 JOIN regions r ON r.id = s.region_id AND r.group_id = %s
                 WHERE (s.shared = 1 OR s.owner_id = %s)
             """
-            return self._sql.execute(query, (group_id))
+            return self._sql.execute(query, (group_id, user_id))
         else:
             query = """
                 SELECT s.*, r.name AS 'region' 

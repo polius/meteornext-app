@@ -38,7 +38,7 @@ class Servers:
             server_json = request.get_json()
 
             if request.method == 'GET':
-                return self.get(user['group_id'])
+                return self.get(user['id'], user['group_id'])
             elif request.method == 'POST':
                 return self.post(user['id'], user['group_id'], server_json)
             elif request.method == 'PUT':
@@ -83,8 +83,8 @@ class Servers:
     ####################
     # Internal Methods #
     ####################
-    def get(self, group_id):
-        return jsonify({'data': self._servers.get(group_id)}), 200
+    def get(self, user_id, group_id):
+        return jsonify({'data': self._servers.get(user_id, group_id)}), 200
 
     def post(self, user_id, group_id, data):
         if self._servers.exist(group_id, data):
