@@ -18,6 +18,11 @@
             <v-chip outlined :color="server.color" style="margin-left:0px;"><span class="font-weight-medium" style="padding-right:4px;">{{ server.server }}</span> - {{ server.region }}</v-chip>
           </div>
         </template>
+        <template v-slot:[`item.shared`]="{ item }">
+          <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
+          <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
+          {{ !item.shared ? 'Personal' : 'Shared' }}
+        </template>
       </v-data-table>
     </v-card>
 
@@ -89,7 +94,8 @@ export default {
     headers: [
       { text: 'Id', align: ' d-none', value: 'id' },
       { text: 'Name', align: 'left', value: 'name' },
-      { text: 'Servers', align: 'left', value: 'servers' }
+      { text: 'Servers', align: 'left', value: 'servers' },
+      { text: 'Scope', align: 'left', value: 'shared', width: "120px" }
     ],
     items: [],
     selected: [],

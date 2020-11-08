@@ -64,7 +64,9 @@ export default {
   data: () => ({
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
-      { text: 'Active', align: 'left', value: 'active' }
+      { text: 'Active', align: 'left', value: 'active' },
+      { text: 'Created', align: 'left', value: 'created_at' },
+      { text: 'Updated', align: 'left', value: 'updated_at' }
     ],
     items: [],
     selected: [],

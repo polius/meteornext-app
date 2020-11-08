@@ -10,6 +10,7 @@ class Regions:
                 SELECT *
                 FROM regions 
                 WHERE group_id = %s
+                AND (shared = 1 OR owner_id = %s)
             """
             return self._sql.execute(query, (group_id))
         else:
