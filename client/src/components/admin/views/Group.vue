@@ -61,7 +61,7 @@
                   </v-tooltip>
                 </div>
                 <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
-                  <v-toolbar-items class="hidden-sm-and-down" style="margin-left:-16px">
+                  <v-toolbar-items style="margin-left:-16px">
                     <v-btn text @click="newOwners()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
                     <v-btn v-if="inventorySelected.length > 0" text @click="removeOwners()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                   </v-toolbar-items>
