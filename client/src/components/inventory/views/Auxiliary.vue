@@ -129,6 +129,9 @@ export default {
     snackbarText: '',
     snackbarColor: ''
   }),
+  computed: {
+    inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
+  },
   created() {
     this.getAuxiliary()
   },
