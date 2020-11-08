@@ -7,6 +7,7 @@ const state = () => ({
   coins: localStorage.getItem('coins') || 0,
   admin: localStorage.getItem('admin') || false,
   inventory_enabled: localStorage.getItem('inventory_enabled') == '1' ? true : false,
+  inventory_secured: localStorage.getItem('inventory_secured') == '1' ? true : false,
   deployments_enabled: localStorage.getItem('deployments_enabled') == '1' ? true : false,
   deployments_basic: localStorage.getItem('deployments_basic') == '1' ? true : false,
   deployments_pro: localStorage.getItem('deployments_pro') == '1' ? true : false,
@@ -23,6 +24,7 @@ const getters = {
   coins: state => state.coins,
   admin: state => state.admin,
   inventory_enabled: state => state.inventory_enabled,
+  inventory_secured: state => state.inventory_secured,
   deployments_enabled: state => state.deployments_enabled,
   deployments_basic: state => state.deployments_basic,
   deployments_pro: state => state.deployments_pro,
@@ -48,6 +50,7 @@ const actions = {
             coins: response.data.data.coins,
             admin: response.data.data.admin,
             inventory_enabled: response.data.data.inventory_enabled,
+            inventory_secured: response.data.data.inventory_secured,
             deployments_enabled: response.data.data.deployments_enabled,
             deployments_basic: response.data.data.deployments_basic,
             deployments_pro: response.data.data.deployments_pro,
@@ -62,6 +65,7 @@ const actions = {
           localStorage.setItem('coins', data['coins'])
           localStorage.setItem('admin', data['admin'])
           localStorage.setItem('inventory_enabled', data['inventory_enabled'])
+          localStorage.setItem('inventory_secured', data['inventory_secured'])
           localStorage.setItem('deployments_enabled', data['deployments_enabled'])
           localStorage.setItem('deployments_basic', data['deployments_basic'])
           localStorage.setItem('deployments_pro', data['deployments_pro'])
@@ -85,6 +89,7 @@ const actions = {
           localStorage.removeItem('coins')
           localStorage.removeItem('admin')
           localStorage.removeItem('inventory_enabled')
+          localStorage.removeItem('inventory_secured')
           localStorage.removeItem('deployments_enabled')
           localStorage.removeItem('deployments_basic')
           localStorage.removeItem('deployments_pro')
@@ -113,6 +118,7 @@ const actions = {
       localStorage.removeItem('coins')
       localStorage.removeItem('admin')
       localStorage.removeItem('inventory_enabled')
+      localStorage.removeItem('inventory_secured')
       localStorage.removeItem('deployments_enabled')
       localStorage.removeItem('deployments_basic')
       localStorage.removeItem('deployments_pro')
@@ -136,6 +142,7 @@ const mutations = {
     state.coins = data.coins
     state.admin = data.admin == 1
     state.inventory_enabled = data.inventory_enabled == 1
+    state.inventory_secured = data.inventory_secured == 1
     state.deployments_enabled = data.deployments_enabled == 1
     state.deployments_basic = data.deployments_basic == 1
     state.deployments_pro = data.deployments_pro == 1
@@ -150,6 +157,7 @@ const mutations = {
     state.coins = 0
     state.admin = 0
     state.inventory_enabled = 0
+    state.inventory_secured = 0
     state.deployments_enabled = 0
     state.deployments_basic = 0
     state.deployments_pro = 0

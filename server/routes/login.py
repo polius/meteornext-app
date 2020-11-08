@@ -58,6 +58,7 @@ class Login:
                 'coins': user[0]['coins'],
                 'admin': user[0]['admin'] and valid_url,
                 'inventory_enabled': user[0]['inventory_enabled'],
+                'inventory_secured': user[0]['inventory_secured'],
                 'deployments_enabled': user[0]['deployments_enabled'],
                 'deployments_basic': user[0]['deployments_basic'],
                 'deployments_pro': user[0]['deployments_pro'],

@@ -145,14 +145,14 @@ export default {
     snackbarColor: ''
   }),
   computed : {
-    isLoggedIn : function() { return this.$store.getters['app/isLoggedIn'] },
-    admin : function() { return this.$store.getters['app/admin'] == 0 ? false : this.$store.getters['app/admin'] },
-    coins : function() { return this.$store.getters['app/coins'] },
-    inventory_enabled : function() { return this.$store.getters['app/inventory_enabled'] },
-    deployments_enabled : function() { return this.$store.getters['app/deployments_enabled'] },
-    monitoring_enabled : function() { return this.$store.getters['app/monitoring_enabled'] },
-    utils_enabled : function() { return this.$store.getters['app/utils_enabled'] },
-    client_enabled : function() { return this.$store.getters['app/client_enabled'] }
+    isLoggedIn: function() { return this.$store.getters['app/isLoggedIn'] },
+    admin: function() { return this.$store.getters['app/admin'] == 0 ? false : this.$store.getters['app/admin'] },
+    coins: function() { return this.$store.getters['app/coins'] },
+    inventory_enabled: function() { return this.$store.getters['app/inventory_enabled'] },
+    deployments_enabled: function() { return this.$store.getters['app/deployments_enabled'] },
+    monitoring_enabled: function() { return this.$store.getters['app/monitoring_enabled'] },
+    utils_enabled: function() { return this.$store.getters['app/utils_enabled'] },
+    client_enabled: function() { return this.$store.getters['app/client_enabled'] }
   },
   created() {
     this.getNotifications(true)
