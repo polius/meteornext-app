@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-card>
-      <v-toolbar flat color="primary">
+      <v-toolbar flat dense color="primary">
         <v-toolbar-title class="white--text">{{ toolbar_title }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon title="Go back" @click="goBack()" style="margin-right:-5px;"><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn>
@@ -10,13 +10,9 @@
         <v-flex>
           <v-form ref="form" v-model="form_valid">
             <!-- INFO -->
-            <div class="title font-weight-regular white--text" style="margin-bottom:5px;">INFO</div>
-            <v-text-field ref="focus" v-model="group.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+            <v-text-field ref="focus" v-model="group.name" :rules="[v => !!v || '']" label="Name" required style="margin-top:0px;"></v-text-field>
             <v-text-field v-model="group.description" :rules="[v => !!v || '']" label="Description" required style="padding-top:0px; margin-top:0px;"></v-text-field>
-          
-            <!-- COINS -->
-            <div class="title font-weight-regular white--text" style="margin-bottom:5px;">COINS</div>
-            <v-text-field v-model="group.coins_day" label="Coins per day" :rules="[v => v == parseInt(v) && v >= 0 || '']" required></v-text-field>
+            <v-text-field v-model="group.coins_day" label="Coins per day" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="padding-top:0px; margin-top:0px;"></v-text-field>
             <v-text-field v-model="group.coins_max" label="Maximum coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
 
             <!-- SERVICES - BAR -->
