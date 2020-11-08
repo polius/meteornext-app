@@ -183,8 +183,7 @@ export default {
       axios.put('/deployments/releases', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          // Edit item in the data table
-          this.items.splice(i, 1, payload)
+          this.getReleases()
           this.dialog = false
           this.selected = []
         })
