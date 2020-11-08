@@ -25,10 +25,10 @@ class Auxiliary:
 
     def post(self, user_id, group_id, auxiliary):
         query = """
-            INSERT INTO auxiliary (name, group_id, ssh_tunnel, ssh_hostname, ssh_port, ssh_username, ssh_password, ssh_key, sql_engine, sql_hostname, sql_port, sql_username, sql_password, created_by, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO auxiliary (name, group_id, ssh_tunnel, ssh_hostname, ssh_port, ssh_username, ssh_password, ssh_key, sql_engine, sql_hostname, sql_port, sql_username, sql_password, shared, owner_id, created_by, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s)
         """
-        self._sql.execute(query, (auxiliary['name'], group_id, auxiliary['ssh_tunnel'], auxiliary['ssh_hostname'], auxiliary['ssh_port'], auxiliary['ssh_username'], auxiliary['ssh_password'], auxiliary['ssh_key'], auxiliary['sql_engine'], auxiliary['sql_hostname'], auxiliary['sql_port'], auxiliary['sql_username'], auxiliary['sql_password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        self._sql.execute(query, (auxiliary['name'], group_id, auxiliary['ssh_tunnel'], auxiliary['ssh_hostname'], auxiliary['ssh_port'], auxiliary['ssh_username'], auxiliary['ssh_password'], auxiliary['ssh_key'], auxiliary['sql_engine'], auxiliary['sql_version'], auxiliary['sql_hostname'], auxiliary['sql_port'], auxiliary['sql_username'], auxiliary['sql_password'], auxiliary['shared'], auxiliary['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user_id, group_id, auxiliary):
         query = """
@@ -45,12 +45,14 @@ class Auxiliary:
                 sql_port = %s, 
                 sql_username = %s, 
                 sql_password = %s,
+                shared = %s,
+                owner_id = IF(%s = 1, NULL, %s),
                 updated_by = %s,
                 updated_at = %s
             WHERE id = %s
             AND group_id = %s
         """
-        self._sql.execute(query, (auxiliary['name'], auxiliary['ssh_tunnel'], auxiliary['ssh_hostname'], auxiliary['ssh_port'], auxiliary['ssh_username'], auxiliary['ssh_password'], auxiliary['ssh_key'], auxiliary['sql_engine'], auxiliary['sql_hostname'], auxiliary['sql_port'], auxiliary['sql_username'], auxiliary['sql_password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), auxiliary['id'], group_id))
+        self._sql.execute(query, (auxiliary['name'], auxiliary['ssh_tunnel'], auxiliary['ssh_hostname'], auxiliary['ssh_port'], auxiliary['ssh_username'], auxiliary['ssh_password'], auxiliary['ssh_key'], auxiliary['sql_engine'], auxiliary['sql_version'], auxiliary['sql_hostname'], auxiliary['sql_port'], auxiliary['sql_username'], auxiliary['sql_password'], auxiliary['shared'], auxiliary['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), auxiliary['id'], group_id))
 
     def delete(self, group_id, auxiliary_id):
         query = """

@@ -13,6 +13,11 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
+        <template v-slot:[`item.shared`]="{ item }">
+          <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
+          <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
+          {{ !item.shared ? 'Personal' : 'Shared' }}
+        </template>
       </v-data-table>
     </v-card>
 
@@ -21,8 +26,8 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn title="Create the server only for you" :color="item.scope == 'personal' ? 'primary' : '#779ecb'" @click="item.scope = 'personal'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn title="Create the server for all users in your group" :color="item.scope == 'shared' ? 'primary' : '#779ecb'" @click="item.scope = 'shared'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn title="Create the server only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn title="Create the server for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -39,7 +44,7 @@
                   </v-row>
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
-                      <v-select v-model="item.engine" :items="engines" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
+                      <v-select v-model="item.engine" :items="Object.keys(engines)" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
                       <v-select v-model="item.version" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
@@ -99,20 +104,23 @@ export default {
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Region', align: 'left', value: 'region'},
-      { text: 'Engine', align: 'left', value: 'engine' },
+      { text: 'Engine', align: 'left', value: 'version' },
       { text: 'Hostname', align: 'left', value: 'hostname'},
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
-      // { text: 'Password', align: 'left', value: 'password'}
+      { text: 'Scope', align: 'left', value: 'shared' },
     ],
     items: [],
     selected: [],
     search: '',
-    item: { scope: 'personal', name: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' },
+    item: { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', shared: false },
     mode: '',
     loading: true,
-    engines: ['MySQL', 'PostgreSQL', 'Aurora MySQL'],
-    versions: ['MySQL 5.6', 'MySQL 5.7', 'MySQL 8.x'],
+    engines: {
+      'MySQL': ['MySQL 5.6', 'MySQL 5.7', 'MySQL 8.x'],
+      'Aurora MySQL': ['Aurora MySQL 5.6', 'Aurora MySQL 5.7']
+    },
+    versions: [],
     aws_regions: [
       { code: 'us-east-1', name: 'US East (N. Virginia)' },
       { code: 'us-east-2', name: 'US East (Ohio)' },
@@ -177,16 +185,18 @@ export default {
         if (value == 'MySQL') this.item['port'] = '3306'
         else if (value == 'PostgreSQL') this.item['port'] = '5432'
       }
+      this.versions = this.engines[value]
     },
     newServer() {
       this.mode = 'new'
-      this.item = { scope: 'personal', name: '', region: '', engine: '', hostname: '', port: '', username: '', password: '' }
+      this.item = { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', shared: false }
       this.dialog_title = 'New Server'
       this.dialog = true
     },
     editServer() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.versions = this.engines[this.item.engine]
       this.getRegions()
       this.dialog_title = 'Edit Server'
       this.dialog = true

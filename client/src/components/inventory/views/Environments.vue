@@ -26,8 +26,8 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn title="Create the environment only for you" :color="scope == 'personal' ? 'primary' : '#779ecb'" @click="scope = 'personal'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn title="Create the environment for all users in your group" :color="scope == 'shared' ? 'primary' : '#779ecb'" @click="scope = 'shared'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn title="Create the environment only for you" :color="!shared ? 'primary' : '#779ecb'" @click="shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn title="Create the environment for all users in your group" :color="shared ? 'primary' : '#779ecb'" @click="shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -99,7 +99,7 @@ export default {
     dialog: false,
     dialog_title: '',
     // Dialog items
-    scope: 'personal',
+    shared: false,
     environment_name: '',
     environment_servers: {},
     treeviewItems: [],
@@ -181,6 +181,7 @@ export default {
         let row = {}
         row['id'] = environments[i]['id']
         row['name'] = environments[i]['name']
+        row['shared'] = environments[i]['shared']
         row['servers'] = []
         if (environments[i]['id'] in this.environment_servers) {
           for (let j = 0; j < this.environment_servers[environments[i]['id']].length; ++j) {
@@ -228,7 +229,7 @@ export default {
     },
     newEnvironment() {
       this.mode = 'new'
-      this.scope = 'personal'
+      this.shared = false
       this.environment_name = ''
       this.treeviewSelected = []
       this.treeviewOpened = []
@@ -238,6 +239,7 @@ export default {
     editEnvironment() {
       this.mode = 'edit'
       this.environment_name = this.selected[0]['name']
+      this.shared = this.selected[0]['shared']
       this.dialog_title = 'Edit Environment'
       this.dialog = true
       setTimeout(this.updateSelected, 1);
@@ -291,7 +293,7 @@ export default {
       var server_list = []
       for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i])
       // Add item in the DB
-      const payload = { name: this.environment_name, servers: server_list }
+      const payload = { shared: this.shared, name: this.environment_name, servers: server_list }
       axios.post('/inventory/environments', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -329,7 +331,7 @@ export default {
       var server_list = []
       for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i])
       // Edit item in the DB
-      const payload = { id: this.selected[0]['id'], name: this.environment_name, servers: server_list }
+      const payload = { id: this.selected[0]['id'], shared: this.shared, name: this.environment_name, servers: server_list }
       axios.put('/inventory/environments', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')

@@ -74,7 +74,7 @@
 <style scoped src="@/styles/splitPanes.css"></style>
 
 <script>
-// import axios from 'axios'
+import axios from 'axios'
 import EventBus from '../../../js/event-bus'
 import { mapFields } from '../../../js/map-fields'
 
@@ -112,6 +112,17 @@ export default {
   methods: {
     onSplitPaneReady() {
 
+    },
+    getServers() {
+      axios.get('/inventory/servers')
+        .then((response) => {
+          this.items = response.data.data
+          this.loading = false
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
     },
     newConnection() {
       this.dialog = true

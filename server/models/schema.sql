@@ -46,6 +46,7 @@ CREATE TABLE `users` (
   `group_id` int(10) unsigned NOT NULL,
   `admin` tinyint(1) NOT NULL DEFAULT '0',
   `last_login` DATETIME NULL,
+  `disabled` TINYINT(1) NOT NULL DEFAULT '0',
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,
@@ -60,13 +61,18 @@ CREATE TABLE `environments` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `group_id` int(10) unsigned NOT NULL,
+  `shared` tinyint(1) NOT NULL,
+  `owner_id` int(10) unsigned NULL,
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_id__name` (`group_id`,`name`),
-  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
+  INDEX `shared` (`shared`),
+  INDEX `owner_id` (`owner_id`),
+  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`),
+  FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `regions` (
@@ -79,24 +85,36 @@ CREATE TABLE `regions` (
   `username` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `password` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `key` text COLLATE utf8mb4_unicode_ci,
+  `shared` tinyint(1) NOT NULL,
+  `owner_id` int(10) unsigned NULL,
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_id__name` (`group_id`,`name`),
-  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
+  INDEX `shared` (`shared`),
+  INDEX `owner_id` (`owner_id`),
+  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`),
+  FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `servers` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `engine` enum('MySQL','PostgreSQL', 'Aurora MySQL') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `region_id` int(10) unsigned NOT NULL,
+  `region_id` int(10) unsigned NULL,
+  `engine`  varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `version`  varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `hostname` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `port` INT UNSIGNED NOT NULL,
   `username` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ssl` tinyint(1) NOT NULL,
+  `ssl_client_key` text COLLATE utf8mb4_unicode_ci,
+  `ssl_client_certificate` text COLLATE utf8mb4_unicode_ci,
+  `ssl_ca_certificate` text COLLATE utf8mb4_unicode_ci,
+  `shared` tinyint(1) NOT NULL,
+  `owner_id` int(10) unsigned NULL,
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,
@@ -104,7 +122,10 @@ CREATE TABLE `servers` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `region_id__name` (`region_id`, `name`),
   INDEX `name` (`name`),
-  FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`)
+  INDEX `shared` (`shared`),
+  INDEX `owner_id` (`owner_id`),
+  FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`),
+  FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `environment_servers` (
@@ -124,11 +145,14 @@ CREATE TABLE `auxiliary` (
   `ssh_username` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `ssh_password` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `ssh_key` text COLLATE utf8mb4_unicode_ci,
-  `sql_engine` enum('MySQL','PostgreSQL') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sql_engine`  varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sql_version`  varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `sql_hostname` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `sql_port` INT UNSIGNED NOT NULL,
   `sql_username` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `sql_password` varchar(191) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `shared` tinyint(1) NOT NULL,
+  `owner_id` int(10) unsigned NULL,
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,

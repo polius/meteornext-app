@@ -23,13 +23,13 @@ class Servers:
 
     def post(self, user_id, group_id, server):
         query = """
-            INSERT INTO servers (name, region_id, hostname, port, username, password, created_by, created_at)             
-            SELECT %s, id, %s, %s, %s, %s, %s, %s
+            INSERT INTO servers (name, region_id, engine, version, hostname, port, username, password, ssl, shared, owner_id, created_by, created_at)             
+            SELECT %s, id, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
             FROM regions
             WHERE group_id = %s
             AND name = %s
         """
-        self._sql.execute(query, (server['name'], server['hostname'], server['port'], server['username'], server['password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, server['region']))
+        self._sql.execute(query, (server['name'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, server['region']))
 
     def put(self, user_id, group_id, server):
         query = """
@@ -37,15 +37,20 @@ class Servers:
             JOIN regions r ON r.id = servers.region_id AND r.id = %s AND r.group_id = %s
             SET servers.name = %s,
                 servers.region_id = (SELECT id FROM regions WHERE group_id = %s AND name = %s),
+                servers.engine = %s,
+                servers.version = %s,
                 servers.hostname = %s,
                 servers.port = %s,
                 servers.username = %s,
                 servers.password = %s,
+                servers.ssl = %s,
+                servers.shared = %s,
+                servers.owner_id = IF(%s = 1, NULL, %s),
                 servers.updated_by = %s,
                 servers.updated_at = %s
             WHERE servers.id = %s
         """
-        self._sql.execute(query, (server['region_id'], group_id, server['name'], group_id, server['region'], server['hostname'], server['port'], server['username'], server['password'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
+        self._sql.execute(query, (server['region_id'], group_id, server['name'], group_id, server['region'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
     def delete(self, group_id, server_id):
         # Delete from 'monitoring'

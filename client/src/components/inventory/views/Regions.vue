@@ -25,6 +25,11 @@
           <v-icon v-if="item.ssh_tunnel && (item.key || '').length != 0" small color="#00b16a" style="margin-left:22px">fas fa-circle</v-icon>
           <v-icon v-else-if="item.ssh_tunnel" small color="error" style="margin-left:22px">fas fa-circle</v-icon>
         </template>
+        <template v-slot:[`item.shared`]="{ item }">
+          <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
+          <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
+          {{ !item.shared ? 'Personal' : 'Shared' }}
+        </template>
       </v-data-table>
     </v-card>
 
@@ -33,8 +38,8 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn title="Create the region only for you" :color="item.scope == 'personal' ? 'primary' : '#779ecb'" @click="item.scope = 'personal'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn title="Create the region for all users in your group" :color="item.scope == 'shared' ? 'primary' : '#779ecb'" @click="item.scope = 'shared'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn title="Create the region only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn title="Create the region for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -93,12 +98,13 @@ export default {
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'Password', align: 'left', value: 'password'},
-      { text: 'Private Key', align: 'left', value: 'key'}
+      { text: 'Private Key', align: 'left', value: 'key'},
+      { text: 'Scope', align: 'left', value: 'shared' },
     ],
     items: [],
     selected: [],
     search: '',
-    item: { scope: 'personal', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '' },
+    item: { name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: false },
     mode: '',
     loading: true,
     dialog: false,
@@ -128,7 +134,7 @@ export default {
     },
     newRegion() {
       this.mode = 'new'
-      this.item = { scope: 'personal', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '' }
+      this.item = { name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: false }
       this.dialog_title = 'New Region'
       this.dialog = true
     },
