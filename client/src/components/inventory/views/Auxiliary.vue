@@ -160,6 +160,7 @@ export default {
     editAuxiliary() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.versions = this.engines[this.item.sql_engine]
       this.dialog_title = 'Edit Auxiliary'
       this.dialog = true
     },

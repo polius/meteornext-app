@@ -6,14 +6,15 @@ class Auxiliary:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, group_id, auxiliary_id=None):
+    def get(self, user_id, group_id, auxiliary_id=None):
         if auxiliary_id is None:
             query = """
                 SELECT *
                 FROM auxiliary
                 WHERE group_id = %s
+                AND (shared = 1 OR owner_id = %s)
             """
-            return self._sql.execute(query, (group_id))
+            return self._sql.execute(query, (group_id, user_id))
         else:
             query = """
                 SELECT *
@@ -40,7 +41,8 @@ class Auxiliary:
                 ssh_username = %s, 
                 ssh_password = %s, 
                 ssh_key = %s, 
-                sql_engine = %s, 
+                sql_engine = %s,
+                sql_version = %s,
                 sql_hostname = %s, 
                 sql_port = %s, 
                 sql_username = %s, 

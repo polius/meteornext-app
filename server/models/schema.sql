@@ -183,6 +183,8 @@ CREATE TABLE `releases` (
   `name` VARCHAR(191) NOT NULL,
   `active` TINYINT(1) NOT NULL DEFAULT 1,
   `user_id` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id__name` (`user_id`, `name`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)

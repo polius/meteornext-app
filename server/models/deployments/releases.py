@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+from datetime import datetime
 
 class Releases:
     def __init__(self, sql):
@@ -9,10 +8,10 @@ class Releases:
         return self._sql.execute("SELECT * FROM releases WHERE user_id = %s ORDER BY id DESC", (user_id))
 
     def post(self, user_id, release):
-        self._sql.execute("INSERT INTO releases (name, active, user_id) VALUES (%s, %s, %s)", (release['name'], release['active'], user_id))
+        self._sql.execute("INSERT INTO releases (name, active, user_id, created_at) VALUES (%s, %s, %s, %s)", (release['name'], release['active'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user_id, release):
-        self._sql.execute("UPDATE releases SET name = %s, active = %s WHERE id = %s AND user_id = %s", (release['name'], release['active'], release['id'], user_id))
+        self._sql.execute("UPDATE releases SET name = %s, active = %s, updated_at = %s WHERE id = %s AND user_id = %s", (release['name'], release['active'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), release['id'], user_id))
 
     def delete(self, user_id, release_id):
         self._sql.execute("DELETE FROM releases WHERE id = %s AND user_id = %s", (release_id, user_id))

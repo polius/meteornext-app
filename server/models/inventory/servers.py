@@ -10,6 +10,7 @@ class Servers:
                 SELECT s.*, r.name AS 'region' 
                 FROM servers s
                 JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+                WHERE (s.shared = 1 OR s.owner_id = %s)
             """
             return self._sql.execute(query, (group_id))
         else:
