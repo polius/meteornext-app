@@ -41,9 +41,39 @@
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text">INVENTORY</v-toolbar-title>
               </v-toolbar>
-              <v-card-text style="padding-bottom:0px;">
-                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
-                <v-switch v-model="group.inventory_enabled" label="Access Inventory" color="info" style="margin-top:0px;"></v-switch>
+              <v-card-text style="padding-bottom:20px;">
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
+                  RIGHTS
+                  <v-tooltip right>
+                    <template v-slot:activator="{ on }">
+                      <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                    </template>
+                    <span><strong style="color:#2196f3; margin-right:6px;">Access Inventory:</strong>Allow users to access to the inventory.</span>
+                    <br>
+                    <span><strong style="color:#fa8231; margin-right:6px;">Secure Inventory:</strong>Shared resources (regions, servers, auxiliary connections) are shown without sensible data (hostname, username, password, ...).</span>
+                  </v-tooltip>
+                </div>
+                <v-switch v-model="group.inventory_enabled" label="Access Inventory" color="info" hide-details style="margin-top:0px;"></v-switch>
+                <v-switch v-model="group.inventory_secured" label="Secure Inventory" color="#fa8231" hide-details style="margin-top:20px; padding-top:0px;"></v-switch>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:15px; margin-top:15px">
+                  OWNERS
+                  <v-tooltip right>
+                    <template v-slot:activator="{ on }">
+                      <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                    </template>
+                    <span>Owners can mange <strong>Shared</strong> resources (environments, regions, servers, auxiliary connections)</span>
+                  </v-tooltip>
+                </div>
+                <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
+                  <v-toolbar-items class="hidden-sm-and-down" style="margin-left:-16px">
+                    <v-btn text @click="newOwners()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                    <v-btn v-if="inventorySelected.length > 0" text @click="removeOwners()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                  </v-toolbar-items>
+                  <v-divider class="mx-3" inset vertical></v-divider>
+                  <v-text-field v-model="inventorySearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+                </v-toolbar>
+                <v-data-table v-model="inventorySelected" :headers="inventoryHeaders" :items="inventoryItems" :search="inventorySearch" item-key="name" class="elevation-1" no-data-text="No owners created" hide-detault-header hide-default-footer disable-pagination>
+                </v-data-table>
               </v-card-text>
             </v-card>
 
@@ -123,6 +153,64 @@
       </v-card-text>
     </v-card>
 
+    <!---------------------->
+    <!-- Inventory Owners -->
+    <!---------------------->
+    <v-dialog v-model="dialog" persistent max-width="50%">
+      <v-card>
+        <v-toolbar dense v-if="dialogOptions.mode != 'delete'" flat color="primary">
+          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
+        </v-toolbar>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <div v-if="dialogOptions.mode == 'delete'" class="text-h6" style="font-weight:400;">{{ dialogOptions.title }}</div>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-bottom:15px;">
+                  <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
+                  <v-card>
+                    <v-toolbar flat dense color="#2e3131">
+                      <v-toolbar-title class="white--text">USERS</v-toolbar-title>
+                      <v-divider class="mx-3" inset vertical></v-divider>
+                      <v-text-field v-model="ownersSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+                    </v-toolbar>
+                    <v-list flat dense>
+                      <v-list-item-group v-model="owners" multiple>
+                        <v-list-item>
+                          <template v-slot:default="{ active }">
+                            <v-list-item-action>
+                              <v-checkbox :input-value="active"></v-checkbox>
+                            </v-list-item-action>
+                            <v-list-item-content>
+                              <v-list-item-title>username</v-list-item-title>
+                              <v-list-item-subtitle>email</v-list-item-subtitle>
+                            </v-list-item-content>
+                          </template>
+                        </v-list-item>
+                      </v-list-item-group>
+                    </v-list>
+                  </v-card>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogOptions.button1 }}</v-btn>
+                    </v-col>
+                    <v-col style="margin-bottom:10px;">
+                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogOptions.button2 }}</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!-------------->
+    <!-- Snackbar -->
+    <!-------------->
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -143,6 +231,7 @@ export default {
     // +--------+
     group: {
       'inventory_enabled': false,
+      'inventory_secured': false,
       'deployments_enabled': false,
       'deployments_basic': false,
       'deployments_pro': false,
@@ -157,6 +246,18 @@ export default {
     toolbar_title: '',
     form_valid: false,
     loading: false,
+
+    // Inventory - Owners
+    inventorySearch: '',
+    inventorySelected: [],
+    inventoryHeaders: [],
+    inventoryItems: [],
+    ownersSearch: '',
+    owners: [],
+
+    // Dialog - Basic
+    dialog: false,
+    dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
 
     // +------+
     // | TABS |
@@ -264,6 +365,33 @@ export default {
         .finally(() => {
           this.loading = false
         })
+    },
+    newOwners() {
+      var dialogOptions = {
+      'mode': 'new',
+        'title': 'New owners',
+        'text': '',
+        'button1': 'Submit',
+        'button2': 'Cancel'
+      }
+      this.showDialog(dialogOptions)
+    },
+    removeOwners() {
+      var dialogOptions = {
+        'mode': 'delete',
+        'title': 'Remove owners',
+        'text': 'Are you sure you want to remove the selected owners?',
+        'button1': 'Remove',
+        'button2': 'Cancel'
+      }
+      this.showDialog(dialogOptions)
+    },
+    showDialog(options) {
+      this.dialogOptions = options
+      this.dialog = true
+    },
+    dialogSubmit() {
+
     },
     goBack() {
       this.$router.go(-1)

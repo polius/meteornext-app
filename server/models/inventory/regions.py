@@ -4,7 +4,7 @@ class Regions:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, group_id, region_id=None):
+    def get(self, user_id, group_id, region_id=None):
         if region_id is None:
             query = """
                 SELECT *
@@ -12,7 +12,7 @@ class Regions:
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)
             """
-            return self._sql.execute(query, (group_id))
+            return self._sql.execute(query, (group_id, user_id))
         else:
             query = """
                 SELECT *

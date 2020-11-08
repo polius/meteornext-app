@@ -38,7 +38,7 @@ class Environments:
             environment_json = request.get_json()
 
             if request.method == 'GET':
-                return self.get(user['group_id'])
+                return self.get(user['id'], user['group_id'])
             elif request.method == 'POST':
                 return self.post(user['id'], user['group_id'], environment_json)
             elif request.method == 'PUT':
@@ -61,16 +61,15 @@ class Environments:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
             
             # Get environments list
-            return jsonify({'data': self._environments.get(user['group_id'])})
+            return jsonify({'data': self._environments.get(user['id'], user['group_id'])})
 
         return environments_blueprint
 
     ####################
     # Internal Methods #
     ####################
-    def get(self, group_id):
-        return jsonify({'environments': self._environments.get(group_id), 'environment_servers': self._environments.get_environment_servers(group_id), 'servers': self._environments.get_servers(group_id)}), 200
-        # return jsonify({'environments': self._environments.get(group_id), 'servers': self._environments.get_servers(group_id)}), 200
+    def get(self, user_id, group_id):
+        return jsonify({'environments': self._environments.get(user_id, group_id), 'environment_servers': self._environments.get_environment_servers(group_id), 'servers': self._environments.get_servers(group_id)}), 200
 
     def post(self, user_id, group_id, data):
         if self._environments.exist(group_id, data):

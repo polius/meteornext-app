@@ -95,7 +95,7 @@ export default {
       { text: 'Id', align: ' d-none', value: 'id' },
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Servers', align: 'left', value: 'servers' },
-      { text: 'Scope', align: 'left', value: 'shared', width: "120px" }
+      { text: 'Scope', align: 'left', value: 'shared', width: "10%" }
     ],
     items: [],
     selected: [],

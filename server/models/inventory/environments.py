@@ -4,7 +4,7 @@ class Environments:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, group_id=None):
+    def get(self, user_id, group_id=None):
         if group_id:
             query = """
                 SELECT * 
@@ -12,7 +12,7 @@ class Environments:
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)
             """
-            return self._sql.execute(query, (group_id))
+            return self._sql.execute(query, (group_id, user_id))
         else:
             query = "SELECT * FROM environments"
             return self._sql.execute(query)
