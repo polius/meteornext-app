@@ -70,7 +70,11 @@ class Groups:
         else:
             # Get group ID
             groupID = request.args['groupID'] if group_id is None else group_id
-            return jsonify({'data': self._groups.get(group_id=groupID)}), 200
+            # Get group
+            group = self._groups.get(group_id=groupID)
+            # Get group owners
+            group_owners = self._groups.get_owners(group_id=groupID)
+            return jsonify({'group': group, 'owners': group_owners}), 200
 
     def post(self, user_id, data):
         # Get Group
