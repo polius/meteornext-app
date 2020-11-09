@@ -10,10 +10,10 @@
         <v-flex>
           <v-form ref="form" v-model="form_valid">
             <!-- INFO -->
-            <v-text-field ref="focus" v-model="group.name" :rules="[v => !!v || '']" label="Name" required style="margin-top:0px;"></v-text-field>
-            <v-text-field v-model="group.description" :rules="[v => !!v || '']" label="Description" required style="padding-top:0px; margin-top:0px;"></v-text-field>
-            <v-text-field v-model="group.coins_day" label="Coins per day" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="padding-top:0px; margin-top:0px;"></v-text-field>
-            <v-text-field v-model="group.coins_max" label="Maximum coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
+            <v-text-field :disabled="loading" ref="focus" v-model="group.name" :rules="[v => !!v || '']" label="Name" required style="margin-top:0px;"></v-text-field>
+            <v-text-field :disabled="loading" v-model="group.description" :rules="[v => !!v || '']" label="Description" required style="padding-top:0px; margin-top:0px;"></v-text-field>
+            <v-text-field :disabled="loading" v-model="group.coins_day" label="Coins per day" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="padding-top:0px; margin-top:0px;"></v-text-field>
+            <v-text-field :disabled="loading" v-model="group.coins_max" label="Maximum coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
 
             <!-- SERVICES - BAR -->
             <div>
@@ -49,26 +49,26 @@
                     <span><strong style="color:#fa8231; margin-right:6px;">Secure Inventory:</strong>Shared resources (regions, servers, auxiliary connections) are shown without sensible data (hostname, username, password, ...).</span>
                   </v-tooltip>
                 </div>
-                <v-switch v-model="group.inventory_enabled" label="Access Inventory" color="info" hide-details style="margin-top:0px;"></v-switch>
-                <v-switch v-model="group.inventory_secured" label="Secure Inventory" color="#fa8231" hide-details style="margin-top:20px; padding-top:0px;"></v-switch>
+                <v-switch :disabled="loading" v-model="group.inventory_enabled" label="Access Inventory" color="info" hide-details style="margin-top:0px;"></v-switch>
+                <v-switch :disabled="loading" v-model="group.inventory_secured" label="Secure Inventory" color="#fa8231" hide-details style="margin-top:20px; padding-top:0px;"></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:15px; margin-top:15px">
                   OWNERS
                   <v-tooltip right>
                     <template v-slot:activator="{ on }">
                       <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
                     </template>
-                    <span>Owners can mange <strong>Shared</strong> resources (environments, regions, servers, auxiliary connections)</span>
+                    <span>Owners can manage <strong>Shared</strong> resources (environments, regions, servers, auxiliary connections)</span>
                   </v-tooltip>
                 </div>
                 <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
                   <v-toolbar-items style="margin-left:-16px">
-                    <v-btn text @click="newOwners()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                    <v-btn v-if="inventorySelected.length > 0" text @click="removeOwners()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                    <v-btn :disabled="loading" text @click="newOwners()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                    <v-btn :disabled="loading" v-if="ownersSelected.length > 0" text @click="removeOwners()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                   </v-toolbar-items>
                   <v-divider class="mx-3" inset vertical></v-divider>
-                  <v-text-field v-model="inventorySearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+                  <v-text-field v-model="ownersSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                 </v-toolbar>
-                <v-data-table v-model="inventorySelected" :headers="inventoryHeaders" :items="inventoryItems" :search="inventorySearch" item-key="name" class="elevation-1" no-data-text="No owners created" hide-detault-header hide-default-footer disable-pagination>
+                <v-data-table v-model="ownersSelected" :headers="ownersHeaders" :items="ownersItems" :search="ownersSearch" item-key="username" class="elevation-1" no-data-text="No owners created" hide-detault-header hide-default-footer show-select disable-pagination>
                 </v-data-table>
               </v-card-text>
             </v-card>
@@ -152,34 +152,35 @@
     <!---------------------->
     <!-- Inventory Owners -->
     <!---------------------->
-    <v-dialog v-model="dialog" persistent max-width="50%">
+    <v-dialog v-model="ownersDialog" persistent max-width="50%">
       <v-card>
-        <v-toolbar dense v-if="dialogOptions.mode != 'delete'" flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
+        <v-toolbar dense v-if="ownersDialogOptions.mode != 'delete'" flat color="primary">
+          <v-toolbar-title class="white--text">{{ ownersDialogOptions.title }}</v-toolbar-title>
         </v-toolbar>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px">
             <v-layout wrap>
-              <div v-if="dialogOptions.mode == 'delete'" class="text-h6" style="font-weight:400;">{{ dialogOptions.title }}</div>
+              <div v-if="ownersDialogOptions.mode == 'delete'" class="text-h6" style="font-weight:400;">{{ ownersDialogOptions.title }}</div>
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
-                  <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
-                  <v-card>
+                  <div v-if="ownersDialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important; margin-top:15px;">{{ ownersDialogOptions.text }}</div>
+                  <v-card v-if="ownersDialogOptions.mode == 'new'">
                     <v-toolbar flat dense color="#2e3131">
                       <v-toolbar-title class="white--text">USERS</v-toolbar-title>
                       <v-divider class="mx-3" inset vertical></v-divider>
-                      <v-text-field v-model="ownersSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+                      <v-text-field v-model="ownersDialogSearch" @input="onOwnersSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>
+                    <div v-if="ownersDialogItems.length == 0" class="body-2" style="margin-top:15px; text-align:center; color:rgb(211, 211, 211);">{{ ownersDialogSearch.length != 0 ? 'This search returned no results' : 'This group does not contain users or all users have already been added to owners' }}</div>
                     <v-list flat dense>
-                      <v-list-item-group v-model="owners" multiple>
-                        <v-list-item>
-                          <template v-slot:default="{ active }">
+                      <v-list-item-group multiple>
+                        <v-list-item v-for="item in ownersDialogItems" :key="item.username" dense @click="onOwnersClick(item)" @contextmenu="$event.preventDefault()">
+                          <template>
                             <v-list-item-action>
-                              <v-checkbox :input-value="active"></v-checkbox>
+                              <v-checkbox :input-value="ownersDialogSelected.includes(item.username)"></v-checkbox>
                             </v-list-item-action>
                             <v-list-item-content>
-                              <v-list-item-title>username</v-list-item-title>
-                              <v-list-item-subtitle>email</v-list-item-subtitle>
+                              <v-list-item-title>{{ item.username }}</v-list-item-title>
+                              <v-list-item-subtitle>{{ item.email }}</v-list-item-subtitle>
                             </v-list-item-content>
                           </template>
                         </v-list-item>
@@ -191,10 +192,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogOptions.button1 }}</v-btn>
+                      <v-btn :disabled="ownersDialogOptions.mode == 'new' && this.ownersDialogSelected.length == 0" :loading="loading" @click="ownersDialogSubmit" color="primary">{{ ownersDialogOptions.button1 }}</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogOptions.button2 }}</v-btn>
+                      <v-btn :disabled="loading" @click="ownersDialog = false" outlined color="#e74d3c">{{ ownersDialogOptions.button2 }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -226,34 +227,40 @@ export default {
     // | GROUPS |
     // +--------+
     group: {
-      'inventory_enabled': false,
-      'inventory_secured': false,
-      'deployments_enabled': false,
-      'deployments_basic': false,
-      'deployments_pro': false,
-      'coins_execution': 10,
-      'deployments_execution_threads': 10,
-      'deployments_execution_limit': null,
-      'deployments_execution_concurrent': null,
-      'monitoring_enabled': false,
-      'utils_enabled': false,
-      'client_enabled': false
+      inventory_enabled: false,
+      inventory_secured: false,
+      deployments_enabled: false,
+      deployments_basic: false,
+      deployments_pro: false,
+      coins_execution: 10,
+      deployments_execution_threads: 10,
+      deployments_execution_limit: null,
+      deployments_execution_concurrent: null,
+      monitoring_enabled: false,
+      utils_enabled: false,
+      client_enabled: false
     },
     toolbar_title: '',
     form_valid: false,
     loading: false,
 
     // Inventory - Owners
-    inventorySearch: '',
-    inventorySelected: [],
-    inventoryHeaders: [],
-    inventoryItems: [],
+    inventoryOwners: [],
+    ownersItems: [],
     ownersSearch: '',
-    owners: [],
+    ownersSelected: [],
+    ownersHeaders: [
+      { text: 'Username', align: 'left', value: 'username' },
+      { text: 'Email', align: 'left', value: 'email' }
+    ],
 
-    // Dialog - Basic
-    dialog: false,
-    dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
+    // Inventory - Owners Dialog
+    ownersDialog: false,
+    ownersDialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
+    ownersDialogRawItems: [],
+    ownersDialogItems: [],
+    ownersDialogSelected: [],
+    ownersDialogSearch: '',
 
     // +------+
     // | TABS |
@@ -282,18 +289,21 @@ export default {
     // | GROUPS |
     // +--------+
     getGroup() {
+      this.loading = true
       axios.get('/admin/groups', { params: { groupID: this.group['id'] } })
         .then((response) => {
-          if (response.data.data.length == 0) this.$router.push('/admin/groups')
+          if (response.data.group.length == 0) this.$router.push('/admin/groups')
           else {
-            this.group = response.data.data[0]
-            this.loading = false
+            this.group = response.data.group[0]
+            this.inventoryOwners = response.data.owners
+            this.ownersItems = response.data.owners.filter(x => x.owner)
           }
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
+        .finally(() => this.loading = false)
     },
     submitGroup() {
       this.loading = true
@@ -312,12 +322,7 @@ export default {
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
       // Add group to the DB
       const payload = {
-        group: JSON.stringify(this.group),
-        environments: this.environment_items,
-        regions: this.region_items,
-        servers: this.server_items,
-        auxiliary: this.auxiliary_items,
-        slack: JSON.stringify(this.slack),        
+        group: JSON.stringify(this.group)
       }
       axios.post('/admin/groups', payload)
         .then((response) => {
@@ -343,12 +348,7 @@ export default {
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
       // Edit group to the DB
       const payload = {
-        group: JSON.stringify(this.group),
-        environments: this.environment_items,
-        regions: this.region_items,
-        servers: this.server_items,
-        auxiliary: this.auxiliary_items,
-        slack: JSON.stringify(this.slack),        
+        group: JSON.stringify(this.group),   
       }
       axios.put('/admin/groups', payload)
         .then((response) => {
@@ -363,31 +363,55 @@ export default {
         })
     },
     newOwners() {
-      var dialogOptions = {
+      var ownersDialogOptions = {
       'mode': 'new',
         'title': 'New owners',
         'text': '',
-        'button1': 'Submit',
+        'button1': 'Add',
         'button2': 'Cancel'
       }
-      this.showDialog(dialogOptions)
+      this.showDialog(ownersDialogOptions)
     },
     removeOwners() {
-      var dialogOptions = {
+      var ownersDialogOptions = {
         'mode': 'delete',
         'title': 'Remove owners',
         'text': 'Are you sure you want to remove the selected owners?',
         'button1': 'Remove',
         'button2': 'Cancel'
       }
-      this.showDialog(dialogOptions)
+      this.showDialog(ownersDialogOptions)
     },
     showDialog(options) {
-      this.dialogOptions = options
-      this.dialog = true
+      this.ownersDialogOptions = options
+      this.ownersDialogSearch = ''
+      this.ownersDialogSelected = []
+      this.ownersDialogRawItems = this.inventoryOwners.filter(x => !x.owner).filter(x => !this.ownersItems.some(y => y.username == x.username))
+      this.ownersDialogItems = this.ownersDialogRawItems.slice(0)
+      this.ownersDialog = true
     },
-    dialogSubmit() {
-
+    onOwnersSearch(value) {
+      if (value.length == 0) this.ownersDialogItems = this.ownersDialogRawItems.slice(0)
+      else this.ownersDialogItems = this.ownersDialogRawItems.filter(x => x.username.includes(value) || x.email.includes(value) )
+    },
+    onOwnersClick(item) {
+      const index = this.ownersDialogSelected.findIndex(x => x == item.username)
+      if (index > -1) this.ownersDialogSelected.splice(index, 1)
+      else this.ownersDialogSelected.push(item.username)
+    },
+    ownersDialogSubmit() {
+      if (this.ownersDialogOptions.mode == 'new') {
+        for (let owner of this.ownersDialogSelected) {
+          let obj = this.ownersDialogRawItems.find(x => x.username == owner)
+          delete obj['owner']
+          this.ownersItems.push(obj)
+        }
+      }
+      else if (this.ownersDialogOptions.mode == 'delete') {
+        this.ownersItems = this.ownersItems.filter(x => !this.ownersSelected.some(y => y.username == x.username))
+        this.ownersSelected = []
+      }
+      this.ownersDialog = false
     },
     goBack() {
       this.$router.go(-1)

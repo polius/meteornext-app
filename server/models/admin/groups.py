@@ -69,3 +69,22 @@ class Groups:
                 ) AS exist
             """
             return self._sql.execute(query, (group['name']))[0]['exist'] == 1
+
+    def get_owners(self, group_id):
+        query = """
+            SELECT u.username, u.email, (go.group_id IS NOT NULL) AS 'owner'
+            FROM users u
+            LEFT JOIN group_owners go ON go.user_id = u.id AND go.group_id = u.group_id
+            WHERE u.group_id = %s
+        """
+        return self._sql.execute(query, (group_id))
+
+    def post_owners(self, group_id, owners):
+        for owner in owners:
+            query = "INSERT IGNORE INTO group_owners (group_id, user_id) VALUES (%s, %s)"
+            self._sql.execute(query, (group_id, owner))
+
+    def delete_owners(self, group_id, owners):
+        for owner in owners:
+            query = "DELETE FROM group_owners WHERE group_id = %s AND user_id = %s"
+            self._sql.execute(query, (group_id, owner))
