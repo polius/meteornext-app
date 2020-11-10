@@ -27,7 +27,7 @@
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn title="Create the server only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn title="Create the server for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn :disabled="!owner" title="Create the server for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -153,6 +153,10 @@ export default {
     snackbarText: '',
     snackbarColor: ''
   }),
+  computed: {
+    owner: function() { return this.$store.getters['app/owner'] },
+    inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
+  },
   created() {
     this.getServers()
     this.getRegions()

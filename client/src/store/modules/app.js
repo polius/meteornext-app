@@ -6,6 +6,7 @@ const state = () => ({
   token: localStorage.getItem('token') || '',
   coins: localStorage.getItem('coins') || 0,
   admin: localStorage.getItem('admin') || false,
+  owner: localStorage.getItem('owner') || false,
   inventory_enabled: localStorage.getItem('inventory_enabled') == '1' ? true : false,
   inventory_secured: localStorage.getItem('inventory_secured') == '1' ? true : false,
   deployments_enabled: localStorage.getItem('deployments_enabled') == '1' ? true : false,
@@ -23,6 +24,7 @@ const getters = {
   username: state => state.username,
   coins: state => state.coins,
   admin: state => state.admin,
+  owner: state => state.owner,
   inventory_enabled: state => state.inventory_enabled,
   inventory_secured: state => state.inventory_secured,
   deployments_enabled: state => state.deployments_enabled,
@@ -49,6 +51,7 @@ const actions = {
             token: response.data.data.access_token,
             coins: response.data.data.coins,
             admin: response.data.data.admin,
+            owner: response.data.data.owner,
             inventory_enabled: response.data.data.inventory_enabled,
             inventory_secured: response.data.data.inventory_secured,
             deployments_enabled: response.data.data.deployments_enabled,
@@ -64,6 +67,7 @@ const actions = {
           localStorage.setItem('token', data['token'])
           localStorage.setItem('coins', data['coins'])
           localStorage.setItem('admin', data['admin'])
+          localStorage.setItem('owner', data['owner'])
           localStorage.setItem('inventory_enabled', data['inventory_enabled'])
           localStorage.setItem('inventory_secured', data['inventory_secured'])
           localStorage.setItem('deployments_enabled', data['deployments_enabled'])
@@ -88,6 +92,7 @@ const actions = {
           localStorage.removeItem('token')
           localStorage.removeItem('coins')
           localStorage.removeItem('admin')
+          localStorage.removeItem('owner')
           localStorage.removeItem('inventory_enabled')
           localStorage.removeItem('inventory_secured')
           localStorage.removeItem('deployments_enabled')
@@ -117,6 +122,7 @@ const actions = {
       localStorage.removeItem('token')
       localStorage.removeItem('coins')
       localStorage.removeItem('admin')
+      localStorage.removeItem('owner')
       localStorage.removeItem('inventory_enabled')
       localStorage.removeItem('inventory_secured')
       localStorage.removeItem('deployments_enabled')
@@ -141,6 +147,7 @@ const mutations = {
     state.token = data.token
     state.coins = data.coins
     state.admin = data.admin == 1
+    state.owner = data.owner == 1
     state.inventory_enabled = data.inventory_enabled == 1
     state.inventory_secured = data.inventory_secured == 1
     state.deployments_enabled = data.deployments_enabled == 1
@@ -156,6 +163,7 @@ const mutations = {
     state.token = ''
     state.coins = 0
     state.admin = 0
+    state.owner = 0
     state.inventory_enabled = 0
     state.inventory_secured = 0
     state.deployments_enabled = 0
