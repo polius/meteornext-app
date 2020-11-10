@@ -31,12 +31,12 @@ class Regions:
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
-            # Check user privileges
-            if not user['inventory_enabled']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
             # Get Request Json
             region_json = request.get_json()
+
+            # Check user privileges
+            if not user['inventory_enabled'] or (request.method != 'GET' and region_json['shared'] and not user['owner']):
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
                 return self.get(user['id'], user['group_id'])
