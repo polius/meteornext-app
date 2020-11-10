@@ -8,8 +8,12 @@
           <v-btn text @click="newAuxiliary()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn v-if="selected.length == 1" text @click="editAuxiliary()" class="body-2"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
           <v-btn v-if="selected.length > 0" text @click="deleteAuxiliary()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
+          <v-btn text class="body-2" @click="filterBy('personal')" :style="filter == 'personal' ? 'font-weight:600' : 'font-weight:400'">PERSONAL</v-btn>
+          <v-btn text class="body-2" @click="filterBy('shared')" :style="filter == 'shared' ? 'font-weight:600' : 'font-weight:400'">SHARED</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
-        <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
@@ -100,6 +104,7 @@ import axios from 'axios';
 
 export default {
   data: () => ({
+    filter: 'all',
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Engine', align: 'left', value: 'sql_engine'},
@@ -109,6 +114,7 @@ export default {
       { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'},
       { text: 'Scope', align: 'left', value: 'shared' },
     ],
+    auxiliary: [],
     items: [],
     selected: [],
     search: '',
@@ -140,6 +146,7 @@ export default {
     getAuxiliary() {
       axios.get('/inventory/auxiliary')
         .then((response) => {
+          this.auxiliary = response.data.data
           this.items = response.data.data
           this.loading = false
         })
@@ -298,6 +305,12 @@ export default {
         .finally(() => {
           this.loading = false
         })
+    },
+    filterBy(val) {
+      this.filter = val
+      if (val == 'all') this.items = this.auxiliary.slice(0)
+      else if (val == 'personal') this.items = this.auxiliary.filter(x => !x.shared)
+      else if (val == 'shared') this.items = this.auxiliary.filter(x => x.shared)
     },
     notification(message, color, persistent=false) {
       this.snackbar = false

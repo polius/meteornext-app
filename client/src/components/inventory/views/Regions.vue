@@ -8,8 +8,12 @@
           <v-btn text @click="newRegion()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn v-if="selected.length == 1" text @click="editRegion()" class="body-2"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
           <v-btn v-if="selected.length > 0" text @click="deleteRegion()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
+          <v-btn text class="body-2" @click="filterBy('personal')" :style="filter == 'personal' ? 'font-weight:600' : 'font-weight:400'">PERSONAL</v-btn>
+          <v-btn text class="body-2" @click="filterBy('shared')" :style="filter == 'shared' ? 'font-weight:600' : 'font-weight:400'">SHARED</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
-        <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
@@ -91,6 +95,7 @@ import axios from 'axios';
 export default {
   data: () => ({
     // Data Table
+    filter: 'all',
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'},
@@ -101,6 +106,7 @@ export default {
       { text: 'Private Key', align: 'left', value: 'key'},
       { text: 'Scope', align: 'left', value: 'shared' },
     ],
+    regions: [],
     items: [],
     selected: [],
     search: '',
@@ -128,6 +134,7 @@ export default {
     getRegions() {
       axios.get('/inventory/regions')
         .then((response) => {
+          this.regions = response.data.data
           this.items = response.data.data
           this.loading = false
         })
@@ -265,6 +272,12 @@ export default {
         .finally(() => {
           this.loading = false
         })
+    },
+    filterBy(val) {
+      this.filter = val
+      if (val == 'all') this.items = this.regions.slice(0)
+      else if (val == 'personal') this.items = this.regions.filter(x => !x.shared)
+      else if (val == 'shared') this.items = this.regions.filter(x => x.shared)
     },
     notification(message, color, persistent=false) {
       this.snackbar = false

@@ -18,6 +18,7 @@ CREATE TABLE `groups` (
   `coins_max` INT UNSIGNED NOT NULL DEFAULT '100',
   `coins_execution` INT UNSIGNED NOT NULL DEFAULT '10',
   `inventory_enabled` tinyint(1) NOT NULL DEFAULT '0',
+  `inventory_secured` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_enabled` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_basic` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_pro` tinyint(1) NOT NULL DEFAULT '0',
