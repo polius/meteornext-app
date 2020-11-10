@@ -322,7 +322,11 @@ export default {
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
       // Add group to the DB
       const payload = {
-        group: JSON.stringify(this.group)
+        group: JSON.stringify(this.group),
+        owners: {
+          add: this.ownersItems.map(x => x.username),
+          del: [],
+        }
       }
       axios.post('/admin/groups', payload)
         .then((response) => {
@@ -348,7 +352,11 @@ export default {
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
       // Edit group to the DB
       const payload = {
-        group: JSON.stringify(this.group),   
+        group: JSON.stringify(this.group),
+        owners: {
+          add: this.ownersItems.filter(x => this.inventoryOwners.some(y => y.username == x.username && !y.owner)).map(x => x.username),
+          del: this.inventoryOwners.filter(x => x.owner && !this.ownersItems.some(y => y.username == x.username)).map(x => x.username)
+        }
       }
       axios.put('/admin/groups', payload)
         .then((response) => {
@@ -402,7 +410,7 @@ export default {
     ownersDialogSubmit() {
       if (this.ownersDialogOptions.mode == 'new') {
         for (let owner of this.ownersDialogSelected) {
-          let obj = this.ownersDialogRawItems.find(x => x.username == owner)
+          let obj = JSON.parse(JSON.stringify(this.ownersDialogRawItems.find(x => x.username == owner)))
           delete obj['owner']
           this.ownersItems.push(obj)
         }

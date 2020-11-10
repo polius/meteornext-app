@@ -84,8 +84,9 @@ class Groups:
         if self._groups.exist(group):
             return jsonify({'message': 'This group currently exists'}), 400
 
-        # Create group
-        self._groups.post(user_id, group)
+        # Create group & owners
+        group_id = self._groups.post(user_id, group)
+        self._groups.post_owners(group_id, data['owners']['add'])
         return jsonify({'message': 'Group added'}), 200
 
     def put(self, user_id, data):
@@ -96,8 +97,10 @@ class Groups:
         if self._groups.exist(group):
             return jsonify({'message': 'This group currently exists'}), 400
 
-        # Update group
+        # Update group & owners
         self._groups.put(user_id, group)
+        self._groups.post_owners(group['id'], data['owners']['add'])
+        self._groups.delete_owners(group['id'], data['owners']['del'])
         return jsonify({'message': 'Group edited'}), 200
 
     def delete(self):

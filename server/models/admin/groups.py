@@ -19,7 +19,7 @@ class Groups:
             INSERT INTO groups (name, description, coins_day, coins_max, coins_execution, inventory_enabled, inventory_secured, deployments_enabled, deployments_basic, deployments_pro, deployments_execution_threads, deployments_execution_limit, deployments_execution_concurrent, monitoring_enabled, utils_enabled, client_enabled, created_by, created_at) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_limit'], group['deployments_execution_concurrent'], group['monitoring_enabled'], group['utils_enabled'], group['client_enabled'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        return self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_limit'], group['deployments_execution_concurrent'], group['monitoring_enabled'], group['utils_enabled'], group['client_enabled'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user_id, group):
         query = """
@@ -81,10 +81,20 @@ class Groups:
 
     def post_owners(self, group_id, owners):
         for owner in owners:
-            query = "INSERT IGNORE INTO group_owners (group_id, user_id) VALUES (%s, %s)"
+            query = """
+                INSERT IGNORE INTO group_owners (group_id, user_id)
+                SELECT %s, id
+                FROM users
+                WHERE username = %s
+            """
             self._sql.execute(query, (group_id, owner))
 
     def delete_owners(self, group_id, owners):
         for owner in owners:
-            query = "DELETE FROM group_owners WHERE group_id = %s AND user_id = %s"
-            self._sql.execute(query, (group_id, owner))
+            query = """
+                DELETE go
+                FROM group_owners go
+                JOIN users u ON u.id = go.user_id AND u.username = %s
+                WHERE go.group_id = %s
+            """
+            self._sql.execute(query, (owner, group_id))
