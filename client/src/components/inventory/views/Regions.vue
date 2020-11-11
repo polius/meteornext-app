@@ -54,7 +54,7 @@
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" :readonly="readOnly" label="Name" required></v-text-field>
                   <v-switch v-model="item.ssh_tunnel" :readonly="readOnly" label="Use SSH Tunnel" color="info" hide-details style="margin-top:0px;"></v-switch>
-                  <div v-if="item.ssh_tunnel" style="margin-top:25px;">
+                  <div v-if="item.ssh_tunnel && !(readOnly && inventory_secured)" style="margin-top:25px;">
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
                         <v-text-field v-model="item.hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>

@@ -57,6 +57,9 @@
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
+                        <template v-slot:append="{ item }">
+                          <v-chip v-if="!item.children" label><v-icon small style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
+                        </template>
                       </v-treeview>
                     </v-card-text>
                   </v-card>
@@ -65,7 +68,7 @@
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <div v-if="readOnly">
-                      <v-btn color="#00b16a" @click="dialog = false">CLOSE</v-btn>
+                    <v-btn color="#00b16a" @click="dialog = false">CLOSE</v-btn>
                   </div>
                   <div v-else>
                     <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>
@@ -175,7 +178,7 @@ export default {
         let region = { id: 'r'+regions[i]['id'], name: regions[i]['name'], children: []}
         for (let j = 0; j < servers.length; ++j) {
           if (regions[i]['name'] == servers[j]['region_name']) {
-            region['children'].push({ id: servers[j]['server_id'], name: servers[j]['server_name'] })
+            region['children'].push({ id: servers[j]['server_id'], name: servers[j]['server_name'], shared: servers[j]['server_shared'] })
           }
         }
         if (region['children'].length == 0) delete region['children']

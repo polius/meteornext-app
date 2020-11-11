@@ -43,7 +43,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px;">
                   <v-text-field ref="field" v-model="item.name" :readonly="readOnly" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
@@ -53,42 +53,44 @@
                       <v-select v-model="item.sql_version" :readonly="readOnly" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
                     </v-col>
                   </v-row>
-                  <v-row no-gutters>
-                    <v-col cols="8" style="padding-right:10px">
-                      <v-text-field v-model="item.sql_hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-left:10px">
-                      <v-text-field v-model="item.sql_port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                  </v-row>
-                  <v-text-field v-model="item.sql_username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="item.sql_password" :readonly="readOnly" label="Password" style="padding-top:0px;" hide-details></v-text-field>
-                  <v-switch v-model="item.ssh_tunnel" :readonly="readOnly" label="Use SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
-                  <div v-if="item.ssh_tunnel" style="margin-top:20px;">
+                  <div v-if="!(readOnly && inventory_secured)" style="margin-bottom:20px">
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
-                        <v-text-field v-model="item.ssh_hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="item.sql_hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
                       </v-col>
                       <v-col cols="4" style="padding-left:10px">
-                        <v-text-field v-model="item.ssh_port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="item.sql_port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
                       </v-col>
                     </v-row>
-                    <v-text-field v-model="item.ssh_username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.ssh_password" :readonly="readOnly" label="Password" style="padding-top:0px;"></v-text-field>
-                    <v-textarea v-model="item.ssh_key" :readonly="readOnly" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                    <v-text-field v-model="item.sql_username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="item.sql_password" :readonly="readOnly" label="Password" style="padding-top:0px;" hide-details></v-text-field>
+                    <v-switch v-model="item.ssh_tunnel" :readonly="readOnly" label="Use SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
+                    <div v-if="item.ssh_tunnel" style="margin-top:20px;">
+                      <v-row no-gutters>
+                        <v-col cols="8" style="padding-right:10px">
+                          <v-text-field v-model="item.ssh_hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
+                        </v-col>
+                        <v-col cols="4" style="padding-left:10px">
+                          <v-text-field v-model="item.ssh_port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
+                        </v-col>
+                      </v-row>
+                      <v-text-field v-model="item.ssh_username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                      <v-text-field v-model="item.ssh_password" :readonly="readOnly" label="Password" style="padding-top:0px;"></v-text-field>
+                      <v-textarea v-model="item.ssh_key" :readonly="readOnly" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                    </div>
+                    <v-switch v-model="item.sql_ssl" :readonly="readOnly" flat label="Use SSL" style="margin-top:10px" hide-details></v-switch>
+                    <v-row no-gutters v-if="item.sql_ssl" style="margin-top:20px">
+                      <v-col style="padding-right:10px;">
+                        <v-file-input v-model="item.ssl_client_key" :readonly="readOnly" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
+                      </v-col>
+                      <v-col style="padding-right:5px; padding-left:5px;">
+                        <v-file-input v-model="item.ssl_client_certificate" :readonly="readOnly" filled dense label="Client Certificate" prepend-icon="" hide-details></v-file-input>
+                      </v-col>
+                      <v-col style="padding-left:10px;">
+                        <v-file-input v-model="item.ssl_client_ca_certificate" :readonly="readOnly" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
+                      </v-col>
+                    </v-row>
                   </div>
-                  <v-switch v-model="item.sql_ssl" :readonly="readOnly" flat label="Use SSL" style="margin-top:10px" hide-details></v-switch>
-                  <v-row no-gutters v-if="item.sql_ssl" style="margin-top:20px">
-                    <v-col style="padding-right:10px;">
-                      <v-file-input v-model="item.ssl_client_key" :readonly="readOnly" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
-                    </v-col>
-                    <v-col style="padding-right:5px; padding-left:5px;">
-                      <v-file-input v-model="item.ssl_client_certificate" :readonly="readOnly" filled dense label="Client Certificate" prepend-icon="" hide-details></v-file-input>
-                    </v-col>
-                    <v-col style="padding-left:10px;">
-                      <v-file-input v-model="item.ssl_client_ca_certificate" :readonly="readOnly" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
-                    </v-col>
-                  </v-row>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected auxiliary connections?</div>
                 <v-divider></v-divider>
