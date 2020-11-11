@@ -6,8 +6,8 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text @click="newEnvironment()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editEnvironment()" class="body-2"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn v-if="selected.length > 0" text @click="deleteEnvironment()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="editEnvironment()" class="body-2"><v-icon small style="padding-right:10px">{{ !owner && selected[0].shared ? 'fas fa-info' : 'fas fa-feather-alt' }}</v-icon>{{ !owner && selected[0].shared ? 'INFO' : 'EDIT' }}</v-btn>
+          <v-btn v-if="selected.length > 0 && !(!owner && selected.some(x => x.shared))" text @click="deleteEnvironment()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('personal')" :style="filter == 'personal' ? 'font-weight:600' : 'font-weight:400'">PERSONAL</v-btn>
@@ -34,9 +34,9 @@
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn title="Create the environment only for you" :color="!shared ? 'primary' : '#779ecb'" @click="shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn :disabled="!owner" title="Create the environment for all users in your group" :color="shared ? 'primary' : '#779ecb'" @click="shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
+          <v-btn v-if="mode != 'delete' && !(!owner && shared)" title="Create the environment only for you" :color="!shared ? 'primary' : '#779ecb'" @click="shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="!shared && !owner" title="Create the environment for all users in your group" :color="shared ? 'primary' : '#779ecb'" @click="shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -45,7 +45,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
-                  <v-text-field v-if="mode!='delete'" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="environment_name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  <v-text-field v-if="mode!='delete'" :readonly="readOnly" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="environment_name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-card v-if="mode!='delete'">
                     <v-toolbar flat dense color="#2e3131">
                       <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
@@ -53,7 +53,7 @@
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
-                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active :activatable="!readOnly" transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -64,8 +64,13 @@
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                  <div v-if="readOnly">
+                      <v-btn color="#00b16a" @click="dialog = false">CLOSE</v-btn>
+                  </div>
+                  <div v-else>
+                    <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                  </div>
                 </div>
               </v-flex>
             </v-layout>
@@ -125,8 +130,9 @@ export default {
     snackbarColor: ''
   }),
   computed: {
-    owner: function() { return this.$store.getters['app/owner'] },
+    owner: function() { return this.$store.getters['app/owner'] == 1 ? true : false },
     inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
+    readOnly: function() { return this.mode == 'edit' && !this.owner && this.shared == 1 }
   },
   created() {
     this.getEnvironments()
@@ -257,7 +263,7 @@ export default {
       this.mode = 'edit'
       this.environment_name = this.selected[0]['name']
       this.shared = this.selected[0]['shared']
-      this.dialog_title = 'Edit Environment'
+      this.dialog_title = (!this.owner && this.shared) ? 'INFO' : 'Edit Environment'
       this.dialog = true
       setTimeout(this.updateSelected, 1);
     },

@@ -7,7 +7,7 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text @click="newRegion()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn v-if="selected.length == 1" text @click="editRegion()" class="body-2"><v-icon small style="padding-right:10px">{{ !owner && selected[0].shared ? 'fas fa-info' : 'fas fa-feather-alt' }}</v-icon>{{ !owner && selected[0].shared ? 'INFO' : 'EDIT' }}</v-btn>
-          <v-btn v-if="(selected.length == 1 && !(!owner && selected[0].shared)) || selected.length > 1" text @click="deleteRegion()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn v-if="selected.length > 0 && !(!owner && selected.some(x => x.shared))" text @click="deleteRegion()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('personal')" :style="filter == 'personal' ? 'font-weight:600' : 'font-weight:400'">PERSONAL</v-btn>
@@ -41,38 +41,49 @@
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn title="Create the region only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn :disabled="!owner" title="Create the region for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
+          <v-btn v-if="mode != 'delete' && !(!owner && item.shared)" title="Create the region only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="!item.shared && !owner" title="Create the region for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
-                  <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <v-switch v-model="item.ssh_tunnel" label="Use SSH Tunnel" color="info" hide-details style="margin-top:0px;"></v-switch>
+                  <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" :readonly="readOnly" label="Name" required></v-text-field>
+                  <v-switch v-model="item.ssh_tunnel" :readonly="readOnly" label="Use SSH Tunnel" color="info" hide-details style="margin-top:0px;"></v-switch>
                   <div v-if="item.ssh_tunnel" style="margin-top:25px;">
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
-                        <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="item.hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
                       </v-col>
                       <v-col cols="4" style="padding-left:10px">
-                        <v-text-field v-model="item.port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="item.port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
                       </v-col>
                     </v-row>
-                    <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.password" label="Password" style="padding-top:0px;"></v-text-field>
-                    <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                    <v-text-field v-model="item.username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="item.password" :readonly="readOnly" label="Password" style="padding-top:0px;"></v-text-field>
+                    <v-textarea v-model="item.key" :readonly="readOnly" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
                   </div>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>
                 <v-divider></v-divider>
-                <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitRegion()">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">CANCEL</v-btn>
-                  <v-btn v-if="item['ssh_tunnel'] && mode != 'delete'" :loading="loading" color="info" @click="testConnection()" style="float:right;">Test Connection</v-btn>
-                </div>
+                <v-row no-gutters style="margin-top:20px;">
+                  <v-col cols="auto" class="mr-auto">
+                    <div v-if="readOnly">
+                      <v-btn color="#00b16a" @click="dialog = false">CLOSE</v-btn>
+                    </div>
+                    <div v-else>
+                      <v-btn :loading="loading" color="#00b16a" @click="submitRegion()">CONFIRM</v-btn>
+                      <v-btn :disabled="loading" color="error" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
+                    </div>
+                  </v-col>
+                  <v-col cols="auto">
+                    <v-btn v-if="item['ssh_tunnel'] && mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
+                  </v-col>
+                </v-row>
               </v-flex>
             </v-layout>
           </v-container>
@@ -126,6 +137,7 @@ export default {
   computed: {
     owner: function() { return this.$store.getters['app/owner'] == 1 ? true : false },
     inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
+    readOnly: function() { return this.mode == 'edit' && !this.owner && this.item.shared == 1 }
   },
   created() {
     this.getRegions()
@@ -152,7 +164,7 @@ export default {
     editRegion() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.dialog_title = 'Edit Region'
+      this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'Edit Region'
       this.dialog = true
     },
     deleteRegion() {
