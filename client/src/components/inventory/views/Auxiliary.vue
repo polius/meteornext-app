@@ -132,11 +132,10 @@ export default {
     filter: 'all',
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
-      { text: 'Engine', align: 'left', value: 'sql_engine'},
+      { text: 'Engine', align: 'left', value: 'sql_version'},
       { text: 'Hostname', align: 'left', value: 'sql_hostname'},
       { text: 'Port', align: 'left', value: 'sql_port'},
       { text: 'Username', align: 'left', value: 'sql_username'},
-      { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'},
       { text: 'Scope', align: 'left', value: 'shared' },
     ],
     auxiliary: [],

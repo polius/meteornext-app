@@ -39,7 +39,7 @@ class Regions:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
-                return self.get(user['id'], user['group_id'])
+                return self.get(user['id'], user['group_id'], user['inventory_secured'] and not user['owner'])
             elif request.method == 'POST':
                 return self.post(user['id'], user['group_id'], region_json)
             elif request.method == 'PUT':
@@ -78,8 +78,17 @@ class Regions:
     ####################
     # Internal Methods #
     ####################
-    def get(self, user_id, group_id):
-        return jsonify({'data': self._regions.get(user_id, group_id)}), 200
+    def get(self, user_id, group_id, secured):
+        regions = self._regions.get(user_id, group_id)
+        if secured:
+            regions_secured = []
+            for r in regions:
+                if r['shared']:
+                    regions_secured.append({"id": r['id'], "name": r['name'], "ssh_tunnel": r['ssh_tunnel'], "shared": r['shared']})
+                else:
+                    regions_secured.append(r)
+            return jsonify({'data': regions_secured}), 200
+        return jsonify({'data': regions}), 200
 
     def post(self, user_id, group_id, data):
         if self._regions.exist(group_id, data):

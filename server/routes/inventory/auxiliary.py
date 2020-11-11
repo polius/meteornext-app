@@ -36,7 +36,7 @@ class Auxiliary:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
-                return self.get(user['id'], user['group_id'])
+                return self.get(user['id'], user['group_id'], user['inventory_secured'] and not user['owner'])
             elif request.method == 'POST':
                 return self.post(user['id'], user['group_id'], auxiliary_json)
             elif request.method == 'PUT':
@@ -81,8 +81,17 @@ class Auxiliary:
     ####################
     # Internal Methods #
     ####################
-    def get(self, user_id, group_id):
-        return jsonify({'data': self._auxiliary.get(user_id, group_id)}), 200
+    def get(self, user_id, group_id, secured):
+        auxiliary = self._auxiliary.get(user_id, group_id)
+        if secured:
+            auxiliary_secured = []
+            for a in auxiliary:
+                if a['shared']:
+                    auxiliary_secured.append({"id": a['id'], "name": a['name'], "sql_engine": a['sql_engine'], "sql_version": a['sql_version'], "shared": a['shared']})
+                else:
+                    auxiliary_secured.append(a)
+            return jsonify({'data': auxiliary_secured}), 200
+        return jsonify({'data': auxiliary}), 200
 
     def post(self, user_id, group_id, data):
         if self._auxiliary.exist(group_id, data):
