@@ -56,6 +56,7 @@
                     </v-card-text>
                   </v-card>
                   <v-switch v-model="item.admin" label="Administrator" color="info" style="margin-top:5px;" hide-details></v-switch>
+                  <v-switch v-model="item.disabled" label="Disabled" color="error" style="margin-top:10px;" hide-details></v-switch>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
                 <v-divider></v-divider>
@@ -100,7 +101,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { username: '', email: '', password: '', coins: '', group: '', mfa: { enabled: false, origin: false, hash: null, uri: null, value: ''}, admin: false },
+    item: { username: '', email: '', password: '', coins: '', group: '', mfa: { enabled: false, origin: false, hash: null, uri: null, value: ''}, admin: false, disabled: false },
     mode: '',
     loading: true,
     dialog: false,
@@ -133,7 +134,7 @@ export default {
     },
     newUser() {
       this.mode = 'new'
-      this.item = { username: '', email: '', password: '', coins: '', group: '', mfa: { enabled: false, origin: false, hash: null, uri: null, value: ''}, admin: false }
+      this.item = { username: '', email: '', password: '', coins: '', group: '', mfa: { enabled: false, origin: false, hash: null, uri: null, value: ''}, admin: false, disabled: false }
       this.dialog_title = 'New User'
       this.dialog = true
     },
@@ -217,7 +218,8 @@ export default {
           hash: this.item.mfa.hash,
           value: this.item.mfa.value
         },
-        admin: this.item.admin 
+        admin: this.item.admin,
+        disabled: this.item.disabled
       }
       axios.put('/admin/users', payload)
         .then((response) => {

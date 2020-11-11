@@ -24,6 +24,10 @@ class Profile:
             # Get User
             user = self._users.get(get_jwt_identity())[0]
 
+            # Check user privileges
+            if user['disabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
             # Get Request Json
             profile_json = request.get_json()
 
@@ -66,6 +70,10 @@ class Profile:
 
             # Get User
             user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Generate MFA hash
             mfa_hash = pyotp.random_base32()

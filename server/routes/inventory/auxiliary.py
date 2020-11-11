@@ -32,7 +32,7 @@ class Auxiliary:
             auxiliary_json = request.get_json()
 
             # Check user privileges
-            if not user['inventory_enabled'] or (request.method != 'GET' and auxiliary_json['shared'] and not user['owner']):
+            if user['disabled'] or not user['inventory_enabled'] or (request.method != 'GET' and auxiliary_json['shared'] and not user['owner']):
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
@@ -55,7 +55,7 @@ class Auxiliary:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['inventory_enabled']:
+            if user['disabled'] or not user['inventory_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json

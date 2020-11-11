@@ -50,7 +50,7 @@ class Basic:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['deployments_basic']:
+            if user['disabled'] or not user['deployments_basic']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -74,7 +74,7 @@ class Basic:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['deployments_basic']:
+            if user['disabled'] or not user['deployments_basic']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Check user authority
@@ -99,7 +99,7 @@ class Basic:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['deployments_basic']:
+            if user['disabled'] or not user['deployments_basic']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -126,7 +126,7 @@ class Basic:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['deployments_basic']:
+            if user['disabled'] or not user['deployments_basic']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -153,7 +153,7 @@ class Basic:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['deployments_basic']:
+            if user['disabled'] or not user['deployments_basic']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json

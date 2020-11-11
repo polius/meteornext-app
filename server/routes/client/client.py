@@ -37,7 +37,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Servers
@@ -55,7 +55,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
@@ -86,7 +86,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
@@ -124,7 +124,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
@@ -148,7 +148,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -202,7 +202,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
@@ -229,7 +229,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
@@ -253,7 +253,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
@@ -318,7 +318,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
@@ -342,7 +342,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
@@ -385,7 +385,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
@@ -415,7 +415,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -445,7 +445,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -469,7 +469,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Close Connection
@@ -487,7 +487,7 @@ class Client:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['client_enabled']:
+            if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection

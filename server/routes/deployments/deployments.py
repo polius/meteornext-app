@@ -48,7 +48,7 @@ class Deployments:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['deployments_enabled']:
+            if user['disabled'] or not user['deployments_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
@@ -79,6 +79,10 @@ class Deployments:
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if not results['public'] and int(results['user_id']) != user['id'] and not user['admin']:
                 return jsonify({'title': 'Authorized Access Only', 'description': 'The URL provided is private' }), 400

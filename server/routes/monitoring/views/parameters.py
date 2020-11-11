@@ -30,7 +30,7 @@ class Parameters:
             monitoring_json = request.get_json()
 
             # Check user privileges
-            if not user['monitoring_enabled']:
+            if user['disabled'] or not user['monitoring_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':

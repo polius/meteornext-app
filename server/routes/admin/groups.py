@@ -45,7 +45,7 @@ class Groups:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['admin']:
+            if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             group_json = request.get_json()
