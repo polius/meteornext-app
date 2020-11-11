@@ -24,7 +24,7 @@ class Servers:
 
     def post(self, user_id, group_id, server):
         query = """
-            INSERT INTO servers (name, region_id, engine, version, hostname, port, username, password, ssl, shared, owner_id, created_by, created_at)             
+            INSERT INTO servers (name, region_id, engine, version, hostname, port, username, password, `ssl`, shared, owner_id, created_by, created_at)             
             SELECT %s, id, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
             FROM regions
             WHERE group_id = %s
@@ -44,7 +44,7 @@ class Servers:
                 servers.port = %s,
                 servers.username = %s,
                 servers.password = %s,
-                servers.ssl = %s,
+                servers.`ssl` = %s,
                 servers.shared = %s,
                 servers.owner_id = IF(%s = 1, NULL, %s),
                 servers.updated_by = %s,

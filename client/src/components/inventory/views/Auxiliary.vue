@@ -6,8 +6,8 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text @click="newAuxiliary()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editAuxiliary()" class="body-2"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn v-if="selected.length > 0" text @click="deleteAuxiliary()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="editAuxiliary()" class="body-2"><v-icon small style="padding-right:10px">{{ !owner && selected[0].shared ? 'fas fa-info' : 'fas fa-feather-alt' }}</v-icon>{{ !owner && selected[0].shared ? 'INFO' : 'EDIT' }}</v-btn>
+          <v-btn v-if="selected.length > 0 && !(!owner && selected.some(x => x.shared))" text @click="deleteAuxiliary()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('personal')" :style="filter == 'personal' ? 'font-weight:600' : 'font-weight:400'">PERSONAL</v-btn>
@@ -33,56 +33,79 @@
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn title="Create the auxiliary only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn :disabled="!owner" title="Create the auxiliary for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
+          <v-btn v-if="mode != 'delete' && !(!owner && item.shared)" title="Create the auxiliary only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="!item.shared && !owner" title="Create the auxiliary for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
-                  <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  <v-text-field ref="field" v-model="item.name" :readonly="readOnly" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
-                      <v-select v-model="item.sql_engine" :items="Object.keys(engines)" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
+                      <v-select v-model="item.sql_engine" :readonly="readOnly" :items="Object.keys(engines)" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
-                      <v-select v-model="item.sql_version" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                      <v-select v-model="item.sql_version" :readonly="readOnly" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
                     </v-col>
                   </v-row>
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
-                      <v-text-field v-model="item.sql_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
+                      <v-text-field v-model="item.sql_hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
-                      <v-text-field v-model="item.sql_port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
+                      <v-text-field v-model="item.sql_port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
                     </v-col>
                   </v-row>
-                  <v-text-field v-model="item.sql_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="item.sql_password" label="Password" style="padding-top:0px;" hide-details></v-text-field>
-                  <v-switch v-model="item.ssh_tunnel" label="Use SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
-                  <div v-if="item.ssh_tunnel" style="margin-top:15px;">
+                  <v-text-field v-model="item.sql_username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="item.sql_password" :readonly="readOnly" label="Password" style="padding-top:0px;" hide-details></v-text-field>
+                  <v-switch v-model="item.ssh_tunnel" :readonly="readOnly" label="Use SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
+                  <div v-if="item.ssh_tunnel" style="margin-top:20px;">
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
-                        <v-text-field v-model="item.ssh_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="item.ssh_hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
                       </v-col>
                       <v-col cols="4" style="padding-left:10px">
-                        <v-text-field v-model="item.ssh_port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="item.ssh_port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
                       </v-col>
                     </v-row>
-                    <v-text-field v-model="item.ssh_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.ssh_password" label="Password" style="padding-top:0px;"></v-text-field>
-                    <v-textarea v-model="item.ssh_key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                    <v-text-field v-model="item.ssh_username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="item.ssh_password" :readonly="readOnly" label="Password" style="padding-top:0px;"></v-text-field>
+                    <v-textarea v-model="item.ssh_key" :readonly="readOnly" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
                   </div>
+                  <v-switch v-model="item.sql_ssl" :readonly="readOnly" flat label="Use SSL" style="margin-top:10px" hide-details></v-switch>
+                  <v-row no-gutters v-if="item.sql_ssl" style="margin-top:20px">
+                    <v-col style="padding-right:10px;">
+                      <v-file-input v-model="item.ssl_client_key" :readonly="readOnly" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
+                    </v-col>
+                    <v-col style="padding-right:5px; padding-left:5px;">
+                      <v-file-input v-model="item.ssl_client_certificate" :readonly="readOnly" filled dense label="Client Certificate" prepend-icon="" hide-details></v-file-input>
+                    </v-col>
+                    <v-col style="padding-left:10px;">
+                      <v-file-input v-model="item.ssl_client_ca_certificate" :readonly="readOnly" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
+                    </v-col>
+                  </v-row>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected auxiliary connections?</div>
                 <v-divider></v-divider>
-                <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitAuxiliary()">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">CANCEL</v-btn>
-                  <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()" style="float:right;">Test Connection</v-btn>
-                </div>
+                <v-row no-gutters style="margin-top:20px;">
+                  <v-col cols="auto" class="mr-auto">
+                    <div v-if="readOnly">
+                      <v-btn color="#00b16a" @click="dialog = false">CLOSE</v-btn>
+                    </div>
+                    <div v-else>
+                      <v-btn :loading="loading" color="#00b16a" @click="submitAuxiliary()">CONFIRM</v-btn>
+                      <v-btn :disabled="loading" color="error" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
+                    </div>
+                  </v-col>
+                  <v-col cols="auto">
+                    <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
+                  </v-col>
+                </v-row>
               </v-flex>
             </v-layout>
           </v-container>
@@ -118,7 +141,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', shared: false },
+    item: { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', sql_ssl: false, shared: false },
     mode: '',
     loading: true,
     engines: {
@@ -136,8 +159,9 @@ export default {
     snackbarColor: ''
   }),
   computed: {
-    owner: function() { return this.$store.getters['app/owner'] },
+    owner: function() { return this.$store.getters['app/owner'] == 1 ? true : false },
     inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
+    readOnly: function() { return this.mode == 'edit' && !this.owner && this.item.shared == 1 }
   },
   created() {
     this.getAuxiliary()
@@ -164,7 +188,7 @@ export default {
     },
     newAuxiliary() {
       this.mode = 'new'
-      this.item = { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', shared: false }
+      this.item = { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', sql_ssl: false, shared: false }
       this.dialog_title = 'New Auxiliary'
       this.dialog = true
     },
@@ -172,7 +196,7 @@ export default {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.versions = this.engines[this.item.sql_engine]
-      this.dialog_title = 'Edit Auxiliary'
+      this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'Edit Auxiliary'
       this.dialog = true
     },
     deleteAuxiliary() {

@@ -6,8 +6,8 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text @click="newServer()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editServer()" class="body-2"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn v-if="selected.length > 0" text @click="deleteServer()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="editServer()" class="body-2"><v-icon small style="padding-right:10px">{{ !owner && selected[0].shared ? 'fas fa-info' : 'fas fa-feather-alt' }}</v-icon>{{ !owner && selected[0].shared ? 'INFO' : 'EDIT' }}</v-btn>
+          <v-btn v-if="selected.length > 0 && !(!owner && selected.some(x => x.shared))" text @click="deleteServer()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('personal')" :style="filter == 'personal' ? 'font-weight:600' : 'font-weight:400'">PERSONAL</v-btn>
@@ -29,9 +29,11 @@
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn title="Create the server only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn :disabled="!owner" title="Create the server for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
+          <v-btn v-if="mode != 'delete' && !(!owner && item.shared)" title="Create the server only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" :disabled="!item.shared && !owner" title="Create the server for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -40,50 +42,59 @@
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:20px; margin-bottom:20px;">
                   <v-row no-gutters style="margin-top:15px">
                     <v-col cols="8" style="padding-right:10px">
-                      <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
+                      <v-text-field ref="field" v-model="item.name" :readonly="readOnly" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
-                      <v-select v-model="item.region" :rules="[v => !!v || '']" :items="regions" label="Region" required style="padding-top:0px;"></v-select>
+                      <v-select v-model="item.region" :readonly="readOnly" :rules="[v => !!v || '']" :items="regions" label="Region" required style="padding-top:0px;"></v-select>
                     </v-col>
                   </v-row>
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
-                      <v-select v-model="item.engine" :items="Object.keys(engines)" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
+                      <v-select v-model="item.engine" :readonly="readOnly" :items="Object.keys(engines)" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
-                      <v-select v-model="item.version" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                      <v-select v-model="item.version" :readonly="readOnly" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
                     </v-col>
                   </v-row>
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
-                      <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;"></v-text-field>
+                      <v-text-field v-model="item.hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;"></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
-                      <v-text-field v-model="item.port" :rules="[v => v == parseInt(v) || '']" label="Port" required style="padding-top:0px;"></v-text-field>
+                      <v-text-field v-model="item.port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" required style="padding-top:0px;"></v-text-field>
                     </v-col>
                   </v-row>
-                  <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" hide-details></v-text-field>
-                  <v-switch v-model="item.ssl" flat label="Use SSL" style="margin-top:20px" hide-details></v-switch>
+                  <v-text-field v-model="item.username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="item.password" :readonly="readOnly" label="Password" style="padding-top:0px;" hide-details></v-text-field>
+                  <v-switch v-model="item.ssl" :readonly="readOnly" flat label="Use SSL" style="margin-top:20px" hide-details></v-switch>
                   <v-row no-gutters v-if="item.ssl" style="margin-top:20px">
                     <v-col style="padding-right:10px;">
-                      <v-file-input v-model="item.ssl_client_key" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
+                      <v-file-input v-model="item.ssl_client_key" :readonly="readOnly" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
                     </v-col>
                     <v-col style="padding-right:5px; padding-left:5px;">
-                      <v-file-input v-model="item.ssl_client_certificate" filled dense label="Client Certificate" prepend-icon="" hide-details></v-file-input>
+                      <v-file-input v-model="item.ssl_client_certificate" :readonly="readOnly" filled dense label="Client Certificate" prepend-icon="" hide-details></v-file-input>
                     </v-col>
                     <v-col style="padding-left:10px;">
-                      <v-file-input v-model="item.ssl_client_ca_certificate" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
+                      <v-file-input v-model="item.ssl_client_ca_certificate" :readonly="readOnly" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
                     </v-col>
                   </v-row>
                 </v-form>
-                <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px" >Are you sure you want to delete the selected servers?</div>
+                <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
                 <v-divider></v-divider>
-                <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitServer()">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">CANCEL</v-btn>
-                  <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()" style="float:right;">Test Connection</v-btn>
-                </div>
+                <v-row no-gutters style="margin-top:20px;">
+                  <v-col cols="auto" class="mr-auto">
+                    <div v-if="readOnly">
+                      <v-btn color="#00b16a" @click="dialog = false">CLOSE</v-btn>
+                    </div>
+                    <div v-else>
+                      <v-btn :loading="loading" color="#00b16a" @click="submitServer()">CONFIRM</v-btn>
+                      <v-btn :disabled="loading" color="error" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
+                    </div>
+                  </v-col>
+                  <v-col cols="auto">
+                    <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
+                  </v-col>
+                </v-row>
               </v-flex>
             </v-layout>
           </v-container>
@@ -119,7 +130,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', shared: false },
+    item: { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, shared: false },
     mode: '',
     loading: true,
     engines: {
@@ -160,8 +171,9 @@ export default {
     snackbarColor: ''
   }),
   computed: {
-    owner: function() { return this.$store.getters['app/owner'] },
+    owner: function() { return this.$store.getters['app/owner'] == 1 ? true : false },
     inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
+    readOnly: function() { return this.mode == 'edit' && !this.owner && this.item.shared == 1 }
   },
   created() {
     this.getServers()
@@ -200,7 +212,7 @@ export default {
     },
     newServer() {
       this.mode = 'new'
-      this.item = { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', shared: false }
+      this.item = { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, shared: false }
       this.dialog_title = 'New Server'
       this.dialog = true
     },
@@ -209,7 +221,7 @@ export default {
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.versions = this.engines[this.item.engine]
       this.getRegions()
-      this.dialog_title = 'Edit Server'
+      this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'Edit Server'
       this.dialog = true
     },
     deleteServer() {
