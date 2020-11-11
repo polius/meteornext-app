@@ -21,14 +21,6 @@
           <v-icon v-if="item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
           <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>
         </template>
-        <template v-slot:[`item.password`]="{ item }">
-          <v-icon v-if="item.ssh_tunnel && (item.password || '').length != 0" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
-          <v-icon v-else-if="item.ssh_tunnel" small color="error" style="margin-left:20px">fas fa-circle</v-icon>
-        </template>
-        <template v-slot:[`item.key`]="{ item }">
-          <v-icon v-if="item.ssh_tunnel && (item.key || '').length != 0" small color="#00b16a" style="margin-left:22px">fas fa-circle</v-icon>
-          <v-icon v-else-if="item.ssh_tunnel" small color="error" style="margin-left:22px">fas fa-circle</v-icon>
-        </template>
         <template v-slot:[`item.shared`]="{ item }">
           <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
           <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
@@ -113,8 +105,6 @@ export default {
       { text: 'Hostname', align: 'left', value: 'hostname'},
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
-      { text: 'Password', align: 'left', value: 'password'},
-      { text: 'Private Key', align: 'left', value: 'key'},
       { text: 'Scope', align: 'left', value: 'shared' },
     ],
     regions: [],

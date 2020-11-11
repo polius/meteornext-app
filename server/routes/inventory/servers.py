@@ -38,7 +38,7 @@ class Servers:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
-                return self.get(user['id'], user['group_id'])
+                return self.get(user['id'], user['group_id'], user['inventory_secured'] and not user['owner'])
             elif request.method == 'POST':
                 return self.post(user['id'], user['group_id'], server_json)
             elif request.method == 'PUT':
@@ -83,8 +83,18 @@ class Servers:
     ####################
     # Internal Methods #
     ####################
-    def get(self, user_id, group_id):
-        return jsonify({'data': self._servers.get(user_id, group_id)}), 200
+    def get(self, user_id, group_id, secured):
+        servers = self._servers.get(user_id, group_id)
+        if secured:
+            servers_secured = []
+            for s in servers:
+                if s['shared']:
+                    servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared']})
+                else:
+                    servers_secured.append(s)
+            return jsonify({'data': servers_secured}), 200
+
+        return jsonify({'data': servers}), 200
 
     def post(self, user_id, group_id, data):
         try:
