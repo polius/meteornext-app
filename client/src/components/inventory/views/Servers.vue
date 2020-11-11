@@ -39,7 +39,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:20px; margin-bottom:20px;">
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:20px;">
                   <v-row no-gutters style="margin-top:15px">
                     <v-col cols="8" style="padding-right:10px">
                       <v-text-field ref="field" v-model="item.name" :readonly="readOnly" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
@@ -56,28 +56,30 @@
                       <v-select v-model="item.version" :readonly="readOnly" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
                     </v-col>
                   </v-row>
-                  <v-row no-gutters>
-                    <v-col cols="8" style="padding-right:10px">
-                      <v-text-field v-model="item.hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-left:10px">
-                      <v-text-field v-model="item.port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" required style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                  </v-row>
-                  <v-text-field v-model="item.username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="item.password" :readonly="readOnly" label="Password" style="padding-top:0px;" hide-details></v-text-field>
-                  <v-switch v-model="item.ssl" :readonly="readOnly" flat label="Use SSL" style="margin-top:20px" hide-details></v-switch>
-                  <v-row no-gutters v-if="item.ssl" style="margin-top:20px">
-                    <v-col style="padding-right:10px;">
-                      <v-file-input v-model="item.ssl_client_key" :readonly="readOnly" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
-                    </v-col>
-                    <v-col style="padding-right:5px; padding-left:5px;">
-                      <v-file-input v-model="item.ssl_client_certificate" :readonly="readOnly" filled dense label="Client Certificate" prepend-icon="" hide-details></v-file-input>
-                    </v-col>
-                    <v-col style="padding-left:10px;">
-                      <v-file-input v-model="item.ssl_client_ca_certificate" :readonly="readOnly" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
-                    </v-col>
-                  </v-row>
+                  <div v-if="!(readOnly && inventory_secured)" style="margin-bottom:20px">
+                    <v-row no-gutters>
+                      <v-col cols="8" style="padding-right:10px">
+                        <v-text-field v-model="item.hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                      <v-col cols="4" style="padding-left:10px">
+                        <v-text-field v-model="item.port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" required style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                    </v-row>
+                    <v-text-field v-model="item.username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="item.password" :readonly="readOnly" label="Password" style="padding-top:0px;" hide-details></v-text-field>
+                    <v-switch v-model="item.ssl" :readonly="readOnly" flat label="Use SSL" style="margin-top:20px" hide-details></v-switch>
+                    <v-row no-gutters v-if="item.ssl" style="margin-top:20px">
+                      <v-col style="padding-right:10px;">
+                        <v-file-input v-model="item.ssl_client_key" :readonly="readOnly" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
+                      </v-col>
+                      <v-col style="padding-right:5px; padding-left:5px;">
+                        <v-file-input v-model="item.ssl_client_certificate" :readonly="readOnly" filled dense label="Client Certificate" prepend-icon="" hide-details></v-file-input>
+                      </v-col>
+                      <v-col style="padding-left:10px;">
+                        <v-file-input v-model="item.ssl_client_ca_certificate" :readonly="readOnly" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
+                      </v-col>
+                    </v-row>
+                  </div>
                 </v-form>
                 <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
                 <v-divider></v-divider>
@@ -220,7 +222,6 @@ export default {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.versions = this.engines[this.item.engine]
-      this.getRegions()
       this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'Edit Server'
       this.dialog = true
     },
