@@ -38,7 +38,7 @@ class Settings:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['admin']:
+            if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json

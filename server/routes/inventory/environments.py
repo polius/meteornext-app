@@ -34,7 +34,7 @@ class Environments:
             environment_json = request.get_json()
 
             # Check user privileges
-            if not user['inventory_enabled'] or (request.method != 'GET' and environment_json['shared'] and not user['owner']):
+            if user['disabled'] or not user['inventory_enabled'] or (request.method != 'GET' and environment_json['shared'] and not user['owner']):
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
@@ -57,7 +57,7 @@ class Environments:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['inventory_enabled'] and request.method != 'GET':
+            if user['disabled'] or not user['inventory_enabled'] and request.method != 'GET':
                 return jsonify({'message': 'Insufficient Privileges'}), 401
             
             # Get environments list

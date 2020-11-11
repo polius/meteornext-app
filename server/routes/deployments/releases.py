@@ -27,6 +27,10 @@ class Releases:
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
+            # Check user privileges
+            if user['disabled'] or not user['deployments_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
             # Get Request Json
             release_json = request.get_json()
 
@@ -48,6 +52,10 @@ class Releases:
 
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['deployments_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
             release_json = request.get_json()

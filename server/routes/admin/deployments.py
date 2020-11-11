@@ -37,7 +37,7 @@ class Deployments:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['admin']:
+            if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Deployments
@@ -54,11 +54,10 @@ class Deployments:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['admin']:
+            if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Deployments
             return jsonify({'data': self._deployments.get(search=json.loads(request.args['data']))}), 200
 
         return admin_deployments_blueprint
-

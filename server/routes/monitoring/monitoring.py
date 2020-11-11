@@ -28,12 +28,12 @@ class Monitoring:
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
+            # Check user privileges
+            if user['disabled'] or not user['monitoring_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
             # Get Request Json
             monitoring_json = request.get_json()
-
-            # Check user privileges
-            if not user['monitoring_enabled']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
                 return self.get(user)
@@ -51,7 +51,7 @@ class Monitoring:
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if not user['monitoring_enabled']:
+            if user['disabled'] or not user['monitoring_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json

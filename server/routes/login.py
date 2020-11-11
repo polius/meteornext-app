@@ -47,6 +47,10 @@ class Login:
             if user[0]['mfa'] == 1 and not pyotp.TOTP(user[0]['mfa_hash'], interval=30).verify(login_json['mfa']):
                 return jsonify({"message": "Invalid MFA Code"}), 401
 
+            # Check disabled
+            if user[0]['disabled']:
+                return jsonify({"message": "Account disabled"}), 401
+
             # Update user last_login
             self._users.put_last_login(login_json['username'])
 
