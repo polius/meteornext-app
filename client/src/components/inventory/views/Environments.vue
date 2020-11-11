@@ -58,7 +58,7 @@
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
                         <template v-slot:append="{ item }">
-                          <v-chip v-if="!item.children" label><v-icon small style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
+                          <v-chip v-if="!item.children" label><v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
                         </template>
                       </v-treeview>
                     </v-card-text>

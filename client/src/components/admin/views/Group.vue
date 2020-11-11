@@ -46,7 +46,7 @@
                     </template>
                     <span><strong style="color:#2196f3; margin-right:6px;">Access Inventory:</strong>Allow users to access to the inventory.</span>
                     <br>
-                    <span><strong style="color:#fa8231; margin-right:6px;">Secure Inventory:</strong>Shared resources (regions, servers, auxiliary connections) are shown without sensible data (hostname, username, password, ...).</span>
+                    <span><strong style="color:#fa8231; margin-right:6px;">Secure Inventory:</strong>Shared resources (regions, servers, auxiliary connections) for non owners are shown without sensible data (hostname, username, password, ...).</span>
                   </v-tooltip>
                 </div>
                 <v-switch :disabled="loading" v-model="group.inventory_enabled" label="Access Inventory" color="info" hide-details style="margin-top:0px;"></v-switch>
