@@ -17,6 +17,10 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
+        <template v-slot:[`item.region`]="{ item }">
+          <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+          {{ item.region }}
+        </template>
         <template v-slot:[`item.shared`]="{ item }">
           <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
           <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
@@ -45,7 +49,16 @@
                       <v-text-field ref="field" v-model="item.name" :readonly="readOnly" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
-                      <v-select v-model="item.region" :readonly="readOnly" :rules="[v => !!v || '']" :items="regions" label="Region" required style="padding-top:0px;"></v-select>
+                      <v-select v-model="item.region" item-value="name" :readonly="readOnly" :rules="[v => !!v || '']" :items="regions" label="Region" required style="padding-top:0px;">
+                        <template v-slot:[`selection`]="{ item }">
+                          <v-icon small style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
+                        <template v-slot:[`item`]="{ item }">
+                          <v-icon small style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
+                      </v-select>
                     </v-col>
                   </v-row>
                   <v-row no-gutters>
@@ -195,10 +208,10 @@ export default {
         })
     },
     getRegions() {
-      this.regions = []
+      // this.regions = []
       axios.get('/inventory/regions')
         .then((response) => {
-          for (var i = 0; i < response.data.data.length; ++i) this.regions.push(response.data.data[i]['name'])
+          this.regions = response.data.data.map(x => { return { name: x.name, shared: x.shared }})
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -221,6 +234,7 @@ export default {
     editServer() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.item.region = { name: this.item.region, shared: this.item.shared }
       this.versions = this.engines[this.item.engine]
       this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'Edit Server'
       this.dialog = true
