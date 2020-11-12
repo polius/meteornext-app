@@ -8,6 +8,10 @@
           <v-btn text @click="newUser()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn v-if="selected.length == 1" text @click="editUser()" class="body-2"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
           <v-btn v-if="selected.length > 0" text @click="deleteUser()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
+          <v-btn text class="body-2" @click="filterBy('enabled')" :style="filter == 'enabled' ? 'font-weight:600' : 'font-weight:400'">ENABLED</v-btn>
+          <v-btn text class="body-2" @click="filterBy('disabled')" :style="filter == 'disabled' ? 'font-weight:600' : 'font-weight:400'">DISABLED</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -56,7 +60,7 @@
                     </v-card-text>
                   </v-card>
                   <v-switch v-model="item.admin" label="Administrator" color="info" style="margin-top:5px;" hide-details></v-switch>
-                  <v-switch v-model="item.disabled" label="Disabled" color="error" style="margin-top:10px;" hide-details></v-switch>
+                  <v-switch v-model="item.disabled" label="Disable Account" color="error" style="margin-top:10px;" hide-details></v-switch>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
                 <v-divider></v-divider>
@@ -88,6 +92,7 @@ import QrcodeVue from 'qrcode.vue'
 export default {
   data: () => ({
     // Data Table
+    filter: 'all',
     headers: [
       { text: 'Username', align: 'left', value: 'username' },
       { text: 'Group', align: 'left', value: 'group' },
@@ -98,6 +103,7 @@ export default {
       { text: 'MFA', align: 'left', value: 'mfa'},
       { text: 'Admin', align: 'left', value: 'admin'},
     ],
+    users: [],
     items: [],
     selected: [],
     search: '',
@@ -123,8 +129,9 @@ export default {
     getUsers() {
       axios.get('/admin/users')
         .then((response) => {
+          this.users = response.data.data.users
           this.items = response.data.data.users
-          for (var i = 0; i < response.data.data.groups.length; ++i) this.groups.push(response.data.data.groups[i]['name'])
+          this.groups = response.data.data.groups.map(x => x.name)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -290,6 +297,12 @@ export default {
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
+    },
+    filterBy(val) {
+      this.filter = val
+      if (val == 'all') this.items = this.users.slice(0)
+      else if (val == 'enabled') this.items = this.users.filter(x => !x.disabled)
+      else if (val == 'disabled') this.items = this.users.filter(x => x.disabled)
     },
     notification(message, color) {
       this.snackbarText = message
