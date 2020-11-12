@@ -8,7 +8,7 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">New Connection</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn :disabled="loading" :loading="disabled" @click="newConnectionSubmit" color="primary" style="margin-right:10px;">Save</v-btn>
+          <v-btn :disabled="loading" :loading="loading" @click="newConnectionSubmit" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -53,21 +53,38 @@
                             </v-row>
                           </v-container>
                         </Pane>
-                        <Pane size="70" min-size="0" style="align-items:inherit; background-color:#484848">
-                          <v-container style="padding:0px; max-width:100%;">
+                        <Pane size="70" min-size="0" style="align-items:inherit; background-color:#484848; padding:0px 2% 2% 2%; overflow-y:auto;">
+                          <v-container style="max-width:100%;">
                             <v-layout wrap>
                               <v-flex xs12>
                                 <v-row justify="space-around">
-                                  <v-img :src="require('@/assets/mysql.png')" class="my-3" contain height="100"></v-img>
+                                  <v-img :src="require('@/assets/amazon_aurora.png')" class="my-3" contain height="100"></v-img>
                                 </v-row>
-                                <v-row justify="space-around">
+                                <v-row justify="space-around" style="margin-top:5px">
                                   <div class="text-h5">Server Name</div>
                                 </v-row>
-                                <v-row justify="space-around">
-                                  <div class="text-subtitle-1">Region EU</div>
+                                <v-row justify="space-around" style="margin-top:15px">
+                                  <div class="text-subtitle-1"><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-users</v-icon>Region EU</div>
                                 </v-row>
-                                <v-text-field dense outlined readonly :rules="[v => !!v || '']" label="Name" required></v-text-field>
-
+                                <v-row no-gutters style="margin-top:30px">
+                                  <v-col cols="8" style="padding-right:10px">
+                                    <v-text-field readonly label="Engine" required style="padding-top:0px;"></v-text-field>
+                                  </v-col>
+                                  <v-col cols="4" style="padding-left:10px">
+                                    <v-text-field readonly label="Version" required style="padding-top:0px;"></v-text-field>
+                                  </v-col>
+                                </v-row>
+                                <v-row no-gutters style="margin-top:5px">
+                                  <v-col cols="8" style="padding-right:10px">
+                                    <v-text-field readonly label="Hostname" required style="padding-top:0px;"></v-text-field>
+                                  </v-col>
+                                  <v-col cols="4" style="padding-left:10px">
+                                    <v-text-field readonly label="Port" required style="padding-top:0px;"></v-text-field>
+                                  </v-col>
+                                </v-row>
+                                <v-text-field readonly label="Username" hide-details required style="padding-top:0px;"></v-text-field>
+                                <v-text-field readonly label="Password" hide-details style="margin-top:15px"></v-text-field>
+                                <v-switch readonly flat label="Use SSL" style="margin-top:20px"></v-switch>
                               </v-flex>
                             </v-layout>
                           </v-container>
