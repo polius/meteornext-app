@@ -58,12 +58,12 @@
                             <v-layout wrap>
                               <v-flex xs12>
                                 <v-row justify="space-around">
-                                  <v-img :src="require('@/assets/amazon_aurora.png')" class="my-3" contain height="100"></v-img>
+                                  <v-img :src="require('@/assets/mysql.png')" class="my-3" contain height="100"></v-img>
                                 </v-row>
-                                <v-row justify="space-around" style="margin-top:5px">
+                                <v-row justify="space-around" style="margin-top:10px">
                                   <div class="text-h5">Server Name</div>
                                 </v-row>
-                                <v-row justify="space-around" style="margin-top:15px">
+                                <v-row justify="space-around" style="margin-top:20px">
                                   <div class="text-subtitle-1"><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-users</v-icon>Region EU</div>
                                 </v-row>
                                 <v-row no-gutters style="margin-top:30px">
