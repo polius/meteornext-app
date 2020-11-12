@@ -53,8 +53,24 @@
                             </v-row>
                           </v-container>
                         </Pane>
-                        <Pane size="70" min-size="0" style="background-color:#484848">
+                        <Pane size="70" min-size="0" style="align-items:inherit; background-color:#484848">
+                          <v-container style="padding:0px; max-width:100%;">
+                            <v-layout wrap>
+                              <v-flex xs12>
+                                <v-row justify="space-around">
+                                  <v-img :src="require('@/assets/mysql.png')" class="my-3" contain height="100"></v-img>
+                                </v-row>
+                                <v-row justify="space-around">
+                                  <div class="text-h5">Server Name</div>
+                                </v-row>
+                                <v-row justify="space-around">
+                                  <div class="text-subtitle-1">Region EU</div>
+                                </v-row>
+                                <v-text-field dense outlined readonly :rules="[v => !!v || '']" label="Name" required></v-text-field>
 
+                              </v-flex>
+                            </v-layout>
+                          </v-container>
                         </Pane>
                       </Splitpanes>
                     </v-card-text>
