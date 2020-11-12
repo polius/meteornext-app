@@ -8,7 +8,7 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">New Connection</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn :disabled="loading" :loading="loading" @click="newConnectionSubmit" color="primary" style="margin-right:10px;">Save</v-btn>
+          <v-btn :disabled="selected.length == 0 || loading" :loading="loading" @click="newConnectionSubmit" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -57,7 +57,7 @@
                           <v-container style="max-width:100%;">
                             <v-layout wrap>
                               <v-flex v-if="Object.keys(item).length == 0" xs12>
-
+                                <div class="body-2" style="text-align:center; margin-top:2%;">Select a server to show the details</div>
                               </v-flex>
                               <v-flex v-else>
                                 <v-row justify="space-around">
@@ -96,17 +96,6 @@
                     </v-card-text>
                   </v-card>
                 </v-form>
-                <!-- <v-divider></v-divider>
-                <div style="margin-top:15px;">
-                  <v-row no-gutters>
-                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="newConnectionSubmit" color="primary">Save</v-btn>
-                    </v-col>
-                    <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">Cancel</v-btn>
-                    </v-col>
-                  </v-row>
-                </div> -->
               </v-flex>
             </v-layout>
           </v-container>
@@ -185,8 +174,10 @@ export default {
       const index = this.selected.findIndex(x => x == item.id)
       if (index > -1) this.selected.splice(index, 1)
       else this.selected.push(item.id)
-      this.item = JSON.parse(JSON.stringify(item))
-      console.log(this.item)
+      // Select the server to display
+      if (this.selected.length == 0) this.item = {}
+      else if (this.selected[this.selected.length - 1].id == item.id) this.item = JSON.parse(JSON.stringify(item))
+      else this.item = this.servers.find(x => x.id == this.selected[this.selected.length - 1])
     },
     newConnection() {
       this.dialog = true
@@ -199,9 +190,11 @@ export default {
     },
     selectAll() {
       this.selected = this.servers.map(x => x.id)
+      if (Object.keys(this.item).length == 0) this.item = JSON.parse(JSON.stringify(this.servers[this.servers.length - 1]))
     },
     deselectAll() {
       this.selected = []
+      this.item = {}
     },
   }
 }
