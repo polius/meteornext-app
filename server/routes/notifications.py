@@ -46,6 +46,13 @@ class Notifications:
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
 
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
             # Return unseen user notifications
             return jsonify({'data': self._notifications.get_notification_bar(user['id'])}), 200
     
