@@ -2,9 +2,27 @@ class Client:
     def __init__(self, sql):
         self._sql = sql
 
+    def get_connections(self, user_id):
+        query = """
+            SELECT s.id, s.name, s.shared, cc.folder_id
+            FROM servers s
+            JOIN client_connections cc ON cc.server_id = s.id AND cc.user_id = %s
+            ORDER BY s.name
+        """
+        return self._sql.execute(query, (user_id))
+
+    def get_connection_folders(self, user_id):
+        query = """
+            SELECT cf.id, cf.name
+            FROM client_folders cf
+            WHERE cf.user_id = %s
+            ORDER BY cf.name
+        """
+        return self._sql.execute(query, (user_id))
+
     def get_servers(self, group_id):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.engine AS 'server_engine', s.hostname AS 'server_hostname', r.id AS 'region_id', r.name AS 'region_name'
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.engine AS 'server_engine', s.hostname AS 'server_hostname', r.id AS 'region_id', r.name AS 'region_name', r.shared AS 'region_shared'
             FROM servers s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %s
         """

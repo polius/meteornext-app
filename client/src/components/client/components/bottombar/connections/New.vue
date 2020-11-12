@@ -67,7 +67,7 @@
                                   <div class="text-h5">{{ item.name }}</div>
                                 </v-row>
                                 <v-row justify="space-around" style="margin-top:10px">
-                                  <div class="text-subtitle-1"><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-users</v-icon>{{ item.region }}</div>
+                                  <div class="text-subtitle-1"><v-icon small :color="item.region_shared ? 'error' : 'warning'" style="margin-right:10px; margin-bottom:2px;">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.region }}</div>
                                 </v-row>
                                 <v-row no-gutters style="margin-top:25px">
                                   <v-col cols="8" style="padding-right:10px">
