@@ -100,3 +100,18 @@ class Client:
                 analyze_queries = %(analyze_queries)s 
         """
         self._sql.execute(query, { "user_id": user_id, "refresh_rate": data['refresh_rate'], "analyze_queries": data['analyze_queries'] })
+
+    def add_servers(self, data, user_id):
+        for server in data:
+            query = "INSERT INTO client_servers (user_id, server_id) VALUES (%s, %s)"
+            self._sql.execute(query, (user_id, server))
+    
+    def remove_servers(self, data, user_id):
+        for server in data:
+            query = "DELETE FROM client_servers WHERE user_id = %s AND server_id = %s"
+            self._sql.execute(query, (user_id, server))
+
+    def move_servers(self, data, user_id):
+        for server in data:
+            query = "UPDATE client_servers SET folder_id = %s WHERE user_id = %s AND server_id = %s"
+            self._sql.execute(query, (data['folder_id'], user_id, data['server_id']))

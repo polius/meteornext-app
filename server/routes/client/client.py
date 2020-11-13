@@ -26,7 +26,7 @@ class Client:
         # Init blueprint
         client_blueprint = Blueprint('client', __name__, template_folder='client')
 
-        @client_blueprint.route('/client/servers', methods=['GET'])
+        @client_blueprint.route('/client/servers', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
         def client_servers_method():
             # Check license
@@ -40,10 +40,22 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get servers
-            servers = self._client.get_servers(user['id'])
-            folders = self._client.get_folders(user['id'])
-            return jsonify({'servers': servers, 'folders': folders}), 200
+            # Get Request Json
+            client_json = request.get_json()
+
+            if request.method == 'GET':
+                servers = self._client.get_servers(user['id'])
+                folders = self._client.get_folders(user['id'])
+                return jsonify({'servers': servers, 'folders': folders}), 200
+            elif request.method == 'POST':
+                self._client.add_servers(client_json, user['id'])
+                return jsonify({"message": "Servers successfully added"}), 200
+            elif request.method == 'PUT':
+                self._client.move_servers(client_json, user['id'])
+                return jsonify({"message": "Servers successfully moved"}), 200
+            elif request.method == 'DELETE':
+                self._client.remove_servers(client_json, user['id'])
+                return jsonify({"message": "Servers successfully deleted"}), 200
 
         @client_blueprint.route('/client/databases', methods=['GET'])
         @jwt_required
