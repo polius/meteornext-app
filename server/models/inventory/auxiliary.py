@@ -80,17 +80,19 @@ class Auxiliary:
                     FROM auxiliary
                     WHERE name = %s
                     AND group_id = %s
+                    AND shared = %s
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (auxiliary['name'], group_id, auxiliary['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (auxiliary['name'], group_id, auxiliary['shared'], auxiliary['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM auxiliary
                     WHERE name = %s
+                    AND shared = %s
                     AND group_id = %s
                 ) AS exist
             """
-            return self._sql.execute(query, (auxiliary['name'], group_id))[0]['exist'] == 1
+            return self._sql.execute(query, (auxiliary['name'], auxiliary['shared'], group_id))[0]['exist'] == 1

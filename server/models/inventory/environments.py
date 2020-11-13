@@ -74,20 +74,22 @@ class Environments:
                     FROM environments 
                     WHERE name = %s 
                     AND group_id = %s
+                    AND shared = %s
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (environment['name'], group_id, environment['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (environment['name'], group_id, environment['shared'], environment['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM environments 
-                    WHERE name = %s 
+                    WHERE name = %s
+                    AND shared = %s
                     AND group_id = %s
                 ) AS exist
             """
-            return self._sql.execute(query, (environment['name'], group_id))[0]['exist'] == 1
+            return self._sql.execute(query, (environment['name'], environment['shared'], group_id))[0]['exist'] == 1
 
     def get_by_name(self, group_id, environment_name):
         query = """

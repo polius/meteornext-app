@@ -18,7 +18,7 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:[`item.region`]="{ item }">
-          <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+          <v-icon small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
           {{ item.region }}
         </template>
         <template v-slot:[`item.shared`]="{ item }">
@@ -234,7 +234,6 @@ export default {
     editServer() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.item.region = { name: this.item.region, shared: this.item.shared }
       this.versions = this.engines[this.item.engine]
       this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'Edit Server'
       this.dialog = true
