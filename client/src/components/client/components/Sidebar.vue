@@ -316,7 +316,7 @@ export default {
           this.parseDatabases(server, response.data)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
         .finally(() => {
