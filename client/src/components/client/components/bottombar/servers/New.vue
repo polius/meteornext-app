@@ -24,7 +24,7 @@
                       <v-text-field v-model="search" @input="onServerSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding:0px;">
-                      <Splitpanes @ready="onSplitPaneReady" style="height:71vh">
+                      <Splitpanes style="height:71vh">
                         <Pane size="30" min-size="0" style="align-items:inherit">
                           <v-container fluid style="padding:0px;">
                             <v-row no-gutters style="height:calc(100% - 36px); overflow:auto;">
@@ -123,7 +123,7 @@ export default {
       // Dialog
       dialog: false,
       search: '',
-      servers: [],
+      origin: [],
       items: [],
       selected: [],
       item: {},
@@ -133,14 +133,11 @@ export default {
   components: { Splitpanes, Pane },
   computed: {
     ...mapFields([
-      'sidebarSelected',
-    ], { path: 'client/connection' }),
-  },
-  created() {
-    this.getServers()
+      'servers',
+    ], { path: 'client/client' }),
   },
   mounted() {
-    EventBus.$on('show-bottombar-connections-new', this.newConnection)
+    EventBus.$on('show-bottombar-servers-new', this.newConnection)
   },
   watch: {
     dialog (val) {
@@ -148,18 +145,15 @@ export default {
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
       })
+      this.getServers()
     },
   },
   methods: {
-    onSplitPaneReady() {
-
-    },
     getServers() {
       this.loading = true
       axios.get('/inventory/servers')
         .then((response) => {
-          this.servers = response.data.data
-          this.items = response.data.data
+          this.parseServers(response.data.data)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -167,9 +161,15 @@ export default {
         })
         .finally(() => this.loading = false )
     },
+    parseServers(data) {
+      // Remove added servers
+      console.log(this.servers)
+      this.origin = data
+      this.items = data
+    },
     onServerSearch(value) {
-      if (value.length == 0) this.items = this.servers.slice(0)
-      else this.items = this.servers.filter(x => x.name.toLowerCase().includes(value.toLowerCase()))
+      if (value.length == 0) this.items = this.origin.slice(0)
+      else this.items = this.origin.filter(x => x.name.toLowerCase().includes(value.toLowerCase()))
     },
     onServerClick(item) {
       const index = this.selected.findIndex(x => x == item.id)
@@ -178,7 +178,7 @@ export default {
       // Select the server to display
       if (this.selected.length == 0) this.item = {}
       else if (this.selected[this.selected.length - 1].id == item.id) this.item = JSON.parse(JSON.stringify(item))
-      else this.item = this.servers.find(x => x.id == this.selected[this.selected.length - 1])
+      else this.item = this.origin.find(x => x.id == this.selected[this.selected.length - 1])
     },
     newConnection() {
       this.dialog = true
@@ -190,8 +190,8 @@ export default {
       this.getServers()
     },
     selectAll() {
-      this.selected = this.servers.map(x => x.id)
-      if (Object.keys(this.item).length == 0) this.item = JSON.parse(JSON.stringify(this.servers[this.servers.length - 1]))
+      this.selected = this.origin.map(x => x.id)
+      if (Object.keys(this.item).length == 0) this.item = JSON.parse(JSON.stringify(this.origin[this.origin.length - 1]))
     },
     deselectAll() {
       this.selected = []

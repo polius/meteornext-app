@@ -26,25 +26,6 @@ class Client:
         # Init blueprint
         client_blueprint = Blueprint('client', __name__, template_folder='client')
 
-        @client_blueprint.route('/client/connections', methods=['GET'])
-        @jwt_required
-        def client_connections_method():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Get user data
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if user['disabled'] or not user['client_enabled']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Get Connections
-            connections = self._client.get_connections(user['id'])
-            folders = self._client.get_connection_folders(user['id'])
-            return jsonify({'connections': connections, 'folders': folders}), 200
-
         @client_blueprint.route('/client/servers', methods=['GET'])
         @jwt_required
         def client_servers_method():
@@ -59,9 +40,10 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Servers
-            servers = self._client.get_servers(user['group_id'])
-            return jsonify({'servers': servers}), 200
+            # Get servers
+            servers = self._client.get_servers(user['id'])
+            folders = self._client.get_folders(user['id'])
+            return jsonify({'servers': servers, 'folders': folders}), 200
 
         @client_blueprint.route('/client/databases', methods=['GET'])
         @jwt_required

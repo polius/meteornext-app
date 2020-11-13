@@ -421,7 +421,7 @@ CREATE TABLE `client_folders` (
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 );
 
-CREATE TABLE `client_connections` (
+CREATE TABLE `client_servers` (
   `user_id` INT UNSIGNED NOT NULL,
   `server_id` INT UNSIGNED NOT NULL,
   `folder_id` INT UNSIGNED NULL,
