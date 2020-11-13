@@ -111,22 +111,20 @@ class Servers:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
-                    FROM servers s
-                    JOIN regions r ON r.id = s.region_id AND r.name = %s AND r.group_id = %s
-                    WHERE s.name = %s AND s.shared = %s AND s.id != %s
+                    FROM servers
+                    WHERE `name` = %s AND owner_id = %s AND group_id = %s AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['region'], group_id, server['name'], server['shared'], server['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['name'], server['owner_id'], group_id, server['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
-                    FROM servers s
-                    JOIN regions r ON r.id = s.region_id AND r.name = %s AND r.group_id = %s
-                    WHERE s.name = %s AND s.shared = %s
+                    FROM servers
+                    WHERE `name` = %s AND owner_id = %s AND group_id = %s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['region'], group_id, server['name'], server['shared']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['name'], server['owner_id'], group_id))[0]['exist'] == 1
 
     def exist_by_region(self, group_id, region_id):
         query = """
