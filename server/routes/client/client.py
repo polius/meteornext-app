@@ -52,6 +52,7 @@ class Client:
                     self._client.add_servers(client_json['servers'], user['id'])
                     return jsonify({"message": "Servers successfully added"}), 200
                 elif 'folder' in client_json:
+                    # Todo: Check duplicates
                     self._client.add_folder(client_json['folder'], user['id'])
                     return jsonify({"message": "Folder successfully created"}), 200
             elif request.method == 'PUT':
@@ -59,6 +60,7 @@ class Client:
                     self._client.move_servers(client_json['servers'], user['id'])
                     return jsonify({"message": "Servers successfully moved"}), 200
                 elif 'folder' in client_json:
+                    # Todo: Check duplicates
                     self._client.rename_folder(client_json['folder'], user['id'])
                     return jsonify({"message": "Folder successfully renamed"}), 200
             elif request.method == 'DELETE':
