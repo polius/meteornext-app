@@ -5,16 +5,12 @@
     <!---------------->
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">New Folder</v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
-        </v-toolbar>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
+              <div class="text-h6" style="font-weight:400;">New Folder</div>
               <v-flex xs12>
-                <v-form ref="form" @submit.prevent style="margin-top:10px; margin-bottom:15px;">
+                <v-form ref="form" @submit.prevent style="margin-top:20px; margin-bottom:15px;">
                   <v-text-field @keyup.enter="newFolderSubmit" v-model="name" :rules="[v => !!v || '']" label="Folder Name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                 </v-form>
                 <v-divider></v-divider>
@@ -60,13 +56,36 @@ export default {
   mounted() {
     EventBus.$on('show-bottombar-servers-new-folder', this.newFolder)
   },
+  watch: {
+    dialog (val) {
+      if (val) this.name = ''
+      else {
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
+        })
+      }
+    }
+  },
   methods: {
     newFolder() {
       this.dialog = true
     },
     newFolderSubmit() {
+      this.loading = true
       const payload = { 'folder': this.name }
-      
+      axios.post('/client/servers', payload)
+        .then((response) => {
+          EventBus.$emit('send-notification', response.data.message, '#00b16a', 2)
+          EventBus.$emit('get-sidebar-servers')
+          this.dialog = false
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loading = false
+        })
     },
   }
 }
