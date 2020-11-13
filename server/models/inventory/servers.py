@@ -7,7 +7,7 @@ class Servers:
     def get(self, user_id, group_id, server_id=None):
         if server_id is None:
             query = """
-                SELECT s.*, r.name AS 'region' 
+                SELECT s.*, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
                 JOIN regions r ON r.id = s.region_id AND r.group_id = %s
                 WHERE (s.shared = 1 OR s.owner_id = %s)
@@ -15,7 +15,7 @@ class Servers:
             return self._sql.execute(query, (group_id, user_id))
         else:
             query = """
-                SELECT s.*, r.name AS 'region' 
+                SELECT s.*, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
                 JOIN regions r ON r.id = s.region_id AND r.group_id = %s
                 WHERE s.id = %s
@@ -113,20 +113,20 @@ class Servers:
                     SELECT * 
                     FROM servers s
                     JOIN regions r ON r.id = s.region_id AND r.name = %s AND r.group_id = %s
-                    WHERE s.name = %s AND s.id != %s
+                    WHERE s.name = %s AND s.shared = %s AND s.id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['region'], group_id, server['name'], server['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['region'], group_id, server['name'], server['shared'], server['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM servers s
                     JOIN regions r ON r.id = s.region_id AND r.name = %s AND r.group_id = %s
-                    WHERE s.name = %s
+                    WHERE s.name = %s AND s.shared = %s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['region'], group_id, server['name']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['region'], group_id, server['name'], server['shared']))[0]['exist'] == 1
 
     def exist_by_region(self, group_id, region_id):
         query = """

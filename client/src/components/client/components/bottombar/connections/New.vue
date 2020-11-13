@@ -61,7 +61,7 @@
                               </v-flex>
                               <v-flex v-else>
                                 <v-row justify="space-around">
-                                  <v-img :src="require('@/assets/amazon_aurora.png')" class="my-3" contain height="100"></v-img>
+                                  <v-img :src="require('@/assets/' + image[item.engine] + '.png')" class="my-3" contain height="100"></v-img>
                                 </v-row>
                                 <v-row justify="space-around" style="margin-top:10px">
                                   <div class="text-h5">{{ item.name }}</div>
@@ -127,6 +127,7 @@ export default {
       items: [],
       selected: [],
       item: {},
+      image: {'MySQL': 'mysql', 'Aurora MySQL': 'amazon_aurora'}
     }
   },
   components: { Splitpanes, Pane },
