@@ -98,7 +98,7 @@ class Servers:
 
     def post(self, user_id, group_id, data):
         try:
-            if self._servers.exist(group_id, data):
+            if self._servers.exist(user_id, group_id, data):
                 return jsonify({'message': 'This server currently exists'}), 400
             else:
                 self._servers.post(user_id, group_id, data)
@@ -108,7 +108,7 @@ class Servers:
             return jsonify({'message': 'ERROR'}), 500
 
     def put(self, user_id, group_id, data):
-        if self._servers.exist(group_id, data):
+        if self._servers.exist(user_id, group_id, data):
             return jsonify({'message': 'This new server name currently exists'}), 400
         else:
             self._servers.put(user_id, group_id, data)

@@ -72,14 +72,14 @@ class Environments:
         return jsonify({'environments': self._environments.get(user_id, group_id), 'environment_servers': self._environments.get_environment_servers(group_id), 'servers': self._environments.get_servers(group_id)}), 200
 
     def post(self, user_id, group_id, data):
-        if self._environments.exist(group_id, data):
+        if self._environments.exist(user_id, group_id, data):
             return jsonify({'message': 'This environment currently exists'}), 400
         else:
             self._environments.post(user_id, group_id, data)
             return jsonify({'message': 'Environment added successfully'}), 200
 
     def put(self, user_id, group_id, data):
-        if self._environments.exist(group_id, data):
+        if self._environments.exist(user_id, group_id, data):
             return jsonify({'message': 'This new environment currently exists'}), 400
         else:
             self._environments.put(user_id, group_id, data)

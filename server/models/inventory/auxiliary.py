@@ -72,7 +72,7 @@ class Auxiliary:
         """
         self._sql.execute(query, (group_id))
 
-    def exist(self, group_id, auxiliary):
+    def exist(self, user_id, group_id, auxiliary):
         if 'id' in auxiliary:
             query = """
                 SELECT EXISTS ( 
@@ -84,7 +84,7 @@ class Auxiliary:
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (auxiliary['name'], group_id, auxiliary['owner_id'], auxiliary['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (auxiliary['name'], group_id, user_id, auxiliary['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -95,4 +95,4 @@ class Auxiliary:
                     AND group_id = %s
                 ) AS exist
             """
-            return self._sql.execute(query, (auxiliary['name'], auxiliary['owner_id'], group_id))[0]['exist'] == 1
+            return self._sql.execute(query, (auxiliary['name'], user_id, group_id))[0]['exist'] == 1

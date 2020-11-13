@@ -24,19 +24,20 @@ class Servers:
 
     def post(self, user_id, group_id, server):
         query = """
-            INSERT INTO servers (name, region_id, engine, version, hostname, port, username, password, `ssl`, shared, owner_id, created_by, created_at)             
-            SELECT %s, id, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
+            INSERT INTO servers (name, group_id, region_id, engine, version, hostname, port, username, password, `ssl`, shared, owner_id, created_by, created_at)             
+            SELECT %s, %s, id, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
             FROM regions
-            WHERE group_id = %s
-            AND name = %s
+            WHERE `name` = %s
+            AND group_id = %s
         """
-        self._sql.execute(query, (server['name'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, server['region']))
+        self._sql.execute(query, (server['name'], group_id, server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['region'], group_id))
 
     def put(self, user_id, group_id, server):
         query = """
             UPDATE servers
             JOIN regions r ON r.id = servers.region_id AND r.id = %s AND r.group_id = %s
             SET servers.name = %s,
+                servers.group_id = %s,
                 servers.region_id = (SELECT id FROM regions WHERE group_id = %s AND name = %s),
                 servers.engine = %s,
                 servers.version = %s,
@@ -51,7 +52,7 @@ class Servers:
                 servers.updated_at = %s
             WHERE servers.id = %s
         """
-        self._sql.execute(query, (server['region_id'], group_id, server['name'], group_id, server['region'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
+        self._sql.execute(query, (server['region_id'], group_id, server['name'], group_id, group_id, server['region'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
     def delete(self, group_id, server_id):
         # Delete from 'monitoring'
@@ -106,7 +107,7 @@ class Servers:
         """
         self._sql.execute(query, (group_id))
 
-    def exist(self, group_id, server):
+    def exist(self, user_id, group_id, server):
         if 'id' in server:
             query = """
                 SELECT EXISTS ( 
@@ -115,7 +116,7 @@ class Servers:
                     WHERE `name` = %s AND owner_id = %s AND group_id = %s AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], server['owner_id'], group_id, server['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['name'], user_id, group_id, server['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -124,7 +125,7 @@ class Servers:
                     WHERE `name` = %s AND owner_id = %s AND group_id = %s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], server['owner_id'], group_id))[0]['exist'] == 1
+            return self._sql.execute(query, (server['name'], user_id, group_id))[0]['exist'] == 1
 
     def exist_by_region(self, group_id, region_id):
         query = """

@@ -148,6 +148,7 @@ export default {
           this.environment_servers = this.parseEnvironmentServers(response.data.environment_servers)
           this.environments = this.parseEnvironments(response.data.environments)
           this.items = this.environments.slice(0)
+          this.filterBy(this.filter)
           this.loading = false
         })
         .catch((error) => {

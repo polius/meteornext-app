@@ -173,6 +173,7 @@ export default {
         .then((response) => {
           this.auxiliary = response.data.data
           this.items = response.data.data
+          this.filterBy(this.filter)
           this.loading = false
         })
         .catch((error) => {
