@@ -91,7 +91,7 @@ class Regions:
         return jsonify({'data': regions}), 200
 
     def post(self, user_id, group_id, data):
-        if self._regions.exist(group_id, data):
+        if self._regions.exist(user_id, group_id, data):
             return jsonify({'message': 'This region currently exists'}), 400
 
         # Create new Region
@@ -99,7 +99,7 @@ class Regions:
         return jsonify({'message': 'Region added successfully'}), 200
 
     def put(self, user_id, group_id, data):
-        if self._regions.exist(group_id, data):
+        if self._regions.exist(user_id, group_id, data):
             return jsonify({'message': 'This new region name currently exists'}), 400
 
         # Edit Region

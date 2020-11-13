@@ -94,14 +94,14 @@ class Auxiliary:
         return jsonify({'data': auxiliary}), 200
 
     def post(self, user_id, group_id, data):
-        if self._auxiliary.exist(group_id, data):
+        if self._auxiliary.exist(user_id, group_id, data):
             return jsonify({'message': 'This auxiliary connection currently exists'}), 400
         else:
             self._auxiliary.post(user_id, group_id, data)
             return jsonify({'message': 'Auxiliary connection added successfully'}), 200
 
     def put(self, user_id, group_id, data):
-        if self._auxiliary.exist(group_id, data):
+        if self._auxiliary.exist(user_id, group_id, data):
             return jsonify({'message': 'This new auxiliary connection name currently exists'}), 400
         else:
             self._auxiliary.put(user_id, group_id, data)

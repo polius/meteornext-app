@@ -63,7 +63,7 @@ class Regions:
         """
         self._sql.execute(query, (group_id))
 
-    def exist(self, group_id, region):
+    def exist(self, user_id, group_id, region):
         if 'id' in region:
             query = """
                 SELECT EXISTS ( 
@@ -75,7 +75,7 @@ class Regions:
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (group_id, region['name'], region['owner_id'], region['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (group_id, region['name'], user_id, region['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -86,7 +86,7 @@ class Regions:
                     AND owner_id = %s
                 ) AS exist
             """
-            return self._sql.execute(query, (group_id, region['name'], region['owner_id']))[0]['exist'] == 1
+            return self._sql.execute(query, (group_id, region['name'], user_id))[0]['exist'] == 1
 
     def get_by_server(self, group_id, server_name):
         query = """
