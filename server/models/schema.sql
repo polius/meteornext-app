@@ -75,7 +75,7 @@ CREATE TABLE `environments` (
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `group_id__name__shared` (`group_id`,`name`, `shared`),
+  UNIQUE KEY `group_id__name__owner_id` (`group_id`,`name`, `owner_id`),
   INDEX `shared` (`shared`),
   INDEX `owner_id` (`owner_id`),
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`),
@@ -99,7 +99,7 @@ CREATE TABLE `regions` (
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `group_id__name__shared` (`group_id`,`name`,`shared`),
+  UNIQUE KEY `group_id__name__owner_id` (`group_id`,`name`,`owner_id`),
   INDEX `shared` (`shared`),
   INDEX `owner_id` (`owner_id`),
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`),
@@ -109,6 +109,7 @@ CREATE TABLE `regions` (
 CREATE TABLE `servers` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `group_id` int(10) unsigned NOT NULL,
   `region_id` int(10) unsigned NULL,
   `engine` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `version` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -127,10 +128,11 @@ CREATE TABLE `servers` (
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `region_id__name__shared` (`region_id`, `name`, `shared`),
+  UNIQUE KEY `group_id__name__owner_id` (`group_id`, `name`, `owner_id`),
   INDEX `name` (`name`),
   INDEX `shared` (`shared`),
   INDEX `owner_id` (`owner_id`),
+  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`),
   FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`),
   FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
@@ -169,7 +171,7 @@ CREATE TABLE `auxiliary` (
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `group_id__name__shared` (`group_id`,`name`, `shared`),
+  UNIQUE KEY `group_id__name__owner_id` (`group_id`,`name`, `owner_id`),
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 

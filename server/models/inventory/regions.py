@@ -71,11 +71,11 @@ class Regions:
                     FROM regions
                     WHERE group_id = %s
                     AND name = %s
-                    AND shared = %s
+                    AND owner_id = %s
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (group_id, region['name'], region['shared'], region['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (group_id, region['name'], region['owner_id'], region['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -83,10 +83,10 @@ class Regions:
                     FROM regions
                     WHERE group_id = %s
                     AND name = %s
-                    AND shared = %s
+                    AND owner_id = %s
                 ) AS exist
             """
-            return self._sql.execute(query, (group_id, region['name'], region['shared']))[0]['exist'] == 1
+            return self._sql.execute(query, (group_id, region['name'], region['owner_id']))[0]['exist'] == 1
 
     def get_by_server(self, group_id, server_name):
         query = """
