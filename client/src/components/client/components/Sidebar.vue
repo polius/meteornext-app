@@ -182,6 +182,7 @@ export default {
   },
   mounted() {
     EventBus.$on('execute-sidebar', this.execute);
+    EventBus.$on('get-sidebar-servers', this.getServers);
     EventBus.$on('get-sidebar-objects', this.getObjects);
     EventBus.$on('refresh-sidebar-objects', this.refreshObjects);
   },

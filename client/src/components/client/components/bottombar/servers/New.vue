@@ -1,14 +1,14 @@
 <template>
   <div>
-    <!-------------------->
-    <!-- NEW CONNECTION -->
-    <!-------------------->
+    <!---------------->
+    <!-- NEW SERVER -->
+    <!---------------->
     <v-dialog v-model="dialog" persistent max-width="70%">
       <v-card>
         <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">New Connection</v-toolbar-title>
+          <v-toolbar-title class="white--text">New Servers</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn :disabled="selected.length == 0 || loading" :loading="loading" @click="newConnectionSubmit" color="primary" style="margin-right:10px;">Save</v-btn>
+          <v-btn :disabled="selected.length == 0 || loading" :loading="loading" @click="newServerSubmit" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -138,7 +138,7 @@ export default {
     ], { path: 'client/client' }),
   },
   mounted() {
-    EventBus.$on('show-bottombar-servers-new', this.newConnection)
+    EventBus.$on('show-bottombar-servers-new', this.newServer)
   },
   watch: {
     dialog (val) {
@@ -182,18 +182,34 @@ export default {
       else if (this.selected[this.selected.length - 1].id == item.id) this.item = JSON.parse(JSON.stringify(item))
       else this.item = this.origin.find(x => x.id == this.selected[this.selected.length - 1])
     },
-    newConnection() {
+    newServer() {
       this.dialog = true
     },
-    newConnectionSubmit() {
-      this.dialog = false
+    newServerSubmit() {
+      this.loading = true
+      const payload = this.selected
+      axios.post('/client/servers', payload)
+        .then((response) => {
+          this.selected = []
+          this.item = {}
+          EventBus.$emit('send-notification', response.data.message, '#00b16a', 2)
+          EventBus.$emit('get-sidebar-servers')
+          this.dialog = false
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
+        })
+        .finally(() => {
+          this.loading = false
+        })
     },
     refresh() {
       this.getServers()
     },
     selectAll() {
-      this.selected = this.origin.map(x => x.id)
-      if (Object.keys(this.item).length == 0) this.item = JSON.parse(JSON.stringify(this.origin[this.origin.length - 1]))
+      this.selected = this.items.map(x => x.id)
+      if (Object.keys(this.item).length == 0) this.item = JSON.parse(JSON.stringify(this.items[this.items.length - 1]))
     },
     deselectAll() {
       this.selected = []
