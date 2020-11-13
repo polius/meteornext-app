@@ -2,17 +2,17 @@
   <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
     <div style="height:calc(100% - 36px)">
       <v-autocomplete ref="database" v-model="database" :disabled="sidebarLoading || databaseItems.length == 0" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete>
-      <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'CONNECTIONS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
+      <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
       <div v-if="sidebarMode == 'servers' || database.length > 0" style="height:100%">
         <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :search="sidebarSearch" activatable multiple-active open-on-click transition return-object class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
           <template v-slot:label="{item, open}">
             <v-btn text @click="sidebarClicked($event, item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
-              <v-icon v-if="!item.type" small style="padding:10px;">
+              <v-icon v-if="'children' in item" small style="padding:10px;">
                 {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
               </v-icon>
-              <v-icon v-else small :title="item.type" :color="sidebarColor[item.type]" style="padding:10px;">
-                {{ sidebarImg[item.type] }}
+              <v-icon v-else small :title="item.version" :color="sidebarColor[item.engine]" style="padding:10px;">
+                {{ sidebarImg[item.engine] }}
               </v-icon>
               {{item.name}}
               <v-spacer></v-spacer>
@@ -275,7 +275,7 @@ export default {
       this.sidebarLoading = true
       axios.get('/client/servers')
         .then((response) => {
-          this.parseServers(response.data.servers)
+          this.parseServers(response.data)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -285,16 +285,18 @@ export default {
     },
     parseServers(data) {
       var servers = []
-      for (let i = 0; i < data.length; ++i) {
-        let found = false
-        for (var j = 0; j < servers.length; ++j) {
-          if (servers[j]['id'] == 'r' + data[i]['region_id']) {
-            found = true
-            break
-          }
+      // Parse Server Folders
+      for (let folder of data.folders) {
+        folder['children'] = []
+        servers.push(folder)
+      }
+      // Parse Servers
+      for (let server of data.servers) {
+        if (server.folder_id == null) servers.push(server)
+        else {
+          const index = servers.findIndex(x => 'children' in x && server.folder_id == x.id)
+          servers[index]['children'].push(server)
         }
-        if (found) servers[j]['children'].push({ id: data[i]['server_id'], parentId: servers[j]['id'], name: data[i]['server_name'], type: data[i]['server_engine'], host: data[i]['server_hostname'] })
-        else servers.push({ id: ('r' + data[i]['region_id']), name: data[i]['region_name'], children: [{ id: data[i]['server_id'], parentId: ('r' + data[i]['region_id']), name: data[i]['server_name'], type: data[i]['server_engine'], host: data[i]['server_hostname'] }] })
       }
       this.servers = servers.slice(0)
       this.sidebarItems = servers.slice(0)
@@ -500,8 +502,8 @@ export default {
       this.contextMenuItems = []
       const m = true, s = true
       if (this.sidebarMode == 'servers') {
-        if (item.children === undefined) this.contextMenuItems = [{i:'Open Connection'}, {i:'|'}, {i:'New Connection',m}, {i:'Remove Connection',m,s}]
-        else this.contextMenuItems = [{i:'New Connection'}, {i:'|'}, {i:'New Folder'}, {i:'Rename Folder'}, {i:'Remove Folder'}]
+        if (item.children === undefined) this.contextMenuItems = [{i:'Open Connection'}, {i:'|'}, {i:'New Server',m}, {i:'Move Server',m,s}, {i:'Remove Server',m,s}]
+        else this.contextMenuItems = [{i:'New Server'}, {i:'|'}, {i:'New Folder'}, {i:'Rename Folder'}, {i:'Remove Folder'}]
       }
       else if (this.sidebarMode == 'objects') {
         if (item.type == 'Table') {
@@ -534,11 +536,12 @@ export default {
     contextMenuClicked(item) {
       if (this.sidebarMode == 'servers') {
         if (item == 'Open Connection') this.getDatabases(this.contextMenuItem)
-        else if (item == 'New Connection') EventBus.$emit('show-bottombar-connections-new')
-        else if (item == 'Remove Connection') EventBus.$emit('show-bottombar-connections-remove')
-        else if (item == 'New Folder') EventBus.$emit('show-bottombar-connections-new-folder')
-        else if (item == 'Rename Folder') EventBus.$emit('show-bottombar-connections-rename-folder')
-        else if (item == 'Remove Folder') EventBus.$emit('show-bottombar-connections-remove-folder')
+        else if (item == 'New Server') EventBus.$emit('show-bottombar-servers-new')
+        else if (item == 'Move Server') EventBus.$emit('show-bottombar-servers-move')
+        else if (item == 'Remove Server') EventBus.$emit('show-bottombar-servers-remove')
+        else if (item == 'New Folder') EventBus.$emit('show-bottombar-servers-new-folder')
+        else if (item == 'Rename Folder') EventBus.$emit('show-bottombar-servers-rename-folder')
+        else if (item == 'Remove Folder') EventBus.$emit('show-bottombar-servers-remove-folder')
       }
       else if (this.sidebarMode == 'objects') {
         if (this.contextMenuItem.type == 'Table') {
