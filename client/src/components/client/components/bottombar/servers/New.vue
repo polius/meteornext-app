@@ -28,7 +28,8 @@
                         <Pane size="30" min-size="0" style="align-items:inherit">
                           <v-container fluid style="padding:0px;">
                             <v-row no-gutters style="height:calc(100% - 36px); overflow:auto;">
-                              <v-list flat style="width:100%; padding:0px;">
+                              <v-progress-circular v-if="loading" indeterminate color="white" size="25" width="2" style="margin:12px;"></v-progress-circular>
+                              <v-list v-else flat style="width:100%; padding:0px;">
                                 <v-list-item-group mandatory multiple>
                                   <v-list-item v-for="item in items" :key="item.id" dense @click="onServerClick(item)" @contextmenu="$event.preventDefault()" style="max-height:20px;">
                                     <template>
@@ -150,6 +151,7 @@ export default {
   },
   methods: {
     getServers() {
+      this.items = []
       this.loading = true
       axios.get('/inventory/servers')
         .then((response) => {
@@ -163,9 +165,9 @@ export default {
     },
     parseServers(data) {
       // Remove added servers
-      console.log(this.servers)
-      this.origin = data
-      this.items = data
+      const current = this.servers.reduce((acc, val) => { 'children' in val ? acc = acc.concat(val['children'].map(x => x.id)) : acc.push(val.id) ; return acc }, [])
+      this.origin = data.filter(x => !current.includes(x.id))
+      this.items = this.origin.slice(0)
     },
     onServerSearch(value) {
       if (value.length == 0) this.items = this.origin.slice(0)

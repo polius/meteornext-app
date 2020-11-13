@@ -116,6 +116,7 @@ export default {
       sidebarClick: undefined,
       sidebarImg: {
         MySQL: "fas fa-server",
+        "Aurora MySQL": "fas fa-server",
         PostgreSQL: "fas fa-server",
         Table: "fas fa-th",
         View: "fas fa-th-list",
@@ -126,6 +127,7 @@ export default {
       },
       sidebarColor: {
         MySQL: "#F29111",
+        "Aurora MySQL": "#F29111",
         PostgreSQL: "",
         Table: "#ec644b",
         View: "#f2d984",
