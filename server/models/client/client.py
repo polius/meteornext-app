@@ -115,3 +115,22 @@ class Client:
         for server in data:
             query = "UPDATE client_servers SET folder_id = %s WHERE user_id = %s AND server_id = %s"
             self._sql.execute(query, (data['folder_id'], user_id, data['server_id']))
+
+    def add_folder(self, folder_name, user_id):
+        query = "INSERT INTO client_folders (name, user_id) VALUES (%s, %s)"
+        self._sql.execute(query, (folder_name, user_id))
+
+    def remove_folder(self, folder_id, user_id):
+        query = """
+            UPDATE client_servers
+            JOIN client_folders cf ON cf.id = client_servers.folder_id AND cf.user_id = %s
+            SET client_servers.folder_id = NULL
+            WHERE client_servers.folder_id = %s
+        """
+        self._sql.execute(query, (user_id, folder_id))
+        query = "DELETE FROM client_folders WHERE id = %s AND user_id = %s"
+        self._sql.execute(query, (folder_id, user_id))
+
+    def rename_folder(self, folder, user_id):
+        query = "UPDATE client_folders SET name = %s WHERE id = %s AND user_id = %s"
+        self._sql.execute(query, (folder['name'], folder['id'], user_id))
