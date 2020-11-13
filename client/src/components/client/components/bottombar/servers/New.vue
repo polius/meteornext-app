@@ -187,7 +187,7 @@ export default {
     },
     newServerSubmit() {
       this.loading = true
-      const payload = this.selected
+      const payload = { 'servers': this.selected }
       axios.post('/client/servers', payload)
         .then((response) => {
           this.selected = []

@@ -48,14 +48,26 @@ class Client:
                 folders = self._client.get_folders(user['id'])
                 return jsonify({'servers': servers, 'folders': folders}), 200
             elif request.method == 'POST':
-                self._client.add_servers(client_json, user['id'])
-                return jsonify({"message": "Servers successfully added"}), 200
+                if 'servers' in client_json:
+                    self._client.add_servers(client_json['servers'], user['id'])
+                    return jsonify({"message": "Servers successfully added"}), 200
+                elif 'folder' in client_json:
+                    self._client.add_folder(client_json['folder'], user['id'])
+                    return jsonify({"message": "Folder successfully created"}), 200
             elif request.method == 'PUT':
-                self._client.move_servers(client_json, user['id'])
-                return jsonify({"message": "Servers successfully moved"}), 200
+                if 'servers' in client_json:
+                    self._client.move_servers(client_json['servers'], user['id'])
+                    return jsonify({"message": "Servers successfully moved"}), 200
+                elif 'folder' in client_json:
+                    self._client.rename_folder(client_json['folder'], user['id'])
+                    return jsonify({"message": "Folder successfully renamed"}), 200
             elif request.method == 'DELETE':
-                self._client.remove_servers(client_json, user['id'])
-                return jsonify({"message": "Servers successfully deleted"}), 200
+                if 'servers' in client_json:
+                    self._client.remove_servers(client_json['servers'], user['id'])
+                    return jsonify({"message": "Servers successfully deleted"}), 200
+                elif 'folder' in client_json:
+                    self._client.remove_folder(client_json['folder'], user['id'])
+                    return jsonify({"message": "Folder successfully deleted"}), 200
 
         @client_blueprint.route('/client/databases', methods=['GET'])
         @jwt_required

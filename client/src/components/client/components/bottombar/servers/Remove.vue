@@ -68,7 +68,7 @@ export default {
     },
     removeServerSubmit() {
       this.loading = true
-      const payload = this.sidebarSelected.map(x => x.id)
+      const payload = { 'servers': this.sidebarSelected.map(x => x.id) }
       axios.delete('/client/servers', { data: payload })
         .then((response) => {
           EventBus.$emit('send-notification', response.data.message, '#00b16a', 2)

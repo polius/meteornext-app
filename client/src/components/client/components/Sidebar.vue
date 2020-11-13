@@ -505,7 +505,7 @@ export default {
       this.contextMenuItems = []
       const m = true, s = true
       if (this.sidebarMode == 'servers') {
-        if (item.children === undefined) this.contextMenuItems = [{i:'Open Connection'}, {i:'|'}, {i:'New Server',m}, {i:'Move Server',m,s}, {i:'Remove Server',m,s}]
+        if (item.children === undefined) this.contextMenuItems = [{i:'Open Connection'}, {i:'Test Connection'}, {i:'|'}, {i:'New Server',m}, {i:'Move Server',m,s}, {i:'Remove Server',m,s}]
         else this.contextMenuItems = [{i:'New Server'}, {i:'|'}, {i:'New Folder'}, {i:'Rename Folder'}, {i:'Remove Folder'}]
       }
       else if (this.sidebarMode == 'objects') {
@@ -539,6 +539,7 @@ export default {
     contextMenuClicked(item) {
       if (this.sidebarMode == 'servers') {
         if (item == 'Open Connection') this.getDatabases(this.contextMenuItem)
+        else if (item == 'Test Connection') 1 == 1
         else if (item == 'New Server') EventBus.$emit('show-bottombar-servers-new')
         else if (item == 'Move Server') EventBus.$emit('show-bottombar-servers-move')
         else if (item == 'Remove Server') EventBus.$emit('show-bottombar-servers-remove')
