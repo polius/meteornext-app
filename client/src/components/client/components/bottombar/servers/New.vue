@@ -55,7 +55,7 @@
                           </v-container>
                         </Pane>
                         <Pane size="70" min-size="0" style="align-items:inherit; background-color:#484848; padding:0px 2% 2% 2%; overflow-y:auto;">
-                          <v-container style="max-width:100%;">
+                          <v-container style="max-width:100%; padding-top:5px">
                             <v-layout wrap>
                               <v-flex v-if="Object.keys(item).length == 0" xs12>
                                 <div class="body-2" style="text-align:center; margin-top:2%;">Select a server to show the details</div>
@@ -64,13 +64,13 @@
                                 <v-row justify="space-around">
                                   <v-img :src="require('@/assets/' + image[item.engine] + '.png')" class="my-3" contain height="100"></v-img>
                                 </v-row>
-                                <v-row justify="space-around" style="margin-top:10px">
+                                <v-row justify="space-around" style="margin-top:1%">
                                   <div class="text-h5">{{ item.name }}</div>
                                 </v-row>
-                                <v-row justify="space-around" style="margin-top:10px">
+                                <v-row justify="space-around" style="margin-top:2%">
                                   <div class="text-subtitle-1"><v-icon small :color="item.region_shared ? 'error' : 'warning'" style="margin-right:10px; margin-bottom:2px;">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.region }}</div>
                                 </v-row>
-                                <v-row no-gutters style="margin-top:25px">
+                                <v-row no-gutters style="margin-top:2%">
                                   <v-col cols="8" style="padding-right:10px">
                                     <v-text-field v-model="item.engine" readonly label="Engine" required style="padding-top:0px;"></v-text-field>
                                   </v-col>
@@ -78,7 +78,7 @@
                                     <v-text-field v-model="item.version" readonly label="Version" required style="padding-top:0px;"></v-text-field>
                                   </v-col>
                                 </v-row>
-                                <v-row no-gutters style="margin-top:5px">
+                                <v-row no-gutters style="margin-top:2%">
                                   <v-col cols="8" style="padding-right:10px">
                                     <v-text-field v-model="item.hostname" readonly label="Hostname" required style="padding-top:0px;"></v-text-field>
                                   </v-col>
@@ -86,9 +86,9 @@
                                     <v-text-field v-model="item.port" readonly label="Port" required style="padding-top:0px;"></v-text-field>
                                   </v-col>
                                 </v-row>
-                                <v-text-field v-model="item.username" readonly label="Username" hide-details required style="padding-top:0px; margin-top:10px"></v-text-field>
-                                <v-text-field v-model="item.password" readonly label="Password" hide-details style="margin-top:20px"></v-text-field>
-                                <v-switch v-model="item.ssl" readonly flat label="Use SSL" style="margin-top:25px"></v-switch>
+                                <v-text-field v-model="item.username" readonly label="Username" required style="padding-top:0px; margin-top:2%"></v-text-field>
+                                <v-text-field v-model="item.password" readonly label="Password" style="padding-top:0px; margin-top:2%"></v-text-field>
+                                <v-switch v-model="item.ssl" readonly flat label="Use SSL" style="margin-top:1%"></v-switch>
                               </v-flex>
                             </v-layout>
                           </v-container>

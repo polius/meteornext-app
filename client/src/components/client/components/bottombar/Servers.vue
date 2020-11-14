@@ -16,7 +16,10 @@
     <!------------->
     <New />
     <Remove />
+    <Move />
     <NewFolder />
+    <RemoveFolder />
+    <RenameFolder />
   </div>
 </template>
 
@@ -26,7 +29,10 @@ import { mapFields } from '../../js/map-fields'
 
 import New from './servers/New'
 import Remove from './servers/Remove'
+import Move from './servers/Move'
 import NewFolder from './servers/NewFolder'
+import RemoveFolder from './servers/RemoveFolder'
+import RenameFolder from './servers/RenameFolder'
 
 export default {
   data() {
@@ -34,7 +40,7 @@ export default {
       loading: false,
     }
   },
-  components: { New, Remove, NewFolder },
+  components: { New, Remove, Move, NewFolder, RemoveFolder, RenameFolder },
   computed: {
     ...mapFields([
       'database',
