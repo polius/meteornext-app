@@ -53,7 +53,7 @@ export default {
       EventBus.$emit('show-bottombar-servers-' + option)
     },
     refreshServers() {
-      EventBus.$emit('get-sidebar-servers')
+      new Promise((resolve, reject) => EventBus.$emit('get-sidebar-servers', resolve, reject))
     },
   }
 }
