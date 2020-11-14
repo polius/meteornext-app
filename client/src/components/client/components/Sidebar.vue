@@ -8,15 +8,15 @@
         <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :search="sidebarSearch" activatable multiple-active open-on-click transition return-object class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
           <template v-slot:label="{item, open}">
             <v-btn text @click="sidebarClicked($event, item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
-              <v-icon v-if="'children' in item" small style="padding:10px;">
+              <v-icon v-if="!item.type" small style="padding:10px;">
                 {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
               </v-icon>
-              <v-icon v-else small :title="item.version" :color="sidebarColor[item.engine]" style="padding:10px;">
-                {{ sidebarImg[item.engine] }}
+              <v-icon v-else small :title="item.type" :color="sidebarColor[item.type]" style="padding:10px;">
+                {{ sidebarImg[item.type] }}
               </v-icon>
               {{item.name}}
               <v-spacer></v-spacer>
-              <v-progress-circular v-if="loadingServer && sidebarMode == 'servers' && ((sidebarSelected.length > 0 && item.id == sidebarSelected[0].id) || item.id == contextMenuItem.id)" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
+              <v-progress-circular v-if="loadingServer && sidebarMode == 'servers' && !('children' in item) && ((sidebarSelected.length > 0 && item.id == sidebarSelected[0].id) || item.id == contextMenuItem.id)" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
               <!-- <v-chip label outlined small style="margin-left:10px; margin-right:10px;">Prod</v-chip> -->
             </v-btn>
           </template>
@@ -252,24 +252,40 @@ export default {
         let lastIndex = -1
         if (this.sidebarSelected.length != 0) {
           lastParentIndex = this.sidebarItems.findIndex(x => x.id == lastElement.parentId)
-          lastIndex = this.sidebarItems[lastParentIndex]['children'].findIndex(x => x.id == lastElement.id)
+          if (lastParentIndex == -1) lastIndex = this.sidebarItems.findIndex(x => x.id == lastElement.id)
+          else lastIndex = this.sidebarItems[lastParentIndex]['children'].findIndex(x => x.id == lastElement.id)
         }
         // Find new index
         let newParentIndex = this.sidebarItems.findIndex(x => x.id == item.parentId)
-        let newIndex = this.sidebarItems[newParentIndex]['children'].findIndex(x => x.id == item.id)
+        let newIndex = -1
+        if (newParentIndex == -1) newIndex = this.sidebarItems.findIndex(x => x.id == item.id)
+        else newIndex = this.sidebarItems[newParentIndex]['children'].findIndex(x => x.id == item.id)
+        
         setTimeout(() => {
           this.sidebarSelected = []
           // Select all rows from 0 to selected
           if (lastIndex == -1) {
-            for (let i = 0; i <= newIndex; ++i) this.sidebarSelected.push(this.sidebarItems[newParentIndex]['children'][i])
+            if (newParentIndex == -1) {
+              for (let i = 0; i <= newIndex; ++i) if (!('children' in this.sidebarItems[i])) this.sidebarSelected.push(this.sidebarItems[i])
+            }
+            else for (let i = 0; i <= newIndex; ++i) this.sidebarSelected.push(this.sidebarItems[newParentIndex]['children'][i])
           }
           // Select rows between
           else if (lastParentIndex == newParentIndex) {
-            if (lastIndex < newIndex) for (let i = lastIndex; i <= newIndex; ++i) this.sidebarSelected.push(this.sidebarItems[newParentIndex]['children'][i])
-            else for (let i = lastIndex; i >= newIndex; --i) this.sidebarSelected.push(this.sidebarItems[newParentIndex]['children'][i])
+            if (lastParentIndex == -1) {
+              if (lastIndex < newIndex) for (let i = lastIndex; i <= newIndex; ++i) this.sidebarSelected.push(this.sidebarItems[i])
+              else for (let i = lastIndex; i >= newIndex; --i) this.sidebarSelected.push(this.sidebarItems[i])
+            }
+            else {
+              if (lastIndex < newIndex) for (let i = lastIndex; i <= newIndex; ++i) this.sidebarSelected.push(this.sidebarItems[newParentIndex]['children'][i])
+              else for (let i = lastIndex; i >= newIndex; --i) this.sidebarSelected.push(this.sidebarItems[newParentIndex]['children'][i])
+            }
           }
           // Select selected row
-          else this.sidebarSelected.push(this.sidebarItems[newParentIndex]['children'][newIndex])
+          else {
+            if (newParentIndex == -1) this.sidebarSelected.push(this.sidebarItems[newIndex])
+            else this.sidebarSelected.push(this.sidebarItems[newParentIndex]['children'][newIndex])
+          }
         }, 10)
       }
       else this.sidebarSelected = []
@@ -298,9 +314,11 @@ export default {
       }
       // Parse Servers
       for (let server of data.servers) {
+        server['type'] = server['engine']
         if (server.folder_id == null) servers.push(server)
         else {
           const index = servers.findIndex(x => 'children' in x && server.folder_id == x.id.substring(1))
+          server['parentId'] = servers[index].id
           servers[index]['children'].push(server)
         }
       }
