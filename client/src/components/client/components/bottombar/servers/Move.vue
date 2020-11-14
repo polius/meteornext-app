@@ -102,9 +102,9 @@ export default {
       axios.put('/client/servers', payload)
         .then((response) => {
           EventBus.$emit('send-notification', response.data.message, '#00b16a', 2)
-          EventBus.$emit('get-sidebar-servers')
+          new Promise((resolve, reject) => EventBus.$emit('get-sidebar-servers', resolve, reject))
+          .then(() => this.$nextTick(() => this.parseOpenedFolders(payload.servers.folder) ))
           this.dialog = false
-          this.parseOpenedFolders(payload.servers.folder)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -115,6 +115,7 @@ export default {
         })
     },
     parseOpenedFolders(folder) {
+      console.log(folder)
       if (folder == null) this.sidebarOpened = []
       else this.sidebarOpened = [this.servers.find(x => x.id == 'f' + folder)]
     }

@@ -136,6 +136,9 @@ export default {
     ...mapFields([
       'servers',
     ], { path: 'client/client' }),
+    ...mapFields([
+      'sidebarSelected'
+    ], { path: 'client/connection' }),
   },
   mounted() {
     EventBus.$on('show-bottombar-servers-new', this.newServer)
@@ -193,7 +196,11 @@ export default {
           this.selected = []
           this.item = {}
           EventBus.$emit('send-notification', response.data.message, '#00b16a', 2)
-          EventBus.$emit('get-sidebar-servers')
+          new Promise((resolve, reject) => EventBus.$emit('get-sidebar-servers', resolve, reject))
+          .then(() => {
+            const server = this.servers.find(x => !('children' in x) && x.id == payload.servers[payload.servers.length - 1])
+            this.sidebarSelected = [server]
+          })
           this.dialog = false
         })
         .catch((error) => {

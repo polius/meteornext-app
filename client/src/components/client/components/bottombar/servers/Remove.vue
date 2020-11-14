@@ -50,6 +50,7 @@ export default {
   computed: {
     ...mapFields([
       'sidebarSelected',
+      'sidebarOpened',
     ], { path: 'client/connection' }),
   },
   mounted() {
@@ -65,7 +66,8 @@ export default {
       axios.delete('/client/servers', { data: payload })
         .then((response) => {
           EventBus.$emit('send-notification', response.data.message, '#00b16a', 2)
-          EventBus.$emit('get-sidebar-servers')
+          this.parseOpenedFolders(payload.servers)
+          new Promise((resolve, reject) => EventBus.$emit('get-sidebar-servers', resolve, reject))
           this.dialog = false
         })
         .catch((error) => {
@@ -76,6 +78,16 @@ export default {
           this.loading = false
         })
     },
+    parseOpenedFolders(selected) {
+      let opened = []
+      for (const key of Object.keys(this.sidebarOpened)) {
+        const folder = this.sidebarOpened[key]
+        const match = folder.children.filter(x => selected.includes(x.id))
+        if (match.length < folder.children.length) opened.push(folder)
+      }
+      this.sidebarOpened = opened.slice(0)
+      this.sidebarSelected = []
+    }
   }
 }
 </script>

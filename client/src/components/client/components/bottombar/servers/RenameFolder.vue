@@ -64,8 +64,8 @@ export default {
   },
   watch: {
     dialog (val) {
-      if (val) this.newName = ''
-      else {
+      if (val) {
+        this.newName = ''
         requestAnimationFrame(() => {
           if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         })
@@ -87,9 +87,9 @@ export default {
       const payload = { folder: { id: this.sidebarSelected[0].id.substring(1), name: this.newName }}
       axios.put('/client/servers', payload)
         .then((response) => {
-          this.sidebarSelected[0]['name'] = this.newName
           EventBus.$emit('send-notification', response.data.message, '#00b16a', 2)
-          EventBus.$emit('get-sidebar-servers')
+          new Promise((resolve, reject) => EventBus.$emit('get-sidebar-servers', resolve, reject))
+          .then(() => this.sidebarSelected[0]['name'] = this.newName)
           this.dialog = false
         })
         .catch((error) => {
