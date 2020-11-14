@@ -11,7 +11,7 @@
               <div class="text-h6" style="font-weight:400;">Remove Folder</div>
               <v-flex xs12>
                 <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
-                  <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">Are you sure you want to remove the selected folders?</div>
+                  <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">Are you sure you want to remove the selected folder?</div>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
