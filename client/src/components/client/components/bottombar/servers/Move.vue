@@ -115,7 +115,6 @@ export default {
         })
     },
     parseOpenedFolders(folder) {
-      console.log(folder)
       if (folder == null) this.sidebarOpened = []
       else this.sidebarOpened = [this.servers.find(x => x.id == 'f' + folder)]
     }

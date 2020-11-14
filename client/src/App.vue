@@ -5,7 +5,6 @@
         <v-toolbar-title>Meteor Next</v-toolbar-title>
       </router-link>
       <v-divider class="mx-3" inset vertical></v-divider>
-
       <!-- DEPLOYMENTS -->
       <router-link v-if="deployments_enabled" class="nav-link" to="/deployments" style="margin-right:10px;">
         <v-btn color="#e74c3c"><v-icon small style="padding-right:10px">fas fa-meteor</v-icon>Deployments</v-btn>
@@ -22,16 +21,13 @@
       <router-link v-if="client_enabled" class="nav-link" to="/client">
         <v-btn color="#8e44ad"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>Client</v-btn>
       </router-link>
-
       <v-spacer></v-spacer>
-
       <!-- COINS -->
       <v-chip @click="getCoins()" class="subtitle-1 font-weight-medium" style="margin-right:5px;">
         {{ coins }} Coins
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-icon small color="#ffcb05">fas fa-coins</v-icon>
       </v-chip>
-
       <!-- NOTIFICATIONS BAR -->
       <div>
         <v-tooltip>
@@ -47,35 +43,28 @@
           </template>
         </v-tooltip>
       </div>
-
       <!-- PROFILE -->
       <router-link title="Profile" class="nav-link" to="/profile">
         <v-btn icon><v-icon>fas fa-user</v-icon></v-btn>
       </router-link>
-
       <!-- INVENTORY -->
       <router-link v-if="inventory_enabled" title="Inventory" class="nav-link" to="/inventory">
         <v-btn icon><v-icon>fas fa-layer-group</v-icon></v-btn>
       </router-link>
-
       <!-- ADMINISTRATION -->
       <router-link v-if="admin" title="Administration" class="nav-link" to="/admin">
         <v-btn icon><v-icon>fas fa-ankh</v-icon></v-btn>
       </router-link>
-
       <!-- FULL SCREEN -->
       <v-btn icon :title="fullScreenEnabled ? 'Exit Full Screen' : 'Full Screen'" @click="fullScreen">
         <v-icon>{{ fullScreenEnabled ? 'fas fa-compress' : 'fas fa-expand' }}</v-icon>
       </v-btn>
-
       <!-- LOGOUT -->
       <v-btn icon title="Logout" @click="logout()">
         <v-icon>fas fa-sign-out-alt</v-icon>
       </v-btn>
     </v-app-bar>
-
     <router-view/>
-
     <v-navigation-drawer temporary right v-model="rightDrawer" fixed app style="width:320px;">
       <v-toolbar flat class="primary">
         <v-toolbar-title>Notifications</v-toolbar-title>
@@ -104,7 +93,6 @@
         <v-btn v-if="notifications.length > 0" block large text title="Clear all notifications" @click="clearNotifications()">CLEAR</v-btn>
       </v-list>
     </v-navigation-drawer>
-
     <!-- NOTIFICATIONS Snackbar -->
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
@@ -112,13 +100,44 @@
         <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
       </template>
     </v-snackbar>
-
     <!-- FOOTER -->
     <!--
     <v-footer app v-if="isLoggedIn && showBottomNavbar()" style="height:50px;">
       <span class="px-3" style="text-align:center; margin-left:auto; margin-right:auto;"> Copyright © 2020 Meteor Next</span>
     </v-footer>
     -->
+    <!----------->
+    <!-- COINS -->
+    <!----------->
+    <v-dialog v-model="coinsDialog" persistent max-width="25%">
+      <v-card>
+        <v-card-text style="padding:20px 15px 5px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-row justify="space-around">
+                  <v-avatar size="100"><i class="fas fa-coins fa-7x" style="color:#ffcb05"></i></v-avatar>
+                </v-row>
+                <v-row justify="space-around">
+                  <div class="text-h5" style="font-weight:400; margin-top:15px; margin-bottom:10px;">{{ coins + ' Coins' }}</div>
+                </v-row>
+                <!-- <v-row justify="space-around">
+                  <div class="text-subtitle-1" style="font-weight:400; margin-top:15px; margin-bottom:10px;">+ 15 Coins</div>
+                </v-row> -->
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn @click="coinsDialog = false" color="primary">Close</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
@@ -137,6 +156,7 @@ export default {
     notifications: [],
     loading: false,
     fullScreenEnabled: false,
+    coinsDialog: false,
 
     // Snackbar
     snackbar: false,
@@ -246,7 +266,7 @@ export default {
       }
     },
     getCoins() {
-
+      this.coinsDialog = true
     },
     parseDate(date) {
       return moment.utc(date).local().format('ddd, DD MMM YYYY HH:mm:ss')

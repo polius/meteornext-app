@@ -96,7 +96,7 @@ class Client:
             try:
                 conn = self._connections.connect(user['id'], request.args['connection'], cred)
             except Exception as e:
-                return jsonify({"message": "Can't connect to the Server"}), 500
+                return jsonify({"message": "Can't connect to the server"}), 500
 
             # Get Databases
             databases = conn.get_all_databases()
