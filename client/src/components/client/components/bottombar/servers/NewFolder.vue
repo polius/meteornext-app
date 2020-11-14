@@ -48,11 +48,6 @@ export default {
       name: '',
     }
   },
-  computed: {
-    ...mapFields([
-      'sidebarSelected',
-    ], { path: 'client/connection' }),
-  },
   mounted() {
     EventBus.$on('show-bottombar-servers-new-folder', this.newFolder)
   },
@@ -71,6 +66,11 @@ export default {
       this.dialog = true
     },
     newFolderSubmit() {
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
       this.loading = true
       const payload = { 'folder': this.name }
       axios.post('/client/servers', payload)

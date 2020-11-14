@@ -290,6 +290,7 @@ export default {
       var servers = []
       // Parse Server Folders
       for (let folder of data.folders) {
+        folder['id'] = 'f' + folder['id']
         folder['children'] = []
         servers.push(folder)
       }
@@ -297,7 +298,7 @@ export default {
       for (let server of data.servers) {
         if (server.folder_id == null) servers.push(server)
         else {
-          const index = servers.findIndex(x => 'children' in x && server.folder_id == x.id)
+          const index = servers.findIndex(x => 'children' in x && server.folder_id == x.id.substring(1))
           servers[index]['children'].push(server)
         }
       }

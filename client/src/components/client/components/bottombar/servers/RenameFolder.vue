@@ -1,23 +1,28 @@
 <template>
   <div>
     <!------------------->
-    <!-- REMOVE SERVER -->
+    <!-- RENAME FOLDER -->
     <!------------------->
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">Rename Table</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <div class="text-h6" style="font-weight:400;">Remove Servers</div>
               <v-flex xs12>
-                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
-                  <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">Are you sure you want to remove the selected servers?</div>
+                <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
+                  <v-text-field readonly v-model="currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
+                  <v-text-field @keyup.enter="renameFolderSubmit" v-model="newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="removeServerSubmit" color="primary">Remove</v-btn>
+                      <v-btn :loading="loading" @click="renameFolderSubmit" color="primary">Submit</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
                       <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">Cancel</v-btn>
@@ -45,6 +50,8 @@ export default {
       loading: false,
       // Dialog
       dialog: false,
+      currentName: '',
+      newName: '',
     }
   },
   computed: {
@@ -53,17 +60,34 @@ export default {
     ], { path: 'client/connection' }),
   },
   mounted() {
-    EventBus.$on('show-bottombar-servers-remove', this.removeServer)
+    EventBus.$on('show-bottombar-servers-rename-folder', this.renameFolder)
+  },
+  watch: {
+    dialog (val) {
+      if (val) this.newName = ''
+      else {
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
+        })
+      }
+    }
   },
   methods: {
-    removeServer() {
+    renameFolder() {
       this.dialog = true
+      this.currentName = this.sidebarSelected[0].name
     },
-    removeServerSubmit() {
+    renameFolderSubmit() {
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
       this.loading = true
-      const payload = { 'servers': this.sidebarSelected.map(x => x.id) }
-      axios.delete('/client/servers', { data: payload })
+      const payload = { folder: { id: this.sidebarSelected[0].id.substring(1), name: this.newName }}
+      axios.put('/client/servers', payload)
         .then((response) => {
+          this.sidebarSelected[0]['name'] = this.newName
           EventBus.$emit('send-notification', response.data.message, '#00b16a', 2)
           EventBus.$emit('get-sidebar-servers')
           this.dialog = false
