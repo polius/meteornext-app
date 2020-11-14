@@ -178,7 +178,7 @@ export default {
     ], { path: 'client/connection' }),
   },
   created() {
-    this.getServers()
+    new Promise((resolve, reject) => this.getServers(resolve, reject))
   },
   mounted() {
     EventBus.$on('execute-sidebar', this.execute);
@@ -274,15 +274,17 @@ export default {
       }
       else this.sidebarSelected = []
     },
-    getServers() {
+    getServers(resolve, reject) {
       this.sidebarLoading = true
       axios.get('/client/servers')
         .then((response) => {
           this.parseServers(response.data)
+          resolve()
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message, 'error')
+          reject()
         })
         .finally(() => { this.sidebarLoading = false })
     },

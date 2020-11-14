@@ -48,6 +48,14 @@ export default {
       name: '',
     }
   },
+  computed: {
+    ...mapFields([
+      'servers',
+    ], { path: 'client/client' }),
+    ...mapFields([
+      'sidebarSelected'
+    ], { path: 'client/connection' }),
+  },
   mounted() {
     EventBus.$on('show-bottombar-servers-new-folder', this.newFolder)
   },
@@ -76,8 +84,13 @@ export default {
       axios.post('/client/servers', payload)
         .then((response) => {
           EventBus.$emit('send-notification', response.data.message, '#00b16a', 2)
-          EventBus.$emit('get-sidebar-servers')
           this.dialog = false
+          // Get servers + select new folder
+          new Promise((resolve, reject) => EventBus.$emit('get-sidebar-servers', resolve, reject))
+          .then(() => {
+            const folder = this.servers.find(x => 'children' in x && x.name == this.name)
+            this.sidebarSelected = [folder]
+          })
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
