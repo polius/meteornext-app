@@ -102,8 +102,8 @@ export default {
       axios.put('/client/servers', payload)
         .then((response) => {
           EventBus.$emit('send-notification', response.data.message, '#00b16a', 2)
+          this.parseOpenedFolders(payload.servers.folder)
           new Promise((resolve, reject) => EventBus.$emit('get-sidebar-servers', resolve, reject))
-          .then(() => this.$nextTick(() => this.parseOpenedFolders(payload.servers.folder) ))
           this.dialog = false
         })
         .catch((error) => {

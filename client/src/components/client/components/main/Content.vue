@@ -509,24 +509,26 @@ export default {
         })
     },
     cellEditingStarted(event) {
-      // Store row node
-      this.currentCellEditNode = this.gridApi.content.getSelectedNodes()[0]
-    
-      // Store row values
-      if (Object.keys(this.currentCellEditValues).length == 0) {
-        let node = this.gridApi.content.getSelectedNodes()[0].data
-        let keys = Object.keys(node)
-        this.currentCellEditValues = {}
-        for (let i = 0; i < keys.length; ++i) {
-          this.currentCellEditValues[keys[i]] = {'old': node[keys[i]] == 'NULL' ? null : node[keys[i]]}
+      this.$nextTick(() => {
+        // Store row node
+        this.currentCellEditNode = this.gridApi.content.getSelectedNodes()[0]
+      
+        // Store row values
+        if (Object.keys(this.currentCellEditValues).length == 0) {
+          let node = this.gridApi.content.getSelectedNodes()[0].data
+          let keys = Object.keys(node)
+          this.currentCellEditValues = {}
+          for (let i = 0; i < keys.length; ++i) {
+            this.currentCellEditValues[keys[i]] = {'old': node[keys[i]] == 'NULL' ? null : node[keys[i]]}
+          }
         }
-      }
-      // If the cell includes an special character (\n or \t) or the cell == TEXT, ... then open the extended editor
-      let columnType = this.contentColumnsType[event.colDef.colId]
-      if (['text','mediumtext','longtext'].includes(columnType) || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
-        if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
-        else this.editDialogOpen(event.column.colId + ': ' + columnType.toUpperCase(), event.value)
-      }
+        // If the cell includes an special character (\n or \t) or the cell == TEXT, ... then open the extended editor
+        let columnType = this.contentColumnsType[event.colDef.colId]
+        if (['text','mediumtext','longtext'].includes(columnType) || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
+          if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
+          else this.editDialogOpen(event.column.colId + ': ' + columnType.toUpperCase(), event.value)
+        }
+      })
     },
     cellEditingStopped(event) {
       // Store new value
