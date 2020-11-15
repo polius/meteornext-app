@@ -72,7 +72,7 @@ class Auxiliary:
                 u = utils.Utils(ssh)
                 u.check_sql(sql)
             except Exception as e:
-                return jsonify({'message': "Can't connect to the Auxiliary Server"}), 400
+                return jsonify({'message': "Can't connect to the server"}), 400
 
             return jsonify({'message': 'Connection Successful'}), 200
 

@@ -57,7 +57,7 @@
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <div class="text-h6" style="font-weight:400;">Unable to apply changes</div>
+              <div class="text-h6" style="font-weight:400;">{{ dialogTitle }}</div>
               <v-flex xs12>
                 <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <div class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
@@ -145,6 +145,7 @@ export default {
       contextMenuY: 0,
       // Dialog
       dialog: false,
+      dialogTitle: '',
       dialogText: '',
     }
   },
@@ -338,7 +339,11 @@ export default {
         })
         .catch((error) => {
           if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message, 'error')
+          else {
+            this.dialogTitle = "Can't connect to the server"
+            this.dialogText = error.response.data.message
+            this.dialog = true
+          }
         })
         .finally(() => {
           this.loadingServer = false
@@ -629,6 +634,7 @@ export default {
           else {
             let data = JSON.parse(error.response.data.data)
             // Show error
+            this.dialogTitle = 'Unable to apply changes'
             this.dialogText = data[0]['error']
             this.dialog = true
             // Reject promise

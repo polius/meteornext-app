@@ -74,7 +74,7 @@ class Servers:
             try:
                 u.check_sql(server_json)
             except Exception as e:
-                return jsonify({'message': "Can't connect to the Server"}), 400
+                return jsonify({'message': "Can't connect to the server"}), 400
 
             return jsonify({'message': 'Connection Successful'}), 200
 
