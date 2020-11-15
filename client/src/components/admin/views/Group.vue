@@ -87,7 +87,7 @@
                   LIMITS
                 <v-tooltip right>
                   <template v-slot:activator="{ on }">
-                    <v-icon small style="margin-left:5px;" v-on="on">fas fa-question-circle</v-icon>
+                    <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
                   </template>
                   <span>
                     <b>Execution Threads</b>: Maximum number of spawned threads per server.
@@ -102,6 +102,23 @@
                 <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => v == parseInt(v) && v > 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <v-text-field v-model="group.deployments_execution_limit" label="Execution Limit" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <v-text-field v-model="group.deployments_execution_concurrent" label="Concurrent Executions" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
+                  SLACK
+                  <v-tooltip right>
+                    <template v-slot:activator="{ on }">
+                      <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                    </template>
+                    <span>
+                      Send a <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime a deployment finishes.
+                    </span>
+                  </v-tooltip>  
+                </div>
+                <v-switch v-model="group.deployments_slack_enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
+                <div v-if="group.deployments_slack_enabled">
+                  <v-text-field v-model="group.deployments_slack_name" label="Channel Name" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="group.deployments_slack_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" style="padding-top:0px;"></v-text-field>
+                  <v-btn :loading="loading" color="info" style="margin-bottom:15px">Test Slack</v-btn>
+                </div>
               </v-card-text>
             </v-card>
 
@@ -236,6 +253,9 @@ export default {
       deployments_execution_threads: 10,
       deployments_execution_limit: null,
       deployments_execution_concurrent: null,
+      deployments_slack_enabled: false,
+      deployments_slack_name: '',
+      deployments_slack_url: '',
       monitoring_enabled: false,
       utils_enabled: false,
       client_enabled: false
