@@ -86,37 +86,41 @@ const connection = {
   },
 }
 
-// STATE
-const state = {
-  servers: [],
-  components: {
-    // Client ACE Editor
-    editor: null,
-    editorTools: null,
-    editorMarkers: [],
-    editorCompleters: [],
+const getDefaultState = () => {
+  return {
+    servers: [],
+    components: {
+      // Client ACE Editor
+      editor: null,
+      editorTools: null,
+      editorMarkers: [],
+      editorCompleters: [],
 
-    // AG Grid API
-    gridApi: {
-      client: null,
-      structure: { columns: null, indexes: null, fks: null, triggers: null },
-      content: null,
-      info: null,
-      objects: { tables: null, views: null, triggers: null, functions: null, procedures: null, events: null },
+      // AG Grid API
+      gridApi: {
+        client: null,
+        structure: { columns: null, indexes: null, fks: null, triggers: null },
+        content: null,
+        info: null,
+        objects: { tables: null, views: null, triggers: null, functions: null, procedures: null, events: null },
+      },
+      columnApi: {
+        client: null,
+        structure: { columns: null, indexes: null, fks: null, triggers: null },
+        content: null,
+        info: null,
+        objects: { tables: null, views: null, triggers: null, functions: null, procedures: null, events: null },
+      },
     },
-    columnApi: {
-      client: null,
-      structure: { columns: null, indexes: null, fks: null, triggers: null },
-      content: null,
-      info: null,
-      objects: { tables: null, views: null, triggers: null, functions: null, procedures: null, events: null },
-    },
-  },
-  connections: [JSON.parse(JSON.stringify(connection))],
-  currentConn: 0,
-  connectionIndex: 1,
-  history: []
+    connections: [JSON.parse(JSON.stringify(connection))],
+    currentConn: 0,
+    connectionIndex: 1,
+    history: []
+  }
 }
+
+// STATE
+const state = getDefaultState()
 
 // GETTERS
 const getters = {
@@ -129,6 +133,7 @@ const getters = {
 
 // ACTIONS
 const actions = {
+  reset({ commit }) { commit('reset') },
   newConnection({ commit }) { commit('newConnection') },
   changeConnection({ commit }, data) { commit('changeConnection', data) },
   deleteConnection({ commit }, data) { commit('deleteConnection', data) },
@@ -137,6 +142,9 @@ const actions = {
 
 // MUTATIONS
 const mutations = {
+  reset(state) {
+    Object.assign(state, getDefaultState())
+  },
   newConnection(state) {
     // Store Client ACE Editor (current connection)
     state.connections[state.currentConn].clientQueries = state.components.editor.getValue()

@@ -147,6 +147,10 @@ export default {
       snackbarText: '',
     }
   },
+  beforeDestroy() {
+    EventBus.$off()
+    this.$store.dispatch('client/reset')
+  },
   components: { Splitpanes, Pane, Header, Connections, Sidebar, Main },
   computed: {
     ...mapFields(['connections'], { path: 'client/client' }),
