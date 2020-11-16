@@ -16,7 +16,7 @@ import models.inventory.environments
 import models.inventory.regions
 import models.inventory.servers
 import models.inventory.auxiliary
-import models.inventory.slack
+import models.admin.groups
 
 class Meteor:
     def __init__(self, app, sql):
@@ -28,7 +28,7 @@ class Meteor:
         self._regions = models.inventory.regions.Regions(sql)
         self._servers = models.inventory.servers.Servers(sql)
         self._auxiliary = models.inventory.auxiliary.Auxiliary(sql)
-        self._slack = models.inventory.slack.Slack(sql)
+        self._groups = models.admin.groups.Groups(sql)
 
         # Init Meteor Config
         self._blueprint = ''
@@ -61,11 +61,11 @@ class Meteor:
 
     def __compile_config(self, deployment):
         # Get Data
-        environment = self._environments.get_by_name(deployment['group_id'], deployment['environment'])
-        regions = self._regions.get_by_environment(deployment['group_id'], deployment['environment'])
-        servers = self._servers.get_by_environment(deployment['group_id'], deployment['environment'])
-        auxiliary = self._auxiliary.get(deployment['group_id'])
-        slack = self._slack.get(deployment['group_id'], 'DEPLOYMENTS')
+        environment = self._environments.get_by_name(deployment['user_id'], deployment['group_id'], deployment['environment'])
+        regions = self._regions.get_by_environment(deployment['user_id'], deployment['group_id'], deployment['environment'])
+        servers = self._servers.get_by_environment(deployment['user_id'], deployment['group_id'], deployment['environment'])
+        auxiliary = self._auxiliary.get(deployment['user_id'], deployment['group_id'])
+        slack = self._groups.get_slack(deployment['group_id'])
 
         if len(environment) == 0:
             return
@@ -162,11 +162,11 @@ class Meteor:
             "channel_name": "",
             "webhook_url": ""
         }
-        if len(slack) > 0:
+        if slack['enabled']:
             self._config['slack'] = {
-                "enabled": True if slack[0]['enabled'] else False,
-                "channel_name": slack[0]['channel_name'],
-                "webhook_url": slack[0]['webhook_url']
+                "enabled":  True if slack['enabled'] else False,
+                "channel_name": slack['channel_name'],
+                "webhook_url": slack['webhook_url']
             }
 
         # Enable Meteor Next
@@ -187,7 +187,7 @@ class Meteor:
         self._config['params'] = {
             "id": deployment['execution_id'],
             "mode": deployment['mode'].lower(),
-            "user": deployment['user'],
+            "user": deployment['username'],
             "threads": deployment['execution_threads'],
             "limit": deployment['execution_limit'],
             "environment": deployment['environment'],

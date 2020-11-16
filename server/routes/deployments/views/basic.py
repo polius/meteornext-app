@@ -271,7 +271,8 @@ class Basic:
             data['execution_threads'] = group['deployments_execution_threads']
             data['execution_limit'] = group['deployments_execution_limit']
             data['mode'] = 'BASIC'
-            data['user'] = user['username']
+            data['user_id'] = user['id']
+            data['username'] = user['username']
 
             # Start Meteor Execution
             self._meteor.execute(data)
@@ -345,7 +346,8 @@ class Basic:
                 data['execution_threads'] = group['deployments_execution_threads']
                 data['execution_limit'] = group['deployments_execution_limit']
                 data['mode'] = 'BASIC'
-                data['user'] = user['username']
+                data['user_id'] = user['id']
+                data['username'] = user['username']
 
                 # Start Meteor Execution
                 self._meteor.execute(data)
@@ -380,7 +382,8 @@ class Basic:
         deployment['execution_threads'] = group['deployments_execution_threads']
         deployment['execution_limit'] = group['deployments_execution_limit']
         deployment['mode'] = 'BASIC'
-        deployment['user'] = user['username']
+        deployment['user_id'] = user['id']
+        deployment['username'] = user['username']
 
         # Update Execution Status
         status = 'STARTING' if not group['deployments_execution_concurrent'] else 'QUEUED'

@@ -72,12 +72,6 @@ let router = new VueRouter({
           name: 'inventory.auxiliary',
           component: () => import('../components/inventory/views/Auxiliary'),
           meta: { requiresInventory: true }
-        },
-        {
-          path: 'slack',
-          name: 'inventory.slack',
-          component: () => import('../components/inventory/views/Slack'),
-          meta: { requiresInventory: true }
         }
       ]
     },
@@ -209,7 +203,7 @@ let router = new VueRouter({
           path: '',
           name: 'client',
           component: () => import('../components/client/Client'),
-          meta: { requiresAdmin: true }
+          meta: { requiresClient: true },
         }
       ]
     },

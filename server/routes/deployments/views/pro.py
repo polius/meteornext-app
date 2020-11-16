@@ -297,7 +297,8 @@ class Pro:
             data['execution_threads'] = group['deployments_execution_threads']
             data['execution_limit'] = group['deployments_execution_limit']
             data['mode'] = 'PRO'
-            data['user'] = user['username']
+            data['user_id'] = user['id']
+            data['username'] = user['username']
 
             # Start Meteor Execution
             self._meteor.execute(data)
@@ -379,7 +380,8 @@ class Pro:
                 data['execution_threads'] = group['deployments_execution_threads']
                 data['execution_limit'] = group['deployments_execution_limit']
                 data['mode'] = 'PRO'
-                data['user'] = user['username']
+                data['user_id'] = user['id']
+                data['username'] = user['username']
 
                 # Start Meteor Execution
                 self._meteor.execute(data)
@@ -414,7 +416,8 @@ class Pro:
         deployment['execution_threads'] = group['deployments_execution_threads']
         deployment['execution_limit'] = group['deployments_execution_limit']
         deployment['mode'] = 'PRO'
-        deployment['user'] = user['username']
+        deployment['user_id'] = user['id']
+        deployment['username'] = user['username']
 
         # Update Execution Status
         status = 'STARTING' if not group['deployments_execution_concurrent'] else 'QUEUED'

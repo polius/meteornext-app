@@ -147,11 +147,12 @@ class Servers:
         """
         return self._sql.execute(query, (server_id, group_id))
 
-    def get_by_environment(self, group_id, environment_name):
+    def get_by_environment(self, user_id, group_id, environment_name):
         query = """
             SELECT s.*
             FROM servers s
             JOIN environment_servers es ON es.server_id = s.id
             JOIN environments e ON e.id = es.environment_id AND e.group_id = %s AND e.name = %s
+            WHERE (s.shared = 1 OR s.owner_id = %s)
         """
-        return self._sql.execute(query, (group_id, environment_name))
+        return self._sql.execute(query, (group_id, environment_name, user_id))

@@ -117,7 +117,7 @@
                 <div v-if="group.deployments_slack_enabled">
                   <v-text-field v-model="group.deployments_slack_name" label="Channel Name" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="group.deployments_slack_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" style="padding-top:0px;"></v-text-field>
-                  <v-btn :loading="loading" color="info" style="margin-bottom:15px">Test Slack</v-btn>
+                  <v-btn :loading="loading" @click="testSlack" color="info" style="margin-bottom:15px">Test Slack</v-btn>
                 </div>
               </v-card-text>
             </v-card>
@@ -440,6 +440,26 @@ export default {
         this.ownersSelected = []
       }
       this.ownersDialog = false
+    },
+    testSlack() {
+      this.loading = true
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.loading = false
+        return
+      }
+      // Test Slack Webhook URL
+      const payload = { webhook_url: this.group.deployments_slack_url }
+      axios.get('/admin/groups/slack', { params: payload })
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+        .finally(() => { this.loading = false })
     },
     goBack() {
       this.$router.go(-1)
