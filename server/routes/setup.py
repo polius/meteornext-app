@@ -25,7 +25,6 @@ import routes.inventory.environments
 import routes.inventory.regions
 import routes.inventory.servers
 import routes.inventory.auxiliary
-import routes.inventory.slack
 import routes.deployments.releases
 import routes.deployments.deployments
 import routes.deployments.views.basic
@@ -235,7 +234,6 @@ class Setup:
         regions = routes.inventory.regions.Regions(self._app, sql, self._license)
         servers = routes.inventory.servers.Servers(self._app, sql, self._license)
         auxiliary = routes.inventory.auxiliary.Auxiliary(self._app, sql, self._license)
-        slack = routes.inventory.slack.Slack(self._app, sql, self._license)
         releases = routes.deployments.releases.Releases(self._app, sql, self._license)
         deployments = routes.deployments.deployments.Deployments(self._app, sql, self._license)
         deployments_basic = routes.deployments.views.basic.Basic(self._app, sql, self._license)
@@ -246,7 +244,7 @@ class Setup:
         monitoring_queries = routes.monitoring.views.queries.Queries(self._app, sql, self._license)
         client = routes.client.client.Client(self._app, sql, self._license)
 
-        self._blueprints = [login, profile, notifications, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, slack, releases, deployments, deployments_basic, deployments_pro, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client]
+        self._blueprints = [login, profile, notifications, settings, groups, users, admin_deployments, environments, regions, servers, auxiliary, releases, deployments, deployments_basic, deployments_pro, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client]
 
         # Register all blueprints
         for i in self._blueprints:

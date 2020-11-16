@@ -91,14 +91,15 @@ class Environments:
             """
             return self._sql.execute(query, (environment['name'], user_id, group_id))[0]['exist'] == 1
 
-    def get_by_name(self, group_id, environment_name):
+    def get_by_name(self, user_id, group_id, environment_name):
         query = """
             SELECT *
             FROM environments
             WHERE group_id = %s
             AND name = %s
+            AND (shared = 1 OR owner_id = %s)
         """
-        return self._sql.execute(query, (group_id, environment_name))
+        return self._sql.execute(query, (group_id, environment_name, user_id))
 
     def get_servers(self, group_id):
         query = """

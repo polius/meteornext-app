@@ -1,4 +1,7 @@
 import json
+import time
+import calendar
+import requests
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -8,7 +11,6 @@ import routes.inventory.environments
 import routes.inventory.regions
 import routes.inventory.servers
 import routes.inventory.auxiliary
-import routes.inventory.slack
 import routes.admin.settings
 
 class Groups:
@@ -23,7 +25,6 @@ class Groups:
         self._regions = routes.inventory.regions.Regions(app, sql, license)
         self._servers = routes.inventory.servers.Servers(app, sql, license)
         self._auxiliary = routes.inventory.auxiliary.Auxiliary(app, sql, license)
-        self._slack = routes.inventory.slack.Slack(app, sql, license)
         self._settings = routes.admin.settings.Settings(app, sql, license)
 
     def blueprint(self):
@@ -58,6 +59,41 @@ class Groups:
                 return self.put(user['id'], group_json)
             elif request.method == 'DELETE':
                 return self.delete()
+
+        @groups_blueprint.route('/admin/groups/slack', methods=['GET'])
+        @jwt_required
+        def groups_slack_test_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['inventory_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Build Slack Message
+            webhook_data = {
+                "attachments": [
+                    {
+                        "text": "Yay, It works!",
+                        "color": 'good',
+                        "ts": calendar.timegm(time.gmtime())
+                    }
+                ]
+            }
+
+            # Send Slack Message
+            try:
+                response = requests.post(request.args['webhook_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
+                if response.status_code != 200:
+                    raise Exception()
+            except Exception as e:
+                return jsonify({'message': "Slack message could not be sent. Invalid Webhook URL"}), 400
+            else:
+                return jsonify({'message': "Slack message successfully sent"}), 200
 
         return groups_blueprint
 
@@ -110,7 +146,6 @@ class Groups:
             group_id = self._groups.get(group_id=group)[0]['id']
 
             # Delete all group elements
-            self._slack.delete(group_id)
             self._auxiliary.remove(group_id)
             self._servers.remove(group_id)
             self._regions.remove(group_id)
