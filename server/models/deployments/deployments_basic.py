@@ -11,7 +11,7 @@ class Deployments_Basic:
             SELECT d.id, b.id AS 'execution_id', 'BASIC' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', b.databases, b.queries, b.method, b.status, q.queue, b.created, b.scheduled, b.started, b.ended, CONCAT(TIMEDIFF(b.ended, b.started)) AS 'overall', b.error, b.progress, b.url, b.uri, b.engine, b.public
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id
-            JOIN releases r ON r.id = d.release_id
+            LEFT JOIN releases r ON r.id = d.release_id
             LEFT JOIN environments e ON e.id = b.environment_id
             LEFT JOIN
             (

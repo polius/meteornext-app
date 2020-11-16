@@ -144,6 +144,25 @@
 <style>
 a { text-decoration: none; }
 html { overflow-y: auto!important; }
+
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 15px;
+  background-color: #4f4d56;
+}
+::-webkit-scrollbar-track {
+  background: #4f4d56;
+}
+::-webkit-scrollbar-thumb {
+  min-height: 25px;
+  background: #373540;
+  border: 3px solid transparent;
+  border-radius: 10px;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-corner {
+  background: #373540;
+}
 </style>
 
 <script>

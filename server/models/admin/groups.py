@@ -16,7 +16,7 @@ class Groups:
 
     def post(self, user_id, group):
         query = """
-            INSERT INTO groups (name, description, coins_day, coins_max, coins_execution, inventory_enabled, inventory_secured, deployments_enabled, deployments_basic, deployments_pro, deployments_execution_threads, deployments_execution_limit, deployments_execution_concurrent, monitoring_enabled, utils_enabled, client_enabled, created_by, created_at) 
+            INSERT INTO groups (name, description, coins_day, coins_max, coins_execution, inventory_enabled, inventory_secured, deployments_enabled, deployments_basic, deployments_pro, deployments_execution_threads, deployments_execution_limit, deployments_execution_concurrent, deployments_slack_enabled, deployments_slack_name, deployments_slack_url, monitoring_enabled, utils_enabled, client_enabled, created_by, created_at) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         return self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_limit'], group['deployments_execution_concurrent'], group['monitoring_enabled'], group['utils_enabled'], group['client_enabled'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
