@@ -178,22 +178,6 @@ CREATE TABLE `auxiliary` (
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE `slack` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `mode` ENUM('DEPLOYMENTS','MONITORING') NOT NULL,
-  `channel_name` varchar(191) COLLATE utf8mb4_unicode_ci,
-  `webhook_url` text COLLATE utf8mb4_unicode_ci,
-  `enabled` tinyint(1) DEFAULT NULL,
-  `group_id` int(10) unsigned NOT NULL,
-  `created_by` INT UNSIGNED NOT NULL,
-  `created_at` DATETIME NOT NULL,
-  `updated_by` INT UNSIGNED NULL,
-  `updated_at` DATETIME NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `group_id__mode` (`group_id`, `mode`),
-  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
-
 CREATE TABLE `releases` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(191) NOT NULL,
