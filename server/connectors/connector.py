@@ -24,10 +24,10 @@ class Connections:
         collector = {k:k2 for k,v in self._connections.items() for k2,v2 in v.items() if (not v2.is_executing and v2.last_execution + self._time_to_live < now)}
         for user_id, conn_id in collector.items():
             self._connections[user_id][conn_id].close()
-            del self._connections[user_id][conn_id]
+            self._connections[user_id].pop(conn_id, None)
             total += 1
         for user_id in collector.keys():
-            del self._connections[user_id]
+            self._connections.pop(user_id, None)
         if total > 0:
             print("- [CLIENT] Connections closed: {}".format(total))
 

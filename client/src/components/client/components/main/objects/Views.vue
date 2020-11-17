@@ -175,12 +175,12 @@ export default {
       if (item == 'Copy SQL') this.copySQL()
       else if (item == 'Copy CSV') this.copyCSV()
       else if (item == 'Copy JSON') this.copyJSON()
-      else if (item == 'Select All') this.gridApi.client.selectAll()
-      else if (item == 'Deselect All') this.gridApi.client.deselectAll()
+      else if (item == 'Select All') this.gridApi.objects.views.selectAll()
+      else if (item == 'Deselect All') this.gridApi.objects.views.deselectAll()
     },
     copySQL() {
       var SqlString = require('sqlstring');
-      let selectedRows = this.gridApi.client.getSelectedRows()
+      let selectedRows = this.gridApi.objects.views.getSelectedRows()
       let rawQuery = 'INSERT INTO `<table>` (' + Object.keys(selectedRows[0]).map(x => '`' + x.trim() + '`').join() + ')\nVALUES\n'
       let values = ''
       let args = []
@@ -194,7 +194,7 @@ export default {
       navigator.clipboard.writeText(query)
     },
     copyCSV() {
-      let selectedRows = this.gridApi.client.getSelectedRows()
+      let selectedRows = this.gridApi.objects.views.getSelectedRows()
       let replacer = (key, value) => value === null ? undefined : value
       let header = Object.keys(selectedRows[0])
       let csv = selectedRows.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
@@ -203,7 +203,7 @@ export default {
       navigator.clipboard.writeText(csv)
     },
     copyJSON() {
-      let selectedRows = this.gridApi.client.getSelectedRows()
+      let selectedRows = this.gridApi.objects.views.getSelectedRows()
       let json = JSON.stringify(selectedRows)
       navigator.clipboard.writeText(json)
     },
