@@ -16,16 +16,16 @@
             <v-col cols="2">
               <v-select v-model="contentSearchFilter" :items="contentSearchFilterItems" dense solo hide-details height="35px" style="padding-top:5px; padding-left:5px;"></v-select>
             </v-col>
-            <v-col v-if="contentSearchFilter != 'BETWEEN'">
+            <v-col v-if="!['BETWEEN','NOT BETWEEN'].includes(contentSearchFilter)">
               <v-text-field @keyup.enter="filterClick" :disabled="['IS NULL','IS NOT NULL'].includes(contentSearchFilter)" v-model="contentSearchFilterText" solo dense hide-details prepend-inner-icon="search" height="35px" style="padding-top:5px; padding-left:5px;"></v-text-field>
             </v-col>
-            <v-col v-if="contentSearchFilter == 'BETWEEN'">
+            <v-col v-if="['BETWEEN','NOT BETWEEN'].includes(contentSearchFilter)">
               <v-text-field v-model="contentSearchFilterText" @keyup.enter="filterClick" solo dense hide-details prepend-inner-icon="search" height="35px" style="padding-top:5px; padding-left:5px;"></v-text-field>
             </v-col>
-            <v-col v-if="contentSearchFilter == 'BETWEEN'" sm="auto">
+            <v-col v-if="['BETWEEN','NOT BETWEEN'].includes(contentSearchFilter)" sm="auto">
               <div class="body-2" style="margin-top:13px; padding-left:10px; padding-right:5px;">AND</div>
             </v-col>
-            <v-col v-if="contentSearchFilter == 'BETWEEN'">
+            <v-col v-if="['BETWEEN','NOT BETWEEN'].includes(contentSearchFilter)">
               <v-text-field v-model="contentSearchFilterText2" @keyup.enter="filterClick" solo dense hide-details prepend-inner-icon="search" height="35px" style="padding-top:5px; padding-left:5px;"></v-text-field>
             </v-col>
             <v-col sm="auto" justify="end">
@@ -669,8 +669,8 @@ export default {
     filterClick() {
       // Build query condition
       var condition = ''
-      if (this.contentSearchFilter == 'BETWEEN') {
-        if (this.contentSearchFilterText.length != 0 && this.contentSearchFilterText2.length != 0) condition = ' WHERE ' + this.contentSearchColumn + " BETWEEN '" + this.contentSearchFilterText + "' AND '" + this.contentSearchFilterText2 + "'"
+      if (['BETWEEN','NOT BETWEEN'].includes(this.contentSearchFilter)) {
+        if (this.contentSearchFilterText.length != 0 && this.contentSearchFilterText2.length != 0) condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "' AND '" + this.contentSearchFilterText2 + "'"
       }
       else if (['IS NULL','IS NOT NULL'].includes(this.contentSearchFilter)) {
         condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter
