@@ -81,7 +81,7 @@
                     <v-text-field v-model="item.username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="item.password" :readonly="readOnly" label="Password" style="padding-top:0px;" hide-details></v-text-field>
                     <v-switch v-model="item.ssl" :readonly="readOnly" flat label="Use SSL" style="margin-top:20px" hide-details></v-switch>
-                    <v-row no-gutters v-if="item.ssl" style="margin-top:20px">
+                    <v-row no-gutters v-if="item.ssl" style="margin-top:20px; margin-bottom:20px;">
                       <v-col style="padding-right:10px;">
                         <v-file-input v-model="item.ssl_client_key" :readonly="readOnly" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
                       </v-col>
@@ -92,6 +92,7 @@
                         <v-file-input v-model="item.ssl_client_ca_certificate" :readonly="readOnly" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
                       </v-col>
                     </v-row>
+                    <!-- <v-switch v-model="item.client_disabled" label="Disable in Client" color="error" style="margin-top:10px;" hide-details></v-switch> -->
                   </div>
                 </v-form>
                 <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
@@ -145,7 +146,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, shared: false },
+    item: { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false },
     mode: '',
     loading: true,
     engines: {
@@ -228,7 +229,7 @@ export default {
     },
     newServer() {
       this.mode = 'new'
-      this.item = { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, shared: false }
+      this.item = { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false }
       this.dialog_title = 'New Server'
       this.dialog = true
     },

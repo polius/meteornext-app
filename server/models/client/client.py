@@ -4,8 +4,9 @@ class Client:
 
     def get_servers(self, user_id):
         query = """
-            SELECT s.id, s.name, s.engine, s.version, s.shared, cs.folder_id
+            SELECT s.*, cs.folder_id, r.name AS 'region', r.shared AS 'region_shared'
             FROM servers s
+            JOIN regions r ON r.id = s.region_id
             JOIN client_servers cs ON cs.server_id = s.id AND cs.user_id = %s
             ORDER BY s.name
         """
