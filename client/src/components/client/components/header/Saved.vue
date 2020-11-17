@@ -16,7 +16,7 @@
                 <Splitpanes @ready="onSplitPaneReady" style="height:80vh">
                   <Pane size="20" min-size="0" style="align-items:inherit">
                     <v-container fluid style="padding:0px;">
-                      <v-row ref="list" no-gutters style="height:calc(100% - 36px); overflow:auto;">
+                      <v-row ref="list" no-gutters style="height:calc(100% - 93px); overflow:auto;">
                         <v-list style="width:100%; padding:0px;">
                           <v-list-item-group v-model="selected" mandatory multiple>
                             <v-list-item v-for="(item, i) in items" :key="i" dense :ref="'saved' + i" @click="onListClick($event, i)" @contextmenu="onListRightClick">
@@ -24,6 +24,9 @@
                             </v-list-item>
                           </v-list-item-group>
                         </v-list>
+                      </v-row>
+                      <v-row no-gutters>
+                        <v-text-field ref="search" v-model="search" label="Search" @input="onSavedSearch" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
                       </v-row>
                       <v-row no-gutters style="height:35px; border-top:2px solid #3b3b3b; width:100%">
                         <v-btn @click="addSaved" text small title="New Saved Query" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
@@ -102,8 +105,10 @@ export default {
       loading: false,
       dialog: false,
       confirmDialog: false,
+      origin: [],
       items: [],
       selected: [],
+      search: '',
       name: '',
       editor: null,
       saveButtonDisabled: true,
@@ -125,6 +130,11 @@ export default {
         const tab = {'client': 0, 'structure': 1, 'content': 2, 'info': 3, 'objects': 6}
         this.headerTab = tab[this.headerTabSelected]
       }
+      else {
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.search !== 'undefined') this.$refs.search.focus()
+        })
+      }
     },
   },
   methods: {
@@ -136,6 +146,7 @@ export default {
       // Get Saved queries
       axios.get('/client/saved')
         .then((response) => {
+          this.origin = response.data.saved
           this.items = response.data.saved
           if (this.items.length == 0) this.editor.setReadOnly(true)
           else {
@@ -310,6 +321,11 @@ export default {
     },
     onListRightClick(event) {
       event.preventDefault()
+    },
+    onSavedSearch(value) {
+      if (value.length == 0) this.items = this.origin.slice(0)
+      else this.items = this.origin.filter(x => x.name.toLowerCase().includes(value.toLowerCase()))
+      this.editor.setReadOnly(this.items.length == 0)
     },
     checkValues() {
       if (this.items[this.selected[0]] == undefined) return
