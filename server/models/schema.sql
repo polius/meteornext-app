@@ -124,6 +124,7 @@ CREATE TABLE `servers` (
   `ssl_client_key` text COLLATE utf8mb4_unicode_ci,
   `ssl_client_certificate` text COLLATE utf8mb4_unicode_ci,
   `ssl_ca_certificate` text COLLATE utf8mb4_unicode_ci,
+  -- `client_disabled` tinyint(1) NOT NULL DEFAULT '0',
   `shared` tinyint(1) NOT NULL,
   `owner_id` int(10) unsigned NULL,
   `created_by` INT UNSIGNED NOT NULL,
