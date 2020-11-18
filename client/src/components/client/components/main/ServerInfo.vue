@@ -36,35 +36,37 @@
                   <v-text-field v-model="item.version" readonly label="Version" required style="padding-top:0px; font-size:1rem;"></v-text-field>
                 </v-col>
               </v-row>
-              <v-row no-gutters style="margin-top:10px;">
-                <v-col cols="8" style="padding-right:10px">
-                  <v-text-field v-model="item.hostname" readonly label="MySQL Hostname" required style="padding-top:0px; font-size:1rem;"></v-text-field>
-                </v-col>
-                <v-col cols="4" style="padding-left:10px">
-                  <v-text-field v-model="item.port" readonly label="Port" required style="padding-top:0px; font-size:1rem;"></v-text-field>
-                </v-col>
-              </v-row>
-              <v-text-field v-model="item.username" readonly label="Username" required style="padding-top:0px; font-size:1rem;"></v-text-field>
-              <v-text-field v-model="item.password" readonly label="Password" :append-icon="sqlPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="sqlPassword ? 'text' : 'password'" @click:append="sqlPassword = !sqlPassword" style="padding-top:0px; font-size:1rem;"></v-text-field>
-              <!-- SSH -->
-              <div v-if="item.ssh_enabled">
-                <v-row no-gutters style="margin-top:15px;">
+              <div v-if="!(inventory_secured && !owner && item.shared)">
+                <v-row no-gutters style="margin-top:10px;">
                   <v-col cols="8" style="padding-right:10px">
-                    <v-text-field v-model="item.ssh_hostname" readonly label="SSH Hostname" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                    <v-text-field v-model="item.hostname" readonly label="MySQL Hostname" required style="padding-top:0px; font-size:1rem;"></v-text-field>
                   </v-col>
                   <v-col cols="4" style="padding-left:10px">
-                    <v-text-field v-model="item.ssh_port" readonly label="Port" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                    <v-text-field v-model="item.port" readonly label="Port" required style="padding-top:0px; font-size:1rem;"></v-text-field>
                   </v-col>
                 </v-row>
-                <v-text-field v-model="item.ssh_username" readonly label="Username" required style="padding-top:0px; font-size:1rem;"></v-text-field>
-                <v-row no-gutters>
-                  <v-col style="padding-right:10px">
-                    <v-text-field v-model="item.ssh_password" readonly label="Password" :append-icon="sshPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="sshPassword ? 'text' : 'password'" @click:append="sshPassword = !sshPassword" style="padding-top:0px; font-size:1rem;"></v-text-field>
-                  </v-col>
-                  <v-col cols="auto" style="padding-left:10px">
-                    <v-btn @click="sshClick" color="#2e3131">SSH Key</v-btn>
-                  </v-col>
-                </v-row>
+                <v-text-field v-model="item.username" readonly label="Username" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                <v-text-field v-model="item.password" readonly label="Password" :append-icon="sqlPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="sqlPassword ? 'text' : 'password'" @click:append="sqlPassword = !sqlPassword" style="padding-top:0px; font-size:1rem;"></v-text-field>
+                <!-- SSH -->
+                <div v-if="item.ssh_enabled">
+                  <v-row no-gutters style="margin-top:15px;">
+                    <v-col cols="8" style="padding-right:10px">
+                      <v-text-field v-model="item.ssh_hostname" readonly label="SSH Hostname" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:10px">
+                      <v-text-field v-model="item.ssh_port" readonly label="Port" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-text-field v-model="item.ssh_username" readonly label="Username" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                  <v-row no-gutters>
+                    <v-col style="padding-right:10px">
+                      <v-text-field v-model="item.ssh_password" readonly label="Password" :append-icon="sshPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="sshPassword ? 'text' : 'password'" @click:append="sshPassword = !sshPassword" style="padding-top:0px; font-size:1rem;"></v-text-field>
+                    </v-col>
+                    <v-col cols="auto" style="padding-left:10px">
+                      <v-btn @click="sshClick" color="#2e3131">SSH Key</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
               </div>
             </v-card-text>
           </v-card>
@@ -124,11 +126,12 @@ export default {
       if (this.sidebarSelected.length == 0) return []
       else return this.sidebarSelected[this.sidebarSelected.length - 1]
     },
+    owner: function() { return this.$store.getters['app/owner'] == 1 ? true : false },
+    inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
   },
   watch: {
     sidebarSelected (val) {
       if (val) {
-        // console.log(val)
         this.$nextTick(() => {
           if (this.$refs.item !== undefined && this.$refs.item.clientHeight != 0) {
             this.height = this.$refs.item.clientHeight + 25 + 'px'
