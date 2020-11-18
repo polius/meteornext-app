@@ -109,7 +109,7 @@
     <!----------->
     <!-- COINS -->
     <!----------->
-    <v-dialog v-model="coinsDialog" persistent max-width="360px">
+    <v-dialog v-model="coinsDialog" max-width="360px">
       <v-card>
         <v-card-text style="padding:20px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
