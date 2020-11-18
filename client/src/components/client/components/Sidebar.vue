@@ -359,7 +359,7 @@ export default {
       this.editorAddCompleter(completer)
 
       // Get Column Types + Collations
-      if (server.type == 'MySQL') {
+      if (server.engine == 'MySQL') {
         this.server.version = data.version
         this.server.engines = data.engines
         this.server.encodings = data.encodings
