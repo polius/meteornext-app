@@ -63,7 +63,7 @@
                       <v-text-field v-model="item.ssh_password" readonly label="Password" :append-icon="sshPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="sshPassword ? 'text' : 'password'" @click:append="sshPassword = !sshPassword" style="padding-top:0px; font-size:1rem;"></v-text-field>
                     </v-col>
                     <v-col cols="auto" style="padding-left:10px">
-                      <v-btn @click="sshClick" color="#2e3131">SSH Key</v-btn>
+                      <v-btn @click="sshClick" color="#2e3131"><v-icon small :color="item.ssh_key == null || item.ssh_key.length == 0 ? 'error' : '#00b16a'" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>SSH Key</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -105,6 +105,7 @@
 
 <script>
 import { mapFields } from '../../js/map-fields'
+import EventBus from '../../js/event-bus'
 
 export default {
   data() {
@@ -142,9 +143,12 @@ export default {
   },
   methods: {
     sshClick() {
-      this.dialogTitle = 'SSH Key'
-      this.dialogText = this.item.ssh_key
-      this.dialog = true
+      if (this.item.ssh_key == null || this.item.ssh_key.length == 0) EventBus.$emit('send-notification', 'This server does not have an SSH key configured', 'error')
+      else {
+        this.dialogTitle = 'SSH Key'
+        this.dialogText = this.item.ssh_key
+        this.dialog = true
+      }
     },
   },
 }

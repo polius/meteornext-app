@@ -81,6 +81,32 @@ class Client:
                     self._client.remove_folders(client_json['folders'], user['id'])
                     return jsonify({"message": "Folder successfully deleted"}), 200
 
+        @client_blueprint.route('/client/servers/unassigned', methods=['GET'])
+        @jwt_required
+        def client_servers_unassigned_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            if request.method == 'GET':
+                servers = self._client.get_servers_unassigned(user['id'])
+                if user['inventory_secured'] and not user['owner']:
+                    servers_secured = []
+                    for s in servers:
+                        if s['shared']:
+                            servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "region_shared": s['region_shared']})
+                        else:
+                            servers_secured.append(s)
+                    return jsonify({'servers': servers_secured}), 200
+                return jsonify({'servers': servers}), 200
+
         @client_blueprint.route('/client/databases', methods=['GET'])
         @jwt_required
         def client_databases_method():
@@ -96,7 +122,7 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
 
@@ -132,7 +158,7 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
@@ -170,7 +196,7 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
@@ -197,7 +223,7 @@ class Client:
             client_json = request.get_json()
 
             # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], client_json['server'])
+            cred = self._client.get_credentials(user['id'], user['group_id'], client_json['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = self._connections.connect(user['id'], client_json['connection'], cred)
@@ -248,7 +274,7 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
@@ -275,7 +301,7 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
@@ -299,7 +325,7 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
@@ -364,7 +390,7 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
@@ -388,7 +414,7 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], request.form['server'])
+            cred = self._client.get_credentials(user['id'], user['group_id'], request.form['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = self._connections.connect(user['id'], request.form['connection'], cred)
@@ -431,7 +457,7 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
@@ -533,7 +559,7 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Server Credentials + Connection
-            cred = self._client.get_credentials(user['group_id'], request.args['server'])
+            cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
             if cred is None:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)

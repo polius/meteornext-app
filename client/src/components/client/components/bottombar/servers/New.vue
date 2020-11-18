@@ -115,7 +115,7 @@
                                             <v-text-field v-model="item.ssh_password" readonly label="Password" :append-icon="sshPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="sshPassword ? 'text' : 'password'" @click:append="sshPassword = !sshPassword" style="padding-top:0px; font-size:1rem;"></v-text-field>
                                           </v-col>
                                           <v-col cols="auto" style="padding-left:10px">
-                                            <v-btn @click="sshClick" color="#2e3131">SSH Key</v-btn>
+                                           <v-btn @click="sshClick" color="#2e3131"><v-icon small :color="item.ssh_key == null || item.ssh_key.length == 0 ? 'error' : '#00b16a'" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>SSH Key</v-btn>
                                           </v-col>
                                         </v-row>
                                       </div>
@@ -130,6 +130,33 @@
                     </v-card-text>
                   </v-card>
                 </v-form>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!------------>
+    <!-- DIALOG -->
+    <!------------>
+    <v-dialog v-model="infoDialog" max-width="50%">
+      <v-card>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <div class="text-h6" style="font-weight:400;">{{ infoDialogTitle }}</div>
+              <v-flex xs12>
+                <div style="max-height:70vh; padding:15px 10px 0px 5px; overflow-y:auto;">
+                  <v-textarea readonly solo counter auto-grow :value="infoDialogText"></v-textarea>
+                </div>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn @click="infoDialog = false" color="primary">Close</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
               </v-flex>
             </v-layout>
           </v-container>
@@ -164,6 +191,10 @@ export default {
       height: '100%',
       sqlPassword: false,
       sshPassword: false,
+      // Info Dialog
+      infoDialog: false,
+      infoDialogTitle: '',
+      infoDialogText: '',
     }
   },
   components: { Splitpanes, Pane },
@@ -186,6 +217,7 @@ export default {
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
       })
+      this.deselectAll()
       this.getServers()
     },
   },
@@ -193,9 +225,9 @@ export default {
     getServers() {
       this.items = []
       this.loading = true
-      axios.get('/inventory/servers')
+      axios.get('/client/servers/unassigned')
         .then((response) => {
-          this.parseServers(response.data.data)
+          this.parseServers(response.data.servers)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -208,6 +240,14 @@ export default {
       const current = this.servers.reduce((acc, val) => { 'children' in val ? acc = acc.concat(val['children'].map(x => x.id)) : acc.push(val.id) ; return acc }, [])
       this.origin = data.filter(x => !current.includes(x.id))
       this.items = this.origin.slice(0)
+    },
+    sshClick() {
+      if (this.item.ssh_key == null || this.item.ssh_key.length == 0) EventBus.$emit('send-notification', 'This server does not have an SSH key configured', 'error')
+      else {
+        this.infoDialogTitle = 'SSH Key'
+        this.infoDialogText = this.item.ssh_key
+        this.infoDialog = true
+      }
     },
     onServerSearch(value) {
       if (value.length == 0) this.items = this.origin.slice(0)
