@@ -8,7 +8,7 @@
         <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :search="sidebarSearch" activatable multiple-active open-on-click transition return-object class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
           <template v-slot:label="{item, open}">
             <v-btn text @click="sidebarClicked($event, item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
-              <v-icon v-if="'children' in item" small style="padding:10px;">{{ open ? 'mdi-folder-open' : 'mdi-folder' }}</v-icon>
+              <v-icon v-if="'children' in item && sidebarMode == 'servers'" small style="padding:10px;">{{ open ? 'mdi-folder-open' : 'mdi-folder' }}</v-icon>
               <v-icon v-else-if="sidebarMode == 'servers'" small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? 'error' : 'warning'" style="padding:10px;">fas fa-server</v-icon>
               <v-icon v-else small :title="item.type" :color="sidebarColor[item.type]" style="padding:10px;">{{ sidebarImg[item.type] }}</v-icon>
               {{ item.name }}
