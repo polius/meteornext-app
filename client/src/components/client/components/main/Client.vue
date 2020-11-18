@@ -273,20 +273,10 @@ export default {
 
       // Add custom keybinds
       this.editor.commands.removeCommand('transposeletters')
+      this.editor.commands.removeCommand('showSettingsMenu')
       this.editor.container.addEventListener("keydown", (e) => {
-        // if (e.key.toLowerCase() == "w" && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey))
-        // - New Connection -
-        if (e.key.toLowerCase() == "t" && (e.ctrlKey || e.metaKey)) {
-          e.preventDefault()
-          // this.newConnection()
-        }
-        // - Remove Connection -
-        else if (e.key.toLowerCase() == "w" && (e.ctrlKey || e.metaKey)) {
-          e.preventDefault()
-          // this.removeConnection(this.currentConn)
-        }
         // - Run Query/ies -
-        else if (e.key.toLowerCase() == "r" && (e.ctrlKey || e.metaKey)) {
+        if (e.key.toLowerCase() == "r" && (e.ctrlKey || e.metaKey)) {
           e.preventDefault()
           if (Object.keys(this.server).length > 0 && this.clientQuery['query'].length > 0) this.runQuery()
         }
@@ -316,6 +306,10 @@ export default {
           e.preventDefault()
           let size = parseInt(this.editor.getFontSize(), 10) || 12
           this.editor.setFontSize(Math.max(size - 1 || 1))
+        }
+        // - Disable Default Browser Behaviour -
+        else if (e.key.toLowerCase() == "," && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault()
         }
       }, false);
 

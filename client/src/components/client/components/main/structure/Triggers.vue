@@ -158,6 +158,7 @@ export default {
         this.dialogEditor.session.setOptions({ tabSize: 4, useSoftTabs: false })
 
         // Add custom keybinds
+        this.dialogEditor.commands.removeCommand('showSettingsMenu')
         this.dialogEditor.container.addEventListener("keydown", (e) => {
           // - Increase Font Size -
           if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {

@@ -34,6 +34,7 @@ export default {
       readOnly: true,
       showLineNumbers: true
     });
+    this.editor.commands.removeCommand('showSettingsMenu')
     this.editor.container.addEventListener("keydown", (e) => {
       // - Increase Font Size -
       if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
