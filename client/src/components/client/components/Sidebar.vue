@@ -8,13 +8,10 @@
         <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :search="sidebarSearch" activatable multiple-active open-on-click transition return-object class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
           <template v-slot:label="{item, open}">
             <v-btn text @click="sidebarClicked($event, item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
-              <v-icon v-if="!item.type" small style="padding:10px;">
-                {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
-              </v-icon>
-              <v-icon v-else small :title="item.type" :color="sidebarColor[item.type]" style="padding:10px;">
-                {{ sidebarImg[item.type] }}
-              </v-icon>
-              {{item.name}}
+              <v-icon v-if="'children' in item" small style="padding:10px;">{{ open ? 'mdi-folder-open' : 'mdi-folder' }}</v-icon>
+              <v-icon v-else-if="sidebarMode == 'servers'" small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? 'error' : 'warning'" style="padding:10px;">fas fa-server</v-icon>
+              <v-icon v-else small :title="item.type" :color="sidebarColor[item.type]" style="padding:10px;">{{ sidebarImg[item.type] }}</v-icon>
+              {{ item.name }}
               <v-spacer></v-spacer>
               <v-progress-circular v-if="loadingServer && sidebarMode == 'servers' && !('children' in item) && ((sidebarSelected.length > 0 && item.id == sidebarSelected[0].id) || item.id == contextMenuItem.id)" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
               <!-- <v-chip label outlined small style="margin-left:10px; margin-right:10px;">Prod</v-chip> -->
@@ -115,9 +112,6 @@ export default {
       // Sidebar
       sidebarClick: undefined,
       sidebarImg: {
-        MySQL: "fas fa-server",
-        "Aurora MySQL": "fas fa-server",
-        PostgreSQL: "fas fa-server",
         Table: "fas fa-th",
         View: "fas fa-th-list",
         Trigger: "fas fa-bolt",
@@ -126,9 +120,6 @@ export default {
         Event: "far fa-clock"
       },
       sidebarColor: {
-        MySQL: "#F29111",
-        "Aurora MySQL": "#F29111",
-        PostgreSQL: "",
         Table: "#ec644b",
         View: "#f2d984",
         Trigger: "#59abe3",
@@ -315,7 +306,6 @@ export default {
       }
       // Parse Servers
       for (let server of data.servers) {
-        server['type'] = server['engine']
         if (server.folder_id == null) servers.push(server)
         else {
           const index = servers.findIndex(x => 'children' in x && server.folder_id == x.id.substring(1))
