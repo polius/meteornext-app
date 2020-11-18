@@ -46,6 +46,14 @@ class Client:
             if request.method == 'GET':
                 servers = self._client.get_servers(user['id'])
                 folders = self._client.get_folders(user['id'])
+                if user['inventory_secured'] and not user['owner']:
+                    servers_secured = []
+                    for s in servers:
+                        if s['shared']:
+                            servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "region_shared": s['region_shared'], "folder_id": s['folder_id']})
+                        else:
+                            servers_secured.append(s)
+                    return jsonify({'servers': servers_secured, 'folders': folders}), 200
                 return jsonify({'servers': servers, 'folders': folders}), 200
             elif request.method == 'POST':
                 if 'servers' in client_json:
