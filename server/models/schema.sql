@@ -420,3 +420,12 @@ CREATE TABLE `client_servers` (
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`),
   FOREIGN KEY (`folder_id`) REFERENCES `client_folders` (`id`)
 );
+
+CREATE TABLE `client_settings` (
+  `user_id` INT UNSIGNED NOT NULL,
+  `setting` VARCHAR(191) NOT NULL,
+  `value` VARCHAR(191) NOT NULL,
+  PRIMARY KEY (`user_id`, `setting`),
+  INDEX `server_id` (`server_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+);

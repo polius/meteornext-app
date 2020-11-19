@@ -11,7 +11,7 @@
       <v-tab @click="tabInfo" :disabled="sidebarMode != 'objects' || sidebarSelected.length != 1 || 'children' in sidebarSelected[0] || !['Table','View','Trigger','Function','Procedure','Event'].includes(sidebarSelected[0]['type'])"><span class="pl-2 pr-2" style="min-width:100px"><v-icon small style="padding-bottom:2px; padding-right:10px">fas fa-cube</v-icon>Info</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
       <v-spacer></v-spacer>
-      <v-tab @click="tabShortcuts" title="Information" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-info</v-icon></span></v-tab>
+      <v-tab @click="tabSettings" title="Settings" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-cog</v-icon></span></v-tab>
       <v-tab @click="tabHistory" title="Query History" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-history</v-icon></span></v-tab>
       <v-tab @click="tabSaved" title="Saved Queries" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small>fas fa-star</v-icon></span></v-tab>
       <v-tab @click="tabObjects" :disabled="sidebarMode != 'objects' || database.length == 0" title="Schema Objects" style="min-width:10px;"><span class="pl-2 pr-2"><v-icon small style="font-size:17px; margin-top:3px;">fas fa-cube</v-icon></span></v-tab>
@@ -21,7 +21,7 @@
     <!---------------->
     <!-- COMPONENTS -->
     <!---------------->
-    <Information />
+    <Settings />
     <History />
     <Saved />
     <Processlist />
@@ -33,7 +33,7 @@
 import EventBus from '../js/event-bus'
 import { mapFields } from '../js/map-fields'
 
-import Information from './header/Information'
+import Settings from './header/Settings'
 import History from './header/History'
 import Saved from './header/Saved'
 import Processlist from './header/Processlist'
@@ -60,7 +60,7 @@ export default {
       'editor',
     ], { path: 'client/components' }),
   },
-  components: { Information, History, Saved, Processlist, Rights },
+  components: { Settings, History, Saved, Processlist, Rights },
   methods: {
     tabClient() {
       this.headerTab = 0
@@ -84,9 +84,6 @@ export default {
       this.headerTabSelected = 'objects'
       new Promise((resolve, reject) => { EventBus.$emit('get-objects', resolve, reject) })
     },
-    tabShortcuts() {
-      EventBus.$emit('show-information')
-    },
     tabHistory() {
       EventBus.$emit('show-history')
     },
@@ -98,6 +95,9 @@ export default {
     },
     tabRights() {
       EventBus.$emit('show-rights')
+    },
+    tabSettings() {
+      EventBus.$emit('show-settings')
     },
   },
 }
