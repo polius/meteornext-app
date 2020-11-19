@@ -64,17 +64,28 @@ class Servers:
             server_json = request.get_json()
 
             # Get Server Region
-            r = server_json['region'] if type(server_json['region']) is dict else self._regions.get_by_server(user['group_id'], server_json['region'])[0]
+            region = server_json['region'] if type(server_json['region']) is dict else self._regions.get(user['id'], user['group_id'], server_json['region'])
+            if len(region) == 0:
+                return jsonify({'message': "Can't test the connection. Invalid region provided."}), 400
+            else:
+                region = region[0]
 
             # Init Utils Class
-            connection = r if r['ssh_tunnel'] else None
+            connection = region if region['ssh_tunnel'] else None
             u = utils.Utils(connection)
+
+            # Get Server
+            server = self._servers.get(user['id'], user['group_id'], server_json['server'])
+            if len(server) == 0:
+                return jsonify({'message': "Can't test the connection. Invalid server provided."}), 400
+            else:
+                server = server[0]
 
             # Check SQL Connection
             try:
-                u.check_sql(server_json)
+                u.check_sql(server)
             except Exception as e:
-                return jsonify({'message': "Can't connect to the server"}), 400
+                return jsonify({'message': str(e)}), 400
 
             return jsonify({'message': 'Connection Successful'}), 200
 
