@@ -16,7 +16,7 @@ class Utils:
         sys.stderr = open(os.devnull, 'w')
 
         try:
-            pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']), password=self._conn['password'])
+            pkey = None if self._conn['key'] is None or len(self._conn['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._conn['key']), password=self._conn['password'])
             client = paramiko.SSHClient()
             client.load_system_host_keys()
             client.set_missing_host_key_policy(paramiko.WarningPolicy())
@@ -36,7 +36,7 @@ class Utils:
 
         try:
             if self._conn:
-                pkey = paramiko.RSAKey.from_private_key(StringIO(self._conn['key']), password=self._conn['password'])
+                pkey = None if self._conn['key'] is None or len(self._conn['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._conn['key']), password=self._conn['password'])
                 sshtunnel.SSH_TIMEOUT = 10.0
                 with sshtunnel.SSHTunnelForwarder((self._conn['hostname'], int(self._conn['port'])), ssh_username=self._conn['username'], ssh_password=self._conn['password'], ssh_pkey=pkey, remote_bind_address=(server['hostname'], int(server['port'])), threaded=False) as tunnel:
                     conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'])

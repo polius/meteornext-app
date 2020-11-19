@@ -18,7 +18,7 @@ class Regions:
                 SELECT *
                 FROM regions 
                 WHERE group_id = %s
-                AND r.id = %s
+                AND id = %s
             """
             return self._sql.execute(query, (group_id, region_id))            
 
@@ -87,15 +87,6 @@ class Regions:
                 ) AS exist
             """
             return self._sql.execute(query, (group_id, region['name'], user_id))[0]['exist'] == 1
-
-    def get_by_server(self, group_id, server_name):
-        query = """
-            SELECT *
-            FROM regions
-            WHERE group_id = %s 
-            AND name = %s
-        """
-        return self._sql.execute(query, (group_id, server_name))
 
     def get_by_environment(self, user_id, group_id, environment_name):
         query = """

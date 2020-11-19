@@ -358,7 +358,10 @@ export default {
       // Test Connection
       this.notification('Testing Server...', 'info', true)
       this.loading = true
-      const payload = this.item
+      const payload = {
+        region: this.item.region_id,
+        server: this.item.id,
+      }
       axios.post('/inventory/servers/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')

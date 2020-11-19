@@ -555,7 +555,7 @@ export default {
     contextMenuClicked(item) {
       if (this.sidebarMode == 'servers') {
         if (item == 'Open Connection') this.getDatabases(this.contextMenuItem)
-        else if (item == 'Test Connection') 1 == 1
+        else if (item == 'Test Connection') this.testConnection()
         else if (item == 'New Server') EventBus.$emit('show-bottombar-servers-new')
         else if (item == 'Move Server') EventBus.$emit('show-bottombar-servers-move')
         else if (item == 'Remove Server') EventBus.$emit('show-bottombar-servers-remove')
@@ -631,6 +631,28 @@ export default {
             reject()
           }
         })
+    },
+    testConnection() {
+      // Test Connection
+      EventBus.$emit('send-notification', 'Testing Server...', 'info', true)
+      this.loading = true
+      const payload = {
+        region: this.contextMenuItem.region_id,
+        server: this.contextMenuItem.id,
+      }
+      axios.post('/inventory/servers/test', payload)
+        .then((response) => {
+          EventBus.$emit('send-notification', response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else {
+            this.dialogTitle = "Can't connect to the server"
+            this.dialogText = error.response.data.message
+            this.dialog = true
+          }
+        })
+        .finally(() => { this.loading = false })
     },
   }
 }
