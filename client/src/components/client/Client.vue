@@ -147,17 +147,21 @@ export default {
       snackbarText: '',
     }
   },
-  beforeDestroy() {
-    EventBus.$off()
-    this.$store.dispatch('client/reset')
-  },
   components: { Splitpanes, Pane, Header, Connections, Sidebar, Main },
   computed: {
     ...mapFields(['connections'], { path: 'client/client' }),
     ...mapFields(['server'], { path: 'client/connection' }),
   },
-  mounted () {
+  beforeMount() {
+    window.addEventListener('beforeunload', this.beforeUnload)
+  },
+  mounted() {
     EventBus.$on('send-notification', this.notification);
+  },
+  beforeDestroy() {
+    EventBus.$off()
+    this.$store.dispatch('client/reset')
+    window.removeEventListener('beforeunload', this.beforeUnload)
   },
   methods: {
     notification(message, color='', timeout=5) {
@@ -165,7 +169,11 @@ export default {
       this.snackbarColor = color
       this.snackbarTimeout = Number(timeout*1000)
       this.snackbar = true
-    }
+    },
+    beforeUnload(e) {
+      e.preventDefault() 
+      e.returnValue = ''
+    },
   },
 }
 </script>
