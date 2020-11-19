@@ -648,6 +648,7 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             this.dialogTitle = "Can't connect to the server"
+            EventBus.$emit('send-notification', this.dialogTitle, 'error')
             this.dialogText = error.response.data.message
             this.dialog = true
           }
