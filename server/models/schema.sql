@@ -427,5 +427,5 @@ CREATE TABLE `client_settings` (
   `value` VARCHAR(191) NOT NULL,
   PRIMARY KEY (`user_id`, `setting`),
   INDEX `server_id` (`server_id`),
-  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 );
