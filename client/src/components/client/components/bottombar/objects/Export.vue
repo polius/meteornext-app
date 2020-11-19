@@ -43,7 +43,7 @@
                     <ag-grid-vue v-show="tabObjectsSelected == 4" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('procedures', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.procedures" :defaultColDef="defaultColDef" :rowData="objectsItems.procedures"></ag-grid-vue>
                     <ag-grid-vue v-show="tabObjectsSelected == 5" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('events', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.events" :defaultColDef="defaultColDef" :rowData="objectsItems.events"></ag-grid-vue>
                   </div>
-                  <v-select v-if="tab == 'sql'" v-model="include" :items="includeItems" label="Include" outlined hide-details style="margin-top:15px"></v-select>
+                  <v-select v-if="tab == 'sql'" v-model="include" :items="includeItems" dense label="Include" outlined hide-details style="margin-top:15px"></v-select>
                   <v-checkbox v-if="tab == 'csv'" v-model="includeFields" label="Include field names in first row" hide-details style="padding:0px; margin-top:10px"></v-checkbox>
                 </v-form>
                 <v-divider></v-divider>
