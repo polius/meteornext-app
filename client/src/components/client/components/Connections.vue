@@ -86,6 +86,12 @@ export default {
       'connections',
     ], { path: 'client/client' }),
   },
+  mounted() {
+    document.addEventListener("keydown", this.listeners, false)
+  },
+  beforeDestroy() {
+    document.removeEventListener("keydown", this.listeners, false)
+  },
   methods: {
     newConnection() {
       this.$store.dispatch('client/newConnection')
@@ -130,6 +136,34 @@ export default {
     },
     minifyQuery() {
       EventBus.$emit('minify-query')
+    },
+    // Listeners
+    listeners(e) {
+      // - New Connection -
+      if (e.key.toLowerCase() == "." && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
+        this.newConnection()
+      }
+      // - Remove Connection -
+      else if (e.key.toLowerCase() == "," && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
+        this.deleteConnection(this.currentConn)
+      }
+      // - Previous Connection -
+      else if (e.key.toLowerCase() == "o" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
+        if (this.connections.length > 1 && this.currentConn != 0) this.changeConnection(this.currentConn - 1)
+      }
+      // - Next Connection -
+      else if (e.key.toLowerCase() == "p" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
+        if (this.connections.length > 1 && this.currentConn != this.connections.length - 1) this.changeConnection(this.currentConn + 1)
+      }
+      // - Change Connection -
+      else if (['1','2','3','4','5','6','7','8','9'].includes(e.key) && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
+        if (this.connections.length >= parseInt(e.key)) this.changeConnection(parseInt(e.key) - 1)
+      }
     },
   },
 }
