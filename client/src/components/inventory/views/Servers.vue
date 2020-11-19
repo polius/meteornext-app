@@ -364,7 +364,7 @@ export default {
       }
       axios.post('/inventory/servers/test', payload)
         .then((response) => {
-          this.notification(response.data.message, '#00b16a')
+          this.notification(response.data.message, '#00b16a', 2)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

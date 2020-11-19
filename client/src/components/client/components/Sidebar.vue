@@ -642,13 +642,13 @@ export default {
       }
       axios.post('/inventory/servers/test', payload)
         .then((response) => {
-          EventBus.$emit('send-notification', response.data.message, '#00b16a')
+          EventBus.$emit('send-notification', response.data.message, '#00b16a', 2)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             this.dialogTitle = "Can't connect to the server"
-            EventBus.$emit('send-notification', this.dialogTitle, 'error')
+            EventBus.$emit('send-notification', this.dialogTitle, 'error', 2)
             this.dialogText = error.response.data.message
             this.dialog = true
           }

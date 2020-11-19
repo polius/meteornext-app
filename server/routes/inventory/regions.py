@@ -64,12 +64,19 @@ class Regions:
             # Get Request Json
             region_json = request.get_json()
 
+            # Get Region
+            region = self._regions.get(user['id'], user['group_id'], region_json['region'])
+            if len(region) == 0:
+                return jsonify({'message': "Can't test the SSH connection. Invalid region provided."}), 400
+            else:
+                region = region[0]
+
             # Check SSH Connection
             try:
-                u = utils.Utils(region_json)
+                u = utils.Utils(region)
                 u.check_ssh()
             except Exception as e:
-                return jsonify({'message': "Can't connect to the SSH Region"}), 400
+                return jsonify({'message': str(e)}), 400
 
             return jsonify({'message': 'Connection Successful'}), 200
 
