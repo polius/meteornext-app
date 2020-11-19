@@ -229,13 +229,15 @@ export default {
         var allColumnIds = [];
         this.columnApi[object].getAllColumns().forEach(function(column) {
           allColumnIds.push(column.colId);
-        });
+        })
         this.columnApi[object].autoSizeColumns(allColumnIds);
       })
-      let obj = (object == 'tablesCsv') ? 'tables' : object 
-      if (this.objectsItems[obj].length > 0) this.gridApi[obj].hideOverlay()
-      else this.gridApi[obj].showNoRowsOverlay()
-      if (selectRow) this.selectRow()
+      this.$nextTick(() => {
+        let obj = (object == 'tablesCsv') ? 'tables' : object 
+        if (this.objectsItems[obj].length > 0) this.gridApi[obj].hideOverlay()
+        else this.gridApi[obj].showNoRowsOverlay()
+        if (selectRow) this.selectRow()
+      })
     },
     tabClick(object) {
       if (object == 'sql') {
