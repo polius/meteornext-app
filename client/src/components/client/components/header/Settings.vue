@@ -5,7 +5,7 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-cog</v-icon>Settings</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn color="primary" style="margin-right:10px;">Save</v-btn>
+          <v-btn @loading="loading" @disabled="loading" @click="saveSettings" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -14,7 +14,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
-                  <v-text-field outlined v-model="editorFontSize" label="Editor Font Size" hide-details style="margin-top:10px"></v-text-field>
+                  <v-text-field outlined v-model="editorFontSize" label="Editor Font Size" :rules="[v => v == parseInt(v) || '']" hide-details style="margin-top:10px"></v-text-field>
                   <div class="subtitle-1 font-weight-regular white--text" style="margin-top:12px; margin-bottom:10px; margin-left:2px">SHORTCUTS</div>
                   <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" style="width:100%; height:60vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="shortcuts"></ag-grid-vue>
                   <!-- <div class="body-1"><v-chip label>Ctrl + T</v-chip> Open</div> -->
@@ -39,6 +39,7 @@ export default {
   data() {
     return {
       dialog: false,
+      loading: false,
       editorFontSize: '14',
       // AG Grid
       gridApi: null,
@@ -98,12 +99,15 @@ export default {
     },
     resizeTable() {
       this.$nextTick(() => {
-        if (this.gridApi != null) {
-          this.gridApi.sizeColumnsToFit()
-          // let allColIds = this.columnApi.getAllColumns().map(column => column.colId)
-          // this.columnApi.autoSizeColumns(allColIds)
-        }
+        if (this.gridApi != null) this.gridApi.sizeColumnsToFit()
       })
+    },
+    saveSettings() {
+      // Check if all fields are filled
+      if (!this.$refs.form.validate()) {
+        EventBus.$emit('send-notification', 'Please make sure all required login fields are filled out correctly', 'error')
+        return
+      }
     },
   },
 }
