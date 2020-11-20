@@ -312,6 +312,11 @@ export default {
           let size = parseInt(this.editor.getFontSize(), 10) || 12
           this.editor.setFontSize(Math.max(size - 1 || 1))
         }
+        // - Save Editor Queries -
+        else if (e.key.toLowerCase() == "s" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault()
+          this.download('editor.txt', this.editor.getValue())
+        }
         // - Disable Default Browser Behaviour -
         else if (e.key.toLowerCase() == "," && (e.ctrlKey || e.metaKey)) {
           e.preventDefault()
