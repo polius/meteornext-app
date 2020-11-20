@@ -16,6 +16,7 @@ RUN yum update -y && \
     python3 -m pip install flask && \
     python3 -m pip install flask_cors && \
     python3 -m pip install flask_jwt_extended && \
+    python3 -m pip install flask-compress && \
     python3 -m pip install schedule && \
     python3 -m pip install cython && \
     python3 -m pip install gunicorn && \
