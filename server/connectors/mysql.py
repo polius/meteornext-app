@@ -106,14 +106,19 @@ class MySQL:
 
     def execute(self, query, args=None, database=None, fetch=True):
         try:
+            # Check connection
             try:
                 self._sql.ping(reconnect=False)
             except Exception as e:
                 self.connect()
 
             # Execute the query and return results
-            self._is_executing = True
-            return self.__execute_query(query, args, database, fetch)
+            try:
+                self._is_executing = True
+                return self.__execute_query(query, args, database, fetch)
+            except AttributeError:
+                self.connect()
+                return self.__execute_query(query, args, database, fetch)
 
         except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError, pymysql.OperationalError) as error:
             raise Exception(error.args[1])
