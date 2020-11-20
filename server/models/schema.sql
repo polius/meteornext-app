@@ -176,7 +176,10 @@ CREATE TABLE `auxiliary` (
   `updated_at` DATETIME NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_id__name__owner_id` (`group_id`,`name`, `owner_id`),
-  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
+  INDEX `shared` (`shared`),
+  INDEX `owner_id` (`owner_id`),
+  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`),
+  FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `releases` (
