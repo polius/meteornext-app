@@ -218,7 +218,7 @@ export default {
           // Get Response Data
           let data = JSON.parse(response.data.data)
           // Get Structure
-          this.getStructure()
+          this.getStructure(true)
           // Build BottomBar
           this.parseBottomBar(data, current)
           // Add execution to history
