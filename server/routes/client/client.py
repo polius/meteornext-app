@@ -44,7 +44,7 @@ class Client:
             client_json = request.get_json()
 
             if request.method == 'GET':
-                servers = self._client.get_servers(user['id'])
+                servers = self._client.get_servers(user['id'], user['group_id'])
                 folders = self._client.get_folders(user['id'])
                 if user['inventory_secured'] and not user['owner']:
                     servers_secured = []
@@ -96,7 +96,7 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
-                servers = self._client.get_servers_unassigned(user['id'])
+                servers = self._client.get_servers_unassigned(user['id'], user['group_id'])
                 if user['inventory_secured'] and not user['owner']:
                     servers_secured = []
                     for s in servers:
