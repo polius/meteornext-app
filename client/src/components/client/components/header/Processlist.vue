@@ -50,8 +50,8 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
-                  <v-text-field v-model="settings.refresh" label="Refresh Rate (seconds)" :rules="[v => v == parseInt(v) && v > 0 || '']" filled hide-details></v-text-field>
-                  <v-switch v-model="settings.analyze" label="Analyze scanned rows" hide-details></v-switch>
+                  <v-text-field v-model="settingsItem.refresh_rate" label="Refresh Rate (seconds)" :rules="[v => v == parseInt(v) && v > 0 || '']" filled hide-details></v-text-field>
+                  <v-switch v-model="settingsItem.analyze_queries" label="Analyze scanned rows" hide-details></v-switch>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -143,10 +143,9 @@ export default {
       loading: false,
       // Dialog
       dialog: false,
-      stopped: false,
-      refreshRate: 5,
-      analyze: false,
+      stopped: true,
       timer: null,
+      loaded : false,
       // AG Grid
       gridApi: null,
       columnApi: null,
@@ -155,7 +154,7 @@ export default {
       items: [],
       // Settings Dialog
       settingsDialog: false,
-      settings: {},
+      settingsItem: {},
       // Context Menu
       contextMenu: false,
       contextMenuModel: null,
@@ -179,6 +178,10 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'settings',
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'headerTab',
       'headerTabSelected',
       'server',
@@ -189,23 +192,32 @@ export default {
   },
   watch: {
     dialog: function(value) {
+      this.dialogOpened = value
       if (!value) {
         const tab = {'client': 0, 'structure': 1, 'content': 2, 'info': 3, 'objects': 6}
         this.headerTab = tab[this.headerTabSelected]
         clearTimeout(this.timer)
       }
-    }
+    },
   },
   methods: {
     showDialog() {
       this.dialog = true
-      this.stopped = false
       this.search = ''
-      this.getSettings()
+      this.loaded = false
+      this.stopped = false
+      if (this.gridApi != null) {
+        this.loaded = true
+        this.getProcesslist()
+      }
     },
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
+      if (this.loaded == false) {
+        this.loaded = true
+        this.getProcesslist()
+      }
     },
     onAnalyzeGridReady(params) {
       this.analyzeGridApi = params.api
@@ -250,7 +262,7 @@ export default {
       this.contextMenuX = e.event.clientX
       this.contextMenuY = e.event.clientY
       this.contextMenuItems = ['Kill','|','Select All','Deselect All']
-      if (this.analyze) this.contextMenuItems.unshift('Analyze')
+      if (this.settings['analyze_queries'] == 1 || false) this.contextMenuItems.unshift('Analyze')
       this.contextMenu = true
     },
     contextMenuClicked(item) {
@@ -285,15 +297,15 @@ export default {
     },
     parseProcesslist(data) {
       new Promise((resolve) => {
-        if (!this.analyze) { this.analyzeData = {}; resolve() }
-        else this.analyzeQueries(resolve, data)
+        if (!(this.settings['analyze_queries'] == 1 || false)) { this.analyzeData = {}; resolve() }
+        else this.analyzeQueriesFunction(resolve, data)
       }).then(() => {
         // Build header
         let header = []
         if (data.length > 0) {
           let keys = Object.keys(data[0])
           for (let key of keys) header.push({ headerName: key, colId: key, field: key, sortable: true, filter: true, resizable: true, editable: false })
-          if (this.analyze) header.push({ headerName: 'Scanned Rows', colId: 'scanned', field: 'scanned', sortable: true, filter: true, resizable: true, editable: false,
+          if (this.settings['analyze_queries'] == 1 || false) header.push({ headerName: 'Scanned Rows', colId: 'scanned', field: 'scanned', sortable: true, filter: true, resizable: true, editable: false,
             cellRenderer: function(params) {
               if (params.value != null) {
                 if (params.value < 10000) return '<i class="fas fa-circle" style="color:#00b16a; margin-right:10px"></i>' + params.value
@@ -306,7 +318,7 @@ export default {
         }
         // Check if resize columns is needed
         const scannedIn = this.header.some(x => x.colId == 'scanned')
-        const shouldResize = (this.analyze && !scannedIn) || (!this.analyze && scannedIn) 
+        const shouldResize = ((this.settings['analyze_queries'] == 1 || false) && !scannedIn) || ((!this.settings['analyze_queries'] == 1 || true) && scannedIn) 
         // Apply new columns
         this.header = header.slice(0)
         this.gridApi.setColumnDefs(this.header)
@@ -338,10 +350,10 @@ export default {
           this.gridApi.setFilterModel(filterModel)
         })
         // Repeat processlist request
-        this.timer = setTimeout(this.getProcesslist, this.refreshRate * 1000)
+        this.timer = setTimeout(this.getProcesslist, (this.settings['refresh_rate'] || 5) * 1000)
       })
     },
-    analyzeQueries(resolve, data) {
+    analyzeQueriesFunction(resolve, data) {
       // Build data
       let match = {}
       let queries = []
@@ -407,27 +419,9 @@ export default {
       exportData = exportData.join('\r\n')
       this.download('processlist_analyze.csv', exportData)
     },
-    getSettings() {
-      // Get processlist settings
-      axios.get('/client/processlist')
-        .then((response) => {
-          // Get stored user values
-          let data = response.data.processlist
-          if (data.length != 0) {
-            this.refreshRate = data[0].refresh_rate
-            this.analyze = data[0].analyze_queries
-          }
-          // Start processlist retrieval
-          this.getProcesslist()
-        })
-        .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message, 'error')
-        })
-    },
     settingsProcesslist() {
-      this.settings['refresh'] = this.refreshRate
-      this.settings['analyze'] = this.analyze
+      this.settingsItem.refresh_rate = this.settings['refresh_rate'] || 5
+      this.settingsItem.analyze_queries = this.settings['analyze_queries'] == 1 || false
       this.settingsDialog = true
     },
     settingsProcesslistSubmit() {
@@ -438,15 +432,15 @@ export default {
       }
       this.loading = true
       const payload = {
-        refresh_rate: this.settings['refresh'],
-        analyze_queries: this.settings['analyze']
+        refresh_rate: this.settingsItem['refresh_rate'],
+        analyze_queries: this.settingsItem['analyze_queries']
       }
-      axios.put('/client/processlist', payload)
+      axios.put('/client/settings', payload)
         .then((response) => {
-            this.refreshRate = this.settings['refresh']
-            this.analyze = this.settings['analyze']
-            this.settingsDialog = false
-            EventBus.$emit('send-notification', response.data.message, '#00b16a', 1)
+          this.settings['refresh_rate'] = payload.refresh_rate
+          this.settings['analyze_queries'] = payload.analyze_queries ? 1 : 0
+          this.settingsDialog = false
+          EventBus.$emit('send-notification', response.data.message, '#00b16a', 1)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

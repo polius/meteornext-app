@@ -144,6 +144,7 @@ export default {
   computed: {
     ...mapFields([
       'servers',
+      'dialogOpened',
     ], { path: 'client/client' }),
     ...mapFields([
       'editor',
@@ -177,6 +178,11 @@ export default {
     EventBus.$on('get-sidebar-servers', this.getServers);
     EventBus.$on('get-sidebar-objects', this.getObjects);
     EventBus.$on('refresh-sidebar-objects', this.refreshObjects);
+  },
+  watch: {
+    dialog: function(val) {
+      this.dialogOpened = val
+    },
   },
   methods: {
     sidebarClicked(event, item) {

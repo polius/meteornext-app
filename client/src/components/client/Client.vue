@@ -125,7 +125,7 @@
 </style>
 
 <script>
-
+import axios from 'axios'
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 
@@ -149,11 +149,17 @@ export default {
   },
   components: { Splitpanes, Pane, Header, Connections, Sidebar, Main },
   computed: {
-    ...mapFields(['connections'], { path: 'client/client' }),
+    ...mapFields([
+      'connections',
+      'settings',
+    ], { path: 'client/client' }),
     ...mapFields(['server'], { path: 'client/connection' }),
   },
   beforeMount() {
     window.addEventListener('beforeunload', this.beforeUnload)
+  },
+  created() {
+    this.getSettings()
   },
   mounted() {
     EventBus.$on('send-notification', this.notification);
@@ -164,6 +170,18 @@ export default {
     window.removeEventListener('beforeunload', this.beforeUnload)
   },
   methods: {
+    getSettings() {
+      axios.get('/client/settings')
+        .then((response) => {
+          // Get stored user values
+          let data = response.data.settings
+          for (let row of data) this.settings[row.setting] = row.value
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message, 'error')
+        })
+    },
     notification(message, color='', timeout=5) {
       this.snackbarText = message
       this.snackbarColor = color

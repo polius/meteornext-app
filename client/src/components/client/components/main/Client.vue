@@ -161,6 +161,8 @@ export default {
     ...mapFields([
       'currentConn',
       'connections',
+      'settings',
+      'dialogOpened',
     ], { path: 'client/client' }),
   },
   watch: {
@@ -173,6 +175,9 @@ export default {
     },
     currentConn() {
       if (this.headerTabSelected == 'client') this.editor.focus()
+    },
+    dialog: function(val) {
+      this.dialogOpened = val
     }
   },
   methods: {
@@ -256,7 +261,7 @@ export default {
       this.editor = ace.edit("editor", {
         mode: "ace/mode/mysql",
         theme: "ace/theme/monokai",
-        fontSize: 14,
+        fontSize: parseInt(this.settings['font_size']) || 14,
         showPrintMargin: false,
         wrap: true,
         autoScrollEditorIntoView: true,

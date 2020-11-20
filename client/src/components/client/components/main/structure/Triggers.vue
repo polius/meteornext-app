@@ -103,6 +103,10 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'settings',
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'structureHeaders',
       'structureItems',
       'sidebarSelected',
@@ -117,6 +121,7 @@ export default {
   },
   watch: {
     dialog (val) {
+      this.dialogOpened = val
       if (!val) return
       if (this.dialogEditor == null) this.initEditor()
       requestAnimationFrame(() => {
@@ -146,7 +151,7 @@ export default {
         this.dialogEditor = ace.edit("dialogEditor", {
           mode: "ace/mode/mysql",
           theme: "ace/theme/monokai",
-          fontSize: 14,
+          fontSize: parseInt(this.settings['font_size']) || 14,
           showPrintMargin: false,
           wrap: true,
           autoScrollEditorIntoView: true,

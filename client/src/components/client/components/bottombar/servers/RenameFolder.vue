@@ -56,6 +56,9 @@ export default {
   },
   computed: {
     ...mapFields([
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'sidebarSelected',
     ], { path: 'client/connection' }),
   },
@@ -64,6 +67,7 @@ export default {
   },
   watch: {
     dialog (val) {
+      this.dialogOpened = val
       if (val) {
         this.newName = ''
         requestAnimationFrame(() => {

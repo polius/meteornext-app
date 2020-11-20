@@ -47,6 +47,9 @@ export default {
   },
   computed: {
     ...mapFields([
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'server',
       'database',
       'databaseItems',
@@ -55,7 +58,8 @@ export default {
     ], { path: 'client/connection' }),
   },
   watch: {
-    dialog (val) {
+    dialog: function (val) {
+      this.dialogOpened = val
       if (!val) return
       requestAnimationFrame(() => {
         if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()

@@ -13,11 +13,10 @@
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-bottom:15px;">
-                  <v-text-field outlined v-model="editorFontSize" label="Editor Font Size" :rules="[v => v == parseInt(v) || '']" hide-details style="margin-top:10px"></v-text-field>
+                <v-form ref="form" @submit.prevent style="margin-bottom:15px;">
+                  <v-text-field outlined v-model="editorFontSize" @keyup.enter="saveSettings" label="Editor Font Size" :rules="[v => v == parseInt(v) && v > 0 || '']" hide-details style="margin-top:10px"></v-text-field>
                   <div class="subtitle-1 font-weight-regular white--text" style="margin-top:12px; margin-bottom:10px; margin-left:2px">SHORTCUTS</div>
                   <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" style="width:100%; height:60vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="shortcuts"></ag-grid-vue>
-                  <!-- <div class="body-1"><v-chip label>Ctrl + T</v-chip> Open</div> -->
                 </v-form>
               </v-flex>
             </v-layout>
@@ -31,6 +30,7 @@
 <style scoped src="@/styles/agGridVue.css"></style>
 
 <script>
+import axios from 'axios'
 import EventBus from '../../js/event-bus'
 import { mapFields } from '../../js/map-fields'
 import {AgGridVue} from "ag-grid-vue";
@@ -59,7 +59,7 @@ export default {
         { command: 'Explain Query', binding: 'Ctrl + E', scope: 'Client Editor' },
         { command: 'Minify Query', binding: 'Ctrl + M', scope: 'Client Editor' },
         { command: 'Beautify Query', binding: 'Ctrl + B', scope: 'Client Editor' },
-        { command: 'Save Query', binding: 'Ctrl + S', scope: 'Client Editor' },
+        { command: 'Save Editor', binding: 'Ctrl + S', scope: 'Client Editor' },
         { command: 'Increase Font Size', binding: 'Ctrl + +', scope: 'Client Editor' },
         { command: 'Decrease Font Size', binding: 'Ctrl + -', scope: 'Client Editor' },
       ],
@@ -67,6 +67,10 @@ export default {
   },
   components: { AgGridVue },
   computed: {
+    ...mapFields([
+      'settings',
+      'dialogOpened',
+    ], { path: 'client/client' }),
     ...mapFields([
       'headerTab',
       'headerTabSelected',
@@ -82,6 +86,7 @@ export default {
   },
   watch: {
     dialog: function(value) {
+      this.dialogOpened = value
       if (!value) {
         const tab = {'client': 0, 'structure': 1, 'content': 2, 'info': 3, 'objects': 6}
         this.headerTab = tab[this.headerTabSelected]
@@ -91,6 +96,7 @@ export default {
   methods: {
     showDialog() {
       this.dialog = true
+      this.getSettings()
     },
     onGridReady(params) {
       this.gridApi = params.api
@@ -102,12 +108,29 @@ export default {
         if (this.gridApi != null) this.gridApi.sizeColumnsToFit()
       })
     },
+    getSettings() {
+      if ('font_size' in this.settings) this.editorFontSize = this.settings['font_size']
+    },
     saveSettings() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         EventBus.$emit('send-notification', 'Please make sure all required login fields are filled out correctly', 'error')
         return
       }
+      this.loading = true
+      const payload = {
+        font_size: this.editorFontSize,
+      }
+      axios.put('/client/settings', payload)
+        .then((response) => {
+            this.settings['font_size'] = payload['font_size']
+            EventBus.$emit('send-notification', response.data.message, '#00b16a', 1)
+        })
+        .catch((error) => {
+          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message, 'error')
+        })
+        .finally(() => { this.loading = false })
     },
   },
 }

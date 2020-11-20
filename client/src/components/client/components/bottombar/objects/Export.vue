@@ -174,6 +174,9 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'index',
       'server',
       'database',
@@ -189,6 +192,9 @@ export default {
     tabObjectsSelected: function(val) {
       if (this.tab == 'csv') this.resizeTable('tablesCsv', false)
       else if (this.tab == 'sql') this.resizeTable(this.objects[val], false)
+    },
+    dialog: function(val) {
+      this.dialogOpened = val
     },
   },
   methods: {
