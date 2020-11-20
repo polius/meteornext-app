@@ -21,7 +21,7 @@ class Connections:
     def __close_active_connections(self):
         now = time.time()
         total = 0
-        collector = {k:k2 for k,v in self._connections.items() for k2,v2 in v.items() if (not v2.is_executing and v2.last_execution + self._time_to_live < now)}
+        collector = {k:k2 for k,v in self._connections.items() for k2,v2 in v.items() if (not v2.is_protected and not v2.is_executing and v2.last_execution + self._time_to_live < now)}
         for user_id, conn_id in collector.items():
             self._connections[user_id][conn_id].close()
             self._connections[user_id].pop(conn_id, None)
@@ -39,6 +39,7 @@ class Connections:
             if user_id not in self._connections:
                 self._connections[user_id] = {} 
             self._connections[user_id][conn_id] = conn
+        self._connections[user_id][conn_id].is_protected = True
         return self._connections[user_id][conn_id]
 
     def kill(self, user_id, conn_id):
@@ -67,6 +68,14 @@ class Connection:
     @property
     def is_executing(self):
         return self._sql.is_executing
+
+    @property
+    def is_protected(self):
+        return self._sql.is_protected
+
+    @is_protected.setter
+    def is_protected(self, value):
+        self._sql.is_protected = value
 
     @property
     def connection_id(self):

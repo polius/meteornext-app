@@ -25,6 +25,7 @@ class MySQL:
         self._connection_id = None
         self._last_execution = None
         self._is_executing = False
+        self._is_protected = False
 
     @property
     def last_execution(self):
@@ -33,6 +34,14 @@ class MySQL:
     @property
     def is_executing(self):
         return self._is_executing
+
+    @property
+    def is_protected(self):
+        return self._is_protected
+
+    @is_protected.setter
+    def is_protected(self, value):
+        self._is_protected = value
 
     @property
     def connection_id(self):
@@ -112,6 +121,7 @@ class MySQL:
         finally:
             self._last_execution = time.time()
             self._is_executing = False
+            self._is_protected = False
 
     def __execute_query(self, query, args, database, fetch):
         # Select the database
