@@ -146,7 +146,6 @@ export default {
       this.gridApi.structure.columns = params.api
       this.columnApi.structure.columns = params.columnApi
       this.$refs['agGridStructureColumns'].$el.addEventListener('click', this.onGridClick)
-      this.gridApi.structure.columns.showLoadingOverlay()
     },
     onNewColumnsLoaded() {
       if (this.gridApi.structure.columns != null) this.resizeTable()
