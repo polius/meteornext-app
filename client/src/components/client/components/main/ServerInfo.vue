@@ -121,6 +121,9 @@ export default {
   },
   computed: {
     ...mapFields([
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'sidebarSelected'
     ], { path: 'client/connection' }),
     item: function() {
@@ -139,6 +142,9 @@ export default {
           }
         })
       }
+    },
+    dialog: function(val) {
+      this.dialogOpened = val
     },
   },
   methods: {

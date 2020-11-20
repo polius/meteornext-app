@@ -86,6 +86,10 @@ export default {
   props: { contextMenuItem: Object },
   computed: {
     ...mapFields([
+      'settings',
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'database',
       'sidebarOpened',
       'sidebarSelected',
@@ -99,6 +103,7 @@ export default {
   },
   watch: {
     dialog (val) {
+      this.dialogOpened = val
       if (!val) return
       if (this.dialogEditor == null && this.dialogOptions.mode == 'createTrigger') this.initEditor()
       requestAnimationFrame(() => {
@@ -113,7 +118,7 @@ export default {
         this.dialogEditor = ace.edit("dialogEditor", {
           mode: "ace/mode/mysql",
           theme: "ace/theme/monokai",
-          fontSize: 14,
+          fontSize: parseInt(this.settings['font_size']) || 14,
           showPrintMargin: false,
           wrap: true,
           autoScrollEditorIntoView: true,

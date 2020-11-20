@@ -502,9 +502,9 @@ class Client:
                 self._client.delete_saved_queries(saved_json, user['id'])
                 return jsonify({'message': 'Selected saved queries deleted successfully'}), 200
 
-        @client_blueprint.route('/client/processlist', methods=['GET','PUT'])
+        @client_blueprint.route('/client/settings', methods=['GET','PUT'])
         @jwt_required
-        def client_processlist_method():
+        def client_settings_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -517,13 +517,17 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
-            processlist_json = request.get_json()
+            settings_json = request.get_json()
 
             if request.method == 'GET':
-                processlist_settings = self._client.get_processlist_settings(user['id'])
-                return jsonify({'processlist': processlist_settings}), 200
+                settings = self._client.get_settings(user['id'])
+                return jsonify({'settings': settings}), 200
             elif request.method == 'PUT':
-                self._client.save_processlist_settings(processlist_json, user['id'])
+                # Check JSON
+                for key in settings_json.keys():
+                    if key not in ['font_size','refresh_rate','analyze_queries']:
+                        return jsonify({"message": 'Invalid JSON provided'}), 400
+                self._client.save_settings(user['id'], settings_json)
                 return jsonify({'message': 'Changes saved'}), 200
 
         @client_blueprint.route('/client/stop', methods=['GET'])

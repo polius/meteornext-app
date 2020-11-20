@@ -49,12 +49,20 @@ export default {
   },
   computed: {
     ...mapFields([
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'sidebarSelected',
       'sidebarOpened',
     ], { path: 'client/connection' }),
   },
   mounted() {
     EventBus.$on('show-bottombar-servers-remove', this.removeServer)
+  },
+  watch: {
+    dialog: function(val) {
+      this.dialogOpened = val
+    }
   },
   methods: {
     removeServer() {

@@ -201,6 +201,7 @@ export default {
   computed: {
     ...mapFields([
       'servers',
+      'dialogOpened',
     ], { path: 'client/client' }),
     ...mapFields([
       'sidebarSelected'
@@ -212,7 +213,8 @@ export default {
     EventBus.$on('show-bottombar-servers-new', this.newServer)
   },
   watch: {
-    dialog (val) {
+    dialog: function(val) {
+      this.dialogOpened = val
       if (!val) return
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()

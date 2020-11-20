@@ -117,6 +117,9 @@ export default {
   components: { Splitpanes, Pane },
   computed: {
     ...mapFields([
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'headerTab',
       'headerTabSelected',
     ], { path: 'client/connection' }),
@@ -126,6 +129,7 @@ export default {
   },
   watch: {
     dialog: function(value) {
+      this.dialogOpened = value
       if (!value) {
         const tab = {'client': 0, 'structure': 1, 'content': 2, 'info': 3, 'objects': 6}
         this.headerTab = tab[this.headerTabSelected]

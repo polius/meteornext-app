@@ -88,11 +88,17 @@ export default {
     ], { path: 'client/components' }),
     ...mapFields([
       'connections',
+      'dialogOpened',
     ], { path: 'client/client' }),
   },
   mounted () {
     EventBus.$on('get-structure', this.getStructure);
     EventBus.$on('execute-structure', this.execute);
+  },
+  watch: {
+    dialog: function(val) {
+      this.dialogOpened = val
+    },
   },
   methods: {
     tabStructureColumns() {

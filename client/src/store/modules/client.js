@@ -115,7 +115,9 @@ const getDefaultState = () => {
     connections: [JSON.parse(JSON.stringify(connection))],
     currentConn: 0,
     connectionIndex: 1,
-    history: []
+    history: [],
+    settings: {},
+    dialogOpened: false,
   }
 }
 

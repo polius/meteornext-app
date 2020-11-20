@@ -86,6 +86,9 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'index',
       'server',
     ], { path: 'client/connection' }),
@@ -96,7 +99,10 @@ export default {
   watch: {
     search: function(val) {
       this.gridApi.setQuickFilter(val)
-    }
+    },
+    dialog: function(val) {
+      this.dialogOpened = val
+    },
   },
   methods: {
     showDialog() {

@@ -99,6 +99,9 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'index',
       'structureHeaders',
       'structureItems',
@@ -117,6 +120,7 @@ export default {
   },
   watch: {
     dialog (val) {
+      this.dialogOpened = val
       if (!val) return
       requestAnimationFrame(() => {
         if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()

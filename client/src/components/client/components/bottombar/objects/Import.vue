@@ -77,6 +77,9 @@ export default {
   },
   computed: {
     ...mapFields([
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'index',
       'server',
       'database',
@@ -84,6 +87,11 @@ export default {
   },
   mounted() {
     EventBus.$on('show-bottombar-objects-import', this.showDialog);
+  },
+  watch: {
+    dialog: function(val) {
+      this.dialogOpened = val
+    },
   },
   methods: {
     showDialog() {

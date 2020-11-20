@@ -94,6 +94,9 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'headerTabSelected',
       'tabObjectsSelected',
       'objectsHeaders',
@@ -118,6 +121,9 @@ export default {
       if (val == 'triggers') {
         this.$nextTick(() => { this.resizeTable() })
       }
+    },
+    exportDialog: function(val) {
+      this.dialogOpened = val
     },
   },
   methods: {

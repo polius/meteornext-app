@@ -98,23 +98,22 @@ class Client:
             query = "DELETE FROM client_saved_queries WHERE id = %s AND user_id = %s"
             self._sql.execute(query, (s, user_id))
 
-    def get_processlist_settings(self, user_id):
+    def get_settings(self, user_id):
         query = """
-            SELECT refresh_rate, analyze_queries
-            FROM client_processlist
+            SELECT setting, value
+            FROM client_settings
             WHERE user_id = %s
         """
         return self._sql.execute(query, (user_id))
-    
-    def save_processlist_settings(self, data, user_id):
-        query = """
-            INSERT INTO client_processlist (user_id, refresh_rate, analyze_queries)
-            VALUES (%(user_id)s, %(refresh_rate)s, %(analyze_queries)s)
-            ON DUPLICATE KEY UPDATE
-                refresh_rate = %(refresh_rate)s,
-                analyze_queries = %(analyze_queries)s 
-        """
-        self._sql.execute(query, { "user_id": user_id, "refresh_rate": data['refresh_rate'], "analyze_queries": data['analyze_queries'] })
+
+    def save_settings(self, user_id, data):
+        for k, v in data.items():
+            query = """
+                INSERT INTO client_settings (user_id, setting, value)
+                VALUES (%s, %s, %s)
+                ON DUPLICATE KEY UPDATE value = VALUES(value)
+            """
+            self._sql.execute(query, (user_id, k, v))
 
     def add_servers(self, data, user_id):
         for server in data:

@@ -198,6 +198,9 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'dialogOpened',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'index',
       'headerTabSelected',
       'contentHeaders',
@@ -223,9 +226,6 @@ export default {
     EventBus.$on('get-content', this.getContent);
   },
   watch: {
-    // 'sidebarSelected.name': function() {
-    //   if (this.headerTabSelected == 'content') this.cellEditingDiscard()
-    // },
     sidebarSelected: {
       handler: function () {
         if (this.headerTabSelected == 'content') this.cellEditingDiscard()
@@ -239,6 +239,12 @@ export default {
         })
       }
       else if (oldValue == 'content') this.cellEditingDiscard()
+    },
+    dialog: function() {
+      this.dialogOpened = this.dialog || this.editDialog
+    },
+    editDialog: function() {
+      this.dialogOpened = this.dialog || this.editDialog
     },
   },
   methods: {

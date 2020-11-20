@@ -392,14 +392,6 @@ CREATE TABLE `client_saved_queries` (
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 );
 
-CREATE TABLE `client_processlist` (
-  `user_id` INT UNSIGNED NOT NULL,
-  `refresh_rate` INT UNSIGNED NOT NULL,
-  `analyze_queries` TINYINT(1) NOT NULL,
-  PRIMARY KEY (`user_id`),
-  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-);
-
 CREATE TABLE `client_folders` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(191) NOT NULL,

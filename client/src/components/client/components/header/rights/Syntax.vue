@@ -18,6 +18,9 @@ export default {
   },
   computed: {
     ...mapFields([
+      'settings',
+    ], { path: 'client/client' }),
+    ...mapFields([
       'rights',
     ], { path: 'client/connection' }),
   },
@@ -28,7 +31,7 @@ export default {
     this.editor = ace.edit("rightsSyntax", {
       mode: "ace/mode/mysql",
       theme: "ace/theme/monokai",
-      fontSize: 14,
+      fontSize: parseInt(this.settings['font_size']) || 14,
       showPrintMargin: false,
       wrap: true,
       readOnly: true,
