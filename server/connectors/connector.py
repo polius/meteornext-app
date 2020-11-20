@@ -56,7 +56,7 @@ class Connection:
         self._server = server
         self._sql = None
 
-        if server['sql']['engine'] == 'MySQL':
+        if server['sql']['engine'] in ['MySQL','Aurora MySQL']:
             self._sql = MySQL(server)
         elif server['sql']['engine'] == 'PostgreSQL':
             self._sql = PostgreSQL(server)
