@@ -4,7 +4,7 @@ class connector:
     def __init__(self, server):
         self._sql = None
 
-        if server['sql']['engine'] == 'MySQL':
+        if server['sql']['engine'] in ['MySQL','Aurora MySQL']:
             self._sql = mysql(server)
 
     def start(self):
