@@ -335,13 +335,30 @@ class MySQL:
 
     def get_fks(self, db, table):
         query = """
-            SELECT c.constraint_name AS 'Name', column_name AS 'Column', k.referenced_table_schema AS 'FK Database', k.referenced_table_name AS 'FK Table', referenced_column_name AS 'FK Column', update_rule AS 'On Update', delete_rule AS 'On Delete'
-            FROM information_schema.KEY_COLUMN_USAGE k
-            JOIN information_schema.REFERENTIAL_CONSTRAINTS c ON c.constraint_name = k.constraint_name AND c.constraint_schema = k.constraint_schema
-            WHERE c.constraint_schema = %s
-            AND k.table_name = %s
+            SELECT 
+                r.constraint_name AS 'Name', 
+                k.column_name AS 'Column', 
+                k.referenced_table_schema AS 'FK Database', 
+                k.referenced_table_name AS 'FK Table', 
+                k.referenced_column_name AS 'FK Column', 
+                r.update_rule AS 'On Update', 
+                r.delete_rule AS 'On Delete'
+            FROM
+            (
+                SELECT constraint_name, constraint_schema, update_rule, delete_rule
+                FROM information_schema.REFERENTIAL_CONSTRAINTS
+                WHERE constraint_schema = %(db)s
+                AND table_name = %(table)s
+            ) r
+            JOIN
+            (
+                SELECT constraint_name, column_name, table_schema, referenced_table_schema, referenced_table_name, referenced_column_name
+                FROM information_schema.KEY_COLUMN_USAGE
+                WHERE table_schema = %(db)s
+                AND table_name = %(table)s
+            ) k ON k.constraint_name = r.constraint_name AND k.table_schema = r.constraint_schema
         """
-        return self.execute(query, args=(db, table))['data']
+        return self.execute(query, args={"db": db, "table": table})['data']
     
     def get_triggers(self, db, table):
         query = """
