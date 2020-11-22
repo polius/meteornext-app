@@ -101,7 +101,6 @@ export default {
       'index',
       'server',
       'database',
-      'databaseItems',
       'sidebarOpened',
       'sidebarSelected',
       'headerTab',
@@ -124,8 +123,8 @@ export default {
   methods: {
     buildSelectors() {
       // Build Encodings
-      let db = this.databaseItems.filter(obj => { return obj.text == this.database })[0]
-      this.encodings = [{ text: 'Default (' + db.encoding + ')', value: db.encoding }]
+      let item = this.server.defaults.encoding
+      this.encodings = [{ text: 'Default (' + item + ')', value: item }]
       this.encodings.push({ divider: true })
       this.encodings.push(...this.server.encodings.reduce((acc, val) => { 
         acc.push({ text: val.description + ' (' + val.encoding + ')', value: val.encoding })
@@ -133,11 +132,11 @@ export default {
       }, []))
 
       // Build Collations
-      this.getCollations(db.encoding)
+      this.getCollations(item)
 
       // Build Engines
-      db = this.server.engines.filter(obj => { return obj.support == 'DEFAULT' })[0]
-      this.engines = [{ text: 'Default (' + db.engine + ')', value: db.engine }]
+      item = this.server.engines.filter(obj => { return obj.support == 'DEFAULT' })[0]
+      this.engines = [{ text: 'Default (' + item.engine + ')', value: item.engine }]
       this.engines.push({ divider: true })
       this.engines.push(...this.server.engines.reduce((acc, val) => { 
         acc.push(val.engine)

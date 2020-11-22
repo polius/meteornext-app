@@ -243,12 +243,16 @@ class MySQL:
         return collations
 
     def get_all_databases(self):
+        # , default_character_set_name AS 'encoding', default_collation_name AS 'collation'
         query = """
-            SELECT schema_name AS 'name', default_character_set_name AS 'encoding', default_collation_name AS 'collation'
+            SELECT schema_name AS 'name'
             FROM information_schema.schemata
         """
         result = self.execute(query)['data']
-        return result
+        databases = []
+        for db in result:
+            databases.append(db['name'])
+        return databases
 
     def get_all_tables(self, db):
         query = """
