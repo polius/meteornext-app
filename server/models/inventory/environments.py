@@ -11,10 +11,11 @@ class Environments:
                 FROM environments
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)
+                ORDER BY `name`
             """
             return self._sql.execute(query, (group_id, user_id))
         else:
-            query = "SELECT * FROM environments"
+            query = "SELECT * FROM environments ORDER BY `name`"
             return self._sql.execute(query)
 
     def post(self, user_id, group_id, environment):
