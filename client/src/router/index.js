@@ -101,15 +101,15 @@ let router = new VueRouter({
       ]
     },
     {
-      path: '/results',
-      name: 'results',
-      component: () => import('../components/deployments/Results'),
+      path: '/viewer',
+      name: 'viewer',
+      component: () => import('../components/deployments/Viewer'),
       meta: { requiresAuth: true }
     },
     {
-      path: '/results/:uri',
-      name: 'results_uri',
-      component: () => import('../components/deployments/Results'),
+      path: '/viewer/:uri',
+      name: 'viewer_uri',
+      component: () => import('../components/deployments/Viewer'),
       meta: { requiresAuth: true }
     },
     {
