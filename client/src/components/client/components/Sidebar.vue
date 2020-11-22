@@ -208,7 +208,7 @@ export default {
             }
             else {
               if (this.headerTabSelected == 'structure') EventBus.$emit('get-structure')
-              else if (this.headerTabSelected == 'content') EventBus.$emit('get-content')
+              else if (this.headerTabSelected == 'content') EventBus.$emit('get-content', true)
               else if (this.headerTabSelected.startsWith('info_')) {
                 let type = item.type.toLowerCase()
                 this.headerTabSelected = 'info_' + type
@@ -223,7 +223,7 @@ export default {
               if (['Table','View'].includes(item.type) && item.children === undefined) {
                 this.headerTab = 2
                 this.headerTabSelected = 'content'
-                EventBus.$emit('get-content')
+                EventBus.$emit('get-content', true)
               }
               else if (['Trigger','Function','Procedure','Event'].includes(item.type) && item.children === undefined) {
                 let type = item.type.toLowerCase()

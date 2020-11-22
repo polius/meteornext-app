@@ -33,7 +33,7 @@
             </v-col>
           </v-row>
         </div>
-        <ag-grid-vue ref="agGridContent" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @row-clicked="onRowClicked" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" @cell-context-menu="onContextMenu" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+        <ag-grid-vue ref="agGridContent" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @row-clicked="onRowClicked" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" @cell-context-menu="onContextMenu" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
         <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
           <v-list style="padding:0px;">
             <v-list-item-group v-model="contextMenuModel">
@@ -61,6 +61,8 @@
           <v-btn @click="filterClick" text small title="Refresh rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
           <v-btn :disabled="contentItems.length == 0" @click="exportRows" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
+          <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+          <v-btn @click="resizeTable" text small title="Compress columns" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-compress</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
@@ -233,12 +235,7 @@ export default {
       deep: true
     },
     headerTabSelected(newValue, oldValue) {
-      if (newValue == 'content') {
-        this.$nextTick(() => {
-          if (this.gridApi.content != null) this.resizeTable()
-        })
-      }
-      else if (oldValue == 'content') this.cellEditingDiscard()
+      if (oldValue == 'content') this.cellEditingDiscard()
     },
     dialog: function() {
       this.dialogOpened = this.dialog || this.editDialog
@@ -336,8 +333,8 @@ export default {
       let json = JSON.stringify(selectedRows)
       navigator.clipboard.writeText(json)
     },
-    getContent() {
-      if (this.contentConnection == this.sidebarSelected[0]['id']) return
+    getContent(force) {
+      if (!force && this.contentConnection == this.sidebarSelected[0]['id']) return
       this.bottomBar.content = { status: '', text: '', info: '' }
       this.gridApi.content.showLoadingOverlay()
       const payload = {
@@ -391,13 +388,7 @@ export default {
       this.contentHeaders = []
       this.contentHeaders = headers
       this.contentItems = items
-      // this.gridApi.content.setRowData(items)
       this.isRowSelected = false
-
-      // Resize Table
-      // this.gridApi.content.setColumnDefs(headers)
-      // this.gridApi.content.setRowData(items)
-      // this.resizeTable()
 
       // Build BottomBar
       this.parseContentBottomBar(data)
@@ -406,11 +397,8 @@ export default {
       this.contentConnection = this.sidebarSelected[0]['id']
     },
     resizeTable() {
-      var allColumnIds = [];
-      this.columnApi.content.getAllColumns().forEach(function(column) {
-        allColumnIds.push(column.colId);
-      });
-      this.columnApi.content.autoSizeColumns(allColumnIds);
+      let allColumnIds = this.columnApi.content.getAllColumns().map(v => v.colId)
+      this.columnApi.content.autoSizeColumns(allColumnIds)
     },
     addRow() {
       // Clean vars
@@ -646,8 +634,8 @@ export default {
       }
       this.bottomBar.content['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
       this.bottomBar.content['text'] = data[0]['query']
-      this.bottomBar.content['info'] = this.gridApi.content.getDisplayedRowCount() + ' records'
-      if (elapsed != null) this.bottomBar.content['info'] += ' | ' + elapsed.toString() + 's elapsed'
+      this.bottomBar.content['info'] = this.contentItems.length + ' records'
+      if (elapsed != null) this.bottomBar.content['info'] += ' | ' + elapsed.toFixed(3).toString() + 's elapsed'
     },
     cellEditingDiscard() {
       // Close Dialog

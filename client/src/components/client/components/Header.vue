@@ -73,7 +73,7 @@ export default {
     },
     tabContent() {
       this.headerTabSelected = 'content'
-      EventBus.$emit('get-content')
+      EventBus.$emit('get-content', false)
     },
     tabInfo() {
       const object = this.sidebarSelected[0]['type'].toLowerCase()

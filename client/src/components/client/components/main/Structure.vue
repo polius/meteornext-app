@@ -257,7 +257,7 @@ export default {
       }
       current.bottomBar.structure[current.tabStructureSelected]['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
       current.bottomBar.structure[current.tabStructureSelected]['text'] = data[0]['query']
-      if (elapsed != null) current.bottomBar.structure[current.tabStructureSelected]['info'] = elapsed.toString() + 's elapsed'
+      if (elapsed != null) current.bottomBar.structure[current.tabStructureSelected]['info'] = elapsed.toFixed(3).toString() + 's elapsed'
     },
   },
 }
