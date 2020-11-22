@@ -576,7 +576,8 @@ export default {
         let chars = []
         for (var i = 0; i < selectedText.length; ++i) {
           if (selectedText[i] == ';' && chars.length == 0) {
-            queries.push(selectedText.substring(start, i+1).trim())
+            let q = selectedText.substring(start, i+1).trim()
+            if (q != ';') queries.push(q)
             start = i+1
           }
           else if (selectedText[i] == "\"") {
@@ -588,7 +589,10 @@ export default {
             else chars.push("'")
           }
         }
-        if (start < i) queries.push(selectedText.substring(start, i).trim())
+        if (start < i) {
+          let q = selectedText.substring(start, i).trim()
+          if (q.length > 0 && q != ';') queries.push(q)
+        }
       }
       // Return parsed queries
       return queries
