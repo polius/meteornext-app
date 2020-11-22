@@ -353,16 +353,19 @@ export default {
       this.sidebarMode = 'objects'
       this.sidebarSearch = ''
 
-      // Build Databases
-      this.databaseItems = []
-      var completer = []
-      for (let i = 0; i < data.databases.length; ++i) {
-        this.databaseItems.push({ text: data.databases[i]['name'], encoding: data.databases[i]['encoding'], collation: data.databases[i]['collation'] })
-        completer.push({ value: data.databases[i]['name'], meta: 'Database' })
-      }
+      new Promise(() => {
+        // Build Databases
+        this.databaseItems = data.databases
+        // const arr = Array.from({length: 10000}, () => Math.floor(Math.random() * 10000))
+        // this.databaseItems = arr
 
-      // Add database names to the editor autocompleter
-      this.editorAddCompleter(completer)
+        // Add database names to the editor autocompleter
+        let completer = data.databases.reduce((acc, val) => {
+          acc.push({value: val.toString(), meta: 'Database'})
+          return acc
+        },[])
+        this.editorAddCompleter(completer)
+      })
 
       // Get Column Types + Collations
       if (server.engine == 'MySQL') {
