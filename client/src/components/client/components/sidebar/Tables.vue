@@ -156,7 +156,6 @@ export default {
           this.parseCollations(encoding, response.data.collations)
         })
         .catch((error) => {
-          console.log(error)
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else EventBus.$emit('send-notification', error.response.data.message, 'error')
         })
@@ -228,7 +227,6 @@ export default {
       this.dialog = true
     },
     deleteTable() {
-      console.log(this.sidebarSelected)
       let dialogOptions = { 
         mode: 'deleteTable', 
         title: 'Delete Tables', 
@@ -328,6 +326,8 @@ export default {
       }).then(() => { 
         // Hide Dialog
         this.dialog = false
+        // Clean Table
+        if (this.headerTabSelected == 'content') EventBus.$emit('get-content', true)
       }).catch(() => {}).finally(() => { this.loading = false })
     },
     deleteTableSubmit() {

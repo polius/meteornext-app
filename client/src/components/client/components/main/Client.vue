@@ -11,7 +11,8 @@
           </div>
         </Pane>
         <Pane size="50" min-size="0">
-          <ag-grid-vue ref="agGridClient" suppressContextMenu preventDefaultOnContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
+          <!-- suppressColumnVirtualisation -->
+          <ag-grid-vue ref="agGridClient" suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
           <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
             <v-list style="padding:0px;">
               <v-list-item-group v-model="contextMenuModel">
@@ -34,6 +35,8 @@
       <v-row no-gutters style="flex-wrap: nowrap;">
         <v-col cols="auto" v-if="clientItems.length > 0">
           <v-btn @click="exportRows" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
+          <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+          <v-btn @click="resizeTable" text small title="Compress columns" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-compress</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
@@ -166,13 +169,6 @@ export default {
     ], { path: 'client/client' }),
   },
   watch: {
-    headerTabSelected(val) {
-      if (val == 'client') {
-        this.$nextTick(() => {
-          if (this.gridApi.client != null) this.resizeTable()
-        })
-      }
-    },
     currentConn() {
       if (this.headerTabSelected == 'client') this.editor.focus()
     },
@@ -444,7 +440,6 @@ export default {
       this.clientItems = []
       this.bottomBar.client = { text: '', status: '', info: '' }   
       this.editor.completer.detach()
-      this.gridApi.client.showLoadingOverlay()
     },
     runQuery() {
       this.clientExecuting = 'query'
@@ -541,7 +536,6 @@ export default {
         .catch((error) => {
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
-          this.gridApi.client.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             // Get Response Data
@@ -621,21 +615,22 @@ export default {
           })
         }
       }
-      current.clientHeaders = headers
-      current.clientItems = items
+      // Load First 20 rows at init
+      setTimeout(() => {
+        current.clientHeaders = headers
+        current.clientItems = items.slice(0,19)
+      }, 0)
 
-      // Resize Table
-      if (this.index == current.index) {
-        this.gridApi.client.setColumnDefs(headers)
-        this.$nextTick(() => { this.resizeTable() })        
-      }
+      // Load the rest of the rows
+      new Promise(() => {
+        for (let item of items.slice(19, items.length)) {
+          setTimeout(() => { this.gridApi.client.applyTransactionAsync({ add: [item]})}, 0)
+        }
+      })
     },
     resizeTable() {
-      var allColumnIds = [];
-      this.columnApi.client.getAllColumns().forEach(function(column) {
-        allColumnIds.push(column.colId);
-      });
-      this.columnApi.client.autoSizeColumns(allColumnIds);
+      let allColumnIds = this.columnApi.client.getAllColumns().map(v => v.colId)
+      this.columnApi.client.autoSizeColumns(allColumnIds)
     },
     parseClientBottomBar(data, current) {
       var elapsed = null
@@ -650,7 +645,7 @@ export default {
       current.bottomBar.client['text'] = data[data.length-1]['query'].endsWith(';') ? data[data.length-1]['query'] : data[data.length-1]['query'] + ';'
       current.bottomBar.client['info'] = (data[data.length-1]['data'] !== undefined && data[data.length-1]['query'].toLowerCase().startsWith('select')) ? data[data.length-1]['data'].length + ' records | ' : ''
       current.bottomBar.client['info'] += data.length + ' queries'
-      if (elapsed != null) current.bottomBar.client['info'] += ' | ' + elapsed.toString() + 's elapsed'
+      if (elapsed != null) current.bottomBar.client['info'] += ' | ' + elapsed.toFixed(3).toString() + 's elapsed'
     },
     showDialog(options) {
       this.dialogMode = options.mode
