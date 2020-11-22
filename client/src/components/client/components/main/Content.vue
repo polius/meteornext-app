@@ -54,15 +54,19 @@
     <div style="height:35px; background-color:#303030; border-top:2px solid #2c2c2c;">
       <v-row no-gutters style="flex-wrap: nowrap;">
         <v-col cols="auto">
+          <v-btn @click="filterClick" text small title="Refresh rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+          <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
           <v-btn @click="addRow" text small title="Add row" style="height:30px; min-width:36px; margin-top:1px; margin-left:3px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
           <v-btn @click="removeRow" :disabled="!isRowSelected" text small title="Remove selected row(s)" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
-          <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
-          <v-btn @click="filterClick" text small title="Refresh rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
           <v-btn :disabled="contentItems.length == 0" @click="exportRows" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
           <v-btn @click="resizeTable" text small title="Compress columns" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-compress</v-icon></v-btn>
+          <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+          <v-btn @click="previousPage" :disabled="page == 1" text small title="Previous page" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-chevron-left</v-icon></v-btn>
+          <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+          <v-btn @click="nextPage" :disabled="contentItems.length == 0" text small title="Next page" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-chevron-right</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
@@ -174,6 +178,8 @@ export default {
       currentCellEditMode: 'edit', // edit - new
       currentCellEditNode: {},
       currentCellEditValues: {},
+      // Pagination
+      page: 1,
       // Dialog - Content Edit
       editDialog: false,
       editDialogTitle: '',
@@ -677,6 +683,8 @@ export default {
         condition = condition.substring(0, condition.length - 1) + ")"
       }
       else if (this.contentSearchFilterText.length != 0) condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "'"
+      // Build pagination
+      var pagination = (this.page == 1) ? ' LIMIT 1000' : ' LIMIT ' + this.page * 1000 + ' OFFSET ' + this.page * 1000
       // Show overlay
       this.gridApi.content.showLoadingOverlay()
       // Build payload
@@ -685,7 +693,7 @@ export default {
         server: this.server.id,
         database: this.database,
         table: this.sidebarSelected[0]['name'],
-        queries: ['SELECT * FROM ' + this.sidebarSelected[0]['name'] + condition + ' LIMIT 1000;' ]
+        queries: ['SELECT * FROM ' + this.sidebarSelected[0]['name'] + condition + pagination + ';' ]
       }
       axios.post('/client/execute', payload)
         .then((response) => {
@@ -706,6 +714,14 @@ export default {
             this.$store.dispatch('client/addHistory', history)
           }
         })
+    },
+    previousPage() {
+      this.page -= 1
+      this.filterClick()
+    },
+    nextPage() {
+      this.page += 1
+      this.filterClick()
     },
     showDialog(options) {
       this.dialogMode = options.mode
