@@ -399,7 +399,7 @@ export default {
       this.sidebarLoading = true
       // Retrieve Tables
       const payload = {
-        connection: this.index,
+        connection: 0,
         server: this.server.id,
         database: database
       }

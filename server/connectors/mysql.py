@@ -273,7 +273,10 @@ class MySQL:
     def get_all_triggers(self, db):
         query = "SHOW TRIGGERS"
         result = self.execute(query, database=db)['data']
-        return [t['Trigger'] for t in result]
+        triggers = []
+        for t in result:
+            triggers.append(t['Trigger'])
+        return triggers
 
     def get_all_events(self, db):
         query = """
