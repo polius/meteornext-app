@@ -39,7 +39,7 @@
 
       <!-- RESULTS -->
       <v-card-text v-if="show_results" style="padding:0px; background-color:rgb(55, 53, 64);">
-        <results :src="deployment['uri']" :height="`calc(100vh - 207px)`"></results>
+        <Viewer :src="deployment['uri']" :height="`calc(100vh - 207px)`"></Viewer>
       </v-card-text>
 
       <v-card-text v-else>
@@ -446,7 +446,7 @@
           <v-container style="padding:0px 10px 0px 10px">
             <v-layout wrap>
               <v-flex xs12 style="padding-bottom:10px">
-                <v-btn ref="results_url" block text :href="url + `/results/` + deployment['uri']" target="_blank" class="text-lowercase title font-weight-light" style="margin-top:25px;">{{url + `/results/` + deployment['uri'] }}</v-btn>
+                <v-btn ref="results_url" block text :href="url + `/viewer/` + deployment['uri']" target="_blank" class="text-lowercase title font-weight-light" style="margin-top:25px;">{{url + `/viewer/` + deployment['uri'] }}</v-btn>
               </v-flex>
             </v-layout>
           </v-container>
@@ -508,7 +508,7 @@
   import 'codemirror/addon/display/fullscreen.css'
 
   // VIEWER
-  import Results from './Results'
+  import Viewer from './Viewer'
 
   export default  {
     data: () => ({
@@ -659,7 +659,7 @@
     }),
     components: { 
       codemirror,
-      results: Results
+      Viewer
     },
     created() {
       this.init()
@@ -1268,7 +1268,7 @@
       // -------------------------------------
       resultsClipboard() {
         var textarea = document.createElement('textarea')
-        textarea.textContent = this.url + `/results/` + this.deployment['uri']
+        textarea.textContent = this.url + `/viewer/` + this.deployment['uri']
         document.body.appendChild(textarea)
         var selection = document.getSelection()
         var range = document.createRange()

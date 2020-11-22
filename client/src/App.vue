@@ -51,6 +51,10 @@
       <router-link v-if="inventory_enabled" title="Inventory" class="nav-link" to="/inventory">
         <v-btn icon><v-icon>fas fa-layer-group</v-icon></v-btn>
       </router-link>
+      <!-- VIEWER -->
+      <router-link title="Viewer" class="nav-link" to="/viewer" target="_blank">
+        <v-btn icon><v-icon>fas fa-chart-area</v-icon></v-btn>
+      </router-link>
       <!-- ADMINISTRATION -->
       <router-link v-if="admin" title="Administration" class="nav-link" to="/admin">
         <v-btn icon><v-icon>fas fa-ankh</v-icon></v-btn>
@@ -111,19 +115,22 @@
     <!----------->
     <v-dialog v-model="coinsDialog" max-width="360px">
       <v-card>
-        <v-card-text style="padding:20px 15px 5px;">
+        <v-card-text style="padding:10px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
                 <v-row justify="space-around">
-                  <v-avatar size="100"><i class="fas fa-coins fa-7x" style="color:#ffcb05"></i></v-avatar>
+                  <v-avatar size="130"><i class="fas fa-coins fa-7x" style="color:#ffcb05"></i></v-avatar>
                 </v-row>
                 <v-row justify="space-around">
-                  <div class="text-h5" style="font-weight:400; margin-top:15px; margin-bottom:10px;">{{ coins + ' Coins' }}</div>
+                  <div class="text-h5" style="font-weight:400; margin-top:10px; margin-bottom:15px;">{{ coins + ' Coins' }}</div>
                 </v-row>
-                <!-- <v-row justify="space-around">
-                  <div class="text-subtitle-1" style="font-weight:400; margin-top:15px; margin-bottom:10px;">+ 15 Coins</div>
-                </v-row> -->
+                <v-row justify="space-around">
+                  <div class="text-subtitle-1" style="font-weight:400">1 Deployment = 10 Coins</div>
+                </v-row>
+                <v-row justify="space-around">
+                  <div class="text-subtitle-1" style="font-weight:400; margin-top:10px; margin-bottom:15px;">+15 Coins per day</div>
+                </v-row>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
@@ -213,11 +220,11 @@ export default {
       this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
     },
     showTopNavbar() {
-      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/results')) return true
+      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/viewer')) return true
       return false
     },
     showBottomNavbar() {
-      if (window.location.pathname != '/login' && !window.location.pathname.startsWith('/results') && window.location.pathname != '/deployments/information') return true
+      if (window.location.pathname != '/login' && !window.location.pathname.startsWith('/viewer') && window.location.pathname != '/deployments/information') return true
       return false
     },
     openNotifications() {
