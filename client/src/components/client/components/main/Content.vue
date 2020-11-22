@@ -391,12 +391,13 @@ export default {
       this.contentHeaders = []
       this.contentHeaders = headers
       this.contentItems = items
-      this.gridApi.content.setRowData(items)
+      // this.gridApi.content.setRowData(items)
       this.isRowSelected = false
 
       // Resize Table
-      this.gridApi.content.setColumnDefs(headers)
-      this.resizeTable()
+      // this.gridApi.content.setColumnDefs(headers)
+      // this.gridApi.content.setRowData(items)
+      // this.resizeTable()
 
       // Build BottomBar
       this.parseContentBottomBar(data)

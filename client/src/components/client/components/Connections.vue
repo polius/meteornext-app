@@ -5,7 +5,7 @@
         <draggable v-bind="dragOptions" v-model="connections" class="v-tabs__container" @start="dragConnectionStart" @end="dragConnectionEnd">
           <v-tab v-for="(conn, index) in connections" :key="index" @click="changeConnection(index)" :title="Object.keys(conn.server).length > 0 ? '[' + conn.server.version + '] ' + conn.server.name : ''" active-class="v-tabs-active" style="padding:0px 10px 0px 0px; float:left; height:100%; text-transform:none;">
             <span class="pl-2 pr-2" style="padding:0px!important; margin-left:15px;">
-              <v-progress-circular v-if="conn.clientExecuting != null" indeterminate color="white" size="15" width="1.5" style="margin-right:5px; margin-bottom:2px"></v-progress-circular>
+              <v-progress-circular v-if="conn.clientExecuting != null" indeterminate color="white" size="15" width="1.5" style="margin-right:10px"></v-progress-circular>
               <v-icon v-if="Object.keys(conn.server).length > 0" small :title="conn.server.shared ? 'Shared' : 'Personal'" :color="conn.server.shared ? 'error' : 'warning'" style="margin-right:7px;">fas fa-server</v-icon>
               {{ Object.keys(conn.server).length > 0 ? conn.server.name : 'Connection ' + (conn.index) }}
               <v-btn title="Close Connection" small icon @click.prevent.stop="deleteConnection(index)" style="margin-left:10px;"><v-icon x-small style="padding-bottom:1px;">fas fa-times</v-icon></v-btn></span>

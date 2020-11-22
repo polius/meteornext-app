@@ -419,16 +419,16 @@ export default {
       // Build routines
       var procedures = []
       var functions = []
-      for (let i = 0; i < data.routines.length; ++i) {
-        if (data.routines[i]['type'].toLowerCase() == 'procedure') procedures.push(data.routines[i])
-        else functions.push(data.routines[i])
+      for (let routine of data.routines) {
+        if (routine['type'].toLowerCase() == 'procedure') procedures.push(routine)
+        else functions.push(routine)
       }
       // Build tables / views
       var tables = []
       var views = []
-      for (let i = 0; i < data.tables.length; ++i) {
-        if (data.tables[i]['type'].toLowerCase() == 'table') tables.push(data.tables[i])
-        else views.push(data.tables[i])
+      for (let table of data.tables) {
+        if (table['type'].toLowerCase() == 'table') tables.push(table)
+        else views.push(table)
       }
       this.tableItems = tables.reduce((acc, val) => { acc.push(val['name']); return acc; }, [])
 
@@ -443,38 +443,39 @@ export default {
         { id: 'events', 'name': 'Events (' + data.events.length + ')',  type: 'Event', children: [] }
       ]
       // Parse Columns
-      for (let i = 0; i < data.columns.length; ++i) {
-        completer.push({ value: data.columns[i]['name'], meta: 'Column: ' + data.columns[i]['type'] })
+      for (let column of data.columns) {
+        completer.push({ value: column['name'], meta: 'Column: ' + column['type'] })
       }
       // Parse Tables
-      for (let i = 0; i < tables.length; ++i) {
-        objects[0]['children'].push({ id: 'table|' + tables[i]['name'], ...tables[i], type: 'Table', parentId: 'tables' })
-        completer.push({ value: tables[i]['name'], meta: 'Table' })
+      for (let table of tables) {
+        objects[0]['children'].push({ id: 'table|' + table['name'], ...table, type: 'Table', parentId: 'tables' })
+        completer.push({ value: table['name'], meta: 'Table' })
       }
       // Parse Views
-      for (let i = 0; i < views.length; ++i) {
-        objects[1]['children'].push({ id: 'view|' + views[i]['name'], ...views[i], type: 'View', parentId: 'views' })
-        completer.push({ value: views[i]['name'], meta: 'View' })
+      for (let view of views) {
+        objects[1]['children'].push({ id: 'view|' + view['name'], ...view, type: 'View', parentId: 'views' })
+        completer.push({ value: view['name'], meta: 'View' })
       }
       // Parse Triggers
-      for (let i = 0; i < data.triggers.length; ++i) {
-        objects[2]['children'].push({ id: 'trigger|' + data.triggers[i]['name'], ...data.triggers[i], type: 'Trigger', parentId: 'triggers' })
-        completer.push({ value: data.triggers[i]['name'], meta: 'Trigger' })
+      for (let trigger of data.triggers) {
+        objects[2]['children'].push({ id: 'trigger|' + trigger, name: trigger, type: 'Trigger', parentId: 'triggers' })
+        completer.push({ value: trigger, meta: 'Trigger' })
       }
+
       // Parse Functions
-      for (let i = 0; i < functions.length; ++i) {
-        objects[3]['children'].push({ id: 'function|' + functions[i]['name'], ...functions[i], type: 'Function', parentId: 'functions' })
-        completer.push({ value: functions[i]['name'], meta: 'Function' })
+      for (let f of functions) {
+        objects[3]['children'].push({ id: 'function|' + f['name'], ...f, type: 'Function', parentId: 'functions' })
+        completer.push({ value: f['name'], meta: 'Function' })
       }
       // Parse Procedures
-      for (let i = 0; i < procedures.length; ++i) {
-        objects[4]['children'].push({ id: 'procedure|' + procedures[i]['name'], ...procedures[i], type: 'Procedure', parentId: 'procedures' })
-        completer.push({ value: procedures[i]['name'], meta: 'Procedure' })
+      for (let procedure of procedures) {
+        objects[4]['children'].push({ id: 'procedure|' + procedure['name'], ...procedure, type: 'Procedure', parentId: 'procedures' })
+        completer.push({ value: procedure['name'], meta: 'Procedure' })
       }
       // Parse Events
-      for (let i = 0; i < data.events.length; ++i) {
-        objects[5]['children'].push({ id: 'event|' + data.events[i]['name'], ...data.events[i], type: 'Event', parentId: 'events' })
-        completer.push({ value: data.events[i]['name'], meta: 'Event' })
+      for (let event of data.events) {
+        objects[5]['children'].push({ id: 'event|' + event['name'], ...event, type: 'Event', parentId: 'events' })
+        completer.push({ value: event['name'], meta: 'Event' })
       }
       this.sidebarItems = objects
 

@@ -271,12 +271,9 @@ class MySQL:
         return self.execute(query, args=(db))['data']
 
     def get_all_triggers(self, db):
-        query = """
-            SELECT trigger_name AS 'name'
-            FROM information_schema.triggers
-            WHERE trigger_schema = %s
-        """
-        return self.execute(query, args=(db))['data']
+        query = "SHOW TRIGGERS"
+        result = self.execute(query, database=db)['data']
+        return [t['Trigger'] for t in result]
 
     def get_all_events(self, db):
         query = """
