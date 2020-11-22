@@ -11,6 +11,7 @@ class Servers:
                 FROM servers s
                 JOIN regions r ON r.id = s.region_id AND r.group_id = %s
                 WHERE (s.shared = 1 OR s.owner_id = %s)
+                ORDER BY `name`
             """
             return self._sql.execute(query, (group_id, user_id))
         else:
@@ -19,6 +20,7 @@ class Servers:
                 FROM servers s
                 JOIN regions r ON r.id = s.region_id AND r.group_id = %s
                 WHERE s.id = %s
+                ORDER BY `name`
             """
             return self._sql.execute(query, (group_id, server_id))
 

@@ -13,6 +13,7 @@ class Auxiliary:
                 FROM auxiliary
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)
+                ORDER BY `name`
             """
             return self._sql.execute(query, (group_id, user_id))
         else:
@@ -21,6 +22,7 @@ class Auxiliary:
                 FROM auxiliary
                 WHERE group_id = %s
                 AND id = %s
+                ORDER BY `name`
             """
             return self._sql.execute(query, (group_id, auxiliary_id))
 
