@@ -127,7 +127,7 @@ export default {
       'sidebarSelected'
     ], { path: 'client/connection' }),
     item: function() {
-      if (this.sidebarSelected.length == 0) return []
+      if (this.sidebarSelected.length == 0 || 'children' in this.sidebarSelected[this.sidebarSelected.length - 1]) return []
       else return this.sidebarSelected[this.sidebarSelected.length - 1]
     },
     owner: function() { return this.$store.getters['app/owner'] == 1 ? true : false },

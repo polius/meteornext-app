@@ -214,7 +214,6 @@ export default {
       axios.get('/inventory/regions')
         .then((response) => {
           this.regions = response.data.data.map(x => ({ id: x.id, name: x.name, shared: x.shared }))
-          console.log(this.regions)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
