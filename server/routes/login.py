@@ -69,7 +69,9 @@ class Login:
                 'deployments_pro': user[0]['deployments_pro'],
                 'monitoring_enabled': user[0]['monitoring_enabled'],
                 'utils_enabled': user[0]['utils_enabled'],
-                'client_enabled': user[0]['client_enabled']
+                'client_enabled': user[0]['client_enabled'],
+                'coins_execution': user[0]['coins_execution'],
+                'coins_day': user[0]['coins_day']
             }
             return jsonify({'data': ret}), 200
 

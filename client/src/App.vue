@@ -126,10 +126,10 @@
                   <div class="text-h5" style="font-weight:400; margin-top:10px; margin-bottom:15px;">{{ coins + ' Coins' }}</div>
                 </v-row>
                 <v-row justify="space-around">
-                  <div class="text-subtitle-1" style="font-weight:400">1 Deployment = 10 Coins</div>
+                  <div class="text-subtitle-1" style="font-weight:400">{{ "1 Deployment = " + this.coins_execution + " Coins" }}</div>
                 </v-row>
                 <v-row justify="space-around">
-                  <div class="text-subtitle-1" style="font-weight:400; margin-top:10px; margin-bottom:15px;">+15 Coins per day</div>
+                  <div class="text-subtitle-1" style="font-weight:400; margin-top:10px; margin-bottom:15px;">{{ "+" + this.coins_day + " Coins per day" }}</div>
                 </v-row>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -198,7 +198,9 @@ export default {
     deployments_enabled: function() { return this.$store.getters['app/deployments_enabled'] },
     monitoring_enabled: function() { return this.$store.getters['app/monitoring_enabled'] },
     utils_enabled: function() { return this.$store.getters['app/utils_enabled'] },
-    client_enabled: function() { return this.$store.getters['app/client_enabled'] }
+    client_enabled: function() { return this.$store.getters['app/client_enabled'] },
+    coins_execution: function() { return this.$store.getters['app/coins_execution'] },
+    coins_day: function() { return this.$store.getters['app/coins_day'] },
   },
   created() {
     this.getNotifications(true)
