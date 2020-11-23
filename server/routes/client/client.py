@@ -629,15 +629,14 @@ class Client:
                     first = False
                 writer.writerow(row)
                 yield output.getvalue()
-        conn.stop()
 
     def __export_sql(self, options, cred, conn):
         errors = {'tables': [], 'views': [], 'triggers': [], 'functions': [], 'procedures': [], 'events': []}
         # Build header
         yield '# ************************************************************\n'
         yield '# Meteor Next - Export SQL\n'
-        yield '# Version 1\n#\n'
-        yield '# https://meteor2.io\n#\n'
+        # yield '# Version 1\n#\n'
+        # yield '# https://meteor2.io\n#\n'
         yield '# Host: {} ({} {})\n'.format(cred['sql']['hostname'], cred['sql']['engine'], conn.get_version())
         yield '# Database: {}\n'.format(request.args['database'])
         yield '# Generation Time: {} UTC\n'.format(datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
@@ -781,6 +780,3 @@ class Client:
             yield '\n# ************************************************************\n'
             yield '# Export finished with errors\n'
             yield '# ************************************************************'
-
-        # Close connection
-        conn.stop()
