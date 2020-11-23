@@ -310,7 +310,7 @@ export default {
         objects['events'] = events.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
       }
       const payload = {
-        connection: this.index,
+        connection: 0,
         server: this.server.id,
         database: this.database,
         options: {
