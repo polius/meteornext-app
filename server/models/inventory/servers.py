@@ -19,10 +19,10 @@ class Servers:
                 SELECT s.*, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
                 JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-                WHERE s.id = %s
-                ORDER BY `name`
+                WHERE (s.shared = 1 OR s.owner_id = %s)
+                AND s.id = %s
             """
-            return self._sql.execute(query, (group_id, server_id))
+            return self._sql.execute(query, (group_id, user_id, server_id))
 
     def post(self, user_id, group_id, server):
         query = """

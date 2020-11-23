@@ -19,10 +19,10 @@ class Regions:
                 SELECT *
                 FROM regions 
                 WHERE group_id = %s
+                AND (shared = 1 OR owner_id = %s)
                 AND id = %s
-                ORDER BY `name`
             """
-            return self._sql.execute(query, (group_id, region_id))            
+            return self._sql.execute(query, (group_id, user_id, region_id))            
 
     def post(self, user_id, group_id, region):
         query = """
