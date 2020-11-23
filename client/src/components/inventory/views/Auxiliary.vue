@@ -183,7 +183,7 @@ export default {
     },
     selectEngine(value) {
       if (this.item['sql_port'] == '') {
-        if (value == 'MySQL') this.item['sql_port'] = '3306'
+        if (['MySQL','Aurora MySQL'].includes(value)) this.item['sql_port'] = '3306'
         else if (value == 'PostgreSQL') this.item['sql_port'] = '5432'
       }
       this.versions = this.engines[value]
@@ -319,7 +319,7 @@ export default {
       // Test Connection
       this.notification('Testing Auxiliary Connection...', 'info', true)
       this.loading = true
-      const payload = this.item
+      const payload = ('id' in this.item) ? { auxiliary: this.item.id } : this.item
       axios.post('/inventory/auxiliary/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')

@@ -21,10 +21,10 @@ class Auxiliary:
                 SELECT *
                 FROM auxiliary
                 WHERE group_id = %s
+                AND (shared = 1 OR owner_id = %s)
                 AND id = %s
-                ORDER BY `name`
             """
-            return self._sql.execute(query, (group_id, auxiliary_id))
+            return self._sql.execute(query, (group_id, user_id, auxiliary_id))
 
     def post(self, user_id, group_id, auxiliary):
         query = """

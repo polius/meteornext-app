@@ -213,7 +213,8 @@ export default {
       // this.regions = []
       axios.get('/inventory/regions')
         .then((response) => {
-          this.regions = response.data.data.map(x => { return { name: x.name, shared: x.shared }})
+          this.regions = response.data.data.map(x => ({ id: x.id, name: x.name, shared: x.shared }))
+          console.log(this.regions)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -222,7 +223,7 @@ export default {
     },
     selectEngine(value) {
       if (this.item['port'] == '') {
-        if (value == 'MySQL') this.item['port'] = '3306'
+        if (['MySQL','Aurora MySQL'].includes(value)) this.item['port'] = '3306'
         else if (value == 'PostgreSQL') this.item['port'] = '5432'
       }
       this.versions = this.engines[value]
@@ -359,8 +360,8 @@ export default {
       this.notification('Testing Server...', 'info', true)
       this.loading = true
       const payload = {
-        region: this.item.region_id,
-        server: this.item.id,
+        region: 'region_id' in this.item ? this.item.region_id : this.regions.find(x => x.name == this.item.region).id,
+        server: 'id' in this.item ? this.item.id : { hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password }
       }
       axios.post('/inventory/servers/test', payload)
         .then((response) => {

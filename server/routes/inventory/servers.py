@@ -63,8 +63,8 @@ class Servers:
             # Get Request Json
             server_json = request.get_json()
 
-            # Get Server Region
-            region = server_json['region'] if type(server_json['region']) is dict else self._regions.get(user['id'], user['group_id'], server_json['region'])
+            # Get Region
+            region = self._regions.get(user['id'], user['group_id'], server_json['region'])
             if len(region) == 0:
                 return jsonify({'message': "Can't test the connection. Invalid region provided."}), 400
             else:
@@ -75,11 +75,14 @@ class Servers:
             u = utils.Utils(connection)
 
             # Get Server
-            server = self._servers.get(user['id'], user['group_id'], server_json['server'])
-            if len(server) == 0:
-                return jsonify({'message': "Can't test the connection. Invalid server provided."}), 400
+            if type(server_json['server']) is dict:
+                server = server_json['server']
             else:
-                server = server[0]
+                server = self._servers.get(user['id'], user['group_id'], server_json['server'])
+                if len(server) == 0:
+                    return jsonify({'message': "Can't test the connection. Invalid server provided."}), 400
+                else:
+                    server = server[0]
 
             # Check SQL Connection
             try:

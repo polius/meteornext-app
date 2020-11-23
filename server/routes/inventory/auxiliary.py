@@ -62,17 +62,26 @@ class Auxiliary:
             auxiliary_json = request.get_json()
 
             # Build Auxiliary Data
-            ssh = None
-            if auxiliary_json['ssh_tunnel']:
-               ssh = {"hostname": auxiliary_json['ssh_hostname'], "port": auxiliary_json['ssh_port'], "username": auxiliary_json['ssh_username'], "password": auxiliary_json['ssh_password'], "key": auxiliary_json['ssh_key']}
-            sql = {"hostname": auxiliary_json['sql_hostname'], "port": auxiliary_json['sql_port'], "username": auxiliary_json['sql_username'], "password": auxiliary_json['sql_password']}
- 
+            if 'auxiliary' in auxiliary_json:
+                aux = self._auxiliary.get(user['id'], user['group_id'], auxiliary_json['auxiliary'])
+                if len(aux) == 0:
+                    return jsonify({'message': "Can't test the connection. Invalid auxiliary provided."}), 400
+                ssh = None
+                if aux[0]['ssh_tunnel']:
+                    ssh = {"hostname": aux[0]['ssh_hostname'], "port": aux[0]['ssh_port'], "username": aux[0]['ssh_username'], "password": aux[0]['ssh_password'], "key": aux[0]['ssh_key']}
+                sql = {"hostname": aux[0]['sql_hostname'], "port": aux[0]['sql_port'], "username": aux[0]['sql_username'], "password": aux[0]['sql_password']}
+            else:
+                ssh = None
+                if auxiliary_json['ssh_tunnel']:
+                    ssh = {"hostname": auxiliary_json['ssh_hostname'], "port": auxiliary_json['ssh_port'], "username": auxiliary_json['ssh_username'], "password": auxiliary_json['ssh_password'], "key": auxiliary_json['ssh_key']}
+                sql = {"hostname": auxiliary_json['sql_hostname'], "port": auxiliary_json['sql_port'], "username": auxiliary_json['sql_username'], "password": auxiliary_json['sql_password']}
+
             # Check SQL Connection
             try:
                 u = utils.Utils(ssh)
                 u.check_sql(sql)
             except Exception as e:
-                return jsonify({'message': "Can't connect to the server"}), 400
+                return jsonify({'message': str(e)}), 400
 
             return jsonify({'message': 'Connection Successful'}), 200
 
