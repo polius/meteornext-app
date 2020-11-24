@@ -47,7 +47,7 @@
         <v-card>
           <v-data-table :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1">
             <template v-slot:[`item.mode`]="{ item }">
-              <v-chip :color="getModeColor(item.mode)">{{ item.mode }}</v-chip>
+              <v-chip outlined :color="getModeColor(item.mode)">{{ item.mode }}</v-chip>
             </template>
             <template v-slot:[`item.method`]="{ item }">
               <span :style="'color: ' + getMethodColor(item.method.toUpperCase())" style="font-weight:500">{{ item.method.toUpperCase() }}</span>
@@ -1316,9 +1316,8 @@
         else if (method == 'VALIDATE') return '#4caf50'
       },
       getModeColor (mode) {
-        if (mode == 'BASIC') return '#eb974e'
+        if (mode == 'BASIC') return 'rgb(250, 130, 49)'
         else if (mode == 'PRO') return 'rgb(235, 95, 93)'
-        else if (mode == 'INBENTA') return '#049372'
       },
       regionColor (index, region) {
         if (region.startsWith('100%')) return 'background-color: rgb(0, 177, 106);'

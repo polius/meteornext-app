@@ -29,7 +29,7 @@
           </v-edit-dialog>
         </template>
         <template v-slot:[`item.mode`]="{ item }">
-          <v-chip :color="getModeColor(item.mode)">{{ item.mode }}</v-chip>
+          <v-chip outlined :color="getModeColor(item.mode)">{{ item.mode }}</v-chip>
         </template>
         <template v-slot:[`item.method`]="{ item }">
           <span :style="'color: ' + getMethodColor(item.method)" style="font-weight:500">{{ item.method }}</span>
@@ -191,9 +191,8 @@ export default {
         }) 
     },
     getModeColor (mode) {
-      if (mode == 'BASIC') return '#eb974e'
+      if (mode == 'BASIC') return 'rgb(250, 130, 49)'
       else if (mode == 'PRO') return 'rgb(235, 95, 93)'
-      else if (mode == 'INBENTA') return '#049372'
     },
     getMethodColor (method) {
       if (method == 'DEPLOY') return 'rgb(231, 76, 60)'
