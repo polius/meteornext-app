@@ -117,7 +117,7 @@ export default {
       if (this.gridApi != null) this.gridApi.showLoadingOverlay()
       this.loading = true
       const payload = {
-        connection: this.index,
+        connection: 0,
         server: this.server.id
       }
       axios.get('/client/variables', { params: payload })

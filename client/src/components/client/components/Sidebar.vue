@@ -620,7 +620,7 @@ export default {
     execute(queries, resolve, reject) {
       // Execute Query
       const payload = {
-        connection: this.index,
+        connection: 0,
         server: this.server.id,
         database: this.database,
         queries: queries

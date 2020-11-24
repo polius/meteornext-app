@@ -128,7 +128,7 @@ export default {
       // Retrieve Databases
       this.loading = true
       const payload = {
-        connection: this.index,
+        connection: 0,
         server: this.server.id, 
         encoding: encoding
       }
