@@ -207,10 +207,10 @@ const mutations = {
     const moment = require('moment')
     const server = state.connections[state.currentConn].server
     for (let query of data['queries']) {
-      state.history.push({
+      state.history.unshift({
         'section': data['section'],
         'time': moment().format('YYYY-MM-DD HH:mm:ss'),
-        'connection': '[' + server.type + ' ' + server.version + '] ' + server.name,
+        'connection': '[' + server.engine + ' ' + server.version + '] ' + server.name,
         'database': state.connections[state.currentConn].database,
         'query': query,
         'status': data['status'],
