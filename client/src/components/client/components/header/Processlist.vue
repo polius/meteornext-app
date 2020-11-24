@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" persistent max-width="90%">
+    <v-dialog v-model="dialog" persistent max-width="100%">
       <v-card>
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-server</v-icon>Processlist</v-toolbar-title>
