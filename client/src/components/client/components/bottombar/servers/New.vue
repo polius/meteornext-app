@@ -100,7 +100,7 @@
                                       <v-text-field v-model="item.username" readonly label="Username" required style="padding-top:0px; font-size:1rem;"></v-text-field>
                                       <v-text-field v-model="item.password" readonly label="Password" :append-icon="sqlPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="sqlPassword ? 'text' : 'password'" @click:append="sqlPassword = !sqlPassword" style="padding-top:0px; font-size:1rem;"></v-text-field>
                                       <!-- SSH -->
-                                      <div v-if="item.ssh_enabled">
+                                      <div v-if="'ssh_hostname' in item && item.ssh_enabled">
                                         <v-row no-gutters style="margin-top:15px;">
                                           <v-col cols="8" style="padding-right:10px">
                                             <v-text-field v-model="item.ssh_hostname" readonly label="SSH Hostname" required style="padding-top:0px; font-size:1rem;"></v-text-field>
