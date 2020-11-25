@@ -263,7 +263,7 @@ export default {
       // Test Connection
       this.notification('Testing Region...', 'info', true)
       this.loading = true
-      const payload = ('id' in this.item) ? { region: this.item.id } : this.item
+      const payload = (this.readOnly && this.inventory_secured) ? { region: this.item.id } : this.item
       axios.post('/inventory/regions/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a', 2)

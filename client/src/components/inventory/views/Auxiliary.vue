@@ -319,7 +319,7 @@ export default {
       // Test Connection
       this.notification('Testing Auxiliary Connection...', 'info', true)
       this.loading = true
-      const payload = ('id' in this.item) ? { auxiliary: this.item.id } : this.item
+      const payload = (this.readOnly && this.inventory_secured) ? { auxiliary: this.item.id } : this.item
       axios.post('/inventory/auxiliary/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
