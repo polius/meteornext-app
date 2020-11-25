@@ -43,4 +43,4 @@ class Releases:
         return self._sql.execute("SELECT * FROM releases WHERE user_id = %s AND active = 1 ORDER BY id DESC", (user_id))
     
     def putActive(self, user_id, release):
-        self._sql.execute("UPDATE releases SET active = %s WHERE id = %s AND user_id = %s", (release['active'], release['id'], user_id))
+        self._sql.execute("UPDATE releases SET active = %s, updated_at = %s WHERE id = %s AND user_id = %s", (release['active'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), release['id'], user_id))
