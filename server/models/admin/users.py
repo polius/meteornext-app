@@ -43,8 +43,9 @@ class Users:
             self._sql.execute("DELETE m FROM monitoring m JOIN users u ON u.id = m.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE ms FROM monitoring_settings ms JOIN users u ON u.id = ms.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE csq FROM client_saved_queries csq JOIN users u ON u.id = csq.user_id AND u.username = %s", (user))
-            self._sql.execute("DELETE cp FROM client_processlist cp JOIN users u ON u.id = cp.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE cs FROM client_settings cs JOIN users u ON u.id = cs.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE cs FROM client_servers cs JOIN users u ON u.id = cs.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE cf FROM client_folders cf JOIN users u ON u.id = cf.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE FROM users WHERE username = %s", (user))
 
     def exist(self, username):
