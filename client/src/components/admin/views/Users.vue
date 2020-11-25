@@ -50,16 +50,16 @@
                   <v-text-field v-model="item.email" :rules="[v => !!v || '', v => /.+@.+\..+/.test(v) || '']" label="Email" type="email" required append-icon="email" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" type="password" required append-icon="lock" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" label="Coins" required append-icon="monetization_on" style="padding-top:0px;"></v-text-field>
-                  <v-select v-model="item.group" :items="groups" :rules="[v => !!v || '']" label="Group" required hide-details style="padding-top:0px;"></v-select>
-                  <v-switch v-model="item.mfa.enabled" @change="onMFAChange" :loading="loading" :disabled="loading" flat label="Multi-Factor Authentication (MFA)" hide-details style="margin-top:20px; margin-bottom:10px;"></v-switch>
-                  <v-card v-if="item.mfa.enabled && !item.mfa.origin" style="width:232px; margin-bottom:20px;">
+                  <v-select v-model="item.group" :items="groups" :rules="[v => !!v || '']" label="Group" required hide-details style="padding-top:0px; margin-bottom:20px; "></v-select>
+                  <v-switch v-if="mode == 'edit'" v-model="item.mfa.enabled" @change="onMFAChange" :loading="loading" :disabled="loading" flat label="Multi-Factor Authentication (MFA)" hide-details style="margin-bottom:10px;"></v-switch>
+                  <v-card v-if="item.mfa.enabled && !item.mfa.origin" style="width:232px; margin-bottom:15px;">
                     <v-card-text>
                       <v-progress-circular v-if="item.mfa.uri == null" indeterminate style="margin-left:auto; margin-right:auto; display:table;"></v-progress-circular>
                       <qrcode-vue v-else :value="item.mfa.uri" size="200" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
                       <v-text-field outlined v-model="item.mfa.value" v-on:keyup.enter="submitUser()" label="MFA Code" append-icon="vpn_key" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px"></v-text-field>
                     </v-card-text>
                   </v-card>
-                  <v-switch v-model="item.admin" label="Administrator" color="info" style="margin-top:5px;" hide-details></v-switch>
+                  <v-switch v-model="item.admin" label="Administrator" color="info" style="margin-top:10px;" hide-details></v-switch>
                   <v-switch v-model="item.disabled" label="Disable Account" color="error" style="margin-top:10px;" hide-details></v-switch>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
