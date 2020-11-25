@@ -100,7 +100,7 @@ class Client:
                 if user['inventory_secured'] and not user['owner']:
                     servers_secured = []
                     for s in servers:
-                        if s['shared']:
+                        if s['shared'] or s['region_shared']:
                             servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "region_shared": s['region_shared']})
                         else:
                             servers_secured.append(s)
