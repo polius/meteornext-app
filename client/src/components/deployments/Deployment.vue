@@ -240,15 +240,11 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <div class="title font-weight-regular" style="margin-top:10px; margin-bottom: 25px;">{{ this.deployment['mode'] }}</div>
+                <div class="title font-weight-regular" style="margin-top:10px; margin-bottom: 25px;">{{ deployment['mode'] }}</div>
                 <v-text-field readonly v-model="information_dialog_data.name" label="Name" style="padding-top:0px;"></v-text-field>
-                <v-select :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="environments" label="Environment" style="padding-top:0px;"></v-select>
-
-                <v-select v-if="this.deployment['mode'] == 'INBENTA'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.products" :items="information_dialog_data.products_list" label="Products" multiple style="padding-top:0px;"></v-select>
-                <v-select v-if="this.deployment['mode'] == 'INBENTA'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.schema" :items="information_dialog_data.schema_list" label="Schema" style="padding-top:0px;"></v-select>
-
-                <v-text-field v-if="this.deployment['mode'] != 'PRO'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" style="padding-top:0px;"></v-text-field>
-                <v-card v-if="this.deployment['mode'] != 'PRO'" style="margin-bottom:20px;">
+                <v-autocomplete :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="environments" label="Environment" style="padding-top:0px;"></v-autocomplete>
+                <v-text-field v-if="deployment['mode'] == 'BASIC'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" style="padding-top:0px;"></v-text-field>
+                <v-card v-if="deployment['mode'] == 'BASIC'" style="margin-bottom:20px;">
                   <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
                     <v-toolbar-title class="white--text">Queries</v-toolbar-title>
                     <v-divider v-if="information_dialog_mode != 'parameters'" class="mx-3" inset vertical></v-divider>
@@ -263,8 +259,8 @@
                   </v-data-table>
                 </v-card>
 
-                <div v-if="this.deployment['mode'] == 'PRO'" class="subtitle-1 font-weight-regular" style="margin-top:-5px; margin-bottom:10px;" title="Press ESC when cursor is in the editor to toggle full screen editing">CODE</div>
-                <codemirror v-if="this.deployment['mode'] == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
+                <div v-if="deployment['mode'] == 'PRO'" class="subtitle-1 font-weight-regular" style="margin-top:-5px; margin-bottom:10px;" title="Press ESC when cursor is in the editor to toggle full screen editing">CODE</div>
+                <codemirror v-if="deployment['mode'] == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
 
                 <div class="subtitle-1 font-weight-regular" style="margin-top:20px;">
                   METHOD
@@ -681,7 +677,6 @@
           var code = id.substring(0, 1)
           if (code == 'b' || code == 'B') this.deployment['mode'] = 'basic'
           else if (code == 'p' || code == 'P') this.deployment['mode'] = 'pro'
-          else if (code == 'i' || code == 'I') this.deployment['mode'] = 'inbenta'
           this.getDeployment()
         }
       },
@@ -741,7 +736,7 @@
         this.deployment['name'] = data['name']
         this.deployment['release'] = data['release']
         this.deployment['environment'] = data['environment']
-        if (this.deployment['mode'] == 'BASIC' || this.deployment['mode'] == 'INBENTA') {
+        if (this.deployment['mode'] == 'BASIC') {
           this.deployment['databases'] = data['databases']
           this.deployment['queries'] = []
           var queries = JSON.parse(data['queries'])
@@ -750,18 +745,6 @@
         }
         else if (this.deployment['mode'] == 'PRO') {
           this.deployment['code'] = data['code']
-        }
-        if (this.deployment['mode'] == 'INBENTA') {
-          this.deployment['products_schema'] = data['products_list']
-          this.deployment['products_list'] = Object.keys(data['products_list'])
-          this.deployment['products'] = []
-          for (const i of data['products'].split(',')) {
-            for (const [key, value] of Object.entries(data['products_list'])) {
-              if (i == value) this.deployment['products'].push(key)
-            }
-          }
-          this.deployment['schema_list'] = data['schema_list']
-          this.deployment['schema'] = data['schema']
         }
         this.deployment['method'] = data['method'].toLowerCase()
         if (this.deployment['status'] != data['status']) this.getExecutions()
@@ -1122,18 +1105,12 @@
         else payload['start_execution'] = (this.information_dialog_data.start_execution === undefined) ? false : this.information_dialog_data.start_execution
 
         // Build different modes
-        if (this.deployment['mode'] == 'BASIC' || this.deployment['mode'] == 'INBENTA') {
+        if (this.deployment['mode'] == 'BASIC') {
           payload['databases'] = this.information_dialog_data.databases
           payload['queries'] = JSON.stringify(this.information_dialog_data.queries)
         }
         else if (this.deployment['mode'] == 'PRO') {
           payload['code'] = this.information_dialog_data.code
-        }
-        if (this.deployment['mode'] == 'INBENTA') {
-          payload['products'] = []
-          if (this.information_dialog_data.products.length == 0) this.information_dialog_data.products = ['Chatbot', 'KM', 'Search', 'Ticketing', 'Legacy']
-          for (const i of this.information_dialog_data.products) payload['products'].push(this.deployment['products_schema'][i])
-          payload['schema'] = this.information_dialog_data.schema
         }
 
         // Add deployment to the DB

@@ -359,8 +359,8 @@ export default {
       this.notification('Testing Server...', 'info', true)
       this.loading = true
       const payload = {
-        region: 'region_id' in this.item ? this.item.region_id : this.regions.find(x => x.name == this.item.region).id,
-        server: 'id' in this.item ? this.item.id : { hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password }
+        region: (this.readOnly && this.inventory_secured) ? this.item.region_id : this.regions.find(x => x.name == this.item.region).id,
+        server: (this.readOnly && this.inventory_secured) ? this.item.id : { hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password }
       }
       axios.post('/inventory/servers/test', payload)
         .then((response) => {
