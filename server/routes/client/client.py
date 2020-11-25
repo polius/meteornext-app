@@ -49,8 +49,10 @@ class Client:
                 if user['inventory_secured'] and not user['owner']:
                     servers_secured = []
                     for s in servers:
-                        if s['shared'] or s['region_shared']:
+                        if s['shared']:
                             servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "region_shared": s['region_shared'], "folder_id": s['folder_id']})
+                        elif s['region_shared']:
+                            servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "hostname": s['hostname'], "port": s['port'], "username": s['username'], "password": s['password'], "shared": s['shared'], "region_shared": s['region_shared']})
                         else:
                             servers_secured.append(s)
                     return jsonify({'servers': servers_secured, 'folders': folders}), 200
@@ -100,8 +102,10 @@ class Client:
                 if user['inventory_secured'] and not user['owner']:
                     servers_secured = []
                     for s in servers:
-                        if s['shared'] or s['region_shared']:
+                        if s['shared']:
                             servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "region_shared": s['region_shared']})
+                        elif s['region_shared']:
+                            servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "hostname": s['hostname'], "port": s['port'], "username": s['username'], "password": s['password'], "shared": s['shared'], "region_shared": s['region_shared']})
                         else:
                             servers_secured.append(s)
                     return jsonify({'servers': servers_secured}), 200
