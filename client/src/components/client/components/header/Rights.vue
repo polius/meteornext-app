@@ -349,7 +349,7 @@ export default {
         // Login
         const login = {
           username: data['server'][0]['User'],
-          password: data['server'][0]['authentication_string'],
+          password: ('Password' in data['server'][0]) ? data['server'][0]['Password'] : data['server'][0]['authentication_string'],
           passwordType: 'Hash',
           hostname: data['server'][0]['Host']
         }
