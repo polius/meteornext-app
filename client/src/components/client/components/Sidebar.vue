@@ -368,7 +368,7 @@ export default {
       })
 
       // Get Column Types + Collations
-      if (server.engine == 'MySQL') {
+      if (['MySQL','Aurora MySQL'].includes(server.engine)) {
         this.server.version = data.version
         this.server.engines = data.engines
         this.server.encodings = data.encodings
