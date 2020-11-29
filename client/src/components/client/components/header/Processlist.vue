@@ -218,9 +218,6 @@ export default {
       this.search = ''
       this.loaded = false
       this.stopped = false
-      this.snackbarText = 'Processlist started'
-      this.snackbarColor = '#00b16a'
-      this.snackbar = true
       if (this.gridApi != null) {
         this.loaded = true
         this.getProcesslist()
@@ -245,7 +242,11 @@ export default {
       if (this.analyzeGridApi != null) this.analyzeGridApi.sizeColumnsToFit()
     },
     resizeTable() {
-      if (this.gridApi != null) this.gridApi.sizeColumnsToFit()
+      if (this.gridApi != null) {
+        let allColumnIds = this.columnApi.getAllColumns().map(v => v.colId)
+        this.columnApi.autoSizeColumns(allColumnIds)
+      }
+      // if (this.gridApi != null) this.gridApi.sizeColumnsToFit()
     },
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
@@ -331,13 +332,13 @@ export default {
             }
           })
         }
-        // Check if resize columns is needed
-        const scannedIn = this.header.some(x => x.colId == 'scanned')
-        const shouldResize = ((this.settings['analyze_queries'] == 1 || false) && !scannedIn) || ((!this.settings['analyze_queries'] == 1 || true) && scannedIn) 
         // Apply new columns
         this.header = header.slice(0)
         this.gridApi.setColumnDefs(this.header)
-        if (shouldResize) this.resizeTable()
+        // Check if resize columns is needed
+        // const scannedIn = this.header.some(x => x.colId == 'scanned')
+        // const shouldResize = ((this.settings['analyze_queries'] == 1 || false) && !scannedIn) || ((this.settings['analyze_queries'] == 0 || false) && scannedIn) 
+        // if (shouldResize) this.resizeTable()
         // Build items
         if (Object.keys(this.analyzeData).length != 0) {
           for (let row of data) {

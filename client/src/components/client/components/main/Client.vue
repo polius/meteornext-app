@@ -177,7 +177,7 @@ export default {
     }
   },
   methods: {
-   onGridReady(params) {
+    onGridReady(params) {
       this.gridApi.client = params.api
       this.columnApi.client = params.columnApi
       this.$refs['agGridClient'].$el.addEventListener('click', this.onGridClick)
