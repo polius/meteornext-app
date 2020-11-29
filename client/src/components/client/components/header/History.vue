@@ -8,8 +8,8 @@
           <v-btn :disabled="history.length == 0" @click="clear" color="primary" style="margin-right:10px;"><v-icon small style="font-size:14px; padding-right:10px; padding-bottom:2px;">fas fa-broom</v-icon>Clear</v-btn>
           <v-btn :disabled="history.length == 0" @click="save" color="primary" style="margin-right:10px;"><v-icon small style="font-size:14px; padding-right:10px;">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-text-field @input="onSearch" v-model="search" label="Search" solo dense color="white" background-color="transparent" hide-details style="margin-right:-10px;"></v-text-field>
-          <!-- <v-btn @click="dialog = false" icon style="margin-left:5px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn> -->
+          <v-text-field @input="onSearch" v-model="search" label="Search" solo dense color="white" background-color="transparent" hide-details></v-text-field>
+          <v-btn @click="dialog = false" icon style="margin-left:5px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%;">
