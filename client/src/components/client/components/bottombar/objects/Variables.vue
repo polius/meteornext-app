@@ -2,11 +2,11 @@
   <div>
     <v-dialog v-model="dialog" max-width="70%">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">Server Variables</v-toolbar-title>
+        <v-toolbar flat dense color="primary">
+          <v-toolbar-title class="white--text body-1">SERVER VARIABLES</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-text-field ref="field" :disabled="loading" v-model="search" label="Search" color="white" outlined dense hide-details></v-text-field>
-          <v-btn :disabled="loading" @click="dialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-text-field ref="field" :disabled="loading" v-model="search" label="Search" color="white" solo dense background-color="transparent" hide-details></v-text-field>
+          <v-btn :disabled="loading" @click="dialog = false" icon style="margin-left:5px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%;">
