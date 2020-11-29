@@ -1,22 +1,24 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" persistent max-width="100%">
+    <v-dialog v-model="dialog" fullscreen max-width="100%" transition="fade-transition">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-server</v-icon>Processlist</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-server</v-icon>PROCESSLIST</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn @click="stopProcesslist" color="primary" :title="stopped ? 'Start processlist retrieval' : 'Stop processlist retrieval'" style="margin-right:10px;"><v-icon small style="padding-right:10px">{{ stopped ? 'fas fa-play' : 'fas fa-stop'}}</v-icon>{{ stopped ? 'START' : 'STOP' }}</v-btn>
-          <v-btn @click="exportProcesslist" color="primary" style="margin-right:10px;"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
-          <v-btn @click="settingsProcesslist" color="primary"><v-icon small style="padding-right:10px; font-size:14px;">fas fa-cog</v-icon>Settings</v-btn>
+          <div class="body-1">{{ server.name }}</div>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-text-field @input="onSearch" v-model="search" label="Search" outlined dense color="white" hide-details></v-text-field>
-          <v-btn @click="dialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn text @click="stopProcesslist" :title="stopped ? 'Start processlist retrieval' : 'Stop processlist retrieval'" style="margin-right:10px; height:100%"><v-icon small style="padding-right:10px">{{ stopped ? 'fas fa-play' : 'fas fa-stop'}}</v-icon>{{ stopped ? 'START' : 'STOP' }}</v-btn>
+          <v-btn text @click="exportProcesslist" style="margin-right:10px; height:100%"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
+          <v-btn text @click="settingsProcesslist" style="height:100%"><v-icon small style="padding-right:10px; font-size:14px;">fas fa-cog</v-icon>Settings</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-text-field @input="onSearch" v-model="search" label="Search" solo color="white" dense background-color="transparent" hide-details style="margin-right:-10px"></v-text-field>
+          <!-- <v-btn @click="dialog = false" icon style="margin-left:5px;"><v-icon>fas fa-times-circle</v-icon></v-btn> -->
         </v-toolbar>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:80vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="header" :rowData="items"></ag-grid-vue>
+                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:calc(100vh - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="header" :rowData="items"></ag-grid-vue>
                 <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
                   <v-list style="padding:0px;">
                     <v-list-item-group v-model="contextMenuModel">

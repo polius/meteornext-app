@@ -2,12 +2,12 @@
   <div>
     <v-dialog ref="savedDialog" v-model="dialog" @keydown="onKeyDown" max-width="80%" eager>
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-star</v-icon>Saved Queries</v-toolbar-title>
+        <v-toolbar flat dense color="primary">
+          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-star</v-icon>SAVED QUERIES</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="selected.length != 1 || saveButtonDisabled" :loading="loading" @click="editSaved" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <!-- <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn> -->
         </v-toolbar>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%;">
