@@ -661,13 +661,18 @@ class Client:
                         yield 'DROP TABLE IF EXISTS `{}`;\n\n'.format(table)
                         yield '{};\n\n'.format(syntax)
                     if options['include'] in ['Structure + Content','Content']:
-                        first = True                            
+                        first = True
+                        i = 0
                         while True:
                             row = conn.fetch_one()
                             if row == None:
                                 if not first:
                                     yield ';\n\n'
                                 break
+                            if i == 1000:
+                                yield ';\n\n'
+                                i = 0
+                                first = True
                             args = [v for k, v in row.items()]
                             if first:
                                 yield 'INSERT INTO `{}` ({})\nVALUES\n'.format(table, ','.join([f'`{k}`' for k, v in row.items()]))
@@ -675,6 +680,7 @@ class Client:
                                 yield '({})'.format(conn.mogrify(','.join(repeat('%s', len(args))), args))
                             else:
                                 yield ',\n({})'.format(conn.mogrify(','.join(repeat('%s', len(args))), args))
+                            i += 1
                 except Exception as e:
                     errors['tables'].append({'k': table, 'v': str(e)})
                     yield '# Error: {}\n\n'.format(e)
