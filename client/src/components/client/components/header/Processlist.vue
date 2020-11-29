@@ -7,12 +7,12 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <div class="body-1">{{ server.name }}</div>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn text @click="stopProcesslist" :title="stopped ? 'Start processlist retrieval' : 'Stop processlist retrieval'" style="margin-right:10px; height:100%"><v-icon small style="padding-right:10px">{{ stopped ? 'fas fa-play' : 'fas fa-stop'}}</v-icon>{{ stopped ? 'START' : 'STOP' }}</v-btn>
-          <v-btn text @click="exportProcesslist" style="margin-right:10px; height:100%"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-btn text @click="settingsProcesslist" style="height:100%"><v-icon small style="padding-right:10px; font-size:14px;">fas fa-cog</v-icon>Settings</v-btn>
+          <v-btn text @click="exportProcesslist" style="height:100%"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
+          <v-btn text @click="stopProcesslist" :title="stopped ? 'Start processlist retrieval' : 'Stop processlist retrieval'" style="height:100%"><v-icon small style="padding-right:10px">{{ stopped ? 'fas fa-play' : 'fas fa-stop'}}</v-icon>{{ stopped ? 'START' : 'STOP' }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field @input="onSearch" v-model="search" label="Search" solo color="white" dense background-color="transparent" hide-details style="margin-right:-10px"></v-text-field>
-          <!-- <v-btn @click="dialog = false" icon style="margin-left:5px;"><v-icon>fas fa-times-circle</v-icon></v-btn> -->
+          <v-btn @click="dialog = false" icon style="margin-left:18px;"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -127,6 +127,12 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <!-------------->
+    <!-- Snackbar -->
+    <!-------------->
+    <v-snackbar v-model="snackbar" :multi-line="false" timeout=1000 :color="snackbarColor" bottom style="padding-top:0px;">
+      <div style="text-align:center">{{ snackbarText }}</div>
+    </v-snackbar>
   </div>
 </template>
 
@@ -175,6 +181,10 @@ export default {
       analyzeColumns: [],
       analyzeItems: [],
       analyzeData: {},
+      // Snackbar
+      snackbar: false,
+      snackbarText: '',
+      snackbarColor: '',
     }
   },
   components: { AgGridVue },
@@ -208,6 +218,9 @@ export default {
       this.search = ''
       this.loaded = false
       this.stopped = false
+      this.snackbarText = 'Processlist started'
+      this.snackbarColor = '#00b16a'
+      this.snackbar = true
       if (this.gridApi != null) {
         this.loaded = true
         this.getProcesslist()
@@ -401,7 +414,16 @@ export default {
       this.analyzeData = JSON.parse(JSON.stringify(parsedData))
     },
     stopProcesslist() {
-      if (this.stopped) clearTimeout(this.timer)
+      if (this.stopped) {
+        clearTimeout(this.timer)
+        this.snackbarText = 'Processlist started'
+        this.snackbarColor = '#00b16a'
+      }
+      else {
+        this.snackbarText = 'Processlist stopped'
+        this.snackbarColor = 'error'
+      }
+      this.snackbar = true
       this.stopped = !this.stopped
       if (!this.stopped) this.getProcesslist() 
     },
