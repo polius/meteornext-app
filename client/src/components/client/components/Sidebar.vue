@@ -1,6 +1,7 @@
 <template>
   <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
     <div style="height:calc(100% - 36px)">
+      <!-- <v-autocomplete v-if="sidebarMode == 'servers'" ref="server" v-model="server" :disabled="sidebarLoading" @change="serverChanged" solo :items="serverItems" label="Search" auto-select-first hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete> -->
       <v-autocomplete ref="database" v-model="database" :disabled="sidebarLoading || databaseItems.length == 0" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete>
       <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
@@ -326,7 +327,7 @@ export default {
       this.loadingServer = true
       // Retrieve Databases
       const payload = {
-        connection: this.index,
+        connection: 0,
         server: server.id,
       }
       axios.get('/client/databases', { params: payload })

@@ -27,7 +27,8 @@ class Connections:
             self._connections[user_id].pop(conn_id, None)
             total += 1
         for user_id in collector.keys():
-            self._connections.pop(user_id, None)
+            if len(self._connections[user_id]) == 0:
+                self._connections.pop(user_id, None)
         if total > 0:
             print("- [CLIENT] Connections closed: {}".format(total))
 

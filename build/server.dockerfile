@@ -20,6 +20,8 @@ RUN yum update -y && \
     python3 -m pip install schedule && \
     python3 -m pip install cython && \
     python3 -m pip install gunicorn && \
+    python3 -m pip install gevent && \
+    python3 -m pip install gunicorn[gevent] && \
     python3 -m pip install pyinstaller
 WORKDIR /root/build
 CMD [ "python3", "build_server.py" ]
