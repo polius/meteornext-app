@@ -42,7 +42,7 @@ class builder:
         # Build Docker
         subprocess.call("docker pull nginx:latest", shell=True)
         subprocess.call("cd {} ; docker build -t meteornext:latest -f build/docker.dockerfile .".format(self._pwd), shell=True)
-        subprocess.call("docker rmi nginx:latest", shell=True)
+        # subprocess.call("docker rmi nginx:latest", shell=True)
         subprocess.call("docker save meteornext > {}/dist/meteornext.tar".format(self._pwd), shell=True)
         self.clean_docker()
 
@@ -68,7 +68,7 @@ class builder:
         subprocess.call("docker build -t meteornextbuild:latest - < server.dockerfile", shell=True)
         subprocess.call("docker run --rm -it -v {}:/root/ meteornextbuild:latest".format(self._pwd), shell=True)
         subprocess.call("docker rmi meteornextbuild:latest", shell=True)
-        subprocess.call("docker rmi amazonlinux:1", shell=True)
+        # subprocess.call("docker rmi amazonlinux:1", shell=True)
 
     def __build_client(self):
         subprocess.call("rm -rf {}/dist/meteornext.tar".format(self._pwd), shell=True)

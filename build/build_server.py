@@ -57,7 +57,7 @@ class build_server:
         # Build Meteor Next Server
         build_path = "{}/server".format(self._pwd)
         additional_files = ['routes/deployments/blueprint.py', 'models/schema.sql', 'apps/meteor.tar.gz']
-        hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','socket','paramiko','sshtunnel','unicodedata','secrets','simplejson','csv','itertools','pyotp','flask_compress']
+        hidden_imports = ['json','_cffi_backend','bcrypt','requests','pymysql','uuid','flask','flask_cors','flask_jwt_extended','schedule','boto3','socket','paramiko','sshtunnel','unicodedata','secrets','simplejson','csv','itertools','pyotp','flask_compress','gevent']
         additional_binaries = []
         binary_name = 'server'
         binary_path = '{}/dist'.format(self._pwd)
@@ -133,6 +133,8 @@ class build_server:
         with open(init_file, 'w') as file_open:
             if binary_name == 'server':
                 file_open.write("""# -*- coding: utf-8 -*-
+from gevent import monkey
+monkey.patch_all()
 from gunicorn.app.base import Application, Config
 import os
 import sys
@@ -140,7 +142,7 @@ import json
 import tarfile
 import gunicorn
 from gunicorn import glogging
-from gunicorn.workers import sync
+from gunicorn.workers import ggevent
 from app import app
 class GUnicornFlaskApplication(Application):
     def __init__(self, app):
@@ -156,7 +158,7 @@ if __name__ == "__main__":
         tar.extractall(path="{}/apps/meteor/".format(sys._MEIPASS))
     # Init Gunicorn App
     gunicorn_app = GUnicornFlaskApplication(app)
-    gunicorn_app.run(worker_class="gunicorn.workers.sync.SyncWorker", bind='unix:server.sock', capture_output=True, errorlog='error.log', workers=8, timeout=300)""")
+    gunicorn_app.run(worker_class='gunicorn.workers.ggevent.GeventWorker', bind='unix:server.sock', capture_output=True, enable_stdio_inheritance=True, errorlog='error.log')""")
             else:
                 file_open.write("from {0} import {0}\n{0}()".format(binary_name))
 
