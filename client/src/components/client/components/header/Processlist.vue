@@ -11,8 +11,11 @@
           <v-btn text @click="exportProcesslist" style="height:100%"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-btn text @click="stopProcesslist" :title="stopped ? 'Start processlist retrieval' : 'Stop processlist retrieval'" style="height:100%"><v-icon small style="padding-right:10px">{{ stopped ? 'fas fa-play' : 'fas fa-stop'}}</v-icon>{{ stopped ? 'START' : 'STOP' }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-text-field @input="onSearch" v-model="search" label="Search" solo color="white" dense background-color="transparent" hide-details style="margin-right:-10px"></v-text-field>
-          <v-btn @click="dialog = false" icon style="margin-left:18px;"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+          <div class="body-1">{{ items.length + ' Connection(s)' }}</div>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-text-field @input="onSearch" v-model="search" label="Search" solo color="white" dense background-color="transparent" hide-details></v-text-field>
+          <v-divider class="mx-3" inset vertical style="margin-right:0px!important"></v-divider>
+          <v-btn @click="dialog = false" icon style="margin-left:5px;"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -354,6 +357,7 @@ export default {
         const selectedNodes = this.gridApi.getSelectedNodes().map(node => node.data.Id)
         const filterModel = this.gridApi.getFilterModel()
         // Reload new items
+
         this.items = data
         this.gridApi.setRowData(data)
         // Apply selected / filtered nodes
