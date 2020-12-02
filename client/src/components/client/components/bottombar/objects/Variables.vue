@@ -138,7 +138,7 @@ export default {
       this.items = variables
       if (this.gridApi != null) {
         this.loading = false
-        // this.$nextTick(() => { this.$refs.field.focus() })      
+        this.$nextTick(() => { this.$refs.field.focus() })      
         this.gridApi.hideOverlay()  
       }
     },
@@ -147,7 +147,7 @@ export default {
       this.columnApi = params.columnApi
       this.gridApi.showLoadingOverlay()
       this.loading = false
-      // this.$refs.field.focus()
+      this.$refs.field.focus()
     },
     onFirstDataRendered(params) {
       params.api.sizeColumnsToFit()

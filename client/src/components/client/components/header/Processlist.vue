@@ -153,7 +153,6 @@ export default {
       dialog: false,
       stopped: true,
       timer: null,
-      loaded : false,
       // AG Grid
       gridApi: null,
       columnApi: null,
@@ -216,20 +215,12 @@ export default {
     showDialog() {
       this.dialog = true
       this.search = ''
-      this.loaded = false
       this.stopped = false
-      if (this.gridApi != null) {
-        this.loaded = true
-        this.getProcesslist()
-      }
+      this.getProcesslist()
     },
     onGridReady(params) {
       this.gridApi = params.api
       this.columnApi = params.columnApi
-      if (this.loaded == false) {
-        this.loaded = true
-        this.getProcesslist()
-      }
     },
     onAnalyzeGridReady(params) {
       this.analyzeGridApi = params.api
@@ -295,6 +286,11 @@ export default {
     },
     getProcesslist() {
       if (this.stopped) return
+      else if (this.gridApi == null) {
+        clearTimeout(this.timer)
+        this.timer = setTimeout(this.getProcesslist, 1000)
+        return
+      }
       const payload = {
         connection: 0,
         server: this.server.id,
@@ -366,6 +362,7 @@ export default {
           this.gridApi.setFilterModel(filterModel)
         })
         // Repeat processlist request
+        clearTimeout(this.timer)
         this.timer = setTimeout(this.getProcesslist, (this.settings['refresh_rate'] || 5) * 1000)
       })
     },
@@ -415,18 +412,19 @@ export default {
       this.analyzeData = JSON.parse(JSON.stringify(parsedData))
     },
     stopProcesslist() {
-      if (this.stopped) {
-        clearTimeout(this.timer)
+      this.stopped = !this.stopped
+      if (!this.stopped) {
         this.snackbarText = 'Processlist started'
         this.snackbarColor = '#00b16a'
+        clearTimeout(this.timer)
+        this.getProcesslist()
       }
       else {
         this.snackbarText = 'Processlist stopped'
         this.snackbarColor = 'error'
+        clearTimeout(this.timer)
       }
       this.snackbar = true
-      this.stopped = !this.stopped
-      if (!this.stopped) this.getProcesslist() 
     },
     exportProcesslist() {
       let replacer = (key, value) => value === null ? undefined : value
@@ -534,8 +532,8 @@ export default {
         .then(() => {
           EventBus.$emit('send-notification', 'Queries killed', '#00b16a', 2)
           this.killDialog = false
-          clearTimeout(this.timer)
-          this.getProcesslist()
+          // clearTimeout(this.timer)
+          // this.getProcesslist()
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

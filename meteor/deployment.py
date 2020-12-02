@@ -33,6 +33,10 @@ class deployment:
             if not os.path.exists("{}/execution".format(self._args.path)):
                 os.makedirs("{}/execution".format(self._args.path))
 
+            # Create Logs Folder
+            if not os.path.exists("{}/logs".format(self._args.path)):
+                os.makedirs("{}/logs".format(self._args.path))
+
             # Init Progress dictionary
             progress = {i['name']: {} for i in self._config['regions']}
 

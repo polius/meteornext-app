@@ -148,11 +148,13 @@ export default {
       'headerTabSelected',
       'clientHeaders',
       'clientItems',
+      'clientQueries',
       'clientQuery',
       'bottomBar',
       'server',
       'clientExecuting',
       'database',
+      'sidebarMode',
     ], { path: 'client/connection' }),
     ...mapFields([
       'editor',
@@ -169,6 +171,9 @@ export default {
     ], { path: 'client/client' }),
   },
   watch: {
+    sidebarMode(val) {
+      if (val == 'objects') this.editor.setValue(this.clientQueries, 1)
+    },
     currentConn() {
       if (this.headerTabSelected == 'client') this.editor.focus()
     },
