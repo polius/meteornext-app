@@ -82,7 +82,7 @@ export default {
     },
     tabObjects() {
       this.headerTabSelected = 'objects'
-      new Promise((resolve, reject) => { EventBus.$emit('get-objects', resolve, reject) })
+      new Promise((resolve, reject) => { EventBus.$emit('get-objects', false, resolve, reject) })
     },
     tabHistory() {
       EventBus.$emit('show-history')

@@ -214,17 +214,14 @@ export default {
       navigator.clipboard.writeText(json)
     },
     refresh() {
-      let promise = new Promise((resolve, reject) => {
+      new Promise((resolve, reject) => {
         this.loading = true
         this.gridApi.objects.triggers.showLoadingOverlay()
-        EventBus.$emit('get-objects', resolve, reject)
+        EventBus.$emit('get-objects', true, resolve, reject)
+      }).finally(() => {
+        this.gridApi.objects.triggers.hideOverlay() 
+        this.loading = false 
       })
-      promise.then(() => {})
-        .catch(() => {})
-        .finally(() => {
-          this.gridApi.objects.triggers.hideOverlay() 
-          this.loading = false 
-        })
     },
     exportRows() {
       this.exportFormat = 'Meteor'

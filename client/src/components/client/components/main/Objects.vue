@@ -73,8 +73,8 @@ export default {
     tabObjects(object) {
       this.tabObjectsSelected = object
     },
-    getObjects(resolve, reject) {
-      if (this.database == this.databasePrev) { resolve(); return; }
+    getObjects(force, resolve, reject) {
+      if (this.database == this.databasePrev && !force) { resolve(); return; }
       const payload = {
         connection: this.index,
         server: this.server.id,

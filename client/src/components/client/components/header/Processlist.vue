@@ -11,7 +11,7 @@
           <v-btn text @click="exportProcesslist" style="height:100%"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-btn text @click="stopProcesslist" :title="stopped ? 'Start processlist retrieval' : 'Stop processlist retrieval'" style="height:100%"><v-icon small style="padding-right:10px">{{ stopped ? 'fas fa-play' : 'fas fa-stop'}}</v-icon>{{ stopped ? 'START' : 'STOP' }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <div class="body-1">{{ items.length + ' Connection(s)' }}</div>
+          <div class="body-1">{{ rowCount + ' Connection(s)' }}</div>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field @input="onSearch" v-model="search" label="Search" solo color="white" dense background-color="transparent" hide-details></v-text-field>
           <v-divider class="mx-3" inset vertical style="margin-right:0px!important"></v-divider>
@@ -162,6 +162,7 @@ export default {
       search: '',
       header: [],
       items: [],
+      rowCount: 0,
       // Settings Dialog
       settingsDialog: false,
       settingsItem: {},
@@ -283,6 +284,7 @@ export default {
     },
     onSearch(value) {
       this.gridApi.setQuickFilter(value)
+      this.rowCount = this.gridApi.getDisplayedRowCount()
     },
     onAnalyzeSearch(value) {
       this.analyzeGridApi.setQuickFilter(value)
@@ -360,6 +362,7 @@ export default {
 
         this.items = data
         this.gridApi.setRowData(data)
+        this.rowCount = this.items.length
         // Apply selected / filtered nodes
         this.$nextTick(() => {
           this.gridApi.forEachNode((node) => node.setSelected(selectedNodes.includes(node.data.Id)))
