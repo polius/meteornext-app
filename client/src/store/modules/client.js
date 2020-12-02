@@ -89,6 +89,7 @@ const connection = {
 const getDefaultState = () => {
   return {
     servers: [],
+    serversList: [],
     components: {
       // Client ACE Editor
       editor: null,
@@ -160,7 +161,7 @@ const mutations = {
     // Init servers list
     state.connections[state.currentConn].sidebarItems = state.servers.slice(0)
     // Init Client ACE Editor
-    state.components.editor.setValue('')
+    state.connections[state.currentConn].clientQueries = ''
   },
   changeConnection(state, data) {
     // Store Client ACE Editor (current connection)

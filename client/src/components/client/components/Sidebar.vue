@@ -1,12 +1,27 @@
 <template>
   <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
     <div style="height:calc(100% - 36px)">
-      <!-- <v-autocomplete v-if="sidebarMode == 'servers'" ref="server" v-model="server" :disabled="sidebarLoading" @change="serverChanged" solo :items="serverItems" label="Search" auto-select-first hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete> -->
-      <v-autocomplete ref="database" v-model="database" :disabled="sidebarLoading || databaseItems.length == 0" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete>
+      <v-autocomplete v-if="sidebarMode == 'servers'" ref="server" v-model="serverSearch" :loading="loadingServer" :disabled="loadingServer" @change="serverChanged" solo :items="serversList" item-text="name" label="Search" auto-select-first hide-details return-object background-color="#303030" height="48px" style="padding:10px;">
+        <template v-slot:[`selection`]="{ item }">
+          <div class="body-2">
+            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
+            <span class="body-2">{{ item.name }}</span>
+            <span v-show="item.folder != null" class="body-2" style="font-weight:300; margin-left:8px;">{{ '(' + item.folder + ')' }}</span>
+          </div>
+        </template>
+        <template v-slot:[`item`]="{ item }">
+          <div class="body-2">
+            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
+            <span class="body-2">{{ item.name }}</span>
+            <span v-show="item.folder != null" class="body-2" style="font-weight:300; margin-left:8px;">{{ '(' + item.folder + ')' }}</span>
+          </div>
+        </template>
+      </v-autocomplete>
+      <v-autocomplete v-else ref="database" v-model="database" :disabled="sidebarLoading || databaseItems.length == 0" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete>
       <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
       <div v-if="sidebarMode == 'servers' || database.length > 0" style="height:100%">
-        <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :search="sidebarSearch" activatable multiple-active open-on-click transition return-object class="clear_shadow" style="height:calc(100% - 162px); width:100%; overflow-y:auto;">
+        <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :search="sidebarSearch" activatable multiple-active open-on-click transition return-object class="clear_shadow" :style="`${sidebarMode == 'servers' ? `height:calc(100% - 107px)` : `height:calc(100% - 162px)`}; width:100%; overflow-y:auto;`">
           <template v-slot:label="{item, open}">
             <v-btn text @click="sidebarClicked($event, item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
               <v-icon v-if="'children' in item && sidebarMode == 'servers'" small style="padding:10px;">{{ open ? 'mdi-folder-open' : 'mdi-folder' }}</v-icon>
@@ -31,7 +46,7 @@
             </v-list-item-group>
           </v-list>
         </v-menu>
-        <v-text-field v-if="sidebarItems.length > 0" :disabled="sidebarMode == 'objects' && database.length == 0" v-model="sidebarSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
+        <v-text-field v-if="sidebarMode == 'objects' && sidebarItems.length > 0" :disabled="sidebarMode == 'objects' && database.length == 0" v-model="sidebarSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
       </div>
     </div>
     <!---------------------------->
@@ -107,6 +122,9 @@ import BottomBar from './BottomBar'
 export default {
   data() {
     return {
+      // Server search
+      serverSearch: {},
+
       // Loading
       loadingServer: false,
 
@@ -145,6 +163,7 @@ export default {
   computed: {
     ...mapFields([
       'servers',
+      'serversList',
       'dialogOpened',
     ], { path: 'client/client' }),
     ...mapFields([
@@ -179,13 +198,40 @@ export default {
     EventBus.$on('get-sidebar-servers', this.getServers);
     EventBus.$on('get-sidebar-objects', this.getObjects);
     EventBus.$on('refresh-sidebar-objects', this.refreshObjects);
+    this.$refs.server.focus()
   },
   watch: {
     dialog: function(val) {
       this.dialogOpened = val
+      if (!val) {
+        this.serverSearch = {}
+        setTimeout(() => this.$refs.server.focus(),100)
+      }
     },
+    sidebarMode: function(val) {
+      if (val == 'servers') {
+        this.serverSearch = {}
+        setTimeout(() => this.$refs.server.focus(),100)
+      }
+    }
   },
   methods: {
+    serverChanged(val) {
+      if (val === undefined || val.length == 0) return
+      const server = this.findServer(val.id)
+      this.sidebarSelected = [server]
+      this.getDatabases(server)
+    },
+    findServer(id) {
+      for (let i of this.servers) {
+        if ('children' in i) {
+          for (let j of i['children']) {
+            if (j.id == id) return j
+          }
+        }
+        else if (i.id == id) return i
+      }
+    },
     sidebarClicked(event, item) {
       if (this.loadingServer) return
       this.clickHandler(event, item)
@@ -322,6 +368,8 @@ export default {
       }
       this.servers = servers.slice(0)
       this.sidebarItems = servers.slice(0)
+      // Parse Servers List
+      this.serversList = data.servers.map(x => ({ id: x.id, name: x.name, shared: x.shared, folder: x.folder_name }))
     },
     getDatabases(server) {
       this.loadingServer = true
