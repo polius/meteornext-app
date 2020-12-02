@@ -104,7 +104,7 @@ export default {
         for (let [key] of Object.entries(data[0])) {
           let column = { headerName: this.parseHeaderName(key), colId: key.trim(), field: key.trim(), sortable: true, filter: true, resizable: true, editable: false }
           if (object == 'tables' && ['data_length','index_length','total_length'].includes(key)) {
-            column.valueGetter = (params) => {
+            column.valueFormatter = (params) => {
               return this.parseBytes(params.data[params.colDef.field])
             }
             column.comparator = this.compareValues

@@ -79,7 +79,7 @@ export default {
     dialog: function(value) {
       this.dialogOpened = value
       if (!value) {
-        const tab = {'client': 0, 'structure': 1, 'content': 2, 'info': 3, 'objects': 6}
+        const tab = {'client': 0, 'structure': 1, 'content': 2, 'info': 3, 'objects': 7}
         this.headerTab = tab[this.headerTabSelected]
       }
     }
