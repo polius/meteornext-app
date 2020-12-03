@@ -15,6 +15,8 @@ class deployment:
         self._config = imports.config
         self._progress = progress
         self._time = None
+        self._sigterm = False
+        self._threads = []
 
     @property
     def time(self):
@@ -22,6 +24,9 @@ class deployment:
 
     def start(self):
         try:
+            # Handle SIGTERM
+            signal.signal(signal.SIGTERM, self.__sigterm)
+
             # Get Deployment Start Datetime
             started_datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
             started_time = time.time()
@@ -41,17 +46,21 @@ class deployment:
             progress = {i['name']: {} for i in self._config['regions']}
 
             # Start Deployment
-            threads = []
             for region in self._config['regions']:
                 r = Region(self._args, region)
                 t = threading.Thread(target=r.deploy)
-                threads.append(t)
+                self._threads.append(t)
                 t.start()
 
-            # Track Overall Progress
-            while any(t.is_alive() for t in threads):
+            while any(t.is_alive() for t in self._threads):
+                # Track Overall Progress
                 self.__track_overall(progress, started_datetime, started_time)
+                # Check Sigterm
+                if self._sigterm:
+                    raise KeyboardInterrupt()
                 time.sleep(1)
+
+            # Track again Overall Progress 
             self.__track_overall(progress, started_datetime, started_time)
 
             # Check Critical Errors
@@ -87,32 +96,47 @@ class deployment:
         except KeyboardInterrupt:
             # Supress CTRL+C events
             signal.signal(signal.SIGINT,signal.SIG_IGN)
-            print("--> Ctrl+C Received. Interrupting all regions...")
-
-            # Interrupt Deployments
-            int_threads = []
-            for region in self._config['regions']:
-                r = Region(self._args, region)
-                t = threading.Thread(target=r.sigint())
-                int_threads.append(t)
-                t.start()
-            for t in int_threads:
-                t.join()
-
-            # Wait all deployments to be interrupted
-            for t in threads:
-                t.join()
-
-            print("--> {}Execution Interrupted Successfully".format('Test ' if self._args.test else ''))   
-
+            if self._sigterm:
+                self.__terminate_deployment()
+            else:
+                self.__interrupt_deployment()
             # Enable CTRL+C events
             signal.signal(signal.SIGINT, signal.default_int_handler)
-
             # Raise KeyboardInterrupt
             raise
-
         finally:
             self._time = time.time()
+
+    def __sigterm(self, signum, frame):
+        self._sigterm = True
+
+    def __interrupt_deployment(self):
+        print("--> SIGINT Received. Interrupting all regions...")
+        threads = []
+        for region in self._config['regions']:
+            r = Region(self._args, region)
+            t = threading.Thread(target=r.sigint())
+            t.daemon = True
+            threads.append(t)
+            t.start()
+        while any(t.is_alive() for t in self._threads):
+            if self._sigterm:
+                self.__terminate_deployment()
+                break
+            time.sleep(1)
+        print("--> {}Execution Interrupted Successfully".format('Test ' if self._args.test else ''))
+
+    def __terminate_deployment(self):
+        print("--> SIGTERM Received. Terminating all regions...")
+        threads = []
+        for region in self._config['regions']:
+            r = Region(self._args, region)
+            t = threading.Thread(target=r.sigkill())
+            threads.append(t)
+            t.start()
+        for t in self._threads:
+            t.join()
+        print("--> {}Execution Terminated Successfully".format('Test ' if self._args.test else ''))   
 
     def __track_overall(self, progress, started_datetime, started_time):
         # Start tracking all regions
