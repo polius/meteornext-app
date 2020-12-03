@@ -32,7 +32,6 @@ class deploy_regions:
 
             # Track Progress
             track = threading.Thread(target=self.__track_progress, args=(deploy,))
-            track.alive = True
             track.start()
             track.join()
 
@@ -54,15 +53,8 @@ class deploy_regions:
 
     def __track_progress(self, deploy):
         progress = {"progress": {}}
-        current_thread = threading.current_thread()
         tracking = True
         while tracking:
-            track_progress = True
-
-            # Check current thread status
-            if not current_thread.alive:
-                return
-
             # Check if all processes have finished
             if not deploy.is_alive():
                 tracking = False

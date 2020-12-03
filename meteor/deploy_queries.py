@@ -125,7 +125,8 @@ class deploy_queries:
         if self._args.deploy or query_syntax == 'Select':
             try:
                 # Execute query
-                query_info = conn.execute(query=query_parsed, args=args, database=database_name)
+                query_prefix = '/*B' + str(self._imports.config['params']['id']) + '*/' if self._imports.config['params']['mode'] == 'basic' else '/*P' + str(self._imports.config['params']['id']) + '*/'
+                query_info = conn.execute(query=query_prefix + query_parsed, args=args, database=database_name)
 
                 # If the query is executed successfully, then write the query result to the Log
                 execution_row['meteor_output'] = query_info['query_result'] if str(query_info['query_result']) != '()' else '[]'

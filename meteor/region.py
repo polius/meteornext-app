@@ -88,14 +88,14 @@ class Region:
         return int(count)
 
     def sigint(self):
-        command = "ps -U $USER -u $USER u | grep '{}' | grep -v grep | awk '{{print $2}}' | xargs kill -2 2> /dev/null".format(self._uuid)
+        command = "ps -U $USER -u $USER u | grep '{}' | grep '\--region' | grep -v grep | awk '{{print $2}}' | xargs kill -2 2> /dev/null".format(self._uuid)
         if self._region['ssh']['enabled']:
             self.__ssh(command, self._args.path + '/logs/' + self._region['name'])
         else:
             self.__local(command, self._args.path + '/logs/' + self._region['name'])
 
     def sigkill(self):
-        command = "ps -U $USER -u $USER u | grep '{}' | grep -v grep | awk '{{print $2}}' | xargs kill -9 2> /dev/null".format(self._uuid)
+        command = "ps -U $USER -u $USER u | grep '{}' | grep '\--region' | grep -v grep | awk '{{print $2}}' | xargs kill -9 2> /dev/null".format(self._uuid)
         if self._region['ssh']['enabled']:
             self.__ssh(command, None)
         else:
@@ -118,12 +118,10 @@ class Region:
             self.__put("{}/blueprint.py".format(self._args.path), "{}/.meteor/logs/{}/blueprint.py".format(home, self._uuid))
 
             # Start execution
-            # self.__ssh('nohup {} --path "{}/logs/{}" --{} --region "{}" </dev/null >/dev/null 2>&1 &'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']))
             self.__ssh('{} --path "{}/logs/{}" --{} --region "{}"'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']), self._args.path + '/logs/' + self._region['name'])
         else:
             binary_path = "{}/init".format(self._local_path) if self._bin else "python3 {}/meteor.py".format(self._local_path)
             # Start execution
-            # self.__local('nohup {} --path "{}" --{} --region "{}" </dev/null >/dev/null 2>&1 &'.format(binary_path, self._args.path, mode, self._region['name']))
             self.__local('{} --path "{}" --{} --region "{}"'.format(binary_path, self._args.path, mode, self._region['name']), self._args.path + '/logs/' + self._region['name'])
 
         # Wait deploy to finish

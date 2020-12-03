@@ -4,14 +4,14 @@
       <v-toolbar flat color="primary">
         <v-toolbar-title class="white--text">INFORMATION</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
-
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="'status' in deployment" text title="Show Parameters" @click="parameters()"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
           <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="padding-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
           <v-btn :disabled="deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING' || deployment['status'] == 'QUEUED'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit execution' : 'Re-Deploy with other parameters'" @click="edit()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
           <v-divider v-if="start_execution || deployment['status'] == 'STARTING' || deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="start_execution" v-if="deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED'" text title="Start Execution" @click="start()"><v-icon small style="padding-right:10px">fas fa-play</v-icon>START</v-btn>
-          <v-btn :disabled="stop_execution || deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING'" v-if="deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' || deployment['status'] == 'IN PROGRESS'" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
+          <!-- <v-btn :disabled="stop_execution || deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING'" v-if="deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' || deployment['status'] == 'IN PROGRESS'" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn> -->
+          <v-btn :disabled="deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING'" v-if="deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' || deployment['status'] == 'IN PROGRESS'" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
         </v-toolbar-items>
         <v-divider v-if="'status' in deployment" class="mx-3" inset vertical></v-divider>
         
@@ -413,7 +413,14 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <div class="subtitle-1" style="margin-bottom:10px">{{ action_dialog_text }}</div>
+                <div v-if="action_dialog_text.length > 0" class="subtitle-1" style="margin-bottom:10px">{{ action_dialog_text }}</div>
+                <div v-if="action_dialog_mode == 'stop'">
+                  <div class="subtitle-1 font-weight-medium">METHOD</div>
+                  <v-radio-group v-model="stop_execution_mode" hide-details style="margin-top:10px; margin-bottom:20px;">
+                    <v-radio label="Graceful - Wait current databases to finish." value="graceful" color="warning"></v-radio>
+                    <v-radio label="Forceful - Do not wait current databases to finish and stop ongoing queries." value="forceful" color="error"></v-radio>
+                  </v-radio-group>
+                </div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn color="#00b16a" @click="actionSubmit()">Confirm</v-btn>
@@ -593,6 +600,7 @@
 
       // Executions Flag
       stop_execution: false,
+      stop_execution_mode: 'graceful',
       start_execution: false,
       show_results: false,
 
@@ -984,7 +992,7 @@
       stop() {
         this.action_dialog_mode = 'stop'
         this.action_dialog_title = 'STOP EXECUTION'
-        this.action_dialog_text = 'Are you sure you want to stop the current execution?'
+        this.action_dialog_text = ''
         this.action_dialog = true
       },
       actionSubmit() {
@@ -1014,19 +1022,18 @@
         })
       },
       actionSubmitStop() {
-        if (this.deployment['status'] != 'IN PROGRESS') this.notification('The execution has already finished.', 'primary')
+        if (!(['IN PROGRESS','STOPPING'].includes(this.deployment['status']))) this.notification('The execution has already finished.', 'primary')
         else {
           this.notification('Stopping the execution. Please wait...', 'primary')
           this.stop_execution = true
 
           // Build parameters
-          const path = '/deployments/' + this.deployment['mode'].toLowerCase() +  '/stop'
+          const path = '/deployments/' + this.deployment['mode'].toLowerCase() + '/stop'
           const payload = {
-            execution_id: this.deployment['execution_id']
+            execution_id: this.deployment['execution_id'],
+            mode: this.stop_execution_mode
           }
           axios.post(path, payload)
-          .then(() => {
-          })
           .catch((error) => {
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message, 'error')

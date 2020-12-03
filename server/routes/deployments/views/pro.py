@@ -151,6 +151,10 @@ class Pro:
             # Get Request Json
             deployment_json = request.get_json()
 
+            # Check params
+            if 'mode' not in deployment_json:
+                return jsonify({'message': 'Mode parameter required'}), 400
+
             # Check deployment authority
             authority = self._deployments_pro.getUser(deployment_json['execution_id'])
             if len(authority) == 0:
@@ -159,7 +163,7 @@ class Pro:
                 return jsonify({'message': 'Insufficient Privileges'}), 400
 
             # Call Auxiliary Method
-            return self.__stop(user, deployment_json)
+            return self.__stop(deployment_json)
 
         @deployments_pro_blueprint.route('/deployments/pro/public', methods=['POST'])
         @jwt_required
@@ -433,7 +437,7 @@ class Pro:
         # Return Successful Message
         return jsonify({'data': response, 'message': 'Deployment Launched'}), 200
 
-    def __stop(self, user, data):
+    def __stop(self, data):
         # Get the deployment pid
         deployment = self._deployments_pro.getPid(data['execution_id'])[0]
 
@@ -442,7 +446,10 @@ class Pro:
 
         # Stop the execution
         try:
-            os.kill(deployment['pid'], signal.SIGINT)
+            if data['mode'] == 'graceful':
+                os.kill(deployment['pid'], signal.SIGINT)
+            elif data['mode'] == 'forceful':
+                os.kill(deployment['pid'], signal.SIGTERM)
         except OSError as e:
             pass
         finally:
