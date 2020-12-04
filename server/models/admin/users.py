@@ -40,12 +40,28 @@ class Users:
 
     def delete(self, users):
         for user in users:
+            self._sql.execute("UPDATE users SET disabled = 1 WHERE username = %s", (user))
+            self._sql.execute("DELETE dq deployments_queued dq JOIN deployments_basic db ON db.id = dq.execution_id WHERE dq.execution_mode = 'basic'")
+            self._sql.execute("DELETE dq deployments_queued dq JOIN deployments_pro dp ON dp.id = dq.execution_id WHERE dq.execution_mode = 'pro'")
+            self._sql.execute("DELETE df deployments_finished df JOIN deployments_basic db ON db.id = df.execution_id WHERE df.execution_mode = 'basic'")
+            self._sql.execute("DELETE df deployments_finished df JOIN deployments_pro dp ON dp.id = df.execution_id WHERE df.execution_mode = 'pro'")
+            self._sql.execute("DELETE db deployments_basic db JOIN deployments d ON d.id = db.deployment_id JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE dp deployments_pro dp JOIN deployments d ON d.id = dp.deployment_id JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE d FROM deployments d JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE r FROM releases JOIN users u ON u.id = r.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE n FROM notifications n JOIN users u ON u.id = n.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE m FROM monitoring m JOIN users u ON u.id = m.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE ms FROM monitoring_settings ms JOIN users u ON u.id = ms.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE csq FROM client_saved_queries csq JOIN users u ON u.id = csq.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE cs FROM client_settings cs JOIN users u ON u.id = cs.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE cs FROM client_servers cs JOIN users u ON u.id = cs.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE cf FROM client_folders cf JOIN users u ON u.id = cf.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE es FROM environment_servers es JOIN servers s ON s.id = es.server_id AND s.shared = 0 JOIN users u ON u.id = s.owner_id AND u.username = %s", (user))
+            self._sql.execute("DELETE s FROM servers JOIN users u ON u.id = s.owner_id AND u.username = %s WHERE s.shared = 0", (user))
+            self._sql.execute("DELETE a FROM auxiliary JOIN users u ON u.id = a.owner_id AND u.username = %s WHERE a.shared = 0", (user))
+            self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.shared = 0 JOIN users u ON u.id = e.owner_id AND u.username = %s", (user))
+            self._sql.execute("DELETE e FROM environments e JOIN users u ON u.id = e.user_id AND u.username = %s WHERE e.shared = 0", (user))
+            self._sql.execute("DELETE go FROM group_owners go JOIN users u ON u.id = go.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE FROM users WHERE username = %s", (user))
 
     def exist(self, username):

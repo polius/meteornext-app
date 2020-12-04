@@ -1,5 +1,5 @@
 import time
-import schedule
+# import schedule
 import threading
 from connectors.mysql import MySQL
 from connectors.postgresql import PostgreSQL
@@ -13,10 +13,11 @@ class Connections:
         t.start()
 
     def __scheduler(self):
-        schedule.every(self._time_to_live).seconds.do(self.__close_active_connections)
+        # schedule.every(self._time_to_live).seconds.do(self.__close_active_connections)
         while True:
-            schedule.run_pending()
-            time.sleep(1)
+            # schedule.run_pending()
+            self.__close_active_connections()
+            time.sleep(self._time_to_live)
 
     def __close_active_connections(self):
         now = time.time()

@@ -8,7 +8,7 @@ class Deployments_Pro:
 
     def get(self, execution_id):
         query = """
-            SELECT d.id, p.id AS 'execution_id', 'PRO' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', p.code, p.method, p.status, q.queue, p.created, p.started, p.scheduled, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.url, p.uri, p.engine, p.public
+            SELECT d.id, p.id AS 'execution_id', 'PRO' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', p.code, p.method, p.status, p.stopped, q.queue, p.created, p.started, p.scheduled, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.url, p.uri, p.engine, p.public
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id
             LEFT JOIN releases r ON r.id = d.release_id
@@ -46,13 +46,13 @@ class Deployments_Pro:
         """
         self._sql.execute(query, (deployment['environment'], deployment['group_id'], deployment['code'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
 
-    def updateStatus(self, deployment_id, status):
-        query = """
-            UPDATE deployments_pro
-            SET `status` = %s
-            WHERE id = %s
-        """
-        self._sql.execute(query, (status, deployment_id))
+    def updateStatus(self, deployment_id, status, stopped=None):
+        if stopped is None:
+            query = "UPDATE deployments_pro SET `status` = %s WHERE id = %s"
+            self._sql.execute(query, (status, deployment_id))
+        else:
+            query = "UPDATE deployments_pro SET `status` = %s, `stopped` = %s WHERE id = %s"
+            self._sql.execute(query, (status, stopped, deployment_id))
 
     def getExecutions(self, deployment_id):
         query = """
