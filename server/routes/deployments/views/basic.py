@@ -78,7 +78,7 @@ class Basic:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Check user authority
-            authority = self._deployments.getUser(request.args['deployment_id'])
+            authority = self._deployments_basic.getUser(request.args['deployment_id'])
             if len(authority) == 0:
                 return jsonify({'message': 'This deployment does not exist'}), 400
             elif authority[0]['id'] != user['id'] and not user['admin']:

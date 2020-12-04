@@ -75,7 +75,7 @@ class Deployments_Pro:
     def getUser(self, execution_id):
         query = """
             SELECT u.id, u.group_id
-            FROM deployments_basic p
+            FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id
             JOIN users u ON u.id = d.user_id
             WHERE p.id = %s

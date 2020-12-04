@@ -2,8 +2,11 @@ import os
 import sys
 import time
 import pymysql
+import paramiko
 import warnings
+import sshtunnel
 import threading
+from io import StringIO
 from collections import OrderedDict
 from pymysql.cursors import DictCursorMixin, Cursor
 
@@ -13,6 +16,7 @@ class OrderedDictCursor(DictCursorMixin, Cursor):
 class mysql:
     def __init__(self, server):
         self._server = server
+        self._tunnel = None
         self._sql = None
 
     def start(self):
@@ -31,9 +35,19 @@ class mysql:
                 return
 
             try:
+                # Start SSH Tunnel
+                if 'ssh' in self._server and self._server['ssh']['enabled']:
+                    sshtunnel.SSH_TIMEOUT = 5.0
+                    sshtunnel.TUNNEL_TIMEOUT = 5.0
+                    pkey = paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']))
+                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']))
+                    self._tunnel.start()
+
                 # Start SQL Connection
+                hostname = '127.0.0.1' if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['hostname']
+                port = self._tunnel.local_bind_port if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['port']
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-                self._sql = pymysql.connect(host=self._server['sql']['hostname'], port=self._server['sql']['port'], user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False)
+                self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False)
                 return
 
             except Exception as e:
@@ -56,7 +70,12 @@ class mysql:
         except Exception:
             pass
 
-    def execute(self, query, args=None, database=None):
+        try:
+            self._tunnel.stop()
+        except Exception:
+            pass
+
+    def execute(self, query, args=None, database=None, retry=True):
         try:
             # Execute the query and return results
             return self.__execute_query(query, args, database)
@@ -65,11 +84,12 @@ class mysql:
             raise Exception(error.args[1])
 
         except Exception as e:
-            # Reconnect SSH + SQL
-            self.start()
+            if retry:
+                # Reconnect
+                self.start()
 
-            # Retry the query
-            return self.__execute_query(query, args, database)
+                # Retry the query
+                return self.__execute_query(query, args, database)
 
         except KeyboardInterrupt:
             self.rollback()

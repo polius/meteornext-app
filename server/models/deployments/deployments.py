@@ -178,15 +178,6 @@ class Deployments:
         """
         self._sql.execute(query, (deployment['id'], user_id, deployment['release'], user_id))
 
-    def getUser(self, deployment_id):
-        query = """
-            SELECT u.id, u.group_id
-            FROM deployments d
-            JOIN users u ON u.id = d.user_id
-            WHERE d.id = %s
-        """
-        return self._sql.execute(query, (deployment_id))
-
     def getResults(self, uri):
         query = """
             SELECT d.user_id, r.*

@@ -67,7 +67,7 @@ class deploy_blueprint:
                 return
 
             # Get all server databases
-            conn_data = {"ssh": self._region['ssh'], "sql": server}
+            conn_data = {"sql": server}
             conn = connector(conn_data)
             conn.start()
             databases = conn.get_all_databases()
