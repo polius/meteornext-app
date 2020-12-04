@@ -8,10 +8,9 @@
           <v-btn v-if="'status' in deployment" text title="Show Parameters" @click="parameters()"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
           <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="padding-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
           <v-btn :disabled="deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING' || deployment['status'] == 'QUEUED'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit execution' : 'Re-Deploy with other parameters'" @click="edit()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
-          <v-divider v-if="start_execution || deployment['status'] == 'STARTING' || deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" class="mx-3" inset vertical></v-divider>
+          <v-divider v-if="start_execution || deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="start_execution" v-if="deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED'" text title="Start Execution" @click="start()"><v-icon small style="padding-right:10px">fas fa-play</v-icon>START</v-btn>
-          <!-- <v-btn :disabled="stop_execution || deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING'" v-if="deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' || deployment['status'] == 'IN PROGRESS'" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn> -->
-          <v-btn :disabled="deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || (deployment['status'] == 'STOPPING' && deployment['stopped'] == 'forceful')" v-if="deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' || deployment['status'] == 'IN PROGRESS'" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
+          <v-btn :disabled="deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || (deployment['status'] == 'STOPPING' && deployment['stopped'] == 'forceful')" v-if="deployment['status'] == 'QUEUED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
         </v-toolbar-items>
         <v-divider v-if="'status' in deployment" class="mx-3" inset vertical></v-divider>
         
@@ -757,6 +756,7 @@
         this.deployment['method'] = data['method'].toLowerCase()
         if (this.deployment['status'] != data['status']) this.getExecutions()
         this.deployment['status'] = data['status']
+        this.deployment['stopped'] = data['stopped']
         this.deployment['queue'] = data['queue']
         this.deployment['created'] = data['created']
         this.deployment['scheduled'] = data['scheduled']
@@ -993,6 +993,7 @@
         this.action_dialog_mode = 'stop'
         this.action_dialog_title = 'STOP EXECUTION'
         this.action_dialog_text = ''
+        this.stop_execution_mode = (this.deployment['stopped'] == 'graceful') ? 'forceful' : 'graceful' 
         this.action_dialog = true
       },
       actionSubmit() {
