@@ -37,7 +37,7 @@ class deploy_queries:
 
     def start_sql_connection(self, server):
         self._server = server
-        connection = {'ssh': self._region['ssh'], 'sql': server}
+        connection = {'sql': server}
         self._sql = connector(connection)
         self._sql.start()
 

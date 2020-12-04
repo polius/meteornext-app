@@ -38,9 +38,9 @@ class blueprint:
     ########################
     # User Defined Methods #
     ########################
-    def __search(self, item, key_name, value_name):
+    def __search(self, item, key, value):
         # Search a key value in a list of dictionaries
-        return [i for i in item if i[key_name] == value_name]
+        return [i for i in item if i[key] == value]
 
     def __str2dict(self, data):
         # Convert a string representation of a dictionary to a dictionary
