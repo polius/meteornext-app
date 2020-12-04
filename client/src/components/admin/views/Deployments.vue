@@ -143,7 +143,7 @@ export default {
     // Filter Dialog
     filter_dialog: false,
     filter_dialog_data: {},
-    deployment_modes: ['Basic','Pro','Inbenta'],
+    deployment_modes: ['Basic','Pro'],
     deployment_status: ['CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED'],
 
     // Date / Time Picker
@@ -250,7 +250,6 @@ export default {
     getModeColor (mode) {
       if (mode == 'BASIC') return '#eb974e'
       else if (mode == 'PRO') return 'rgb(235, 95, 93)'
-      else if (mode == 'INBENTA') return '#049372'
     },
     getMethodColor (method) {
       if (method == 'DEPLOY') return '#f44336'
