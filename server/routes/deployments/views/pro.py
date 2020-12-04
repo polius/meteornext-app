@@ -152,7 +152,7 @@ class Pro:
             deployment_json = request.get_json()
 
             # Check params
-            if 'mode' not in deployment_json:
+            if 'mode' not in deployment_json or deployment_json['mode'] not in ['graceful','forceful']:
                 return jsonify({'message': 'Mode parameter required'}), 400
 
             # Check deployment authority
@@ -442,7 +442,7 @@ class Pro:
         deployment = self._deployments_pro.getPid(data['execution_id'])[0]
 
         # Update Execution Status
-        self._deployments_pro.updateStatus(data['execution_id'], 'STOPPING')
+        self._deployments_pro.updateStatus(data['execution_id'], 'STOPPING', data['mode'])
 
         # Stop the execution
         try:
