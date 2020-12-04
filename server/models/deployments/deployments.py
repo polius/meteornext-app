@@ -180,9 +180,10 @@ class Deployments:
 
     def getUser(self, deployment_id):
         query = """
-            SELECT user_id
-            FROM deployments
-            WHERE id = %s
+            SELECT u.id, u.group_id
+            FROM deployments d
+            JOIN users u ON u.id = d.user_id
+            WHERE d.id = %s
         """
         return self._sql.execute(query, (deployment_id))
 
