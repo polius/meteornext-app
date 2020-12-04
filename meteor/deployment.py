@@ -94,15 +94,12 @@ class deployment:
             return 1 if queries_failed else 0
 
         except KeyboardInterrupt:
-            # Supress CTRL+C events
             signal.signal(signal.SIGINT,signal.SIG_IGN)
             if self._sigterm:
                 self.__terminate_deployment()
             else:
                 self.__interrupt_deployment()
-            # Enable CTRL+C events
             signal.signal(signal.SIGINT, signal.default_int_handler)
-            # Raise KeyboardInterrupt
             raise
         finally:
             self._time = time.time()
