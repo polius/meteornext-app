@@ -100,7 +100,7 @@ class Pro:
             authority = self._deployments.getUser(request.args['deployment_id'])
             if len(authority) == 0:
                 return jsonify({'message': 'This deployment does not exist'}), 400
-            elif authority[0]['user_id'] != user['id'] and not user['admin']:
+            elif authority[0]['id'] != user['id'] and not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 400
 
             # Get deployment executions
@@ -128,7 +128,7 @@ class Pro:
             authority = self._deployments_pro.getUser(deployment_json['execution_id'])
             if len(authority) == 0:
                 return jsonify({'message': 'This deployment does not exist'}), 400
-            elif authority[0]['user_id'] != user['id'] and not user['admin']:
+            elif authority[0]['id'] != user['id'] and not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 400
 
             # Call Auxiliary Method
@@ -159,7 +159,7 @@ class Pro:
             authority = self._deployments_pro.getUser(deployment_json['execution_id'])
             if len(authority) == 0:
                 return jsonify({'message': 'This deployment does not exist'}), 400
-            elif authority[0]['user_id'] != user['id'] and not user['admin']:
+            elif authority[0]['id'] != user['id'] and not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 400
 
             # Call Auxiliary Method
@@ -186,7 +186,7 @@ class Pro:
             authority = self._deployments_pro.getUser(deployment_json['execution_id'])
             if len(authority) == 0:
                 return jsonify({'message': 'This deployment does not exist'}), 400
-            elif authority[0]['user_id'] != user['id'] and not user['admin']:
+            elif authority[0]['id'] != user['id'] and not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 400
 
             # Change deployment public value
@@ -244,14 +244,14 @@ class Pro:
         authority = self._deployments_pro.getUser(request.args['execution_id'])
         if len(authority) == 0:
             return jsonify({'message': 'This deployment does not exist'}), 400
-        elif authority[0]['user_id'] != user['id'] and not user['admin']:
+        elif authority[0]['id'] != user['id'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
         # Get deployment
         deployment = self._deployments_pro.get(request.args['execution_id'])
 
         # Get environments
-        environments = [i['name'] for i in self._environments.get(user['id'], user['group_id'])]
+        environments = [i['name'] for i in self._environments.get(authority[0]['id'], authority[0]['group_id'])]
 
         # Return data
         return jsonify({'deployment': deployment, 'environments': environments}), 200
@@ -316,7 +316,7 @@ class Pro:
         authority = self._deployments_pro.getUser(data['execution_id'])
         if len(authority) == 0:
             return jsonify({'message': 'This deployment does not exist'}), 400
-        elif authority[0]['user_id'] != user['id'] and not user['admin']:
+        elif authority[0]['id'] != user['id'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
         # Check Code Syntax Errors
@@ -349,7 +349,7 @@ class Pro:
         else:
             # Check Coins
             group = self._groups.get(group_id=user['group_id'])[0]
-            if not (authority[0]['user_id'] != user['id'] and user['admin']) and (user['coins'] - group['coins_execution']) < 0:
+            if not (authority[0]['id'] != user['id'] and user['admin']) and (user['coins'] - group['coins_execution']) < 0:
                 return jsonify({'message': 'Insufficient Coins'}), 400
 
             # Check logs path permissions
@@ -369,7 +369,7 @@ class Pro:
             data['execution_id'] = self._deployments_pro.post(data)
 
             # Consume Coins
-            if authority[0]['user_id'] != user['id'] and user['admin']:
+            if authority[0]['id'] != user['id'] and user['admin']:
                 coins = user['coins']
             else:
                 self._users.consume_coins(user, group['coins_execution'])
