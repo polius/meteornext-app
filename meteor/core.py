@@ -160,10 +160,11 @@ class core:
         print("+==================================================================+")
         print("|  KILL QUERIES                                                    |")
         print("+==================================================================+")
+        print("- Killing ongoing queries...")
         threads = []
         for region in self._imports.config['regions']:
             for server in region['sql']:
-                connection = {'ssh': region['ssh'], 'sql': server}
+                connection = {'name': region['name'], 'ssh': region['ssh'], 'sql': server}
                 t = threading.Thread(target=self.__kill_queries_server, args=(connection,))
                 threads.append(t)
                 t.start()
@@ -175,13 +176,14 @@ class core:
         conn.start()
         try:
             code = '/*B' + str(self._imports.config['params']['id']) + '*/' if self._imports.config['params']['mode'] == 'basic' else '/*P' + str(self._imports.config['params']['id']) + '*/'
-            queries = conn.execute(query=f"SELECT id FROM processlist WHERE info LIKE '{code}%'", database='information_schema')
+            results = conn.execute(query=f"SELECT id FROM processlist WHERE info LIKE '{code}%'", database='information_schema')
             if connection['sql']['engine'] == 'MySQL':
-                for query in queries:
-                    conn.execute(query=f"KILL {query['query_result']['id']}", retry=False)
+                for result in results['query_result']:
+                    conn.execute(query=f"KILL {result['id']}", retry=False)
             elif connection['sql']['engine'] == 'Aurora MySQL':
-                for query in queries:
-                    conn.execute(query=f"CALL mysql.rds_kill({query['query_result']['id']})", retry=False)
+                for result in results['query_result']:
+                    conn.execute(query=f"CALL mysql.rds_kill({result['id']})", retry=False)
+            print(f"- Region '{connection['name']}': {len(results['query_result'])}")
         finally:
             conn.stop()
 
