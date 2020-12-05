@@ -20,7 +20,7 @@ class Client:
         self._users = models.admin.users.Users(sql)
         self._client = models.client.client.Client(sql)
         # Init connections
-        self._connections = Connections()
+        self._connections = Connections(app)
 
     def blueprint(self):
         # Init blueprint

@@ -64,6 +64,7 @@ class mysql:
             raise error
 
     def stop(self):
+        self.rollback()
         try:
             self._sql.close()
         except Exception:
@@ -84,16 +85,11 @@ class mysql:
 
         except Exception as e:
             if retry:
-                # Reconnect
                 self.start()
-
-                # Retry the query
-                return self.__execute_query(query, args, database)
-
-        except KeyboardInterrupt:
-            self.rollback()
-            self.close()
-            raise KeyboardInterrupt("Program Interrupted by User. Rollback successfully performed.")
+                return self.execute(query, args, database, retry=False)
+            else:
+                self.stop()
+                raise
 
     def __execute_query(self, query, args, database):
         # Select the database

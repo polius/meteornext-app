@@ -19,17 +19,18 @@ class Cron:
         self._sql = sql
         self._monitoring_ready = True
 
-    def start(self):
-        # Init Crons
-        schedule.every(10).seconds.do(self.__executions)
-        schedule.every().day.at("00:00").do(self.__coins)
-        schedule.every().day.at("00:00").do(self.__logs)
-        schedule.every().day.at("00:00").do(self.__monitoring_clean)
-        schedule.every(2).seconds.do(self.__monitoring)
+        @app.before_first_request
+        def start():
+            # Init Crons
+            schedule.every(10).seconds.do(self.__executions)
+            schedule.every().day.at("00:00").do(self.__coins)
+            schedule.every().day.at("00:00").do(self.__logs)
+            schedule.every().day.at("00:00").do(self.__monitoring_clean)
+            schedule.every(2).seconds.do(self.__monitoring)
 
-        # Start Cron Listener
-        t = threading.Thread(target=self.__run_schedule)
-        t.start()
+            # Start Cron Listener
+            t = threading.Thread(target=self.__run_schedule)
+            t.start()
 
     def __run_schedule(self):
         while True:

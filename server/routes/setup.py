@@ -47,7 +47,6 @@ class Setup:
         self._logs_folder = "{}/logs".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/logs".format(os.path.dirname(sys.executable))
         self._blueprints = []
         self._license = None
-        self._cron = None
         
         # Start Setup
         try:
@@ -67,8 +66,7 @@ class Setup:
             self._conf = {}
         else:
             # Init cron
-            self._cron = Cron(self._app, self._license, self._blueprints, sql)
-            self._cron.start()
+            Cron(self._app, self._license, self._blueprints, sql)
 
     def blueprint(self):
         # Init blueprint
@@ -202,8 +200,7 @@ class Setup:
             self._conf['license']['uuid'] = str(uuid.getnode())
 
             # Init cron
-            self._cron = Cron(self._app, self._license, self._blueprints, sql)
-            self._cron.start()
+            Cron(self._app, self._license, self._blueprints, sql)
 
             # Build return message
             return jsonify({'message': 'Setup Finished Successfully'}), 200
