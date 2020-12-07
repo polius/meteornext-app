@@ -11,9 +11,9 @@
           <v-btn text @click="exportProcesslist" style="height:100%"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-btn text @click="stopProcesslist" :title="stopped ? 'Start processlist retrieval' : 'Stop processlist retrieval'" style="height:100%"><v-icon small style="padding-right:10px">{{ stopped ? 'fas fa-play' : 'fas fa-stop'}}</v-icon>{{ stopped ? 'START' : 'STOP' }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <div class="body-1">{{ rowCount + ' Connection(s)' }}</div>
+          <div><span class="body-1 font-weight-medium">{{ rowCount }}</span><span class="body-1"> Connection(s)</span></div>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-text-field @input="onSearch" v-model="search" label="Search" solo color="white" dense background-color="transparent" hide-details></v-text-field>
+          <v-text-field @input="onSearch" v-model="search" label="Search" color="white" append-icon="search" single-line hide-details></v-text-field>
           <v-divider class="mx-3" inset vertical style="margin-right:0px!important"></v-divider>
           <v-btn @click="dialog = false" icon style="margin-left:5px;"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
