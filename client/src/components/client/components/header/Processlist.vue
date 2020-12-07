@@ -290,7 +290,7 @@ export default {
       this.analyzeGridApi.setQuickFilter(value)
     },
     getProcesslist() {
-      if (this.stopped) return
+      if (this.stopped || !this.dialog) { clearTimeout(this.timer); return }
       else if (this.gridApi == null) {
         clearTimeout(this.timer)
         this.timer = setTimeout(this.getProcesslist, 1000)

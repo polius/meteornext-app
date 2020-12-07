@@ -6,7 +6,7 @@
           <div class="body-2">
             <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
             <span class="body-2">{{ item.name }}</span>
-            <span v-show="item.folder != null" class="body-2" style="font-weight:300; margin-left:8px;">{{ '(' + item.folder + ')' }}</span>
+            <!-- <span v-show="item.folder != null" class="body-2" style="font-weight:300; margin-left:8px;">{{ '(' + item.folder + ')' }}</span> -->
           </div>
         </template>
         <template v-slot:[`item`]="{ item }">
