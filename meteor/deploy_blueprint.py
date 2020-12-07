@@ -192,10 +192,13 @@ class deploy_blueprint:
         current_thread = threading.current_thread()
 
         # Commit/Rollback queries
-        if error:
-            query_instance.rollback()
-        else:
-            query_instance.commit()
+        try:
+            if error:
+                query_instance.rollback()
+            else:
+                query_instance.commit()
+        except Exception:
+            pass
 
         # Store Logs
         execution_log_path = "{0}/execution/{1}/{2}/{3}.json".format(self._args.path, self._region['name'], server['name'], database)
