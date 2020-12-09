@@ -173,7 +173,6 @@ export default {
     ], { path: 'client/components' }),
     ...mapFields([
       'index',
-      'database',
       'databaseItems',
       'tableItems',
       'sidebarItems',
@@ -376,6 +375,7 @@ export default {
       this.serversList = data.servers.map(x => ({ id: x.id, name: x.name, shared: x.shared, folder: x.folder_name }))
     },
     getDatabases(server) {
+      this.serverSearch = server
       this.loadingServer = true
       // Retrieve Databases
       const payload = {
