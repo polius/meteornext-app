@@ -12,7 +12,7 @@
         </Pane>
         <Pane size="50" min-size="0">
           <!-- suppressColumnVirtualisation -->
-          <ag-grid-vue ref="agGridClient" suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
+          <ag-grid-vue ref="agGridClient" suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" @row-data-changed="onRowDataChanged" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
           <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
             <v-list style="padding:0px;">
               <v-list-item-group v-model="contextMenuModel">
@@ -636,6 +636,9 @@ export default {
           setTimeout(() => { this.gridApi.client.applyTransactionAsync({ add: [item]})}, 0)
         }
       })
+    },
+    onRowDataChanged() {
+      if (this.columnApi.client != null) this.resizeTable()
     },
     resizeTable() {
       let allColumnIds = this.columnApi.client.getAllColumns().map(v => v.colId)
