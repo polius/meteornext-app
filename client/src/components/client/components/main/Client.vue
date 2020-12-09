@@ -380,10 +380,8 @@ export default {
           if (chars[chars.length-1] == "'") chars.pop()
           else chars.push("'")
         }
-        else if (chars.length == 0 && editorText[i] == "#") {
-          if (chars[chars.length-1] == '\n') chars.pop()
-          else chars.push("#")
-        }
+        else if (chars.length == 0 && editorText[i] == "#") chars.push("#")
+        else if (editorText[i] == "\n" && chars[chars.length-1] == '#') chars.pop()
       }
       if (start < i && editorText.substring(start, i).trim().length > 0) rawQueries.push({"begin": start, "end": i})
 
