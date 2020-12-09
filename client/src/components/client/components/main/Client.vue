@@ -521,6 +521,7 @@ export default {
       })
     },
     executeQuery(payload) {
+      setTimeout(() => { this.gridApi.client.showLoadingOverlay() }, 0)
       // Execute queries
       const index = this.index
       axios.post('/client/execute', payload)
