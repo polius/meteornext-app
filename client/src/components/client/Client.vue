@@ -169,6 +169,10 @@ export default {
     this.$store.dispatch('client/reset')
     window.removeEventListener('beforeunload', this.beforeUnload)
   },
+  // eslint-disable-next-line
+  beforeRouteLeave(to, from, next) {
+    next('/client')
+  },
   methods: {
     getSettings() {
       axios.get('/client/settings')
