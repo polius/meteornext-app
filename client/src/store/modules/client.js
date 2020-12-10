@@ -205,17 +205,17 @@ const mutations = {
     state.components.editor.setValue(state.connections[state.currentConn].clientQueries, 1)
   },
   addHistory(state, data) {
+    const server = 'server' in data ? data['server'] : state.connections[state.currentConn].server
     const moment = require('moment')
-    const server = state.connections[state.currentConn].server
     for (let query of data['queries']) {
       state.history.unshift({
         'section': data['section'],
         'time': moment().format('YYYY-MM-DD HH:mm:ss'),
         'connection': '[' + server.engine + ' ' + server.version + '] ' + server.name,
-        'database': state.connections[state.currentConn].database,
-        'query': query,
-        'status': data['status'],
-        'error': data['error']
+        'database': query['database'],
+        'query': query['query'],
+        'status': 'error' in query ? false : true,
+        'error': 'error' in query ? query['error'] : null
       })
     }
   },

@@ -238,11 +238,11 @@ class Client:
             multiple = type(client_json['database']) == list and len(client_json['database']) == len(client_json['queries'])
 
             for index, query in enumerate(client_json['queries']):
+                database = client_json['database'][index] if multiple else client_json['database']
                 try:
-                    database = client_json['database'][index] if multiple else client_json['database']
                     result = conn.execute(query=query, database=database)
                     result['query'] = query
-
+                    result['database'] = database
                     # Get table metadata
                     if 'table' in client_json:
                         columns = conn.get_column_names(db=database, table=client_json['table'])
@@ -256,7 +256,7 @@ class Client:
 
                 except Exception as e:
                     errors = True
-                    result = {'query': query, 'error': str(e)}
+                    result = {'query': query, 'database': database, 'error': str(e)}
                     execution.append(result)
                     if ('executeAll' not in client_json or not client_json['executeAll']):
                         return jsonify({'data': self.__json(execution)}), 400
