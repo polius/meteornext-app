@@ -482,9 +482,6 @@ export default {
       new Promise((resolve) => { this.applyRights(resolve, queries) })
     },
     applyRights(resolve, queries) {
-      // Add queries to history
-      const history = { section: 'rights', queries } 
-      this.$store.dispatch('client/addHistory', history)
       // Execute generated queries
       this.loading = true
       const payload = {
@@ -494,12 +491,14 @@ export default {
         queries,
         executeAll: true,
       }
+      const server = this.server
       axios.post('/client/execute', payload)
-        .then(() => {
+        .then((response) => {
+          let data = JSON.parse(response.data.data)
           this.checkDialog = false
           EventBus.$emit('send-notification', 'Rights saved successfully', '#00b16a')
           // Add execution to history
-          const history = { section: 'rights', queries: payload.queries, status: true, error: null } 
+          const history = { section: 'rights', server: server, queries: data } 
           this.$store.dispatch('client/addHistory', history)
           // Get rights
           if (queries[0].startsWith('DROP USER')) new Promise((resolve) => { this.getRights(resolve) })
@@ -525,7 +524,7 @@ export default {
             }
             this.errorDialog = true
             // Add execution to history
-            const history = { section: 'rights', queries: payload.queries, status: false, error: data[0].error } 
+            const history = { section: 'rights', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
           }
         })

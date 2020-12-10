@@ -678,14 +678,22 @@ export default {
         database: this.database,
         queries: queries
       }
+      const server = this.server
       axios.post('/client/execute', payload)
         .then((response) => {
+          // Add execution to history
+          let data = JSON.parse(response.data.data)
+          const history = { section: 'sidebar', server: server, queries: data } 
+          this.$store.dispatch('client/addHistory', history)
           resolve(response.data)
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
+            // Add execution to history
             let data = JSON.parse(error.response.data.data)
+            const history = { section: 'sidebar', server: server, queries: data } 
+            this.$store.dispatch('client/addHistory', history)
             // Show error
             this.dialogTitle = 'Unable to apply changes'
             this.dialogText = data[0]['error']

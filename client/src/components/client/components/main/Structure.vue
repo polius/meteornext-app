@@ -209,6 +209,7 @@ export default {
         database: this.database,
         queries: [queries]
       }
+      const server = this.server
       axios.post('/client/execute', payload)
         .then((response) => {
           let current = this.connections.find(c => c['index'] == index)
@@ -222,7 +223,7 @@ export default {
           // Build BottomBar
           this.parseBottomBar(data, current)
           // Add execution to history
-          const history = { section: 'structure', queries: payload.queries, status: true, error: null } 
+          const history = { section: 'structure', server: server, queries: data } 
           this.$store.dispatch('client/addHistory', history)
           // Resolve promise
           resolve()
@@ -239,7 +240,7 @@ export default {
             this.dialogText = data[0]['error']
             this.dialog = true
             // Add execution to history
-            const history = { section: 'structure', queries: payload.queries, status: false, error: data[0]['error'] } 
+            const history = { section: 'structure', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
             // Reject promise
             reject()

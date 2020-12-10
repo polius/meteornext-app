@@ -474,20 +474,22 @@ export default {
         database: this.database,
         queries: queries
       }
+      const server = this.server
       axios.post('/client/execute', payload)
         .then((response) => {
+          // Get Response Data
+          let data = JSON.parse(response.data.data)
           // Remove Frontend Rows
           this.gridApi.content.applyTransaction({ remove: this.gridApi.content.getSelectedRows() })
           // Build BottomBar
-          this.parseContentBottomBar(JSON.parse(response.data.data))
+          this.parseContentBottomBar(data)
           // Close Dialog
           this.dialog = false
           // Add execution to history
-          const history = { section: 'content', queries: payload.queries, status: true, error: null } 
+          const history = { section: 'content', server: server, queries: data } 
           this.$store.dispatch('client/addHistory', history)
         })
         .catch((error) => {
-          console.log(error)
           this.gridApi.content.hideOverlay()
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
@@ -504,7 +506,7 @@ export default {
             // Build BottomBar
             this.parseContentBottomBar(data)
             // Add execution to history
-            const history = { section: 'content', queries: payload.queries, status: false, error: data[0]['error'] } 
+            const history = { section: 'content', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
           }
         })
@@ -589,6 +591,7 @@ export default {
           database: this.database,
           queries: [query]
         }
+        const server = server
         axios.post('/client/execute', payload)
           .then((response) => {
             this.gridApi.content.hideOverlay()
@@ -598,11 +601,10 @@ export default {
             // Check AUTO_INCREMENTs
             if (data[0].query.startsWith('INSERT') && this.contentPks.length > 0) node.setDataValue(this.contentPks[0], data[0].lastRowId)
             // Add execution to history
-            const history = { section: 'content', queries: payload.queries, status: true, error: null } 
+            const history = { section: 'content', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
           })
           .catch((error) => {
-            console.log(error)
             this.gridApi.content.hideOverlay()
             if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else {
@@ -623,7 +625,7 @@ export default {
               this.currentCellEditNode = node
               this.currentCellEditValues = values
               // Add execution to history
-              const history = { section: 'content', queries: payload.queries, status: false, error: data[0]['error'] } 
+              const history = { section: 'content', server: server, queries: data } 
               this.$store.dispatch('client/addHistory', history)
             }
           })
@@ -695,11 +697,13 @@ export default {
         table: this.sidebarSelected[0]['name'],
         queries: ['SELECT * FROM ' + this.sidebarSelected[0]['name'] + condition + pagination + ';' ]
       }
+      const server = server
       axios.post('/client/execute', payload)
         .then((response) => {
-          this.parseContentExecution(JSON.parse(response.data.data))
+          let data = JSON.parse(response.data.data)
+          this.parseContentExecution(data)
           // Add execution to history
-          const history = { section: 'content', queries: payload.queries, status: true, error: null } 
+          const history = { section: 'content', server: server, queries: data } 
           this.$store.dispatch('client/addHistory', history)
         })
         .catch((error) => {
@@ -710,7 +714,7 @@ export default {
             let data = JSON.parse(error.response.data.data)
             EventBus.$emit('send-notification', data[0]['error'], 'error')
             // Add execution to history
-            const history = { section: 'content', queries: payload.queries, status: false, error: data[0]['error'] } 
+            const history = { section: 'content', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
           }
         })

@@ -33,15 +33,16 @@
     <!---------------->
     <div style="height:35px; background-color:#303030; border-top:2px solid #2c2c2c;">
       <v-row no-gutters style="flex-wrap: nowrap;">
-        <v-col cols="auto" v-if="clientItems.length > 0">
-          <v-btn @click="exportRows" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
+        <v-col cols="auto">
+          <v-btn :disabled="clientItems.length == 0" @click="exportRows" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-          <v-btn @click="resizeTable" text small title="Compress columns" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-compress</v-icon></v-btn>
+          <v-btn :disabled="clientItems.length == 0" @click="resizeTable" text small title="Compress columns" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-compress</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
           <div class="body-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            <v-icon v-if="bottomBar.client['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:7px;">fas fa-check-circle</v-icon>
+            <v-icon v-if="bottomBar.client['status']=='executing'" title="Executing" small style="color:rgb(250, 130, 49); padding-bottom:1px; padding-right:7px;">fas fa-spinner</v-icon>
+            <v-icon v-else-if="bottomBar.client['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:7px;">fas fa-check-circle</v-icon>
             <v-icon v-else-if="bottomBar.client['status']=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:7px;">fas fa-times-circle</v-icon>
             <span :title="bottomBar.client['text']">{{ bottomBar.client['text'] }}</span>
           </div>
@@ -442,32 +443,33 @@ export default {
         this.editorMarkers.push(marker)
       }
     },
-    initExecution() {
+    initExecution(payload) {
+      const queries = payload.queries.map(x => x.endsWith(';') ? x : x + ';').join('\n')
       this.clientHeaders = []
       this.clientItems = []
-      this.bottomBar.client = { text: '', status: '', info: '' }   
+      this.bottomBar.client = { text: queries, status: 'executing', info: '' }   
       this.editor.completer.detach()
     },
     runQuery() {
       this.clientExecuting = 'query'
-      this.initExecution()
       const payload = {
         connection: this.index,
         server: this.server.id,
         database: this.database,
         queries: this.parseQueries()
       }
+      this.initExecution(payload)
       this.executeQuery(payload)
     },
     explainQuery() {
       this.clientExecuting = 'explain'
-      this.initExecution()
       const payload = {
         connection: this.index,
         server: this.server.id,
         database: this.database,
         queries: this.parseQueries().reduce((acc, val) => { acc.push('EXPLAIN ' + val); return acc }, [])
       }
+      this.initExecution(payload)
       this.executeQuery(payload)
     },
     beautifyQuery() {
@@ -521,8 +523,10 @@ export default {
       })
     },
     executeQuery(payload) {
-      setTimeout(() => { this.gridApi.client.showLoadingOverlay() }, 0)
+      const gridApi = this.gridApi.client
+      setTimeout(() => { gridApi.showLoadingOverlay() }, 0)
       // Execute queries
+      const server = this.server
       const index = this.index
       axios.post('/client/execute', payload)
         .then((response) => {
@@ -538,10 +542,11 @@ export default {
           this.editor.moveCursorTo(cursor.row, cursor.column)
           current.clientExecuting = null
           // Add execution to history
-          const history = { section: 'client', queries: payload.queries, status: true, error: null } 
+          const history = { section: 'client', server: server, queries: data } 
           this.$store.dispatch('client/addHistory', history)
         })
         .catch((error) => {
+          gridApi.hideOverlay()
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -562,7 +567,7 @@ export default {
             if (this.index == index) this.showDialog(dialogOptions)
             current.clientExecuting = null
             // Add execution to history
-            const history = { section: 'client', queries: payload.queries, status: false, error: data[data.length-1]['error'] } 
+            const history = { section: 'client', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
           }
         })
