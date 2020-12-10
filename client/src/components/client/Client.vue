@@ -171,7 +171,8 @@ export default {
   },
   // eslint-disable-next-line
   beforeRouteLeave(to, from, next) {
-    next('/client')
+    if(to.name == 'login') next()
+    else next('/client')
   },
   methods: {
     getSettings() {
