@@ -1,7 +1,7 @@
 <template>
   <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
     <div style="height:calc(100% - 36px)">
-      <v-autocomplete v-if="sidebarMode == 'servers'" ref="server" v-model="serverSearch" :loading="loadingServer" :disabled="loadingServer" @change="serverChanged" solo :items="serversList" item-text="name" label="Search" auto-select-first hide-details return-object background-color="#303030" height="48px" style="padding:10px;">
+      <v-autocomplete v-if="sidebarMode == 'servers'" ref="server" v-model="serverSearch" :loading="sidebarLoading || loadingServer" :disabled="loadingServer" @change="serverChanged" solo :items="serversList" item-text="name" label="Search" auto-select-first hide-details return-object background-color="#303030" height="48px" style="padding:10px;">
         <template v-slot:[`selection`]="{ item }">
           <div class="body-2">
             <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
@@ -373,6 +373,7 @@ export default {
       this.sidebarItems = servers.slice(0)
       // Parse Servers List
       this.serversList = data.servers.map(x => ({ id: x.id, name: x.name, shared: x.shared, folder: x.folder_name }))
+      this.$refs.server.focus()
     },
     getDatabases(server) {
       this.serverSearch = server
