@@ -444,10 +444,12 @@ export default {
       // Clear Tab
       this.headerTab = 0
       this.headerTabSelected = 'client'
+      // Focus Editor
+      this.editor.focus()
       // Get Objects
       new Promise((resolve, reject) => { 
         this.getObjects(database, resolve, reject)
-      }).finally(() => { this.editor.focus() })
+      })
     },
     getObjects(database, resolve, reject) {
       this.sidebarLoading = true
