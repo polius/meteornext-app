@@ -171,8 +171,12 @@ export default {
   },
   // eslint-disable-next-line
   beforeRouteLeave(to, from, next) {
-    if(to.name == 'login') next()
-    else next('/client')
+    if (to.name == 'login') next()
+    else {
+      const answer = window.confirm('Close Meteor Next - Client?')
+      if (answer) next()
+      else next(false)
+    }
   },
   methods: {
     getSettings() {
