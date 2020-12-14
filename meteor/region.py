@@ -140,19 +140,8 @@ class Region:
         # Paramiko Execute Local Command
         client = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        # for line in client.stderr:
-        #     print(line.rstrip())
-
-        # Get stdout & stderr
+        # Get stdout
         stdout = client.stdout.readlines()
-        stderr = client.stderr.readlines()
-
-        # Log response
-        if path:
-            with open(path + '.txt', "a") as myfile:
-                myfile.write(command)
-                myfile.write("\nstdout: " + str(stdout))
-                myfile.write("\nstderr: " + str(stderr))
 
         # Return Execution Output
         return stdout[0] if len(stdout) > 0 else ''
@@ -178,26 +167,16 @@ class Region:
             stdin, stdout, stderr = client.exec_command(command, get_pty=False)
             stdin.close()
 
-            # for line in stderr:
-            #     print(line.rstrip())
-
-            # Get stdout & stderr
+            # Get stdout
             _stdout = stdout.readlines()
-            _stderr = stderr.readlines()
-
-            # Log response
-            if path:
-                with open(path + '.txt', "a") as myfile:
-                    myfile.write(command)
-                    myfile.write("\nstdout: " + str(_stdout))
-                    myfile.write("\nstderr: " + str(_stderr))
 
             # Return Execution Output
             return _stdout[0].strip() if len(_stdout) > 0 else ''
 
         finally:
             # Paramiko Close Connection
-            client.close()
+            if client:
+                client.close()
 
     def __get(self, remote_path, local_path):
         try:

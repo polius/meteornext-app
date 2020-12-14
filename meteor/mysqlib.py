@@ -12,7 +12,7 @@ from pymysql.cursors import DictCursorMixin, Cursor
 class OrderedDictCursor(DictCursorMixin, Cursor):
     dict_type = OrderedDict
 
-class mysql:
+class MySQL:
     def __init__(self, server):
         self._server = server
         self._tunnel = None

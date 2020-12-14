@@ -142,6 +142,7 @@ class deployment:
             # Get progress
             r = Region(self._args, region)
             t = threading.Thread(target=r.get_progress)
+            t.daemon = True
             t.region = region['name']
             t.progress = {}
             threads.append(t)

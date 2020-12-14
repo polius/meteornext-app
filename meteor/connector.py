@@ -1,11 +1,11 @@
-from mysql import mysql
+from mysqlib import MySQL
 
 class connector:
     def __init__(self, server):
         self._sql = None
 
         if server['sql']['engine'] in ['MySQL','Aurora MySQL']:
-            self._sql = mysql(server)
+            self._sql = MySQL(server)
 
     def start(self):
         self._sql.start()
