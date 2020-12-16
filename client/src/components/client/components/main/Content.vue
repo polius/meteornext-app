@@ -33,7 +33,7 @@
             </v-col>
           </v-row>
         </div>
-        <ag-grid-vue ref="agGridContent" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @row-clicked="onRowClicked" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" @cell-context-menu="onContextMenu" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+        <ag-grid-vue ref="agGridContent" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @row-clicked="onRowClicked" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" @cell-context-menu="onContextMenu" @row-data-changed="onRowDataChanged" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
         <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
           <v-list style="padding:0px;">
             <v-list-item-group v-model="contextMenuModel">
@@ -406,6 +406,9 @@ export default {
       let allColumnIds = this.columnApi.content.getAllColumns().map(v => v.colId)
       this.columnApi.content.autoSizeColumns(allColumnIds)
     },
+    onRowDataChanged() {
+      if (this.columnApi.content != null) this.resizeTable()
+    },
     addRow() {
       // Clean vars
       this.currentCellEditValues = {}
@@ -631,7 +634,7 @@ export default {
           })
       }
     },
-    parseContentBottomBar(data) {     
+    parseContentBottomBar(data) {
       var elapsed = null
       if (data[data.length-1]['time'] !== undefined) {
         elapsed = 0
@@ -642,7 +645,7 @@ export default {
       }
       this.bottomBar.content['status'] = data[0]['error'] === undefined ? 'success' : 'failure'
       this.bottomBar.content['text'] = data[0]['query']
-      this.bottomBar.content['info'] = this.contentItems.length + ' records'
+      this.bottomBar.content['info'] = data[0]['rowCount'] + ' records'
       if (elapsed != null) this.bottomBar.content['info'] += ' | ' + elapsed.toFixed(3).toString() + 's elapsed'
     },
     cellEditingDiscard() {
@@ -697,7 +700,7 @@ export default {
         table: this.sidebarSelected[0]['name'],
         queries: ['SELECT * FROM ' + this.sidebarSelected[0]['name'] + condition + pagination + ';' ]
       }
-      const server = server
+      const server = this.server
       axios.post('/client/execute', payload)
         .then((response) => {
           let data = JSON.parse(response.data.data)

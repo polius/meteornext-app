@@ -3,7 +3,6 @@ import sys
 import time
 import pymysql
 import paramiko
-import warnings
 import sshtunnel
 from io import StringIO
 from collections import OrderedDict
@@ -135,11 +134,9 @@ class MySQL:
         # Prepare the cursor
         if fetch:
             with self._sql.cursor(OrderedDictCursor) as cursor:            
-                # Execute the SQL query ignoring warnings
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    start_time = time.time()
-                    cursor.execute(query, args)
+                # Execute the SQL query
+                start_time = time.time()
+                cursor.execute(query, args)
 
                 # Get the query results
                 data = cursor.fetchall()
@@ -148,10 +145,8 @@ class MySQL:
             query_data = {"data": data, "lastRowId": cursor.lastrowid, "rowCount": cursor.rowcount, "time": "{0:.3f}".format(time.time() - start_time)}
             return query_data
         else:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                self._cursor = self._sql.cursor(OrderedDictCursor)
-                self._cursor.execute(query, args)
+            self._cursor = self._sql.cursor(OrderedDictCursor)
+            self._cursor.execute(query, args)
 
     def fetch_one(self):
         if self._cursor:

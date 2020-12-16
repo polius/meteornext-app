@@ -3,7 +3,6 @@ import sys
 import time
 import pymysql
 import paramiko
-import warnings
 import sshtunnel
 import threading
 from collections import OrderedDict
@@ -77,12 +76,7 @@ class MySQL:
 
     def execute(self, query, args=None, database=None, retry=True):
         try:
-            # Execute the query and return results
             return self.__execute_query(query, args, database)
-
-        except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError) as error:
-            raise Exception(error.args[1])
-
         except Exception as e:
             if retry:
                 self.start()
@@ -98,11 +92,9 @@ class MySQL:
 
         # Prepare the cursor
         with self._sql.cursor(OrderedDictCursor) as cursor:            
-            # Execute the SQL query ignoring warnings
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                start_time = time.time()
-                cursor.execute(query, args)
+            # Execute the SQL query
+            start_time = time.time()
+            cursor.execute(query, args)
 
             # Get the query results
             query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
