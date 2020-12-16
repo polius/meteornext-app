@@ -17,7 +17,7 @@
           </div>
         </template>
       </v-autocomplete>
-      <v-autocomplete v-else ref="database" v-model="database" :disabled="sidebarLoading || databaseItems.length == 0" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete>
+      <v-autocomplete v-else ref="database" v-model="database" :loading="loadingServer" :disabled="sidebarLoading || databaseItems.length == 0" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete>
       <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
       <div v-if="sidebarMode == 'servers' || database.length > 0" style="height:100%">
@@ -208,7 +208,7 @@ export default {
       this.dialogOpened = val
       if (!val) {
         this.serverSearch = {}
-        setTimeout(() => this.$refs.server.focus(),100)
+        if (this.$refs.server !== undefined) setTimeout(() => this.$refs.server.focus(),100)
       }
     },
     sidebarMode: function(val) {
