@@ -204,24 +204,32 @@ export default {
     },
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
-        navigator.clipboard.writeText(e.value)
+        let selectedRows = this.gridApi.structure.triggers.getSelectedRows()
+        if (selectedRows.length > 1) {
+          let header = Object.keys(selectedRows[0])
+          let value = selectedRows.map(row => header.map(fieldName => row[fieldName] == null ? 'NULL' : row[fieldName]).join('\t')).join('\n')
+          navigator.clipboard.writeText(value)
+        }
+        else {
+          navigator.clipboard.writeText(e.value)
 
-        // Highlight cells
-        e.event.target.classList.add('ag-cell-highlight');
-        e.event.target.classList.remove('ag-cell-highlight-animation')
+          // Highlight cells
+          e.event.target.classList.add('ag-cell-highlight')
+          e.event.target.classList.remove('ag-cell-highlight-animation')
 
-        // Add animation
-        window.setTimeout(function () {
+          // Add animation
+          window.setTimeout(function () {
             e.event.target.classList.remove('ag-cell-highlight')
             e.event.target.classList.add('ag-cell-highlight-animation')
             e.event.target.style.transition = "background-color " + 200 + "ms"
 
             // Remove animation
             window.setTimeout(function () {
-                e.event.target.classList.remove('ag-cell-highlight-animation')
-                e.event.target.style.transition = null;
+              e.event.target.classList.remove('ag-cell-highlight-animation')
+              e.event.target.style.transition = null;
             }, 200);
-        }, 200);
+          }, 200);
+        }
       }
     },
     onCellClicked() {

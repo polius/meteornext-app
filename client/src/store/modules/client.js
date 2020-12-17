@@ -59,10 +59,9 @@ const connection = {
   infoConnection: null,
 
   // Objecs
-  objectsTab: 0,
-  tabObjectsSelected: 'databases',
-  objectsHeaders: { databases: [], tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
-  objectsItems: { databases: [], tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
+  tabObjectsSelected: 'tables',
+  objectsHeaders: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
+  objectsItems: { tables: [], views: [], triggers: [], functions: [], procedures: [], events: [] },
 
   // Rights
   rights: { sidebar: [], login: {}, server: {}, schema: [], resources: {}, syntax: '' },

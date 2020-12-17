@@ -61,8 +61,8 @@ class MySQL:
                 if self._server['ssh']['enabled']:
                     sshtunnel.SSH_TIMEOUT = 5.0
                     sshtunnel.TUNNEL_TIMEOUT = 5.0
-                    pkey = paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']))
-                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']))
+                    pkey = paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
+                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']))
                     self._tunnel.start()
 
                 # Start SQL Connection
