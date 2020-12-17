@@ -169,14 +169,13 @@ class Client:
 
             # Get Database Objects
             if 'detailed' in request.args:
-                databases = conn.get_database_info()
                 tables = conn.get_table_info(db=request.args['database'])
                 views = conn.get_view_info(db=request.args['database'])
                 triggers = conn.get_trigger_info(db=request.args['database'])
                 functions = conn.get_function_info(db=request.args['database'])
                 procedures = conn.get_procedure_info(db=request.args['database'])
                 events = conn.get_event_info(db=request.args['database'])
-                return jsonify({'databases': self.__json(databases), 'tables': self.__json(tables), 'views': self.__json(views), 'triggers': self.__json(triggers), 'functions': self.__json(functions), 'procedures': self.__json(procedures), 'events': self.__json(events)}), 200
+                return jsonify({'tables': self.__json(tables), 'views': self.__json(views), 'triggers': self.__json(triggers), 'functions': self.__json(functions), 'procedures': self.__json(procedures), 'events': self.__json(events)}), 200
             else:
                 tables = conn.get_all_tables(db=request.args['database'])
                 columns = conn.get_all_columns(db=request.args['database'])

@@ -3,10 +3,7 @@
     <!------------->
     <!-- OBJECTS -->
     <!------------->
-    <v-tabs v-model="objectsTab" show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
-      <v-tabs-slider></v-tabs-slider>
-      <v-tab @click="tabObjects('databases')"><span class="pl-2 pr-2">Databases</span></v-tab>
-      <v-divider class="mx-3" inset vertical></v-divider>
+    <v-tabs show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
       <v-tab @click="tabObjects('tables')"><span class="pl-2 pr-2">Tables</span></v-tab>
       <v-divider class="mx-3" inset vertical></v-divider>
       <v-tab @click="tabObjects('views')"><span class="pl-2 pr-2">Views</span></v-tab>
@@ -23,7 +20,6 @@
     <!---------------->
     <!-- COMPONENTS -->
     <!---------------->
-    <Databases v-show="tabObjectsSelected == 'databases'" />
     <Tables v-show="tabObjectsSelected == 'tables'" />
     <Views v-show="tabObjectsSelected == 'views'" />
     <Triggers v-show="tabObjectsSelected == 'triggers'" />
@@ -38,7 +34,6 @@ import axios from 'axios'
 import EventBus from '../../js/event-bus'
 import { mapFields } from '../../js/map-fields'
 
-import Databases from './objects/Databases'
 import Tables from './objects/Tables'
 import Views from './objects/Views'
 import Triggers from './objects/Triggers'
@@ -49,13 +44,13 @@ import Events from './objects/Events'
 export default {
   data() {
     return {
+      objectsTab: 0,
     }
   },
-  components: { Databases, Tables, Views, Triggers, Functions, Procedures, Events },
+  components: { Tables, Views, Triggers, Functions, Procedures, Events },
   computed: {
     ...mapFields([
       'index',
-      'objectsTab',
       'tabObjectsSelected',
       'server',
       'database',
