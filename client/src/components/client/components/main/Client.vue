@@ -378,8 +378,8 @@ export default {
       var chars = []
       for (var i = 0; i < editorText.length; ++i) {
         if (editorText[i] == ';' && chars.length == 0) {
-          rawQueries.push({"begin": start, "end": i+1})
-          start = i+2
+          rawQueries.push({"begin": start, "end": i})
+          start = i+1
         }
         else if (editorText[i] == "\"") {
           if (chars[chars.length-1] == '"') chars.pop()
@@ -531,6 +531,13 @@ export default {
       })
     },
     executeQuery(payload) {
+      // Check database
+      let database = payload.queries.find(x => x.substring(0,4).toUpperCase() == 'USE ')
+      if (database !== undefined) {
+        database = database.endsWith(';') ? database.substring(4, database.length-1) : database.substring(4, database.length)
+        EventBus.$emit('change-database', database)
+      }
+      // Show loading
       const gridApi = this.gridApi.client
       setTimeout(() => { gridApi.showLoadingOverlay() }, 0)
       // Execute queries
@@ -616,8 +623,9 @@ export default {
       // Build Data Table
       var headers = []
       var items = data[data.length - 1]['data']
+      console.log(items)
       // Build Headers
-      if (data.length > 0 && data[0]['data'].length > 0) {
+      if (data.length > 0 && data[data.length - 1]['data'].length > 0) {
         var keys = Object.keys(data[data.length - 1]['data'][0])
         for (let i = 0; i < keys.length; ++i) {
           let field = keys[i].trim()

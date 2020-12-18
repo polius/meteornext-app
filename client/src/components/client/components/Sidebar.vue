@@ -201,6 +201,7 @@ export default {
     EventBus.$on('get-sidebar-servers', this.getServers);
     EventBus.$on('get-sidebar-objects', this.getObjects);
     EventBus.$on('refresh-sidebar-objects', this.refreshObjects);
+    EventBus.$on('change-database', this.databaseChanged);
     this.$refs.server.focus()
   },
   watch: {
@@ -437,6 +438,7 @@ export default {
     },
     databaseChanged(database) {
       if (database === undefined) return
+      this.database = database
       // Clear Sidebar
       this.sidebarSelected = []
       this.sidebarOpened = []
@@ -466,7 +468,6 @@ export default {
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message, 'error')
           reject(error)
         })
         .finally(() => { this.sidebarLoading = false })
