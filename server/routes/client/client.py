@@ -167,22 +167,25 @@ class Client:
                 return jsonify({"message": 'This server does not exist'}), 400
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
-            # Get Database Objects
-            if 'detailed' in request.args:
-                tables = conn.get_table_info(db=request.args['database'])
-                views = conn.get_view_info(db=request.args['database'])
-                triggers = conn.get_trigger_info(db=request.args['database'])
-                functions = conn.get_function_info(db=request.args['database'])
-                procedures = conn.get_procedure_info(db=request.args['database'])
-                events = conn.get_event_info(db=request.args['database'])
-                return jsonify({'tables': self.__json(tables), 'views': self.__json(views), 'triggers': self.__json(triggers), 'functions': self.__json(functions), 'procedures': self.__json(procedures), 'events': self.__json(events)}), 200
-            else:
-                tables = conn.get_all_tables(db=request.args['database'])
-                columns = conn.get_all_columns(db=request.args['database'])
-                triggers = conn.get_all_triggers(db=request.args['database'])
-                events = conn.get_all_events(db=request.args['database'])
-                routines = conn.get_all_routines(db=request.args['database'])
-                return jsonify({'tables': tables, 'columns': columns, 'triggers': triggers, 'events': events, 'routines': routines}), 200
+            try:
+                # Get Database Objects
+                if 'detailed' in request.args:
+                    tables = conn.get_table_info(db=request.args['database'])
+                    views = conn.get_view_info(db=request.args['database'])
+                    triggers = conn.get_trigger_info(db=request.args['database'])
+                    functions = conn.get_function_info(db=request.args['database'])
+                    procedures = conn.get_procedure_info(db=request.args['database'])
+                    events = conn.get_event_info(db=request.args['database'])
+                    return jsonify({'tables': self.__json(tables), 'views': self.__json(views), 'triggers': self.__json(triggers), 'functions': self.__json(functions), 'procedures': self.__json(procedures), 'events': self.__json(events)}), 200
+                else:
+                    tables = conn.get_all_tables(db=request.args['database'])
+                    columns = conn.get_all_columns(db=request.args['database'])
+                    triggers = conn.get_all_triggers(db=request.args['database'])
+                    events = conn.get_all_events(db=request.args['database'])
+                    routines = conn.get_all_routines(db=request.args['database'])
+                    return jsonify({'tables': tables, 'columns': columns, 'triggers': triggers, 'events': events, 'routines': routines}), 200
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
 
         @client_blueprint.route('/client/variables', methods=['GET'])
         @jwt_required
@@ -235,9 +238,14 @@ class Client:
             execution = []
             errors = False
             multiple = type(client_json['database']) == list and len(client_json['database']) == len(client_json['queries'])
+            use_database = None
 
             for index, query in enumerate(client_json['queries']):
                 database = client_json['database'][index] if multiple else client_json['database']
+                if query[:4].upper() == 'USE ':
+                    database = use_database = query[4:-1] if query.endswith(';') else query[4:]
+                elif use_database is not None:
+                    database = use_database
                 try:
                     result = conn.execute(query=query, database=database)
                     result['query'] = query
