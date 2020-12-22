@@ -388,7 +388,7 @@ export default {
       if (queries.length == 0) resolve()
       // Build payload
       const payload = {
-        connection: 0,
+        connection: -1,
         server: this.server.id,
         database,
         queries,
@@ -528,7 +528,7 @@ export default {
       } 
       // Build payload
       const payload = {
-        connection: 0,
+        connection: -1,
         server: this.server.id,
         database: null,
         queries,
@@ -536,15 +536,8 @@ export default {
       }
       // Kill queries
       axios.post('/client/execute', payload)
-        .then(() => {
-          EventBus.$emit('send-notification', 'Queries killed', '#00b16a', 2)
-          this.killDialog = false
-          // clearTimeout(this.timer)
-          // this.getProcesslist()
-        })
-        .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-        })
+      EventBus.$emit('send-notification', 'Queries killed', '#00b16a', 2)
+      this.killDialog = false
     }
   }
 }
