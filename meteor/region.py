@@ -167,6 +167,14 @@ class Region:
             stdin, stdout, stderr = client.exec_command(command, get_pty=False)
             stdin.close()
 
+            if path:
+                while True:
+                    line = stderr.readline()
+                    if not line:
+                        break
+                    with open(path + '.err', 'a') as outfile:
+                        outfile.write(line + '\n')
+
             # Get stdout
             _stdout = stdout.readlines()
 

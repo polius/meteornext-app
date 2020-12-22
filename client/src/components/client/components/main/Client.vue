@@ -623,7 +623,6 @@ export default {
       // Build Data Table
       var headers = []
       var items = data[data.length - 1]['data']
-      console.log(items)
       // Build Headers
       if (data.length > 0 && data[data.length - 1]['data'].length > 0) {
         var keys = Object.keys(data[data.length - 1]['data'][0])
