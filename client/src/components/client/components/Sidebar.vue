@@ -421,7 +421,7 @@ export default {
           acc.push({value: val.toString(), meta: 'Database'})
           return acc
         },[])
-        this.editorAddCompleter(current, completer)
+        this.editorAddCompleter(completer)
       })
 
       // Get Column Types + Collations
@@ -544,7 +544,7 @@ export default {
       if (this.editorCompleters.length > 1) this.editorRemoveCompleter(1)
       this.editorAddCompleter(completer)
     },
-    editorAddCompleter(current, list) {
+    editorAddCompleter(list) {
       const newCompleter = {
         identifierRegexps: [/[^\s]+/],
         getCompletions: function(editor, session, pos, prefix, callback) {
