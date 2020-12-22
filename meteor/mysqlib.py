@@ -91,7 +91,7 @@ class MySQL:
             self._sql.select_db(database)
 
         # Prepare the cursor
-        with self._sql.cursor(OrderedDictCursor) as cursor:            
+        with self._sql.cursor(OrderedDictCursor) as cursor:
             # Execute the SQL query
             start_time = time.time()
             cursor.execute(query, args)

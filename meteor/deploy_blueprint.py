@@ -163,7 +163,6 @@ class deploy_blueprint:
 
                 # Perform the execution to the Database
                 self._blueprint.main(query_instance, self._imports.config['params']['environment'], self._region['name'], server['name'], database)
-
                 # Store Logs
                 self.__store_main_logs(server, database, query_instance, error=False)
 
