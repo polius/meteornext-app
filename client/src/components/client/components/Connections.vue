@@ -49,9 +49,7 @@
 </template>
 
 <style scoped>
-.v-tabs-active {
-  background-color:#303030;
-}
+.v-tabs-active { background-color: #353535; }
 </style>
 
 <script>
