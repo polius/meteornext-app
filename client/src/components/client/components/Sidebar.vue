@@ -162,6 +162,7 @@ export default {
   components: { Tables, Views, Triggers, Procedures, Functions, Events, BottomBar },
   computed: {
     ...mapFields([
+      'connections',
       'servers',
       'serversList',
       'dialogOpened',
@@ -374,7 +375,6 @@ export default {
       this.sidebarItems = servers.slice(0)
       // Parse Servers List
       this.serversList = data.servers.map(x => ({ id: x.id, name: x.name, shared: x.shared, folder: x.folder_name }))
-      this.$refs.server.focus()
     },
     getDatabases(server) {
       this.serverSearch = server
@@ -384,9 +384,11 @@ export default {
         connection: 0,
         server: server.id,
       }
+      const index = this.index
       axios.get('/client/databases', { params: payload })
         .then((response) => {
-          this.parseDatabases(server, response.data)
+          let current = this.connections.find(c => c['index'] == index)
+          this.parseDatabases(current, server, response.data)
         })
         .catch((error) => {
           if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -400,17 +402,17 @@ export default {
           this.loadingServer = false
         })
     },
-    parseDatabases(server, data) {
+    parseDatabases(current, server, data) {
       // Assign server
-      this.server = server
+      current.server = server
 
       // Init sidebar
-      this.sidebarMode = 'objects'
-      this.sidebarSearch = ''
+      current.sidebarMode = 'objects'
+      current.sidebarSearch = ''
 
       new Promise(() => {
         // Build Databases
-        this.databaseItems = data.databases
+        current.databaseItems = data.databases
         // const arr = Array.from({length: 10000}, () => Math.floor(Math.random() * 10000))
         // this.databaseItems = arr
 
@@ -419,18 +421,18 @@ export default {
           acc.push({value: val.toString(), meta: 'Database'})
           return acc
         },[])
-        this.editorAddCompleter(completer)
+        this.editorAddCompleter(current, completer)
       })
 
       // Get Column Types + Collations
       if (['MySQL','Aurora MySQL'].includes(server.engine)) {
-        this.server.version = data.version
-        this.server.engines = data.engines
-        this.server.encodings = data.encodings
-        this.server.defaults = data.defaults
-        this.server.columnTypes = ['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','FLOAT','DOUBLE','BIT','CHAR','VARCHAR','BINARY','VARBINARY','TINYBLOB','BLOB','MEDIUMBLOB','LONGBLOB','TINYTEXT','TEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET','DATE','TIME','DATETIME','TIMESTAMP','YEAR','GEOMETRY','POINT','LINESTRING','POLYGON','GEOMETRYCOLLECTION','MULTILINESTRING','MULTIPOINT','MULTIPOLYGON','JSON']
-        this.server.indexTypes = ['PRIMARY','INDEX','UNIQUE','FULLTEXT']
-        this.server.fkRules = ['Restrict','Cascade','Set NULL','No Action']
+        current.server.version = data.version
+        current.server.engines = data.engines
+        current.server.encodings = data.encodings
+        current.server.defaults = data.defaults
+        current.server.columnTypes = ['TINYINT','SMALLINT','MEDIUMINT','INT','BIGINT','FLOAT','DOUBLE','BIT','CHAR','VARCHAR','BINARY','VARBINARY','TINYBLOB','BLOB','MEDIUMBLOB','LONGBLOB','TINYTEXT','TEXT','MEDIUMTEXT','LONGTEXT','ENUM','SET','DATE','TIME','DATETIME','TIMESTAMP','YEAR','GEOMETRY','POINT','LINESTRING','POLYGON','GEOMETRYCOLLECTION','MULTILINESTRING','MULTIPOINT','MULTIPOLYGON','JSON']
+        current.server.indexTypes = ['PRIMARY','INDEX','UNIQUE','FULLTEXT']
+        current.server.fkRules = ['Restrict','Cascade','Set NULL','No Action']
       }
 
       // Focus database
@@ -461,9 +463,11 @@ export default {
         server: this.server.id,
         database: database
       }
+      const index = this.index
       axios.get('/client/objects', { params: payload })
         .then((response) => {
-          this.parseObjects(response.data)
+          let current = this.connections.find(c => c['index'] == index)
+          this.parseObjects(current, response.data)
           resolve()
         })
         .catch((error) => {
@@ -472,7 +476,7 @@ export default {
         })
         .finally(() => { this.sidebarLoading = false })
     },
-    parseObjects(data) {
+    parseObjects(current, data) {
       // Build routines
       var procedures = []
       var functions = []
@@ -487,7 +491,7 @@ export default {
         if (table['type'].toLowerCase() == 'table') tables.push(table)
         else views.push(table)
       }
-      this.tableItems = tables.reduce((acc, val) => { acc.push(val['name']); return acc; }, [])
+      current.tableItems = tables.reduce((acc, val) => { acc.push(val['name']); return acc; }, [])
 
       // Build objects
       var completer = []
@@ -534,13 +538,13 @@ export default {
         objects[5]['children'].push({ id: 'event|' + event['name'], ...event, type: 'Event', parentId: 'events' })
         completer.push({ value: event['name'], meta: 'Event' })
       }
-      this.sidebarItems = objects
+      current.sidebarItems = objects
 
       // Add objects to the editor autocompleter
       if (this.editorCompleters.length > 1) this.editorRemoveCompleter(1)
       this.editorAddCompleter(completer)
     },
-    editorAddCompleter(list) {
+    editorAddCompleter(current, list) {
       const newCompleter = {
         identifierRegexps: [/[^\s]+/],
         getCompletions: function(editor, session, pos, prefix, callback) {

@@ -362,9 +362,6 @@ export default {
 
       // Resize after Renderer
       this.editor.renderer.on('afterRender', () => { this.editor.resize() });
-
-      // Focus Editor
-      this.editor.focus()
     },
     highlightQueries() {
       var Range = ace.require("ace/range").Range
@@ -532,9 +529,10 @@ export default {
     },
     executeQuery(payload) {
       // Check database
-      let database = payload.queries.find(x => x.substring(0,4).toUpperCase() == 'USE ')
+      let database = payload.queries.find(x => x.replace(/^\s+|\s+$/g, '').substring(0,4).toUpperCase() == 'USE ')
       if (database !== undefined) {
-        database = database.endsWith(';') ? database.substring(4, database.length-1) : database.substring(4, database.length)
+        const parsedDatabase = database.replace(/^\s+|\s+$/g, '')
+        database = database.endsWith(';') ? parsedDatabase.substring(4, parsedDatabase.length-1) : parsedDatabase.substring(4, parsedDatabase.length)
         EventBus.$emit('change-database', database)
       }
       // Show loading

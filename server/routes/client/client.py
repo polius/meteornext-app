@@ -242,8 +242,8 @@ class Client:
 
             for index, query in enumerate(client_json['queries']):
                 database = client_json['database'][index] if multiple else client_json['database']
-                if query[:4].upper() == 'USE ':
-                    database = use_database = query[4:-1] if query.endswith(';') else query[4:]
+                if query.strip()[:4].upper() == 'USE ':
+                    database = use_database = query.strip()[4:-1] if query.endswith(';') else query.strip()[4:]
                 elif use_database is not None:
                     database = use_database
                 try:
