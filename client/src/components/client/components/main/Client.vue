@@ -62,9 +62,9 @@
             <v-layout wrap>
               <div class="text-h6" style="font-weight:400;">{{ dialogTitle }}</div>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
+                <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
                   <div v-if="dialogText.length>0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
-                  <v-select v-if="dialogMode=='export'" outlined v-model="dialogSelect" :items="['Meteor','JSON','CSV','SQL']" label="Format" hide-details></v-select>
+                  <v-select v-if="dialogMode=='export'" filled v-model="dialogSelect" :items="['SQL','CSV','JSON','Meteor']" label="Format" hide-details></v-select>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -696,7 +696,7 @@ export default {
     },
     exportRows() {
       // Show confirmation dialog
-      this.dialogSelect = 'Meteor'
+      this.dialogSelect = 'SQL'
       var dialogOptions = {
         'mode': 'export',
         'title': 'Export Rows',
