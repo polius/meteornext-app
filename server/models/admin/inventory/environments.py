@@ -7,20 +7,28 @@ class Environments:
     def get(self, group_id=None):
         if group_id is not None:
             query = """
-                SELECT e.*, u.id AS 'user_id', u.username AS 'owner', g.name AS 'group'  
+                SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.id AS 'owner_id', u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
                 FROM environments e
+                LEFT JOIN environment_servers es ON es.environment_id = e.id
                 LEFT JOIN users u ON u.id = e.owner_id
+                LEFT JOIN users u2 ON u2.id = e.created_by
+                LEFT JOIN users u3 ON u3.id = e.updated_by
                 LEFT JOIN groups g ON g.id = e.group_id
                 WHERE e.group_id = %s
+                GROUP BY e.id
                 ORDER BY e.`name`
             """
             return self._sql.execute(query, (group_id))
         else:
             query = """
-                SELECT e.*, u.id AS 'user_id', u.username AS 'owner', g.name AS 'group'  
+                SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.id AS 'owner_id', u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
                 FROM environments e
+                LEFT JOIN environment_servers es ON es.environment_id = e.id
                 LEFT JOIN users u ON u.id = e.owner_id
+                LEFT JOIN users u2 ON u2.id = e.created_by
+                LEFT JOIN users u3 ON u3.id = e.updated_by
                 LEFT JOIN groups g ON g.id = e.group_id
+                GROUP BY e.id
                 ORDER BY e.`name`
             """
             return self._sql.execute(query)
@@ -112,26 +120,6 @@ class Environments:
                 SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name'
                 FROM servers s
                 JOIN regions r ON r.id = s.region_id
-            """
-            return self._sql.execute(query)
-
-    def get_environment_regions(self, group_id=None):
-        if group_id is not None:
-            query = """
-                SELECT DISTINCT r.name AS 'region_name'
-                FROM environment_servers es
-                JOIN servers s ON s.id = es.server_id AND s.group_id = %s
-                JOIN regions r ON r.id = s.region_id
-                ORDER BY r.name
-            """
-            return self._sql.execute(query, (group_id))
-        else:
-            query = """
-                SELECT DISTINCT r.name AS 'region_name'
-                FROM environment_servers es
-                JOIN servers s ON s.id = es.server_id 
-                JOIN regions r ON r.id = s.region_id
-                ORDER BY r.name
             """
             return self._sql.execute(query)
 

@@ -2,14 +2,18 @@
   <div>
     <v-data-table v-model="selected" :headers="headers" :items="items" :search="filter.search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1">
       <template v-slot:[`item.servers`]="{ item }">
-        <div v-for="server in item.servers" :key="server.id" style="margin-left:0px; padding-left:0px; float:left; margin-right:5px; padding-top:3px; padding-bottom:3px;">
-          <v-chip outlined label :color="server.color" style="margin-left:0px;"><span class="font-weight-medium" style="padding-right:4px;">{{ server.server }}</span> - {{ server.region }}</v-chip>
-        </div>
+        <span class="font-weight-medium">{{item.servers}}</span><!-- server{{item.servers != 1 ? 's' : ''}} -->
       </template>
       <template v-slot:[`item.shared`]="{ item }">
         <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
         <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
         {{ !item.shared ? 'Personal' : 'Shared' }}
+      </template>
+      <template v-slot:[`item.created_at`]="{ item }">
+        {{ dateFormat(item.created_at) }}
+      </template>
+      <template v-slot:[`item.updated_at`]="{ item }">
+        {{ dateFormat(item.updated_at) }}
       </template>
     </v-data-table>
 
@@ -91,6 +95,7 @@ tr:hover {
 <script>
 import EventBus from '../../js/event-bus'
 import axios from 'axios'
+import moment from 'moment'
 
 export default {
   data: () => ({
@@ -148,6 +153,7 @@ export default {
     getServers() {
       axios.get('/admin/inventory/environments/servers', { params: { group: this.group }})
         .then((response) => {
+          this.environment_servers = this.parseEnvironmentServers(response.data.environment_servers)
           this.treeviewItems = this.parseTreeView(response.data.servers)
           if (this.mode == 'edit') setTimeout(this.updateSelected, 1)
         })
@@ -162,8 +168,7 @@ export default {
     getEnvironments() {
       axios.get('/admin/inventory/environments', { params: { group: this.filter.group }})
         .then((response) => {
-          this.environment_servers = this.parseEnvironmentServers(response.data.environment_servers)
-          this.environments = this.parseEnvironments(response.data.environments, response.data.environment_regions)
+          this.parseEnvironments(response.data.environments)
           this.items = this.environments.slice(0)
           this.filterBy(this.filter.scope)
           this.loading = false
@@ -212,56 +217,24 @@ export default {
       }
       return treeview
     },
-    parseEnvironments(environments, environment_regions) {
-      var data = []
-      var regions = environment_regions.map(x => x.region_name)
-      var colors = ['#eb5f5d', '#fa8231', '#00b16a', '#9c59b6', '#2196f3']
+    parseEnvironments(environments) {
       // Define headers
       this.headers = [
         { text: 'Id', align: ' d-none', value: 'id' },
         { text: 'GroupId', align: ' d-none', value: 'group_id' },
-        { text: 'UserId', align: ' d-none', value: 'user_id' },
+        { text: 'OwnerId', align: ' d-none', value: 'owner_id' },
         { text: 'Name', align: 'left', value: 'name' },
         { text: 'Servers', align: 'left', value: 'servers' },
-        { text: 'Scope', align: 'left', value: 'shared', width: "10%" },
-        { text: 'Owner', align: 'left', value: 'owner', width: "10%" },
+        { text: 'Scope', align: 'left', value: 'shared' },
+        { text: 'Owner', align: 'left', value: 'owner' },
+        { text: 'Created By', align: 'left', value: 'created_by' },
+        { text: 'Created At', align: 'left', value: 'created_at' },
+        { text: 'Updated By', align: 'left', value: 'updated_by' },
+        { text: 'Updated At', align: 'left', value: 'updated_at' },
       ]
-      if (this.filter.group == null) this.headers.splice(6, 0, { text: 'Group', align: 'left', value: 'group', width: "10%" })      
-      // Parse Environments
-      for (let i = 0; i < environments.length; ++i) {
-        let row = {}
-        row['id'] = environments[i]['id']
-        row['name'] = environments[i]['name']
-        row['shared'] = environments[i]['shared']
-        row['group_id'] = environments[i]['group_id']
-        row['group'] = environments[i]['group']
-        row['user_id'] = environments[i]['user_id']
-        row['owner'] = environments[i]['owner']
-        row['servers'] = []
-        if (environments[i]['id'] in this.environment_servers) {
-          for (let j = 0; j < this.environment_servers[environments[i]['id']].length; ++j) {
-            for (let k = 0; k < this.environment_servers[environments[i]['id']][j]['children'].length; ++k) {
-              let region_name = this.environment_servers[environments[i]['id']][j]['name']
-              let server_name = this.environment_servers[environments[i]['id']][j]['children'][k]['name']
-              let color_next = regions.indexOf(region_name) < colors.length ? colors[regions.indexOf(region_name)] : ''
-              row['servers'].push({ region: region_name, server: server_name, color: color_next })
-            }
-          }
-        }
-        // Sort servers ASC by region_name
-        row['servers'].sort(function(a,b) { 
-          if (a.region < b.region) return -1
-          else if (a.region > b.region) return 1
-          else {
-            if (a.server < b.server) return -1
-            else if (a.server > b.server) return 1
-            else return 0
-          }
-        })
-        // Add row to array
-        data.push(row)
-      }
-      return data
+      if (this.filter.group == null) this.headers.splice(6, 0, { text: 'Group', align: 'left', value: 'group' })      
+      // Define data
+      this.environments = environments
     },
     parseEnvironmentServers(environment_servers) {
       var data = {}
@@ -301,7 +274,7 @@ export default {
         this.environment_name = this.selected[0]['name']
         this.shared = this.selected[0]['shared']
         this.group = this.selected[0]['group_id']
-        this.owner = this.selected[0]['user_id']
+        this.owner = this.selected[0]['owner_id']
         this.groupChanged()
         this.dialog_title = 'Edit Environment'
         this.dialog = true
@@ -434,6 +407,10 @@ export default {
       if (val == 'all') this.items = this.environments.slice(0)
       else if (val == 'personal') this.items = this.environments.filter(x => !x.shared)
       else if (val == 'shared') this.items = this.environments.filter(x => x.shared)
+    },
+    dateFormat(date) {
+      if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
+      return date
     },
     notification(message, color) {
       this.snackbarText = message
