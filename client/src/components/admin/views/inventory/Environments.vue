@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1">
+    <v-data-table v-model="selected" :headers="headers" :items="items" :search="filter.search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1">
       <template v-slot:[`item.servers`]="{ item }">
         <div v-for="server in item.servers" :key="server.id" style="margin-left:0px; padding-left:0px; float:left; margin-right:5px; padding-top:3px; padding-bottom:3px;">
           <v-chip outlined label :color="server.color" style="margin-left:0px;"><span class="font-weight-medium" style="padding-right:4px;">{{ server.server }}</span> - {{ server.region }}</v-chip>
@@ -18,8 +18,8 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
-          <v-btn v-if="mode != 'delete'" title="Create the environment only for you" :color="!shared ? 'primary' : '#779ecb'" @click="shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn v-if="mode != 'delete'" title="Create the environment for all users in your group" :color="shared ? 'primary' : '#779ecb'" @click="shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn v-if="mode != 'delete'" title="Create the environment only for a user" :color="!shared ? 'primary' : '#779ecb'" @click="shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" title="Create the environment for all users in a group" :color="shared ? 'primary' : '#779ecb'" @click="shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -27,8 +27,16 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
-                  <v-text-field v-if="mode!='delete'" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="environment_name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
+                  <v-row no-gutters style="margin-bottom:15px">
+                    <v-col>
+                      <v-autocomplete ref="field" v-if="mode!='delete'" @change="groupChanged" v-model="group" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                    </v-col>
+                    <v-col v-if="!shared" style="margin-left:20px">
+                      <v-autocomplete v-if="mode!='delete'" v-model="owner" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                    </v-col>
+                  </v-row>
+                  <v-text-field v-if="mode!='delete'" @keypress.enter.native.prevent="submitEnvironment()" v-model="environment_name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-card v-if="mode!='delete'">
                     <v-toolbar flat dense color="#2e3131">
                       <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
@@ -36,6 +44,7 @@
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
+                      <div v-if="treeviewItems.length == 0" class="text-body-2" style="text-align:center">Select a group</div>
                       <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
@@ -86,13 +95,7 @@ import axios from 'axios'
 export default {
   data: () => ({
     // Data Table
-    headers: [
-      { text: 'Id', align: ' d-none', value: 'id' },
-      { text: 'Name', align: 'left', value: 'name' },
-      { text: 'Servers', align: 'left', value: 'servers' },
-      { text: 'Scope', align: 'left', value: 'shared', width: "10%" },
-      { text: 'Owner', align: 'left', value: 'owner', width: "10%" },
-    ],
+    headers: [],
     environments: [],
     items: [],
     selected: [],
@@ -103,6 +106,9 @@ export default {
     dialog_title: '',
     // Dialog items
     shared: false,
+    group: '',
+    users: [],
+    owner: '',
     environment_name: '',
     environment_servers: {},
     treeviewItems: [],
@@ -115,7 +121,7 @@ export default {
     snackbarText: '',
     snackbarColor: ''
   }),
-  props: ['filter'],
+  props: ['groups','filter'],
   created() {
     this.getEnvironments()
   },
@@ -126,12 +132,33 @@ export default {
     EventBus.$on('delete-environment', this.deleteEnvironment);
   },
   methods: {
+    groupChanged() {
+      this.getUsers()
+      this.getServers()
+    },
+    getUsers() {
+      axios.get('/admin/inventory/users', { params: { group: this.group }})
+        .then((response) => {
+          this.users = response.data.users
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    getServers() {
+      axios.get('/admin/inventory/environments/servers', { params: { group: this.group }})
+        .then((response) => {
+          this.treeviewItems = this.parseTreeView(response.data.servers)
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
     getEnvironments() {
       axios.get('/admin/inventory/environments', { params: { group: this.filter.group }})
         .then((response) => {
-          this.treeviewItems = this.parseTreeView(response.data.servers)
           this.environment_servers = this.parseEnvironmentServers(response.data.environment_servers)
-          this.environments = this.parseEnvironments(response.data.environments)
+          this.environments = this.parseEnvironments(response.data.environments, response.data.environment_regions)
           this.items = this.environments.slice(0)
           this.filterBy(this.filter.scope)
           this.loading = false
@@ -180,20 +207,30 @@ export default {
       }
       return treeview
     },
-    parseEnvironments(environments) {
+    parseEnvironments(environments, environment_regions) {
       var data = []
-      var regions = []
+      var regions = environment_regions.map(x => x.region_name)
       var colors = ['#eb5f5d', '#fa8231', '#00b16a', '#9c59b6', '#2196f3']
-      // Fill regions
-      for (let i = 0; i < this.treeviewItems.length; ++i) regions.push(this.treeviewItems[i]['name'])
-      regions.sort()
-      
+      // Define headers
+      this.headers = [
+        { text: 'Id', align: ' d-none', value: 'id' },
+        { text: 'GroupId', align: ' d-none', value: 'group_id' },
+        { text: 'UserId', align: ' d-none', value: 'user_id' },
+        { text: 'Name', align: 'left', value: 'name' },
+        { text: 'Servers', align: 'left', value: 'servers' },
+        { text: 'Scope', align: 'left', value: 'shared', width: "10%" },
+        { text: 'Owner', align: 'left', value: 'owner', width: "10%" },
+      ]
+      if (this.filter.group == null) this.headers.splice(4, 0, { text: 'Group', align: 'left', value: 'group', width: "10%" })      
       // Parse Environments
       for (let i = 0; i < environments.length; ++i) {
         let row = {}
         row['id'] = environments[i]['id']
         row['name'] = environments[i]['name']
         row['shared'] = environments[i]['shared']
+        row['group_id'] = environments[i]['group_id']
+        row['group'] = environments[i]['group']
+        row['user_id'] = environments[i]['user_id']
         row['owner'] = environments[i]['owner']
         row['servers'] = []
         if (environments[i]['id'] in this.environment_servers) {
@@ -243,7 +280,10 @@ export default {
     newEnvironment() {
       this.mode = 'new'
       this.shared = false
+      this.group = null
+      this.owner = null
       this.environment_name = ''
+      this.treeviewItems = []
       this.treeviewSelected = []
       this.treeviewOpened = []
       this.dialog_title = 'New Environment'
@@ -253,6 +293,9 @@ export default {
       this.mode = 'edit'
       this.environment_name = this.selected[0]['name']
       this.shared = this.selected[0]['shared']
+      this.group = this.selected[0]['group_id']
+      this.owner = this.selected[0]['user_id']
+      this.groupChanged()
       this.dialog_title = 'Edit Environment'
       this.dialog = true
       setTimeout(this.updateSelected, 1);
@@ -306,7 +349,7 @@ export default {
       var server_list = []
       for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i])
       // Add item in the DB
-      const payload = { shared: this.shared, name: this.environment_name, servers: server_list }
+      const payload = { group: this.group, owner: this.owner, shared: this.shared, name: this.environment_name, servers: server_list }
       axios.post('/inventory/environments', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -344,7 +387,7 @@ export default {
       var server_list = []
       for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i])
       // Edit item in the DB
-      const payload = { id: this.selected[0]['id'], shared: this.shared, name: this.environment_name, servers: server_list }
+      const payload = { id: this.selected[0]['id'], group: this.group, owner: this.owner, shared: this.shared, name: this.environment_name, servers: server_list }
       axios.put('/inventory/environments', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -401,7 +444,7 @@ export default {
     },
     selected(val) {
       EventBus.$emit('change-selected', val)
-    }
+    },
   }
 }
 </script>

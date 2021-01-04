@@ -23,9 +23,6 @@ class Users:
             """
             return self._sql.execute(query, (username))
 
-    def get_by_id(self, user_id):
-        return self._sql.execute("SELECT * FROM users WHERE id = user_id")
-
     def post(self, user_id, user):
         self._sql.execute("INSERT INTO users (username, password, mfa, email, coins, group_id, admin, disabled, created_by, created_at) SELECT %s, %s, %s, %s, %s, id, %s, %s, %s, %s FROM groups WHERE name = %s", (user['username'], user['password'], user['mfa']['enabled'], user['email'], user['coins'], user['admin'], user['disabled'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['group']))
 
