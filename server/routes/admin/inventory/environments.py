@@ -53,7 +53,7 @@ class Environments:
             elif request.method == 'DELETE':
                 return self.delete(user)
 
-        @admin_environments_blueprint.route('/admin/inventory/environments/list', methods=['GET'])
+        @admin_environments_blueprint.route('/admin/inventory/environments/servers', methods=['GET'])
         @jwt_required
         def admin_environments_list_method():
             # Check license
@@ -66,9 +66,13 @@ class Environments:
             # Check user privileges
             if user['disabled'] or not user['inventory_enabled'] and request.method != 'GET':
                 return jsonify({'message': 'Insufficient Privileges'}), 401
-            
-            # Get environments list
-            return jsonify({'data': self._environments.get(user['id'], user['group_id'])})
+
+            # Check params
+            if 'group' not in request.args:
+                return jsonify({'message': 'Missing "group" parameter'}), 400
+
+            # Get environments servers
+            return jsonify({'servers': self._environments.get_servers(request.args['group'])})
 
         return admin_environments_blueprint
 
@@ -77,12 +81,11 @@ class Environments:
     ####################
     def get(self):
         group_id = request.args['group'] if 'group' in request.args else None
-        return jsonify({'environments': self._environments.get(group_id), 'environment_servers': self._environments.get_environment_servers(group_id), 'servers': self._environments.get_servers(group_id)}), 200
+        return jsonify({'environments': self._environments.get(group_id), 'environment_regions': self._environments.get_environment_regions(group_id), 'environment_servers': self._environments.get_environment_servers(group_id)}), 200
 
     def post(self, user, environment):
-        # Check privileges
-        if environment['shared'] and not user['owner']:
-            return jsonify({'message': "Insufficient privileges"}), 401
+        # Check group & user
+        
         # Check environment exists
         if self._environments.exist(user['id'], user['group_id'], environment):
             return jsonify({'message': 'This environment currently exists'}), 400

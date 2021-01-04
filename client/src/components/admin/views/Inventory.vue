@@ -18,9 +18,9 @@
           </v-tabs>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
-        <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+        <v-text-field v-model="filter.search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
-      <Environments v-show="tab == 0" :filter="filter"/>
+      <Environments v-show="tab == 0" :groups="groups" :filter="filter"/>
     </v-card>
     <!------------>
     <!-- DIALOG -->
@@ -37,7 +37,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:20px; margin-bottom:25px;">
-                  <v-autocomplete ref="filter" v-model="filter.group" filled :items="filters" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-bottom:20px"></v-autocomplete>
+                  <v-autocomplete ref="filter" v-model="filter.group" filled :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-bottom:20px"></v-autocomplete>
                   <v-row no-gutters style="margin-bottom:12px;">
                     <v-col cols="auto">
                       <div class='text-subtitle-1 font-weight-regular'>Scope:</div>
@@ -84,13 +84,12 @@ export default {
   data() {
     return {
       tab: '',
-      search: '',
       selected: [],
       // Dialog
       dialog: false,
       loading: false,
-      filters: [],
-      filter: { group: null, scope: 'all'},
+      groups: [],
+      filter: { search: '', group: null, scope: 'all'},
       filterApplied: false,
       // Snackbar
       snackbar: false,
@@ -101,17 +100,17 @@ export default {
   },
   components: { Environments },
   created() {
-    this.getFilter()
+    this.getGroups()
   },
   mounted() {
     EventBus.$on('notification', this.notification)
     EventBus.$on('change-selected', this.changeSelected)
   },
   methods: {
-    getFilter() {
-      axios.get('/admin/groups')
+    getGroups() {
+      axios.get('/admin/inventory/groups')
         .then((response) => {
-          this.filters = response.data.data.map(x => ({ id: x.id, name: x.name }))
+          this.groups = response.data.groups
         })
         .catch((error) => {
           console.log(error)
@@ -152,7 +151,7 @@ export default {
       this.dialog = false
     },
     clearFilter() {
-      this.filter = { group: null, scope: 'all' }
+      this.filter = { search: '', group: null, scope: 'all' }
       this.$nextTick(() => {
         if (this.tab == 0) EventBus.$emit('get-environments')
         else if (this.tab == 1) EventBus.$emit('get-regions')
@@ -174,7 +173,7 @@ export default {
   watch: {
     dialog (val) {
       if (!val) return
-      if (!this.filterApplied) this.filter = { group: null, scope: 'all' }
+      if (!this.filterApplied) this.filter = { search: '', group: null, scope: 'all' }
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (typeof this.$refs.filter !== 'undefined') this.$refs.filter.focus()
