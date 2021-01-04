@@ -28,12 +28,12 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
-                  <v-row no-gutters style="margin-bottom:15px">
+                  <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-autocomplete ref="field" v-if="mode!='delete'" @change="groupChanged" v-model="group" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="field" @change="groupChanged" v-model="group" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                     <v-col v-if="!shared" style="margin-left:20px">
-                      <v-autocomplete v-if="mode!='delete'" v-model="owner" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete v-model="owner" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-text-field v-if="mode!='delete'" @keypress.enter.native.prevent="submitEnvironment()" v-model="environment_name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
@@ -45,7 +45,7 @@
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
                       <div v-if="treeviewItems.length == 0" class="text-body-2" style="text-align:center">Select a group</div>
-                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active transition>
+                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -149,6 +149,7 @@ export default {
       axios.get('/admin/inventory/environments/servers', { params: { group: this.group }})
         .then((response) => {
           this.treeviewItems = this.parseTreeView(response.data.servers)
+          if (this.mode == 'edit') setTimeout(this.updateSelected, 1)
         })
         .catch((error) => {
           console.log(error)
@@ -221,7 +222,7 @@ export default {
         { text: 'Scope', align: 'left', value: 'shared', width: "10%" },
         { text: 'Owner', align: 'left', value: 'owner', width: "10%" },
       ]
-      if (this.filter.group == null) this.headers.splice(4, 0, { text: 'Group', align: 'left', value: 'group', width: "10%" })      
+      if (this.filter.group == null) this.headers.splice(6, 0, { text: 'Group', align: 'left', value: 'group', width: "10%" })      
       // Parse Environments
       for (let i = 0; i < environments.length; ++i) {
         let row = {}
@@ -298,7 +299,6 @@ export default {
       this.groupChanged()
       this.dialog_title = 'Edit Environment'
       this.dialog = true
-      setTimeout(this.updateSelected, 1);
     },
     updateSelected() {
       var treeviewSelected = []

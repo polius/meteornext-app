@@ -25,19 +25,19 @@ class Environments:
             """
             return self._sql.execute(query)
 
-    def post(self, user_id, group_id, environment):
+    def post(self, environment):
         query = """
             INSERT INTO environments (name, group_id, shared, owner_id, created_by, created_at) 
             SELECT %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
         """
-        environment_id = self._sql.execute(query, (environment['name'], group_id, environment['shared'], environment['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        environment_id = self._sql.execute(query, (environment['name'], environment['group'], environment['shared'], environment['shared'], environment['owner'], environment['owner'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
         if len(environment['servers']) > 0:
             values = ''
             for server in environment['servers']:
                 values += '(%s, %s),' % (environment_id, server)
             self._sql.execute("INSERT INTO environment_servers (environment_id, server_id) VALUES {}".format(values[:-1]))
 
-    def put(self, user_id, group_id, environment):
+    def put(self, environment):
         # Update environment
         query = """
             UPDATE environments 
@@ -49,7 +49,7 @@ class Environments:
             WHERE id = %s
             AND group_id = %s;
         """
-        self._sql.execute(query, (environment['name'], environment['shared'], environment['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), environment['id'], group_id))
+        self._sql.execute(query, (environment['name'], environment['shared'], environment['shared'], environment['owner'], environment['owner'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), environment['id'], environment['group']))
 
         # Clean environment servers
         query = """
@@ -66,15 +66,15 @@ class Environments:
                 values += '(%s, %s),' % (environment['id'], server)
             self._sql.execute("INSERT INTO environment_servers (environment_id, server_id) VALUES {}".format(values[:-1]))
 
-    def delete(self, group_id, environment):
-        self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.id = %s AND e.group_id = %s", (environment, group_id))
-        self._sql.execute("DELETE FROM environments WHERE id = %s AND group_id = %s", (environment, group_id))
+    def delete(self, environment):
+        self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.id = %s", (environment))
+        self._sql.execute("DELETE FROM environments WHERE id = %s", (environment))
 
     def remove(self, group_id):
-        self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.group_id = %s", (group_id))
+        self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id", (group_id))
         self._sql.execute("DELETE FROM environments WHERE group_id = %s", (group_id))
 
-    def exist(self, user_id, group_id, environment):
+    def exist(self, environment):
         if 'id' in environment:
             query = """
                 SELECT EXISTS ( 
@@ -86,18 +86,18 @@ class Environments:
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (environment['name'], group_id, user_id, environment['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (environment['name'], environment['group'], environment['owner'], environment['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM environments 
                     WHERE name = %s
-                    AND owner_id = %s
                     AND group_id = %s
+                    AND owner_id = %s
                 ) AS exist
             """
-            return self._sql.execute(query, (environment['name'], user_id, group_id))[0]['exist'] == 1
+            return self._sql.execute(query, (environment['name'], environment['group'], environment['owner']))[0]['exist'] == 1
 
     def get_by_name(self, user_id, group_id, environment_name):
         query = """
