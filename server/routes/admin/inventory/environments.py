@@ -4,8 +4,8 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
 import models.deployments.deployments
+import models.admin.inventory.inventory
 import models.admin.inventory.environments
-import models.inventory.regions
 import routes.admin.settings
 
 class Environments:
@@ -14,8 +14,8 @@ class Environments:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
+        self._inventory = models.admin.inventory.inventory.Inventory(sql)
         self._environments = models.admin.inventory.environments.Environments(sql)
-        self._regions = models.inventory.regions.Regions(sql)
         # Init routes
         self._settings = routes.admin.settings.Settings(app, sql, license)
 
@@ -47,9 +47,9 @@ class Environments:
             if request.method == 'GET':
                 return self.get()
             elif request.method == 'POST':
-                return self.post(environment)
+                return self.post(user, environment)
             elif request.method == 'PUT':
-                return self.put(environment)
+                return self.put(user, environment)
             elif request.method == 'DELETE':
                 return self.delete()
 
@@ -60,11 +60,15 @@ class Environments:
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
 
+            # Check Settings - Security (Administration URL)
+            if not self._settings.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if user['disabled'] or not user['inventory_enabled'] and request.method != 'GET':
+            if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Check params
@@ -83,30 +87,30 @@ class Environments:
         group_id = request.args['group'] if 'group' in request.args else None
         return jsonify({'environments': self._environments.get(group_id), 'environment_regions': self._environments.get_environment_regions(group_id), 'environment_servers': self._environments.get_environment_servers(group_id)}), 200
 
-    def post(self, environment):
+    def post(self, user, environment):
         # Check group & user
         if not self._inventory.exist_group(environment['group']):
             return jsonify({'message': 'This group does not exist'}), 400
-        if not self._inventory.exist_user(environment['group'], environment['owner']):
+        if not environment['shared'] and not self._inventory.exist_user(environment['group'], environment['owner']):
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check environment exists
         if self._environments.exist(environment):
             return jsonify({'message': 'This environment currently exists'}), 400
         # Add environment
-        self._environments.post(environment)
+        self._environments.post(user, environment)
         return jsonify({'message': 'Environment added successfully'}), 200
 
-    def put(self, environment):
+    def put(self, user, environment):
         # Check group & user
         if not self._inventory.exist_group(environment['group']):
             return jsonify({'message': 'This group does not exist'}), 400
-        if not self._inventory.exist_user(environment['group'], environment['owner']):
+        if not environment['shared'] and not self._inventory.exist_user(environment['group'], environment['owner']):
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check environment exists
         if self._environments.exist(environment):
             return jsonify({'message': 'This new environment currently exists'}), 400
         # Edit environment
-        self._environments.put(environment)
+        self._environments.put(user, environment)
         return jsonify({'message': 'Environment edited successfully'}), 200
 
     def delete(self):

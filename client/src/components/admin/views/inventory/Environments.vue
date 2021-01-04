@@ -126,9 +126,9 @@ export default {
     this.getEnvironments()
   },
   mounted () {
-    EventBus.$on('get-environments', this.getEnvironments);
+    EventBus.$on('filter-environments', this.filterEnvironments);
     EventBus.$on('new-environment', this.newEnvironment);
-    EventBus.$on('edit-environment', this.editEnvironment);
+    EventBus.$on('edit-environment', this.editEnvironment)
     EventBus.$on('delete-environment', this.deleteEnvironment);
   },
   methods: {
@@ -154,6 +154,10 @@ export default {
         .catch((error) => {
           console.log(error)
         })
+    },
+    filterEnvironments() {
+      this.selected = []
+      this.getEnvironments()
     },
     getEnvironments() {
       axios.get('/admin/inventory/environments', { params: { group: this.filter.group }})
@@ -290,24 +294,18 @@ export default {
       this.treeviewOpened = []
       this.dialog_title = 'New Environment'
       this.dialog = true
-      requestAnimationFrame(() => {
-        if (this.filter.group == null) this.$refs.group.focus()
-        else this.$refs.name.focus()
-      })
     },
     editEnvironment() {
-      this.mode = 'edit'
-      this.environment_name = this.selected[0]['name']
-      this.shared = this.selected[0]['shared']
-      this.group = this.selected[0]['group_id']
-      this.owner = this.selected[0]['user_id']
-      this.groupChanged()
-      this.dialog_title = 'Edit Environment'
-      this.dialog = true
-      requestAnimationFrame(() => {
-        if (this.group == null) this.$refs.group.focus()
-        else this.$refs.name.focus()
-      })
+      setTimeout(() => {
+        this.mode = 'edit'
+        this.environment_name = this.selected[0]['name']
+        this.shared = this.selected[0]['shared']
+        this.group = this.selected[0]['group_id']
+        this.owner = this.selected[0]['user_id']
+        this.groupChanged()
+        this.dialog_title = 'Edit Environment'
+        this.dialog = true
+      },0)
     },
     updateSelected() {
       var treeviewSelected = []
@@ -359,7 +357,7 @@ export default {
       for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i])
       // Add item in the DB
       const payload = { group: this.group, owner: this.owner, shared: this.shared, name: this.environment_name, servers: server_list }
-      axios.post('/inventory/environments', payload)
+      axios.post('/admin/inventory/environments', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getEnvironments()
@@ -397,7 +395,7 @@ export default {
       for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i])
       // Edit item in the DB
       const payload = { id: this.selected[0]['id'], group: this.group, owner: this.owner, shared: this.shared, name: this.environment_name, servers: server_list }
-      axios.put('/inventory/environments', payload)
+      axios.put('/admin/inventory/environments', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
@@ -417,7 +415,7 @@ export default {
     deleteEnvironmentSubmit() {
       const payload = { environments: JSON.stringify(this.selected.map((x) => x.id)) }
       // Delete items to the DB
-      axios.delete('/inventory/environments', { params: payload })
+      axios.delete('/admin/inventory/environments', { params: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getEnvironments()
@@ -447,7 +445,16 @@ export default {
     dialog (val) {
       if (!val) return
       requestAnimationFrame(() => {
-        if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()      })
+        if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
+        if (this.mode == 'new') {
+          if (this.filter.group == null) this.$refs.group.focus()
+          else this.$refs.name.focus()
+        }
+        else if (this.mode == 'edit') {
+          if (this.group == null) this.$refs.group.focus()
+          else this.$refs.name.focus()
+        }
+      })
     },
     selected(val) {
       EventBus.$emit('change-selected', val)
