@@ -123,12 +123,10 @@ export default {
       else if (this.tab == 3) EventBus.$emit('new-auxiliary')
     },
     editClick() {
-      this.$nextTick(() => {
-        if (this.tab == 0) EventBus.$emit('edit-environment')
-        else if (this.tab == 1) EventBus.$emit('edit-region')
-        else if (this.tab == 2) EventBus.$emit('edit-server')
-        else if (this.tab == 3) EventBus.$emit('edit-auxiliary')
-      })
+      if (this.tab == 0) EventBus.$emit('edit-environment')
+      else if (this.tab == 1) EventBus.$emit('edit-region')
+      else if (this.tab == 2) EventBus.$emit('edit-server')
+      else if (this.tab == 3) EventBus.$emit('edit-auxiliary')
     },
     deleteClick() {
       if (this.tab == 0) EventBus.$emit('delete-environment')
@@ -145,20 +143,20 @@ export default {
         this.loading = false
         return
       }
-      if (this.tab == 0) EventBus.$emit('get-environments')
-      else if (this.tab == 1) EventBus.$emit('get-regions')
-      else if (this.tab == 2) EventBus.$emit('get-servers')
-      else if (this.tab == 3) EventBus.$emit('get-auxiliary')
+      if (this.tab == 0) EventBus.$emit('filter-environments')
+      else if (this.tab == 1) EventBus.$emit('filter-regions')
+      else if (this.tab == 2) EventBus.$emit('filter-servers')
+      else if (this.tab == 3) EventBus.$emit('filter-auxiliary')
       this.filterApplied = true
       this.dialog = false
     },
     clearFilter() {
       this.filter = { search: '', group: null, scope: 'all' }
       this.$nextTick(() => {
-        if (this.tab == 0) EventBus.$emit('get-environments')
-        else if (this.tab == 1) EventBus.$emit('get-regions')
-        else if (this.tab == 2) EventBus.$emit('get-servers')
-        else if (this.tab == 3) EventBus.$emit('get-auxiliary')
+        if (this.tab == 0) EventBus.$emit('filter-environments')
+        else if (this.tab == 1) EventBus.$emit('filter-regions')
+        else if (this.tab == 2) EventBus.$emit('filter-servers')
+        else if (this.tab == 3) EventBus.$emit('filter-auxiliary')
       })
       this.filterApplied = false
       this.dialog = false

@@ -25,46 +25,46 @@ class Environments:
             """
             return self._sql.execute(query)
 
-    def post(self, environment):
+    def post(self, user, environment):
         query = """
             INSERT INTO environments (name, group_id, shared, owner_id, created_by, created_at) 
             SELECT %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
         """
-        environment_id = self._sql.execute(query, (environment['name'], environment['group'], environment['shared'], environment['shared'], environment['owner'], environment['owner'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        environment_id = self._sql.execute(query, (environment['name'], environment['group'], environment['shared'], environment['shared'], environment['owner'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
         if len(environment['servers']) > 0:
             values = ''
             for server in environment['servers']:
                 values += '(%s, %s),' % (environment_id, server)
             self._sql.execute("INSERT INTO environment_servers (environment_id, server_id) VALUES {}".format(values[:-1]))
 
-    def put(self, environment):
+    def put(self, user, environment):
+        # Clean environment servers
+        query = """
+            DELETE es
+            FROM environment_servers es
+            JOIN environments e ON e.id = es.environment_id AND e.id = %s
+        """
+        self._sql.execute(query, (environment['id']))
+
         # Update environment
         query = """
             UPDATE environments 
             SET name = %s,
                 shared = %s,
+                group_id = %s,
                 owner_id = IF(%s = 1, NULL, %s),
                 updated_by = %s, 
                 updated_at = %s
             WHERE id = %s
-            AND group_id = %s;
         """
-        self._sql.execute(query, (environment['name'], environment['shared'], environment['shared'], environment['owner'], environment['owner'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), environment['id'], environment['group']))
-
-        # Clean environment servers
-        query = """
-            DELETE es
-            FROM environment_servers es
-            JOIN environments e ON e.id = es.environment_id AND e.group_id = %s AND e.id = %s
-        """
-        self._sql.execute(query, (group_id, environment['id']))
+        self._sql.execute(query, (environment['name'], environment['shared'], environment['group'], environment['shared'], environment['owner'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), environment['id']))
 
         # Fill environment servers
         if len(environment['servers']) > 0:
             values = ''
             for server in environment['servers']:
                 values += '(%s, %s),' % (environment['id'], server)
-            self._sql.execute("INSERT INTO environment_servers (environment_id, server_id) VALUES {}".format(values[:-1]))
+            self._sql.execute("INSERT IGNORE INTO environment_servers (environment_id, server_id) VALUES {}".format(values[:-1]))
 
     def delete(self, environment):
         self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.id = %s", (environment))
@@ -98,16 +98,6 @@ class Environments:
                 ) AS exist
             """
             return self._sql.execute(query, (environment['name'], environment['group'], environment['owner']))[0]['exist'] == 1
-
-    def get_by_name(self, user_id, group_id, environment_name):
-        query = """
-            SELECT *
-            FROM environments
-            WHERE group_id = %s
-            AND name = %s
-            AND (shared = 1 OR owner_id = %s)
-        """
-        return self._sql.execute(query, (group_id, environment_name, user_id))
 
     def get_servers(self, group_id=None):
         if group_id is not None:
