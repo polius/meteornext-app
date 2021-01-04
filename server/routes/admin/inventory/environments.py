@@ -4,8 +4,9 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
 import models.deployments.deployments
-import models.inventory.environments
+import models.admin.inventory.environments
 import models.inventory.regions
+import routes.admin.settings
 
 class Environments:
     def __init__(self, app, sql, license):
@@ -13,32 +14,38 @@ class Environments:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
-        self._environments = models.inventory.environments.Environments(sql)
+        self._environments = models.admin.inventory.environments.Environments(sql)
         self._regions = models.inventory.regions.Regions(sql)
+        # Init routes
+        self._settings = routes.admin.settings.Settings(app, sql, license)
 
     def blueprint(self):
         # Init blueprint
-        environments_blueprint = Blueprint('environments', __name__, template_folder='environments')
+        admin_environments_blueprint = Blueprint('admin_environments', __name__, template_folder='admin_environments')
 
-        @environments_blueprint.route('/inventory/environments', methods=['GET','POST','PUT','DELETE'])
+        @admin_environments_blueprint.route('/admin/inventory/environments', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
-        def environments_method():
+        def admin_environments_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
 
+            # Check Settings - Security (Administration URL)
+            if not self._settings.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
             environment = request.get_json()
 
-            # Check user privileges
-            if user['disabled'] or not user['inventory_enabled']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
             if request.method == 'GET':
-                return self.get(user)
+                return self.get()
             elif request.method == 'POST':
                 return self.post(user, environment)
             elif request.method == 'PUT':
@@ -46,9 +53,9 @@ class Environments:
             elif request.method == 'DELETE':
                 return self.delete(user)
 
-        @environments_blueprint.route('/inventory/environments/list', methods=['GET'])
+        @admin_environments_blueprint.route('/admin/inventory/environments/list', methods=['GET'])
         @jwt_required
-        def environments_list_method():
+        def admin_environments_list_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -63,13 +70,14 @@ class Environments:
             # Get environments list
             return jsonify({'data': self._environments.get(user['id'], user['group_id'])})
 
-        return environments_blueprint
+        return admin_environments_blueprint
 
     ####################
     # Internal Methods #
     ####################
-    def get(self, user):
-        return jsonify({'environments': self._environments.get(user['id'], user['group_id']), 'environment_servers': self._environments.get_environment_servers(user['group_id']), 'servers': self._environments.get_servers(user['group_id'])}), 200
+    def get(self):
+        group_id = request.args['group'] if 'group' in request.args else None
+        return jsonify({'environments': self._environments.get(group_id), 'environment_servers': self._environments.get_environment_servers(group_id), 'servers': self._environments.get_servers(group_id)}), 200
 
     def post(self, user, environment):
         # Check privileges

@@ -32,20 +32,20 @@ class Regions:
             user = self._users.get(get_jwt_identity())[0]
 
             # Get Request Json
-            region_json = request.get_json()
+            region = request.get_json()
 
             # Check user privileges
-            if user['disabled'] or not user['inventory_enabled'] or (request.method != 'GET' and region_json['shared'] and not user['owner']):
-                return jsonify({'message': 'Insufficient Privileges'}), 401
+            if user['disabled'] or not user['inventory_enabled']:
+                return jsonify({'message': 'Insufficient privileges'}), 401
 
             if request.method == 'GET':
-                return self.get(user['id'], user['group_id'], user['inventory_secured'] and not user['owner'])
+                return self.get(user)
             elif request.method == 'POST':
-                return self.post(user['id'], user['group_id'], region_json)
+                return self.post(user, region)
             elif request.method == 'PUT':
-                return self.put(user['id'], user['group_id'], region_json)
+                return self.put(user, region)
             elif request.method == 'DELETE':
-                return self.delete(user['group_id'])
+                return self.delete(user)
 
         @regions_blueprint.route('/inventory/regions/test', methods=['POST'])
         @jwt_required
@@ -88,9 +88,9 @@ class Regions:
     ####################
     # Internal Methods #
     ####################
-    def get(self, user_id, group_id, secured):
-        regions = self._regions.get(user_id, group_id)
-        if secured:
+    def get(self, user):
+        regions = self._regions.get(user['id'], user['group_id'])
+        if user['inventory_secured'] and not user['owner']:
             regions_secured = []
             for r in regions:
                 if r['shared']:
@@ -100,31 +100,42 @@ class Regions:
             return jsonify({'data': regions_secured}), 200
         return jsonify({'data': regions}), 200
 
-    def post(self, user_id, group_id, data):
-        if self._regions.exist(user_id, group_id, data):
+    def post(self, user, region):
+        # Check privileges
+        if region['shared'] and not user['owner']:
+            return jsonify({'message': "Insufficient privileges"}), 401
+        # Check region exists
+        if self._regions.exist(user['id'], user['group_id'], region):
             return jsonify({'message': 'This region currently exists'}), 400
-
-        # Create new Region
-        self._regions.post(user_id, group_id, data)
+        # Add region
+        self._regions.post(user['id'], user['group_id'], region)
         return jsonify({'message': 'Region added successfully'}), 200
 
-    def put(self, user_id, group_id, data):
-        if self._regions.exist(user_id, group_id, data):
+    def put(self, user, region):
+        # Check privileges
+        if region['shared'] and not user['owner']:
+            return jsonify({'message': "Insufficient privileges"}), 401
+        # Check region exists
+        if self._regions.exist(user['id'], user['group_id'], region):
             return jsonify({'message': 'This new region name currently exists'}), 400
-
-        # Edit Region
-        self._regions.put(user_id, group_id, data)
+        # Edit region
+        self._regions.put(user['id'], user['group_id'], region)
         return jsonify({'message': 'Region edited successfully'}), 200
 
-    def delete(self, group_id):
-        data = json.loads(request.args['regions'])
+    def delete(self, user):
+        regions = json.loads(request.args['regions'])
         # Check inconsistencies
-        for region in data:
-            if self._servers.exist_by_region(group_id, region):
+        for region in regions:
+            if self._servers.exist_by_region(user['group_id'], region):
                 return jsonify({'message': "The selected regions have servers"}), 400
-
-        for region in data:
-            self._regions.delete(group_id, region)
+        # Check privileges
+        for region in regions:
+            region = self._regions.get(user['id'], user['group_id'], region)
+            if len(region) > 0 and region[0]['shared'] and not user['owner']:
+                return jsonify({'message': "Insufficient privileges"}), 401
+        # Delete regions
+        for region in regions:
+            self._regions.delete(user['group_id'], region)
         return jsonify({'message': 'Selected regions deleted successfully'}), 200
 
     def remove(self, group_id):

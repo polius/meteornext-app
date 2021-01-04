@@ -4,25 +4,24 @@ class Environments:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, user_id, group_id, environment_id=None):
-        if environment_id is None:
+    def get(self, group_id=None):
+        if group_id is not None:
             query = """
-                SELECT * 
-                FROM environments
-                WHERE group_id = %s
-                AND (shared = 1 OR owner_id = %s)
-                ORDER BY `name`
+                SELECT e.*, u.username AS 'owner' 
+                FROM environments e
+                LEFT JOIN users u ON u.id = e.owner_id 
+                WHERE e.group_id = %s
+                ORDER BY e.`name`
             """
-            return self._sql.execute(query, (group_id, user_id))
+            return self._sql.execute(query, (group_id))
         else:
             query = """
-                SELECT * 
-                FROM environments
-                WHERE group_id = %s
-                AND (shared = 1 OR owner_id = %s)
-                AND id = %s
+                SELECT e.*, u.username AS 'owner'  
+                FROM environments e
+                LEFT JOIN users u ON u.id = e.owner_id 
+                ORDER BY e.`name`
             """
-            return self._sql.execute(query, (group_id, user_id, environment_id))
+            return self._sql.execute(query)
 
     def post(self, user_id, group_id, environment):
         query = """
@@ -108,20 +107,38 @@ class Environments:
         """
         return self._sql.execute(query, (group_id, environment_name, user_id))
 
-    def get_servers(self, group_id):
-        query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name'
-            FROM servers s
-            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-        """
-        return self._sql.execute(query, (group_id))
+    def get_servers(self, group_id=None):
+        if group_id is not None:
+            query = """
+                SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name'
+                FROM servers s
+                JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            """
+            return self._sql.execute(query, (group_id))
+        else:
+            query = """
+                SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name'
+                FROM servers s
+                JOIN regions r ON r.id = s.region_id
+            """
+            return self._sql.execute(query)
 
-    def get_environment_servers(self, group_id):
-        query = """
-            SELECT es.environment_id, s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name'
-            FROM environment_servers es
-            JOIN environments e ON e.id = es.environment_id AND e.group_id = %s
-            JOIN servers s ON s.id = es.server_id
-            JOIN regions r ON r.id = s.region_id
-        """
-        return self._sql.execute(query, (group_id))
+    def get_environment_servers(self, group_id=None):
+        if group_id is not None:
+            query = """
+                SELECT es.environment_id, s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name'
+                FROM environment_servers es
+                JOIN environments e ON e.id = es.environment_id AND e.group_id = %s
+                JOIN servers s ON s.id = es.server_id
+                JOIN regions r ON r.id = s.region_id
+            """
+            return self._sql.execute(query, (group_id))
+        else:
+            query = """
+                SELECT es.environment_id, s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name'
+                FROM environment_servers es
+                JOIN environments e ON e.id = es.environment_id
+                JOIN servers s ON s.id = es.server_id
+                JOIN regions r ON r.id = s.region_id
+            """
+            return self._sql.execute(query)
