@@ -115,21 +115,21 @@
     <!----------->
     <v-dialog v-model="coinsDialog" max-width="360px">
       <v-card>
-        <v-card-text style="padding:10px 15px 5px;">
+        <v-card-text style="padding:20px 20px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
                 <v-row justify="space-around">
                   <v-avatar size="130"><i class="fas fa-coins fa-7x" style="color:#ffcb05"></i></v-avatar>
                 </v-row>
-                <v-row justify="space-around">
-                  <div class="text-h5" style="font-weight:400; margin-top:10px; margin-bottom:15px;">{{ coins + ' Coins' }}</div>
+                <v-row justify="space-around" style="margin-top:10px; margin-bottom:15px;">
+                  <div class="text-h5" style="font-weight:400;">{{ coins + ' Coins' }}</div>
                 </v-row>
-                <v-row justify="space-around">
+                <v-row justify="space-around" style="margin-top:0px">
                   <div class="text-subtitle-1" style="font-weight:400">{{ "1 Deployment = " + this.coins_execution + " Coins" }}</div>
                 </v-row>
-                <v-row justify="space-around">
-                  <div class="text-subtitle-1" style="font-weight:400; margin-top:10px; margin-bottom:15px;">{{ "+" + this.coins_day + " Coins per day" }}</div>
+                <v-row justify="space-around" style="margin-top:20px; margin-bottom:15px">
+                  <div class="text-subtitle-1" style="font-weight:400;">{{ "+" + this.coins_day + " Coins per day" }}</div>
                 </v-row>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
