@@ -30,13 +30,13 @@
                 <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
                   <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-autocomplete ref="field" @change="groupChanged" v-model="group" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="group" @change="groupChanged" v-model="group" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                     <v-col v-if="!shared" style="margin-left:20px">
                       <v-autocomplete v-model="owner" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                   </v-row>
-                  <v-text-field v-if="mode!='delete'" @keypress.enter.native.prevent="submitEnvironment()" v-model="environment_name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  <v-text-field ref="name" v-if="mode!='delete'" @keypress.enter.native.prevent="submitEnvironment()" v-model="environment_name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-card v-if="mode!='delete'">
                     <v-toolbar flat dense color="#2e3131">
                       <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
@@ -281,14 +281,19 @@ export default {
     newEnvironment() {
       this.mode = 'new'
       this.shared = false
-      this.group = null
+      this.group = this.filter.group
       this.owner = null
+      if (this.filter.group != null) this.groupChanged()
       this.environment_name = ''
       this.treeviewItems = []
       this.treeviewSelected = []
       this.treeviewOpened = []
       this.dialog_title = 'New Environment'
       this.dialog = true
+      requestAnimationFrame(() => {
+        if (this.filter.group == null) this.$refs.group.focus()
+        else this.$refs.name.focus()
+      })
     },
     editEnvironment() {
       this.mode = 'edit'
@@ -299,6 +304,10 @@ export default {
       this.groupChanged()
       this.dialog_title = 'Edit Environment'
       this.dialog = true
+      requestAnimationFrame(() => {
+        if (this.group == null) this.$refs.group.focus()
+        else this.$refs.name.focus()
+      })
     },
     updateSelected() {
       var treeviewSelected = []
@@ -438,9 +447,7 @@ export default {
     dialog (val) {
       if (!val) return
       requestAnimationFrame(() => {
-        if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
-        if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
-      })
+        if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()      })
     },
     selected(val) {
       EventBus.$emit('change-selected', val)
