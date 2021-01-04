@@ -86,11 +86,19 @@ class Servers:
         query = """
             DELETE es
             FROM environment_servers es
-            JOIN servers s ON s.id = es.server_id
+            JOIN servers s ON s.id = es.server_id AND s.id = %s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-            WHERE s.id = %s
         """
-        self._sql.execute(query, (group_id, server_id))
+        self._sql.execute(query, (server_id, group_id))
+
+        # Delete from 'client_servers'
+        query = """
+            DELETE cs
+            FROM client_servers cs
+            JOIN servers s ON s.id = cs.server_id AND s.id = %s
+            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+        """
+        self._sql.execute(query, (server_id, group_id))
 
         # Delete from 'servers'
         query = """
@@ -141,13 +149,15 @@ class Servers:
 
     def exist_in_environment(self, group_id, server_id):
         query = """
-            SELECT DISTINCT s.name AS 'server_name', e.name AS 'environment_name'
-            FROM environment_servers es
-            JOIN environments e ON e.id = es.environment_id
-            JOIN servers s ON s.id = es.server_id AND s.id = %s
-            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            SELECT EXISTS (
+                SELECT *
+                FROM environment_servers es
+                JOIN environments e ON e.id = es.environment_id
+                JOIN servers s ON s.id = es.server_id AND s.id = %s
+                JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            ) AS exist
         """
-        return self._sql.execute(query, (server_id, group_id))
+        return self._sql.execute(query, (server_id, group_id))[0]['exist'] == 1
 
     def get_by_environment(self, user_id, group_id, environment_name):
         query = """

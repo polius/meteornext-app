@@ -602,7 +602,7 @@ export default {
           database: this.database,
           queries: [query]
         }
-        const server = server
+        const server = this.server
         axios.post('/client/execute', payload)
           .then((response) => {
             this.gridApi.content.hideOverlay()

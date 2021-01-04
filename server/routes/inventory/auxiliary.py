@@ -29,20 +29,20 @@ class Auxiliary:
             user = self._users.get(get_jwt_identity())[0]
 
             # Get Request Json
-            auxiliary_json = request.get_json()
+            auxiliary = request.get_json()
 
             # Check user privileges
-            if user['disabled'] or not user['inventory_enabled'] or (request.method != 'GET' and auxiliary_json['shared'] and not user['owner']):
+            if user['disabled'] or not user['inventory_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
-                return self.get(user['id'], user['group_id'], user['inventory_secured'] and not user['owner'])
+                return self.get(user)
             elif request.method == 'POST':
-                return self.post(user['id'], user['group_id'], auxiliary_json)
+                return self.post(user, auxiliary)
             elif request.method == 'PUT':
-                return self.put(user['id'], user['group_id'], auxiliary_json)
+                return self.put(user, auxiliary)
             elif request.method == 'DELETE':
-                return self.delete(user['group_id'])
+                return self.delete(user)
 
         @auxiliary_blueprint.route('/inventory/auxiliary/test', methods=['POST'])
         @jwt_required
@@ -90,9 +90,9 @@ class Auxiliary:
     ####################
     # Internal Methods #
     ####################
-    def get(self, user_id, group_id, secured):
-        auxiliary = self._auxiliary.get(user_id, group_id)
-        if secured:
+    def get(self, user):
+        auxiliary = self._auxiliary.get(user['id'], user['group_id'])
+        if user['inventory_secured'] and not user['owner']:
             auxiliary_secured = []
             for a in auxiliary:
                 if a['shared']:
@@ -102,24 +102,38 @@ class Auxiliary:
             return jsonify({'data': auxiliary_secured}), 200
         return jsonify({'data': auxiliary}), 200
 
-    def post(self, user_id, group_id, data):
-        if self._auxiliary.exist(user_id, group_id, data):
+    def post(self, user, auxiliary):
+        # Check privileges
+        if auxiliary['shared'] and not user['owner']:
+            return jsonify({'message': "Insufficient privileges"}), 401
+        # Check auxiliary exists
+        if self._auxiliary.exist(user['id'], user['group_id'], auxiliary):
             return jsonify({'message': 'This auxiliary connection currently exists'}), 400
-        else:
-            self._auxiliary.post(user_id, group_id, data)
-            return jsonify({'message': 'Auxiliary connection added successfully'}), 200
+        # Add auxiliary
+        self._auxiliary.post(user['id'], user['group_id'], auxiliary)
+        return jsonify({'message': 'Auxiliary connection added successfully'}), 200
 
-    def put(self, user_id, group_id, data):
-        if self._auxiliary.exist(user_id, group_id, data):
+    def put(self, user, auxiliary):
+        # Check privileges
+        if auxiliary['shared'] and not user['owner']:
+            return jsonify({'message': "Insufficient privileges"}), 401
+        # Check auxiliary exists
+        if self._auxiliary.exist(user['id'], user['group_id'], auxiliary):
             return jsonify({'message': 'This new auxiliary connection name currently exists'}), 400
-        else:
-            self._auxiliary.put(user_id, group_id, data)
-            return jsonify({'message': 'Auxiliary connection edited successfully'}), 200
+        # Edit auxiliary
+        self._auxiliary.put(user['id'], user['group_id'], auxiliary)
+        return jsonify({'message': 'Auxiliary connection edited successfully'}), 200
 
-    def delete(self, group_id):
+    def delete(self, user):
         data = json.loads(request.args['auxiliary'])
+        # Check privileges
         for auxiliary in data:
-            self._auxiliary.delete(group_id, auxiliary)
+            auxiliary = self._auxiliary.get(user['id'], user['group_id'], auxiliary)
+            if len(auxiliary) > 0 and auxiliary[0]['shared'] and not user['owner']:
+                return jsonify({'message': "Insufficient privileges"}), 401
+        # Delete auxiliary
+        for auxiliary in data:
+            self._auxiliary.delete(user['group_id'], auxiliary)
         return jsonify({'message': 'Selected auxiliary connections deleted successfully'}), 200
 
     def remove(self, group_id):
