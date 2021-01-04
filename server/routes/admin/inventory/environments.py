@@ -76,7 +76,7 @@ class Environments:
                 return jsonify({'message': 'Missing "group" parameter'}), 400
 
             # Get environments servers
-            return jsonify({'servers': self._environments.get_servers(request.args['group'])})
+            return jsonify({'servers': self._environments.get_servers(request.args['group']), 'environment_servers': self._environments.get_environment_servers(request.args['group'])})
 
         return admin_environments_blueprint
 
@@ -84,8 +84,7 @@ class Environments:
     # Internal Methods #
     ####################
     def get(self):
-        group_id = request.args['group'] if 'group' in request.args else None
-        return jsonify({'environments': self._environments.get(group_id), 'environment_regions': self._environments.get_environment_regions(group_id), 'environment_servers': self._environments.get_environment_servers(group_id)}), 200
+        return jsonify({'environments': self._environments.get(request.args['group'])}), 200
 
     def post(self, user, environment):
         # Check group & user
