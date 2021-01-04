@@ -47,11 +47,11 @@ class Environments:
             if request.method == 'GET':
                 return self.get()
             elif request.method == 'POST':
-                return self.post(user, environment)
+                return self.post(environment)
             elif request.method == 'PUT':
-                return self.put(user, environment)
+                return self.put(environment)
             elif request.method == 'DELETE':
-                return self.delete(user)
+                return self.delete()
 
         @admin_environments_blueprint.route('/admin/inventory/environments/servers', methods=['GET'])
         @jwt_required
@@ -83,28 +83,33 @@ class Environments:
         group_id = request.args['group'] if 'group' in request.args else None
         return jsonify({'environments': self._environments.get(group_id), 'environment_regions': self._environments.get_environment_regions(group_id), 'environment_servers': self._environments.get_environment_servers(group_id)}), 200
 
-    def post(self, user, environment):
+    def post(self, environment):
         # Check group & user
-        
+        if not self._inventory.exist_group(environment['group']):
+            return jsonify({'message': 'This group does not exist'}), 400
+        if not self._inventory.exist_user(environment['group'], environment['owner']):
+            return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check environment exists
-        if self._environments.exist(user['id'], user['group_id'], environment):
+        if self._environments.exist(environment):
             return jsonify({'message': 'This environment currently exists'}), 400
         # Add environment
-        self._environments.post(user['id'], user['group_id'], environment)
+        self._environments.post(environment)
         return jsonify({'message': 'Environment added successfully'}), 200
 
-    def put(self, user, environment):
-        # Check privileges
-        if environment['shared'] and not user['owner']:
-            return jsonify({'message': "Insufficient privileges"}), 401
+    def put(self, environment):
+        # Check group & user
+        if not self._inventory.exist_group(environment['group']):
+            return jsonify({'message': 'This group does not exist'}), 400
+        if not self._inventory.exist_user(environment['group'], environment['owner']):
+            return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check environment exists
-        if self._environments.exist(user['id'], user['group_id'], environment):
+        if self._environments.exist(environment):
             return jsonify({'message': 'This new environment currently exists'}), 400
         # Edit environment
-        self._environments.put(user['id'], user['group_id'], environment)
+        self._environments.put(environment)
         return jsonify({'message': 'Environment edited successfully'}), 200
 
-    def delete(self, user):
+    def delete(self):
         environments = json.loads(request.args['environments'])
         # Check inconsistencies
         exist = True
@@ -112,14 +117,9 @@ class Environments:
             exist &= not self._deployments.existByEnvironment(environment)
         if not exist:
             return jsonify({'message': "The selected environments have related deployments"}), 400
-        # Check privileges
-        for environment in environments:
-            environment = self._environments.get(user['id'], user['group_id'], environment)
-            if len(environment) > 0 and environment[0]['shared'] and not user['owner']:
-                return jsonify({'message': "Insufficient privileges"}), 401
         # Delete environments
         for environment in environments:
-            self._environments.delete(user['group_id'], environment)
+            self._environments.delete(environment)
         return jsonify({'message': 'Selected environments deleted successfully'}), 200
     
     def remove(self, group_id):
