@@ -106,14 +106,14 @@ class Regions:
     # Internal Methods #
     ####################
     def get(self):
-        group_id = request.args['group'] if 'group' in request.args else None
+        group_id = request.args['group_id'] if 'group_id' in request.args else None
         return jsonify({'regions': self._regions.get(group_id=group_id)}), 200
 
     def post(self, user, region):
         # Check group & user
-        if not self._inventory.exist_group(region['group']):
+        if not self._inventory.exist_group(region['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400
-        if not region['shared'] and not self._inventory.exist_user(region['group'], region['owner']):
+        if not region['shared'] and not self._inventory.exist_user(region['group_id'], region['owner_id']):
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check region exists
         if self._regions.exist(region):
@@ -124,9 +124,9 @@ class Regions:
 
     def put(self, user, region):
         # Check group & user
-        if not self._inventory.exist_group(region['group']):
+        if not self._inventory.exist_group(region['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400
-        if not region['shared'] and not self._inventory.exist_user(region['group'], region['owner']):
+        if not region['shared'] and not self._inventory.exist_user(region['group_id'], region['owner_id']):
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check region exists
         if self._regions.exist(region):

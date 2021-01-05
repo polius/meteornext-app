@@ -148,6 +148,7 @@ export default {
   },
   methods: {
     groupChanged() {
+      this.owner = ''
       this.getUsers()
       this.getServers()
     },
