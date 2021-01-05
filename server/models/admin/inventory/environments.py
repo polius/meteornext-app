@@ -7,7 +7,7 @@ class Environments:
     def get(self, group_id=None):
         if group_id is not None:
             query = """
-                SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.id AS 'owner_id', u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
+                SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
                 FROM environments e
                 LEFT JOIN environment_servers es ON es.environment_id = e.id
                 LEFT JOIN users u ON u.id = e.owner_id
@@ -16,12 +16,12 @@ class Environments:
                 LEFT JOIN groups g ON g.id = e.group_id
                 WHERE e.group_id = %s
                 GROUP BY e.id
-                ORDER BY e.`name`
+                ORDER BY e.id DESC
             """
             return self._sql.execute(query, (group_id))
         else:
             query = """
-                SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.id AS 'owner_id', u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
+                SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
                 FROM environments e
                 LEFT JOIN environment_servers es ON es.environment_id = e.id
                 LEFT JOIN users u ON u.id = e.owner_id
@@ -29,7 +29,7 @@ class Environments:
                 LEFT JOIN users u3 ON u3.id = e.updated_by
                 LEFT JOIN groups g ON g.id = e.group_id
                 GROUP BY e.id
-                ORDER BY e.`name`
+                ORDER BY e.id DESC
             """
             return self._sql.execute(query)
 
