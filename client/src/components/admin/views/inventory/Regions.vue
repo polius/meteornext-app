@@ -20,8 +20,8 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
-          <v-btn v-if="mode != 'delete'" title="Create the region only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn v-if="mode != 'delete'" title="Create the region for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn v-if="mode != 'delete'" title="Create the region only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" title="Create the region for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -151,7 +151,7 @@ export default {
         })
     },
     getRegions() {
-      axios.get('/admin/inventory/regions')
+      axios.get('/admin/inventory/regions', { params: { group_id: this.filter.group }})
         .then((response) => {
           response.data.regions.map(x => {
             x['created_at'] = this.dateFormat(x['created_at'])
@@ -173,7 +173,7 @@ export default {
     },
     newRegion() {
       this.mode = 'new'
-      this.item = { group_id: '', owner_id: '', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: false }
+      this.item = { group_id: this.filter.group, owner_id: '', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: false }
       if (this.filter.group != null) this.getUsers()
       this.dialog_title = 'New Region'
       this.dialog = true
