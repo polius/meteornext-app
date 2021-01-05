@@ -6,9 +6,6 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn :depressed="filterApplied" :color="filterApplied ? '#4a66a1' : ''" @click="filterClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-search</v-icon>FILTER</v-btn>
-          <v-btn @click="newClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1" @click="editClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn v-if="selected.length > 0" @click="deleteClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-tabs v-model="tab" background-color="transparent" color="white" slider-color="white" slot="extension">
             <v-tab>ENVIRONMENTS</v-tab>
@@ -17,10 +14,17 @@
             <v-tab>AUXILIARY</v-tab>
           </v-tabs>
           <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="newClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1" @click="editClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn v-if="selected.length > 0" @click="deleteClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-text-field v-model="filter.search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+        <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
+        <v-btn @click="columnsClick" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <Environments v-show="tab == 0" :groups="groups" :filter="filter"/>
+      <Environments v-show="tab == 0" :tab="tab" :groups="groups" :filter="filter"/>
+      <Regions v-show="tab == 1" :tab="tab" :groups="groups" :filter="filter"/>
     </v-card>
     <!------------>
     <!-- DIALOG -->
@@ -79,6 +83,7 @@
 import EventBus from '../js/event-bus'
 import axios from 'axios'
 import Environments from './inventory/Environments'
+import Regions from './inventory/Regions'
 
 export default {
   data() {
@@ -98,7 +103,7 @@ export default {
       snackbarColor: ''
     }
   },
-  components: { Environments },
+  components: { Environments, Regions },
   created() {
     this.getGroups()
   },
@@ -133,6 +138,9 @@ export default {
       else if (this.tab == 1) EventBus.$emit('delete-region')
       else if (this.tab == 2) EventBus.$emit('delete-server')
       else if (this.tab == 3) EventBus.$emit('delete-auxiliary')
+    },
+    columnsClick() {
+
     },
     filterClick() {
       this.dialog = true

@@ -2,18 +2,15 @@
   <div>
     <v-data-table v-model="selected" :headers="headers" :items="items" :search="filter.search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1">
       <template v-slot:[`item.servers`]="{ item }">
-        <span class="font-weight-medium">{{item.servers}}</span><!-- server{{item.servers != 1 ? 's' : ''}} -->
+        <span class="font-weight-medium">{{item.servers}}</span>
       </template>
       <template v-slot:[`item.shared`]="{ item }">
         <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
         <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
         {{ !item.shared ? 'Personal' : 'Shared' }}
       </template>
-      <template v-slot:[`item.created_at`]="{ item }">
-        {{ dateFormat(item.created_at) }}
-      </template>
-      <template v-slot:[`item.updated_at`]="{ item }">
-        {{ dateFormat(item.updated_at) }}
+      <template v-show="filter.group == null" v-slot:[`item.group`]="{ item }">
+        {{ item.group }}
       </template>
     </v-data-table>
 
@@ -100,7 +97,20 @@ import moment from 'moment'
 export default {
   data: () => ({
     // Data Table
-    headers: [],
+    headers: [
+      { text: 'Id', align: ' d-none', value: 'id' },
+      { text: 'GroupId', align: ' d-none', value: 'group_id' },
+      { text: 'OwnerId', align: ' d-none', value: 'owner_id' },
+      { text: 'Name', align: 'left', value: 'name' },
+      { text: 'Servers', align: 'left', value: 'servers' },
+      { text: 'Scope', align: 'left', value: 'shared' },
+      { text: 'Group', align: 'left', value: 'group' },
+      { text: 'Owner', align: 'left', value: 'owner' },
+      { text: 'Created By', align: 'left', value: 'created_by' },
+      { text: 'Created At', align: 'left', value: 'created_at' },
+      { text: 'Updated By', align: 'left', value: 'updated_by' },
+      { text: 'Updated At', align: 'left', value: 'updated_at' },
+    ],
     environments: [],
     items: [],
     selected: [],
@@ -126,7 +136,7 @@ export default {
     snackbarText: '',
     snackbarColor: ''
   }),
-  props: ['groups','filter'],
+  props: ['tab','groups','filter'],
   created() {
     this.getEnvironments()
   },
@@ -168,7 +178,11 @@ export default {
     getEnvironments() {
       axios.get('/admin/inventory/environments', { params: { group: this.filter.group }})
         .then((response) => {
-          this.parseEnvironments(response.data.environments)
+          response.data.environments.map(x => {
+            x['created_at'] = this.dateFormat(x['created_at'])
+            x['updated_at'] = this.dateFormat(x['created_at'])
+          })
+          this.environments = response.data.environments
           this.items = this.environments.slice(0)
           this.filterBy(this.filter.scope)
           this.loading = false
@@ -216,25 +230,6 @@ export default {
         treeview.push(region)
       }
       return treeview
-    },
-    parseEnvironments(environments) {
-      // Define headers
-      this.headers = [
-        { text: 'Id', align: ' d-none', value: 'id' },
-        { text: 'GroupId', align: ' d-none', value: 'group_id' },
-        { text: 'OwnerId', align: ' d-none', value: 'owner_id' },
-        { text: 'Name', align: 'left', value: 'name' },
-        { text: 'Servers', align: 'left', value: 'servers' },
-        { text: 'Scope', align: 'left', value: 'shared' },
-        { text: 'Owner', align: 'left', value: 'owner' },
-        { text: 'Created By', align: 'left', value: 'created_by' },
-        { text: 'Created At', align: 'left', value: 'created_at' },
-        { text: 'Updated By', align: 'left', value: 'updated_by' },
-        { text: 'Updated At', align: 'left', value: 'updated_at' },
-      ]
-      if (this.filter.group == null) this.headers.splice(6, 0, { text: 'Group', align: 'left', value: 'group' })      
-      // Define data
-      this.environments = environments
     },
     parseEnvironmentServers(environment_servers) {
       var data = {}
@@ -436,6 +431,9 @@ export default {
     selected(val) {
       EventBus.$emit('change-selected', val)
     },
-  }
+    tab() {
+      this.selected = []
+    }
+  },
 }
 </script>

@@ -84,7 +84,8 @@ class Environments:
     # Internal Methods #
     ####################
     def get(self):
-        return jsonify({'environments': self._environments.get(request.args['group'])}), 200
+        group_id = request.args['group'] if 'group' in request.args else None
+        return jsonify({'environments': self._environments.get(group_id)}), 200
 
     def post(self, user, environment):
         # Check group & user
