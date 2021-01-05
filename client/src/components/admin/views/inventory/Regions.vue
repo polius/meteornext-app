@@ -124,9 +124,6 @@ export default {
     snackbarColor: ''
   }),
   props: ['tab','groups','filter'],
-  created() {
-    this.getRegions()
-  },
   mounted () {
     EventBus.$on('filter-regions', this.filterRegions);
     EventBus.$on('new-region', this.newRegion);
@@ -151,6 +148,7 @@ export default {
         })
     },
     getRegions() {
+      this.loading = true
       axios.get('/admin/inventory/regions', { params: { group_id: this.filter.group }})
         .then((response) => {
           response.data.regions.map(x => {
@@ -339,8 +337,9 @@ export default {
     selected(val) {
       EventBus.$emit('change-selected', val)
     },
-    tab() {
+    tab(val) {
       this.selected = []
+      if (val == 1) this.getRegions()
     }
   }
 }

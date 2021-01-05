@@ -137,9 +137,6 @@ export default {
     snackbarColor: ''
   }),
   props: ['tab','groups','filter'],
-  created() {
-    this.getEnvironments()
-  },
   mounted () {
     EventBus.$on('filter-environments', this.filterEnvironments);
     EventBus.$on('new-environment', this.newEnvironment);
@@ -177,6 +174,7 @@ export default {
       this.getEnvironments()
     },
     getEnvironments() {
+      this.loading = true
       axios.get('/admin/inventory/environments', { params: { group: this.filter.group }})
         .then((response) => {
           response.data.environments.map(x => {
@@ -432,8 +430,9 @@ export default {
     selected(val) {
       EventBus.$emit('change-selected', val)
     },
-    tab() {
+    tab(val) {
       this.selected = []
+      if (val == 0) this.getEnvironments()
     }
   },
 }
