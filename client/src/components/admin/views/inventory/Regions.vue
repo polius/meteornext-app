@@ -32,10 +32,10 @@
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:20px; margin-bottom:15px;">
                   <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-autocomplete ref="group" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="group_id" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                     <v-col v-if="!item.shared" style="margin-left:20px">
-                      <v-autocomplete v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="owner_id" v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-text-field ref="name" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
@@ -98,7 +98,7 @@ export default {
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'Scope', align: 'left', value: 'shared' },
-      { text: 'Group', align: 'left', value: 'group_name' },
+      { text: 'Group', align: 'left', value: 'group' },
       { text: 'Owner', align: 'left', value: 'owner' },
       { text: 'Created By', align: 'left', value: 'created_by' },
       { text: 'Created At', align: 'left', value: 'created_at' },
@@ -135,11 +135,14 @@ export default {
   },
   methods: {
     groupChanged() {
+      this.item.owner_id = null
+      requestAnimationFrame(() => {
+        if (!this.item.shared) this.$refs.owner_id.focus()
+      })
       this.getUsers()
-      this.getRegions()
     },
     getUsers() {
-      axios.get('/admin/inventory/users', { params: { group: this.item.group }})
+      axios.get('/admin/inventory/users', { params: { group: this.item.group_id }})
         .then((response) => {
           this.users = response.data.users
         })
@@ -171,15 +174,14 @@ export default {
     newRegion() {
       this.mode = 'new'
       this.item = { group_id: '', owner_id: '', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: false }
-      if (this.filter.group != null) this.groupChanged()
+      if (this.filter.group != null) this.getUsers()
       this.dialog_title = 'New Region'
       this.dialog = true
     },
     editRegion() {
       this.mode = 'edit'
-      console.log(this.selected[0])
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.groupChanged()
+      this.item = Object.assign({}, this.selected[0])
+      this.getUsers()
       this.dialog_title = 'Edit Region'
       this.dialog = true
     },
@@ -204,7 +206,7 @@ export default {
       // Add item in the DB
       this.notification('Adding Region...', 'info', true)
       const payload = this.item
-      axios.post('/inventory/regions', payload)
+      axios.post('/admin/inventory/regions', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getRegions()
@@ -232,11 +234,10 @@ export default {
       // Edit item in the DB
       this.notification('Editing Region...', 'info', true)
       const payload = this.item
-      axios.put('/inventory/regions', payload)
+      axios.put('/admin/inventory/regions', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          // Edit item in the data table
-          this.items.splice(i, 1, this.item)
+          this.getRegions()
           this.dialog = false
           this.selected = []
         })
@@ -253,7 +254,7 @@ export default {
       const payload = { regions: JSON.stringify(this.selected.map((x) => x.id)) }
       // Delete items to the DB
       this.notification('Deleting Region...', 'info', true)
-      axios.delete('/inventory/regions', { params: payload })
+      axios.delete('/admin/inventory/regions', { params: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Delete items from the data table
@@ -289,7 +290,7 @@ export default {
       this.notification('Testing Region...', 'info', true)
       this.loading = true
       const payload = this.item
-      axios.post('/inventory/regions/test', payload)
+      axios.post('/admin/inventory/regions/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a', 2)
         })
@@ -326,11 +327,11 @@ export default {
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (this.mode == 'new') {
-          if (this.filter.group == null) this.$refs.group.focus()
+          if (this.filter.group == null) this.$refs.group_id.focus()
           else this.$refs.name.focus()
         }
         else if (this.mode == 'edit') {
-          if (this.item.group == null) this.$refs.group.focus()
+          if (this.item.group == null) this.$refs.group_id.focus()
           else this.$refs.name.focus()
         }
       })
