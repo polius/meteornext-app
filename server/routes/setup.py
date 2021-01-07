@@ -24,6 +24,8 @@ import routes.admin.deployments
 import routes.admin.inventory.inventory
 import routes.admin.inventory.environments
 import routes.admin.inventory.regions
+import routes.admin.inventory.servers
+import routes.admin.inventory.auxiliary
 import routes.inventory.environments
 import routes.inventory.regions
 import routes.inventory.servers
@@ -233,6 +235,8 @@ class Setup:
         admin_inventory = routes.admin.inventory.inventory.Inventory(self._app, sql, self._license)
         admin_inventory_environments = routes.admin.inventory.environments.Environments(self._app, sql, self._license)
         admin_inventory_regions = routes.admin.inventory.regions.Regions(self._app, sql, self._license)
+        admin_inventory_servers = routes.admin.inventory.servers.Servers(self._app, sql, self._license)
+        admin_inventory_auxiliary = routes.admin.inventory.auxiliary.Auxiliary(self._app, sql, self._license)
         environments = routes.inventory.environments.Environments(self._app, sql, self._license)
         regions = routes.inventory.regions.Regions(self._app, sql, self._license)
         servers = routes.inventory.servers.Servers(self._app, sql, self._license)
@@ -247,7 +251,7 @@ class Setup:
         monitoring_queries = routes.monitoring.views.queries.Queries(self._app, sql, self._license)
         client = routes.client.client.Client(self._app, sql, self._license)
 
-        self._blueprints = [login, profile, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, environments, regions, servers, auxiliary, releases, deployments, deployments_basic, deployments_pro, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client]
+        self._blueprints = [login, profile, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, environments, regions, servers, auxiliary, releases, deployments, deployments_basic, deployments_pro, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client]
 
         # Register all blueprints
         for i in self._blueprints:

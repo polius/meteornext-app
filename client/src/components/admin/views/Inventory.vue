@@ -21,14 +21,16 @@
         </v-toolbar-items>
         <v-text-field v-model="filter.search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
         <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
-        <v-btn @click="columnsClick" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
+        <v-btn @click="filterColumnsClick" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
       <Environments v-show="tab == 0" :tab="tab" :groups="groups" :filter="filter"/>
       <Regions v-show="tab == 1" :tab="tab" :groups="groups" :filter="filter"/>
+      <Servers v-show="tab == 2" :tab="tab" :groups="groups" :filter="filter"/>
+      <Auxiliary v-show="tab == 3" :tab="tab" :groups="groups" :filter="filter"/>
     </v-card>
-    <!------------>
-    <!-- DIALOG -->
-    <!------------>
+    <!------------------->
+    <!-- FILTER DIALOG -->
+    <!------------------->
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar flat color="primary">
@@ -84,13 +86,15 @@ import EventBus from '../js/event-bus'
 import axios from 'axios'
 import Environments from './inventory/Environments'
 import Regions from './inventory/Regions'
+import Servers from './inventory/Servers'
+import Auxiliary from './inventory/Auxiliary'
 
 export default {
   data() {
     return {
       tab: '',
       selected: [],
-      // Dialog
+      // Filter Dialog
       dialog: false,
       loading: false,
       groups: [],
@@ -103,11 +107,12 @@ export default {
       snackbarColor: ''
     }
   },
-  components: { Environments, Regions },
+  components: { Environments, Regions, Servers, Auxiliary },
   created() {
     this.getGroups()
   },
   mounted() {
+    EventBus.$on('init-columns', this.initColumns)
     EventBus.$on('notification', this.notification)
     EventBus.$on('change-selected', this.changeSelected)
   },
@@ -139,8 +144,11 @@ export default {
       else if (this.tab == 2) EventBus.$emit('delete-server')
       else if (this.tab == 3) EventBus.$emit('delete-auxiliary')
     },
-    columnsClick() {
-
+    filterColumnsClick() {
+      if (this.tab == 0) EventBus.$emit('filter-environment-columns')
+      else if (this.tab == 1) EventBus.$emit('filter-region-columns')
+      else if (this.tab == 2) EventBus.$emit('filter-server-columns')
+      else if (this.tab == 3) EventBus.$emit('filter-auxiliary-columns')
     },
     filterClick() {
       this.dialog = true

@@ -1,34 +1,31 @@
-import sys
-import json
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import json
 import utils
 import models.admin.users
 import models.admin.inventory.inventory
-import models.admin.inventory.regions
-import models.admin.inventory.servers
+import models.admin.inventory.auxiliary
 import routes.admin.settings
 
-class Regions:
+class Auxiliary:
     def __init__(self, app, sql, license):
         self._app = app
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
         self._inventory = models.admin.inventory.inventory.Inventory(sql)
-        self._regions = models.admin.inventory.regions.Regions(sql)
-        self._servers = models.admin.inventory.servers.Servers(sql)
+        self._auxiliary = models.admin.inventory.auxiliary.Auxiliary(sql)
         # Init routes
         self._settings = routes.admin.settings.Settings(app, sql, license)
 
     def blueprint(self):
         # Init blueprint
-        admin_regions_blueprint = Blueprint('admin_regions', __name__, template_folder='admin_regions')       
+        admin_auxiliary_blueprint = Blueprint('admin_auxiliary', __name__, template_folder='admin_auxiliary')
 
-        @admin_regions_blueprint.route('/admin/inventory/regions', methods=['GET','POST','PUT','DELETE'])
+        @admin_auxiliary_blueprint.route('/admin/inventory/auxiliary', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
-        def admin_regions_method():
+        def admin_auxiliary_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -45,20 +42,20 @@ class Regions:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
-            region = request.get_json()
+            auxiliary = request.get_json()
 
             if request.method == 'GET':
                 return self.get()
             elif request.method == 'POST':
-                return self.post(user, region)
+                return self.post(user, auxiliary)
             elif request.method == 'PUT':
-                return self.put(user, region)
+                return self.put(user, auxiliary)
             elif request.method == 'DELETE':
                 return self.delete()
 
-        @admin_regions_blueprint.route('/admin/inventory/regions/test', methods=['POST'])
+        @admin_auxiliary_blueprint.route('/admin/inventory/auxiliary/test', methods=['POST'])
         @jwt_required
-        def admin_regions_test_method():
+        def admin_auxiliary_test_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -75,59 +72,64 @@ class Regions:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
-            region_json = request.get_json()
+            auxiliary_json = request.get_json()
 
-            # Check SSH Connection
+            # Build Auxiliary Data
+            ssh = None
+            if auxiliary_json['ssh_tunnel']:
+                ssh = {"hostname": auxiliary_json['ssh_hostname'], "port": auxiliary_json['ssh_port'], "username": auxiliary_json['ssh_username'], "password": auxiliary_json['ssh_password'], "key": auxiliary_json['ssh_key']}
+            sql = {"hostname": auxiliary_json['sql_hostname'], "port": auxiliary_json['sql_port'], "username": auxiliary_json['sql_username'], "password": auxiliary_json['sql_password']}
+
+            # Check SQL Connection
             try:
-                u = utils.Utils(region_json)
-                u.check_ssh()
+                u = utils.Utils(ssh)
+                u.check_sql(sql)
             except Exception as e:
                 return jsonify({'message': str(e)}), 400
 
             return jsonify({'message': 'Connection Successful'}), 200
 
-        return admin_regions_blueprint
+        return admin_auxiliary_blueprint
 
     ####################
     # Internal Methods #
     ####################
     def get(self):
         group_id = request.args['group_id'] if 'group_id' in request.args else None
-        return jsonify({'regions': self._regions.get(group_id=group_id)}), 200
+        return jsonify({'auxiliary': self._auxiliary.get(group_id=group_id)}), 200
 
-    def post(self, user, region):
+    def post(self, user, auxiliary):
         # Check group & user
-        if not self._inventory.exist_group(region['group_id']):
+        if not self._inventory.exist_group(auxiliary['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400
-        if not region['shared'] and not self._inventory.exist_user(region['group_id'], region['owner_id']):
+        if not auxiliary['shared'] and not self._inventory.exist_user(auxiliary['group_id'], auxiliary['owner_id']):
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
-        # Check region exists
-        if self._regions.exist(region):
-            return jsonify({'message': 'This region currently exists'}), 400
-        # Add region
-        self._regions.post(user, region)
-        return jsonify({'message': 'Region added successfully'}), 200
+        # Check auxiliary exists
+        if self._auxiliary.exist(auxiliary):
+            return jsonify({'message': 'This auxiliary connection currently exists'}), 400
+        # Add auxiliary
+        self._auxiliary.post(user, auxiliary)
+        return jsonify({'message': 'Auxiliary connection added successfully'}), 200
 
-    def put(self, user, region):
+    def put(self, user, auxiliary):
         # Check group & user
-        if not self._inventory.exist_group(region['group_id']):
+        if not self._inventory.exist_group(auxiliary['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400
-        if not region['shared'] and not self._inventory.exist_user(region['group_id'], region['owner_id']):
+        if not auxiliary['shared'] and not self._inventory.exist_user(auxiliary['group_id'], auxiliary['owner_id']):
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
-        # Check region exists
-        if self._regions.exist(region):
-            return jsonify({'message': 'This new region name currently exists'}), 400
-        # Edit region
-        self._regions.put(user, region)
-        return jsonify({'message': 'Region edited successfully'}), 200
+        # Check auxiliary exists
+        if self._auxiliary.exist(auxiliary):
+            return jsonify({'message': 'This new auxiliary connection name currently exists'}), 400
+        # Edit auxiliary
+        self._auxiliary.put(user, auxiliary)
+        return jsonify({'message': 'Auxiliary connection edited successfully'}), 200
 
     def delete(self):
-        regions = json.loads(request.args['regions'])
-        # Check inconsistencies
-        for region in regions:
-            if self._servers.exist_by_region(region):
-                return jsonify({'message': "The selected regions have servers"}), 400
-        # Delete regions
-        for region in regions:
-            self._regions.delete(region)
-        return jsonify({'message': 'Selected regions deleted successfully'}), 200
+        data = json.loads(request.args['auxiliary'])
+        # Delete auxiliary
+        for auxiliary in data:
+            self._auxiliary.delete(auxiliary)
+        return jsonify({'message': 'Selected auxiliary connections deleted successfully'}), 200
+
+    def remove(self, group_id):
+        self._auxiliary.remove(group_id)
