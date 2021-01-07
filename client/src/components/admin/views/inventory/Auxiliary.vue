@@ -1,5 +1,5 @@
 <template>
-  <div>      
+  <div>
     <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="filter.search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
       <template v-slot:[`item.ssh_tunnel`]="{ item }">
         <v-icon v-if="item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
@@ -17,8 +17,8 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
-          <v-btn v-if="mode != 'delete'" title="Create the region only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn v-if="mode != 'delete'" title="Create the region for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn v-if="mode != 'delete'" title="Create the auxiliary only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" title="Create the auxiliary for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -26,7 +26,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:20px; margin-bottom:15px;">
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:20px;">
                   <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
                     <v-col>
                       <v-autocomplete ref="group_id" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
@@ -36,30 +36,62 @@
                     </v-col>
                   </v-row>
                   <v-text-field ref="name" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <v-switch v-model="item.ssh_tunnel" label="Use SSH Tunnel" color="info" hide-details style="margin-top:0px;"></v-switch>
-                  <div v-if="item.ssh_tunnel" style="margin-top:25px;">
+                  <v-row no-gutters>
+                    <v-col cols="8" style="padding-right:10px">
+                      <v-select v-model="item.sql_engine" :items="Object.keys(engines)" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:10px">
+                      <v-select v-model="item.sql_version" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                    </v-col>
+                  </v-row>
+                  <div style="margin-bottom:20px">
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
-                        <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="item.sql_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
                       </v-col>
                       <v-col cols="4" style="padding-left:10px">
-                        <v-text-field v-model="item.port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="item.sql_port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
                       </v-col>
                     </v-row>
-                    <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.password" label="Password" style="padding-top:0px;"></v-text-field>
-                    <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                    <v-text-field v-model="item.sql_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="item.sql_password" label="Password" style="padding-top:0px;" hide-details></v-text-field>
+                    <v-switch v-model="item.ssh_tunnel" label="Use SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
+                    <div v-if="item.ssh_tunnel" style="margin-top:20px;">
+                      <v-row no-gutters>
+                        <v-col cols="8" style="padding-right:10px">
+                          <v-text-field v-model="item.ssh_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
+                        </v-col>
+                        <v-col cols="4" style="padding-left:10px">
+                          <v-text-field v-model="item.ssh_port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
+                        </v-col>
+                      </v-row>
+                      <v-text-field v-model="item.ssh_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                      <v-text-field v-model="item.ssh_password" label="Password" style="padding-top:0px;"></v-text-field>
+                      <v-textarea v-model="item.ssh_key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                    </div>
+                    <v-switch v-model="item.sql_ssl" flat label="Use SSL" style="margin-top:10px" hide-details></v-switch>
+                    <v-row no-gutters v-if="item.sql_ssl" style="margin-top:20px">
+                      <v-col style="padding-right:10px;">
+                        <v-file-input v-model="item.ssl_client_key" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
+                      </v-col>
+                      <v-col style="padding-right:5px; padding-left:5px;">
+                        <v-file-input v-model="item.ssl_client_certificate" filled dense label="Client Certificate" prepend-icon="" hide-details></v-file-input>
+                      </v-col>
+                      <v-col style="padding-left:10px;">
+                        <v-file-input v-model="item.ssl_client_ca_certificate" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
+                      </v-col>
+                    </v-row>
                   </div>
                 </v-form>
-                <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>
+                <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected auxiliary connections?</div>
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:20px;">
                   <v-col cols="auto" class="mr-auto">
-                    <v-btn :loading="loading" color="#00b16a" @click="submitRegion()">CONFIRM</v-btn>
+                    <v-btn :loading="loading" color="#00b16a" @click="submitAuxiliary()">CONFIRM</v-btn>
                     <v-btn :disabled="loading" color="error" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
                   </v-col>
                   <v-col cols="auto">
-                    <v-btn v-if="item['ssh_tunnel'] && mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
+                    <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
                   </v-col>
                 </v-row>
               </v-flex>
@@ -89,10 +121,10 @@
                 <v-form ref="form" style="margin-top:20px; margin-bottom:25px;">
                   <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
                   <v-checkbox v-model="columnsRaw" label="Name" value="name" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="SSH Tunnel" value="ssh_tunnel" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Hostname" value="hostname" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Port" value="port" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Username" value="username" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Engine" value="sql_version" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Hostname" value="sql_hostname" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Port" value="sql_port" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Username" value="sql_username" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Scope" value="shared" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Group" value="group" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Owner" value="owner" hide-details style="margin-top:5px"></v-checkbox>
@@ -124,20 +156,19 @@
 
 <script>
 import EventBus from '../../js/event-bus'
-import axios from 'axios'
+import axios from 'axios';
 import moment from 'moment'
 
 export default {
   data: () => ({
-    // Data Table
     headers: [
       { text: 'GroupId', align: ' d-none', value: 'group_id' },
       { text: 'OwnerId', align: ' d-none', value: 'owner_id' },
       { text: 'Name', align: 'left', value: 'name' },
-      { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'},
-      { text: 'Hostname', align: 'left', value: 'hostname'},
-      { text: 'Port', align: 'left', value: 'port'},
-      { text: 'Username', align: 'left', value: 'username'},
+      { text: 'Engine', align: 'left', value: 'sql_version'},
+      { text: 'Hostname', align: 'left', value: 'sql_hostname'},
+      { text: 'Port', align: 'left', value: 'sql_port'},
+      { text: 'Username', align: 'left', value: 'sql_username'},
       { text: 'Scope', align: 'left', value: 'shared' },
       { text: 'Group', align: 'left', value: 'group' },
       { text: 'Owner', align: 'left', value: 'owner' },
@@ -146,34 +177,39 @@ export default {
       { text: 'Updated By', align: 'left', value: 'updated_by' },
       { text: 'Updated At', align: 'left', value: 'updated_at' },
     ],
-    regions: [],
+    auxiliary: [],
     items: [],
     selected: [],
     search: '',
-    item: { group_id: '', owner_id: '', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: false },
+    item: { group_id: '', owner_id: '', name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', sql_ssl: false, shared: false },
     mode: '',
     loading: true,
+    engines: {
+      'MySQL': ['MySQL 5.6', 'MySQL 5.7', 'MySQL 8.x'],
+      'Aurora MySQL': ['Aurora MySQL 5.6', 'Aurora MySQL 5.7']
+    },
+    versions: [],
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
     users: [],
     // Filter Columns Dialog
     columnsDialog: false,
-    columns: ['name','ssh_tunnel','hostname','port','username','shared','group','owner'],
+    columns: ['name','region','sql_version','sql_hostname','sql_port','sql_username','shared','group','owner'],
     columnsRaw: [],
     // Snackbar
     snackbar: false,
-    snackbarTimeout: Number(5000),
+    snackbarTimeout: Number(3000),
     snackbarText: '',
     snackbarColor: ''
   }),
   props: ['tab','groups','filter'],
   mounted () {
-    EventBus.$on('filter-regions', this.filterRegions);
-    EventBus.$on('filter-region-columns', this.filterRegionColumns);
-    EventBus.$on('new-region', this.newRegion);
-    EventBus.$on('edit-region', this.editRegion)
-    EventBus.$on('delete-region', this.deleteRegion);
+    EventBus.$on('filter-auxiliary', this.filterAuxiliary);
+    EventBus.$on('filter-auxiliary-columns', this.filterAuxiliaryColumns);
+    EventBus.$on('new-auxiliary', this.newAuxiliary);
+    EventBus.$on('edit-auxiliary', this.editAuxiliary)
+    EventBus.$on('delete-auxiliary', this.deleteAuxiliary);
   },
   computed: {
     computedHeaders() { return this.headers.filter(x => x.align == ' d-none' || this.columns.includes(x.value)) }
@@ -195,16 +231,16 @@ export default {
           console.log(error)
         })
     },
-    getRegions() {
+    getAuxiliary() {
       this.loading = true
-      axios.get('/admin/inventory/regions', { params: { group_id: this.filter.group }})
+      axios.get('/admin/inventory/auxiliary', { params: { group_id: this.filter.group }})
         .then((response) => {
-          response.data.regions.map(x => {
+          response.data.auxiliary.map(x => {
             x['created_at'] = this.dateFormat(x['created_at'])
             x['updated_at'] = this.dateFormat(x['updated_at'])
           })
-          this.regions = response.data.regions
-          this.items = response.data.regions
+          this.auxiliary = response.data.auxiliary
+          this.items = response.data.auxiliary
           this.filterBy(this.filter.scope)
           this.loading = false
         })
@@ -213,46 +249,61 @@ export default {
           else this.notification(error.response.data.message, 'error')
         })
     },
-    newRegion() {
+    selectEngine(value) {
+      if (this.item['sql_port'] == '') {
+        if (['MySQL','Aurora MySQL'].includes(value)) this.item['sql_port'] = '3306'
+        else if (value == 'PostgreSQL') this.item['sql_port'] = '5432'
+      }
+      this.versions = this.engines[value]
+    },
+    newAuxiliary() {
       this.mode = 'new'
       this.users = []
-      this.item = { group_id: this.filter.group, owner_id: '', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: false }
+      this.item = { group_id: this.filter.group, owner_id: '', name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', sql_ssl: false, shared: false }
       if (this.filter.group != null) this.getUsers()
-      this.dialog_title = 'New Region'
+      this.dialog_title = 'New Auxiliary'
       this.dialog = true
     },
-    editRegion() {
+    editAuxiliary() {
       this.mode = 'edit'
       this.item = Object.assign({}, this.selected[0])
       this.$nextTick(() => this.getUsers())
-      this.dialog_title = 'Edit Region'
+      this.versions = this.engines[this.item.sql_engine]
+      this.dialog_title = 'Edit Auxiliary'
       this.dialog = true
     },
-    deleteRegion() {
+    deleteAuxiliary() {
       this.mode = 'delete'
-      this.dialog_title = 'Delete Region'
+      this.dialog_title = 'Delete Auxiliary'
       this.dialog = true
     },
-    submitRegion() {
+    submitAuxiliary() {
       this.loading = true
-      if (this.mode == 'new') this.newRegionSubmit()
-      else if (this.mode == 'edit') this.editRegionSubmit()
-      else if (this.mode == 'delete') this.deleteRegionSubmit()
+      if (this.mode == 'new') this.newAuxiliarySubmit()
+      else if (this.mode == 'edit') this.editAuxiliarySubmit()
+      else if (this.mode == 'delete') this.deleteAuxiliarySubmit()
     },
-    newRegionSubmit() {
+    newAuxiliarySubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
         this.loading = false
         return
       }
+      // Check if new item already exists
+      for (var i = 0; i < this.items.length; ++i) {
+        if (this.items[i]['name'] == this.item.name) {
+          this.notification('This auxiliary connection currently exists', 'error')
+          this.loading = false
+          return
+        }
+      }
       // Add item in the DB
-      this.notification('Adding Region...', 'info', true)
       const payload = this.item
-      axios.post('/admin/inventory/regions', payload)
+      axios.post('/admin/inventory/auxiliary', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          this.getRegions()
+          this.getAuxiliary()
           this.dialog = false
         })
         .catch((error) => {
@@ -263,7 +314,7 @@ export default {
           this.loading = false
         })
     },
-    editRegionSubmit() {
+    editAuxiliarySubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
@@ -274,13 +325,20 @@ export default {
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['name'] == this.selected[0]['name']) break
       }
+      // Check if edited item already exists
+      for (var j = 0; j < this.items.length; ++j) {
+        if (this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
+          this.notification('This auxiliary connection currently exists', 'error')
+          this.loading = false
+          return
+        }
+      }
       // Edit item in the DB
-      this.notification('Editing Region...', 'info', true)
       const payload = this.item
-      axios.put('/admin/inventory/regions', payload)
+      axios.put('/admin/inventory/auxiliary', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          this.getRegions()
+          this.getAuxiliary()
           this.dialog = false
           this.selected = []
         })
@@ -292,12 +350,11 @@ export default {
           this.loading = false
         })
     },
-    deleteRegionSubmit() {
+    deleteAuxiliarySubmit() {
       // Build payload
-      const payload = { regions: JSON.stringify(this.selected.map((x) => x.id)) }
+      const payload = { auxiliary: JSON.stringify(this.selected.map((x) => x.id)) }
       // Delete items to the DB
-      this.notification('Deleting Region...', 'info', true)
-      axios.delete('/admin/inventory/regions', { params: payload })
+      axios.delete('/admin/inventory/auxiliary', { params: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Delete items from the data table
@@ -311,7 +368,7 @@ export default {
               }
             }
           }
-          this.selected = []
+           this.selected = []
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -330,12 +387,12 @@ export default {
         return
       }
       // Test Connection
-      this.notification('Testing Region...', 'info', true)
+      this.notification('Testing Auxiliary Connection...', 'info', true)
       this.loading = true
       const payload = this.item
-      axios.post('/admin/inventory/regions/test', payload)
+      axios.post('/admin/inventory/auxiliary/test', payload)
         .then((response) => {
-          this.notification(response.data.message, '#00b16a', 2)
+          this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -346,22 +403,22 @@ export default {
         })
     },
     filterBy(val) {
-      if (val == 'all') this.items = this.regions.slice(0)
-      else if (val == 'personal') this.items = this.regions.filter(x => !x.shared)
-      else if (val == 'shared') this.items = this.regions.filter(x => x.shared)
+      if (val == 'all') this.items = this.auxiliary.slice(0)
+      else if (val == 'personal') this.items = this.auxiliary.filter(x => !x.shared)
+      else if (val == 'shared') this.items = this.auxiliary.filter(x => x.shared)
     },
-    filterRegions() {
+    filterAuxiliary() {
       this.selected = []
       if (this.filter.group != null) this.columns = this.columns.filter(x => x != 'group')
       else if (!this.columns.some(x => x == 'group')) this.columns.push('group')
-      this.getRegions()
+      this.getAuxiliary()
     },
-    filterRegionColumns() {
+    filterAuxiliaryColumns() {
       this.columnsRaw = [...this.columns]
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['name','ssh_tunnel','hostname','port','username','shared','group','owner','created_by','created_at','updated_by','updated_at']
+      this.columnsRaw = ['name','region','sql_version','sql_hostname','sql_port','sql_username','shared','group','owner','created_by','created_at','updated_by','updated_at']
     },
     deselectAllColumns() {
       this.columnsRaw = []
@@ -404,8 +461,8 @@ export default {
     },
     tab(val) {
       this.selected = []
-      if (val == 1) this.getRegions()
+      if (val == 3) this.getAuxiliary()
     }
   }
 }
-</script> 
+</script>

@@ -1,16 +1,13 @@
 <template>
   <div>
-    <v-data-table v-model="selected" :headers="headers" :items="items" :search="filter.search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1">
-      <template v-slot:[`item.servers`]="{ item }">
+    <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="filter.search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1">
+      <template v-show="'servers' in columns" v-slot:[`item.servers`]="{ item }">
         <span class="font-weight-medium">{{item.servers}}</span>
       </template>
-      <template v-slot:[`item.shared`]="{ item }">
+      <template v-show="'scope' in columns" v-slot:[`item.shared`]="{ item }">
         <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
         <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
         {{ !item.shared ? 'Personal' : 'Shared' }}
-      </template>
-      <template v-show="filter.group == null" v-slot:[`item.group`]="{ item }">
-        {{ item.group }}
       </template>
     </v-data-table>
 
@@ -63,6 +60,47 @@
                   <v-btn :loading="loading" color="#00b16a" @click="submitEnvironment()">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                 </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!-------------------->
+    <!-- COLUMNS DIALOG -->
+    <!-------------------->
+    <v-dialog v-model="columnsDialog" persistent max-width="600px">
+      <v-card>
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">FILTER COLUMNS</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="selectAllColumns" text title="Select all columns"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
+          <v-btn @click="deselectAllColumns" text title="Deselect all columns"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
+          <v-spacer></v-spacer>
+          <v-divider class="mx-2" inset vertical></v-divider>
+          <v-btn icon @click="columnsDialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 0px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:20px; margin-bottom:25px;">
+                  <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
+                  <v-checkbox v-model="columnsRaw" label="Name" value="name" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Servers" value="servers" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Scope" value="shared" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Group" value="group" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Owner" value="owner" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Created By" value="created_by" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Created At" value="created_at" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Updated By" value="updated_by" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Updated At" value="updated_at" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-divider style="margin-top:15px;"></v-divider>
+                  <div style="margin-top:20px;">
+                    <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  </div>
+                </v-form>
               </v-flex>
             </v-layout>
           </v-container>
@@ -130,6 +168,10 @@ export default {
     treeviewSelected: [],
     treeviewOpened: [],
     treeviewSearch: '',
+    // Filter Columns Dialog
+    columnsDialog: false,
+    columns: ['name','servers','shared','group','owner'],
+    columnsRaw: [],
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -139,9 +181,13 @@ export default {
   props: ['tab','groups','filter'],
   mounted () {
     EventBus.$on('filter-environments', this.filterEnvironments);
+    EventBus.$on('filter-environment-columns', this.filterEnvironmentColumns);
     EventBus.$on('new-environment', this.newEnvironment);
     EventBus.$on('edit-environment', this.editEnvironment)
     EventBus.$on('delete-environment', this.deleteEnvironment);
+  },
+  computed: {
+    computedHeaders() { return this.headers.filter(x => x.align == ' d-none' || this.columns.includes(x.value)) }
   },
   methods: {
     groupChanged() {
@@ -169,17 +215,13 @@ export default {
           console.log(error)
         })
     },
-    filterEnvironments() {
-      this.selected = []
-      this.getEnvironments()
-    },
     getEnvironments() {
       this.loading = true
       axios.get('/admin/inventory/environments', { params: { group: this.filter.group }})
         .then((response) => {
           response.data.environments.map(x => {
             x['created_at'] = this.dateFormat(x['created_at'])
-            x['updated_at'] = this.dateFormat(x['created_at'])
+            x['updated_at'] = this.dateFormat(x['updated_at'])
           })
           this.environments = response.data.environments
           this.items = this.environments.slice(0)
@@ -401,6 +443,26 @@ export default {
       if (val == 'all') this.items = this.environments.slice(0)
       else if (val == 'personal') this.items = this.environments.filter(x => !x.shared)
       else if (val == 'shared') this.items = this.environments.filter(x => x.shared)
+    },
+    filterEnvironments() {
+      this.selected = []
+      if (this.filter.group != null) this.columns = this.columns.filter(x => x != 'group')
+      else if (!this.columns.some(x => x == 'group')) this.columns.push('group')
+      this.getEnvironments()
+    },
+    filterEnvironmentColumns() {
+      this.columnsRaw = [...this.columns]
+      this.columnsDialog = true
+    },
+    selectAllColumns() {
+      this.columnsRaw = ['name','servers','shared','group','owner','created_by','created_at','updated_by','updated_at']
+    },
+    deselectAllColumns() {
+      this.columnsRaw = []
+    },
+    filterColumns() {
+      this.columns = [...this.columnsRaw]
+      this.columnsDialog = false
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")

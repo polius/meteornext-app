@@ -1,8 +1,7 @@
-import sys
-import json
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import json
 import utils
 import models.admin.users
 import models.admin.inventory.inventory
@@ -10,7 +9,7 @@ import models.admin.inventory.regions
 import models.admin.inventory.servers
 import routes.admin.settings
 
-class Regions:
+class Servers:
     def __init__(self, app, sql, license):
         self._app = app
         self._license = license
@@ -24,11 +23,11 @@ class Regions:
 
     def blueprint(self):
         # Init blueprint
-        admin_regions_blueprint = Blueprint('admin_regions', __name__, template_folder='admin_regions')       
+        admin_servers_blueprint = Blueprint('admin_servers', __name__, template_folder='admin_servers')
 
-        @admin_regions_blueprint.route('/admin/inventory/regions', methods=['GET','POST','PUT','DELETE'])
+        @admin_servers_blueprint.route('/admin/inventory/servers', methods=['GET','POST','PUT','DELETE'])
         @jwt_required
-        def admin_regions_method():
+        def admin_servers_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -45,20 +44,20 @@ class Regions:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
-            region = request.get_json()
+            server = request.get_json()
 
             if request.method == 'GET':
                 return self.get()
             elif request.method == 'POST':
-                return self.post(user, region)
+                return self.post(user, server)
             elif request.method == 'PUT':
-                return self.put(user, region)
+                return self.put(user, server)
             elif request.method == 'DELETE':
                 return self.delete()
 
-        @admin_regions_blueprint.route('/admin/inventory/regions/test', methods=['POST'])
+        @admin_servers_blueprint.route('/admin/inventory/servers/test', methods=['POST'])
         @jwt_required
-        def admin_regions_test_method():
+        def admin_servers_test_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -75,59 +74,69 @@ class Regions:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Request Json
-            region_json = request.get_json()
+            server_json = request.get_json()
 
-            # Check SSH Connection
+            # Get Region
+            region = self._regions.get(region_id=server_json['region_id'])
+            if len(region) == 0:
+                return jsonify({'message': "Can't test the connection. Invalid region provided."}), 400
+            else:
+                region = region[0]
+
+            # Init Utils Class
+            connection = region if region['ssh_tunnel'] else None
+            u = utils.Utils(connection)
+
+            # Check SQL Connection
             try:
-                u = utils.Utils(region_json)
-                u.check_ssh()
+                u.check_sql(server_json['server'])
             except Exception as e:
                 return jsonify({'message': str(e)}), 400
 
             return jsonify({'message': 'Connection Successful'}), 200
 
-        return admin_regions_blueprint
+        return admin_servers_blueprint
 
     ####################
     # Internal Methods #
     ####################
     def get(self):
         group_id = request.args['group_id'] if 'group_id' in request.args else None
-        return jsonify({'regions': self._regions.get(group_id=group_id)}), 200
+        return jsonify({'servers': self._servers.get(group_id=group_id)}), 200
 
-    def post(self, user, region):
+    def post(self, user, server):
         # Check group & user
-        if not self._inventory.exist_group(region['group_id']):
+        if not self._inventory.exist_group(server['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400
-        if not region['shared'] and not self._inventory.exist_user(region['group_id'], region['owner_id']):
+        if not server['shared'] and not self._inventory.exist_user(server['group_id'], server['owner_id']):
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
-        # Check region exists
-        if self._regions.exist(region):
-            return jsonify({'message': 'This region currently exists'}), 400
-        # Add region
-        self._regions.post(user, region)
-        return jsonify({'message': 'Region added successfully'}), 200
+        # Check server exists
+        if self._servers.exist(server):
+            return jsonify({'message': 'This server currently exists'}), 400
+        # Add server
+        self._servers.post(user, server)
+        return jsonify({'message': 'Server added successfully'}), 200
 
-    def put(self, user, region):
+    def put(self, user, server):
         # Check group & user
-        if not self._inventory.exist_group(region['group_id']):
+        if not self._inventory.exist_group(server['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400
-        if not region['shared'] and not self._inventory.exist_user(region['group_id'], region['owner_id']):
+        if not server['shared'] and not self._inventory.exist_user(server['group_id'], server['owner_id']):
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
-        # Check region exists
-        if self._regions.exist(region):
-            return jsonify({'message': 'This new region name currently exists'}), 400
-        # Edit region
-        self._regions.put(user, region)
-        return jsonify({'message': 'Region edited successfully'}), 200
+        # Check server exists
+        if self._servers.exist(server):
+            return jsonify({'message': 'This new server name currently exists'}), 400
+        # Edit server
+        self._servers.put(user, server)
+        return jsonify({'message': 'Server edited successfully'}), 200
 
     def delete(self):
-        regions = json.loads(request.args['regions'])
+        servers = json.loads(request.args['servers'])
         # Check inconsistencies
-        for region in regions:
-            if self._servers.exist_by_region(region):
-                return jsonify({'message': "The selected regions have servers"}), 400
-        # Delete regions
-        for region in regions:
-            self._regions.delete(region)
-        return jsonify({'message': 'Selected regions deleted successfully'}), 200
+        for server in servers:
+            if self._servers.exist_in_environment(server):
+                return jsonify({'message': "The server '{}' is included in the environment '{}'".format(exist[0]['server_name'], exist[0]['environment_name'])}), 400
+        # Delete servers
+        for server in servers:
+            self._servers.delete(server)
+        return jsonify({'message': 'Selected servers deleted successfully'}), 200
