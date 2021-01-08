@@ -641,18 +641,19 @@ export default {
           })
         }
       }
-      // Load First 20 rows at init
+      // Load First 25 rows at init
       setTimeout(() => {
         current.clientHeaders = headers
-        current.clientItems = items.slice(0,19)
+        current.clientItems = items.slice(0,24)
       }, 0)
 
       // Load the rest of the rows
-      new Promise(() => {
-        for (let item of items.slice(19, items.length)) {
-          setTimeout(() => { this.gridApi.client.applyTransactionAsync({ add: [item]})}, 0)
-        }
-      })
+      setTimeout(() => { current.clientItems = items }, 1000)
+      // new Promise(() => {
+      //   for (let item of items.slice(19, items.length)) {
+      //     setTimeout(() => { this.gridApi.client.applyTransactionAsync({ add: [item]})}, 0)
+      //   }
+      // })
     },
     onRowDataChanged() {
       if (this.columnApi.client != null) this.resizeTable()
