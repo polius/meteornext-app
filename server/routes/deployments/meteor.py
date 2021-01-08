@@ -205,7 +205,7 @@ class Meteor:
             self._blueprint = deployment['code']
 
         # Store Query Execution
-        with open("{}/{}/blueprint.py".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
+        with open("{}/{}/blueprint.py".format(self._logs['local']['path'], self._uuid), 'w', encoding="utf-8") as outfile:
             outfile.write(self._blueprint.encode('utf-8','ignore').decode('utf-8'))
 
     def __compile_blueprint_basic(self, deployment):
