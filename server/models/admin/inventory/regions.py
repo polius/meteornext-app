@@ -73,11 +73,11 @@ class Regions:
                     FROM regions
                     WHERE name = %s
                     AND group_id = %s
-                    AND (1 = %s OR owner_id = %s)
+                    AND (shared = 1 OR owner_id = %s)
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (region['name'], region['group_id'], region['shared'], region['owner_id'], region['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (region['name'], region['group_id'], region['owner_id'], region['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -85,7 +85,7 @@ class Regions:
                     FROM regions
                     WHERE name = %s
                     AND group_id = %s
-                    AND (1 = %s OR owner_id = %s)
+                    AND (shared = 1 OR owner_id = %s)
                 ) AS exist
             """
-            return self._sql.execute(query, (region['name'], region['group_id'], region['shared'], region['owner_id']))[0]['exist'] == 1
+            return self._sql.execute(query, (region['name'], region['group_id'], region['owner_id']))[0]['exist'] == 1
