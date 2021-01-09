@@ -58,6 +58,7 @@ export default {
             else return '<i class="fas fa-times-circle" title="Failed" style="color:#e74d3c; margin-right:8px;"></i>Failed'
           }
         },
+        { headerName: 'Records', colId: 'records', field: 'records', sortable: true, filter: true, resizable: true, editable: false },
         { headerName: 'Error', colId: 'error', field: 'error', sortable: true, filter: true, resizable: true, editable: false },
       ]
     }

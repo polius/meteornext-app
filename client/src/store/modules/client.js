@@ -214,6 +214,7 @@ const mutations = {
         'database': query['database'],
         'query': query['query'],
         'status': 'error' in query ? false : true,
+        'records': query['rowCount'],
         'error': 'error' in query ? query['error'] : null
       })
     }
