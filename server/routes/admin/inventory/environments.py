@@ -84,14 +84,14 @@ class Environments:
     # Internal Methods #
     ####################
     def get(self):
-        group_id = request.args['group'] if 'group' in request.args else None
+        group_id = request.args['group_id'] if 'group_id' in request.args else None
         return jsonify({'environments': self._environments.get(group_id)}), 200
 
     def post(self, user, environment):
         # Check group & user
-        if not self._inventory.exist_group(environment['group']):
+        if not self._inventory.exist_group(environment['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400
-        if not environment['shared'] and not self._inventory.exist_user(environment['group'], environment['owner']):
+        if not environment['shared'] and not self._inventory.exist_user(environment['group_id'], environment['owner_id']):
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check environment exists
         if self._environments.exist(environment):
@@ -102,9 +102,9 @@ class Environments:
 
     def put(self, user, environment):
         # Check group & user
-        if not self._inventory.exist_group(environment['group']):
+        if not self._inventory.exist_group(environment['group_id']):
             return jsonify({'message': 'This group does not exist'}), 400
-        if not environment['shared'] and not self._inventory.exist_user(environment['group'], environment['owner']):
+        if not environment['shared'] and not self._inventory.exist_user(environment['group_id'], environment['owner_id']):
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check environment exists
         if self._environments.exist(environment):
