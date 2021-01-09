@@ -29,7 +29,7 @@
                 <v-form ref="form" v-if="mode!='delete'" style="margin-top:20px;">
                   <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-autocomplete ref="group_id" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                     <v-col v-if="!item.shared" style="margin-left:20px">
                       <v-autocomplete ref="owner_id" v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
@@ -176,7 +176,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { group_id: '', owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false },
+    item: { group_id: '', owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: true },
     mode: '',
     loading: true,
     engines: {
@@ -200,7 +200,8 @@ export default {
     EventBus.$on('filter-servers', this.filterServers);
     EventBus.$on('filter-server-columns', this.filterServerColumns);
     EventBus.$on('new-server', this.newServer);
-    EventBus.$on('edit-server', this.editServer)
+    EventBus.$on('clone-server', this.cloneServer);
+    EventBus.$on('edit-server', this.editServer);
     EventBus.$on('delete-server', this.deleteServer);
   },
   computed: {
@@ -217,12 +218,12 @@ export default {
       this.getUsers()
     },
     getUsers() {
-      axios.get('/admin/inventory/users', { params: { group: this.item.group_id }})
+      axios.get('/admin/inventory/users', { params: { group_id: this.item.group_id }})
         .then((response) => {
           this.users = response.data.users
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
@@ -239,7 +240,7 @@ export default {
           this.filterBy(this.filter.scope)
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -250,7 +251,7 @@ export default {
           this.regions = response.data.regions.map(x => ({ id: x.id, name: x.name, shared: x.shared }))
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
@@ -264,15 +265,24 @@ export default {
     newServer() {
       this.mode = 'new'
       this.users = []
-      this.item = { group_id: this.filter.group, owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false }
-      if (this.filter.group != null) this.getUsers()
+      this.item = { group_id: this.filter.group, owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: true }
+      if (this.filter.group != null) { this.getUsers(); this.getRegions(); }
       this.dialog_title = 'New Server'
+      this.dialog = true
+    },
+    cloneServer() {
+      this.mode = 'clone'
+      this.users = []
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      delete this.item['id']
+      setTimeout(() => { this.getUsers(); this.getRegions() },0)
+      this.dialog_title = 'Clone Server'
       this.dialog = true
     },
     editServer() {
       this.mode = 'edit'
-      this.item = Object.assign({}, this.selected[0])
-      this.$nextTick(() => this.getUsers())
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.getUsers()
       this.getRegions()
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'Edit Server'
@@ -285,7 +295,7 @@ export default {
     },
     submitServer() {
       this.loading = true
-      if (this.mode == 'new') this.newServerSubmit()
+      if (['new','clone'].includes(this.mode)) this.newServerSubmit()
       else if (this.mode == 'edit') this.editServerSubmit()
       else if (this.mode == 'delete') this.deleteServerSubmit()
     },
@@ -302,10 +312,11 @@ export default {
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getServers()
+          this.selected = []
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -327,7 +338,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -344,7 +355,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -368,7 +379,7 @@ export default {
           this.notification(response.data.message, '#00b16a', 2)
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -415,10 +426,7 @@ export default {
           if (this.filter.group == null) this.$refs.group_id.focus()
           else this.$refs.name.focus()
         }
-        else if (this.mode == 'edit') {
-          if (this.item.group == null) this.$refs.group_id.focus()
-          else this.$refs.name.focus()
-        }
+        else if (['clone','edit'].includes(this.mode)) this.$refs.name.focus()
       })
     },
     selected(val) {

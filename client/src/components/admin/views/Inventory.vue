@@ -15,6 +15,7 @@
           </v-tabs>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="newClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1" @click="cloneClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
           <v-btn v-if="selected.length == 1" @click="editClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
           <v-btn v-if="selected.length > 0" @click="deleteClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -133,6 +134,12 @@ export default {
       else if (this.tab == 1) EventBus.$emit('new-region')
       else if (this.tab == 2) EventBus.$emit('new-server')
       else if (this.tab == 3) EventBus.$emit('new-auxiliary')
+    },
+    cloneClick() {
+      if (this.tab == 0) EventBus.$emit('clone-environment')
+      else if (this.tab == 1) EventBus.$emit('clone-region')
+      else if (this.tab == 2) EventBus.$emit('clone-server')
+      else if (this.tab == 3) EventBus.$emit('clone-auxiliary')
     },
     editClick() {
       if (this.tab == 0) EventBus.$emit('edit-environment')

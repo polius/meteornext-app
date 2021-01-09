@@ -72,11 +72,11 @@ class Environments:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Check params
-            if 'group' not in request.args:
-                return jsonify({'message': 'Missing "group" parameter'}), 400
+            if 'group_id' not in request.args:
+                return jsonify({'message': 'Missing "group_id" parameter'}), 400
 
             # Get environments servers
-            return jsonify({'servers': self._environments.get_servers(request.args['group']), 'environment_servers': self._environments.get_environment_servers(request.args['group'])})
+            return jsonify({'servers': self._environments.get_servers(request.args['group_id']), 'environment_servers': self._environments.get_environment_servers(request.args['group_id'])})
 
         return admin_environments_blueprint
 

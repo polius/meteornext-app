@@ -28,7 +28,7 @@
                 <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
                   <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-autocomplete ref="group_id" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                     <v-col v-if="!item.shared" style="margin-left:20px">
                       <v-autocomplete ref="owner_id" v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
@@ -142,7 +142,7 @@ export default {
     environments: [],
     items: [],
     selected: [],
-    item: { group_id: '', owner_id: '', name: '', shared: false },
+    item: { group_id: '', owner_id: '', name: '', shared: true },
     environment_servers: {},
     mode: '',
     loading: true,
@@ -164,7 +164,8 @@ export default {
     EventBus.$on('filter-environments', this.filterEnvironments);
     EventBus.$on('filter-environment-columns', this.filterEnvironmentColumns);
     EventBus.$on('new-environment', this.newEnvironment);
-    EventBus.$on('edit-environment', this.editEnvironment)
+    EventBus.$on('clone-environment', this.cloneEnvironment);
+    EventBus.$on('edit-environment', this.editEnvironment);
     EventBus.$on('delete-environment', this.deleteEnvironment);
   },
   computed: {
@@ -180,30 +181,30 @@ export default {
       this.getServers()
     },
     getUsers() {
-      axios.get('/admin/inventory/users', { params: { group: this.item.group_id }})
+      axios.get('/admin/inventory/users', { params: { group_id: this.item.group_id }})
         .then((response) => {
           this.users = response.data.users
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     getServers() {
-      axios.get('/admin/inventory/environments/servers', { params: { group: this.item.group_id }})
+      axios.get('/admin/inventory/environments/servers', { params: { group_id: this.item.group_id }})
         .then((response) => {
           this.environment_servers = this.parseEnvironmentServers(response.data.environment_servers)
           this.treeviewItems = this.parseTreeView(response.data.servers)
-          if (this.mode == 'edit') setTimeout(this.updateSelected, 1)
+          if (['edit','clone'].includes(this.mode)) setTimeout(this.updateSelected, 1)
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     getEnvironments() {
       this.loading = true
-      axios.get('/admin/inventory/environments', { params: { group: this.filter.group }})
+      axios.get('/admin/inventory/environments', { params: { group_id: this.filter.group }})
         .then((response) => {
           response.data.environments.map(x => {
             x['created_at'] = this.dateFormat(x['created_at'])
@@ -215,7 +216,7 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
@@ -280,7 +281,7 @@ export default {
     newEnvironment() {
       this.mode = 'new'
       this.users = []
-      this.item = { group_id: this.filter.group, owner_id: '', name: '', shared: false }
+      this.item = { group_id: this.filter.group, owner_id: '', name: '', shared: true }
       if (this.filter.group != null) this.getUsers()
       this.treeviewItems = []
       this.treeviewSelected = []
@@ -288,10 +289,21 @@ export default {
       this.dialog_title = 'New Environment'
       this.dialog = true
     },
+    cloneEnvironment() {
+      this.mode = 'clone'
+      this.users = []
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      delete this.item['id']
+      this.getUsers()
+      this.getServers()
+      this.dialog_title = 'Clone Environment'
+      this.dialog = true
+    },  
     editEnvironment() {
       this.mode = 'edit'
-      this.item = Object.assign({}, this.selected[0])
-      this.$nextTick(() => { this.getUsers(); this.getServers(); })
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.getUsers()
+      this.getServers()
       this.dialog_title = 'Edit Environment'
       this.dialog = true
     },
@@ -321,7 +333,7 @@ export default {
     },
     submitEnvironment() {
       this.loading = true
-      if (this.mode == 'new') this.newEnvironmentSubmit()
+      if (['new','clone'].includes(this.mode)) this.newEnvironmentSubmit()
       else if (this.mode == 'edit') this.editEnvironmentSubmit()
       else if (this.mode == 'delete') this.deleteEnvironmentSubmit()
     },
@@ -338,10 +350,11 @@ export default {
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getEnvironments()
+          this.selected = []
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -365,7 +378,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -381,7 +394,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -428,10 +441,7 @@ export default {
           if (this.filter.group == null) this.$refs.group_id.focus()
           else this.$refs.name.focus()
         }
-        else if (this.mode == 'edit') {
-          if (this.group == null) this.$refs.group_id.focus()
-          else this.$refs.name.focus()
-        }
+        else if (['clone','edit'].includes(this.mode)) this.$refs.name.focus()
       })
     },
     selected(val) {

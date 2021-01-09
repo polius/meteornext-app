@@ -59,10 +59,10 @@ class Inventory:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Check params
-            if 'group' not in request.args:
-                return jsonify({'message': 'Missing "group" parameter'}), 400
+            if 'group_id' not in request.args:
+                return jsonify({'message': 'Missing "group_id" parameter'}), 400
 
             # Return users
-            return jsonify({'users': self._inventory.get_users(request.args['group'])}), 200
+            return jsonify({'users': self._inventory.get_users(request.args['group_id'])}), 200
 
         return admin_inventory_blueprint

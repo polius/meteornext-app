@@ -47,7 +47,6 @@ class Auxiliary:
         query = """
             UPDATE auxiliary
             SET name = %s,
-                group_id = %s,
                 ssh_tunnel = %s, 
                 ssh_hostname = %s,
                 ssh_port = %s, 
@@ -67,7 +66,7 @@ class Auxiliary:
                 updated_at = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (auxiliary['name'], auxiliary['group_id'], auxiliary['ssh_tunnel'], auxiliary['ssh_hostname'], auxiliary['ssh_port'], auxiliary['ssh_username'], auxiliary['ssh_password'], auxiliary['ssh_key'], auxiliary['sql_engine'], auxiliary['sql_version'], auxiliary['sql_hostname'], auxiliary['sql_port'], auxiliary['sql_username'], auxiliary['sql_password'], auxiliary['sql_ssl'], auxiliary['shared'], auxiliary['shared'], auxiliary['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), auxiliary['id']))
+        self._sql.execute(query, (auxiliary['name'], auxiliary['ssh_tunnel'], auxiliary['ssh_hostname'], auxiliary['ssh_port'], auxiliary['ssh_username'], auxiliary['ssh_password'], auxiliary['ssh_key'], auxiliary['sql_engine'], auxiliary['sql_version'], auxiliary['sql_hostname'], auxiliary['sql_port'], auxiliary['sql_username'], auxiliary['sql_password'], auxiliary['sql_ssl'], auxiliary['shared'], auxiliary['shared'], auxiliary['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), auxiliary['id']))
 
     def delete(self, auxiliary_id):
         query = "DELETE FROM auxiliary WHERE id = %s"
@@ -81,19 +80,19 @@ class Auxiliary:
                     FROM auxiliary
                     WHERE name = %s
                     AND group_id = %s
-                    AND owner_id = %s
+                    AND (1 = %s OR owner_id = %s)
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (auxiliary['name'], auxiliary['group_id'], auxiliary['owner_id'], auxiliary['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (auxiliary['name'], auxiliary['group_id'], auxiliary['shared'], auxiliary['owner_id'], auxiliary['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM auxiliary
                     WHERE name = %s
-                    AND owner_id = %s
                     AND group_id = %s
+                    AND (1 = %s OR owner_id = %s)
                 ) AS exist
             """
-            return self._sql.execute(query, (auxiliary['name'], auxiliary['owner_id'], auxiliary['group_id']))[0]['exist'] == 1
+            return self._sql.execute(query, (auxiliary['name'], auxiliary['group_id'], auxiliary['shared'], auxiliary['owner_id']))[0]['exist'] == 1

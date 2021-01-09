@@ -6,6 +6,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text @click="newServer()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1 && !(inventory_secured && selected[0].shared && !owner)" @click="cloneServer()" text class="body-2"><v-icon small style="padding-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
           <v-btn v-if="selected.length == 1" text @click="editServer()" class="body-2"><v-icon small style="padding-right:10px">{{ !owner && selected[0].shared ? 'fas fa-info' : 'fas fa-feather-alt' }}</v-icon>{{ !owner && selected[0].shared ? 'INFO' : 'EDIT' }}</v-btn>
           <v-btn v-if="selected.length > 0 && !(!owner && selected.some(x => x.shared))" text @click="deleteServer()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -182,28 +183,27 @@ export default {
           this.servers = response.data.data
           this.items = response.data.data
           this.filterBy(this.filter)
-          this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
+        .finally(() => this.loading = false)
     },
     getRegions() {
-      // this.regions = []
       axios.get('/inventory/regions')
         .then((response) => {
           this.regions = response.data.data.map(x => ({ id: x.id, name: x.name, shared: x.shared }))
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     selectEngine(value) {
-      if (this.item['port'] == '') {
-        if (['MySQL','Aurora MySQL'].includes(value)) this.item['port'] = '3306'
-        else if (value == 'PostgreSQL') this.item['port'] = '5432'
+      if (this.item.port == '') {
+        if (['MySQL','Aurora MySQL'].includes(value)) this.item.port = '3306'
+        else if (value == 'PostgreSQL') this.item.port = '5432'
       }
       this.versions = this.engines[value]
     },
@@ -211,6 +211,14 @@ export default {
       this.mode = 'new'
       this.item = { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false }
       this.dialog_title = 'New Server'
+      this.dialog = true
+    },
+    cloneServer() {
+      this.mode = 'clone'
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      delete this.item['id']
+      this.versions = this.engines[this.item.sql_engine]
+      this.dialog_title = 'Clone Server'
       this.dialog = true
     },
     editServer() {
@@ -227,7 +235,7 @@ export default {
     },
     submitServer() {
       this.loading = true
-      if (this.mode == 'new') this.newServerSubmit()
+      if (['new','clone'].includes(this.mode)) this.newServerSubmit()
       else if (this.mode == 'edit') this.editServerSubmit()
       else if (this.mode == 'delete') this.deleteServerSubmit()
     },
@@ -238,29 +246,20 @@ export default {
         this.loading = false
         return
       }
-      // Check if new item already exists
-      for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['region'] == this.item.region && this.items[i]['name'] == this.item.name) {
-          this.notification('This server currently exists', 'error')
-          this.loading = false
-          return
-        }
-      }
       // Add item in the DB
       const payload = this.item
       axios.post('/inventory/servers', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getServers()
+          this.selected = []
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     editServerSubmit() {
       // Check if all fields are filled
@@ -269,35 +268,20 @@ export default {
         this.loading = false
         return
       }
-      // Get Item Position
-      for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['region'] == this.selected[0]['region'] && this.items[i]['name'] == this.selected[0]['name']) break
-      }
-      // Check if edited item already exists
-      for (var j = 0; j < this.items.length; ++j) {
-        if (this.items[j]['region'] == this.item.region && this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
-          this.notification('This server currently exists', 'error')
-          this.loading = false
-          return
-        }
-      }
       // Edit item in the DB
       const payload = this.item
       axios.put('/inventory/servers', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          // Edit item in the data table
-          this.items.splice(i, 1, this.item)
-          this.dialog = false
+          this.getServers()
           this.selected = []
+          this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     deleteServerSubmit() {
       // Build payload
@@ -306,27 +290,15 @@ export default {
       axios.delete('/inventory/servers', { params: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          // Delete items from the data table
-          while(this.selected.length > 0) {
-            var s = this.selected.pop()
-            for (var i = 0; i < this.items.length; ++i) {
-              if (this.items[i]['name'] == s['name']) {
-                // Delete Item
-                this.items.splice(i, 1)
-                break
-              }
-            }
-          }
+          this.getServers()
           this.selected = []
-        })
-        .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
-        })
-        .finally(() => {
-          this.loading = false
           this.dialog = false
         })
+        .catch((error) => {
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.loading = false)
     },
     testConnection() {
       // Check if all fields are filled
@@ -347,12 +319,10 @@ export default {
           this.notification(response.data.message, '#00b16a', 2)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     filterBy(val) {
       this.filter = val
