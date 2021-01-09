@@ -66,18 +66,18 @@ class Regions:
         self._sql.execute(query, (group_id))
 
     def exist(self, user_id, group_id, region):
-        if 'id' in region:
+        if 'id' in region: # (name, group_id) 
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM regions
                     WHERE name = %s
                     AND group_id = %s
-                    AND (1 = %s OR owner_id = %s)
+                    AND (shared = 1 OR owner_id = %s)
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (region['name'], group_id, region['shared'], user_id, region['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (region['name'], group_id, user_id, region['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -85,10 +85,10 @@ class Regions:
                     FROM regions
                     WHERE name = %s
                     AND group_id = %s
-                    AND (1 = %s OR owner_id = %s)
+                    AND (shared = 1 OR owner_id = %s)
                 ) AS exist
             """
-            return self._sql.execute(query, (region['name'], group_id, region['shared'], user_id))[0]['exist'] == 1
+            return self._sql.execute(query, (region['name'], group_id, user_id))[0]['exist'] == 1
 
     def get_by_environment(self, user_id, group_id, environment_name):
         query = """

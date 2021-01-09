@@ -125,11 +125,11 @@ class Servers:
                     FROM servers
                     WHERE name = %s
                     AND group_id = %s
-                    AND (1 = %s OR owner_id = %s)
+                    AND (shared = 1 OR owner_id = %s)
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], group_id, server['shared'], user_id, server['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['name'], group_id, user_id, server['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -137,10 +137,10 @@ class Servers:
                     FROM servers
                     WHERE name = %s
                     AND group_id = %s
-                    AND (1 = %s OR owner_id = %s)
+                    AND (shared = 1 OR owner_id = %s)
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], group_id, server['shared'], user_id))[0]['exist'] == 1
+            return self._sql.execute(query, (server['name'], group_id, user_id))[0]['exist'] == 1
 
     def exist_by_region(self, group_id, region_id):
         query = """
