@@ -143,17 +143,12 @@ export default {
     items: [],
     selected: [],
     item: { group_id: '', owner_id: '', name: '', shared: false },
+    environment_servers: {},
     mode: '',
     loading: true,
     dialog: false,
     dialog_title: '',
     users: [],
-    // Dialog items
-    /*shared: false,
-    group: '',
-    owner: '',
-    environment_name: '',*/
-    environment_servers: {},
     // Servers Treeview
     treeviewItems: [],
     treeviewSelected: [],
@@ -190,7 +185,8 @@ export default {
           this.users = response.data.users
         })
         .catch((error) => {
-          console.log(error)
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     getServers() {
@@ -201,7 +197,8 @@ export default {
           if (this.mode == 'edit') setTimeout(this.updateSelected, 1)
         })
         .catch((error) => {
-          console.log(error)
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     getEnvironments() {
@@ -218,8 +215,8 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     parseTreeView(servers) {
@@ -344,8 +341,8 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
     },
@@ -368,8 +365,8 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
     },
@@ -384,8 +381,8 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
     },
