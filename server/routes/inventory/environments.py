@@ -77,7 +77,7 @@ class Environments:
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check environment exists
         if self._environments.exist(user['id'], user['group_id'], environment):
-            return jsonify({'message': 'This environment currently exists'}), 400
+            return jsonify({'message': 'This environment name currently exists'}), 400
         # Add environment
         self._environments.post(user['id'], user['group_id'], environment)
         return jsonify({'message': 'Environment added successfully'}), 200
@@ -88,7 +88,7 @@ class Environments:
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check environment exists
         if self._environments.exist(user['id'], user['group_id'], environment):
-            return jsonify({'message': 'This new environment currently exists'}), 400
+            return jsonify({'message': 'This environment name currently exists'}), 400
         # Edit environment
         self._environments.put(user['id'], user['group_id'], environment)
         return jsonify({'message': 'Environment edited successfully'}), 200

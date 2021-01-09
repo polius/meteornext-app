@@ -112,7 +112,7 @@ class Servers:
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check server exists
         if self._servers.exist(server):
-            return jsonify({'message': 'This server currently exists'}), 400
+            return jsonify({'message': 'This server name currently exists'}), 400
         # Add server
         self._servers.post(user, server)
         return jsonify({'message': 'Server added successfully'}), 200
@@ -125,7 +125,7 @@ class Servers:
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check server exists
         if self._servers.exist(server):
-            return jsonify({'message': 'This new server name currently exists'}), 400
+            return jsonify({'message': 'This server name currently exists'}), 400
         # Edit server
         self._servers.put(user, server)
         return jsonify({'message': 'Server edited successfully'}), 200
