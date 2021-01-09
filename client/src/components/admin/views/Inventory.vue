@@ -5,7 +5,7 @@
         <v-toolbar-title class="body-2 white--text font-weight-medium"><v-icon small style="margin-right:10px">fas fa-layer-group</v-icon>INVENTORY</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn :depressed="filterApplied" :color="filterApplied ? '#4a66a1' : ''" @click="filterClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-search</v-icon>FILTER</v-btn>
+          <v-btn @click="filterClick" text class="body-2" :style="{ backgroundColor : filterApplied ? '#4a66a1' : '' }"><v-icon small style="padding-right:10px">fas fa-search</v-icon>FILTER</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-tabs v-model="tab" background-color="transparent" color="white" slider-color="white" slot="extension">
             <v-tab>ENVIRONMENTS</v-tab>
