@@ -103,7 +103,7 @@ class Regions:
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check region exists
         if self._regions.exist(region):
-            return jsonify({'message': 'This region currently exists'}), 400
+            return jsonify({'message': 'This region name currently exists'}), 400
         # Add region
         self._regions.post(user, region)
         return jsonify({'message': 'Region added successfully'}), 200
@@ -116,7 +116,7 @@ class Regions:
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check region exists
         if self._regions.exist(region):
-            return jsonify({'message': 'This new region name currently exists'}), 400
+            return jsonify({'message': 'This region name currently exists'}), 400
         # Edit region
         self._regions.put(user, region)
         return jsonify({'message': 'Region edited successfully'}), 200

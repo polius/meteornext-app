@@ -184,7 +184,7 @@ export default {
         return
       }
       // Add item in the DB
-      this.notification('Adding Region...', 'info', true)
+      // this.notification('Adding Region...', 'info', true)
       const payload = this.item
       axios.post('/inventory/regions', payload)
         .then((response) => {

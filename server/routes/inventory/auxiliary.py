@@ -108,7 +108,7 @@ class Auxiliary:
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check auxiliary exists
         if self._auxiliary.exist(user['id'], user['group_id'], auxiliary):
-            return jsonify({'message': 'This auxiliary connection currently exists'}), 400
+            return jsonify({'message': 'This auxiliary name currently exists'}), 400
         # Add auxiliary
         self._auxiliary.post(user['id'], user['group_id'], auxiliary)
         return jsonify({'message': 'Auxiliary connection added successfully'}), 200
@@ -119,7 +119,7 @@ class Auxiliary:
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check auxiliary exists
         if self._auxiliary.exist(user['id'], user['group_id'], auxiliary):
-            return jsonify({'message': 'This new auxiliary connection name currently exists'}), 400
+            return jsonify({'message': 'This auxiliary name currently exists'}), 400
         # Edit auxiliary
         self._auxiliary.put(user['id'], user['group_id'], auxiliary)
         return jsonify({'message': 'Auxiliary connection edited successfully'}), 200

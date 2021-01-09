@@ -115,7 +115,7 @@ class Servers:
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check server exists
         if self._servers.exist(user['id'], user['group_id'], server):
-            return jsonify({'message': 'This server currently exists'}), 400
+            return jsonify({'message': 'This server name currently exists'}), 400
         # Add server
         self._servers.post(user['id'], user['group_id'], server)
         return jsonify({'message': 'Server added successfully'}), 200
@@ -126,7 +126,7 @@ class Servers:
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check server exists
         if self._servers.exist(user['id'], user['group_id'], server):
-            return jsonify({'message': 'This new server name currently exists'}), 400
+            return jsonify({'message': 'This server name currently exists'}), 400
         # Edit server
         self._servers.put(user['id'], user['group_id'], server)
         return jsonify({'message': 'Server edited successfully'}), 200

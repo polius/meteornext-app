@@ -106,7 +106,7 @@ class Auxiliary:
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check auxiliary exists
         if self._auxiliary.exist(auxiliary):
-            return jsonify({'message': 'This auxiliary connection currently exists'}), 400
+            return jsonify({'message': 'This auxiliary name currently exists'}), 400
         # Add auxiliary
         self._auxiliary.post(user, auxiliary)
         return jsonify({'message': 'Auxiliary connection added successfully'}), 200
@@ -119,7 +119,7 @@ class Auxiliary:
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check auxiliary exists
         if self._auxiliary.exist(auxiliary):
-            return jsonify({'message': 'This new auxiliary connection name currently exists'}), 400
+            return jsonify({'message': 'This auxiliary name currently exists'}), 400
         # Edit auxiliary
         self._auxiliary.put(user, auxiliary)
         return jsonify({'message': 'Auxiliary connection edited successfully'}), 200

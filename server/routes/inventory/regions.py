@@ -106,7 +106,7 @@ class Regions:
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check region exists
         if self._regions.exist(user['id'], user['group_id'], region):
-            return jsonify({'message': 'This region currently exists'}), 400
+            return jsonify({'message': 'This region name currently exists'}), 400
         # Add region
         self._regions.post(user['id'], user['group_id'], region)
         return jsonify({'message': 'Region added successfully'}), 200
@@ -117,7 +117,7 @@ class Regions:
             return jsonify({'message': "Insufficient privileges"}), 401
         # Check region exists
         if self._regions.exist(user['id'], user['group_id'], region):
-            return jsonify({'message': 'This new region name currently exists'}), 400
+            return jsonify({'message': 'This region name currently exists'}), 400
         # Edit region
         self._regions.put(user['id'], user['group_id'], region)
         return jsonify({'message': 'Region edited successfully'}), 200

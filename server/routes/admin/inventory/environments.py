@@ -95,7 +95,7 @@ class Environments:
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check environment exists
         if self._environments.exist(environment):
-            return jsonify({'message': 'This environment currently exists'}), 400
+            return jsonify({'message': 'This environment name currently exists'}), 400
         # Add environment
         self._environments.post(user, environment)
         return jsonify({'message': 'Environment added successfully'}), 200
@@ -108,7 +108,7 @@ class Environments:
             return jsonify({'message': 'This user does not exist in the provided group'}), 400
         # Check environment exists
         if self._environments.exist(environment):
-            return jsonify({'message': 'This new environment currently exists'}), 400
+            return jsonify({'message': 'This environment name currently exists'}), 400
         # Edit environment
         self._environments.put(user, environment)
         return jsonify({'message': 'Environment edited successfully'}), 200
