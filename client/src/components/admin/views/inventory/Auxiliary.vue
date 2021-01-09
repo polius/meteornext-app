@@ -29,7 +29,7 @@
                 <v-form ref="form" v-if="mode!='delete'" style="margin-top:20px;">
                   <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-autocomplete ref="group_id" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                     <v-col v-if="!item.shared" style="margin-left:20px">
                       <v-autocomplete ref="owner_id" v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
@@ -172,7 +172,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { group_id: '', owner_id: '', name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', sql_ssl: false, shared: false },
+    item: { group_id: '', owner_id: '', name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', sql_ssl: false, shared: true },
     mode: '',
     loading: true,
     engines: {
@@ -193,7 +193,8 @@ export default {
     EventBus.$on('filter-auxiliary', this.filterAuxiliary);
     EventBus.$on('filter-auxiliary-columns', this.filterAuxiliaryColumns);
     EventBus.$on('new-auxiliary', this.newAuxiliary);
-    EventBus.$on('edit-auxiliary', this.editAuxiliary)
+    EventBus.$on('clone-auxiliary', this.cloneAuxiliary);
+    EventBus.$on('edit-auxiliary', this.editAuxiliary);
     EventBus.$on('delete-auxiliary', this.deleteAuxiliary);
   },
   computed: {
@@ -208,12 +209,12 @@ export default {
       this.getUsers()
     },
     getUsers() {
-      axios.get('/admin/inventory/users', { params: { group: this.item.group_id }})
+      axios.get('/admin/inventory/users', { params: { group_id: this.item.group_id }})
         .then((response) => {
           this.users = response.data.users
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
@@ -230,7 +231,7 @@ export default {
           this.filterBy(this.filter.scope)
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -245,15 +246,25 @@ export default {
     newAuxiliary() {
       this.mode = 'new'
       this.users = []
-      this.item = { group_id: this.filter.group, owner_id: '', name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', sql_ssl: false, shared: false }
+      this.item = { group_id: this.filter.group, owner_id: '', name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', sql_ssl: false, shared: true }
       if (this.filter.group != null) this.getUsers()
       this.dialog_title = 'New Auxiliary'
       this.dialog = true
     },
+    cloneAuxiliary() {
+      this.mode = 'clone'
+      this.users = []
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      delete this.item['id']
+      this.getUsers()
+      this.versions = this.engines[this.item.sql_engine]
+      this.dialog_title = 'Clone Auxiliary'
+      this.dialog = true
+    },
     editAuxiliary() {
       this.mode = 'edit'
-      this.item = Object.assign({}, this.selected[0])
-      this.$nextTick(() => this.getUsers())
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.getUsers()
       this.versions = this.engines[this.item.sql_engine]
       this.dialog_title = 'Edit Auxiliary'
       this.dialog = true
@@ -265,7 +276,7 @@ export default {
     },
     submitAuxiliary() {
       this.loading = true
-      if (this.mode == 'new') this.newAuxiliarySubmit()
+      if (['new','clone'].includes(this.mode)) this.newAuxiliarySubmit()
       else if (this.mode == 'edit') this.editAuxiliarySubmit()
       else if (this.mode == 'delete') this.deleteAuxiliarySubmit()
     },
@@ -282,10 +293,11 @@ export default {
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getAuxiliary()
+          this.selected = []
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -307,7 +319,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -324,7 +336,7 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -345,7 +357,7 @@ export default {
           this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -392,10 +404,7 @@ export default {
           if (this.filter.group == null) this.$refs.group_id.focus()
           else this.$refs.name.focus()
         }
-        else if (this.mode == 'edit') {
-          if (this.item.group == null) this.$refs.group_id.focus()
-          else this.$refs.name.focus()
-        }
+        else if (['clone','edit'].includes(this.mode)) this.$refs.name.focus()
       })
     },
     selected(val) {

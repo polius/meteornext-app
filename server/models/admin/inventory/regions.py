@@ -47,7 +47,6 @@ class Regions:
         query = """
             UPDATE regions
             SET name = %s,
-                group_id = %s,
                 ssh_tunnel = %s,
                 hostname = IF(%s = '', NULL, %s),
                 port = IF(%s = '', NULL, %s),
@@ -60,18 +59,11 @@ class Regions:
                 updated_at = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (region['name'], region['group_id'], region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['shared'], region['shared'], region['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), region['id']))
+        self._sql.execute(query, (region['name'], region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['shared'], region['shared'], region['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), region['id']))
 
     def delete(self, region_id):
         query = "DELETE FROM regions WHERE id = %s"
         self._sql.execute(query, (region_id))
-
-    def remove(self, group_id):
-        query = """
-            DELETE FROM regions
-            WHERE group_id = %s
-        """
-        self._sql.execute(query, (group_id))
 
     def exist(self, region):
         if 'id' in region:
@@ -79,32 +71,21 @@ class Regions:
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM regions
-                    WHERE group_id = %s
-                    AND name = %s
-                    AND owner_id = %s
+                    WHERE name = %s
+                    AND group_id = %s
+                    AND (1 = %s OR owner_id = %s)
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (region['group_id'], region['name'], region['owner_id'], region['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (region['name'], region['group_id'], region['shared'], region['owner_id'], region['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM regions
-                    WHERE group_id = %s
-                    AND name = %s
-                    AND owner_id = %s
+                    WHERE name = %s
+                    AND group_id = %s
+                    AND (1 = %s OR owner_id = %s)
                 ) AS exist
             """
-            return self._sql.execute(query, (region['group_id'], region['name'], region['owner_id']))[0]['exist'] == 1
-
-    def get_by_environment(self, user_id, group_id, environment_name):
-        query = """
-            SELECT DISTINCT r.*
-            FROM regions r
-            JOIN servers s ON s.region_id = r.id
-            JOIN environment_servers es ON es.server_id = s.id
-            JOIN environments e ON e.id = es.environment_id AND e.group_id = %s AND e.name = %s
-            WHERE (r.shared = 1 OR r.owner_id = %s)
-        """
-        return self._sql.execute(query, (group_id, environment_name, user_id))
+            return self._sql.execute(query, (region['name'], region['group_id'], region['shared'], region['owner_id']))[0]['exist'] == 1

@@ -59,13 +59,12 @@ class Environments:
             UPDATE environments 
             SET name = %s,
                 shared = %s,
-                group_id = %s,
                 owner_id = IF(%s = 1, NULL, %s),
                 updated_by = %s, 
                 updated_at = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (environment['name'], environment['shared'], environment['group_id'], environment['shared'], environment['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), environment['id']))
+        self._sql.execute(query, (environment['name'], environment['shared'], environment['shared'], environment['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), environment['id']))
 
         # Fill environment servers
         if len(environment['servers']) > 0:
@@ -78,10 +77,6 @@ class Environments:
         self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.id = %s", (environment))
         self._sql.execute("DELETE FROM environments WHERE id = %s", (environment))
 
-    def remove(self, group_id):
-        self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id", (group_id))
-        self._sql.execute("DELETE FROM environments WHERE group_id = %s", (group_id))
-
     def exist(self, environment):
         if 'id' in environment:
             query = """
@@ -90,11 +85,11 @@ class Environments:
                     FROM environments 
                     WHERE name = %s 
                     AND group_id = %s
-                    AND owner_id = %s
+                    AND (1 = %s OR owner_id = %s)
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (environment['name'], environment['group_id'], environment['owner_id'], environment['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (environment['name'], environment['group_id'], environment['shared'], environment['owner_id'], environment['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -102,10 +97,10 @@ class Environments:
                     FROM environments 
                     WHERE name = %s
                     AND group_id = %s
-                    AND owner_id = %s
+                    AND (1 = %s OR owner_id = %s)
                 ) AS exist
             """
-            return self._sql.execute(query, (environment['name'], environment['group_id'], environment['owner_id']))[0]['exist'] == 1
+            return self._sql.execute(query, (environment['name'], environment['group_id'], environment['shared'], environment['owner_id']))[0]['exist'] == 1
 
     def get_servers(self, group_id=None):
         if group_id is not None:

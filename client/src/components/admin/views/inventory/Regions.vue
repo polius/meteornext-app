@@ -29,7 +29,7 @@
                 <v-form ref="form" v-if="mode!='delete'" style="margin-top:20px; margin-bottom:15px;">
                   <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-autocomplete ref="group_id" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                     <v-col v-if="!item.shared" style="margin-left:20px">
                       <v-autocomplete ref="owner_id" v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
@@ -140,7 +140,7 @@ export default {
     regions: [],
     items: [],
     selected: [],
-    item: { group_id: '', owner_id: '', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: false },
+    item: { group_id: '', owner_id: '', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: true },
     mode: '',
     loading: true,
     dialog: false,
@@ -156,7 +156,8 @@ export default {
     EventBus.$on('filter-regions', this.filterRegions);
     EventBus.$on('filter-region-columns', this.filterRegionColumns);
     EventBus.$on('new-region', this.newRegion);
-    EventBus.$on('edit-region', this.editRegion)
+    EventBus.$on('clone-region', this.cloneRegion);
+    EventBus.$on('edit-region', this.editRegion);
     EventBus.$on('delete-region', this.deleteRegion);
   },
   computed: {
@@ -171,12 +172,12 @@ export default {
       this.getUsers()
     },
     getUsers() {
-      axios.get('/admin/inventory/users', { params: { group: this.item.group_id }})
+      axios.get('/admin/inventory/users', { params: { group_id: this.item.group_id }})
         .then((response) => {
           this.users = response.data.users
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
@@ -193,7 +194,7 @@ export default {
           this.filterBy(this.filter.scope)
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -201,15 +202,24 @@ export default {
     newRegion() {
       this.mode = 'new'
       this.users = []
-      this.item = { group_id: this.filter.group, owner_id: '', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: false }
+      this.item = { group_id: this.filter.group, owner_id: '', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: true }
       if (this.filter.group != null) this.getUsers()
       this.dialog_title = 'New Region'
       this.dialog = true
     },
+    cloneRegion() {
+      this.mode = 'clone'
+      this.users = []
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      delete this.item['id']
+      this.getUsers()
+      this.dialog_title = 'Clone Region'
+      this.dialog = true
+    },
     editRegion() {
       this.mode = 'edit'
-      this.item = Object.assign({}, this.selected[0])
-      this.$nextTick(() => this.getUsers())
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.getUsers()
       this.dialog_title = 'Edit Region'
       this.dialog = true
     },
@@ -220,7 +230,7 @@ export default {
     },
     submitRegion() {
       this.loading = true
-      if (this.mode == 'new') this.newRegionSubmit()
+      if (['new','clone'].includes(this.mode)) this.newRegionSubmit()
       else if (this.mode == 'edit') this.editRegionSubmit()
       else if (this.mode == 'delete') this.deleteRegionSubmit()
     },
@@ -238,10 +248,11 @@ export default {
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getRegions()
+          this.selected = []
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
@@ -350,10 +361,7 @@ export default {
           if (this.filter.group == null) this.$refs.group_id.focus()
           else this.$refs.name.focus()
         }
-        else if (this.mode == 'edit') {
-          if (this.item.group == null) this.$refs.group_id.focus()
-          else this.$refs.name.focus()
-        }
+        else if (['clone','edit'].includes(this.mode)) this.$refs.name.focus()
       })
     },
     selected(val) {

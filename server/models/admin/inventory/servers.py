@@ -50,7 +50,6 @@ class Servers:
         query = """
             UPDATE servers
             SET name = %s,
-                group_id = %s,
                 region_id = (SELECT id FROM regions WHERE id = %s),
                 engine = %s,
                 version = %s,
@@ -65,7 +64,7 @@ class Servers:
                 updated_at = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (server['name'], server['group_id'], server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['shared'], server['shared'], server['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
+        self._sql.execute(query, (server['name'], server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['shared'], server['shared'], server['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
     def delete(self, server_id):
         # Delete from 'monitoring'
@@ -120,23 +119,23 @@ class Servers:
                     SELECT * 
                     FROM servers
                     WHERE `name` = %s 
-                    AND owner_id = %s 
-                    AND group_id = %s 
+                    AND group_id = %s
+                    AND (1 = %s OR owner_id = %s)
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], server['owner_id'], server['group_id'], server['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['name'], server['group_id'], server['shared'], server['owner_id'], server['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 
                     FROM servers
                     WHERE `name` = %s 
-                    AND owner_id = %s 
                     AND group_id = %s
+                    AND (1 = %s OR owner_id = %s)
                 ) AS exist
             """
-            return self._sql.execute(query, (server['name'], server['owner_id'], server['group_id']))[0]['exist'] == 1
+            return self._sql.execute(query, (server['name'], server['group_id'], server['shared'], server['owner_id']))[0]['exist'] == 1
 
     def exist_by_region(self, region_id):
         query = """
@@ -158,14 +157,3 @@ class Servers:
             ) AS exist
         """
         return self._sql.execute(query, (server))[0]['exist'] == 1
-
-    # ???? TO-DO
-    def get_by_environment(self, user_id, group_id, environment_name):
-        query = """
-            SELECT s.*
-            FROM servers s
-            JOIN environment_servers es ON es.server_id = s.id
-            JOIN environments e ON e.id = es.environment_id AND e.group_id = %s AND e.name = %s
-            WHERE (s.shared = 1 OR s.owner_id = %s)
-        """
-        return self._sql.execute(query, (group_id, environment_name, user_id))

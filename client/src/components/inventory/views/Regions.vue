@@ -6,6 +6,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text @click="newRegion()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1 && !(inventory_secured && selected[0].shared && !owner)" @click="cloneRegion()" text class="body-2"><v-icon small style="padding-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
           <v-btn v-if="selected.length == 1" text @click="editRegion()" class="body-2"><v-icon small style="padding-right:10px">{{ !owner && selected[0].shared ? 'fas fa-info' : 'fas fa-feather-alt' }}</v-icon>{{ !owner && selected[0].shared ? 'INFO' : 'EDIT' }}</v-btn>
           <v-btn v-if="selected.length > 0 && !(!owner && selected.some(x => x.shared))" text @click="deleteRegion()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -117,7 +118,6 @@ export default {
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
-
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(5000),
@@ -139,17 +139,24 @@ export default {
           this.regions = response.data.data
           this.items = response.data.data
           this.filterBy(this.filter)
-          this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
+        .finally(() => this.loading = false)
     },
     newRegion() {
       this.mode = 'new'
       this.item = { name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: false }
       this.dialog_title = 'New Region'
+      this.dialog = true
+    },
+    cloneRegion() {
+      this.mode = 'clone'
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      delete this.item['id']
+      this.dialog_title = 'Clone Region'
       this.dialog = true
     },
     editRegion() {
@@ -165,7 +172,7 @@ export default {
     },
     submitRegion() {
       this.loading = true
-      if (this.mode == 'new') this.newRegionSubmit()
+      if (['new','clone'].includes(this.mode)) this.newRegionSubmit()
       else if (this.mode == 'edit') this.editRegionSubmit()
       else if (this.mode == 'delete') this.deleteRegionSubmit()
     },
@@ -183,15 +190,14 @@ export default {
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getRegions()
+          this.selected = []
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     editRegionSubmit() {
       // Check if all fields are filled
@@ -200,28 +206,21 @@ export default {
         this.loading = false
         return
       }
-      // Get Item Position
-      for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['name'] == this.selected[0]['name']) break
-      }
       // Edit item in the DB
       this.notification('Editing Region...', 'info', true)
       const payload = this.item
       axios.put('/inventory/regions', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          // Edit item in the data table
-          this.items.splice(i, 1, this.item)
-          this.dialog = false
+          this.getRegions()
           this.selected = []
+          this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     deleteRegionSubmit() {
       // Build payload
@@ -231,27 +230,15 @@ export default {
       axios.delete('/inventory/regions', { params: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          // Delete items from the data table
-          while(this.selected.length > 0) {
-            var s = this.selected.pop()
-            for (var i = 0; i < this.items.length; ++i) {
-              if (this.items[i]['name'] == s['name']) {
-                // Delete Item
-                this.items.splice(i, 1)
-                break
-              }
-            }
-          }
+          this.getRegions()
           this.selected = []
-        })
-        .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
-        })
-        .finally(() => {
-          this.loading = false
           this.dialog = false
         })
+        .catch((error) => {
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.loading = false)
     },
     testConnection() {
       // Check if all fields are filled
@@ -269,12 +256,10 @@ export default {
           this.notification(response.data.message, '#00b16a', 2)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     filterBy(val) {
       this.filter = val

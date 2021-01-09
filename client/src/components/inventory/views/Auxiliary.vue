@@ -6,6 +6,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text @click="newAuxiliary()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1 && !(inventory_secured && selected[0].shared && !owner)" @click="cloneAuxiliary()" text class="body-2"><v-icon small style="padding-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
           <v-btn v-if="selected.length == 1" text @click="editAuxiliary()" class="body-2"><v-icon small style="padding-right:10px">{{ !owner && selected[0].shared ? 'fas fa-info' : 'fas fa-feather-alt' }}</v-icon>{{ !owner && selected[0].shared ? 'INFO' : 'EDIT' }}</v-btn>
           <v-btn v-if="selected.length > 0 && !(!owner && selected.some(x => x.shared))" text @click="deleteAuxiliary()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -174,17 +175,17 @@ export default {
           this.auxiliary = response.data.data
           this.items = response.data.data
           this.filterBy(this.filter)
-          this.loading = false
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
+        .finally(() => this.loading = false)
     },
     selectEngine(value) {
-      if (this.item['sql_port'] == '') {
-        if (['MySQL','Aurora MySQL'].includes(value)) this.item['sql_port'] = '3306'
-        else if (value == 'PostgreSQL') this.item['sql_port'] = '5432'
+      if (this.item.sql_port == '') {
+        if (['MySQL','Aurora MySQL'].includes(value)) this.item.sql_port = '3306'
+        else if (value == 'PostgreSQL') this.item.sql_port = '5432'
       }
       this.versions = this.engines[value]
     },
@@ -192,6 +193,14 @@ export default {
       this.mode = 'new'
       this.item = { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', sql_ssl: false, shared: false }
       this.dialog_title = 'New Auxiliary'
+      this.dialog = true
+    },
+    cloneAuxiliary() {
+      this.mode = 'clone'
+      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      delete this.item['id']
+      this.versions = this.engines[this.item.sql_engine]
+      this.dialog_title = 'Clone Auxiliary'
       this.dialog = true
     },
     editAuxiliary() {
@@ -208,7 +217,7 @@ export default {
     },
     submitAuxiliary() {
       this.loading = true
-      if (this.mode == 'new') this.newAuxiliarySubmit()
+      if (['new','clone'].includes(this.mode)) this.newAuxiliarySubmit()
       else if (this.mode == 'edit') this.editAuxiliarySubmit()
       else if (this.mode == 'delete') this.deleteAuxiliarySubmit()
     },
@@ -219,29 +228,20 @@ export default {
         this.loading = false
         return
       }
-      // Check if new item already exists
-      for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['name'] == this.item.name) {
-          this.notification('This auxiliary connection currently exists', 'error')
-          this.loading = false
-          return
-        }
-      }
       // Add item in the DB
       const payload = this.item
       axios.post('/inventory/auxiliary', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getAuxiliary()
+          this.selected = []
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     editAuxiliarySubmit() {
       // Check if all fields are filled
@@ -250,35 +250,20 @@ export default {
         this.loading = false
         return
       }
-      // Get Item Position
-      for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['name'] == this.selected[0]['name']) break
-      }
-      // Check if edited item already exists
-      for (var j = 0; j < this.items.length; ++j) {
-        if (this.items[j]['name'] == this.item.name && this.item.name != this.selected[0]['name']) {
-          this.notification('This auxiliary connection currently exists', 'error')
-          this.loading = false
-          return
-        }
-      }
       // Edit item in the DB
       const payload = this.item
       axios.put('/inventory/auxiliary', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          // Edit item in the data table
-          this.items.splice(i, 1, this.item)
-          this.dialog = false
+          this.getAuxiliary()
           this.selected = []
+          this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     deleteAuxiliarySubmit() {
       // Build payload
@@ -287,27 +272,15 @@ export default {
       axios.delete('/inventory/auxiliary', { params: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          // Delete items from the data table
-          while(this.selected.length > 0) {
-            var s = this.selected.pop()
-            for (var i = 0; i < this.items.length; ++i) {
-              if (this.items[i]['name'] == s['name']) {
-                // Delete Item
-                this.items.splice(i, 1)
-                break
-              }
-            }
-          }
-           this.selected = []
-        })
-        .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
-        })
-        .finally(() => {
-          this.loading = false
+          this.getAuxiliary()
+          this.selected = []
           this.dialog = false
         })
+        .catch((error) => {
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.loading = false)
     },
     testConnection() {
       // Check if all fields are filled
@@ -325,12 +298,10 @@ export default {
           this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     filterBy(val) {
       this.filter = val
