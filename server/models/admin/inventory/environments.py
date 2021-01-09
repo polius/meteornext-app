@@ -38,7 +38,7 @@ class Environments:
             INSERT INTO environments (name, group_id, shared, owner_id, created_by, created_at) 
             SELECT %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
         """
-        environment_id = self._sql.execute(query, (environment['name'], environment['group'], environment['shared'], environment['shared'], environment['owner'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        environment_id = self._sql.execute(query, (environment['name'], environment['group_id'], environment['shared'], environment['shared'], environment['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
         if len(environment['servers']) > 0:
             values = ''
             for server in environment['servers']:
@@ -65,7 +65,7 @@ class Environments:
                 updated_at = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (environment['name'], environment['shared'], environment['group'], environment['shared'], environment['owner'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), environment['id']))
+        self._sql.execute(query, (environment['name'], environment['shared'], environment['group_id'], environment['shared'], environment['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), environment['id']))
 
         # Fill environment servers
         if len(environment['servers']) > 0:
@@ -94,7 +94,7 @@ class Environments:
                     AND id != %s
                 ) AS exist
             """
-            return self._sql.execute(query, (environment['name'], environment['group'], environment['owner'], environment['id']))[0]['exist'] == 1
+            return self._sql.execute(query, (environment['name'], environment['group_id'], environment['owner_id'], environment['id']))[0]['exist'] == 1
         else:
             query = """
                 SELECT EXISTS ( 
@@ -105,7 +105,7 @@ class Environments:
                     AND owner_id = %s
                 ) AS exist
             """
-            return self._sql.execute(query, (environment['name'], environment['group'], environment['owner']))[0]['exist'] == 1
+            return self._sql.execute(query, (environment['name'], environment['group_id'], environment['owner_id']))[0]['exist'] == 1
 
     def get_servers(self, group_id=None):
         if group_id is not None:

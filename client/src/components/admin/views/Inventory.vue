@@ -115,6 +115,7 @@ export default {
     EventBus.$on('init-columns', this.initColumns)
     EventBus.$on('notification', this.notification)
     EventBus.$on('change-selected', this.changeSelected)
+    EventBus.$on('notification', this.notification)
   },
   methods: {
     getGroups() {
@@ -180,9 +181,10 @@ export default {
     changeSelected(val) {
       this.selected = val
     },
-    notification(message, color) {
+    notification(message, color, persistent=false) {
       this.snackbarText = message
-      this.snackbarColor = color 
+      this.snackbarColor = color
+      this.snackbarTimeout = persistent ? Number(0) : Number(3000)
       this.snackbar = true
     }
   },

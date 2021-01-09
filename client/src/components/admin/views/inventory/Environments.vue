@@ -1,10 +1,10 @@
 <template>
   <div>
     <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="filter.search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1">
-      <template v-show="'servers' in columns" v-slot:[`item.servers`]="{ item }">
+      <template v-slot:[`item.servers`]="{ item }">
         <span class="font-weight-medium">{{item.servers}}</span>
       </template>
-      <template v-show="'scope' in columns" v-slot:[`item.shared`]="{ item }">
+      <template v-slot:[`item.shared`]="{ item }">
         <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
         <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
         {{ !item.shared ? 'Personal' : 'Shared' }}
@@ -16,8 +16,8 @@
         <v-toolbar flat color="primary">
           <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
-          <v-btn v-if="mode != 'delete'" title="Create the environment only for a user" :color="!shared ? 'primary' : '#779ecb'" @click="shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn v-if="mode != 'delete'" title="Create the environment for all users in a group" :color="shared ? 'primary' : '#779ecb'" @click="shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn v-if="mode != 'delete'" title="Create the environment only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" title="Create the environment for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -28,13 +28,13 @@
                 <v-form ref="form" style="margin-top:20px; margin-bottom:15px;">
                   <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-autocomplete ref="group" @change="groupChanged" v-model="group" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="group_id" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
-                    <v-col v-if="!shared" style="margin-left:20px">
-                      <v-autocomplete v-model="owner" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                    <v-col v-if="!item.shared" style="margin-left:20px">
+                      <v-autocomplete ref="owner_id" v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                   </v-row>
-                  <v-text-field ref="name" v-if="mode!='delete'" @keypress.enter.native.prevent="submitEnvironment()" v-model="environment_name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                  <v-text-field ref="name" v-if="mode!='delete'" @keypress.enter.native.prevent="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-card v-if="mode!='delete'">
                     <v-toolbar flat dense color="#2e3131">
                       <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
@@ -107,13 +107,6 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-
-    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
-      {{ snackbarText }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
@@ -136,9 +129,6 @@ export default {
   data: () => ({
     // Data Table
     headers: [
-      { text: 'Id', align: ' d-none', value: 'id' },
-      { text: 'GroupId', align: ' d-none', value: 'group_id' },
-      { text: 'OwnerId', align: ' d-none', value: 'owner_id' },
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Servers', align: 'left', value: 'servers' },
       { text: 'Scope', align: 'left', value: 'shared' },
@@ -152,18 +142,19 @@ export default {
     environments: [],
     items: [],
     selected: [],
-    search: '',
+    item: { group_id: '', owner_id: '', name: '', shared: false },
     mode: '',
     loading: true,
     dialog: false,
     dialog_title: '',
-    // Dialog items
-    shared: false,
-    group: '',
     users: [],
+    // Dialog items
+    /*shared: false,
+    group: '',
     owner: '',
-    environment_name: '',
+    environment_name: '',*/
     environment_servers: {},
+    // Servers Treeview
     treeviewItems: [],
     treeviewSelected: [],
     treeviewOpened: [],
@@ -172,11 +163,6 @@ export default {
     columnsDialog: false,
     columns: ['name','servers','shared','group','owner'],
     columnsRaw: [],
-    // Snackbar
-    snackbar: false,
-    snackbarTimeout: Number(3000),
-    snackbarText: '',
-    snackbarColor: ''
   }),
   props: ['tab','groups','filter'],
   mounted () {
@@ -187,16 +173,19 @@ export default {
     EventBus.$on('delete-environment', this.deleteEnvironment);
   },
   computed: {
-    computedHeaders() { return this.headers.filter(x => x.align == ' d-none' || this.columns.includes(x.value)) }
+    computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) }
   },
   methods: {
     groupChanged() {
-      this.owner = ''
+      this.item.owner_id = null
+      requestAnimationFrame(() => {
+        if (!this.item.shared) this.$refs.owner_id.focus()
+      })
       this.getUsers()
       this.getServers()
     },
     getUsers() {
-      axios.get('/admin/inventory/users', { params: { group: this.group }})
+      axios.get('/admin/inventory/users', { params: { group: this.item.group_id }})
         .then((response) => {
           this.users = response.data.users
         })
@@ -205,7 +194,7 @@ export default {
         })
     },
     getServers() {
-      axios.get('/admin/inventory/environments/servers', { params: { group: this.group }})
+      axios.get('/admin/inventory/environments/servers', { params: { group: this.item.group_id }})
         .then((response) => {
           this.environment_servers = this.parseEnvironmentServers(response.data.environment_servers)
           this.treeviewItems = this.parseTreeView(response.data.servers)
@@ -293,11 +282,9 @@ export default {
     },
     newEnvironment() {
       this.mode = 'new'
-      this.shared = false
-      this.group = this.filter.group
-      this.owner = null
-      if (this.filter.group != null) this.groupChanged()
-      this.environment_name = ''
+      this.users = []
+      this.item = { group_id: this.filter.group, owner_id: '', name: '', shared: false }
+      if (this.filter.group != null) this.getUsers()
       this.treeviewItems = []
       this.treeviewSelected = []
       this.treeviewOpened = []
@@ -305,16 +292,11 @@ export default {
       this.dialog = true
     },
     editEnvironment() {
-      setTimeout(() => {
-        this.mode = 'edit'
-        this.environment_name = this.selected[0]['name']
-        this.shared = this.selected[0]['shared']
-        this.group = this.selected[0]['group_id']
-        this.owner = this.selected[0]['owner_id']
-        this.groupChanged()
-        this.dialog_title = 'Edit Environment'
-        this.dialog = true
-      },0)
+      this.mode = 'edit'
+      this.item = Object.assign({}, this.selected[0])
+      this.$nextTick(() => { this.getUsers(); this.getServers(); })
+      this.dialog_title = 'Edit Environment'
+      this.dialog = true
     },
     updateSelected() {
       var treeviewSelected = []
@@ -353,19 +335,8 @@ export default {
         this.loading = false
         return
       }
-      // Check if new item already exists
-      for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['name'] == this.environment_name) {
-          this.notification('This environment currently exists', 'error')
-          this.loading = false
-          return
-        }
-      }
-      // Build servers array
-      var server_list = []
-      for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i])
       // Add item in the DB
-      const payload = { group: this.group, owner: this.owner, shared: this.shared, name: this.environment_name, servers: server_list }
+      const payload = { ...this.item, servers: [...this.treeviewSelected] }
       axios.post('/admin/inventory/environments', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -376,9 +347,7 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     editEnvironmentSubmit() {
       // Check if all fields are filled
@@ -387,39 +356,22 @@ export default {
         this.loading = false
         return
       }
-      // Get Item Position
-      for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['name'] == this.selected[0]['name']) break
-      }
-      // Check if edited item already exists
-      for (var j = 0; j < this.items.length; ++j) {
-        if (this.items[j]['name'] == this.environment_name && this.environment_name != this.selected[0]['name']) {
-          this.notification('This environment currently exists', 'error')
-          this.loading = false
-          return
-        }
-      }
-      // Build servers array
-      var server_list = []
-      for (let i = 0; i < this.treeviewSelected.length; ++i) server_list.push(this.treeviewSelected[i])
       // Edit item in the DB
-      const payload = { id: this.selected[0]['id'], group: this.group, owner: this.owner, shared: this.shared, name: this.environment_name, servers: server_list }
+      const payload = { ...this.item, servers: [...this.treeviewSelected] }
       axios.put('/admin/inventory/environments', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
           this.getEnvironments()
-          this.dialog = false
           this.selected = []
           this.treeviewSelected = []
+          this.dialog = false
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     deleteEnvironmentSubmit() {
       const payload = { environments: JSON.stringify(this.selected.map((x) => x.id)) }
@@ -429,15 +381,13 @@ export default {
           this.notification(response.data.message, '#00b16a')
           this.getEnvironments()
           this.selected = []
+          this.dialog = false
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
-        .finally(() => {
-          this.loading = false
-          this.dialog = false
-        })
+        .finally(() => this.loading = false)
     },
     filterBy(val) {
       if (val == 'all') this.items = this.environments.slice(0)
@@ -468,10 +418,8 @@ export default {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
     },
-    notification(message, color) {
-      this.snackbarText = message
-      this.snackbarColor = color 
-      this.snackbar = true
+    notification(message, color, persistent=false) {
+      EventBus.$emit('notification', message, color, persistent)
     }
   },
   watch: {
@@ -480,11 +428,11 @@ export default {
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (this.mode == 'new') {
-          if (this.filter.group == null) this.$refs.group.focus()
+          if (this.filter.group == null) this.$refs.group_id.focus()
           else this.$refs.name.focus()
         }
         else if (this.mode == 'edit') {
-          if (this.group == null) this.$refs.group.focus()
+          if (this.group == null) this.$refs.group_id.focus()
           else this.$refs.name.focus()
         }
       })

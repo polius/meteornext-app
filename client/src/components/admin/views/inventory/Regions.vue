@@ -26,7 +26,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:20px; margin-bottom:15px;">
+                <v-form ref="form" v-if="mode!='delete'" style="margin-top:20px; margin-bottom:15px;">
                   <v-row v-if="mode!='delete'" no-gutters style="margin-bottom:15px">
                     <v-col>
                       <v-autocomplete ref="group_id" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
@@ -112,13 +112,6 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-
-    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
-      {{ snackbarText }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
@@ -131,8 +124,6 @@ export default {
   data: () => ({
     // Data Table
     headers: [
-      { text: 'GroupId', align: ' d-none', value: 'group_id' },
-      { text: 'OwnerId', align: ' d-none', value: 'owner_id' },
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'SSH Tunnel', align: 'left', value: 'ssh_tunnel'},
       { text: 'Hostname', align: 'left', value: 'hostname'},
@@ -149,23 +140,16 @@ export default {
     regions: [],
     items: [],
     selected: [],
-    search: '',
     item: { group_id: '', owner_id: '', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: false },
     mode: '',
     loading: true,
     dialog: false,
     dialog_title: '',
-    dialog_valid: false,
     users: [],
     // Filter Columns Dialog
     columnsDialog: false,
     columns: ['name','ssh_tunnel','hostname','port','username','shared','group','owner'],
     columnsRaw: [],
-    // Snackbar
-    snackbar: false,
-    snackbarTimeout: Number(5000),
-    snackbarText: '',
-    snackbarColor: ''
   }),
   props: ['tab','groups','filter'],
   mounted () {
@@ -176,7 +160,7 @@ export default {
     EventBus.$on('delete-region', this.deleteRegion);
   },
   computed: {
-    computedHeaders() { return this.headers.filter(x => x.align == ' d-none' || this.columns.includes(x.value)) }
+    computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) }
   },
   methods: {
     groupChanged() {
@@ -206,12 +190,12 @@ export default {
           this.regions = response.data.regions
           this.items = response.data.regions
           this.filterBy(this.filter.scope)
-          this.loading = false
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
+        .finally(() => this.loading = false)
     },
     newRegion() {
       this.mode = 'new'
@@ -247,7 +231,7 @@ export default {
         return
       }
       // Add item in the DB
-      this.notification('Adding Region...', 'info', true)
+      // this.notification('Adding Region...', 'info', true)
       const payload = this.item
       axios.post('/admin/inventory/regions', payload)
         .then((response) => {
@@ -259,9 +243,7 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     editRegionSubmit() {
       // Check if all fields are filled
@@ -270,57 +252,39 @@ export default {
         this.loading = false
         return
       }
-      // Get Item Position
-      for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['name'] == this.selected[0]['name']) break
-      }
       // Edit item in the DB
-      this.notification('Editing Region...', 'info', true)
+      // this.notification('Editing Region...', 'info', true)
       const payload = this.item
       axios.put('/admin/inventory/regions', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           this.getRegions()
-          this.dialog = false
           this.selected = []
+          this.dialog = false
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     deleteRegionSubmit() {
       // Build payload
       const payload = { regions: JSON.stringify(this.selected.map((x) => x.id)) }
       // Delete items to the DB
-      this.notification('Deleting Region...', 'info', true)
+      // this.notification('Deleting Region...', 'info', true)
       axios.delete('/admin/inventory/regions', { params: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          // Delete items from the data table
-          while(this.selected.length > 0) {
-            var s = this.selected.pop()
-            for (var i = 0; i < this.items.length; ++i) {
-              if (this.items[i]['name'] == s['name']) {
-                // Delete Item
-                this.items.splice(i, 1)
-                break
-              }
-            }
-          }
+          this.getRegions()
           this.selected = []
+          this.dialog = false
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
-        .finally(() => {
-          this.loading = false
-          this.dialog = false
-        })
+        .finally(() => this.loading = false)
     },
     testConnection() {
       // Check if all fields are filled
@@ -341,9 +305,7 @@ export default {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message, 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     filterBy(val) {
       if (val == 'all') this.items = this.regions.slice(0)
@@ -375,13 +337,7 @@ export default {
       return date
     },
     notification(message, color, persistent=false) {
-      this.snackbar = false
-      setTimeout(() => {
-        this.snackbarText = message
-        this.snackbarColor = color
-        this.snackbarTimeout = persistent ? Number(0) : Number(5000)
-        this.snackbar = true
-      }, 10)
+      EventBus.$emit('notification', message, color, persistent)
     }
   },
   watch: {

@@ -73,7 +73,7 @@ class Auxiliary:
         query = "DELETE FROM auxiliary WHERE id = %s"
         self._sql.execute(query, (auxiliary_id))
 
-    def exist(self, user, auxiliary):
+    def exist(self, auxiliary):
         if 'id' in auxiliary:
             query = """
                 SELECT EXISTS ( 
