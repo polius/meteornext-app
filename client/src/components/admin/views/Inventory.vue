@@ -124,7 +124,8 @@ export default {
           this.groups = response.data.groups
         })
         .catch((error) => {
-          console.log(error)
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     newClick() {

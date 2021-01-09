@@ -222,7 +222,8 @@ export default {
           this.users = response.data.users
         })
         .catch((error) => {
-          console.log(error)
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     getServers() {
@@ -238,9 +239,8 @@ export default {
           this.filterBy(this.filter.scope)
         })
         .catch((error) => {
-          console.log(error)
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
     },
@@ -250,9 +250,8 @@ export default {
           this.regions = response.data.regions.map(x => ({ id: x.id, name: x.name, shared: x.shared }))
         })
         .catch((error) => {
-          console.log(error)
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     selectEngine(value) {
@@ -306,8 +305,8 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
     },
@@ -328,8 +327,8 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
     },
@@ -345,8 +344,8 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
     },
@@ -369,8 +368,8 @@ export default {
           this.notification(response.data.message, '#00b16a', 2)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
     },
