@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import pymysql
 import warnings
 from collections import OrderedDict
