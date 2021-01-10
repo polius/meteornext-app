@@ -73,20 +73,19 @@
     <!-------------------->
     <v-dialog v-model="columnsDialog" persistent max-width="600px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">FILTER COLUMNS</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="text-subtitle-1 white--text">FILTER COLUMNS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="selectAllColumns" text title="Select all columns"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
           <v-btn @click="deselectAllColumns" text title="Deselect all columns"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
           <v-spacer></v-spacer>
-          <v-divider class="mx-2" inset vertical></v-divider>
-          <v-btn icon @click="columnsDialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="columnsDialog = false" style="width:40px; height:40px"><v-icon size="21">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 0px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:20px; margin-bottom:25px;">
+                <v-form ref="form" style="margin-top:15px; margin-bottom:25px;">
                   <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
                   <v-checkbox v-model="columnsRaw" label="Name" value="name" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="SSH Tunnel" value="ssh_tunnel" hide-details style="margin-top:5px"></v-checkbox>
