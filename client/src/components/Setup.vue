@@ -133,7 +133,7 @@
             this.available = true
           })
           .catch((error) => {
-            if (error.response.status === 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           })
       },
       setup() {
@@ -159,9 +159,7 @@
           .catch((error) => {
             this.notification(error.response.data.message, 'error')
           })
-          .finally(() => {
-            this.loading = false
-          })
+          .finally(() => this.loading = false)
       },
       setupSQL() {
         if (!this.$refs.formSQL.validate()) {
@@ -179,9 +177,7 @@
           .catch((error) => {
             this.notification(error.response.data.message, 'error')
           })
-          .finally(() => {
-            this.loading = false
-          })
+          .finally(() => this.loading = false)
       },
       setupDialogSubmit(status) {
         this.sql['recreate'] = status
@@ -214,9 +210,7 @@
           .catch((error) => {
             this.notification(error.response.data.message, 'error')
           })
-          .finally(() => {
-            this.loading = false
-          })
+          .finally(() => this.loading = false)
       },
       login() {
         this.$router.push('/login')

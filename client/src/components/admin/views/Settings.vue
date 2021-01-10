@@ -144,14 +144,12 @@ export default {
           this.sql = settings['sql']
           this.logs = settings['logs']
           this.security = settings['security']
-
-          // Disable Loading
-          this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
+        .finally(() => this.loading = false)
     },
     setSetting(setting) {
       this.setting_mode = setting
@@ -181,12 +179,10 @@ export default {
           this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     saveSecurity() {
       // Parse URL value
@@ -205,12 +201,10 @@ export default {
           this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     validURL(str) {
       var pattern = new RegExp('^(https?:\\/\\/)?'+ // protocol

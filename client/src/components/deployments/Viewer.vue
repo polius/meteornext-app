@@ -49,7 +49,7 @@ export default  {
           } catch (error) { 1==1 }
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))          
           else this.$refs.frame.contentWindow.showError(error.response.data.title, error.response.data.description)
         })
     }

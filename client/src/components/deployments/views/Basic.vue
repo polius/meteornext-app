@@ -182,23 +182,23 @@ export default {
       axios.get('/deployments/releases/active')
         .then((response) => {
           for (var i = 0; i < response.data.data.length; ++i) this.release_items.push(response.data.data[i]['name'])
-          this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
+        .finally(() => this.loading = false)
     },
     getEnvironments() {
       axios.get('/inventory/environments/list')
         .then((response) => {
           for (var i = 0; i < response.data.data.length; ++i) this.environment_items.push(response.data.data[i]['name'])
-          this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
+        .finally(() => this.loading = false)
     },
     schedule_close() {
       this.scheduleDialog = false
@@ -373,12 +373,10 @@ export default {
           this.$router.push({ name:'deployment', params: { id: 'B' + data['execution_id'], admin: false, msg: response.data.message, color: '#00b16a' }})
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     notification(message, color) {
       this.snackbarText = message

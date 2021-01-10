@@ -137,13 +137,10 @@ export default {
           this.parseCollations(encoding, response.data.collations)
         })
         .catch((error) => {
-          console.log(error)
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     parseCollations(encoding, data) {
       if (this.collations.length == 0) this.collations = [{ text: 'Default (' + this.server.defaults.collation + ')', value: this.server.defaults.collation }, { divider: true }, ...JSON.parse(data)]

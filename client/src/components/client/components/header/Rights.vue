@@ -330,7 +330,7 @@ export default {
           resolve()
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             // Clean Rights
             this.rights = { sidebar: [], login: {}, server: {}, schema: [], resources: {}, syntax: '' }
@@ -340,7 +340,7 @@ export default {
             this.infoDialog = true
           }
         })
-        .finally(() => { this.loading = false })
+        .finally(() => this.loading = false)
     },
     parseRightsSidebar(data) {
       if ('rights' in data) {
@@ -536,7 +536,7 @@ export default {
             this.$store.dispatch('client/addHistory', history)
           }
         })
-        .finally(() => { this.loading = false })
+        .finally(() => this.loading = false)
     },
     parseRights(rights) {
       return rights.map((x) => { return x.charAt(0).toUpperCase() + x.slice(1).replaceAll('_', ' ') }).join(', ')

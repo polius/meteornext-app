@@ -348,11 +348,11 @@ export default {
           resolve()
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
           reject()
         })
-        .finally(() => { this.sidebarLoading = false })
+        .finally(() => this.sidebarLoading = false)
     },
     parseServers(data) {
       var servers = []
@@ -391,16 +391,14 @@ export default {
           this.parseDatabases(current, server, response.data)
         })
         .catch((error) => {
-          if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))          
           else {
             this.dialogTitle = "Can't connect to the server"
             this.dialogText = error.response.data.message
             this.dialog = true
           }
         })
-        .finally(() => {
-          this.loadingServer = false
-        })
+        .finally(() => this.loadingServer = false)
     },
     parseDatabases(current, server, data) {
       // Assign server
@@ -471,10 +469,10 @@ export default {
           resolve()
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           reject(error)
         })
-        .finally(() => { this.sidebarLoading = false })
+        .finally(() => this.sidebarLoading = false)
     },
     parseObjects(current, data) {
       // Build routines
@@ -696,7 +694,7 @@ export default {
           resolve(response.data)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             // Add execution to history
             let data = JSON.parse(error.response.data.data)
@@ -724,7 +722,7 @@ export default {
           EventBus.$emit('send-notification', response.data.message, '#00b16a', 2)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             this.dialogTitle = "Can't connect to the server"
             EventBus.$emit('send-notification', this.dialogTitle, 'error', 2)
@@ -732,7 +730,7 @@ export default {
             this.dialog = true
           }
         })
-        .finally(() => { this.loading = false })
+        .finally(() => this.loading = false)
     },
   }
 }
