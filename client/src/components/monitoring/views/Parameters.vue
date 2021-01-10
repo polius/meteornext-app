@@ -144,13 +144,13 @@ export default {
           this.parseParameters(response.data.data)
           this.parseTreeView(response.data.data)
           this.parseLastUpdated(response.data.data)
-          this.loading = false
           if (mode != 2) setTimeout(this.getParameters, 10000, 1)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
+        .finally(() => this.loading = false)
       }
     },
     parseParameters(data) {
@@ -252,8 +252,8 @@ export default {
           this.getParameters(2)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     submitFilter() {

@@ -96,12 +96,12 @@ export default {
       axios.get('/deployments/releases')
         .then((res) => {
           this.items = res.data.data
-          this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
-        });
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.loading = false)
     },
     newRelease() {
       this.mode = 'new'
@@ -152,12 +152,10 @@ export default {
           this.dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     editReleaseSubmit() {
       // Check if all fields are filled
@@ -188,12 +186,10 @@ export default {
           this.selected = []
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     deleteReleaseSubmit() {
       // Get Selected Items
@@ -215,15 +211,13 @@ export default {
             }
           }
           this.selected = []
-        })
-        .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
-        })
-        .finally(() => {
-          this.loading = false
           this.dialog = false
         })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.loading = false)
     },
     changeActive(item) {
       // Add item in the DB
@@ -233,8 +227,8 @@ export default {
           this.getReleases()
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     notification(message, color) {

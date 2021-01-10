@@ -153,8 +153,6 @@ export default {
   destroyed() {
     this.active = false
     axios.put('/monitoring/processlist/stop')
-      .then(() => {})
-      .catch(() => {})
   },
   methods: {
     getProcesslist(mode) {
@@ -170,8 +168,8 @@ export default {
             if (mode != 2) setTimeout(this.getProcesslist, 1000, 1)
           })
           .catch((error) => {
-            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-            else this.notification(error.response.data.message, 'error')
+            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
           })
       }
     },
@@ -254,8 +252,8 @@ export default {
           this.getProcesslist(2)
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     submitFilter() {
@@ -286,8 +284,8 @@ export default {
           if (notification) this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     stopProcesslist() {
@@ -296,8 +294,8 @@ export default {
           this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     dateFormat(date) {

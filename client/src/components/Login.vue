@@ -111,12 +111,10 @@
             else this.login_success()
           })
           .catch((error) => {
-            if (error.response.status == 404) this.notification("Can't establish a connection to the server", 'error')
+            if (error.response.status != 400) this.notification("Can't establish a connection to the server", 'error')
             else this.notification(error.response.data.message, 'error')
           })
-          .finally(() => {
-            this.loading = false
-          })
+          .finally(() => this.loading = false)
       },
       login_success() {
         if (this.$route.query.url !== undefined) this.$router.push({ path: this.$route.query.url })

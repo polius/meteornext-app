@@ -364,7 +364,7 @@ export default {
         })
         .catch((error) => {
           this.gridApi.content.hideOverlay()
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             let data = JSON.parse(error.response.data.data)
             EventBus.$emit('send-notification', data[0]['error'], 'error')
@@ -502,7 +502,7 @@ export default {
         })
         .catch((error) => {
           this.gridApi.content.hideOverlay()
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             // Show error
             let data = JSON.parse(error.response.data.data)
@@ -617,7 +617,7 @@ export default {
           })
           .catch((error) => {
             this.gridApi.content.hideOverlay()
-            if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else {
               // Show error
               let data = JSON.parse(error.response.data.data)
@@ -719,7 +719,7 @@ export default {
         })
         .catch((error) => {
           this.gridApi.content.hideOverlay()
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             // Show error
             let data = JSON.parse(error.response.data.data)

@@ -22,15 +22,19 @@ class Cron:
         @app.before_first_request
         def start():
             # Init Crons
-            schedule.every(10).seconds.do(self.__executions)
-            schedule.every().day.at("00:00").do(self.__coins)
-            schedule.every().day.at("00:00").do(self.__logs)
-            schedule.every().day.at("00:00").do(self.__monitoring_clean)
-            schedule.every(2).seconds.do(self.__monitoring)
+            schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
+            schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
+            schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
+            schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
+            schedule.every(2).seconds.do(self.__run_threaded, self.__monitoring)
 
             # Start Cron Listener
             t = threading.Thread(target=self.__run_schedule)
             t.start()
+
+    def __run_threaded(self, job_func):
+        job_thread = threading.Thread(target=job_func)
+        job_thread.start()
 
     def __run_schedule(self):
         while True:

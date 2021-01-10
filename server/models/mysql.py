@@ -26,28 +26,24 @@ class mysql:
 
     def execute(self, query, args=None):
         try:
-            try:
-                # Open a connection
-                connection = self.__connect()
+            # Open a connection
+            connection = self.__connect()
 
-                # Prepare the cursor
-                with connection.cursor(OrderedDictCursor) as cursor:            
-                    # Execute the SQL query ignoring warnings
-                    with warnings.catch_warnings():
-                        warnings.simplefilter("ignore")
-                        cursor.execute(query, args)
+            # Prepare the cursor
+            with connection.cursor(OrderedDictCursor) as cursor:            
+                # Execute the SQL query ignoring warnings
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    cursor.execute(query, args)
 
-                    # Get the query results
-                    query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
+                # Get the query results
+                query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
 
-                # Commit the changes in the database
-                connection.commit()
+            # Commit the changes in the database
+            connection.commit()
 
-                # Return query results
-                return query_result
-
-            except (pymysql.err.OperationalError, pymysql.ProgrammingError, pymysql.InternalError, pymysql.IntegrityError, TypeError) as error:
-                raise Exception(error.args[1])
+            # Return query results
+            return query_result
 
         except Exception as e:
             try:

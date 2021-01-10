@@ -170,12 +170,12 @@ export default {
       axios.get('/admin/deployments')
         .then((res) => {
           this.items = res.data.data
-          this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
-        });
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.loading = false)
     },
     filterDeployments() {
       // Parse Filter
@@ -194,13 +194,13 @@ export default {
       axios.get('/admin/deployments/filter', { params: { data: this.filter_dialog_data }})
         .then((response) => {
           this.items = response.data.data
-          this.loading = false
           this.filter_dialog = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
+        .finally(() => this.loading = false)
     },
     closeFilter() {
       this.filter_dialog = false

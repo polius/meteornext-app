@@ -349,9 +349,8 @@ export default {
           this.step = 'stop'
           this.text = 'Export stopped.'
           this.error = ''
-          this.loading = false
         }
-        else if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        else if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
         else {
           // Convert error from 'arraybuffer' to 'json'
           let err = JSON.parse(Buffer.from(error.response.data).toString('utf8'))
@@ -361,7 +360,7 @@ export default {
           this.loading = false
         }
       })
-      .finally(() => { this.loading = false })
+      .finally(() => this.loading = false)
     },
     cancelExport() {
       EventBus.$emit('send-notification', 'Stopping the export process...', 'warning')

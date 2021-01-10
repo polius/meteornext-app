@@ -38,9 +38,9 @@ class Deployments_Queued:
             SELECT SUBSTRING_INDEX(GROUP_CONCAT(CONCAT(q.execution_mode, '|', q.execution_id, '|', q.status) ORDER BY q.id SEPARATOR ','), ',', COALESCE(g.deployments_execution_concurrent,1)) AS 'executions'
             FROM
             (
-                SELECT q.id, q.execution_mode, q.execution_id, b.status, b.deployment_id FROM deployments_queued q JOIN deployments_basic b ON b.id = q.execution_id AND q.execution_mode = 'basic'
+                SELECT q.id, q.execution_mode, q.execution_id, b.status, b.deployment_id FROM deployments_queued q JOIN deployments_basic b ON b.id = q.execution_id AND q.execution_mode = 'basic' AND b.status = 'QUEUED'
                 UNION
-                SELECT q.id, q.execution_mode, q.execution_id, p.status, p.deployment_id FROM deployments_queued q JOIN deployments_pro p ON p.id = q.execution_id AND q.execution_mode = 'pro'
+                SELECT q.id, q.execution_mode, q.execution_id, p.status, p.deployment_id FROM deployments_queued q JOIN deployments_pro p ON p.id = q.execution_id AND q.execution_mode = 'pro' AND p.status = 'QUEUED'
                 ORDER BY id
             ) q
             JOIN deployments d ON d.id = q.deployment_id

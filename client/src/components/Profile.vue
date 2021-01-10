@@ -81,12 +81,12 @@ export default {
           for (var i = 0; i < response.data.data['password'].length; ++i) hiddenPassword += '·'
           this.password = hiddenPassword
           this.mfa['enabled'] = this.mfa['origin'] = response.data.data['mfa']
-          this.loading = false
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
+        .finally(() => this.loading = false)
     },
     onMFAChange(val) {
       if (val && !this.mfa['origin'] && this.mfa['uri'] == null) this.getMFA()
@@ -98,8 +98,8 @@ export default {
           this.mfa['uri'] = response.data['mfa_uri']
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
     saveProfile() {
@@ -127,12 +127,10 @@ export default {
           this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
-          if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => {
-          this.loading = false
-        })
+        .finally(() => this.loading = false)
     },
     notification(message, color) {
       this.snackbarText = message
