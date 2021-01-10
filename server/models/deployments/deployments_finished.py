@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 class Deployments_Finished:
     def __init__(self, sql):
         self._sql = sql
