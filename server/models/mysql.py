@@ -1,5 +1,4 @@
 import pymysql
-import warnings
 from collections import OrderedDict
 from pymysql.cursors import DictCursorMixin, Cursor
 
@@ -28,11 +27,9 @@ class mysql:
             connection = self.__connect()
 
             # Prepare the cursor
-            with connection.cursor(OrderedDictCursor) as cursor:            
-                # Execute the SQL query ignoring warnings
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    cursor.execute(query, args)
+            with connection.cursor(OrderedDictCursor) as cursor:
+                # Execute the query
+                cursor.execute(query, args)
 
                 # Get the query results
                 query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid

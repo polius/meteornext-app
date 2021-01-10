@@ -5,7 +5,7 @@
         <v-toolbar-title class="white--text subtitle-1">DEPLOYMENTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-          <v-btn text @click="filter_dialog = true" class="body-2"><v-icon small style="padding-right:10px">fas fa-search</v-icon>FILTER</v-btn>
+          <v-btn text @click="filter_dialog = true" class="body-2" :style="{ backgroundColor : filter_applied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-search</v-icon>FILTER</v-btn>
           <v-btn text v-if="selected.length == 1" @click="infoDeployment()" class="body-2"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
@@ -44,10 +44,10 @@
 
     <v-dialog v-model="filter_dialog" persistent max-width="768px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">Filter Deployments</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="text-subtitle-1 white--text">FILTER DEPLOYMENTS</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="filter_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="filter_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 0px;">
           <v-container style="padding:0px">
@@ -143,6 +143,7 @@ export default {
     // Filter Dialog
     filter_dialog: false,
     filter_dialog_data: {},
+    filter_applied: false,
     deployment_modes: ['Basic','Pro'],
     deployment_status: ['CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED'],
 
@@ -152,9 +153,6 @@ export default {
     picker_component: '',
     picker_date: '',
     picker_time: '',
-
-    // Filter
-    filter_applied: false,
 
     // Snackbar
     snackbar: false,
