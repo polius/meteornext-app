@@ -150,6 +150,7 @@ export default {
       'clientHeaders',
       'clientItems',
       'clientQueries',
+      'clientCursor',
       'clientQuery',
       'bottomBar',
       'server',
@@ -176,7 +177,11 @@ export default {
       if (val == 'objects') this.editor.setValue(this.clientQueries, 1)
     },
     currentConn() {
-      if (this.headerTabSelected == 'client') this.editor.focus()
+      if (this.headerTabSelected == 'client') {
+        this.editor.focus()
+        this.editor.setValue(this.clientQueries, 1)
+        if (this.clientCursor != null) this.editor.moveCursorTo(this.clientCursor.row, this.clientCursor.column)
+      }
     },
     dialog: function(val) {
       this.dialogOpened = val
