@@ -29,6 +29,7 @@ const connection = {
   clientHeaders: [],
   clientItems: [],
   clientQueries: '',
+  clientCursor: null,
   clientQuery: { query: '', range: null },
   clientExecuting: null, // query, explain, stop
 
@@ -150,6 +151,7 @@ const mutations = {
   newConnection(state) {
     // Store Client ACE Editor (current connection)
     state.connections[state.currentConn].clientQueries = state.components.editor.getValue()
+    state.connections[state.currentConn].clientCursor = state.components.editor.getCursorPosition()
     // Add new connection
     state.connectionIndex += 1
     let conn = JSON.parse(JSON.stringify(connection))
@@ -165,10 +167,9 @@ const mutations = {
   changeConnection(state, data) {
     // Store Client ACE Editor (current connection)
     state.connections[state.currentConn].clientQueries = state.components.editor.getValue()
+    state.connections[state.currentConn].clientCursor = state.components.editor.getCursorPosition()
     // Change current connection
     state.currentConn = data
-    // Load Client ACE Editor (new connection)
-    state.components.editor.setValue(state.connections[state.currentConn].clientQueries, 1)
   },
   deleteConnection(state, data) {
     // Array contains only 1 element

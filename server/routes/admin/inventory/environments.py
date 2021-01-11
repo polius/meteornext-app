@@ -55,7 +55,7 @@ class Environments:
 
         @admin_environments_blueprint.route('/admin/inventory/environments/servers', methods=['GET'])
         @jwt_required
-        def admin_environments_list_method():
+        def admin_environment_servers_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
