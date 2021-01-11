@@ -271,10 +271,11 @@ export default {
     },
     cloneServer() {
       this.mode = 'clone'
-      this.users = []
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       delete this.item['id']
-      setTimeout(() => { this.getUsers(); this.getRegions() },0)
+      this.getUsers()
+      this.getRegions()
+      this.versions = this.engines[this.item.engine]
       this.dialog_title = 'Clone Server'
       this.dialog = true
     },

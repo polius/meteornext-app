@@ -264,13 +264,14 @@ export default {
       delete this.item['id']
       this.dialog_title = 'Clone Environment'
       this.dialog = true
+      setTimeout(this.updateSelected, 1)
     },
     editEnvironment() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'Edit Environment'
       this.dialog = true
-      setTimeout(this.updateSelected, 1);
+      setTimeout(this.updateSelected, 1)
     },
     updateSelected() {
       var treeviewSelected = []
