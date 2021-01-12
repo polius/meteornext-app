@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
-
 import json
-import utils
+
+import connectors.base
 import models.admin.users
 import models.admin.inventory.inventory
 import models.admin.inventory.auxiliary
@@ -75,15 +75,15 @@ class Auxiliary:
             auxiliary_json = request.get_json()
 
             # Build Auxiliary Data
-            ssh = None
+            ssh = {'enabled': False}
             if auxiliary_json['ssh_tunnel']:
-                ssh = {"hostname": auxiliary_json['ssh_hostname'], "port": auxiliary_json['ssh_port'], "username": auxiliary_json['ssh_username'], "password": auxiliary_json['ssh_password'], "key": auxiliary_json['ssh_key']}
-            sql = {"hostname": auxiliary_json['sql_hostname'], "port": auxiliary_json['sql_port'], "username": auxiliary_json['sql_username'], "password": auxiliary_json['sql_password']}
+                ssh = {"enabled": True, "hostname": auxiliary_json['ssh_hostname'], "port": auxiliary_json['ssh_port'], "username": auxiliary_json['ssh_username'], "password": auxiliary_json['ssh_password'], "key": auxiliary_json['ssh_key']}
+            sql = {"engine": auxiliary_json['sql_engine'], "hostname": auxiliary_json['sql_hostname'], "port": auxiliary_json['sql_port'], "username": auxiliary_json['sql_username'], "password": auxiliary_json['sql_password']}
 
             # Check SQL Connection
             try:
-                u = utils.Utils(ssh)
-                u.check_sql(sql)
+                sql = connectors.base.Base({'ssh': ssh, 'sql': sql})
+                sql.test_sql()
             except Exception as e:
                 return jsonify({'message': str(e)}), 400
 

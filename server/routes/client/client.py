@@ -10,7 +10,7 @@ import datetime
 from itertools import repeat
 import models.admin.users
 import models.client.client
-from connectors.connector import Connections
+import connectors.client
 
 class Client:
     def __init__(self, app, sql, license):
@@ -20,7 +20,7 @@ class Client:
         self._users = models.admin.users.Users(sql)
         self._client = models.client.client.Client(sql)
         # Init connections
-        self._connections = Connections(app)
+        self._connections = connectors.client.Client(app)
 
     def blueprint(self):
         # Init blueprint

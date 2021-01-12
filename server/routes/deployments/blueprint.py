@@ -38,14 +38,14 @@ class blueprint:
     ########################
     # User Defined Methods #
     ########################
-    def __search(self, item, key, value):
+    def search(self, items, key, value):
         # Search a key value in a list of dictionaries
-        return [i for i in item if i[key] == value]
+        return [i for i in items if i[key] == value]
 
-    def __str2dict(self, data):
+    def str2dict(self, data):
         # Convert a string representation of a dictionary to a dictionary
         return json.loads(data, object_pairs_hook=OrderedDict)
 
-    def __dict2str(self, data):
+    def dict2str(self, data):
         # Convert a dictionary to a string
         return json.dumps(data, separators=(',', ':'))

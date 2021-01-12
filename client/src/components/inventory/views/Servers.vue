@@ -312,7 +312,7 @@ export default {
       this.loading = true
       const payload = {
         region: (this.readOnly && this.inventory_secured) ? this.item.region_id : this.regions.find(x => x.name == this.item.region).id,
-        server: (this.readOnly && this.inventory_secured) ? this.item.id : { hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password }
+        server: (this.readOnly && this.inventory_secured) ? this.item.id : { engine: this.item.engine, hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password }
       }
       axios.post('/inventory/servers/test', payload)
         .then((response) => {

@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
-
 import json
-import utils
+
+import connectors.base
 import models.admin.users
 import models.admin.inventory.inventory
 import models.admin.inventory.regions
@@ -83,13 +83,13 @@ class Servers:
             else:
                 region = region[0]
 
-            # Init Utils Class
-            connection = region if region['ssh_tunnel'] else None
-            u = utils.Utils(connection)
-
             # Check SQL Connection
             try:
-                u.check_sql(server_json['server'])
+                conf = {}
+                conf['ssh'] = {'enabled': region['ssh_tunnel'], 'hostname': region['hostname'], 'port': region['port'], 'username': region['username'], 'password': region['password'], 'key': region['key']}
+                conf['sql'] = server_json['server']
+                sql = connectors.base.Base(conf)
+                sql.test_sql()
             except Exception as e:
                 return jsonify({'message': str(e)}), 400
 

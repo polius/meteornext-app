@@ -21,59 +21,63 @@ class Login:
 
         @login_blueprint.route('/login', methods=['POST'])
         def login_user():
-            # Check license
-            self._license.validate()
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
+            try:
+                # Check license
+                self._license.validate()
+                if not self._license.validated:
+                    return jsonify({"message": self._license.status['response']}), 401
 
-            # Check parameters
-            if not request.is_json:
-                return jsonify({"message": "Missing JSON in request"}), 400
-            login_json = request.get_json()
+                # Check parameters
+                if not request.is_json:
+                    return jsonify({"message": "Missing JSON in request"}), 400
+                login_json = request.get_json()
 
-            # Check Settings - Security (Administration URL)
-            valid_url = self._settings.check_url()
+                # Check Settings - Security (Administration URL)
+                valid_url = self._settings.check_url()
 
-            # Get User from Database
-            user = self._users.get(login_json['username'])
+                # Get User from Database
+                user = self._users.get(login_json['username'])
 
-            # Check user & password
-            if len(user) == 0 or not bcrypt.checkpw(login_json['password'].encode('utf-8'), user[0]['password'].encode('utf-8')):
-                return jsonify({"message": "Invalid username or password"}), 401
+                # Check user & password
+                if len(user) == 0 or not bcrypt.checkpw(login_json['password'].encode('utf-8'), user[0]['password'].encode('utf-8')):
+                    return jsonify({"message": "Invalid username or password"}), 401
 
-            # Check MFA
-            if len(login_json['mfa']) == 0 and user[0]['mfa'] == 1:
-                return jsonify({"message": "Requesting MFA credentials"}), 202
-            if user[0]['mfa'] == 1 and not pyotp.TOTP(user[0]['mfa_hash'], interval=30).verify(login_json['mfa']):
-                return jsonify({"message": "Invalid MFA Code"}), 401
+                # Check MFA
+                if len(login_json['mfa']) == 0 and user[0]['mfa'] == 1:
+                    return jsonify({"message": "Requesting MFA credentials"}), 202
+                if user[0]['mfa'] == 1 and not pyotp.TOTP(user[0]['mfa_hash'], interval=30).verify(login_json['mfa']):
+                    return jsonify({"message": "Invalid MFA Code"}), 401
 
-            # Check disabled
-            if user[0]['disabled']:
-                return jsonify({"message": "Account disabled"}), 401
+                # Check disabled
+                if user[0]['disabled']:
+                    return jsonify({"message": "Account disabled"}), 401
 
-            # Update user last_login
-            self._users.put_last_login(login_json['username'])
+                # Update user last_login
+                self._users.put_last_login(login_json['username'])
 
-            # Build return data
-            ret = {
-                'access_token': create_access_token(identity=user[0]['username']),
-                'refresh_token': create_refresh_token(identity=user[0]['username']),
-                'username': user[0]['username'],
-                'coins': user[0]['coins'],
-                'admin': user[0]['admin'] and valid_url,
-                'owner': user[0]['owner'],
-                'inventory_enabled': user[0]['inventory_enabled'],
-                'inventory_secured': user[0]['inventory_secured'],
-                'deployments_enabled': user[0]['deployments_enabled'],
-                'deployments_basic': user[0]['deployments_basic'],
-                'deployments_pro': user[0]['deployments_pro'],
-                'monitoring_enabled': user[0]['monitoring_enabled'],
-                'utils_enabled': user[0]['utils_enabled'],
-                'client_enabled': user[0]['client_enabled'],
-                'coins_execution': user[0]['coins_execution'],
-                'coins_day': user[0]['coins_day']
-            }
-            return jsonify({'data': ret}), 200
+                # Build return data
+                ret = {
+                    'access_token': create_access_token(identity=user[0]['username']),
+                    'refresh_token': create_refresh_token(identity=user[0]['username']),
+                    'username': user[0]['username'],
+                    'coins': user[0]['coins'],
+                    'admin': user[0]['admin'] and valid_url,
+                    'owner': user[0]['owner'],
+                    'inventory_enabled': user[0]['inventory_enabled'],
+                    'inventory_secured': user[0]['inventory_secured'],
+                    'deployments_enabled': user[0]['deployments_enabled'],
+                    'deployments_basic': user[0]['deployments_basic'],
+                    'deployments_pro': user[0]['deployments_pro'],
+                    'monitoring_enabled': user[0]['monitoring_enabled'],
+                    'utils_enabled': user[0]['utils_enabled'],
+                    'client_enabled': user[0]['client_enabled'],
+                    'coins_execution': user[0]['coins_execution'],
+                    'coins_day': user[0]['coins_day']
+                }
+                return jsonify({'data': ret}), 200
+            except Exception as e:
+                print(str(e))
+                raise
 
         @login_blueprint.route('/login/check', methods=['GET'])
         @jwt_required

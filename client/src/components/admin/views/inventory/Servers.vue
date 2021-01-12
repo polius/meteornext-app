@@ -372,7 +372,7 @@ export default {
       this.loading = true
       const payload = {
         region_id: this.item.region_id,
-        server: { hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password }
+        server: { engine: this.item.engine, hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password }
       }
       axios.post('/admin/inventory/servers/test', payload)
         .then((response) => {
