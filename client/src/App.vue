@@ -234,7 +234,7 @@ export default {
     },
     openNotification(notification) {
       // Remove notification from notifications bar
-      const payload = JSON.stringify({ id: notification.id })
+      const payload = { id: notification.id }
       axios.put('/notifications', payload)
         .then(() => {
           for (var i = 0; i < this.notifications.length; ++i) {

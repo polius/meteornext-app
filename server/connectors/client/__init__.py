@@ -1,8 +1,8 @@
 import time
 import threading
-from connectors.mysql import MySQL
+from connectors.client.mysql import MySQL
 
-class Connections:
+class Client:
     def __init__(self, app):
         self._connections = {}
 

@@ -13,7 +13,6 @@ from datetime import datetime, timedelta
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity)
 
-import utils
 import routes.login
 import routes.profile
 import routes.notifications
@@ -39,7 +38,8 @@ import routes.monitoring.views.parameters
 import routes.monitoring.views.processlist
 import routes.monitoring.views.queries
 import routes.client.client
-import models.mysql
+import connectors.base
+import connectors.pool
 import models.admin.settings
 from cron import Cron
 
@@ -60,14 +60,17 @@ class Setup:
             # Set unique hardware id
             self._conf['license']['uuid'] = str(uuid.getnode())
             # Test sql connection
-            sql = models.mysql.mysql(self._conf['sql']['hostname'], self._conf['sql']['username'], self._conf['sql']['password'], self._conf['sql']['port'], self._conf['sql']['database'])
-            sql.test()
+            sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': self._conf['sql']})
+            sql.test_sql()
+            # Init sql pool
+            sql = connectors.pool.Pool(self._conf)
             # Init license
             self._license = License(self._conf['license'])
             self._license.validate()
             # Register blueprints
             self.__register_blueprints(sql)
-        except Exception:
+        except Exception as e:
+            print(str(e))
             self._conf = {}
         else:
             # Init cron
@@ -115,16 +118,16 @@ class Setup:
 
             # Part 2: Check SQL Credentials
             try:
-                sql = models.mysql.mysql(setup_json['hostname'], setup_json['username'], setup_json['password'], setup_json['port'])
-                sql.test()
+                sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': {'engine': setup_json['engine'], 'hostname': setup_json['hostname'], 'username': setup_json['username'], 'password': setup_json['password'], 'port': setup_json['port']}})
+                sql.test_sql()
             except Exception as e:
                 return jsonify({'message': "Can't connect to MySQL server"}), 400
 
             # Check Database Access
             try:
                 exists = sql.check_db_exists(setup_json['database'])
-                sql = models.mysql.mysql(setup_json['hostname'], setup_json['username'], setup_json['password'], setup_json['port'], setup_json['database'])
-                sql.test()
+                sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': {'engine': setup_json['engine'], 'hostname': setup_json['hostname'], 'username': setup_json['username'], 'password': setup_json['password'], 'port': setup_json['port']}})
+                sql.test_sql()
                 return jsonify({'message': 'Connection Successful', 'exists': exists}), 200
             except Exception as e:
                 if "Unknown database " in str(e): 
@@ -146,7 +149,8 @@ class Setup:
             try:
                 # Part 3: Build Meteor & Create User Admin Account
                 if setup_json['sql']['recreate']:
-                    sql = models.mysql.mysql(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'])
+                    # Init sql pool
+                    sql = connectors.pool.Pool(setup_json)
                     # Import SQL Schema
                     sql.execute('DROP DATABASE IF EXISTS {}'.format(setup_json['sql']['database']))
                     sql.execute('CREATE DATABASE {}'.format(setup_json['sql']['database']))
@@ -174,7 +178,8 @@ class Setup:
                     setting = {"name": "LOGS", "value": '{{"amazon_s3":{{"enabled":false}},"local":{{"path":"{}"}}}}'.format(self._logs_folder)}
                     settings.post(1, setting)
                 else:
-                    sql = models.mysql.mysql(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'], setup_json['sql']['database'])
+                    # Init sql pool
+                    sql = connectors.pool.Pool(setup_json)
 
             except Exception as e:
                 return jsonify({'message': str(e)}), 500
@@ -188,6 +193,7 @@ class Setup:
                 },
                 "sql":
                 {
+                    "engine": setup_json['sql']['engine'],
                     "hostname": setup_json['sql']['hostname'],
                     "port": int(setup_json['sql']['port']),
                     "username": setup_json['sql']['username'],

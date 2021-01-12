@@ -3,7 +3,7 @@ import json
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
-import utils
+import connectors.base
 import models.admin.users
 import models.admin.inventory.inventory
 import models.admin.inventory.regions
@@ -79,8 +79,8 @@ class Regions:
 
             # Check SSH Connection
             try:
-                u = utils.Utils(region_json)
-                u.check_ssh()
+                sql = connectors.base.Base({'ssh': region_json, 'sql': {'engine': 'MySQL'}})
+                sql.test_ssh()
             except Exception as e:
                 return jsonify({'message': str(e)}), 400
 
