@@ -6,9 +6,6 @@ import bcrypt
 import hashlib
 import requests
 import threading
-import models.admin.groups
-import models.admin.users
-import models.mysql
 from datetime import datetime, timedelta
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity)
@@ -41,6 +38,8 @@ import routes.client.client
 import connectors.base
 import connectors.pool
 import models.admin.settings
+import models.admin.groups
+import models.admin.users
 from cron import Cron
 
 class Setup:
@@ -154,7 +153,6 @@ class Setup:
                     # Import SQL Schema
                     sql.execute('DROP DATABASE IF EXISTS {}'.format(setup_json['sql']['database']))
                     sql.execute('CREATE DATABASE {}'.format(setup_json['sql']['database']))
-                    sql = models.mysql.mysql(setup_json['sql']['hostname'], setup_json['sql']['username'], setup_json['sql']['password'], setup_json['sql']['port'], setup_json['sql']['database'])
 
                     with open(self._schema_file) as file_open:
                         queries = file_open.read().split(';')
