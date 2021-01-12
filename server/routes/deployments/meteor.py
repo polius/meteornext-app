@@ -8,7 +8,6 @@ from time import time
 from datetime import datetime
 from multiprocessing import Process
 
-import models.mysql
 import models.admin.settings
 import models.inventory.environments
 import models.inventory.regions
