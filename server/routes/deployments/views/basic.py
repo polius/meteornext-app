@@ -423,5 +423,5 @@ class Basic:
 
     def __check_logs_path(self):
         logs_path = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])['local']['path']
-        u = utils.Utils(self._app)
+        u = utils.Utils()
         return u.check_local_path(logs_path)
