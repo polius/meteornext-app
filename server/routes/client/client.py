@@ -649,8 +649,6 @@ class Client:
         # Build header
         yield '# ************************************************************\n'
         yield '# Meteor Next - Export SQL\n'
-        # yield '# Version 1\n#\n'
-        # yield '# https://meteor2.io\n#\n'
         yield '# Host: {} ({} {})\n'.format(cred['sql']['hostname'], cred['sql']['engine'], conn.get_version())
         yield '# Database: {}\n'.format(request.args['database'])
         yield '# Generation Time: {} UTC\n'.format(datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))

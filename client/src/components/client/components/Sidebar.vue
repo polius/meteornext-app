@@ -668,7 +668,7 @@ export default {
         setTimeout(() => {
           let promise = new Promise((resolve, reject) => {
             this.gridApi.objects[object].showLoadingOverlay()
-            EventBus.$emit('get-objects', resolve, reject)
+            EventBus.$emit('get-objects', true, resolve, reject)
           })
           promise.then(() => {})
             .catch(() => {})
