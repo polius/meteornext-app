@@ -437,8 +437,8 @@ export default {
       this.$nextTick(() => { this.$refs.database.focus() })
     },
     databaseChanged(database) {
-      if (database === undefined) return
       this.database = database
+      if (database == null) { this.database = ''; return }
       // Clear Sidebar
       this.sidebarSelected = []
       this.sidebarOpened = []

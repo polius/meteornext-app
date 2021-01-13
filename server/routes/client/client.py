@@ -246,6 +246,9 @@ class Client:
                     database = use_database = query.strip()[4:-1] if query.endswith(';') else query.strip()[4:]
                 elif use_database is not None:
                     database = use_database
+                if len(database) == 0:
+                    result = {'query': query, 'database': database, 'error': 'No database selected'}
+                    return jsonify({'data': self.__json([result])}), 400
                 try:
                     result = conn.execute(query=query, database=database)
                     result['query'] = query

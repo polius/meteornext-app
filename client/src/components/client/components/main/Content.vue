@@ -381,7 +381,7 @@ export default {
         this.contentColumnsDefault = data[0]['columns']['default']
         this.contentColumnsType = data[0]['columns']['type']
         this.contentPks = data[0]['pks']
-        this.contentSearchColumn = this.contentColumnsName[0].trim()
+        if (this.contentSearchColumn.length == 0) this.contentSearchColumn = this.contentColumnsName[0].trim()
         for (let i = 0; i < this.contentColumnsName.length; ++i) {
           let field = this.contentColumnsName[i].trim()
           headers.push({ headerName: this.contentColumnsName[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: true, 
@@ -567,7 +567,7 @@ export default {
           if (node.data[keys[i]] == null) valuesToUpdate.push('NULL')
           else valuesToUpdate.push(JSON.stringify(node.data[keys[i]]))
         }
-        query = "INSERT INTO " + this.sidebarSelected[0]['name'] + ' (' + keys.join() + ") VALUES (" + valuesToUpdate.join() + ");"
+        query = "INSERT INTO `" + this.sidebarSelected[0]['name'] + '` (' + keys.map(x => `\`${x}\``).join(',') + ") VALUES (" + valuesToUpdate.join() + ");"
       }
       // EDIT
       else if (mode == 'edit') {
@@ -575,22 +575,22 @@ export default {
         for (let i = 0; i < keys.length; ++i) {
           if (values[keys[i]]['old'] != values[keys[i]]['new']) {
             if (values[keys[i]]['new'] !== undefined) {
-              if (values[keys[i]]['new'] == null) valuesToUpdate.push(keys[i] + " = NULL")
-              else valuesToUpdate.push(keys[i] + " = " + JSON.stringify(values[keys[i]]['new']))
+              if (values[keys[i]]['new'] == null) valuesToUpdate.push('`' + keys[i] + "` = NULL")
+              else valuesToUpdate.push('`' + keys[i] + "` = " + JSON.stringify(values[keys[i]]['new']))
             }
           }
         }
         let where = []
         if (this.contentPks.length == 0) {
           for (let i = 0; i < keys.length; ++i) {
-            if (values[keys[i]]['old'] == null) where.push(keys[i] + ' IS NULL')
-            else where.push(keys[i] + " = " + JSON.stringify(values[keys[i]]['old']))
+            if (values[keys[i]]['old'] == null) where.push('`' + keys[i] + '` IS NULL')
+            else where.push('`' + keys[i] + "` = " + JSON.stringify(values[keys[i]]['old']))
           }
-          query = "UPDATE " + this.sidebarSelected[0]['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
+          query = "UPDATE `" + this.sidebarSelected[0]['name'] + "` SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
         }
         else {
-          for (let i = 0; i < this.contentPks.length; ++i) where.push(this.contentPks[i] + " = " + JSON.stringify(values[this.contentPks[i]]['old']))
-          query = "UPDATE " + this.sidebarSelected[0]['name'] + " SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
+          for (let i = 0; i < this.contentPks.length; ++i) where.push('`' + this.contentPks[i] + "` = " + JSON.stringify(values[this.contentPks[i]]['old']))
+          query = "UPDATE `" + this.sidebarSelected[0]['name'] + "` SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
         }
       }
       if (mode == 'new' || (mode == 'edit' && valuesToUpdate.length > 0)) {
@@ -684,18 +684,18 @@ export default {
       // Build query condition
       var condition = ''
       if (['BETWEEN','NOT BETWEEN'].includes(this.contentSearchFilter)) {
-        if (this.contentSearchFilterText.length != 0 && this.contentSearchFilterText2.length != 0) condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "' AND '" + this.contentSearchFilterText2 + "'"
+        if (this.contentSearchFilterText.length != 0 && this.contentSearchFilterText2.length != 0) condition = ' WHERE `' + this.contentSearchColumn + '` ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "' AND '" + this.contentSearchFilterText2 + "'"
       }
       else if (['IS NULL','IS NOT NULL'].includes(this.contentSearchFilter)) {
-        condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter
+        condition = ' WHERE `' + this.contentSearchColumn + '` ' + this.contentSearchFilter
       }
       else if (['IN','NOT IN'].includes(this.contentSearchFilter) && this.contentSearchFilterText.length != 0) {
-        condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter + " ("
+        condition = ' WHERE `' + this.contentSearchColumn + '` ' + this.contentSearchFilter + " ("
         let elements = this.contentSearchFilterText.split(',')
         for (let i = 0; i < elements.length; ++i) condition += "'" + elements[i] + "',"
         condition = condition.substring(0, condition.length - 1) + ")"
       }
-      else if (this.contentSearchFilterText.length != 0) condition = ' WHERE ' + this.contentSearchColumn + ' ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "'"
+      else if (this.contentSearchFilterText.length != 0) condition = ' WHERE `' + this.contentSearchColumn + '` ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "'"
       // Build pagination
       var pagination = (this.page == 1) ? ' LIMIT 1000' : ' LIMIT ' + this.page * 1000 + ' OFFSET ' + this.page * 1000
       // Show overlay

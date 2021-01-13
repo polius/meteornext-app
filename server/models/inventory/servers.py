@@ -26,13 +26,13 @@ class Servers:
 
     def post(self, user_id, group_id, server):
         query = """
-            INSERT INTO servers (name, group_id, region_id, engine, version, hostname, port, username, password, `ssl`, shared, owner_id, created_by, created_at)             
-            SELECT %s, %s, id, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
+            INSERT INTO servers (name, group_id, region_id, engine, version, hostname, port, username, password, `ssl`, usage, shared, owner_id, created_by, created_at)             
+            SELECT %s, %s, id, %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
             FROM regions
             WHERE `name` = %s
             AND group_id = %s
         """
-        self._sql.execute(query, (server['name'], group_id, server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['region'], group_id))
+        self._sql.execute(query, (server['name'], group_id, server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['usage'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['region'], group_id))
 
     def put(self, user_id, group_id, server):
         query = """
@@ -48,13 +48,14 @@ class Servers:
                 servers.username = %s,
                 servers.password = %s,
                 servers.`ssl` = %s,
+                servers.usage = %s,
                 servers.shared = %s,
                 servers.owner_id = IF(%s = 1, NULL, %s),
                 servers.updated_by = %s,
                 servers.updated_at = %s
             WHERE servers.id = %s
         """
-        self._sql.execute(query, (server['region_id'], group_id, server['name'], group_id, group_id, server['region'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
+        self._sql.execute(query, (server['region_id'], group_id, server['name'], group_id, group_id, server['region'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['usage'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
     def delete(self, group_id, server_id):
         # Delete from 'monitoring'

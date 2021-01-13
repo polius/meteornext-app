@@ -71,7 +71,11 @@
                     </v-row>
                     <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" hide-details></v-text-field>
-                    <v-switch v-model="item.ssl" flat label="Use SSL" style="margin-top:20px" hide-details></v-switch>
+                    <v-row no-gutters>
+                      <v-col cols="auto" style="margin-top:20px">
+                        <v-switch v-model="item.ssl" flat label="Use SSL" style="margin-top:0px" hide-details></v-switch>
+                      </v-col>
+                    </v-row>
                     <v-row no-gutters v-if="item.ssl" style="margin-top:20px; margin-bottom:20px;">
                       <v-col style="padding-right:10px;">
                         <v-file-input v-model="item.ssl_client_key" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
