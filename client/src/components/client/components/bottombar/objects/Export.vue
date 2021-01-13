@@ -7,8 +7,9 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="tabClick('sql')" :color="sqlColor" style="margin-right:10px;">SQL</v-btn>
           <v-btn @click="tabClick('csv')" :color="csvColor" style="margin-right:10px;">CSV</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-text-field @input="onSearch" v-model="search" label="Search" append-icon="search" color="white" single-line hide-details></v-text-field>
+          <v-btn :disabled="loading" @click="dialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:5px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -76,7 +77,7 @@
                 <div style="margin-top:10px; margin-bottom:10px;">
                   <v-progress-linear :indeterminate="step == 'export'" value="100" rounded color="primary" height="25">
                     <template>
-                      {{ 'Exporting: ' + this.progress }}
+                      {{ progress == 0 ? 'Exporting... Please wait, It might take several minutes' : 'Downloading: ' + this.progress }}
                     </template>
                   </v-progress-linear>
                   <div class="body-1" style="margin-top:10px">
@@ -133,6 +134,7 @@ export default {
       loading: false,
       // Dialog
       dialog: false,
+      search: '',
       // Tab Bar
       tab: 'sql',
       sqlColor: 'primary',
@@ -204,19 +206,18 @@ export default {
       this.selected = selected
       this.dialog = true
       this.tabClick('sql')
-      this.$nextTick(() => { 
+      setTimeout(() => {
         if (this.database != this.databasePrev) this.buildObjects()
         for (let obj of this.objects) {
           if (this.gridApi[obj] != null) this.gridApi[obj].deselectAll()
         }
         if (selected === undefined) this.tabObjectsSelected = 0
         else this.selectRow()
-      })
+      },100)
     },
     onGridReady(object, params) {
       this.gridApi[object] = params.api
       this.columnApi[object] = params.columnApi
-      this.gridApi[object].showLoadingOverlay()
     },
     onNewColumnsLoaded(object) {
       if (this.gridApi[object] != null) this.resizeTable(object, true)
@@ -262,11 +263,11 @@ export default {
       for (let obj of this.objects) {
         if (this.gridApi[obj] != null) this.gridApi[obj].showLoadingOverlay()
       }
-      let promise = new Promise((resolve, reject) => {
+      new Promise((resolve, reject) => {
         this.loading = true
-        EventBus.$emit('get-objects', resolve, reject)
+        EventBus.$emit('get-objects', true, resolve, reject)
       })
-      promise.finally(() => {
+      .finally(() => {
         for (let obj of this.objects) {
           if (this.gridApi[obj] != null) this.gridApi[obj].hideOverlay()
         }
@@ -336,7 +337,16 @@ export default {
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a')
         link.href = url
-        if (this.tab == 'sql') link.setAttribute('download', this.database + '.sql')
+        if (this.tab == 'sql') {
+          let fileName = this.database
+          if (payload['options']['objects']['tables'].length == 1 && payload['options']['objects']['views'].length == 0 && payload['options']['objects']['triggers'].length == 0 && payload['options']['objects']['functions'].length == 0 && payload['options']['objects']['procedures'].length == 0 && payload['options']['objects']['events'].length == 0) fileName = payload['options']['objects']['tables'][0]
+          else if (payload['options']['objects']['tables'].length == 0 && payload['options']['objects']['views'].length == 1 && payload['options']['objects']['triggers'].length == 0 && payload['options']['objects']['functions'].length == 0 && payload['options']['objects']['procedures'].length == 0 && payload['options']['objects']['events'].length == 0) fileName = payload['options']['objects']['views'][0]
+          else if (payload['options']['objects']['tables'].length == 0 && payload['options']['objects']['views'].length == 0 && payload['options']['objects']['triggers'].length == 1 && payload['options']['objects']['functions'].length == 0 && payload['options']['objects']['procedures'].length == 0 && payload['options']['objects']['events'].length == 0) fileName = payload['options']['objects']['triggers'][0]
+          else if (payload['options']['objects']['tables'].length == 0 && payload['options']['objects']['views'].length == 0 && payload['options']['objects']['triggers'].length == 0 && payload['options']['objects']['functions'].length == 1 && payload['options']['objects']['procedures'].length == 0 && payload['options']['objects']['events'].length == 0) fileName = payload['options']['objects']['functions'][0]
+          else if (payload['options']['objects']['tables'].length == 0 && payload['options']['objects']['views'].length == 0 && payload['options']['objects']['triggers'].length == 0 && payload['options']['objects']['functions'].length == 0 && payload['options']['objects']['procedures'].length == 1 && payload['options']['objects']['events'].length == 0) fileName = payload['options']['objects']['procedures'][0]
+          else if (payload['options']['objects']['tables'].length == 0 && payload['options']['objects']['views'].length == 0 && payload['options']['objects']['triggers'].length == 0 && payload['options']['objects']['functions'].length == 0 && payload['options']['objects']['procedures'].length == 0 && payload['options']['objects']['events'].length == 1) fileName = payload['options']['objects']['events'][0]
+          link.setAttribute('download', fileName + '.sql')
+        }
         else if (this.tab == 'csv') link.setAttribute('download', objects['tables'][0] + '.csv')
         document.body.appendChild(link)
         link.click()
@@ -372,6 +382,10 @@ export default {
       else if (value/1024/1024/1024 < 1) return Math.trunc(value/1024/1024*100)/100 + ' MB'
       else if (value/1024/1024/1024/1024 < 1) return Math.trunc(value/1024/1024/1024*100)/100 + ' GB'
       else return Math.trunc(value/1024/1024/1024/1024*100)/100 + ' TB' 
+    },
+    onSearch(value) {
+      let ids = ['tablesCsv','tables','views','triggers','functions','procedures','events']
+      for (let id of ids) this.gridApi[id].setQuickFilter(value)
     },
   }
 }
