@@ -103,7 +103,7 @@
                         <v-file-input v-model="item.ssl_client_ca_certificate" :readonly="readOnly" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
                       </v-col>
                     </v-row>
-                    <v-select outlined v-model="item.usage" :items="['Deployments','Client']" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
+                    <v-select outlined v-model="item.usage" :items="['Deployments','Monitoring','Utils','Client']" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
                 <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
@@ -158,7 +158,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: ['Deployments','Client'] },
+    item: { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: ['Deployments','Monitoring','Utils','Client'] },
     mode: '',
     loading: true,
     engines: {
@@ -220,7 +220,7 @@ export default {
     },
     newServer() {
       this.mode = 'new'
-      this.item = { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: ['Deployments','Client'] }
+      this.item = { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: ['Deployments','Monitoring','Utils','Client'] }
       this.dialog_title = 'New Server'
       this.dialog = true
     },
@@ -347,12 +347,16 @@ export default {
       if (typeof val == 'string') {
         let ret = []
         if (val.includes('D')) ret.push('Deployments')
+        if (val.includes('M')) ret.push('Monitoring')
+        if (val.includes('U')) ret.push('Utils')
         if (val.includes('C')) ret.push('Client')
         return ret
       }
       else {
         let ret = ''
         if (val.includes('Deployments')) ret += 'D'
+        if (val.includes('Monitoring')) ret += 'M'
+        if (val.includes('Utils')) ret += 'U'
         if (val.includes('Client')) ret += 'C'
         return ret
       }
