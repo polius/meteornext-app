@@ -27,6 +27,12 @@
           <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
           {{ !item.shared ? 'Personal' : 'Shared' }}
         </template>
+        <template v-slot:[`item.usage`]="{ item }">
+          <v-icon v-if="item.usage.includes('D')" title="Deployments" small color="#e74c3c" style="margin-right:5px">fas fa-circle</v-icon>
+          <v-icon v-if="item.usage.includes('M')" title="Monitoring" small color="#fa8231" style="margin-right:5px">fas fa-circle</v-icon>
+          <v-icon v-if="item.usage.includes('U')" title="Utils" small color="#00b16a" style="margin-right:5px">fas fa-circle</v-icon>
+          <v-icon v-if="item.usage.includes('C')" title="Client" small color="#8e44ad">fas fa-circle</v-icon>
+        </template>
       </v-data-table>
     </v-card>
 
@@ -81,7 +87,11 @@
                     </v-row>
                     <v-text-field v-model="item.username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="item.password" :readonly="readOnly" label="Password" style="padding-top:0px;" hide-details></v-text-field>
-                    <v-switch v-model="item.ssl" :readonly="readOnly" flat label="Use SSL" style="margin-top:20px" hide-details></v-switch>
+                    <v-row no-gutters>
+                      <v-col cols="auto" style="margin-top:20px">
+                        <v-switch v-model="item.ssl" :readonly="readOnly" flat label="Use SSL" hide-details style="margin-top:0px"></v-switch>
+                      </v-col>
+                    </v-row>
                     <v-row no-gutters v-if="item.ssl" style="margin-top:20px; margin-bottom:20px;">
                       <v-col style="padding-right:10px;">
                         <v-file-input v-model="item.ssl_client_key" :readonly="readOnly" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
@@ -93,7 +103,7 @@
                         <v-file-input v-model="item.ssl_client_ca_certificate" :readonly="readOnly" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
                       </v-col>
                     </v-row>
-                    <v-select outlined v-model="item.usage" :items="['Deployments','Client']" label="Usage" multiple hide-details style="margin-top:20px"></v-select>
+                    <v-select outlined v-model="item.usage" :items="['Deployments','Client']" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
                 <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
@@ -142,6 +152,7 @@ export default {
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
       { text: 'Scope', align: 'left', value: 'shared' },
+      { text: 'Usage', align: 'left', value: 'usage' },
     ],
     servers: [],
     items: [],
@@ -216,6 +227,7 @@ export default {
     cloneServer() {
       this.mode = 'clone'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.item.usage = this.parseUsage(this.item.usage)
       delete this.item['id']
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'Clone Server'
@@ -224,6 +236,7 @@ export default {
     editServer() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.item.usage = this.parseUsage(this.item.usage)
       this.versions = this.engines[this.item.engine]
       this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'Edit Server'
       this.dialog = true
@@ -247,7 +260,7 @@ export default {
         return
       }
       // Add item in the DB
-      const payload = this.item
+      const payload = {...this.item, usage: this.parseUsage(this.item.usage)}
       axios.post('/inventory/servers', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -269,7 +282,7 @@ export default {
         return
       }
       // Edit item in the DB
-      const payload = this.item
+      const payload = {...this.item, usage: this.parseUsage(this.item.usage)}
       axios.put('/inventory/servers', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -329,6 +342,20 @@ export default {
       if (val == 'all') this.items = this.servers.slice(0)
       else if (val == 'personal') this.items = this.servers.filter(x => !x.shared)
       else if (val == 'shared') this.items = this.servers.filter(x => x.shared)
+    },
+    parseUsage(val) {
+      if (typeof val == 'string') {
+        let ret = []
+        if (val.includes('D')) ret.push('Deployments')
+        if (val.includes('C')) ret.push('Client')
+        return ret
+      }
+      else {
+        let ret = ''
+        if (val.includes('Deployments')) ret += 'D'
+        if (val.includes('Client')) ret += 'C'
+        return ret
+      }
     },
     notification(message, color, persistent=false) {
       this.snackbar = false
