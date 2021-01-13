@@ -68,8 +68,7 @@ class Setup:
             self._license.validate()
             # Register blueprints
             self.__register_blueprints(sql)
-        except Exception as e:
-            print(str(e))
+        except Exception:
             self._conf = {}
         else:
             # Init cron
