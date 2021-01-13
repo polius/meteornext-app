@@ -116,8 +116,7 @@ class MySQL:
             client.connect(hostname=self._server['ssh']['hostname'], port=int(self._server['ssh']['port']), username=self._server['ssh']['username'], password=self._server['ssh']['password'], pkey=pkey, timeout=10)
             client.close()
         finally:
-            sys_stderr = sys.stderr
-            sys.stderr = open(os.devnull, 'w')
+            sys.stderr = sys_stderr
 
     def test_sql(self):
         # Supress Errors Output
@@ -135,8 +134,7 @@ class MySQL:
                 conn = pymysql.connect(host=self._server['sql']['hostname'], port=int(self._server['sql']['port']), user=self._server['sql']['username'], passwd=self._server['sql']['password'])
                 conn.close()
         finally:
-            sys_stderr = sys.stderr
-            sys.stderr = open(os.devnull, 'w')
+            sys.stderr = sys_stderr
 
     ####################
     # INTERNAL METHODS #

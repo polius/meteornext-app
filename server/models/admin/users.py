@@ -33,7 +33,7 @@ class Users:
         self._sql.execute("UPDATE users SET password = %s, mfa = %s, mfa_hash = %s, email = %s WHERE username = %s", (user['password'], user['mfa'], user['mfa_hash'], user['email'], user['username']))
 
     def put_last_login(self, username):
-        self._sql.execute("UPDATE users SET last_login = NOW() WHERE username = %s", (username))
+        self._sql.execute("UPDATE users SET last_login = %s WHERE username = %s", (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), username))
 
     def delete(self, users):
         for user in users:
