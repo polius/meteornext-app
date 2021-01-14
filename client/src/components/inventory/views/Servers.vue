@@ -128,7 +128,35 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-
+    <!-------------------->
+    <!-- CONFIRM DIALOG -->
+    <!-------------------->
+    <v-dialog v-model="confirm_dialog" persistent max-width="768px">
+      <v-card>
+        <v-toolbar flat color="primary">
+          <v-toolbar-title class="white--text">{{ confirm_dialog_title }}</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn @click="confirm_dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 20px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <div class="subtitle-1" style="padding-top:10px; padding-bottom:10px">{{ confirm_dialog_title }}</div>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn :loading="loading" color="#00b16a" @click="editServerSubmit(false)">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="confirm_dialog = false" style="margin-left:5px">CANCEL</v-btn>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!-------------->
+    <!-- SNACKBAR -->
+    <!-------------->
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -172,6 +200,9 @@ export default {
     dialog_valid: false,
     // Regions
     regions: [],
+    // Dialog: Confirm
+    confirm_dialog: false,
+    confirm_dialog_title: '',
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -274,7 +305,7 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    editServerSubmit() {
+    editServerSubmit(check=true) {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
@@ -282,15 +313,22 @@ export default {
         return
       }
       // Edit item in the DB
-      const payload = {...this.item, usage: this.parseUsage(this.item.usage)}
+      const payload = {...this.item, usage: this.parseUsage(this.item.usage), check}
       axios.put('/inventory/servers', payload)
         .then((response) => {
-          this.notification(response.data.message, '#00b16a')
-          this.getServers()
-          this.selected = []
-          this.dialog = false
+          if (response.status == 202) {
+            this.confirm_dialog_title = response.data.message
+            this.confirm_dialog = true
+          }
+          else {
+            this.notification(response.data.message, '#00b16a')
+            this.getServers()
+            this.selected = []
+            this.dialog = false
+          }
         })
         .catch((error) => {
+          console.log(error)
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })

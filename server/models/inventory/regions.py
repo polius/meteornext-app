@@ -90,6 +90,17 @@ class Regions:
             """
             return self._sql.execute(query, (region['name'], group_id, user_id))[0]['exist'] == 1
 
+    def exist_in_server(self, user_id, group_id, region_id):
+        query = """
+            SELECT EXISTS ( 
+                SELECT * 
+                FROM servers s
+                JOIN regions r ON r.id = s.region_id AND r.id = %s AND r.group_id = %s
+                WHERE (s.shared = 1 OR s.owner_id = %s)
+            ) AS exist
+        """
+        return self._sql.execute(query, (region_id, group_id, user_id))[0]['exist'] == 1
+
     def get_by_environment(self, user_id, group_id, environment_name):
         query = """
             SELECT DISTINCT r.*
