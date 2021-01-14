@@ -20,6 +20,9 @@ class Base:
     def execute(self, query, args=None, database=None):
         return self._sql.execute(query, args, database)
 
+    def mogrify(self, query, args=None):
+        return self._sql.mogrify(query, args)
+
     ####################
     # INTERNAL METHODS #
     ####################

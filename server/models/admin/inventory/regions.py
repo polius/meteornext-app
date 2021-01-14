@@ -89,3 +89,13 @@ class Regions:
                 ) AS exist
             """
             return self._sql.execute(query, (region['name'], region['group_id'], region['owner_id']))[0]['exist'] == 1
+
+    def exist_in_server(self, region_id):
+        query = """
+            SELECT EXISTS ( 
+                SELECT * 
+                FROM servers s
+                JOIN regions r ON r.id = s.region_id AND r.id = %s
+            ) AS exist
+        """
+        return self._sql.execute(query, (region_id))[0]['exist'] == 1

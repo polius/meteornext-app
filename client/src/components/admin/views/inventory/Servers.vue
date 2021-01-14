@@ -10,6 +10,12 @@
         <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
         {{ !item.shared ? 'Personal' : 'Shared' }}
       </template>
+      <template v-slot:[`item.usage`]="{ item }">
+        <v-icon v-if="item.usage.includes('D')" title="Deployments" small color="#e74c3c" style="margin-right:5px">fas fa-circle</v-icon>
+        <v-icon v-if="item.usage.includes('M')" title="Monitoring" small color="#fa8231" style="margin-right:5px">fas fa-circle</v-icon>
+        <v-icon v-if="item.usage.includes('U')" title="Utils" small color="#00b16a" style="margin-right:5px">fas fa-circle</v-icon>
+        <v-icon v-if="item.usage.includes('C')" title="Client" small color="#8e44ad">fas fa-circle</v-icon>
+      </template>
     </v-data-table>
 
     <v-dialog v-model="dialog" persistent max-width="768px">
@@ -87,6 +93,7 @@
                         <v-file-input v-model="item.ssl_client_ca_certificate" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
                       </v-col>
                     </v-row>
+                    <v-select outlined v-model="item.usage" :items="['Deployments','Monitoring','Utils','Client']" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
                 <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
@@ -134,6 +141,7 @@
                   <v-checkbox v-model="columnsRaw" label="Scope" value="shared" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Group" value="group" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Owner" value="owner" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Usage" value="usage" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Created By" value="created_by" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Created At" value="created_at" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Updated By" value="updated_by" hide-details style="margin-top:5px"></v-checkbox>
@@ -144,6 +152,33 @@
                     <v-btn :disabled="loading" color="error" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
                   </div>
                 </v-form>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!-------------------->
+    <!-- CONFIRM DIALOG -->
+    <!-------------------->
+    <v-dialog v-model="confirm_dialog" persistent max-width="640px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text">Confirmation</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn @click="confirm_dialog = false" icon style="width:40px; height:40px"><v-icon size="21">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 20px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-alert dense type="error" style="margin-top:15px">This server is being used in some sections.</v-alert>
+                <div class="subtitle-1" style="margin-top:10px; margin-bottom:10px;">This server won't be usable in the non selected sections. Do you want to proceed?</div>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn :loading="loading" color="#00b16a" @click="editServerSubmit(false)">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="confirm_dialog = false" style="margin-left:5px">CANCEL</v-btn>
+                </div>
               </v-flex>
             </v-layout>
           </v-container>
@@ -170,6 +205,7 @@ export default {
       { text: 'Scope', align: 'left', value: 'shared' },
       { text: 'Group', align: 'left', value: 'group' },
       { text: 'Owner', align: 'left', value: 'owner' },
+      { text: 'Usage', align: 'left', value: 'usage' },
       { text: 'Created By', align: 'left', value: 'created_by' },
       { text: 'Created At', align: 'left', value: 'created_at' },
       { text: 'Updated By', align: 'left', value: 'updated_by' },
@@ -179,7 +215,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { group_id: '', owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: true },
+    item: { group_id: '', owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false,  client_disabled: false, shared: true, usage: ['Deployments','Monitoring','Utils','Client'] },
     mode: '',
     loading: true,
     engines: {
@@ -191,9 +227,11 @@ export default {
     dialog: false,
     dialog_title: '',
     users: [],
+    // Dialog: Confirm
+    confirm_dialog: false,
     // Filter Columns Dialog
     columnsDialog: false,
-    columns: ['name','region','version','hostname','port','username','shared','group','owner'],
+    columns: ['name','region','version','hostname','port','username','shared','group','owner','usage'],
     columnsRaw: [],
     // Regions
     regions: [],
@@ -268,7 +306,7 @@ export default {
     newServer() {
       this.mode = 'new'
       this.users = []
-      this.item = { group_id: this.filter.group, owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: true }
+      this.item = { group_id: this.filter.group, owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: true, usage: ['Deployments','Monitoring','Utils','Client'] }
       if (this.filter.group != null) { this.getUsers(); this.getRegions(); }
       this.dialog_title = 'New Server'
       this.dialog = true
@@ -276,6 +314,7 @@ export default {
     cloneServer() {
       this.mode = 'clone'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.item.usage = this.parseUsage(this.item.usage)
       delete this.item['id']
       this.getUsers()
       this.getRegions()
@@ -286,6 +325,7 @@ export default {
     editServer() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.item.usage = this.parseUsage(this.item.usage)
       this.getUsers()
       this.getRegions()
       this.versions = this.engines[this.item.engine]
@@ -311,7 +351,7 @@ export default {
         return
       }
       // Add item in the DB
-      const payload = this.item
+      const payload = {...this.item, usage: this.parseUsage(this.item.usage)}
       axios.post('/admin/inventory/servers', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -325,7 +365,8 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    editServerSubmit() {
+    editServerSubmit(check=true) {
+      this.confirm_dialog = false
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
@@ -333,13 +374,16 @@ export default {
         return
       }
       // Edit item in the DB
-      const payload = this.item
+      const payload = {...this.item, usage: this.parseUsage(this.item.usage), check}
       axios.put('/admin/inventory/servers', payload)
         .then((response) => {
-          this.notification(response.data.message, '#00b16a')
-          this.getServers()
-          this.selected = []
-          this.dialog = false
+          if (response.status == 202) this.confirm_dialog = true
+          else {
+            this.notification(response.data.message, '#00b16a')
+            this.getServers()
+            this.selected = []
+            this.dialog = false
+          }
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -393,6 +437,24 @@ export default {
       else if (val == 'personal') this.items = this.servers.filter(x => !x.shared)
       else if (val == 'shared') this.items = this.servers.filter(x => x.shared)
     },
+    parseUsage(val) {
+      if (typeof val == 'string') {
+        let ret = []
+        if (val.includes('D')) ret.push('Deployments')
+        if (val.includes('M')) ret.push('Monitoring')
+        if (val.includes('U')) ret.push('Utils')
+        if (val.includes('C')) ret.push('Client')
+        return ret
+      }
+      else {
+        let ret = ''
+        if (val.includes('Deployments')) ret += 'D'
+        if (val.includes('Monitoring')) ret += 'M'
+        if (val.includes('Utils')) ret += 'U'
+        if (val.includes('Client')) ret += 'C'
+        return ret
+      }
+    },
     filterServers() {
       this.selected = []
       if (this.filter.group != null) this.columns = this.columns.filter(x => x != 'group')
@@ -404,7 +466,7 @@ export default {
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['name','region','version','hostname','port','username','shared','group','owner','created_by','created_at','updated_by','updated_at']
+      this.columnsRaw = ['name','region','version','hostname','port','username','shared','group','owner','usage','created_by','created_at','updated_by','updated_at']
     },
     deselectAllColumns() {
       this.columnsRaw = []

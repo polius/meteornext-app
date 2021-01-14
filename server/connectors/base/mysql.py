@@ -103,6 +103,19 @@ class MySQL:
         # Return query info
         return query_result
 
+    def mogrify(self, query, args=None):
+        try:
+            with self._sql.cursor(OrderedDictCursor) as cursor:
+                return cursor.mogrify(query, args)
+        except Exception as e:
+            if retry:
+                self.start()
+                return self.mogrify(query, args)
+            else:
+                raise
+        finally:
+            self.stop()
+
     def test_ssh(self):
         # Supress Errors Output
         sys_stderr = sys.stderr

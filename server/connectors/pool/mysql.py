@@ -42,3 +42,11 @@ class MySQL:
                 return cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
         finally:
             connection.close()
+
+    def mogrify(self, query, args=None):
+        try:
+            connection = self._pool.connection()
+            with connection.cursor(OrderedDictCursor) as cursor:
+                return cursor.mogrify(query, args)
+        finally:
+            connection.close()
