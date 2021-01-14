@@ -59,7 +59,7 @@ class Client:
                 return jsonify({'servers': servers, 'folders': folders}), 200
             elif request.method == 'POST':
                 if 'servers' in client_json:
-                    self._client.add_servers(client_json['servers'], user['id'])
+                    self._client.add_servers(client_json['servers'], user)
                     return jsonify({"message": "Servers successfully added"}), 200
                 elif 'folder' in client_json:
                     if (self._client.exists_folder({'name': client_json['folder']}, user['id'])):
@@ -68,7 +68,7 @@ class Client:
                     return jsonify({"message": "Folder successfully created"}), 200
             elif request.method == 'PUT':
                 if 'servers' in client_json:
-                    self._client.move_servers(client_json['servers'], user['id'])
+                    self._client.move_servers(client_json['servers'], user)
                     return jsonify({"message": "Servers successfully moved"}), 200
                 elif 'folder' in client_json:
                     if (self._client.exists_folder(client_json['folder'], user['id'])):

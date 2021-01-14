@@ -20,7 +20,9 @@ class Client:
             FROM servers s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
             LEFT JOIN client_servers cs ON cs.server_id = s.id AND cs.user_id = %(user_id)s
-            WHERE s.group_id = %(group_id)s AND (s.shared = 1 OR s.owner_id = %(user_id)s)
+            WHERE s.group_id = %(group_id)s
+            AND (s.shared = 1 OR s.owner_id = %(user_id)s)
+            AND s.usage LIKE '%%C%%'
             AND cs.server_id IS NULL
             ORDER BY s.name;
         """
@@ -116,20 +118,35 @@ class Client:
             """
             self._sql.execute(query, (user_id, k, v))
 
-    def add_servers(self, data, user_id):
+    def add_servers(self, data, user):
         for server in data:
-            query = "INSERT INTO client_servers (user_id, server_id) VALUES (%s, %s)"
-            self._sql.execute(query, (user_id, server))
+            query = """
+                INSERT INTO client_servers (user_id, server_id) 
+                SELECT %s, id
+                FROM servers
+                WHERE group_id = %s
+                AND (shared = 1 OR owner_id = %s)
+                AND id = %s
+            """
+            self._sql.execute(query, (user['id'], user['group_id'], user['id'], server))
     
     def remove_servers(self, data, user_id):
         for server in data:
             query = "DELETE FROM client_servers WHERE user_id = %s AND server_id = %s"
             self._sql.execute(query, (user_id, server))
 
-    def move_servers(self, data, user_id):
+    def move_servers(self, data, user):
         for server in data['servers']:
-            query = "UPDATE client_servers SET folder_id = %s WHERE user_id = %s AND server_id = %s"
-            self._sql.execute(query, (data['folder'], user_id, server))
+            query = """
+                UPDATE client_servers
+                JOIN servers s ON s.id = client_servers.server_id
+                SET client_servers.folder_id = %s
+                WHERE client_servers.user_id = %s
+                AND client_servers.server_id = %s
+                AND s.group_id = %s
+                AND (s.shared = 1 OR s.owner_id = %s)
+            """
+            self._sql.execute(query, (data['folder'], user['id'], server, user['group_id'], user['id']))
 
     def add_folder(self, folder_name, user_id):
         query = "INSERT INTO client_folders (name, user_id) VALUES (%s, %s)"

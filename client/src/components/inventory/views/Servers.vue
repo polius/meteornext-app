@@ -131,18 +131,19 @@
     <!-------------------->
     <!-- CONFIRM DIALOG -->
     <!-------------------->
-    <v-dialog v-model="confirm_dialog" persistent max-width="768px">
+    <v-dialog v-model="confirm_dialog" persistent max-width="640px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ confirm_dialog_title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text">Confirmation</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn @click="confirm_dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="confirm_dialog = false" icon style="width:40px; height:40px"><v-icon size="21">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <div class="subtitle-1" style="padding-top:10px; padding-bottom:10px">{{ confirm_dialog_title }}</div>
+                <v-alert dense type="error" style="margin-top:15px">This server is being used in some sections.</v-alert>
+                <div class="subtitle-1" style="margin-top:10px; margin-bottom:10px;">This server won't be usable in the non selected sections. Do you want to proceed?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="editServerSubmit(false)">CONFIRM</v-btn>
@@ -202,7 +203,6 @@ export default {
     regions: [],
     // Dialog: Confirm
     confirm_dialog: false,
-    confirm_dialog_title: '',
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -306,6 +306,7 @@ export default {
         .finally(() => this.loading = false)
     },
     editServerSubmit(check=true) {
+      this.confirm_dialog = false
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
@@ -316,10 +317,7 @@ export default {
       const payload = {...this.item, usage: this.parseUsage(this.item.usage), check}
       axios.put('/inventory/servers', payload)
         .then((response) => {
-          if (response.status == 202) {
-            this.confirm_dialog_title = response.data.message
-            this.confirm_dialog = true
-          }
+          if (response.status == 202) this.confirm_dialog = true
           else {
             this.notification(response.data.message, '#00b16a')
             this.getServers()
