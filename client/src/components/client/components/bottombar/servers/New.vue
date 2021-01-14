@@ -29,6 +29,7 @@
                           <v-container fluid style="padding:0px;">
                             <v-row no-gutters style="height:calc(100% - 36px); overflow:auto;">
                               <v-progress-circular v-if="loading" indeterminate color="white" size="25" width="2" style="margin:12px;"></v-progress-circular>
+                              <div v-else-if="items.length == 0" class="text-body-2" style="text-align:center; width:100%; display:grid; align-items:center">No servers to be selected</div>
                               <v-list v-else flat style="width:100%; padding:0px;">
                                 <v-list-item-group mandatory multiple>
                                   <v-list-item v-for="item in items" :key="item.id" dense @click="onServerClick(item)" @contextmenu="$event.preventDefault()" style="max-height:20px;">
