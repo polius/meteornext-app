@@ -108,20 +108,22 @@ class Environments:
         """
         return self._sql.execute(query, (group_id, environment_name, user_id))
 
-    def get_servers(self, group_id):
+    def get_servers(self, user_id, group_id):
         query = """
             SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name'
             FROM servers s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            WHERE (s.shared = 1 OR s.owner_id = %s)
+            AND s.usage LIKE '%%D%%'
         """
-        return self._sql.execute(query, (group_id))
+        return self._sql.execute(query, (group_id, user_id))
 
-    def get_environment_servers(self, group_id):
+    def get_environment_servers(self, user_id, group_id):
         query = """
             SELECT es.environment_id, s.id AS 'server_id', s.name AS 'server_name', r.id AS 'region_id', r.name AS 'region_name'
             FROM environment_servers es
             JOIN environments e ON e.id = es.environment_id AND e.group_id = %s
-            JOIN servers s ON s.id = es.server_id
+            JOIN servers s ON s.id = es.server_id AND (s.shared = 1 OR s.owner_id = %s) AND s.usage LIKE '%%D%%'
             JOIN regions r ON r.id = s.region_id
         """
-        return self._sql.execute(query, (group_id))
+        return self._sql.execute(query, (group_id, user_id))

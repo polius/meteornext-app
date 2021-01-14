@@ -69,7 +69,7 @@ class Environments:
     # Internal Methods #
     ####################
     def get(self, user):
-        return jsonify({'environments': self._environments.get(user['id'], user['group_id']), 'environment_servers': self._environments.get_environment_servers(user['group_id']), 'servers': self._environments.get_servers(user['group_id'])}), 200
+        return jsonify({'environments': self._environments.get(user['id'], user['group_id']), 'environment_servers': self._environments.get_environment_servers(user['id'], user['group_id']), 'servers': self._environments.get_servers(user['id'], user['group_id'])}), 200
 
     def post(self, user, environment):
         # Check privileges
