@@ -190,7 +190,7 @@ export default {
     snackbarText: '',
     snackbarColor: ''
   }),
-  computed : {
+  computed: {
     isLoggedIn: function() { return this.$store.getters['app/isLoggedIn'] },
     admin: function() { return this.$store.getters['app/admin'] == 0 ? false : this.$store.getters['app/admin'] },
     coins: function() { return this.$store.getters['app/coins'] },
