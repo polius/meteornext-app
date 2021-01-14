@@ -127,6 +127,12 @@ class Servers:
         # Check server exists
         if self._servers.exist(user['id'], user['group_id'], server):
             return jsonify({'message': 'This server name currently exists'}), 400
+        if 'check' in server and server['check'] is True:
+            # Check usage
+            exist_in_environment = self._servers.exist_in_environment(user['id'], user['group_id'], server['id'])
+            exist_in_client = self._servers.exist_in_client(user['id'], user['group_id'], server['id'])
+            if ('D' in server['usage'] and exist_in_environment) or ('C' in server['usage'] and exist_in_client):
+                return jsonify({'message': 'This server exists in some environments or clients. Are you sure to proceed?'}), 202
         # Edit server
         self._servers.put(user['id'], user['group_id'], server)
         return jsonify({'message': 'Server edited successfully'}), 200
@@ -135,7 +141,7 @@ class Servers:
         servers = json.loads(request.args['servers'])
         # Check inconsistencies
         for server in servers:
-            if self._servers.exist_in_environment(user['group_id'], server):
+            if self._servers.exist_in_environment(user['id'], user['group_id'], server):
                 return jsonify({'message': "The server '{}' is included in the environment '{}'".format(exist[0]['server_name'], exist[0]['environment_name'])}), 400
         # Check privileges
         for server in servers:

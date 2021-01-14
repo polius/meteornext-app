@@ -6,7 +6,6 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 import connectors.base
 import models.admin.users
 import models.inventory.regions
-import models.inventory.servers
 
 class Regions:
     def __init__(self, app, sql, license):
@@ -15,7 +14,6 @@ class Regions:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._regions = models.inventory.regions.Regions(sql)
-        self._servers = models.inventory.servers.Servers(sql)
 
     def blueprint(self):
         # Init blueprint
@@ -126,7 +124,7 @@ class Regions:
         regions = json.loads(request.args['regions'])
         # Check inconsistencies
         for region in regions:
-            if self._servers.exist_by_region(user['group_id'], region):
+            if self._regions.exist_in_server(user['id'], user['group_id'], region):
                 return jsonify({'message': "The selected regions have servers"}), 400
         # Check privileges
         for region in regions:
