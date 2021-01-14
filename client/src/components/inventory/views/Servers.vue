@@ -103,7 +103,7 @@
                         <v-file-input v-model="item.ssl_client_ca_certificate" :readonly="readOnly" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
                       </v-col>
                     </v-row>
-                    <v-select outlined v-model="item.usage" :items="['Deployments','Monitoring','Utils','Client']" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
+                    <v-select outlined v-model="item.usage" :items="usage" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
                 <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
@@ -187,7 +187,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: ['Deployments','Monitoring','Utils','Client'] },
+    item: { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: [] },
     mode: '',
     loading: true,
     engines: {
@@ -195,6 +195,7 @@ export default {
       'Aurora MySQL': ['Aurora MySQL 5.6', 'Aurora MySQL 5.7']
     },
     versions: [],
+    usage: [],
     // Dialog: Item
     dialog: false,
     dialog_title: '',
@@ -212,13 +213,24 @@ export default {
   computed: {
     owner: function() { return this.$store.getters['app/owner'] == 1 ? true : false },
     inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
-    readOnly: function() { return this.mode == 'edit' && !this.owner && this.item.shared == 1 }
+    readOnly: function() { return this.mode == 'edit' && !this.owner && this.item.shared == 1 },
+    deployments_enabled: function() { return this.$store.getters['app/deployments_enabled'] },
+    monitoring_enabled: function() { return this.$store.getters['app/monitoring_enabled'] },
+    utils_enabled: function() { return this.$store.getters['app/utils_enabled'] },
+    client_enabled: function() { return this.$store.getters['app/client_enabled'] },
   },
   created() {
+    this.buildUsage()
     this.getServers()
     this.getRegions()
   },
   methods: {
+    buildUsage() {
+      if (this.deployments_enabled) this.usage.push('Deployments')
+      if (this.monitoring_enabled) this.usage.push('Monitoring')
+      if (this.utils_enabled) this.usage.push('Utils')
+      if (this.client_enabled) this.usage.push('Client')
+    },
     getServers() {
       axios.get('/inventory/servers')
         .then((response) => {
@@ -251,7 +263,7 @@ export default {
     },
     newServer() {
       this.mode = 'new'
-      this.item = { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: ['Deployments','Monitoring','Utils','Client'] }
+      this.item = { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: [...this.usage] }
       this.dialog_title = 'New Server'
       this.dialog = true
     },

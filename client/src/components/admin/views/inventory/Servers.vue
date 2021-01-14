@@ -93,7 +93,7 @@
                         <v-file-input v-model="item.ssl_client_ca_certificate" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
                       </v-col>
                     </v-row>
-                    <v-select outlined v-model="item.usage" :items="['Deployments','Monitoring','Utils','Client']" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
+                    <v-select outlined v-model="item.usage" :items="usage" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
                 <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
@@ -215,7 +215,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { group_id: '', owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false,  client_disabled: false, shared: true, usage: ['Deployments','Monitoring','Utils','Client'] },
+    item: { group_id: '', owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false,  client_disabled: false, shared: true, usage: [] },
     mode: '',
     loading: true,
     engines: {
@@ -223,6 +223,7 @@ export default {
       'Aurora MySQL': ['Aurora MySQL 5.6', 'Aurora MySQL 5.7']
     },
     versions: [],
+    usage: [],
     // Dialog: Item
     dialog: false,
     dialog_title: '',
@@ -246,7 +247,7 @@ export default {
     EventBus.$on('delete-server', this.deleteServer);
   },
   computed: {
-    computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) }
+    computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
   },
   methods: {
     groupChanged() {
@@ -306,7 +307,7 @@ export default {
     newServer() {
       this.mode = 'new'
       this.users = []
-      this.item = { group_id: this.filter.group, owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: true, usage: ['Deployments','Monitoring','Utils','Client'] }
+      this.item = { group_id: this.filter.group, owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: true, usage: [...this.usage] }
       if (this.filter.group != null) { this.getUsers(); this.getRegions(); }
       this.dialog_title = 'New Server'
       this.dialog = true
