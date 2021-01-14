@@ -47,6 +47,18 @@ class Servers:
         self._sql.execute(query, (server['name'], server['group_id'], server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['usage'], server['shared'], server['shared'], server['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user, server):
+        if 'D' not in server['usage']:
+            query = """
+                DELETE FROM environment_servers
+                WHERE server_id = %s
+            """
+            self._sql.execute(query, (server['id']))
+        if 'C' not in server['usage']:
+            query = """
+                DELETE FROM client_servers
+                WHERE server_id = %s
+            """
+            self._sql.execute(query, (server['id']))
         query = """
             UPDATE servers
             SET name = %s,
@@ -58,7 +70,7 @@ class Servers:
                 username = %s,
                 password = %s,
                 `ssl` = %s,
-                usage = %s,
+                `usage` = %s,
                 shared = %s,
                 owner_id = IF(%s = 1, NULL, %s),
                 updated_by = %s,
@@ -138,16 +150,6 @@ class Servers:
             """
             return self._sql.execute(query, (server['name'], server['group_id'], server['owner_id']))[0]['exist'] == 1
 
-    def exist_by_region(self, region_id):
-        query = """
-            SELECT EXISTS ( 
-                SELECT * 
-                FROM servers s
-                JOIN regions r ON r.id = s.region_id AND r.id = %s
-            ) AS exist
-        """
-        return self._sql.execute(query, (region_id))[0]['exist'] == 1
-
     def exist_in_environment(self, server):
         query = """
             SELECT EXISTS (
@@ -155,6 +157,16 @@ class Servers:
                 FROM environment_servers es
                 JOIN environments e ON e.id = es.environment_id
                 JOIN servers s ON s.id = es.server_id AND s.id = %s
+            ) AS exist
+        """
+        return self._sql.execute(query, (server))[0]['exist'] == 1
+
+    def exist_in_client(self, server):
+        query = """
+            SELECT EXISTS (
+                SELECT *
+                FROM client_servers cs
+                JOIN servers s ON s.id = cs.server_id AND s.id = %s
             ) AS exist
         """
         return self._sql.execute(query, (server))[0]['exist'] == 1

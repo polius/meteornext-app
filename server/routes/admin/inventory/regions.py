@@ -7,7 +7,6 @@ import connectors.base
 import models.admin.users
 import models.admin.inventory.inventory
 import models.admin.inventory.regions
-import models.admin.inventory.servers
 import routes.admin.settings
 
 class Regions:
@@ -18,7 +17,6 @@ class Regions:
         self._users = models.admin.users.Users(sql)
         self._inventory = models.admin.inventory.inventory.Inventory(sql)
         self._regions = models.admin.inventory.regions.Regions(sql)
-        self._servers = models.admin.inventory.servers.Servers(sql)
         # Init routes
         self._settings = routes.admin.settings.Settings(app, sql, license)
 
@@ -125,7 +123,7 @@ class Regions:
         regions = json.loads(request.args['regions'])
         # Check inconsistencies
         for region in regions:
-            if self._servers.exist_by_region(region):
+            if self._regions.exist_in_server(region):
                 return jsonify({'message': "The selected regions have servers"}), 400
         # Delete regions
         for region in regions:

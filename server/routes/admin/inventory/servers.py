@@ -126,6 +126,13 @@ class Servers:
         # Check server exists
         if self._servers.exist(server):
             return jsonify({'message': 'This server name currently exists'}), 400
+        # Check usage
+        if 'check' in server and server['check'] is True:
+            origin = self._servers.get(server_id=server['id'])[0]
+            exist_in_environment = self._servers.exist_in_environment(server['id'])
+            exist_in_client = self._servers.exist_in_client(server['id'])
+            if ('D' in origin['usage'] and 'D' not in server['usage'] and exist_in_environment) or ('C' in origin['usage'] and 'C' not in server['usage'] and exist_in_client):
+                return jsonify({'message': 'This server exists in some environments or clients. Are you sure to proceed?'}), 202
         # Edit server
         self._servers.put(user, server)
         return jsonify({'message': 'Server edited successfully'}), 200
