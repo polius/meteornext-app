@@ -67,11 +67,15 @@ class Groups:
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
 
+            # Check Settings - Security (Administration URL)
+            if not self._settings.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
             # Get user data
             user = self._users.get(get_jwt_identity())[0]
 
             # Check user privileges
-            if user['disabled'] or not user['inventory_enabled']:
+            if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Build Slack Message
@@ -95,17 +99,38 @@ class Groups:
             else:
                 return jsonify({'message': "Slack message successfully sent"}), 200
 
+        @groups_blueprint.route('/admin/groups/usage', methods=['GET'])
+        @jwt_required
+        def groups_usage_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Check Settings - Security (Administration URL)
+            if not self._settings.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Return group usage
+            return jsonify({'group': self._groups.get_usage(request.args['group_id'])}), 200
+
         return groups_blueprint
 
     ####################
     # Internal Methods #
     ####################
-    def get(self, group_id=None):
-        if group_id is None and 'groupID' not in request.args:
+    def get(self):
+        if 'groupID' not in request.args:
             return jsonify({'data': self._groups.get()}), 200
         else:
             # Get group ID
-            groupID = request.args['groupID'] if group_id is None else group_id
+            groupID = request.args['groupID']
             # Get group
             group = self._groups.get(group_id=groupID)
             # Get group owners

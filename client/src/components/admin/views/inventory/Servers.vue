@@ -46,7 +46,7 @@
                       <v-text-field ref="name" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
-                      <v-select v-model="item.region_id" item-value="id" item-text="name" :rules="[v => !!v || '']" :items="regions" label="Region" required>
+                      <v-select :disabled="item.group_id == null" v-model="item.region_id" item-value="id" item-text="name" :rules="[v => !!v || '']" :items="regions" label="Region" required>
                         <template v-slot:[`selection`]="{ item }">
                           <v-icon small style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
                           {{ item.name }}
@@ -93,7 +93,7 @@
                         <v-file-input v-model="item.ssl_client_ca_certificate" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
                       </v-col>
                     </v-row>
-                    <v-select outlined v-model="item.usage" :items="usage" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
+                    <v-select :disabled="item.group_id == null" outlined v-model="item.usage" :items="usage" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
                 <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
@@ -215,7 +215,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { group_id: '', owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false,  client_disabled: false, shared: true, usage: [] },
+    item: { group_id: null, owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false,  client_disabled: false, shared: true, usage: [] },
     mode: '',
     loading: true,
     engines: {
@@ -258,11 +258,27 @@ export default {
       })
       this.getRegions()
       this.getUsers()
+      this.buildUsage()
     },
     getUsers() {
       axios.get('/admin/inventory/users', { params: { group_id: this.item.group_id }})
         .then((response) => {
           this.users = response.data.users
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+    },
+    buildUsage() {
+      axios.get('/admin/groups/usage', { params: { group_id: this.item.group_id }})
+        .then((response) => {
+          const data = response.data.group
+          this.usage = []
+          if (data['deployments_enabled'] == 1) this.usage.push('Deployments')
+          if (data['monitoring_enabled'] == 1) this.usage.push('Monitoring')
+          if (data['utils_enabled'] == 1) this.usage.push('Utils')
+          if (data['client_enabled'] == 1) this.usage.push('Client')
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -307,6 +323,8 @@ export default {
     newServer() {
       this.mode = 'new'
       this.users = []
+      this.regions = []
+      this.usage = []
       this.item = { group_id: this.filter.group, owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: true, usage: [...this.usage] }
       if (this.filter.group != null) { this.getUsers(); this.getRegions(); }
       this.dialog_title = 'New Server'
