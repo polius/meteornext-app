@@ -23,8 +23,7 @@
                 </v-toolbar-items>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="id" show-select :hide-default-footer="query_items.length < 11" class="elevation-1">
-              </v-data-table>
+              <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="id" show-select :hide-default-footer="query_items.length < 11" class="elevation-1"></v-data-table>
             </v-card>
 
             <!-- PARAMETERS -->
@@ -324,13 +323,13 @@ export default {
           id += 1
           start = i+1
         }
-        else if (this.query_item[i] == "\"") {
-          if (chars[chars.length-1] == '"') chars.pop()
-          else chars.push("\"")
+        else if (this.query_item[i] == '"' && (i == 0 || this.query_item[i-1] != '\\')) {
+          if (chars.length == 0) chars.push('"')
+          else if (chars[chars.length-1] == '"') chars.pop()
         }
-        else if (this.query_item[i] == "'") {
-          if (chars[chars.length-1] == "'") chars.pop()
-          else chars.push("'")
+        else if (this.query_item[i] == "'" && (i == 0 || this.query_item[i-1] != '\\')) {
+          if (chars.length == 0) chars.push("'")
+          else if (chars[chars.length-1] == "'") chars.pop()
         }
       }
       if (start < i) queries.push({"id": id, "query": this.query_item.substring(start, i).trim()})
