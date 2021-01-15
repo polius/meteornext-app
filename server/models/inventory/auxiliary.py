@@ -65,13 +65,6 @@ class Auxiliary:
         """
         self._sql.execute(query, (group_id, auxiliary_id))
 
-    def remove(self, group_id):
-        query = """
-            DELETE FROM auxiliary
-            WHERE group_id = %s
-        """
-        self._sql.execute(query, (group_id))
-
     def exist(self, user_id, group_id, auxiliary):
         if 'id' in auxiliary:
             query = """

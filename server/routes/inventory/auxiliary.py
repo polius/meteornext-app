@@ -135,6 +135,3 @@ class Auxiliary:
         for auxiliary in data:
             self._auxiliary.delete(user['group_id'], auxiliary)
         return jsonify({'message': 'Selected auxiliary connections deleted successfully'}), 200
-
-    def remove(self, group_id):
-        self._auxiliary.remove(group_id)

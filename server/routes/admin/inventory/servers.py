@@ -140,9 +140,12 @@ class Servers:
     def delete(self):
         servers = json.loads(request.args['servers'])
         # Check inconsistencies
-        for server in servers:
-            if self._servers.exist_in_environment(server):
-                return jsonify({'message': "The server '{}' is included in the environment '{}'".format(exist[0]['server_name'], exist[0]['environment_name'])}), 400
+        if 'check' in request.args and json.loads(request.args['check']) is True:
+            for server in servers:
+                exist_in_environment = self._servers.exist_in_environment(server)
+                exist_in_client = self._servers.exist_in_client(server)
+                if exist_in_environment or exist_in_client:
+                    return jsonify({'message': "The selected servers are included in some environments or clients. Are you sure to proceed?"}), 202
         # Delete servers
         for server in servers:
             self._servers.delete(server)

@@ -110,6 +110,3 @@ class Environments:
         for environment in environments:
             self._environments.delete(user['group_id'], environment)
         return jsonify({'message': 'Selected environments deleted successfully'}), 200
-    
-    def remove(self, group_id):
-        self._environments.remove(group_id)

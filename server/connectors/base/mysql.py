@@ -103,14 +103,14 @@ class MySQL:
         # Return query info
         return query_result
 
-    def mogrify(self, query, args=None):
+    def mogrify(self, query, args=None, retry=True):
         try:
             with self._sql.cursor(OrderedDictCursor) as cursor:
                 return cursor.mogrify(query, args)
         except Exception as e:
             if retry:
                 self.start()
-                return self.mogrify(query, args)
+                return self.mogrify(query, args, retry=False)
             else:
                 raise
         finally:

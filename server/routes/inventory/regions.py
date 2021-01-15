@@ -135,6 +135,3 @@ class Regions:
         for region in regions:
             self._regions.delete(user['group_id'], region)
         return jsonify({'message': 'Selected regions deleted successfully'}), 200
-
-    def remove(self, group_id):
-        self._regions.remove(group_id)

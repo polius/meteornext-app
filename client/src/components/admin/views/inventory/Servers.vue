@@ -176,7 +176,7 @@
                 <div class="subtitle-1" style="margin-top:10px; margin-bottom:10px;">This server won't be usable in the non selected sections. Do you want to proceed?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="editServerSubmit(false)">CONFIRM</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="submitServer(false)">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="error" @click="confirm_dialog = false" style="margin-left:5px">CANCEL</v-btn>
                 </div>
               </v-flex>
@@ -358,11 +358,12 @@ export default {
       this.dialog_title = 'Delete Server'
       this.dialog = true
     },
-    submitServer() {
+    submitServer(check=true) {
+      this.confirm_dialog = false
       this.loading = true
       if (['new','clone'].includes(this.mode)) this.newServerSubmit()
-      else if (this.mode == 'edit') this.editServerSubmit()
-      else if (this.mode == 'delete') this.deleteServerSubmit()
+      else if (this.mode == 'edit') this.editServerSubmit(check)
+      else if (this.mode == 'delete') this.deleteServerSubmit(check)
     },
     newServerSubmit() {
       // Check if all fields are filled
@@ -386,8 +387,7 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    editServerSubmit(check=true) {
-      this.confirm_dialog = false
+    editServerSubmit(check) {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
@@ -412,16 +412,19 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    deleteServerSubmit() {
+    deleteServerSubmit(check) {
       // Build payload
-      const payload = { servers: JSON.stringify(this.selected.map((x) => x.id)) }
+      const payload = { servers: JSON.stringify(this.selected.map((x) => x.id)), check }
       // Delete items to the DB
       axios.delete('/admin/inventory/servers', { params: payload })
         .then((response) => {
-          this.notification(response.data.message, '#00b16a')
-          this.getServers()
-          this.selected = []
-          this.dialog = false
+          if (response.status == 202) this.confirm_dialog = true
+          else {
+            this.notification(response.data.message, '#00b16a')
+            this.getServers()
+            this.selected = []
+            this.dialog = false
+          }
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

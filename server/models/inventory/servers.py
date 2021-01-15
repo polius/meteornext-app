@@ -122,14 +122,6 @@ class Servers:
         """
         self._sql.execute(query, (group_id, server_id))
 
-    def remove(self, group_id):
-        query = """
-            DELETE s
-            FROM servers s
-            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-        """
-        self._sql.execute(query, (group_id))
-
     def exist(self, user_id, group_id, server):
         if 'id' in server:
             query = """
