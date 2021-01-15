@@ -110,3 +110,11 @@ class Groups:
             WHERE id = %s
         """
         return self._sql.execute(query, (group_id))[0]
+
+    def get_usage(self, group_id):
+        query = """
+            SELECT deployments_enabled, monitoring_enabled, utils_enabled, client_enabled
+            FROM groups
+            WHERE id = %s
+        """
+        return self._sql.execute(query, (group_id))[0]
