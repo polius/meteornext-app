@@ -29,7 +29,8 @@ class Client:
             if len(self._connections[user_id]) == 0:
                 self._connections.pop(user_id, None)
         if total > 0:
-            print("- [CLIENT] Connections closed: {}".format(total))
+            pass
+            # print("- [CLIENT] Connections closed: {}".format(total))
 
     def connect(self, user_id, conn_id, server):
         conn_id = int(conn_id)
