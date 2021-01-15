@@ -337,6 +337,7 @@ export default {
       delete this.item['id']
       this.getUsers()
       this.getRegions()
+      this.buildUsage()
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'Clone Server'
       this.dialog = true
@@ -347,6 +348,7 @@ export default {
       this.item.usage = this.parseUsage(this.item.usage)
       this.getUsers()
       this.getRegions()
+      this.buildUsage()
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'Edit Server'
       this.dialog = true
