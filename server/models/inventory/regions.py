@@ -58,13 +58,6 @@ class Regions:
         """
         self._sql.execute(query, (group_id, region_id))
 
-    def remove(self, group_id):
-        query = """
-            DELETE FROM regions
-            WHERE group_id = %s
-        """
-        self._sql.execute(query, (group_id))
-
     def exist(self, user_id, group_id, region):
         if 'id' in region: # (name, group_id) 
             query = """

@@ -69,10 +69,6 @@ class Environments:
         self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.id = %s AND e.group_id = %s", (environment, group_id))
         self._sql.execute("DELETE FROM environments WHERE id = %s AND group_id = %s", (environment, group_id))
 
-    def remove(self, group_id):
-        self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.group_id = %s", (group_id))
-        self._sql.execute("DELETE FROM environments WHERE group_id = %s", (group_id))
-
     def exist(self, user_id, group_id, environment):
         if 'id' in environment:
             query = """

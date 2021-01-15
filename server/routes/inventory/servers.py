@@ -140,19 +140,19 @@ class Servers:
 
     def delete(self, user):
         servers = json.loads(request.args['servers'])
-        # Check inconsistencies
-        for server in servers:
-            if self._servers.exist_in_environment(user['id'], user['group_id'], server):
-                return jsonify({'message': "The server '{}' is included in the environment '{}'".format(exist[0]['server_name'], exist[0]['environment_name'])}), 400
         # Check privileges
         for server in servers:
             server = self._servers.get(user['id'], user['group_id'], server)
             if len(server) > 0 and server[0]['shared'] and not user['owner']:
                 return jsonify({'message': "Insufficient privileges"}), 401
+        # Check inconsistencies
+        if 'check' in request.args and json.loads(request.args['check']) is True:
+            for server in servers:
+                exist_in_environment = self._servers.exist_in_environment(user['id'], user['group_id'], server)
+                exist_in_client = self._servers.exist_in_client(user['id'], user['group_id'], server)
+                if exist_in_environment or exist_in_client:
+                    return jsonify({'message': "The selected servers are included in some environments or clients. Are you sure to proceed?"}), 202
         # Delete servers
         for server in servers:    
             self._servers.delete(user['group_id'], server)
         return jsonify({'message': 'Selected servers deleted successfully'}), 200
-
-    def remove(self, group_id):
-        self._servers.remove(group_id)
