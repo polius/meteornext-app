@@ -80,7 +80,11 @@ class Setup:
 
         @setup_blueprint.route('/setup', methods=['GET'])
         def setup():
-            return jsonify({'setup': self.__setup_available()}), 200
+            available =  self.__setup_available()
+            if available:
+                return jsonify({}), 200
+            else:
+                return jsonify({}), 401
 
         @setup_blueprint.route('/setup/license', methods=['POST'])
         def setup_license():
@@ -119,7 +123,7 @@ class Setup:
                 sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': {'engine': setup_json['engine'], 'hostname': setup_json['hostname'], 'username': setup_json['username'], 'password': setup_json['password'], 'port': setup_json['port']}})
                 sql.test_sql()
             except Exception as e:
-                return jsonify({'message': "Can't connect to MySQL server"}), 400
+                return jsonify({'message': "Connection Failed"}), 400
 
             # Check Database Access
             try:
@@ -130,7 +134,7 @@ class Setup:
             except Exception as e:
                 if "Unknown database " in str(e): 
                     return jsonify({'message': 'Connection Successful', 'exists': exists}), 200
-                return jsonify({'message': "Access denied for user 'meteor' to database '{}'".format(setup_json['database'])}), 400 
+                return jsonify({'message': "Access denied for user '{}' to database '{}'".format(setup_json['username'], setup_json['database'])}), 400 
 
         @setup_blueprint.route('/setup', methods=['POST'])
         def setup_account():
@@ -222,7 +226,7 @@ class Setup:
         if os.path.exists(self._setup_file):
             with open(self._setup_file) as file_open:
                 f = json.load(file_open)
-                if f['sql']['hostname'] != '' or f['sql']['username'] != '' or f['sql']['password'] != '' or f['sql']['port'] != '' or f['sql']['database'] != '':
+                if f['sql']['hostname'] != '' and f['sql']['username'] != '' and f['sql']['password'] != '' and f['sql']['port'] != '' and f['sql']['database'] != '':
                     return False
         return True
 

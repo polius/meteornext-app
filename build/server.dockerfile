@@ -17,7 +17,7 @@ RUN yum update -y && \
     python3 -m pip install paramiko && \
     python3 -m pip install sshtunnel && \
     python3 -m pip install pymysql && \
-    python3 -m pip install dbutils && \
+    python3 -m pip install DBUtils && \
     # python3 -m pip install mysql-connector-python && \
     python3 -m pip install bcrypt && \
     python3 -m pip install pyotp && \

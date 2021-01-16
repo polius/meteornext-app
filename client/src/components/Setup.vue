@@ -19,12 +19,19 @@
                   </v-form>
                   <!-- SQL -->
                   <v-form ref="formSQL" v-show="setup_part == 'sql'">
-                    <div class="title font-weight-medium" style="margin-top:15px; margin-bottom:10px;">MySQL Server</div>
-                    <v-text-field filled v-model="sql.hostname" name="hostname" label="Hostname" required append-icon="cloud" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
-                    <v-text-field filled v-model="sql.port" name="port" label="Port" required append-icon="directions_boat" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
-                    <v-text-field filled v-model="sql.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
-                    <v-text-field filled v-model="sql.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
-                    <v-text-field filled v-model="sql.database" name="database" label="Database" required append-icon="storage" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
+                    <div class="title font-weight-medium" style="margin-top:15px; margin-bottom:10px;">Server</div>
+                    <v-text-field filled v-model="sql.hostname" name="hostname" label="Hostname" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
+                    <v-row no-gutters style="margin-bottom:20px;">
+                      <v-col style="margin-right:5px">
+                        <v-select filled v-model="sql.engine" :items="['MySQL','Aurora MySQL']" @change="sql.port == '' ? sql.port = '3306' : ''" name="engine" label="Engine" required  :rules="[v => !!v || '']" hide-details></v-select>
+                      </v-col>
+                      <v-col style="margin-left:5px">
+                        <v-text-field filled v-model="sql.port" name="port" label="Port" required :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
+                      </v-col>
+                    </v-row>
+                    <v-text-field filled v-model="sql.username" name="username" label="Username" required style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
+                    <v-text-field filled v-model="sql.password" name="password" label="Password" required type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
+                    <v-text-field filled v-model="sql.database" name="database" label="Database" required style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details v-on:keyup.enter="setup()"></v-text-field>
                   </v-form>
                   <!-- ACCOUNT -->
                   <v-form ref="formAccount" v-show="setup_part == 'account'">
@@ -38,12 +45,12 @@
                     <div class="subtitle-1 font-weight-medium" style="margin-top:10px; margin-bottom:10px;">License</div>
                     <v-text-field readonly dense filled v-model="license.email" name="email" label="Email" required append-icon="account_circle" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
                     <v-text-field readonly dense filled v-model="license.key" name="key" label="Key" required append-icon="vpn_key" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
-                    <div class="subtitle-1 font-weight-medium" style="margin-top:15px; margin-bottom:10px;">MySQL Server</div>
-                    <v-text-field readonly dense filled v-model="sql.hostname" name="hostname" label="Hostname" required append-icon="cloud" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
-                    <v-text-field readonly dense filled v-model="sql.port" name="port" label="Port" required append-icon="directions_boat" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
-                    <v-text-field readonly dense filled v-model="sql.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
-                    <v-text-field readonly dense filled v-model="sql.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
-                    <v-text-field readonly dense filled v-model="sql.database" name="database" label="Database" required append-icon="storage" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <div class="subtitle-1 font-weight-medium" style="margin-top:15px; margin-bottom:10px;">Server</div>
+                    <v-text-field readonly dense filled v-model="sql.hostname" name="hostname" label="Hostname" required style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field readonly dense filled v-model="sql.port" name="port" label="Port" required style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field readonly dense filled v-model="sql.username" name="username" label="Username" required style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field readonly dense filled v-model="sql.password" name="password" label="Password" required type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
+                    <v-text-field readonly dense filled v-model="sql.database" name="database" label="Database" required style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
                     <div v-if="sql['recreate']" class="subtitle-1 font-weight-medium" style="margin-top:10px; margin-bottom:10px;">Admin Account</div>
                     <v-text-field v-if="sql['recreate']" readonly dense filled v-model="account.username" name="username" label="Username" required append-icon="person" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
                     <v-text-field v-if="sql['recreate']" readonly dense filled v-model="account.password" name="password" label="Password" required append-icon="lock" type="password" style="margin-bottom:20px;" :rules="[v => !!v || '']" hide-details></v-text-field>
@@ -99,7 +106,7 @@
     data: () => ({
       // Setup Form
       license: { email: '', key: '' },
-      sql: { hostname: '', username: '', password: '', port: '3306', database: 'meteornext' },
+      sql: { hostname: '', engine: '', port: '', username: '', password: '', database: 'meteor2' },
       account: { username: '', password: '' },
       setup_part: 'license',
       buttonText: 'VERIFY',
@@ -132,8 +139,8 @@
           .then(() => {
             this.available = true
           })
-          .catch((error) => {
-            if (error.response.status == 401) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          .catch(() => {
+            this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           })
       },
       setup() {
