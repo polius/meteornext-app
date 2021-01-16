@@ -1,7 +1,7 @@
 import pymysql
+import dbutils.pooled_db
 from collections import OrderedDict
 from pymysql.cursors import DictCursorMixin, Cursor
-from dbutils.pooled_db import PooledDB
 
 class OrderedDictCursor(DictCursorMixin, Cursor):
     dict_type = OrderedDict
@@ -10,7 +10,7 @@ class MySQL:
     def __init__(self, config):
         SQL_CONFIG = {
             "host": config['sql']['hostname'],
-            "port": config['sql']['port'],
+            "port": int(config['sql']['port']),
             "db": config['sql']['database'],
             "password": config['sql']['password'],
             "user": config['sql']['username'],
@@ -29,24 +29,24 @@ class MySQL:
             "setsession": [],
             "ping": 1,
         }
-        self._pool = PooledDB(**POOL_CONFIG, **SQL_CONFIG)
+        self._pool = dbutils.pooled_db.PooledDB(**POOL_CONFIG, **SQL_CONFIG)
 
     def execute(self, query, args=None, database=None):
         try:
-            connection = self._pool.connection()
-            connection.ping(reconnect=True)
+            conn = self._pool.connection()
+            conn.ping(reconnect=True)
             if database:
-                connection.select_db(database)
-            with connection.cursor(OrderedDictCursor) as cursor:
+                conn.select_db(database)
+            with conn.cursor(OrderedDictCursor) as cursor:
                 cursor.execute(query, args)
                 return cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
         finally:
-            connection.close()
+            conn.close()
 
     def mogrify(self, query, args=None):
         try:
-            connection = self._pool.connection()
-            with connection.cursor(OrderedDictCursor) as cursor:
+            conn = self._pool.connection()
+            with conn.cursor(OrderedDictCursor) as cursor:
                 return cursor.mogrify(query, args)
         finally:
-            connection.close()
+            conn.close()
