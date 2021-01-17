@@ -41,8 +41,8 @@ class Servers:
 
     def post(self, user, server):
         query = """
-            INSERT INTO servers (name, group_id, region_id, engine, version, hostname, port, username, password, `ssl`, usage, shared, owner_id, created_by, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s)
+            INSERT INTO servers (name, group_id, region_id, engine, version, hostname, port, username, password, `ssl`, `usage`, shared, owner_id, created_by, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s)
         """
         self._sql.execute(query, (server['name'], server['group_id'], server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['usage'], server['shared'], server['shared'], server['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 

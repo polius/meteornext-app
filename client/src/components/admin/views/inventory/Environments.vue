@@ -281,7 +281,7 @@ export default {
       this.mode = 'new'
       this.users = []
       this.item = { group_id: this.filter.group, owner_id: '', name: '', shared: true }
-      if (this.filter.group != null) this.getUsers()
+      if (this.filter.group != null) { this.getUsers(); this.getServers() }
       this.treeviewItems = []
       this.treeviewSelected = []
       this.treeviewOpened = []
