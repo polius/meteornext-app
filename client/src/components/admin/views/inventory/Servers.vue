@@ -173,7 +173,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-alert dense type="error" style="margin-top:15px">This server is being used in some sections.</v-alert>
-                <div class="subtitle-1" style="margin-top:10px; margin-bottom:10px;">This server won't be usable in the non selected sections. Do you want to proceed?</div>
+                <div class="subtitle-1" style="margin-top:10px; margin-bottom:10px;">This server won't be usable in the selected sections. Do you want to proceed?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitServer(false)">CONFIRM</v-btn>
@@ -253,6 +253,7 @@ export default {
     groupChanged() {
       this.item.owner_id = null
       this.item.region_id = null
+      this.item.usage = []
       requestAnimationFrame(() => {
         if (!this.item.shared) this.$refs.owner_id.focus()
       })
@@ -326,7 +327,7 @@ export default {
       this.regions = []
       this.usage = []
       this.item = { group_id: this.filter.group, owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: true, usage: [...this.usage] }
-      if (this.filter.group != null) { this.getUsers(); this.getRegions(); }
+      if (this.filter.group != null) { this.getUsers(); this.getRegions(); this.buildUsage(); }
       this.dialog_title = 'New Server'
       this.dialog = true
     },
