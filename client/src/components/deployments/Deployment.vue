@@ -193,7 +193,7 @@
         </v-layout>
 
         <!-- POST EXECUTION -->
-        <v-layout row wrap style="margin-top:15px; margin-left:0px; margin-right:0px;">
+        <v-layout row wrap style="margin-top:15px; margin-left:0px; margin-right:0px; margin-bottom:0px">
           <!-- logs -->
           <v-flex v-if="logs_data.length > 0" xs4 style="padding-right:5px;">
             <v-card>

@@ -235,7 +235,6 @@ class blueprint:
 
         # Build Meteor Command
         command = '{} --path "{}" --{}'.format(meteor_path, execution_path, execution_method)
-        # print(command)
 
         # Execute Meteor
         p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)

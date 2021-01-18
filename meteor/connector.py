@@ -31,12 +31,6 @@ class connector:
     def get_all_databases(self):
         return self._sql.get_all_databases()
 
-    def get_databases(self, db_regex):
-        return self._sql.get_databases(db_regex)
-
-    def get_table_size(self, db, table):
-        return self._sql.get_table_size(db, table)
-       
     def check_db_exists(self, db):
         return self._sql.check_db_exists(db)
        
@@ -81,12 +75,3 @@ class connector:
         
     def check_user_exists(self, user, host):
         return self._sql.check_user_exists(user, host)
-        
-    def get_row_format(self, db, table):
-        return self._sql.get_row_format(db, table)
-        
-    def get_column_names(self, db, table):
-        return self._sql.get_column_names(db, table)
-
-    def get_pk_columns(self, db, table):
-        return self._sql.get_pk_columns(db, table)
