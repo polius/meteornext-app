@@ -124,20 +124,6 @@ class MySQL:
             databases.append(db['Database'])
         return databases
 
-    def get_databases(self, db_regex):
-        query = "SELECT DISTINCT(table_schema) AS table_schema FROM information_schema.tables WHERE table_schema LIKE '" + db_regex.strip() + "'"
-        result = self.execute(query)['query_result']
-
-        databases = []
-        for db in result:
-            databases.append(db['table_schema'])
-        return databases
-
-    def get_table_size(self, db, table):
-        query = "SELECT (data_length + index_length)/1024/1024 AS table_size FROM information_schema.tables WHERE table_schema = \"" + db.strip() + "\" AND table_name = \"" + table.strip() + "\""
-        result = self.execute(query)['query_result']
-        return result[0]['table_size']
-
     def check_db_exists(self, db):
         query = "SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"" + db.strip() + "\""
         result = self.execute(query)['query_result']
@@ -224,18 +210,3 @@ class MySQL:
         query = "SELECT COUNT(*) AS count FROM mysql.user WHERE User = \"" + user + "\" AND Host = \"" + host.strip() + "\""
         result = self.execute(query)['query_result']
         return True if int(result[0]['count']) == 1 else False
-
-    def get_row_format(self, db, table):
-        query = "SELECT row_format AS row_format FROM information_schema.tables WHERE table_schema = \"" + db.strip() + "\" AND table_name = \"" + table.strip() + "\""
-        result = self.execute(query)['query_result']
-        return result[0]['row_format']
-
-    def get_column_names(self, db, table):
-        query = "SELECT COLUMN_NAME FROM information_schema.columns WHERE table_schema = '" + db.strip() + "' AND table_name = '" + table.strip() + "' ORDER BY ordinal_position"
-        result = self.execute(query)['query_result']
-        return result
-
-    def get_pk_columns(self, db, table):
-        query = "SELECT COLUMN_NAME FROM information_schema.statistics WHERE table_schema = '" + db.strip() + "' AND table_name = '" + table.strip() + "' AND index_name = 'PRIMARY'"
-        result = self.execute(query)['query_result']
-        return result

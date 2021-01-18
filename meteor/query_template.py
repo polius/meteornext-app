@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 class query_template:
     def __init__(self):
         self._query_template = [
