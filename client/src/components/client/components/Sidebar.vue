@@ -4,14 +4,14 @@
       <v-autocomplete v-if="sidebarMode == 'servers'" ref="server" v-model="serverSearch" :loading="sidebarLoading || loadingServer" :disabled="loadingServer" @change="serverChanged" solo :items="serversList" item-text="name" label="Search" auto-select-first hide-details return-object background-color="#303030" height="48px" style="padding:10px;">
         <template v-slot:[`selection`]="{ item }">
           <div class="body-2">
-            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
+            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
             <span class="body-2">{{ item.name }}</span>
             <!-- <span v-show="item.folder != null" class="body-2" style="font-weight:300; margin-left:8px;">{{ '(' + item.folder + ')' }}</span> -->
           </div>
         </template>
         <template v-slot:[`item`]="{ item }">
           <div class="body-2">
-            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
+            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
             <span class="body-2">{{ item.name }}</span>
             <span v-show="item.folder != null" class="body-2" style="font-weight:300; margin-left:8px;">{{ '(' + item.folder + ')' }}</span>
           </div>
@@ -25,7 +25,7 @@
           <template v-slot:label="{item, open}">
             <v-btn text @click="sidebarClicked($event, item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
               <v-icon v-if="'children' in item && sidebarMode == 'servers'" small style="padding:10px;">{{ open ? 'mdi-folder-open' : 'mdi-folder' }}</v-icon>
-              <v-icon v-else-if="sidebarMode == 'servers'" small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? 'error' : 'warning'" style="padding:10px;">fas fa-server</v-icon>
+              <v-icon v-else-if="sidebarMode == 'servers'" small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="padding:10px;">fas fa-server</v-icon>
               <v-icon v-else small :title="item.type" :color="sidebarColor[item.type]" style="padding:10px;">{{ sidebarImg[item.type] }}</v-icon>
               {{ item.name }}
               <v-spacer></v-spacer>
@@ -342,6 +342,7 @@ export default {
     },
     getServers(resolve, reject) {
       this.sidebarLoading = true
+      const index = this.index
       axios.get('/client/servers')
         .then((response) => {
           this.parseServers(response.data)
@@ -352,7 +353,10 @@ export default {
           else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
           reject()
         })
-        .finally(() => this.sidebarLoading = false)
+        .finally(() => {
+          let current = this.connections.find(c => c['index'] == index)
+          current.sidebarLoading = false
+        })
     },
     parseServers(data) {
       var servers = []
@@ -463,16 +467,19 @@ export default {
       }
       const index = this.index
       axios.get('/client/objects', { params: payload })
-        .then((response) => {
-          let current = this.connections.find(c => c['index'] == index)
-          this.parseObjects(current, response.data)
-          resolve()
-        })
-        .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          reject(error)
-        })
-        .finally(() => this.sidebarLoading = false)
+      .then((response) => {
+        let current = this.connections.find(c => c['index'] == index)
+        this.parseObjects(current, response.data)
+        resolve()
+      })
+      .catch((error) => {
+        if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        reject(error)
+      })
+      .finally(() => {
+        let current = this.connections.find(c => c['index'] == index)
+        current.sidebarLoading = false
+      })
     },
     parseObjects(current, data) {
       // Build routines

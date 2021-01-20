@@ -2,12 +2,12 @@
   <div>
     <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="filter.search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
       <template v-slot:[`item.region`]="{ item }">
-        <v-icon small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+        <v-icon small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
         {{ item.region }}
       </template>
       <template v-slot:[`item.shared`]="{ item }">
         <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
-        <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
+        <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
         {{ !item.shared ? 'Personal' : 'Shared' }}
       </template>
       <template v-slot:[`item.usage`]="{ item }">

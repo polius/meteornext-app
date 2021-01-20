@@ -7,7 +7,7 @@
       </template>
       <template v-slot:[`item.shared`]="{ item }">
         <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
-        <v-icon v-else small title="Shared" color="error" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
+        <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
         {{ !item.shared ? 'Personal' : 'Shared' }}
       </template>
     </v-data-table>

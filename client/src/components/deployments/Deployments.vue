@@ -42,9 +42,9 @@
           <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
           <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
           <v-icon v-else-if="item.status == 'WARNING'" title="Some queries failed" small style="color: #ff9800; margin-left:9px;">fas fa-check</v-icon>
-          <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
+          <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #e74c3c; margin-left:11px;">fas fa-times</v-icon>
           <v-icon v-else-if="item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
-          <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:8px;">fas fa-ban</v-icon>
+          <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #e74c3c; margin-left:8px;">fas fa-ban</v-icon>
         </template>
         <template v-slot:[`item.created`]="{ item }">
           <span>{{ dateFormat(item.created) }}</span>
@@ -195,7 +195,7 @@ export default {
       else if (mode == 'PRO') return 'rgb(235, 95, 93)'
     },
     getMethodColor (method) {
-      if (method == 'DEPLOY') return 'rgb(231, 76, 60)'
+      if (method == 'DEPLOY') return '#e74c3c'
       else if (method == 'TEST') return '#ff9800'
       else if (method == 'VALIDATE') return '#4caf50'
     },
