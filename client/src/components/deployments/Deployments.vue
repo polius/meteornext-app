@@ -24,7 +24,7 @@
           <v-edit-dialog :return-value.sync="item.release" large @open="openRelease(item)" @save="saveRelease(item)"> 
             {{ item.release }}
             <template v-slot:input>
-              <v-select v-model="inline_editing_release" :items="releases_items" label="Releases" hide-details style="margin-top:15px; margin-bottom:5px;"></v-select>
+              <v-autocomplete v-model="inline_editing_release" :items="releases_items" label="Releases" hide-details style="margin-top:15px; margin-bottom:5px;"></v-autocomplete>
             </template>
           </v-edit-dialog>
         </template>

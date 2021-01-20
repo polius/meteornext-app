@@ -12,6 +12,22 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
+        <template v-slot:[`item.name`]="{ item }">
+          <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)"> 
+            {{ item.name }}
+            <template v-slot:input>
+              <v-text-field v-model="inline_editing_name" label="Name" single-line hide-details style="margin-bottom:20px;"></v-text-field>
+            </template>
+          </v-edit-dialog>
+        </template>
+        <template v-slot:[`item.release`]="{ item }">
+          <v-edit-dialog :return-value.sync="item.release" large @open="openRelease(item)" @save="saveRelease(item)"> 
+            {{ item.release }}
+            <template v-slot:input>
+              <v-autocomplete v-model="inline_editing_release" :items="releases_items" :loading="loading_releases" label="Releases" hide-details style="margin-top:15px; margin-bottom:5px;"></v-autocomplete>
+            </template>
+          </v-edit-dialog>
+        </template>
         <template v-slot:[`item.mode`]="{ item }">
           <v-chip outlined :color="getModeColor(item.mode)">{{ item.mode }}</v-chip>
         </template>
@@ -140,6 +156,12 @@ export default {
     search: '',
     loading: true,
 
+    // Inline Editing
+    releases_items: [],
+    loading_releases: false,
+    inline_editing_name: '',
+    inline_editing_release: '',
+
     // Filter Dialog
     filter_dialog: false,
     filter_dialog_data: {},
@@ -244,6 +266,70 @@ export default {
         this.pickerDialog = false
         this.picker_mode = 'date'
       }
+    },
+    openName(item) {
+      this.inline_editing_name = item.name
+    },
+    saveName(item) {
+      if (this.inline_editing_name == item.name) {
+        this.notification('Deployment edited successfully', '#00b16a')
+        return
+      }
+      this.loading = true
+      // Edit release name in the DB
+      const payload = {
+        put: 'name',
+        id: item.id,
+        name: this.inline_editing_name,
+        user_id: item.user_id
+      }
+      axios.put('/admin/deployments', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+          // Reload Deployments Data
+          this.getDeployments()
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        }) 
+    },
+    openRelease(item) {
+      this.loading_releases = true
+      this.inline_editing_release = item.release
+      axios.get('/admin/deployments/releases', { params: { user_id: item.user_id }})
+        .then((response) => {
+          this.releases_items = response.data.releases.map(x => x.name)
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.loading_releases = false)
+    },
+    saveRelease(item) {
+      if (this.inline_editing_release == item.release) {
+        this.notification('Deployment edited successfully', '#00b16a')
+        return
+      }
+      this.loading = true
+      // Edit deployment release in the DB
+      const payload = {
+        put: 'release',
+        id: item.id,
+        release: this.inline_editing_release,
+        user_id: item.user_id
+      }
+      axios.put('/admin/deployments', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+          // Reload Deployments Data
+          this.getDeployments()
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        }) 
     },
     getModeColor (mode) {
       if (mode == 'BASIC') return 'rgb(250, 130, 49)'

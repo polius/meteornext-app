@@ -7,6 +7,7 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
 import models.deployments.deployments
+import models.deployments.releases
 import routes.admin.settings
 
 class Deployments:
@@ -15,6 +16,7 @@ class Deployments:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
+        self._releases = models.deployments.releases.Releases(sql)
         # Init routes
         self._settings = routes.admin.settings.Settings(app, sql, license)
 
@@ -22,7 +24,7 @@ class Deployments:
         # Init blueprint
         admin_deployments_blueprint = Blueprint('admin_deployments', __name__, template_folder='admin_deployments')
 
-        @admin_deployments_blueprint.route('/admin/deployments', methods=['GET'])
+        @admin_deployments_blueprint.route('/admin/deployments', methods=['GET','PUT'])
         @jwt_required
         def admin_deployments_method():
             # Check license
@@ -40,8 +42,35 @@ class Deployments:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Deployments
-            return jsonify({'data': self._deployments.get()}), 200
+            # Get Request Json
+            deployment_json = request.get_json()
+
+            if request.method == 'GET':
+                # Get Deployments
+                return jsonify({'data': self._deployments.get()}), 200
+            elif request.method == 'PUT':
+                if deployment_json['put'] == 'name':
+                    self._deployments.putName(deployment_json['user_id'], deployment_json)
+                elif deployment_json['put'] == 'release':
+                    self._deployments.putRelease(deployment_json['user_id'], deployment_json)
+                return jsonify({'message': 'Deployment edited successfully'}), 200
+
+        @admin_deployments_blueprint.route('/admin/deployments/releases', methods=['GET'])
+        @jwt_required
+        def admin_deployments_releases_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Releases
+            return jsonify({'releases': self._releases.getActive(user_id=request.args['user_id'])}), 200
 
         @admin_deployments_blueprint.route('/admin/deployments/filter', methods=['GET'])
         @jwt_required
