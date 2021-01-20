@@ -1296,7 +1296,7 @@
         else return '#424242'
       },
       getMethodColor (method) {
-        if (method == 'DEPLOY') return 'rgb(231, 76, 60)'
+        if (method == 'DEPLOY') return '#e74c3c'
         else if (method == 'TEST') return '#ff9800'
         else if (method == 'VALIDATE') return '#4caf50'
       },
