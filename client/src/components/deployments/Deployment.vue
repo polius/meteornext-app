@@ -22,8 +22,8 @@
 
         <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="rgb(0, 177, 106)" style="margin-left:5px; margin-right:15px;" title="The execution finished successfully">SUCCESS</v-chip>
         <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="rgb(250, 130, 49)" style="margin-left:5px; margin-right:15px;" title="Some queries failed">WARNING</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="rgb(231, 76, 60)" style="margin-left:5px; margin-right:15px;" title="An error has occurred during the execution">FAILED</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'STOPPED'" label color="rgb(231, 76, 60)" style="margin-left:5px; margin-right:15px;" title="The execution has been interrupted">STOPPED</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="#e74c3c" style="margin-left:5px; margin-right:15px;" title="An error has occurred during the execution">FAILED</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'STOPPED'" label color="#e74c3c" style="margin-left:5px; margin-right:15px;" title="The execution has been interrupted">STOPPED</v-chip>
 
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="padding-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
@@ -59,9 +59,9 @@
               <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
               <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
               <v-icon v-else-if="item.status == 'WARNING'" title="Some queries failed" small style="color: #ff9800; margin-left:9px;">fas fa-check</v-icon>
-              <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
+              <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #e74c3c; margin-left:11px;">fas fa-times</v-icon>
               <v-icon v-else-if="item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
-              <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:8px;">fas fa-ban</v-icon>
+              <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #e74c3c; margin-left:8px;">fas fa-ban</v-icon>
             </template>
             <template v-slot:[`item.created`]="{ item }">
               <span>{{ dateFormat(item.created) }}</span>
