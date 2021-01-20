@@ -1129,7 +1129,7 @@
           // Refresh user coins
           if ('coins' in data) this.$store.dispatch('app/coins', data['coins'])
           // Get new deployment
-          if (payload.start_execution || (payload.scheduled != '' && this.deployment['status'] != 'SCHEDULED')) {
+          if (this.information_dialog_mode == 're-deploy') {
             const id = payload['mode'].substring(0, 1) + data['execution_id']
             this.$router.push({ name:'deployment', params: { id: id }})
           }
