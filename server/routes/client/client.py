@@ -619,8 +619,8 @@ class Client:
         return json.dumps(data, default=self.__json_parser)
 
     def __json_parser(self, o):
-        if isinstance(o, datetime.datetime):
-            return o.__str__()
+        # if isinstance(o, datetime.datetime):
+        return o.__str__()
 
     def __allowed_file(self, filename):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'sql'}

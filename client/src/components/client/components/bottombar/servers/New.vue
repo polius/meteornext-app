@@ -38,7 +38,7 @@
                                         <v-checkbox dense :input-value="selected.includes(item.id)"></v-checkbox>
                                       </v-list-item-action>
                                       <v-list-item-content>
-                                        <v-list-item-title><v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? 'error' : 'warning'" style="margin-right:10px; margin-bottom:2px">fas fa-server</v-icon>{{ item.name }}</v-list-item-title>
+                                        <v-list-item-title><v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px; margin-bottom:2px">fas fa-server</v-icon>{{ item.name }}</v-list-item-title>
                                       </v-list-item-content>
                                     </template>
                                   </v-list-item>
@@ -72,7 +72,7 @@
                                       <v-col cols="4" style="padding-left:10px">
                                         <v-row no-gutters>
                                           <v-col cols="auto" style="margin-right:8px">
-                                            <v-icon small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? 'error' : 'warning'" style="margin-top:13px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                                            <v-icon small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:13px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
                                           </v-col>
                                           <v-col>
                                             <v-text-field v-model="item.region" readonly label="Region" r equired style="padding-top:0px; font-size:1rem;"></v-text-field>

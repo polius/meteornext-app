@@ -103,7 +103,7 @@ class Servers:
             servers_secured = []
             for s in servers:
                 if s['shared']:
-                    servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "region_shared": s['region_shared']})
+                    servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "region_shared": s['region_shared'], "usage": s['usage']})
                 else:
                     servers_secured.append(s)
             return jsonify({'data': servers_secured}), 200

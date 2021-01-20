@@ -217,8 +217,9 @@ export default {
   },
   methods: {
     showDialog() {
-      this.dialog = true
+      this.items = []
       this.search = ''
+      this.dialog = true
       this.stopped = false
       this.getProcesslist()
     },

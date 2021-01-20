@@ -13,7 +13,7 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
         <template v-slot:[`item.mode`]="{ item }">
-          <v-chip :color="getModeColor(item.mode)">{{ item.mode }}</v-chip>
+          <v-chip outlined :color="getModeColor(item.mode)">{{ item.mode }}</v-chip>
         </template>
         <template v-slot:[`item.method`]="{ item }">
           <span :style="'color: ' + getMethodColor(item.method)" style="font-weight:500">{{ item.method }}</span>
@@ -26,9 +26,9 @@
           <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
           <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
           <v-icon v-else-if="item.status == 'WARNING'" title="Some queries failed" small style="color: #ff9800; margin-left:9px;">fas fa-check</v-icon>
-          <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #f44336; margin-left:11px;">fas fa-times</v-icon>
+          <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #e74c3c; margin-left:11px;">fas fa-times</v-icon>
           <v-icon v-else-if="item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
-          <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #f44336; margin-left:8px;">fas fa-ban</v-icon>
+          <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #e74c3c; margin-left:8px;">fas fa-ban</v-icon>
         </template>
         <template v-slot:[`item.created`]="{ item }">
           <span>{{ dateFormat(item.created) }}</span>
@@ -246,11 +246,11 @@ export default {
       }
     },
     getModeColor (mode) {
-      if (mode == 'BASIC') return '#eb974e'
+      if (mode == 'BASIC') return 'rgb(250, 130, 49)'
       else if (mode == 'PRO') return 'rgb(235, 95, 93)'
     },
     getMethodColor (method) {
-      if (method == 'DEPLOY') return '#f44336'
+      if (method == 'DEPLOY') return '#e74c3c'
       else if (method == 'TEST') return '#ff9800'
       else if (method == 'VALIDATE') return '#4caf50'
     },
