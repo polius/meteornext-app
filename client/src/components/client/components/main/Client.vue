@@ -428,16 +428,12 @@ export default {
         }
       }
 
-      // Find Current Query in Ace Editor
-      let queryPosition = this.editor.session.doc.indexToPosition(queryStart)
-      this.editor.$search.setOptions({
-        needle: query.trim(),
-        caseSensitive: true,
-        wholeWord: true,
-        regExp: false,
-        start: queryPosition
-      }); 
-      var queryRange = this.editor.$search.find(this.editor.session)
+      // Get Current Query Range in Ace Editor
+      var queryEnd = null
+      for (let q of rawQueries) {
+        if (q.begin == queryStart) { queryEnd = q.end; break; }
+      }
+      var queryRange = { start: this.editor.session.doc.indexToPosition(queryStart), end: this.editor.session.doc.indexToPosition(queryEnd)}
 
       // Store Current Query (+ range)
       this.clientQuery = { query, range: queryRange }
