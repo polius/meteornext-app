@@ -271,6 +271,7 @@ export default {
       this.mode = 'clone'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item.usage = this.parseUsage(this.item.usage)
+      this.item.shared = false
       delete this.item['id']
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'Clone Server'
