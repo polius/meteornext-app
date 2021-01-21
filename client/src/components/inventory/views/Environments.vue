@@ -262,6 +262,7 @@ export default {
     cloneEnvironment() {
       this.mode = 'clone'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.item.shared = false
       delete this.item['id']
       this.dialog_title = 'Clone Environment'
       this.dialog = true
