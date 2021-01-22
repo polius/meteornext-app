@@ -9,7 +9,7 @@
           <v-btn @click="tabClick('csv')" :color="csvColor" style="margin-right:10px;">CSV</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field @input="onSearch" v-model="search" label="Search" append-icon="search" color="white" single-line hide-details></v-text-field>
-          <v-btn :disabled="loading" @click="dialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="dialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:5px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">

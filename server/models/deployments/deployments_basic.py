@@ -91,7 +91,7 @@ class Deployments_Basic:
 
     def getScheduled(self):
         query = """
-            SELECT b.id AS 'execution_id', 'BASIC' AS 'mode', u.id AS 'user_id', u.username AS 'username', g.id AS 'group_id', e.name AS 'environment', b.databases, b.queries, b.method, b.url, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit', g.deployments_execution_concurrent AS 'concurrent_executions'
+            SELECT b.id AS 'execution_id', 'BASIC' AS 'mode', u.id AS 'user_id', u.username AS 'username', g.id AS 'group_id', e.name AS 'environment', b.databases, b.queries, b.method, b.url, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', g.deployments_execution_concurrent AS 'concurrent_executions'
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id
             JOIN environments e ON e.id = b.environment_id
@@ -104,7 +104,7 @@ class Deployments_Basic:
 
     def getExecutionsN(self, execution_ids):
         query = """
-            SELECT b.id AS 'execution_id', 'BASIC' AS 'mode', u.id AS 'user_id', u.username AS 'username', g.id AS 'group_id', e.name AS 'environment', b.databases, b.queries, b.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_limit AS 'execution_limit', b.url
+            SELECT b.id AS 'execution_id', 'BASIC' AS 'mode', u.id AS 'user_id', u.username AS 'username', g.id AS 'group_id', e.name AS 'environment', b.databases, b.queries, b.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', b.url
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id
             JOIN environments e ON e.id = b.environment_id

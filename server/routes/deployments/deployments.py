@@ -135,7 +135,7 @@ class Deployments:
         ids = ''
         for i in finished:
             ids += '{},'.format(i['id'])
-            self._deployments_finished.post({"mode": i['execution_mode'], "id": i['execution_id']})
+            # self._deployments_finished.post({"mode": i['execution_mode'], "id": i['execution_id']})
         if len(finished) > 0:
             ids = ids[:-1]
             self._deployments_queued.delete(ids)

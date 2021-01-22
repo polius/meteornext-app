@@ -271,7 +271,7 @@ class Basic:
             # Get Meteor Additional Parameters
             data['group_id'] = user['group_id']
             data['execution_threads'] = group['deployments_execution_threads']
-            data['execution_limit'] = group['deployments_execution_limit']
+            data['execution_timeout'] = group['deployments_execution_timeout']
             data['mode'] = 'BASIC'
             data['user_id'] = user['id']
             data['username'] = user['username']
@@ -346,7 +346,7 @@ class Basic:
                 # Get Meteor Additional Parameters
                 data['group_id'] = user['group_id']
                 data['execution_threads'] = group['deployments_execution_threads']
-                data['execution_limit'] = group['deployments_execution_limit']
+                data['execution_timeout'] = group['deployments_execution_timeout']
                 data['mode'] = 'BASIC'
                 data['user_id'] = user['id']
                 data['username'] = user['username']
@@ -382,7 +382,7 @@ class Basic:
         group = self._groups.get(group_id=user['group_id'])[0]
         deployment['group_id'] = user['group_id']
         deployment['execution_threads'] = group['deployments_execution_threads']
-        deployment['execution_limit'] = group['deployments_execution_limit']
+        deployment['execution_timeout'] = group['deployments_execution_timeout']
         deployment['mode'] = 'BASIC'
         deployment['user_id'] = user['id']
         deployment['username'] = user['username']

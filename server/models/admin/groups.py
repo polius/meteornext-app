@@ -14,10 +14,10 @@ class Groups:
 
     def post(self, user_id, group):
         query = """
-            INSERT INTO groups (name, description, coins_day, coins_max, coins_execution, inventory_enabled, inventory_secured, deployments_enabled, deployments_basic, deployments_pro, deployments_execution_threads, deployments_execution_limit, deployments_execution_concurrent, deployments_slack_enabled, deployments_slack_name, deployments_slack_url, monitoring_enabled, utils_enabled, client_enabled, created_by, created_at) 
+            INSERT INTO groups (name, description, coins_day, coins_max, coins_execution, inventory_enabled, inventory_secured, deployments_enabled, deployments_basic, deployments_pro, deployments_execution_threads, deployments_execution_timeout, deployments_execution_concurrent, deployments_slack_enabled, deployments_slack_name, deployments_slack_url, monitoring_enabled, utils_enabled, client_enabled, created_by, created_at) 
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_limit'], group['deployments_execution_concurrent'], group['deployments_slack_enabled'], group['deployments_slack_name'], group['deployments_slack_url'], group['monitoring_enabled'], group['utils_enabled'], group['client_enabled'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        return self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_timeout'], group['deployments_execution_concurrent'], group['deployments_slack_enabled'], group['deployments_slack_name'], group['deployments_slack_url'], group['monitoring_enabled'], group['utils_enabled'], group['client_enabled'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user_id, group):
         query = """
@@ -33,7 +33,7 @@ class Groups:
             deployments_basic = %s,
             deployments_pro = %s,
             deployments_execution_threads = %s,
-            deployments_execution_limit = %s,
+            deployments_execution_timeout = %s,
             deployments_execution_concurrent = %s,
             deployments_slack_enabled = %s,
             deployments_slack_name = %s,
@@ -45,7 +45,7 @@ class Groups:
             updated_at = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_limit'], group['deployments_execution_concurrent'], group['deployments_slack_enabled'], group['deployments_slack_name'], group['deployments_slack_url'], group['monitoring_enabled'], group['utils_enabled'], group['client_enabled'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group['id']))
+        self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_timeout'], group['deployments_execution_concurrent'], group['deployments_slack_enabled'], group['deployments_slack_name'], group['deployments_slack_url'], group['monitoring_enabled'], group['utils_enabled'], group['client_enabled'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group['id']))
 
     def delete(self, group):
         self._sql.execute("DELETE FROM groups WHERE id = %s", (group))

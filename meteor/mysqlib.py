@@ -45,7 +45,8 @@ class MySQL:
                 hostname = '127.0.0.1' if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['hostname']
                 port = self._tunnel.local_bind_port if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['port']
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-                self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False)
+                timeout = None if 'timeout' not in self._server['sql'] else self._server['sql']['timeout']
+                self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, read_timeout=timeout, write_timeout=timeout)
                 return
 
             except Exception as e:
