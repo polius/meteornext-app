@@ -186,7 +186,7 @@ class Meteor:
             "mode": deployment['mode'].lower(),
             "user": deployment['username'],
             "threads": deployment['execution_threads'],
-            "limit": deployment['execution_limit'],
+            "timeout": deployment['execution_timeout'],
             "environment": deployment['environment'],
             "url": deployment['url']
         }

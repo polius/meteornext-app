@@ -37,7 +37,8 @@ class deploy_queries:
 
     def start_sql_connection(self, server):
         self._server = server
-        connection = {'sql': server}
+        self._server['timeout'] = self._imports.config['params']['timeout']
+        connection = {'sql': self._server}
         self._sql = connector(connection)
         self._sql.start()
 
@@ -64,9 +65,9 @@ class deploy_queries:
         query_syntax = self.__get_query_type(query_parsed, show_output=False)
 
         # Apply the execution plan factor
-        if self._imports.config['params']['limit'] and query_syntax == 'Select':
-            query_parsed = query_parsed[:-1] + ' LIMIT ' if query_parsed.endswith(';') else query_parsed + ' LIMIT '
-            query_parsed += str(self._imports.config['params']['limit']) + ';'
+        # if self._imports.config['params']['limit'] and query_syntax == 'Select':
+        #     query_parsed = query_parsed[:-1] + ' LIMIT ' if query_parsed.endswith(';') else query_parsed + ' LIMIT '
+        #     query_parsed += str(self._imports.config['params']['limit']) + ';'
 
         # Query Alias
         if alias is None:               
@@ -87,6 +88,7 @@ class deploy_queries:
                 # Start connecting to the auxiliary connection
                 try:
                     aux = self._imports.config['auxiliary_connections'][auxiliary['auxiliary_connection']]
+                    aux['sql']['timeout'] = self._imports.config['params']['timeout']
                     conn = connector(aux)
                     conn.start()
                 except Exception as e:

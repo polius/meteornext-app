@@ -23,7 +23,7 @@ CREATE TABLE `groups` (
   `deployments_basic` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_pro` tinyint(1) NOT NULL DEFAULT '0',
   `deployments_execution_threads` tinyint(255) UNSIGNED NOT NULL DEFAULT '10',
-  `deployments_execution_limit` INT UNSIGNED NULL,
+  `deployments_execution_timeout` INT UNSIGNED NULL,
   `deployments_execution_concurrent` INT UNSIGNED NULL,
   `deployments_slack_enabled` TINYINT(1) NOT NULL DEFAULT '0',
   `deployments_slack_name` VARCHAR(191) NULL,

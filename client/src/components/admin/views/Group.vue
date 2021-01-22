@@ -92,15 +92,15 @@
                   <span>
                     <b>Execution Threads</b>: Maximum number of spawned threads per server.
                     <br>
-                    <b>Execution Limit</b>: Sets the maximum scanned rows allowed.
+                    <b>Execution Timeout</b>: Maximum execution time per query (in seconds).
                     <br>
-                    <b>Concurrent Executions</b>: Sets the maximum concurrent executions.
+                    <b>Concurrent Executions</b>: Maximum concurrent executions across all users in the group.
                   </span>
                 </v-tooltip>
                 </div>
                 <v-text-field v-model="group.coins_execution" label="Coins per execution" :rules="[v => v == parseInt(v) && v >= 0 || '']" required style="margin-top:25px; padding-top:0px;"></v-text-field>
                 <v-text-field v-model="group.deployments_execution_threads" label="Execution Threads" :rules="[v => v == parseInt(v) && v > 0 || '']" required style="margin-top:0px; padding-top:0px;"></v-text-field>
-                <v-text-field v-model="group.deployments_execution_limit" label="Execution Limit" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
+                <v-text-field v-model="group.deployments_execution_timeout" label="Execution Timeout" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <v-text-field v-model="group.deployments_execution_concurrent" label="Concurrent Executions" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:0px; padding-top:0px;"></v-text-field>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
                   SLACK
@@ -251,7 +251,7 @@ export default {
       deployments_pro: false,
       coins_execution: 10,
       deployments_execution_threads: 10,
-      deployments_execution_limit: null,
+      deployments_execution_timeout: null,
       deployments_execution_concurrent: null,
       deployments_slack_enabled: false,
       deployments_slack_name: '',
@@ -338,7 +338,7 @@ export default {
         return
       }
       // Parse nullable values
-      if (!this.group.deployments_execution_limit) this.group.deployments_execution_limit = null
+      if (!this.group.deployments_execution_timeout) this.group.deployments_execution_timeout = null
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
       // Add group to the DB
       const payload = {
@@ -366,7 +366,7 @@ export default {
         return
       }
       // Parse nullable values
-      if (!this.group.deployments_execution_limit) this.group.deployments_execution_limit = null
+      if (!this.group.deployments_execution_timeout) this.group.deployments_execution_timeout = null
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
       // Edit group to the DB
       const payload = {
