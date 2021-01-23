@@ -38,10 +38,10 @@
 
     <v-dialog v-model="settings_dialog" persistent max-width="50%">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">SETTINGS</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-cog</v-icon>SETTINGS</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="settings_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="settings_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px;">
           <v-container style="padding:0px">
@@ -65,10 +65,10 @@
 
     <v-dialog v-model="servers_dialog" persistent max-width="896px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-database</v-icon>SERVERS</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="servers_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="servers_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -102,16 +102,16 @@
 
     <v-dialog v-model="filter_dialog" persistent max-width="50%">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">FILTER</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-sliders-h</v-icon>FILTER</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="filter_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="filter_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 10px 15px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-bottom:10px;">
+                <v-form ref="form" style="margin-top:10px; margin-bottom:20px;">
                   <v-row>
                     <v-col cols="8" style="padding-right:5px;">
                       <v-text-field text v-model="filter.query_text" label="Query" required style="padding-top:0px;" hide-details></v-text-field>
@@ -120,7 +120,7 @@
                       <v-select text v-model="filter.query_text_options" label="Filter" :items="filter_options" :rules="[v => ((filter.query_text === undefined || filter.query_text.length == 0) || (filter.query_text.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
                     </v-col>
                   </v-row>
-                  <v-row>
+                  <v-row style="margin-top:10px">
                     <v-col cols="8" style="padding-right:5px;">
                       <v-text-field text v-model="filter.db" label="Database" required style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
@@ -128,7 +128,7 @@
                       <v-select text v-model="filter.db_options" label="Filter" :items="filter_options" :rules="[v => ((filter.db === undefined || filter.db.length == 0) || (filter.db.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
                     </v-col>
                   </v-row>
-                  <v-row>
+                  <v-row style="margin-top:10px">
                     <v-col cols="8" style="padding-right:5px;">
                       <v-text-field text v-model="filter.server" label="Server" required style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
@@ -136,7 +136,7 @@
                       <v-select text v-model="filter.server_options" label="Filter" :items="filter_options" :rules="[v => ((filter.server === undefined || filter.server.length == 0) || (filter.server.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
                     </v-col>
                   </v-row>
-                  <v-row>
+                  <v-row style="margin-top:10px">
                     <v-col cols="8" style="padding-right:5px;">
                       <v-text-field text v-model="filter.user" label="User" required style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
@@ -144,7 +144,7 @@
                       <v-select text v-model="filter.user_options" label="Filter" :items="filter_options" :rules="[v => ((filter.user === undefined || filter.user.length == 0) || (filter.user.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
                     </v-col>
                   </v-row>
-                  <v-row>
+                  <v-row style="margin-top:10px">
                     <v-col cols="8" style="padding-right:5px;">
                       <v-text-field text v-model="filter.host" label="Host" required style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>

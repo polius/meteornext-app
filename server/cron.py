@@ -17,7 +17,6 @@ class Cron:
         self._app = app
         self._license = license
         self._sql = sql
-        self._monitoring_ready = True
 
         @app.before_first_request
         def start():
@@ -26,7 +25,7 @@ class Cron:
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
-            schedule.every(2).seconds.do(self.__run_threaded, self.__monitoring)
+            schedule.every(1).seconds.do(self.__run_threaded, self.__monitoring)
 
             # Start Cron Listener
             t = threading.Thread(target=self.__run_schedule)
@@ -120,10 +119,7 @@ class Cron:
 
     def __monitoring(self):
         try:
-            if self._monitoring_ready:
-                self._monitoring_ready = False
-                monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
-                monitoring.start()
-                self._monitoring_ready = True
+            monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
+            monitoring.monitor()
         except Exception as e:
             traceback.print_exc()

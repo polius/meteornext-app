@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 import pymysql
 import paramiko
 import sshtunnel
@@ -18,7 +17,7 @@ class MySQL:
         self._tunnel = None
         self._sql = None
 
-    def start(self):
+    def connect(self):
         # Close existing connections
         self.stop()
 
@@ -26,51 +25,38 @@ class MySQL:
         sys_stderr = sys.stderr
         sys.stderr = open(os.devnull, 'w')
 
-        error = None
-        for i in range(3):
-            # Check if thread is alive
-            if getattr(threading.current_thread(), 'alive', False) and not threading.current_thread().alive:
-                self.stop()
-                return
+        try:
+            # Start SSH Tunnel
+            if 'ssh' in self._server and self._server['ssh']['enabled']:
+                sshtunnel.SSH_TIMEOUT = 5.0
+                sshtunnel.TUNNEL_TIMEOUT = 5.0
+                pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
+                with sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port'])) as tunnel:
+                    self._tunnel = tunnel
 
-            try:
-                # Start SSH Tunnel
-                if 'ssh' in self._server and self._server['ssh']['enabled']:
-                    sshtunnel.SSH_TIMEOUT = 5.0
-                    sshtunnel.TUNNEL_TIMEOUT = 5.0
-                    pkey = paramiko.RSAKey.from_private_key_file(self._server['ssh']['key'], password=self._server['ssh']['password'])
-                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']))
-                    self._tunnel.start()
+            # Start SQL Connection
+            hostname = '127.0.0.1' if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['hostname']
+            port = self._tunnel.local_bind_port if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['port']
+            database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
+            self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True)
+            return
 
-                # Start SQL Connection
-                hostname = '127.0.0.1' if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['hostname']
-                port = self._tunnel.local_bind_port if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['port']
-                database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-                self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True)
-                return
-
-            except Exception as e:
-                self.stop()
-                error = e
-                time.sleep(1)
-
-            finally:
-                # Show Errors Output Again
-                sys.stderr = sys_stderr
-
-        # Check errors
-        if error is not None:
+        except Exception as e:
             self.stop()
-            raise error
+            raise
+
+        finally:
+            # Show Errors Output Again
+            sys.stderr = sys_stderr
 
     def stop(self):
         try:
             self._sql.close()
+            self._sql = None
         except Exception:
-            pass
-
+            pass        
         try:
-            self._tunnel.stop()
+            self._tunnel.stop(force=True)
         except Exception:
             pass
 
@@ -79,7 +65,7 @@ class MySQL:
             return self.__execute_query(query, args, database)
         except Exception as e:
             if retry:
-                self.start()
+                self.connect()
                 return self.execute(query, args, database, retry=False)
             else:
                 raise
@@ -94,7 +80,6 @@ class MySQL:
         # Prepare the cursor
         with self._sql.cursor(OrderedDictCursor) as cursor:
             # Execute the SQL query
-            start_time = time.time()
             cursor.execute(query, args)
 
             # Get the query results
@@ -109,7 +94,7 @@ class MySQL:
                 return cursor.mogrify(query, args)
         except Exception as e:
             if retry:
-                self.start()
+                self.connect()
                 return self.mogrify(query, args, retry=False)
             else:
                 raise
