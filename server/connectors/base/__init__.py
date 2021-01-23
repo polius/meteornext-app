@@ -8,8 +8,8 @@ class Base:
     def connect(self):
         self._sql.connect()
 
-    def close(self):
-        self._sql.close()
+    def stop(self):
+        self._sql.stop()
 
     def test_sql(self):
         self._sql.test_sql()

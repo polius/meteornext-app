@@ -1,15 +1,14 @@
 <template>
   <div>
     <v-card>
-      <v-toolbar flat color="primary">
-        <v-toolbar-title class="white--text">{{ server_name }}</v-toolbar-title>
-        <v-divider class="mx-3" inset vertical></v-divider>
-        <div class="subheading font-weight-regular">{{ region_name }}</div>
+      <v-toolbar dense flat color="primary">
+        <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-database</v-icon>{{ server_name }}</v-toolbar-title>
+        <div v-if="region_name.length > 0" class="subheading font-weight-regular" style="margin-left:5px">({{ region_name }})</div>
         <v-divider class="mx-3" inset vertical></v-divider>
         <div class="subheading font-weight-regular">{{ server_hostname }}</div>
         <v-spacer></v-spacer>
         <div v-if="updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(updated) }}</b></div>
-        <v-btn icon title="Go back" @click="goBack()"><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn>
+        <v-btn icon title="Go back" @click="goBack()" style="width:40px; height:40px"><v-icon size="21">fas fa-arrow-alt-circle-left</v-icon></v-btn>
       </v-toolbar>
 
       <v-card-text style="padding-top:10px;">

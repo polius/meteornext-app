@@ -3,10 +3,10 @@ import datetime
 import calendar
 import requests
 import threading
-import simplejson as json
+import json
 from collections import OrderedDict
 
-from apps.monitoring.connector import connector
+import connectors.base
 import models.notifications
 
 class Monitoring:
@@ -14,7 +14,7 @@ class Monitoring:
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
 
-    def start(self):
+    def monitor(self):
         # Get Monitoring Servers
         utcnow = self.__utcnow()
         query = """
@@ -25,7 +25,7 @@ class Monitoring:
 				ms.updated, IF(ms.updated IS NULL, 1, DATE_ADD(ms.updated, INTERVAL IFNULL(MIN(mset.monitor_interval), 10) SECOND) <= %s) AS 'needs_update'
             FROM monitoring m
 			LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
-            LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id						
+            LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id
             JOIN servers s ON s.id = m.server_id
             JOIN regions r ON r.id = s.region_id
 			WHERE ms.updated IS NULL
@@ -33,7 +33,8 @@ class Monitoring:
             OR m.queries_enabled = 1
             OR m.monitor_enabled = 1 
 			OR m.parameters_enabled = 1
-            GROUP BY m.server_id;
+            GROUP BY m.server_id
+            HAVING needs_update = 1;
         """
         servers_raw = self._sql.execute(query=query, args=(utcnow))
 
@@ -44,13 +45,13 @@ class Monitoring:
             server['id'] = s['id']
             server['ssh'] = {'name': s['rname'], 'enabled': s['ssh_tunnel'], 'hostname': s['rhostname'], 'port': s['rport'], 'username': s['rusername'], 'password': s['rpassword'], 'key': s['key']}
             server['sql'] = {'name': s['name'], 'engine': s['engine'], 'hostname': s['hostname'], 'port': s['port'], 'username': s['username'], 'password': s['password']}
-            server['monitor'] = {'available': s['available'], 'summary': s['summary'], 'parameters': s['parameters'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'updated': s['updated'], 'needs_update': s['needs_update']}
+            server['monitor'] = {'available': s['available'], 'summary': s['summary'], 'parameters': s['parameters'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'updated': s['updated']}
             servers.append(server)
 
         # Get Server Info
         threads = []
         for s in servers:
-            t = threading.Thread(target=self.__start_server, args=(s,))
+            t = threading.Thread(target=self.__monitor_server, args=(s,))
             t.start()
             threads.append(t)
 
@@ -94,11 +95,7 @@ class Monitoring:
         """
         self._sql.execute(query=query, args=(utcnow, utcnow))
 
-    def __start_server(self, server):
-        if server['sql']['engine'] == 'MySQL':
-            self.__start_server_mysql(server)
-
-    def __start_server_mysql(self, server):
+    def __monitor_server(self, server):
         try:
             # Init Connection
             conn = None
@@ -110,13 +107,9 @@ class Monitoring:
                     return
 
             # Start Connection
-            conn = connector(server)
-            conn.start()
-
+            conn = connectors.base.Base({'ssh': server['ssh'], 'sql': server['sql']})
+            conn.connect()
         except Exception as e:
-            # Get current timestamp in utc
-            utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-
             # Monitoring Alarms
             self.__monitor_alarms(available=False, server=server, error=str(e))
 
@@ -129,32 +122,30 @@ class Monitoring:
                     error = VALUES(error),
                     updated = VALUES(updated)
             """
-            self._sql.execute(query=query, args=(server['id'], str(e), utcnow))
+            self._sql.execute(query=query, args=(server['id'], str(e), self.__utcnow()))
         else:
             # Get current timestamp in utc
-            utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            utcnow = self.__utcnow()
 
             # Build Parameters
-            params = ''
-            if (server['monitor']['monitor_enabled'] or server['monitor']['parameters_enabled']) and server['monitor']['needs_update']:
-                params = { p['Variable_name']: p['Value'] for p in conn.get_parameters() }
-                status = { s['Variable_name']: s['Value'] for s in conn.get_status() }
+            params = {}
+            if server['monitor']['monitor_enabled'] or server['monitor']['parameters_enabled']:
+                params = { p['Variable_name']: p['Value'] for p in conn.execute('SHOW GLOBAL VARIABLES') }
+                status = { s['Variable_name']: s['Value'] for s in conn.execute('SHOW GLOBAL STATUS') }
 
             # Build Processlist
-            processlist = ''
-            if server['monitor']['processlist_enabled'] or server['monitor']['queries_enabled'] or (server['monitor']['monitor_enabled'] and server['monitor']['needs_update']):
-                processlist = conn.get_processlist()
+            processlist = []
+            if server['monitor']['processlist_enabled'] or server['monitor']['queries_enabled']:
+                processlist = conn.execute('SELECT * FROM information_schema.processlist')
 
             # Build Summary
-            summary = ''
-            if server['monitor']['monitor_enabled'] and server['monitor']['needs_update']:
-                summary = {'info': {}, 'logs': {}, 'connections': {}, 'statements': {}, 'index': {}, 'rds': {}}
+            summary = {}
+            if server['monitor']['monitor_enabled']:
                 summary['info'] = {'version': params.get('version'), 'uptime': str(datetime.timedelta(seconds=int(status['Uptime']))), 'start_time': str((datetime.datetime.now() - datetime.timedelta(seconds=int(status['Uptime']))).replace(microsecond=0)), 'engine': server['sql']['engine'], 'sql_engine': params.get('default_storage_engine'), 'allocated_memory': params.get('innodb_buffer_pool_size'), 'time_zone': params.get('time_zone')}
                 summary['logs'] = {'general_log': params.get('general_log'), 'general_log_file': params.get('general_log_file'), 'slow_log': params.get('slow_query_log'), 'slow_log_file': params.get('slow_query_log_file'), 'error_log_file': params.get('log_error')}
                 summary['connections'] = {'current': status.get('Threads_connected'), 'max_connections_allowed': params.get('max_connections'), 'max_connections_reached': "{:.2f}%".format((int(status.get('Max_used_connections')) / int(params.get('max_connections'))) * 100), 'max_allowed_packet': params.get('max_allowed_packet'), 'transaction_isolation': params.get('tx_isolation'), 'bytes_received': status.get('Bytes_received'), 'bytes_sent': status.get('Bytes_sent')}
                 summary['statements'] = {'all': status.get('Questions'), 'select': int(status.get('Com_select')) + int(status.get('Qcache_hits')), 'insert': int(status.get('Com_insert')) + int(status.get('Com_insert_select')), 'update': int(status.get('Com_update')) + int(status.get('Com_update_multi')), 'delete': int(status.get('Com_delete')) + int(status.get('Com_delete_multi'))}
                 summary['index'] = {'percent': "{:.2f}%".format((int(status['Handler_read_rnd_next']) + int(status['Handler_read_rnd'])) / (int(status['Handler_read_rnd_next']) + int(status['Handler_read_rnd']) + int(status['Handler_read_first']) + int(status['Handler_read_next']) + int(status['Handler_read_key']) + int(status['Handler_read_prev']))), 'selects': status['Select_scan']}
-                summary['rds'] = {}
 
             # Store Queries
             if server['monitor']['queries_enabled']:
@@ -180,9 +171,9 @@ class Monitoring:
             self.__monitor_alarms(available=True, server=server, summary=summary, params=params)
 
             # Parse Variables
-            summary = self.__dict2str(summary) if summary != '' else ''
-            params = self.__dict2str(params) if params != '' else ''
-            processlist = self.__dict2str(processlist) if processlist != '' else ''
+            summary = self.__dict2str(summary) if bool(summary) else ''
+            params = self.__dict2str(params) if bool(params) else ''
+            processlist = self.__dict2str(processlist) if len(processlist) > 0 else ''
 
             # Store Variables
             if summary != '' or params != '' or processlist != '':
@@ -209,10 +200,6 @@ class Monitoring:
 
         # Check 'Unavailable'
         if server['monitor']['available'] == 1 and not available:
-            # - Notification -
-            query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
-            users = self._sql.execute(query=query, args=(server['id']))
-
             notification = {
                 'name': '{} has become unavailable'.format(server['sql']['name']),
                 'status': 'ERROR',
@@ -222,31 +209,16 @@ class Monitoring:
                 'date': self.__utcnow(),
                 'show': 1
             }
-
+            users = self.__get_users_server(server_id=server['id'])
             for user in users:
                 self._notifications.post(user_id=user['user_id'], notification=notification)
 
-            # - Slack -
-            query = """
-                SELECT DISTINCT s.channel_name, s.webhook_url
-                FROM monitoring m
-                JOIN users u ON u.id = m.user_id
-                JOIN slack s ON s.group_id = u.group_id AND s.`mode` = 'MONITORING' AND s.enabled = 1
-                WHERE m.monitor_enabled = 1
-                AND m.server_id = %s
-            """
-            slack = self._sql.execute(query=query, args=(server['id']))
-
-            for s in slack:
-                self.__slack(slack=s, server=server, mode=1, error=error)
+            slack = self.__get_slack_server(server_id=server['id'])
+            if len(slack) > 0:
+                self.__slack(slack=slack[0], server=server, mode=1, error=error)
 
         # Check 'Available'
         if server['monitor']['available'] == 0 and available:
-            # - Notification -
-            if users is None:
-                query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
-                users = self._sql.execute(query=query, args=(server['id']))
-
             notification = {
                 'name': '{} has become available'.format(server['sql']['name']),
                 'status': 'SUCCESS',
@@ -256,27 +228,17 @@ class Monitoring:
                 'date': self.__utcnow(),
                 'show': 1
             }
-
+            if users is None:
+                users = self.__get_users_server(server_id=server['id'])
             for user in users:
                 self._notifications.post(user_id=user['user_id'], notification=notification)
 
-            # - Slack -
             if slack is None:
-                query = """
-                    SELECT DISTINCT s.channel_name, s.webhook_url
-                    FROM monitoring m
-                    JOIN users u ON u.id = m.user_id
-                    JOIN slack s ON s.group_id = u.group_id AND s.`mode` = 'MONITORING' AND s.enabled = 1
-                    WHERE m.monitor_enabled = 1
-                    AND m.server_id = %s
-                """
-                slack = self._sql.execute(query=query, args=(server['id']))
-
-            for s in slack:
-                self.__slack(slack=s, server=server, mode=2, error=error)
+                slack = self.__get_slack_server(server_id=server['id'])
+                if len(slack) > 0:
+                    self.__slack(slack=slack[0], server=server, mode=2, error=error)
 
     def __slack(self, slack, server, mode, error):
-        # Build Slack Message
         if mode == 1:
             name = '[Monitoring] {} has become unavailable'.format(server['sql']['name'])
         elif mode == 2:
@@ -308,13 +270,27 @@ class Monitoring:
                 }
             ]
         }
-
         if error is not None:
             webhook_data['attachments'][0]['fields'].append({"title": "Error", "value": "```{}```".format(error), "short": False})
 
         # Send Slack Message
         response = requests.post(slack['webhook_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
     
+    def __get_users_server(self, server_id):
+        query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
+        return self._sql.execute(query=query, args=(server_id))
+
+    def __get_slack_server(self, server_id):
+        query = """
+            SELECT DISTINCT s.channel_name, s.webhook_url
+            FROM monitoring m
+            JOIN users u ON u.id = m.user_id
+            JOIN slack s ON s.group_id = u.group_id AND s.`mode` = 'MONITORING' AND s.enabled = 1
+            WHERE m.monitor_enabled = 1
+            AND m.server_id = %s
+        """
+        return self._sql.execute(query=query, args=(server_id))
+
     def __dict2str(self, data):
         return json.dumps(data, separators=(',', ':'))
 
@@ -324,5 +300,4 @@ class Monitoring:
 
     def __utcnow(self):
         # Get current timestamp in utc
-        utcnow = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        return utcnow
+        return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")

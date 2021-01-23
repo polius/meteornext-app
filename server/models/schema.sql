@@ -300,13 +300,13 @@ CREATE TABLE `notifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `monitoring` (
-  user_id INT UNSIGNED NOT NULL,
-  server_id INT UNSIGNED NOT NULL,
-  monitor_enabled TINYINT(1) NOT NULL DEFAULT 0,
-	parameters_enabled TINYINT(1) NOT NULL DEFAULT 0,
-	processlist_enabled TINYINT(1) NOT NULL DEFAULT 0,
-  processlist_active TINYINT(1) NOT NULL DEFAULT 0,
-	queries_enabled TINYINT(1) NOT NULL DEFAULT 0,
+  `user_id` INT UNSIGNED NOT NULL,
+  `server_id` INT UNSIGNED NOT NULL,
+  `monitor_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+	`parameters_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+	`processlist_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+  `processlist_active` TINYINT(1) NOT NULL DEFAULT 0,
+	`queries_enabled` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`user_id`, `server_id`),
   INDEX (`server_id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
@@ -324,13 +324,13 @@ CREATE TABLE `monitoring_settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `monitoring_servers` (
-  server_id INT UNSIGNED NOT NULL,
-  available TINYINT(1) NULL,
-  summary TEXT NULL,
-  parameters MEDIUMTEXT NULL,
-  processlist MEDIUMTEXT NULL,
-  error TEXT NULL,
-  updated DATETIME NULL,
+  `server_id` INT UNSIGNED NOT NULL,
+  `available` TINYINT(1) NULL,
+  `summary` TEXT NULL,
+  `parameters` MEDIUMTEXT NULL,
+  `processlist` MEDIUMTEXT NULL,
+  `error` TEXT NULL,
+  `updated` DATETIME NULL,
   PRIMARY KEY (`server_id`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
