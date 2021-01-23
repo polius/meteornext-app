@@ -19,7 +19,7 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="servers_dialog" persistent max-width="896px">
+    <v-dialog v-model="servers_dialog" max-width="896px">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-database</v-icon>SERVERS</v-toolbar-title>
@@ -56,7 +56,7 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="filter_dialog" persistent max-width="50%">
+    <v-dialog v-model="filter_dialog" max-width="50%">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-sliders-h</v-icon>FILTER</v-toolbar-title>
