@@ -161,7 +161,7 @@ export default {
           this.parseProcesslist(response.data.data)
           this.parseTreeView(response.data.data)
           this.parseLastUpdated(response.data.data)
-          if (refresh) setTimeout(this.getProcesslist, 1000, true)
+          if (refresh && !this.stopped) this.timer = setTimeout(this.getProcesslist, this.treeviewItems.length == 0 ? 10000 : 5000, true)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -245,7 +245,7 @@ export default {
           this.processlist_search = {}
           this.notification(response.data.message, '#00b16a')
           this.servers_dialog = false
-          this.getProcesslist(2)
+          this.getProcesslist(false)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -275,9 +275,11 @@ export default {
       this.stopped = !this.stopped
     },
     startProcesslist(notification=false) {
+      clearTimeout(this.timer)
       axios.put('/monitoring/processlist/start')
         .then((response) => {
           if (notification) this.notification(response.data.message, '#00b16a')
+          this.getProcesslist(true)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -285,6 +287,7 @@ export default {
         })
     },
     stopProcesslist() {
+      clearTimeout(this.timer)
       axios.put('/monitoring/processlist/stop')
         .then((response) => { 
           this.notification(response.data.message, '#00b16a')

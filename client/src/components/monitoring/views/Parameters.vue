@@ -142,7 +142,7 @@ export default {
           this.parseParameters(response.data.data)
           this.parseTreeView(response.data.data)
           this.parseLastUpdated(response.data.data)
-          if (refresh) setTimeout(this.getParameters, 10000, true)
+          if (refresh) this.timer = setTimeout(this.getParameters, 10000, true)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
