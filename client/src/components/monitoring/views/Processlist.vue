@@ -110,8 +110,8 @@ import moment from 'moment'
 
 export default {
   data: () => ({
-    active: true,
     loading: true,
+    timer: null,
     pending_servers: true, 
     last_updated: null,
 
@@ -146,32 +146,28 @@ export default {
     snackbarColor: ''
   }),
   created() {
-    this.active = true
     this.startProcesslist()
-    this.getProcesslist(0)
+    this.getProcesslist(true)
   },
-  destroyed() {
-    this.active = false
+  beforeDestroy() {
+    clearTimeout(this.timer)
     axios.put('/monitoring/processlist/stop')
   },
   methods: {
-    getProcesslist(mode) {
-      if (!this.active) return
-      else if (this.stopped || (Object.keys(this.processlist_origin).length == 0 && mode == 1 && !this.pending_servers)) setTimeout(this.getProcesslist, 5000, 1)
-      else {
-        axios.get('/monitoring/processlist')
-          .then((response) => {
-            this.parseProcesslist(response.data.data)
-            this.parseTreeView(response.data.data)
-            this.parseLastUpdated(response.data.data)
-            this.loading = false
-            if (mode != 2) setTimeout(this.getProcesslist, 1000, 1)
-          })
-          .catch((error) => {
-            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
-          })
-      }
+    getProcesslist(refresh=true) {
+      if (refresh) clearTimeout(this.timer)
+      axios.get('/monitoring/processlist')
+        .then((response) => {
+          this.parseProcesslist(response.data.data)
+          this.parseTreeView(response.data.data)
+          this.parseLastUpdated(response.data.data)
+          if (refresh) setTimeout(this.getProcesslist, 1000, true)
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.loading = false)
     },
     parseProcesslist(data) {
       this.processlist_metadata = {}

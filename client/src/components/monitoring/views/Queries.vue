@@ -49,7 +49,7 @@
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
                   <v-text-field filled v-model="settings.query_execution_time" label="Minimum Execution Time (seconds)" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-bottom:10px;" hide-details></v-text-field>
-                  <v-text-field filled v-model="settings.query_data_retention" label="Data Retention Timeframe (days)" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
+                  <v-text-field filled v-model="settings.query_data_retention" label="Data Retention Timeframe (hours)" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -209,9 +209,9 @@ export default {
 
     // Settings Dialog
     settings_dialog: false,        
-    settings: { query_execution_time:'10', query_data_retention:'1' },
+    settings: { query_execution_time: '10', query_data_retention: '24' },
     execution_time: '10',
-    data_retention: '1',
+    data_retention: '24',
 
     // Servers Dialog
     servers_dialog: false,
@@ -324,12 +324,12 @@ export default {
           this.data_retention = this.settings.query_data_retention
           this.notification(response.data.message, '#00b16a')
           this.settings_dialog = false
-          this.loading = false
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
+        .finally(() => this.loading = false)
     },
     cancelFilter() {
       if (!this.filter_applied) this.filter = {}
