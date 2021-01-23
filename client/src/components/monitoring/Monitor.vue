@@ -12,9 +12,9 @@
       </v-toolbar>
 
       <v-card-text style="padding-top:10px;">
-        <v-card style="margin-bottom:10px;" :title="error">
+        <v-card style="margin-bottom:10px;">
           <v-toolbar flat dense color="#424242">
-            <v-toolbar-title v-if="!loading" class="body-1" style="font-size:15px!important;"><v-icon small :color="available ? 'success' : 'error'" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ available ? 'Server up and running' : error }}</v-toolbar-title>
+            <v-toolbar-title v-if="!loading" class="body-1" style="font-size:15px!important;"><v-icon small :title="available ? 'Available' : 'Unavailable'" :color="available ? 'success' : 'error'" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ available ? 'Server up and running' : error }}</v-toolbar-title>
           </v-toolbar>
         </v-card>
 
@@ -31,6 +31,7 @@
             <v-tab><span class="pl-2 pr-2">STATEMENTS</span></v-tab>
             <v-divider class="mx-3" inset vertical></v-divider>
             <v-tab><span class="pl-2 pr-2">INDEX USAGE</span></v-tab> 
+            <v-divider class="mx-3" inset vertical></v-divider>
           </v-tabs>
         </div>
 
@@ -123,10 +124,9 @@ export default {
     region_name: '',
     available: true,
     error: null,
-
+    timer: null,
     // Tabs
     tabs: 0,
-
     // Summary
     summary_headers: [
       { text: 'Available', align: 'left', value: 'available' },
@@ -139,7 +139,6 @@ export default {
       { text: 'Timezone', align: 'left', value: 'time_zone' }
     ],
     summary_items: [],
-
     // Logs
     logs_headers: [
       { text: 'General Log', align: 'left', value: 'general_log' },
@@ -149,7 +148,6 @@ export default {
       { text: 'Error Log File', align: 'left', value: 'error_log_file' }
     ],
     logs_items: [],
-
     // Connections
     connections_headers: [
       { text: 'Current Connections', align: 'left', value: 'current' },
@@ -161,7 +159,6 @@ export default {
       { text: 'Bytes sent', align: 'left', value: 'bytes_sent' }
     ],
     connections_items: [],
-
     // Statements
     statements_headers: [
       { text: 'All Statements', align: 'left', value: 'all' },
@@ -171,14 +168,12 @@ export default {
       { text: 'DELETEs', align: 'left', value: 'delete' }
     ],
     statements_items: [],
-
     // Indexes
     indexes_headers: [
       { text: 'Percentage of queries not using indexes', align: 'left', value: 'percent' },
       { text: 'SELECTs not using indexes', align: 'left', value: 'selects' }
     ],
     indexes_items: [],
-
     // Parameter Groups
     params_headers: [
       { text: 'Name', align: 'left', value: 'name', width: '25%' },
@@ -186,18 +181,14 @@ export default {
     ],
     params_items: [],
     params_search: '',
-
     // Processlist
     processlist_headers: [],
     processlist_items: [],
     processlist_search: '',
-
     // Updated
     updated: null,
-
     // Loading
     loading: true,
-
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -206,6 +197,9 @@ export default {
   }),
   created() {
     this.init()
+  },
+  beforeDestroy() {
+    clearTimeout(this.timer)
   },
   methods: {
     // -------------
@@ -224,13 +218,14 @@ export default {
     },
     getMonitor() {
       // Get Deployment Data
-      const path = '/monitoring'
-      axios.get(path, { params: { server_id: this.server_id } })
+      axios.get('/monitoring', { params: { server_id: this.server_id } })
         .then((response) => {
-          this.parseData(response.data.data)
-          let refreshRate = (this.available == 0) ? 10000 : 3000
+          this.parseData(response.data.server)
+          const settings = response.data.settings
+          let refreshRate = (settings.length == 0) ? 5000 : parseInt(settings[0]['monitor_interval'] / 2 * 1000)
           this.loading = false
-          setTimeout(this.getMonitor, refreshRate)
+          clearTimeout(this.timer)
+          this.timer = setTimeout(this.getMonitor, refreshRate)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

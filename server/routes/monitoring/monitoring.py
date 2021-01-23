@@ -69,11 +69,9 @@ class Monitoring:
     def get(self, user):
         server_id = request.args['server_id'] if 'server_id' in request.args else None
         if server_id:
-            return jsonify({'data': self._monitoring.get(user, server_id)}), 200
+            return jsonify({'server': self._monitoring.get(user, server_id), 'settings': self._monitoring_settings.get(user)}), 200
         else:
-            servers = self._monitoring.get_monitoring(user)
-            settings = self._monitoring_settings.get(user)
-            return jsonify({'servers': servers, 'settings': settings}), 200
+            return jsonify({'servers': self._monitoring.get_monitoring(user), 'settings': self._monitoring_settings.get(user)}), 200
 
     def put(self, user, data):
         self._monitoring.put_monitor(user, data)

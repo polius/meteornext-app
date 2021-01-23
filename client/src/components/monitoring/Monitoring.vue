@@ -172,8 +172,8 @@
   export default {
     data() {
       return {
-        active: true,
         loading: true,
+        timer: null,
         last_updated: null,
         servers: [],
         servers_origin: [],
@@ -184,7 +184,7 @@
 
         // Settings Dialog
         settings_dialog: false,        
-        settings: { monitor_align:'4', monitor_interval:'10' },
+        settings: { monitor_align: '4', monitor_interval: '10' },
         align_items: ['1', '2', '3', '4'],
         source_items: ['Information Schema', 'Performance Schema (recommended)'],
         align: '4',
@@ -217,8 +217,7 @@
       }
     },
     created() {
-      this.active = true
-      this.getMonitoring(0)
+      this.getMonitoring(true)
     },
     filters: {
       truncate: function (text, length, suffix) {
@@ -229,31 +228,28 @@
         }
       }
     },
-    destroyed() {
-      this.active = false
+    beforeDestroy() {
+      clearTimeout(this.timer)
     },
     methods: {
       monitor(item) {
         this.$router.push({ name:'monitor', params: { id: item.id }})
       },
-      getMonitoring(mode) {
-        if (!this.active) return
-        else if (this.servers_origin.length == 0 && mode == 1 && !this.pending_servers) setTimeout(this.getMonitoring, 5000, 1)
-        else {
-          axios.get('/monitoring')
-          .then((response) => {
-            if (mode == 0) this.parseSettings(response.data.settings)
-            this.parseServers(response.data.servers)
-            this.parseTreeView(response.data.servers)
-            this.parseLastUpdated(response.data.servers)
-            this.loading = false
-            if (mode != 2) setTimeout(this.getMonitoring, 10000, 1)
-          })
-          .catch((error) => {
-            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+      getMonitoring(refresh=true) {
+        if (refresh) clearTimeout(this.timer)
+        axios.get('/monitoring')
+        .then((response) => {
+          this.parseSettings(response.data.settings)
+          this.parseServers(response.data.servers)
+          this.parseTreeView(response.data.servers)
+          this.parseLastUpdated(response.data.servers)
+          if (refresh) setTimeout(this.getMonitoring, parseInt(this.settings.monitor_interval) * 1000, true)
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
-          })
-        }
+        })
+        .finally(() => this.loading = false)
       },
       parseSettings(settings) {
         if (settings.length > 0) {
@@ -330,16 +326,14 @@
         axios.put('/monitoring', payload)
           .then((response) => {
             this.pending_servers = true
-            this.servers_origin = []
-            this.servers = []
             this.search = ''
             this.notification(response.data.message, '#00b16a')
             this.servers_dialog = false
-            this.getMonitoring(2)
+            this.getMonitoring(false)
           })
           .catch((error) => {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
           })
       },
       submitSettings() {
@@ -358,12 +352,12 @@
             this.interval = this.settings.monitor_interval
             this.notification(response.data.message, '#00b16a')
             this.settings_dialog = false
-            this.loading = false
           })
           .catch((error) => {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
           })
+          .finally(() => this.loading = false)
       },
       submitFilter() {
         this.filter = this.filter_item

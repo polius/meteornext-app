@@ -318,7 +318,7 @@ CREATE TABLE `monitoring_settings` (
 	`monitor_align` TINYINT UNSIGNED NOT NULL DEFAULT 4,
   `monitor_interval` INT UNSIGNED NOT NULL DEFAULT 10,
   `query_execution_time` INT UNSIGNED NOT NULL DEFAULT 10,
-  `query_data_retention` INT UNSIGNED NOT NULL DEFAULT 1,
+  `query_data_retention` INT UNSIGNED NOT NULL DEFAULT 24,
   PRIMARY KEY (`user_id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

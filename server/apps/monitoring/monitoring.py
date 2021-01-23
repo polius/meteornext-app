@@ -90,8 +90,8 @@ class Monitoring:
                 JOIN monitoring m ON m.user_id = s.user_id
                 GROUP BY m.server_id
             ) t ON t.server_id = q.server_id
-            WHERE (t.server_id IS NULL AND DATE_ADD(q.first_seen, INTERVAL t.data_retention DAY) <= %s)
-            OR (t.server_id IS NOT NULL AND  DATE_ADD(q.first_seen, INTERVAL 1 DAY) <= %s);
+            WHERE (t.server_id IS NULL AND DATE_ADD(q.first_seen, INTERVAL t.data_retention HOUR) <= %s)
+            OR (t.server_id IS NOT NULL AND DATE_ADD(q.first_seen, INTERVAL 24 HOUR) <= %s);
         """
         self._sql.execute(query=query, args=(utcnow, utcnow))
 
@@ -130,13 +130,13 @@ class Monitoring:
             # Build Parameters
             params = {}
             if server['monitor']['monitor_enabled'] or server['monitor']['parameters_enabled']:
-                params = { p['Variable_name']: p['Value'] for p in conn.execute('SHOW GLOBAL VARIABLES') }
-                status = { s['Variable_name']: s['Value'] for s in conn.execute('SHOW GLOBAL STATUS') }
+                params = { p['Variable_name']: p['Value'] for p in conn.get_variables() }
+                status = { s['Variable_name']: s['Value'] for s in conn.get_status() }
 
             # Build Processlist
             processlist = []
-            if server['monitor']['processlist_enabled'] or server['monitor']['queries_enabled']:
-                processlist = conn.execute('SELECT * FROM information_schema.processlist')
+            if server['monitor']['monitor_enabled'] or server['monitor']['processlist_enabled'] or server['monitor']['queries_enabled']:
+                processlist = conn.get_processlist()
 
             # Build Summary
             summary = {}

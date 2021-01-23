@@ -138,6 +138,14 @@ class MySQL:
     # INTERNAL METHODS #
     ####################
     def check_db_exists(self, db):
-        query = "SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"" + db.strip() + "\""
-        result = self.execute(query)
+        result = self.execute('SELECT COUNT(*) AS count FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = %s', args=(db.strip()))
         return True if int(result[0]['count']) == 1 else False
+
+    def get_variables(self):
+        return self.execute('SHOW GLOBAL VARIABLES')
+
+    def get_status(self):
+        return self.execute('SHOW GLOBAL STATUS')
+
+    def get_processlist(self):
+        return self.execute('SELECT * FROM information_schema.processlist')

@@ -97,8 +97,8 @@ import moment from 'moment'
 
 export default {
   data: () => ({
-    active: true,
     loading: true,
+    timer: null,
     pending_servers: true, 
     last_updated: null,
 
@@ -128,23 +128,21 @@ export default {
     snackbarColor: ''
   }),
   created() {
-    this.active = true
-    this.getParameters(0)
+    this.getParameters(true)
   },
-  destroyed() {
-    this.active = false
+  beforeDestroy() {
+    clearTimeout(this.timer)
   },
   methods: {
-    getParameters(mode) {
-      if (!this.active) return
-      else if (this.parameters_origin.length == 0 && mode == 1 && !this.pending_servers) setTimeout(this.getParameters, 5000, 1)
+    getParameters(refresh=true) {
+      if (refresh) clearTimeout(this.timer)
       else {
         axios.get('/monitoring/parameters')
         .then((response) => {
           this.parseParameters(response.data.data)
           this.parseTreeView(response.data.data)
           this.parseLastUpdated(response.data.data)
-          if (mode != 2) setTimeout(this.getParameters, 10000, 1)
+          if (refresh) setTimeout(this.getParameters, 10000, true)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -244,12 +242,10 @@ export default {
       axios.put('/monitoring/parameters', payload)
         .then((response) => {
           this.pending_servers = true
-          this.parameters_origin = []
-          this.parameters_items = []
           this.parameters_search = ''
           this.notification(response.data.message, '#00b16a')
           this.servers_dialog = false
-          this.getParameters(2)
+          this.getParameters(false)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

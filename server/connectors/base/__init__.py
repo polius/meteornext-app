@@ -27,4 +27,13 @@ class Base:
     # INTERNAL METHODS #
     ####################
     def check_db_exists(self, db):
-        self._sql.check_db_exists(db)
+        return self._sql.check_db_exists(db)
+
+    def get_variables(self):
+        return self._sql.get_variables()
+
+    def get_status(self):
+        return self._sql.get_status()
+
+    def get_processlist(self):
+        return self._sql.get_processlist()

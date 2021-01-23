@@ -24,7 +24,7 @@ class Cron:
             schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
-            schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
+            schedule.every(1).hour.do(self.__run_threaded, self.__monitoring_clean)
             schedule.every(1).seconds.do(self.__run_threaded, self.__monitoring)
 
             # Start Cron Listener
@@ -62,7 +62,6 @@ class Cron:
         try:
             if not self._license.validated:
                 return
-            print("- Giving coins...")
             query = """
                 UPDATE users u
                 JOIN groups g ON g.id = u.group_id
@@ -76,7 +75,6 @@ class Cron:
         try:
             if not self._license.validated:
                 return
-            print("- Cleaning logs...")
             # Get expiration value
             setting = self._sql.execute("SELECT value FROM settings WHERE name = 'LOGS'")
 
