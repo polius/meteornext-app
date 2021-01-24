@@ -22,7 +22,9 @@ class MySQL:
         self.stop()
 
         # Supress Errors Output
+        sys_stdout = sys.stdout
         sys_stderr = sys.stderr
+        sys.stdout = open(os.devnull, 'w')
         sys.stderr = open(os.devnull, 'w')
 
         try:
@@ -47,6 +49,7 @@ class MySQL:
 
         finally:
             # Show Errors Output Again
+            sys.stdout = sys_stdout
             sys.stderr = sys_stderr
 
     def stop(self):

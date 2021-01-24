@@ -27,8 +27,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field v-model="processlist_search[i]" append-icon="search" label="Search" color="white" style="margin-left:10px; margin-bottom:2px;" single-line hide-details></v-text-field>
         </v-toolbar>
-        <v-data-table :headers="processlist_headers[i]" :items="processlist_items[i]" :search="processlist_search[i]" :hide-default-footer="processlist_items[i].length < 11" :no-data-text="(!pending_servers && processlist_items[i].length == 0 && filter == 'All' ) ? 'Server unavailable' : 'No data available'" :loading="pending_servers" class="elevation-1" style="padding-top:3px;">
-        </v-data-table>
+        <v-data-table :headers="processlist_headers[i]" :items="processlist_items[i]" :search="processlist_search[i]" :hide-default-footer="processlist_items[i].length < 11" :no-data-text="(!pending_servers && processlist_items[i].length == 0 && filter == 'All' ) ? 'Server unavailable' : 'No data available'" :loading="pending_servers" class="elevation-1" style="padding-top:3px;"></v-data-table>
       </v-card>
     </div>
 
@@ -110,6 +109,7 @@ import moment from 'moment'
 
 export default {
   data: () => ({
+    active: true,
     loading: true,
     timer: null,
     pending_servers: true, 
@@ -146,16 +146,19 @@ export default {
     snackbarColor: ''
   }),
   created() {
+    this.active = true
     this.startProcesslist()
     this.getProcesslist(true)
   },
   beforeDestroy() {
+    this.active = false
     clearTimeout(this.timer)
     axios.put('/monitoring/processlist/stop')
   },
   methods: {
     getProcesslist(refresh=true) {
-      if (refresh) clearTimeout(this.timer)
+      clearTimeout(this.timer)
+      if (!this.active) return
       axios.get('/monitoring/processlist')
         .then((response) => {
           this.parseProcesslist(response.data.data)

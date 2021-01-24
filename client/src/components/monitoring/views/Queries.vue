@@ -7,32 +7,19 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn :disabled="loading" text title="Define monitoring rules and settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
           <v-btn :disabled="loading" text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
-          <v-btn :disabled="loading" text title="Filter queries" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn :disabled="loading" text title="Filter queries" @click="filter_dialog=true" class="body-2" :style="{ backgroundColor : filter_applied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn :disabled="loading" text title="Refresh query list" @click="getQueries()" class="body-2"><v-icon small style="padding-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-text-field v-model="queries_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table :headers="queries_headers" :items="queries_items" item-key="query_text" :options.sync="queries_options" :server-items-length="queries_total" :hide-default-footer="queries_items.length < 11" multi-sort :loading="loading" class="elevation-1" style="padding-top:5px;">
-        <template slot="item" slot-scope="props">
-          <td>{{ props.item.query_text }}</td>
-          <td>{{ props.item.db }}</td>
-          <td>{{ props.item.server }}</td>
-          <td>{{ props.item.user }}</td>
-          <td>{{ props.item.host }}</td>
-          <td>{{ dateFormat(props.item.first_seen) }}</td>
-          <td>{{ dateFormat(props.item.last_seen) }}</td>
-          <td>{{ props.item.last_execution_time }}</td>
-          <td>{{ props.item.max_execution_time }}</td>
-          <td>{{ props.item.avg_execution_time }}</td>
-          <td>{{ props.item.count }}</td>
+        <template v-slot:[`item.first_seen`]="{ item }">
+          {{ dateFormat(item.first_seen) }}
         </template>
-        <!-- <template v-slot:item.query_text="props">
-          <span style="max-width:50px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ props.item.query_text }}</span>
+        <template v-slot:[`item.last_seen`]="{ item }">
+          {{ dateFormat(item.last_seen) }}
         </template>
-        <template v-slot:item.last_seen="props">
-          <span>{{ dateFormat(props.item.last_seen) }}</span>
-        </template> -->
       </v-data-table>
     </v-card>
 
@@ -190,16 +177,16 @@ export default {
     // Queries
     queries_headers: [
       { text: 'Query', align: 'left', value: 'query_text', sortable: false },
-      { text: 'Database', align: 'left', value: 'db', width: '2%' },
-      { text: 'Server', align: 'left', value: 'server', width: '2%' },
-      { text: 'User', align: 'left', value: 'user', width: '2%' },
-      { text: 'Host', align: 'left', value: 'host', width: '2%' },
-      { text: 'First Seen', align: 'left', value: 'first_seen', width: '2%' },
-      { text: 'Last Seen', align: 'left', value: 'last_seen', width: '2%' },
-      { text: 'Last Execution Time', align: 'left', value: 'last_execution_time', width: '2%' },
-      { text: 'Max Execution Time', align: 'left', value: 'max_execution_time', width: '2%' },
-      { text: 'Avg Execution Time', align: 'left', value: 'avg_execution_time', width: '2%' },
-      { text: 'Count', align: 'left', value: 'count', width: '2%' }
+      { text: 'Database', align: 'left', value: 'db' },
+      { text: 'Server', align: 'left', value: 'server' },
+      { text: 'User', align: 'left', value: 'user' },
+      { text: 'Host', align: 'left', value: 'host' },
+      { text: 'First Seen', align: 'left', value: 'first_seen' },
+      { text: 'Last Seen', align: 'left', value: 'last_seen' },
+      { text: 'Last Execution Time', align: 'left', value: 'last_execution_time' },
+      { text: 'Max Execution Time', align: 'left', value: 'max_execution_time' },
+      { text: 'Avg Execution Time', align: 'left', value: 'avg_execution_time' },
+      { text: 'Count', align: 'left', value: 'count' }
     ],
     queries_origin: [],
     queries_items: [],

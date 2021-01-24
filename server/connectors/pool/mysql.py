@@ -22,7 +22,7 @@ class MySQL:
             "creator": pymysql,
             "maxconnections": None,
             "mincached": 1,
-            "maxcached": None,
+            "maxcached": 10,
             "maxshared": None,
             "blocking": True,
             "maxusage": None,
