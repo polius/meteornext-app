@@ -15,8 +15,7 @@
         <div v-if="loading || pending_servers" class="subheading font-weight-regular" style="margin-left:10px; padding-right:10px;">Loading servers...</div>
         <div v-else-if="!loading && last_updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
       </v-toolbar>
-      <v-data-table :headers="parameters_headers" :items="parameters_items" :search="parameters_search" :hide-default-header="parameters_headers.length == 1" :hide-default-footer="parameters_items.length < 11" no-data-text="No servers selected" :loading="pending_servers" item-key="id" class="elevation-1" style="padding-top:5px;">
-      </v-data-table>
+      <v-data-table :headers="parameters_headers" :items="parameters_items" :search="parameters_search" :hide-default-header="parameters_headers.length == 1" :hide-default-footer="parameters_items.length < 11" no-data-text="No servers selected" :loading="pending_servers" item-key="id" class="elevation-1" style="padding-top:5px;"></v-data-table>
     </v-card>
 
     <v-dialog v-model="servers_dialog" max-width="896px">
@@ -97,6 +96,7 @@ import moment from 'moment'
 
 export default {
   data: () => ({
+    active: true,
     loading: true,
     timer: null,
     pending_servers: true, 
@@ -128,28 +128,29 @@ export default {
     snackbarColor: ''
   }),
   created() {
+    this.active = true
     this.getParameters(true)
   },
   beforeDestroy() {
+    this.active = false
     clearTimeout(this.timer)
   },
   methods: {
     getParameters(refresh=true) {
-      if (refresh) clearTimeout(this.timer)
-      else {
-        axios.get('/monitoring/parameters')
-        .then((response) => {
-          this.parseParameters(response.data.data)
-          this.parseTreeView(response.data.data)
-          this.parseLastUpdated(response.data.data)
-          if (refresh) this.timer = setTimeout(this.getParameters, 10000, true)
-        })
-        .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
-        })
-        .finally(() => this.loading = false)
-      }
+      clearTimeout(this.timer)
+      if (!this.active) return
+      axios.get('/monitoring/parameters')
+      .then((response) => {
+        this.parseParameters(response.data.data)
+        this.parseTreeView(response.data.data)
+        this.parseLastUpdated(response.data.data)
+        if (refresh) this.timer = setTimeout(this.getParameters, 10000, true)
+      })
+      .catch((error) => {
+        if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+      })
+      .finally(() => this.loading = false)
     },
     parseParameters(data) {
       this.parameters_headers = [{ text: 'Variable', align: 'left', value: 'variable' }]

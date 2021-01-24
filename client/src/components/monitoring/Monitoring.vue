@@ -134,20 +134,16 @@
 
     <v-dialog v-model="events_dialog" max-width="50%">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">EVENTS</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-rss</v-icon>EVENTS</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="events_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="events_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
                 <v-data-table :headers="events_headers" :items="events_items" :search="events_search" :loading="loading" item-key="id" :hide-default-footer="events_items.length < 11" class="elevation-1" style="margin-top:20px;">
-                  <!-- <template v-slot:item.aws_enabled="props">
-                    <v-icon v-if="props.item.aws_enabled" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
-                    <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>
-                  </template> -->
                 </v-data-table>
               </v-flex>
             </v-layout>
@@ -172,6 +168,7 @@
   export default {
     data() {
       return {
+        active: true,
         loading: true,
         timer: null,
         last_updated: null,
@@ -217,6 +214,7 @@
       }
     },
     created() {
+      this.active = true
       this.getMonitoring(true)
     },
     filters: {
@@ -229,6 +227,7 @@
       }
     },
     beforeDestroy() {
+      this.active = false
       clearTimeout(this.timer)
     },
     methods: {
@@ -236,7 +235,8 @@
         this.$router.push({ name:'monitor', params: { id: item.id }})
       },
       getMonitoring(refresh=true) {
-        if (refresh) clearTimeout(this.timer)
+        clearTimeout(this.timer)
+        if (!this.active) return
         axios.get('/monitoring')
         .then((response) => {
           this.parseSettings(response.data.settings)
