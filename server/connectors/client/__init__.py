@@ -55,8 +55,6 @@ class Client:
 class Connection:
     def __init__(self, server):
         self._server = server
-        self._sql = None
-
         if server['sql']['engine'] in ['MySQL','Aurora MySQL']:
             self._sql = MySQL(server)
 

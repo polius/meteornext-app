@@ -51,42 +51,34 @@ class MySQL:
         self.close()
 
         # Supress Errors Output
+        sys_stdout = sys.stdout
         sys_stderr = sys.stderr
+        sys.stdout = open(os.devnull, 'w')
         sys.stderr = open(os.devnull, 'w')
 
-        error = None
-        for i in range(3):
-            try:
-                # Start SSH Tunnel
-                if self._server['ssh']['enabled']:
-                    sshtunnel.SSH_TIMEOUT = 5.0
-                    sshtunnel.TUNNEL_TIMEOUT = 5.0
-                    pkey = paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
-                    self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']))
-                    self._tunnel.start()
+        try:
+            # Start SSH Tunnel
+            if self._server['ssh']['enabled']:
+                sshtunnel.SSH_TIMEOUT = 5.0
+                sshtunnel.TUNNEL_TIMEOUT = 5.0
+                pkey = paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
+                with sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port'])) as tunnel:
+                    self._tunnel = tunnel
 
-                # Start SQL Connection
-                hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
-                port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
-                database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-                self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, client_flag=CLIENT.MULTI_STATEMENTS)
-                
-                
-                self._connection_id = self.execute('SELECT CONNECTION_ID()')['data'][0]['CONNECTION_ID()']
-                return
-            except Exception as e:
-                self.close()
-                error = e
-                time.sleep(1)
-
-            finally:
-                # Show Errors Output Again
-                sys.stderr = sys_stderr
-
-        # Check errors
-        if error is not None:
+            # Start SQL Connection
+            hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
+            port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
+            database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
+            self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, client_flag=CLIENT.MULTI_STATEMENTS)
+            self._connection_id = self.execute('SELECT CONNECTION_ID()')['data'][0]['CONNECTION_ID()']
+        except Exception:
             self.close()
-            raise error
+            raise
+
+        finally:
+            # Show Errors Output Again
+            sys.stdout = sys_stdout
+            sys.stderr = sys_stderr
 
     def close(self):
         try:
@@ -100,29 +92,20 @@ class MySQL:
             pass
 
         try:
-            self._tunnel.stop()
+            self._tunnel.stop(force=True)
         except Exception:
             pass
 
     def execute(self, query, args=None, database=None, fetch=True):
+        self._is_executing = True
+        # Check connection
         try:
-            # Check connection
-            try:
-                self._sql.ping(reconnect=False)
-            except Exception as e:
-                self.connect()
-
-            # Execute the query and return results
-            try:
-                self._is_executing = True
-                return self.__execute_query(query, args, database, fetch)
-            except AttributeError:
-                self.connect()
-                return self.__execute_query(query, args, database, fetch)
-
-        except (pymysql.ProgrammingError, pymysql.IntegrityError, pymysql.InternalError, pymysql.OperationalError) as error:
-            raise Exception(error.args[1])
-
+            self._sql.ping(reconnect=False)
+        except Exception:
+            self.connect()
+        # Execute query
+        try:
+            return self.__execute_query(query, args, database, fetch)
         finally:
             self._last_execution = time.time()
             self._is_executing = False
