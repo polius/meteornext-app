@@ -218,7 +218,7 @@ export default {
   },
   methods: {
     serverChanged(val) {
-      if (val === undefined || val.length == 0) return
+      if (val === undefined || val == null || val.length == 0) return
       const server = this.findServer(val.id)
       this.sidebarSelected = [server]
       this.getDatabases(server)
@@ -393,6 +393,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
           if (reject) reject()
         })
         .finally(() => {
