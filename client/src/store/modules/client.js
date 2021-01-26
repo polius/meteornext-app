@@ -24,6 +24,7 @@ const connection = {
   sidebarMode: 'servers',
   sidebarSearch: '',
   sidebarLoading: false,
+  sidebarLoadingServer: false,
 
   // Client
   clientHeaders: [],

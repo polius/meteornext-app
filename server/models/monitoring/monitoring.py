@@ -8,8 +8,9 @@ class Monitoring:
             FROM monitoring_servers ms
             JOIN servers s ON s.id = ms.server_id AND s.id = %s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            WHERE (s.shared = 1 OR s.owner_id = %s)
         """
-        return self._sql.execute(query, (server_id, user['group_id']))
+        return self._sql.execute(query, (server_id, user['group_id'], user['id']))
 
     def get_monitoring(self, user):
         query = """
@@ -18,9 +19,10 @@ class Monitoring:
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
             LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
+            WHERE (s.shared = 1 OR s.owner_id = %s)
             ORDER BY r.name, s.name;
         """
-        return self._sql.execute(query, (user['group_id'], user['id']))
+        return self._sql.execute(query, (user['group_id'], user['id'], user['id']))
 
     def get_parameters(self, user):
         query = """

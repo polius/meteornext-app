@@ -1,12 +1,11 @@
 <template>
   <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
     <div style="height:calc(100% - 36px)">
-      <v-autocomplete v-if="sidebarMode == 'servers'" ref="server" v-model="serverSearch" :loading="sidebarLoading || loadingServer" :disabled="loadingServer" @change="serverChanged" solo :items="serversList" item-text="name" label="Search" auto-select-first hide-details return-object background-color="#303030" height="48px" style="padding:10px;">
+      <v-autocomplete v-if="sidebarMode == 'servers'" ref="server" v-model="serverSearch" :loading="sidebarLoading || sidebarLoadingServer" :disabled="sidebarLoadingServer" @change="serverChanged" solo :items="serversList" item-text="name" label="Search" auto-select-first hide-details return-object background-color="#303030" height="48px" style="padding:10px;">
         <template v-slot:[`selection`]="{ item }">
           <div class="body-2">
             <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
             <span class="body-2">{{ item.name }}</span>
-            <!-- <span v-show="item.folder != null" class="body-2" style="font-weight:300; margin-left:8px;">{{ '(' + item.folder + ')' }}</span> -->
           </div>
         </template>
         <template v-slot:[`item`]="{ item }">
@@ -17,7 +16,7 @@
           </div>
         </template>
       </v-autocomplete>
-      <v-autocomplete v-else ref="database" v-model="database" :loading="loadingServer" :disabled="sidebarLoading || databaseItems.length == 0" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete>
+      <v-autocomplete v-else ref="database" v-model="database" :loading="sidebarLoadingServer" :disabled="sidebarLoading || databaseItems.length == 0" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" style="padding:10px;"></v-autocomplete>
       <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
       <div v-if="sidebarMode == 'servers' || database.length > 0" style="height:100%">
@@ -29,7 +28,7 @@
               <v-icon v-else small :title="item.type" :color="sidebarColor[item.type]" style="padding:10px;">{{ sidebarImg[item.type] }}</v-icon>
               {{ item.name }}
               <v-spacer></v-spacer>
-              <v-progress-circular v-if="loadingServer && sidebarMode == 'servers' && sidebarSelected.length == 1 && item.id == sidebarSelected[0].id" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
+              <v-progress-circular v-if="sidebarLoadingServer && sidebarMode == 'servers' && sidebarSelected.length == 1 && item.id == sidebarSelected[0].id" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
               <!-- <v-chip label outlined small style="margin-left:10px; margin-right:10px;">Prod</v-chip> -->
             </v-btn>
           </template>
@@ -125,9 +124,6 @@ export default {
       // Server search
       serverSearch: {},
 
-      // Loading
-      loadingServer: false,
-
       // Sidebar
       sidebarClick: undefined,
       sidebarImg: {
@@ -182,6 +178,7 @@ export default {
       'sidebarOpened',
       'sidebarSelected',
       'sidebarLoading',
+      'sidebarLoadingServer',
       'server',
       'headerTab',
       'headerTabSelected',
@@ -238,7 +235,7 @@ export default {
       }
     },
     sidebarClicked(event, item) {
-      if (this.loadingServer) return
+      if (this.sidebarLoadingServer) return
       this.clickHandler(event, item)
       return new Promise ((resolve) => {
         if (this.sidebarClick) {
@@ -380,9 +377,9 @@ export default {
       // Parse Servers List
       this.serversList = data.servers.map(x => ({ id: x.id, name: x.name, shared: x.shared, folder: x.folder_name }))
     },
-    getDatabases(server) {
+    getDatabases(server, resolve=null, reject=null) {
       this.serverSearch = server
-      this.loadingServer = true
+      this.sidebarLoadingServer = true
       // Retrieve Databases
       const payload = {
         connection: 0,
@@ -393,16 +390,16 @@ export default {
         .then((response) => {
           let current = this.connections.find(c => c['index'] == index)
           this.parseDatabases(current, server, response.data)
+          if (resolve) resolve()
         })
         .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))          
-          else {
-            this.dialogTitle = "Can't connect to the server"
-            this.dialogText = error.response.data.message
-            this.dialog = true
-          }
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          if (reject) reject()
         })
-        .finally(() => this.loadingServer = false)
+        .finally(() => {
+          let current = this.connections.find(c => c['index'] == index)
+          current.sidebarLoadingServer = false
+        })
     },
     parseDatabases(current, server, data) {
       // Assign server
@@ -578,10 +575,12 @@ export default {
       this.editorCompleters.splice(index, 1)
     },
     refreshObjects(resolve, reject) {
-      this.getDatabases(this.server)
-      if (this.database.length > 0) {
-        this.getObjects(this.database, resolve, reject)
-      }
+      new Promise((res, rej) => this.getDatabases(this.server, res, rej))
+      .then(() => {
+        if (this.database.length > 0) this.getObjects(this.database, resolve, reject)
+        else resolve()
+      })
+      .catch(() => reject())
     },
     showContextMenu(e, item) {
       e.preventDefault()
@@ -730,12 +729,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else {
-            this.dialogTitle = "Can't connect to the server"
-            EventBus.$emit('send-notification', this.dialogTitle, 'error', 2)
-            this.dialogText = error.response.data.message
-            this.dialog = true
-          }
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
     },
