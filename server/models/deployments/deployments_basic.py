@@ -53,15 +53,15 @@ class Deployments_Basic:
             query = "UPDATE deployments_basic SET `status` = %s, `stopped` = %s WHERE id = %s"
             self._sql.execute(query, (status, stopped, deployment_id))
 
-    def getExecutions(self, deployment_id):
+    def getExecutions(self, execution_id):
         query = """
             SELECT b.id, e.name AS 'environment', b.method, b.status, b.created, b.scheduled, b.started, b.ended, CONCAT(TIMEDIFF(b.ended, b.started)) AS 'overall'
             FROM deployments_basic b
+            JOIN deployments_basic b2 ON b2.deployment_id = b.deployment_id AND b2.id = %s
             LEFT JOIN environments e ON e.id = b.environment_id
-            WHERE b.deployment_id = %s
             ORDER BY b.created DESC;
         """
-        return self._sql.execute(query, (deployment_id))
+        return self._sql.execute(query, (execution_id))
 
     def setPublic(self, execution_id, public):
         query = """

@@ -76,14 +76,14 @@ class Basic:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Check user authority
-            authority = self._deployments_basic.getUser(request.args['deployment_id'])
+            authority = self._deployments_basic.getUser(request.args['execution_id'])
             if len(authority) == 0:
                 return jsonify({'message': 'This deployment does not exist'}), 400
             elif authority[0]['id'] != user['id'] and not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 400
 
             # Get deployment executions
-            executions = self._deployments_basic.getExecutions(request.args['deployment_id'])
+            executions = self._deployments_basic.getExecutions(request.args['execution_id'])
             return jsonify({'data': executions }), 200
 
         @deployments_basic_blueprint.route('/deployments/basic/start', methods=['POST'])

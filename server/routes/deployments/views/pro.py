@@ -97,14 +97,14 @@ class Pro:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Check user authority
-            authority = self._deployments_pro.getUser(request.args['deployment_id'])
+            authority = self._deployments_pro.getUser(request.args['execution_id'])
             if len(authority) == 0:
                 return jsonify({'message': 'This deployment does not exist'}), 400
             elif authority[0]['id'] != user['id'] and not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 400
 
             # Get deployment executions
-            executions = self._deployments_pro.getExecutions(request.args['deployment_id'])
+            executions = self._deployments_pro.getExecutions(request.args['execution_id'])
             return jsonify({'data': executions }), 200
 
         @deployments_pro_blueprint.route('/deployments/pro/start', methods=['POST'])
