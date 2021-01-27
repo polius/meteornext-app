@@ -944,7 +944,7 @@
       getExecutions() {
         // Get Deployment Executions
         const path = '/deployments/' + this.deployment['mode'].toLowerCase() + '/executions'
-        axios.get(path, { params: { deployment_id: this.deployment['id'] } })
+        axios.get(path, { params: { execution_id: this.deployment['execution_id'] } })
           .then((response) => {
             this.executions['items'] = response.data.data
             this.executions['headers'] = [
@@ -960,7 +960,7 @@
           })
           .catch((error) => {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
           })
       },
       // ------------------
