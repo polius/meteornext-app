@@ -35,6 +35,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <div style="padding-top:10px; padding-bottom:10px" class="subtitle-1">Are you sure you want to delete the selected groups?</div>
+                <v-alert type="error" dense>The inventory related to the selected groups will be deleted as well.</v-alert>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn color="#00b16a" @click="deleteGroupSubmit()">Confirm</v-btn>

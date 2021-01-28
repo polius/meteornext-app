@@ -19,12 +19,7 @@ class Groups:
         # Init models
         self._groups = models.admin.groups.Groups(sql)
         self._users = models.admin.users.Users(sql)
-
         # Init routes
-        self._environments = routes.inventory.environments.Environments(app, sql, license)
-        self._regions = routes.inventory.regions.Regions(app, sql, license)
-        self._servers = routes.inventory.servers.Servers(app, sql, license)
-        self._auxiliary = routes.inventory.auxiliary.Auxiliary(app, sql, license)
         self._settings = routes.admin.settings.Settings(app, sql, license)
 
     def blueprint(self):
@@ -166,14 +161,13 @@ class Groups:
 
     def delete(self):
         groups = json.loads(request.args['groups'])
+        # Check if exists users in this group
         for group in groups:
-            # Get group ID
-            group_id = self._groups.get(group_id=group)[0]['id']
+            users = self._groups.get_users(group_id=group)
+            if len(users) > 0:
+                return jsonify({'message': 'This group contains users'}), 400
 
-            # Delete all group elements
-            self._auxiliary.remove(group_id)
-            self._servers.remove(group_id)
-            self._regions.remove(group_id)
-            self._environments.remove(group_id)
+        # Delete all groups
+        for group in groups:
             self._groups.delete(group)
         return jsonify({'message': 'Selected groups deleted'}), 200
