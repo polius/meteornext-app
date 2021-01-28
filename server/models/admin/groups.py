@@ -48,8 +48,18 @@ class Groups:
         self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_timeout'], group['deployments_execution_concurrent'], group['deployments_slack_enabled'], group['deployments_slack_name'], group['deployments_slack_url'], group['monitoring_enabled'], group['utils_enabled'], group['client_enabled'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group['id']))
 
     def delete(self, group):
+        self._sql.execute("DELETE m FROM monitoring m JOIN servers s ON s.id = m.server_id AND s.group_id = %s", (group))
+        self._sql.execute("DELETE ms FROM monitoring_servers ms JOIN servers s ON s.id = ms.server_id AND s.group_id = %s", (group))
+        self._sql.execute("DELETE mq FROM monitoring_queries mq JOIN servers s ON s.id = mq.server_id AND s.group_id = %s", (group))
+        self._sql.execute("DELETE me FROM monitoring_events me JOIN servers s ON s.id = me.server_id AND s.group_id = %s", (group))
+        self._sql.execute("DELETE cs FROM client_servers cs JOIN servers s ON s.id = cs.server_id AND s.group_id = %s", (group))
+        self._sql.execute("DELETE a FROM auxiliary a WHERE a.group_id = %s", (group))
+        self._sql.execute("DELETE es FROM environment_servers es JOIN servers s ON s.id = es.server_id AND s.group_id = %s", (group))
+        self._sql.execute("DELETE s FROM servers s WHERE s.group_id = %s", (group))
+        self._sql.execute("DELETE r FROM regions r WHERE r.group_id = %s", (group))
+        self._sql.execute("DELETE e FROM environments e WHERE e.group_id = %s", (group))
         self._sql.execute("DELETE FROM groups WHERE id = %s", (group))
-    
+
     def exist(self, group):
         if 'id' in group:
             query = """
@@ -118,3 +128,11 @@ class Groups:
             WHERE id = %s
         """
         return self._sql.execute(query, (group_id))[0]
+
+    def get_users(self, group_id):
+        query = """
+            SELECT *
+            FROM users
+            WHERE group_id = %s
+        """
+        return self._sql.execute(query, (group_id))

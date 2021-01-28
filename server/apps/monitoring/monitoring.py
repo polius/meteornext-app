@@ -52,6 +52,7 @@ class Monitoring:
         threads = []
         for s in servers:
             t = threading.Thread(target=self.__monitor_server, args=(s,))
+            t.daemon = True
             t.start()
             threads.append(t)
 
