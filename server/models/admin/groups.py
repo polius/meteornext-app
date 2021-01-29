@@ -10,7 +10,7 @@ class Groups:
         elif group_name is not None:
             return self._sql.execute("SELECT * FROM groups WHERE name = %s", (group_name))
         else:
-            return self._sql.execute("SELECT g.*, COUNT(u.id) AS 'users' FROM groups g JOIN users u ON u.group_id = g.id GROUP BY g.id")
+            return self._sql.execute("SELECT g.*, COUNT(u.id) AS 'users' FROM groups g LEFT JOIN users u ON u.group_id = g.id GROUP BY g.id")
 
     def post(self, user_id, group):
         query = """
