@@ -9,6 +9,7 @@
       <v-card-text>
         <v-flex>
           <v-form ref="form" v-model="form_valid">
+            <v-alert v-if="mode == 'clone'" type="warning" dense dismissible icon="mdi-alert">The shared inventory (Environments, Regions, Servers, Auxiliary connections) related to this group will be cloned as well.</v-alert>
             <!-- INFO -->
             <v-text-field :disabled="loading" ref="focus" v-model="group.name" :rules="[v => !!v || '']" label="Name" required style="margin-top:0px;"></v-text-field>
             <v-text-field :disabled="loading" v-model="group.description" :rules="[v => !!v || '']" label="Description" required style="padding-top:0px; margin-top:0px;"></v-text-field>
@@ -62,11 +63,11 @@
                 </div>
                 <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
                   <v-toolbar-items style="margin-left:-16px">
-                    <v-btn :disabled="loading" text @click="newOwners()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                    <v-btn :disabled="loading || mode == 'clone'" text @click="newOwners()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
                     <v-btn :disabled="loading" v-if="ownersSelected.length > 0" text @click="removeOwners()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                   </v-toolbar-items>
                   <v-divider class="mx-3" inset vertical></v-divider>
-                  <v-text-field v-model="ownersSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+                  <v-text-field :disabled="mode == 'clone'" v-model="ownersSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                 </v-toolbar>
                 <v-data-table v-model="ownersSelected" :headers="ownersHeaders" :items="ownersItems" :search="ownersSearch" item-key="username" class="elevation-1" no-data-text="No owners created" hide-detault-header hide-default-footer show-select disable-pagination>
                 </v-data-table>
@@ -240,6 +241,7 @@ import axios from 'axios';
 
 export default {
   data: () => ({
+    mode: '',
     // +--------+
     // | GROUPS |
     // +--------+
@@ -298,12 +300,10 @@ export default {
   },
   methods: {
     init() {
+      this.mode = this.$route.params.mode
       this.group['id'] = this.$route.params.id
-      if (this.group['id'] == 'new') this.toolbar_title = 'NEW GROUP'
-      else {
-        this.toolbar_title = 'EDIT GROUP'
-        this.getGroup()
-      }
+      this.toolbar_title = this.mode.toUpperCase() + ' GROUP'
+      if (['edit','clone'].includes(this.mode)) this.getGroup()
     },
     // +--------+
     // | GROUPS |
@@ -316,7 +316,7 @@ export default {
           else {
             this.group = response.data.group[0]
             this.inventoryOwners = response.data.owners
-            this.ownersItems = response.data.owners.filter(x => x.owner)
+            if (this.mode == 'edit') this.ownersItems = response.data.owners.filter(x => x.owner)
           }
         })
         .catch((error) => {
@@ -327,7 +327,7 @@ export default {
     },
     submitGroup() {
       this.loading = true
-      if (this.group['id'] == 'new') this.newGroupSubmit()
+      if (['new','clone'].includes(this.mode)) this.newGroupSubmit()
       else this.editGroupSubmit()
     },
     newGroupSubmit() {
@@ -342,11 +342,12 @@ export default {
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
       // Add group to the DB
       const payload = {
+        mode: this.mode,
         group: JSON.stringify(this.group),
         owners: {
           add: this.ownersItems.map(x => x.username),
           del: [],
-        }
+        },
       }
       axios.post('/admin/groups', payload)
         .then((response) => {
