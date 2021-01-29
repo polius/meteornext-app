@@ -19,6 +19,53 @@ class Groups:
         """
         return self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_timeout'], group['deployments_execution_concurrent'], group['deployments_slack_enabled'], group['deployments_slack_name'], group['deployments_slack_url'], group['monitoring_enabled'], group['utils_enabled'], group['client_enabled'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
+    def clone_inventory(self, user_id, source_group_id, target_group_id):
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        query = """
+            INSERT INTO environments (`name`, `group_id`, `shared`, `created_by`, `created_at`)
+            SELECT `name`, %s AS 'group_id', `shared`, %s AS 'created_by', %s AS 'created_at'
+            FROM environments
+            WHERE `group_id` = %s
+            AND `shared` = 1
+        """
+        self._sql.execute(query, (target_group_id, user_id, now, source_group_id))
+        query = """
+            INSERT INTO regions (`name`, `group_id`, `ssh_tunnel`, `hostname`, `port`, `username`, `password`, `key`, `shared`, `created_by`, `created_at`)
+            SELECT `name`, %s AS 'group_id', `ssh_tunnel`, `hostname`, `port`, `username`, `password`, `key`, `shared`, %s AS 'created_by', %s AS 'created_at'
+            FROM regions
+            WHERE `group_id` = %s
+            AND `shared` = 1
+        """
+        self._sql.execute(query, (target_group_id, user_id, now, source_group_id))
+        query = """
+            INSERT INTO servers (`name`, `group_id`, `region_id`, `engine`, `version`, `hostname`, `port`, `username`, `password`, `ssl`, `usage`, `shared`, `created_by`, `created_at`)
+            SELECT s.name, %s AS 'group_id', r2.id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.ssl, s.usage, s.shared, %s AS 'created_by', %s AS 'created_at'
+            FROM servers s
+            JOIN regions r ON r.id = s.region_id
+            JOIN regions r2 ON r2.name = r.name AND r2.group_id = %s
+            WHERE s.group_id = %s
+            AND s.shared = 1
+        """
+        self._sql.execute(query, (target_group_id, user_id, now, target_group_id, source_group_id))
+        query = """
+            INSERT INTO environment_servers (`environment_id`, `server_id`)
+            SELECT DISTINCT e2.id AS 'environment_id', s2.id AS 'server_id'
+            FROM environment_servers es
+            JOIN environments e ON e.id = es.environment_id AND e.group_id = %s AND e.shared = 1
+            JOIN servers s ON s.id = es.server_id AND s.group_id = %s AND s.shared = 1
+            JOIN environments e2 ON e2.name = e.name AND e2.group_id = %s
+            JOIN servers s2 ON s2.name = s.name AND s2.group_id = %s
+        """
+        self._sql.execute(query, (source_group_id, source_group_id, target_group_id, target_group_id))
+        query = """
+            INSERT INTO auxiliary (`name`, `group_id`, `ssh_tunnel`, `ssh_hostname`, `ssh_port`, `ssh_username`, `ssh_password`, `ssh_key`, `sql_engine`, `sql_version`, `sql_hostname`, `sql_port`, `sql_username`, `sql_password`, `sql_ssl`, `shared`, `created_by`, `created_at`)
+            SELECT `name`, %s AS 'group_id', `ssh_tunnel`, `ssh_hostname`, `ssh_port`, `ssh_username`, `ssh_password`, `ssh_key`, `sql_engine`, `sql_version`, `sql_hostname`, `sql_port`, `sql_username`, `sql_password`, `sql_ssl`, `shared`, %s AS 'created_by', %s AS 'created_at'
+            FROM auxiliary
+            WHERE group_id = %s
+            AND shared = 1
+        """
+        self._sql.execute(query, (target_group_id, user_id, now, source_group_id))
+
     def put(self, user_id, group):
         query = """
             UPDATE groups 
@@ -55,6 +102,7 @@ class Groups:
         self._sql.execute("DELETE cs FROM client_servers cs JOIN servers s ON s.id = cs.server_id AND s.group_id = %s", (group))
         self._sql.execute("DELETE a FROM auxiliary a WHERE a.group_id = %s", (group))
         self._sql.execute("DELETE es FROM environment_servers es JOIN servers s ON s.id = es.server_id AND s.group_id = %s", (group))
+        self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.group_id = %s", (group))
         self._sql.execute("DELETE s FROM servers s WHERE s.group_id = %s", (group))
         self._sql.execute("DELETE r FROM regions r WHERE r.group_id = %s", (group))
         self._sql.execute("DELETE e FROM environments e WHERE e.group_id = %s", (group))

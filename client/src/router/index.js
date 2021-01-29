@@ -237,7 +237,7 @@ let router = new VueRouter({
           meta: { requiresAdmin: true },
           children: [
             {
-              path: ':id',
+              path: ':id?/:mode',
               name: 'admin.group',
               component: () => import('../components/admin/views/Group'),
               meta: { requiresAdmin: true }

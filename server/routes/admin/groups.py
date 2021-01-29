@@ -135,15 +135,26 @@ class Groups:
     def post(self, user_id, data):
         # Get Group
         group = json.loads(data['group'])
+        source_id = None
+        if data['mode'] == 'clone':
+            source_id = group['id']
+            del group['id']
 
         # Check if group currently exists
         if self._groups.exist(group):
             return jsonify({'message': 'This group currently exists'}), 400
 
-        # Create group & owners
+        # Create group
         group_id = self._groups.post(user_id, group)
-        self._groups.post_owners(group_id, data['owners']['add'])
-        return jsonify({'message': 'Group added'}), 200
+
+        # Create owners
+        if data['mode'] == 'new':
+            self._groups.post_owners(group_id, data['owners']['add'])
+        # Clone inventory
+        elif data['mode'] == 'clone':
+            self._groups.clone_inventory(user_id, source_id, group_id)
+
+        return jsonify({'message': 'Group added' if data['mode'] == 'new' else 'Group cloned'}), 200
 
     def put(self, user_id, data):
         # Get Modified Group
