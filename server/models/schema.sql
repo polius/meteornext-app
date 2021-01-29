@@ -212,7 +212,7 @@ CREATE TABLE `deployments` (
 CREATE TABLE `deployments_basic` (
  `id` INT UNSIGNED AUTO_INCREMENT,
  `deployment_id` INT UNSIGNED NOT NULL,
- `environment_id` INT(10) UNSIGNED NOT NULL,
+ `environment_id` INT(10) UNSIGNED NULL,
  `databases` TEXT NOT NULL,
  `queries` TEXT NOT NULL,
  `method` ENUM('VALIDATE','TEST','DEPLOY') NOT NULL,
@@ -244,7 +244,7 @@ CREATE TABLE `deployments_basic` (
 CREATE TABLE `deployments_pro` (
  `id` INT UNSIGNED AUTO_INCREMENT,
  `deployment_id` INT UNSIGNED NOT NULL,
- `environment_id` INT(10) UNSIGNED NOT NULL,
+ `environment_id` INT(10) UNSIGNED NULL,
  `code` MEDIUMTEXT NOT NULL,
  `method` ENUM('VALIDATE','TEST','DEPLOY') NOT NULL,
  `status` ENUM('CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED') NOT NULL DEFAULT 'CREATED',
