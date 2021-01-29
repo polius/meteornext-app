@@ -71,7 +71,9 @@ export default {
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Description', align: 'left', value: 'description' },
-      { text: 'Created', align: 'left', value: 'created_at' }
+      { text: 'Created', align: 'left', value: 'created_at' },
+      { text: 'Updated', align: 'left', value: 'updated_at' },
+      { text: 'Users', align: 'left', value: 'users' }
     ],
     items: [],
     selected: [],
