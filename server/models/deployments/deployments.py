@@ -199,18 +199,3 @@ class Deployments:
             WHERE release_id = %s
         """
         return self._sql.execute(query, (release_id))
-
-    def existByEnvironment(self, environment_id):
-        query = """
-            SELECT EXISTS (
-                SELECT *
-                FROM
-                (
-                    SELECT deployment_id FROM deployments_basic WHERE environment_id = %(environment_id)s
-                    UNION
-                    SELECT deployment_id FROM deployments_pro WHERE environment_id = %(environment_id)s
-                ) t
-                JOIN deployments d ON d.id = t. deployment_id
-            ) AS 'exist';
-        """
-        return self._sql.execute(query, {'environment_id': environment_id})[0]['exist']

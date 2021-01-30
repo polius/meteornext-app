@@ -55,7 +55,7 @@
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
                       <div v-if="treeviewItems.length == 0" class="text-body-2" style="text-align:center;">No servers to be selected</div>
-                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active :activatable="!readOnly" transition>
+                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewFiltered" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active :activatable="!readOnly" transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -124,6 +124,7 @@ export default {
     dialog_title: '',
     // Servers Treeview
     treeviewItems: [],
+    treeviewShared: {0: [], 1: []},
     treeviewSelected: [],
     treeviewOpened: [],
     treeviewSearch: '',
@@ -136,7 +137,21 @@ export default {
   computed: {
     owner: function() { return this.$store.getters['app/owner'] == 1 ? true : false },
     inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
-    readOnly: function() { return this.mode == 'edit' && !this.owner && this.item.shared == 1 }
+    readOnly: function() { return this.mode == 'edit' && !this.owner && this.item.shared == 1 },
+    treeviewFiltered: function() {
+      if (this.item.shared && this.treeviewItems.length > 0) {
+        var items = JSON.parse(JSON.stringify(this.treeviewItems))
+        for (let i = 0; i < items.length; ++i) {
+          for (let j = items[i]['children'].length - 1; j >= 0; --j) {
+            if (items[i]['children'][j]['shared'] == 0) {
+              items[i]['children'].splice(j, 1)
+            }
+          }
+        }
+        return items
+      }
+      else return this.treeviewItems
+    },
   },
   created() {
     this.getEnvironments()
@@ -181,17 +196,15 @@ export default {
         for (let j = 0; j < servers.length; ++j) {
           if (regions[i]['name'] == servers[j]['region_name']) {
             region['children'].push({ id: servers[j]['server_id'], name: servers[j]['server_name'], shared: servers[j]['server_shared'] })
+            this.treeviewShared[servers[j]['server_shared']].push(servers[j]['server_id'])
           }
         }
-        if (region['children'].length == 0) delete region['children']
-        else {
-          // Sort servers ASC by name
-          region['children'].sort(function(a,b) { 
-            if (a.name < b.name) return -1 
-            else if (a.name > b.name) return 1
-            return 0
-          })
-        }
+        // Sort servers ASC by name
+        region['children'].sort(function(a,b) { 
+          if (a.name < b.name) return -1 
+          else if (a.name > b.name) return 1
+          return 0
+        })
         treeview.push(region)
       }
       return treeview
@@ -385,6 +398,12 @@ export default {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
       })
+    },
+    treeviewFiltered() {
+      if (this.item.shared && this.treeviewItems.length > 0) {
+        // Remove shared from treeview selected elements
+        this.treeviewSelected = this.treeviewSelected.filter(x => !this.treeviewShared[0].includes(x))
+      }
     }
   }
 }

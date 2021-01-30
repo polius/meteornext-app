@@ -65,9 +65,11 @@ class Environments:
                 values += '(%s, %s),' % (environment['id'], server)
             self._sql.execute("INSERT INTO environment_servers (environment_id, server_id) VALUES {}".format(values[:-1]))
 
-    def delete(self, group_id, environment):
-        self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.id = %s AND e.group_id = %s", (environment, group_id))
-        self._sql.execute("DELETE FROM environments WHERE id = %s AND group_id = %s", (environment, group_id))
+    def delete(self, environment):
+        self._sql.execute("UPDATE deployments_basic SET environment_id = NULL WHERE environment_id = %s", (environment))
+        self._sql.execute("UPDATE deployments_pro SET environment_id = NULL WHERE environment_id = %s", (environment))
+        self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.id = %s", (environment))
+        self._sql.execute("DELETE FROM environments WHERE id = %s", (environment))
 
     def exist(self, user_id, group_id, environment):
         if 'id' in environment:
@@ -123,3 +125,15 @@ class Environments:
             JOIN regions r ON r.id = s.region_id
         """
         return self._sql.execute(query, (group_id, user_id))
+
+    def valid(self, user_id, environment):
+        query = """
+            SELECT NOT EXISTS (
+                SELECT *
+                FROM servers
+                WHERE id IN ('{}')
+                AND shared = 0
+                AND owner_id = %s
+            ) AS exist;
+        """.format("','".join([str(i) for i in environment['servers']]))
+        return self._sql.execute(query, (user_id))[0]['exist'] == 1

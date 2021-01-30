@@ -3,7 +3,6 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
-import models.deployments.deployments
 import models.admin.inventory.inventory
 import models.admin.inventory.environments
 import routes.admin.settings
@@ -13,7 +12,6 @@ class Environments:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._deployments = models.deployments.deployments.Deployments(sql)
         self._inventory = models.admin.inventory.inventory.Inventory(sql)
         self._environments = models.admin.inventory.environments.Environments(sql)
         # Init routes
@@ -115,12 +113,6 @@ class Environments:
 
     def delete(self):
         environments = json.loads(request.args['environments'])
-        # Check inconsistencies
-        exist = True
-        for environment in environments:
-            exist &= not self._deployments.existByEnvironment(environment)
-        if not exist:
-            return jsonify({'message': "The selected environments have related deployments"}), 400
         # Delete environments
         for environment in environments:
             self._environments.delete(environment)

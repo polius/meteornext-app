@@ -69,3 +69,12 @@ class Users:
     
     def consume_coins(self, user, coins):
         self._sql.execute("UPDATE users SET coins = coins-%s WHERE username = %s", (coins, user['username']))
+
+    def clean_shared(self, user_id, group):
+        self._sql.execute("DELETE m FROM monitoring m JOIN servers s ON s.id = m.server_id AND s.shared = 1 WHERE m.user_id = %s", (user_id))
+        self._sql.execute("UPDATE servers SET group_id = (SELECT id FROM groups WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
+        self._sql.execute("UPDATE servers JOIN regions r ON r.id = servers.region_id AND r.shared = 1 SET servers.region_id = NULL WHERE servers.shared = 0 AND servers.owner_id = %s", (user_id))
+        self._sql.execute("UPDATE regions SET group_id = (SELECT id FROM groups WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
+        self._sql.execute("UPDATE auxiliary SET group_id = (SELECT id FROM groups WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
+        self._sql.execute("DELETE es FROM environment_servers es JOIN servers s ON s.id = es.server_id AND s.shared = 1 JOIN environments e ON e.id = es.environment_id AND e.shared = 0 AND e.owner_id = %s", (user_id))
+        self._sql.execute("UPDATE environments SET group_id = (SELECT id FROM groups WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
