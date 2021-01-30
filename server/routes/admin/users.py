@@ -122,6 +122,10 @@ class Users:
         else:
             data['mfa']['hash'] = None
 
+        # Clean Shared Inventory References if the group has changed
+        if user[0]['group'] != data['group']:
+            self._users.clean_shared(user[0]['id'], data['group'])
+
         # Edit user
         self._users.put(user_id, data)
         return jsonify({'message': 'User edited successfully'}), 200
