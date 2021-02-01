@@ -1,9 +1,9 @@
 import os
-import sys
 import pymysql
 import paramiko
 import sshtunnel
 import threading
+import logging
 from io import StringIO
 from collections import OrderedDict
 from pymysql.cursors import DictCursorMixin, Cursor
@@ -21,19 +21,11 @@ class MySQL:
         # Close existing connections
         self.stop()
 
-        # Supress Errors Output
-        sys_stdout = sys.stdout
-        sys_stderr = sys.stderr
-        sys.stdout = open(os.devnull, 'w')
-        sys.stderr = open(os.devnull, 'w')
-
         try:
             # Start SSH Tunnel
             if 'ssh' in self._server and self._server['ssh']['enabled']:
                 pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
-                with sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port'])) as tunnel:
-                    pass
-                self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']))
+                self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']), mute_exceptions=True, logger=self.__logger())
                 self._tunnel.start()
 
             # Start SQL Connection
@@ -41,16 +33,10 @@ class MySQL:
             port = self._tunnel.local_bind_port if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['port']
             database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
             self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True)
-            return
 
         except Exception as e:
             self.stop()
             raise
-
-        finally:
-            # Show Errors Output Again
-            sys.stdout = sys_stdout
-            sys.stderr = sys_stderr
 
     def stop(self):
         try:
@@ -59,7 +45,7 @@ class MySQL:
             pass        
         try:
             self._tunnel.stop(force=True)
-        except Exception as e:
+        except Exception:
             pass
 
     def execute(self, query, args=None, database=None, retry=True):
@@ -69,10 +55,7 @@ class MySQL:
             if retry:
                 self.connect()
                 return self.execute(query, args, database, retry=False)
-            else:
-                raise
-        finally:
-            self.stop()
+            raise
 
     def __execute_query(self, query, args, database):
         # Select the database
@@ -98,43 +81,36 @@ class MySQL:
             if retry:
                 self.connect()
                 return self.mogrify(query, args, retry=False)
-            else:
-                raise
-        finally:
-            self.stop()
+            raise
 
     def test_ssh(self):
-        # Supress Errors Output
-        sys_stderr = sys.stderr
-        sys.stderr = open(os.devnull, 'w')
-
-        try:
-            pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
-            client = paramiko.SSHClient()
-            client.load_system_host_keys()
-            client.set_missing_host_key_policy(paramiko.WarningPolicy())
-            client.connect(hostname=self._server['ssh']['hostname'], port=int(self._server['ssh']['port']), username=self._server['ssh']['username'], password=self._server['ssh']['password'], pkey=pkey, timeout=10)
-            client.close()
-        finally:
-            sys.stderr = sys_stderr
+        pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
+        client = paramiko.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.WarningPolicy())
+        with client.connect(hostname=self._server['ssh']['hostname'], port=int(self._server['ssh']['port']), username=self._server['ssh']['username'], password=self._server['ssh']['password'], pkey=pkey, timeout=10):
+            pass
 
     def test_sql(self):
-        # Supress Errors Output
-        sys_stderr = sys.stderr
-        sys.stderr = open(os.devnull, 'w')
-
-        try:
-            if self._server['ssh']['enabled']:
-                pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
-                sshtunnel.SSH_TIMEOUT = 10.0
-                with sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), threaded=False) as tunnel:
-                    conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=self._server['sql']['username'], passwd=self._server['sql']['password'])
-                    conn.close()
-            else:
-                conn = pymysql.connect(host=self._server['sql']['hostname'], port=int(self._server['sql']['port']), user=self._server['sql']['username'], passwd=self._server['sql']['password'])
+        if self._server['ssh']['enabled']:
+            pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
+            sshtunnel.SSH_TIMEOUT = 10.0
+            with sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), threaded=False) as tunnel:
+                conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=self._server['sql']['username'], passwd=self._server['sql']['password'])
                 conn.close()
-        finally:
-            sys.stderr = sys_stderr
+        else:
+            conn = pymysql.connect(host=self._server['sql']['hostname'], port=int(self._server['sql']['port']), user=self._server['sql']['username'], passwd=self._server['sql']['password'])
+            conn.close()
+
+    def __logger(self):
+        # Create a Logger to suppress sshtunnel warnings
+        log = logging.getLogger('sshtunnel')
+        log.setLevel(level=logging.CRITICAL)
+        if not log.hasHandlers():
+            sh = logging.StreamHandler()
+            sh.setLevel(level=logging.CRITICAL)
+            log.addHandler(sh)
+        return log
 
     ####################
     # INTERNAL METHODS #

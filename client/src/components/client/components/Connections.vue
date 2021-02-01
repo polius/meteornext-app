@@ -53,6 +53,7 @@
 </style>
 
 <script>
+import axios from 'axios'
 import draggable from "vuedraggable";
 import EventBus from '../js/event-bus'
 import { mapFields } from '../js/map-fields'
@@ -116,6 +117,7 @@ export default {
       this.currentConn = tabActive;
     },
     deleteConnection(index) {
+      axios.get('/client/close', { params: { connection: index }})
       this.$store.dispatch('client/deleteConnection', index)
     },
     onContextMenu(event) {

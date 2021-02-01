@@ -48,7 +48,14 @@ class Client:
             connection = self._connections[int(user_id)][int(conn_id)]
             conn = Connection(connection.server)
             conn.kill(connection.connection_id)
-            conn.close()
+        finally:
+            pass
+
+    def close(self, user_id, conn_id):
+        try:
+            connection = self._connections[int(user_id)][int(conn_id)]
+            connection.close()
+            self._connections[user_id].pop(conn_id, None)
         finally:
             pass
 
