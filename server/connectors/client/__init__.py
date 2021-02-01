@@ -8,7 +8,7 @@ class Client:
 
         @app.before_first_request
         def start():
-            ttl = 60
+            ttl = 300
             t = threading.Thread(target=self.__scheduler, args=(ttl,))
             t.start()
 
