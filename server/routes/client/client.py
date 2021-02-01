@@ -555,9 +555,9 @@ class Client:
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Close Connection
+            # Kill Query
             self._connections.kill(user['id'], request.args['connection'])
-            return jsonify({'message': 'Connection successfully stopped'}), 200
+            return jsonify({'message': 'Query successfully stopped'}), 200
 
         @client_blueprint.route('/client/rights', methods=['GET'])
         @jwt_required
@@ -609,6 +609,24 @@ class Client:
                     return jsonify({"message": "Cannot retrieve the user permissions. Please check if the current user has SELECT privileges on the 'mysql.procs_priv' table.", "error": str(e)}), 400
                 syntax = conn.get_rights_syntax(request.args['user'], request.args['host'])
                 return jsonify({'server': server, 'database': database, 'table': table, 'column': column, 'proc': proc, 'syntax': syntax}), 200
+
+        @client_blueprint.route('/client/close', methods=['GET'])
+        @jwt_required
+        def client_close_connection_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Close Connection
+            self._connections.close(user['id'], request.args['connection'])
+            return jsonify({'message': 'Connection successfully closed'}), 200
 
         return client_blueprint
 

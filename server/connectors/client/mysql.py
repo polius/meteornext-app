@@ -1,6 +1,6 @@
 import os
-import sys
 import time
+import logging
 import pymysql
 import paramiko
 import sshtunnel
@@ -50,19 +50,13 @@ class MySQL:
         # Close existing connections
         self.close()
 
-        # Supress Errors Output
-        sys_stdout = sys.stdout
-        sys_stderr = sys.stderr
-        sys.stdout = open(os.devnull, 'w')
-        sys.stderr = open(os.devnull, 'w')
-
         try:
             # Start SSH Tunnel
             if self._server['ssh']['enabled']:
                 sshtunnel.SSH_TIMEOUT = 5.0
                 sshtunnel.TUNNEL_TIMEOUT = 5.0
                 pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=self._server['ssh']['password'])
-                self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']))
+                self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']), mute_exceptions=True, logger=self.__logger())
                 self._tunnel.start()
 
             # Start SQL Connection
@@ -71,14 +65,10 @@ class MySQL:
             database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
             self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, client_flag=CLIENT.MULTI_STATEMENTS)
             self._connection_id = self.execute('SELECT CONNECTION_ID()')['data'][0]['CONNECTION_ID()']
+
         except Exception:
             self.close()
             raise
-
-        finally:
-            # Show Errors Output Again
-            sys.stdout = sys_stdout
-            sys.stderr = sys_stderr
 
     def close(self):
         try:
@@ -162,6 +152,16 @@ class MySQL:
             self.execute('CALL mysql.rds_kill_query({})'.format(connection_id))
         except Exception:
             self.execute('KILL QUERY {}'.format(connection_id))
+
+    def __logger(self):
+        # Create a Logger to suppress sshtunnel warnings
+        log = logging.getLogger('sshtunnel')
+        log.setLevel(level=logging.CRITICAL)
+        if not log.hasHandlers():
+            sh = logging.StreamHandler()
+            sh.setLevel(level=logging.CRITICAL)
+            log.addHandler(sh)
+        return log
 
     ####################
     # INTERNAL QUERIES #
