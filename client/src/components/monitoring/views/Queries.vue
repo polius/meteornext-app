@@ -11,9 +11,11 @@
           <v-btn :disabled="loading" text title="Refresh query list" @click="getQueries()" class="body-2"><v-icon small style="padding-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
-        <v-text-field v-model="queries_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
+        <v-text-field v-model="queries_search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+        <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
+        <v-btn @click="filterColumnsClick" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table :headers="queries_headers" :items="queries_items" item-key="query_text" :options.sync="queries_options" :server-items-length="queries_total" :hide-default-footer="queries_items.length < 11" multi-sort :loading="loading" class="elevation-1" style="padding-top:5px;">
+      <v-data-table :headers="computedHeaders" :items="queries_items" item-key="query_text" :options.sync="queries_options" :server-items-length="queries_total" :hide-default-footer="queries_items.length < 11" multi-sort :loading="loading" class="elevation-1" style="padding-top:5px;">
         <template v-slot:[`item.first_seen`]="{ item }">
           {{ dateFormat(item.first_seen) }}
         </template>
@@ -152,6 +154,48 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <!-------------------->
+    <!-- COLUMNS DIALOG -->
+    <!-------------------->
+    <v-dialog v-model="columnsDialog" persistent max-width="600px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="text-subtitle-1 white--text">FILTER COLUMNS</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="selectAllColumns" text title="Select all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
+          <v-btn @click="deselectAllColumns" text title="Deselect all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="columnsDialog = false" style="width:40px; height:40px"><v-icon size="21">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 0px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:25px;">
+                  <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
+                  <v-checkbox v-model="columnsRaw" label="Query" value="query_text" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Database" value="db" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Server" value="server" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="User" value="user" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Host" value="host" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="First Seen" value="first_seen" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Last Seen" value="last_seen" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Last Execution Time" value="last_execution_time" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Max Execution Time" value="max_execution_time" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Avg Execution Time" value="avg_execution_time" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Count" value="count" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-divider style="margin-top:15px;"></v-divider>
+                  <div style="margin-top:20px;">
+                    <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  </div>
+                </v-form>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
 
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
@@ -177,16 +221,16 @@ export default {
     // Queries
     queries_headers: [
       { text: 'Query', align: 'left', value: 'query_text', sortable: false },
-      { text: 'Database', align: 'left', value: 'db' },
-      { text: 'Server', align: 'left', value: 'server' },
-      { text: 'User', align: 'left', value: 'user' },
-      { text: 'Host', align: 'left', value: 'host' },
-      { text: 'First Seen', align: 'left', value: 'first_seen' },
-      { text: 'Last Seen', align: 'left', value: 'last_seen' },
-      { text: 'Last Execution Time', align: 'left', value: 'last_execution_time' },
-      { text: 'Max Execution Time', align: 'left', value: 'max_execution_time' },
-      { text: 'Avg Execution Time', align: 'left', value: 'avg_execution_time' },
-      { text: 'Count', align: 'left', value: 'count' }
+      { text: 'Database', align: 'left', value: 'db', width: '1%' },
+      { text: 'Server', align: 'left', value: 'server', width: '1%' },
+      { text: 'User', align: 'left', value: 'user', width: '1%' },
+      { text: 'Host', align: 'left', value: 'host', width: '1%' },
+      { text: 'First Seen', align: 'left', value: 'first_seen', width: '1%' },
+      { text: 'Last Seen', align: 'left', value: 'last_seen', width: '1%' },
+      { text: 'Last Execution Time', align: 'left', value: 'last_execution_time', width: '1%' },
+      { text: 'Max Execution Time', align: 'left', value: 'max_execution_time', width: '1%' },
+      { text: 'Avg Execution Time', align: 'left', value: 'avg_execution_time', width: '1%' },
+      { text: 'Count', align: 'left', value: 'count', width: '1%' }
     ],
     queries_origin: [],
     queries_items: [],
@@ -216,12 +260,20 @@ export default {
     filter_options: ['Equal', 'Not equal', 'Starts', 'Not starts'],
     filter_applied: false,
 
+    // Filter Columns Dialog
+    columnsDialog: false,
+    columns: ['query_text','db','server','user','last_seen','last_execution_time','count'],
+    columnsRaw: [],
+
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
     snackbarColor: '',
     snackbarText: ''
   }),
+  computed: {
+    computedHeaders() { return this.queries_headers.filter(x => this.columns.includes(x.value)) }
+  },
   methods: {
     getQueries() {
       // Init vars
@@ -392,6 +444,20 @@ export default {
         }
         this.queries_items = items
       }
+    },
+    filterColumnsClick() {
+      this.columnsRaw = [...this.columns]
+      this.columnsDialog = true
+    },
+    filterColumns() {
+      this.columns = [...this.columnsRaw]
+      this.columnsDialog = false
+    },
+    selectAllColumns() {
+      this.columnsRaw = ['query_text','db','server','user','host','first_seen','last_seen','last_execution_time','max_execution_time','avg_execution_time','count']
+    },
+    deselectAllColumns() {
+      this.columnsRaw = []
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
