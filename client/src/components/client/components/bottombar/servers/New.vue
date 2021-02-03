@@ -5,7 +5,7 @@
     <!---------------->
     <v-dialog v-model="dialog" persistent max-width="70%">
       <v-card>
-        <v-toolbar flat color="primary">
+        <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text">New Servers</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="selected.length == 0 || loading" :loading="loading" @click="newServerSubmit" color="primary" style="margin-right:10px;">Save</v-btn>

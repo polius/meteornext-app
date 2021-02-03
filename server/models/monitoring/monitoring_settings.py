@@ -13,7 +13,6 @@ class Monitoring_Settings:
     def put(self, user, data):
         if not data:
             return
-
         headers = ','.join(data.keys())
         duplicate = ','.join(["{}=%s".format(k, data[k]) for k in data])
         query = """
