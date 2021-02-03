@@ -181,6 +181,12 @@ let router = new VueRouter({
           meta: { requiresUtils: true }
         },
         {
+          path: 'access',
+          name: 'utils.access',
+          component: () => import('../components/utils/views/Access'),
+          meta: { requiresUtils: true }
+        },
+        {
           path: 'compare',
           name: 'utils.compare',
           component: () => import('../components/utils/views/Compare'),
@@ -260,6 +266,12 @@ let router = new VueRouter({
           path: 'monitoring',
           name: 'admin.monitoring',
           component: () => import('../components/admin/views/Monitoring'),
+          meta: { requiresAdmin: true }
+        },
+        {
+          path: 'utils',
+          name: 'admin.utils',
+          component: () => import('../components/admin/views/Utils'),
           meta: { requiresAdmin: true }
         },
         {

@@ -12,7 +12,6 @@ RUN yum update -y && \
     yum install xz -y && \
     python3 -m pip install --upgrade pip && \
     python3 -m pip install boto3 && \
-    python3 -m pip install simplejson && \
     python3 -m pip install requests && \
     python3 -m pip install paramiko && \
     python3 -m pip install sshtunnel && \
