@@ -318,10 +318,10 @@ CREATE TABLE `monitoring` (
 
 CREATE TABLE `monitoring_settings` (
   `user_id` INT UNSIGNED NOT NULL,
-	`monitor_align` TINYINT UNSIGNED NOT NULL DEFAULT 4,
+  `monitor_align` TINYINT UNSIGNED NOT NULL DEFAULT 4,
   `monitor_interval` INT UNSIGNED NOT NULL DEFAULT 10,
   `monitor_slack_enabled` TINYINT(1) NOT NULL DEFAULT '0',
-  `monitor_slack_name` VARCHAR(191) NULL,
+  `monitor_slack_url` VARCHAR(191) NULL,
   `query_execution_time` INT UNSIGNED NOT NULL DEFAULT 10,
   `query_data_retention` INT UNSIGNED NOT NULL DEFAULT 24,
   PRIMARY KEY (`user_id`),

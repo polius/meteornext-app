@@ -68,7 +68,7 @@
                   </v-tooltip>
                   <v-switch v-model="settings.monitor_slack_enabled" label="Enable Notifications" color="info" style="margin-top:5px;" hide-details></v-switch>
                   <div v-if="settings.monitor_slack_enabled" style="margin-top:10px">
-                    <v-text-field v-model="settings.monitor_slack_name" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" hide-details></v-text-field>
+                    <v-text-field v-model="settings.monitor_slack_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" hide-details></v-text-field>
                     <v-btn :loading="loading" @click="testSlack" color="info" style="margin-top:15px">Test Slack</v-btn>
                   </div>
                 </div>
@@ -197,12 +197,12 @@
 
         // Settings Dialog
         settings_dialog: false,        
-        settings: { monitor_align: '4', monitor_interval: '10', monitor_slack_enabled: false, monitor_slack_name: '' },
+        settings: { monitor_align: '4', monitor_interval: '10', monitor_slack_enabled: false, monitor_slack_url: '' },
         align_items: ['1', '2', '3', '4'],
         align: '4',
         interval: '10',
         slack_enabled: false,
-        slack_name: '',
+        slack_url: '',
 
         // Servers Dialog
         servers_dialog: false,
@@ -277,7 +277,7 @@
         .finally(() => this.loading = false)
       },
       openSettings() {
-        this.settings = { monitor_align: this.align, monitor_interval: this.interval, monitor_slack_enabled: this.slack_enabled, monitor_slack_name: this.slack_name },
+        this.settings = { monitor_align: this.align, monitor_interval: this.interval, monitor_slack_enabled: this.slack_enabled, monitor_slack_url: this.slack_url },
         this.settings_dialog = true
       },
       getSettings() {
@@ -295,7 +295,7 @@
           this.settings.monitor_align = this.align = settings[0]['monitor_align'].toString()
           this.settings.monitor_interval = this.interval = settings[0]['monitor_interval']
           this.settings.monitor_slack_enabled = this.slack_enabled = settings[0]['monitor_slack_enabled']
-          this.settings.monitor_slack_name = this.slack_name = settings[0]['monitor_slack_name']
+          this.settings.monitor_slack_url = this.slack_url = settings[0]['monitor_slack_url']
         }
       },
       parseServers(servers) {
@@ -405,7 +405,7 @@
             this.align = this.settings.monitor_align
             this.interval = this.settings.monitor_interval
             this.slack_enabled = this.settings.slack_enabled
-            this.slack_name = this.settings.slack_name
+            this.slack_url = this.settings.slack_url
             this.notification(response.data.message, '#00b16a')
             this.settings_dialog = false
           })
