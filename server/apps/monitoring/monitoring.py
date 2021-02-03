@@ -241,6 +241,12 @@ class Monitoring:
                 if len(slack) > 0:
                     self.__slack(slack=slack[0], server=server, mode=2, error=error)
 
+        # Check parameters
+
+        # Check restarted
+
+        # Check connections
+
     def __slack(self, slack, server, mode, error):
         if mode == 1:
             name = '[Monitoring] {} has become unavailable'.format(server['sql']['name'])

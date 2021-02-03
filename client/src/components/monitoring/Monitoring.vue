@@ -239,6 +239,7 @@
     },
     created() {
       this.active = true
+      this.getSettings()
       this.getMonitoring(true)
     },
     filters: {
@@ -276,7 +277,6 @@
         .finally(() => this.loading = false)
       },
       openSettings() {
-        this.getSettings()
         this.settings = { monitor_align: this.align, monitor_interval: this.interval, monitor_slack_enabled: this.slack_enabled, monitor_slack_name: this.slack_name },
         this.settings_dialog = true
       },
