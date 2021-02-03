@@ -216,8 +216,8 @@ class Monitoring:
                 self._notifications.post(user_id=user['user_id'], notification=notification)
 
             slack = self.__get_slack_server(server_id=server['id'])
-            if len(slack) > 0:
-                self.__slack(slack=slack[0], server=server, mode=1, error=error)
+            for s in slack:
+                self.__slack(slack=s['monitor_slack_url'], server=server, mode=1, error=error)
 
         # Check 'Available'
         if server['monitor']['available'] == 0 and available:
@@ -238,8 +238,8 @@ class Monitoring:
 
             if slack is None:
                 slack = self.__get_slack_server(server_id=server['id'])
-                if len(slack) > 0:
-                    self.__slack(slack=slack[0], server=server, mode=2, error=error)
+                for s in slack:
+                    self.__slack(slack=s['monitor_slack_url'], server=server, mode=2, error=error)
 
         # Check parameters
 
@@ -291,12 +291,10 @@ class Monitoring:
 
     def __get_slack_server(self, server_id):
         query = """
-            SELECT DISTINCT s.channel_name, s.webhook_url
-            FROM monitoring m
-            JOIN users u ON u.id = m.user_id
-            JOIN slack s ON s.group_id = u.group_id AND s.`mode` = 'MONITORING' AND s.enabled = 1
-            WHERE m.monitor_enabled = 1
-            AND m.server_id = %s
+            SELECT DISTINCT ms.monitor_slack_url
+            FROM monitoring_settings ms
+            JOIN monitoring m ON m.user_id = ms.user_id AND m.server_id = %s
+            WHERE ms.monitor_slack_enabled = 1
         """
         return self._sql.execute(query=query, args=(server_id))
 
