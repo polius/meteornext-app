@@ -57,6 +57,15 @@ class Monitoring:
         """
         return self._sql.execute(query, (user['group_id'], user['id']))
 
+    def get_events(self, user):
+        query = """
+            SELECT me.id, s.name, me.status, me.message, me.time 
+            FROM monitoring_events me
+            JOIN servers s ON s.id = me.server_id AND s.group_id = %s AND (s.owner_id = %s OR s.shared = 1)
+            ORDER BY me.id DESC
+        """
+        return self._sql.execute(query, (user['group_id'], user['id']))
+
     def put_monitor(self, user, data):
         if len(data) == 0:
             query = """

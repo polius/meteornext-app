@@ -210,6 +210,7 @@ class Monitoring:
                 'date': self.__utcnow(),
                 'show': 1
             }
+            self.__add_event(server_id=server['id'], status='unavailable', error=error)
             users = self.__get_users_server(server_id=server['id'])
             for user in users:
                 self._notifications.post(user_id=user['user_id'], notification=notification)
@@ -229,6 +230,7 @@ class Monitoring:
                 'date': self.__utcnow(),
                 'show': 1
             }
+            self.__add_event(server_id=server['id'], status='available')
             if users is None:
                 users = self.__get_users_server(server_id=server['id'])
             for user in users:
@@ -291,6 +293,17 @@ class Monitoring:
             AND m.server_id = %s
         """
         return self._sql.execute(query=query, args=(server_id))
+
+    def __add_event(self, server_id, status, error=None):
+        if status == 'unavailable':
+            message = 'The server has become unavailable'
+            if error:
+                message += '. Error: {}'.format(error)
+        elif status == 'available':
+            mesage = 'The server has become available'
+            
+        query = "INSERT INTO monitoring_events (`server_id`, `status`, `message`) VALUES (%s, %s, %s)"
+        self._sql.execute(query=query, args=(server_id, status, message))
 
     def __dict2str(self, data):
         return json.dumps(data, separators=(',', ':'))

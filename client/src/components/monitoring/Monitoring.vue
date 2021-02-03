@@ -3,9 +3,9 @@
     <v-card style="margin-bottom:7px;">
       <v-toolbar dense flat color="primary">
         <v-toolbar-items class="hidden-sm-and-down" style="margin-left:-16px">
-          <v-btn :disabled="loading" text title="Define monitoring rules and settings" @click="settings_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
-          <v-btn :disabled="loading" text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
-          <v-btn :disabled="loading" text title="Filter servers" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn :disabled="loading" text title="Define monitoring rules and settings" @click="openSettings()" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+          <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn :disabled="loading" text title="Filter servers" @click="openFilter()" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn :disabled="loading" text title="What's going on in all servers" @click="events_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
@@ -56,6 +56,22 @@
                 <v-form ref="form" style="margin-bottom:15px;">
                   <v-select filled v-model="settings.monitor_align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>
                   <v-text-field filled v-model="settings.monitor_interval" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Data Collection Interval (seconds)" required style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
+                  <div class="subtitle-1 font-weight-regular white--text" style="margin-top:15px">
+                  SLACK
+                  <v-tooltip right>
+                    <template v-slot:activator="{ on }">
+                      <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                    </template>
+                    <span>
+                      Send a <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime a server changes its status (available, unavailable, ...)
+                    </span>
+                  </v-tooltip>
+                  <v-switch v-model="settings.monitor_slack_enabled" label="Enable Notifications" color="info" style="margin-top:5px;" hide-details></v-switch>
+                  <div v-if="settings.monitor_slack_enabled" style="margin-top:10px">
+                    <v-text-field v-model="settings.monitor_slack_name" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" hide-details></v-text-field>
+                    <v-btn :loading="loading" @click="testSlack" color="info" style="margin-top:15px">Test Slack</v-btn>
+                  </div>
+                </div>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -86,7 +102,7 @@
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
-                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                      <v-treeview :active.sync="treeviewSelectedRaw" item-key="id" :items="treeviewItems" :open="treeviewOpenedRaw" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -132,7 +148,7 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="events_dialog" max-width="50%">
+    <v-dialog v-model="events_dialog" max-width="75%">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-rss</v-icon>EVENTS</v-toolbar-title>
@@ -181,17 +197,20 @@
 
         // Settings Dialog
         settings_dialog: false,        
-        settings: { monitor_align: '4', monitor_interval: '10' },
+        settings: { monitor_align: '4', monitor_interval: '10', monitor_slack_enabled: false, monitor_slack_name: '' },
         align_items: ['1', '2', '3', '4'],
-        source_items: ['Information Schema', 'Performance Schema (recommended)'],
         align: '4',
         interval: '10',
+        slack_enabled: false,
+        slack_name: '',
 
         // Servers Dialog
         servers_dialog: false,
         treeviewItems: [],
         treeviewSelected: [],
+        treeviewSelectedRaw: [],
         treeviewOpened: [],
+        treeviewOpenedRaw: [],
         treeviewSearch: '',
 
         // Filter Dialog
@@ -202,7 +221,12 @@
 
         // Events Dialog
         events_dialog: false,
-        events_headers: [],
+        events_headers: [
+          { text: 'Server', align: 'left', value: 'server' },
+          { text: 'Status', align: 'left', value: 'status' },
+          { text: 'Message', align: 'left', value: 'message' },
+          { text: 'Time', align: 'left', value: 'time' },
+        ],
         events_items: [],
         events_search: '',
 
@@ -239,8 +263,8 @@
         if (!this.active) return
         axios.get('/monitoring')
         .then((response) => {
-          this.parseSettings(response.data.settings)
           this.parseServers(response.data.servers)
+          this.parseEvents(response.data.events)
           this.parseTreeView(response.data.servers)
           this.parseLastUpdated(response.data.servers)
           if (refresh) setTimeout(this.getMonitoring, parseInt(this.settings.monitor_interval) * 1000, true)
@@ -251,13 +275,31 @@
         })
         .finally(() => this.loading = false)
       },
+      openSettings() {
+        this.getSettings()
+        this.settings = { monitor_align: this.align, monitor_interval: this.interval, monitor_slack_enabled: this.slack_enabled, monitor_slack_name: this.slack_name },
+        this.settings_dialog = true
+      },
+      getSettings() {
+        axios.get('/monitoring/settings')
+        .then((response) => {
+          this.parseSettings(response.data.settings)
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+      },
       parseSettings(settings) {
         if (settings.length > 0) {
           this.settings.monitor_align = this.align = settings[0]['monitor_align'].toString()
           this.settings.monitor_interval = this.interval = settings[0]['monitor_interval']
+          this.settings.monitor_slack_enabled = this.slack_enabled = settings[0]['monitor_slack_enabled']
+          this.settings.monitor_slack_name = this.slack_name = settings[0]['monitor_slack_name']
         }
       },
       parseServers(servers) {
+        if (this.servers_origin.length > 0) return
         this.servers_origin = []
         var pending_servers = false
         for (let i = 0; i < servers.length; ++i) {
@@ -280,6 +322,9 @@
         if (this.search.length == 0) {
           this.applyFilter()
         }
+      },
+      parseEvents(events) {
+        this.events_items = events
       },
       parseTreeView(servers) {
         var data = []
@@ -307,7 +352,9 @@
         if (!this.servers_dialog) {
           this.treeviewItems = data
           this.treeviewSelected = selected
+          this.treeviewSelectedRaw = selected
           this.treeviewOpened = opened
+          this.treeviewOpenedRaw = opened
         }
       },
       parseLastUpdated(servers) {
@@ -320,11 +367,18 @@
         }
         this.last_updated = last_updated
       },
+      openServers() {
+        this.treeviewSelectedRaw = JSON.parse(JSON.stringify(this.treeviewSelected))
+        this.treeviewOpenedRaw = JSON.parse(JSON.stringify(this.treeviewOpened))
+        this.servers_dialog = true
+      },
       submitServers() {
         this.loading = true
         const payload = this.treeviewSelected
         axios.put('/monitoring', payload)
           .then((response) => {
+            this.treeviewSelected = JSON.parse(JSON.stringify(this.treeviewSelectedRaw))
+            this.treeviewOpened = JSON.parse(JSON.stringify(this.treeviewOpenedRaw))
             this.pending_servers = true
             this.search = ''
             this.notification(response.data.message, '#00b16a')
@@ -344,12 +398,14 @@
           this.loading = false
           return
         }
-        // Update settings        
+        // Update settings
         const payload = this.settings
         axios.put('/monitoring/settings', payload)
           .then((response) => {
             this.align = this.settings.monitor_align
             this.interval = this.settings.monitor_interval
+            this.slack_enabled = this.settings.slack_enabled
+            this.slack_name = this.settings.slack_name
             this.notification(response.data.message, '#00b16a')
             this.settings_dialog = false
           })
@@ -358,6 +414,10 @@
             else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
           })
           .finally(() => this.loading = false)
+      },
+      openFilter() {
+        this.filter_item = this.filter
+        this.filter_dialog = true
       },
       submitFilter() {
         this.filter = this.filter_item
@@ -381,6 +441,25 @@
           if (this.servers[i]['name'].includes(newValue)) search.push(this.servers[i])
         }
         this.servers = search.slice(0)
+      },
+      testSlack() {
+        // Check if all fields are filled
+        if (!this.$refs.form.validate()) {
+          this.notification('Please make sure all required fields are filled out correctly', 'error')
+          return
+        }
+        // Test Slack Webhook URL
+        this.loading = true
+        const payload = { webhook_url: this.settingsslack_url }
+        axios.get('/monitoring/slack', { params: payload })
+          .then((response) => {
+            this.notification(response.data.message, '#00b16a')
+          })
+          .catch((error) => {
+            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          })
+          .finally(() => this.loading = false)
       },
       dateFormat(date) {
         if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
