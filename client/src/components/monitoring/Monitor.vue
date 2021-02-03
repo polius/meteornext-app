@@ -222,7 +222,7 @@ export default {
         .then((response) => {
           this.parseData(response.data.server)
           const settings = response.data.settings
-          let refreshRate = (settings.length == 0) ? 5000 : parseInt(settings[0]['monitor_interval'] / 2 * 1000)
+          let refreshRate = (settings.length == 0) ? 5000 : parseInt(settings[0]['monitor_interval']) * 1000
           this.loading = false
           clearTimeout(this.timer)
           this.timer = setTimeout(this.getMonitor, refreshRate)
