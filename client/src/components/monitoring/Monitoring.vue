@@ -6,11 +6,12 @@
           <v-btn :disabled="loading" text title="Define monitoring rules and settings" @click="openSettings()" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
           <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
           <v-btn :disabled="loading" text title="Filter servers" @click="openFilter()" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn :disabled="loading" text title="Sort servers by number of connections" @click="sortClick()" class="body-2" :style="{ backgroundColor : sort_active ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sort-amount-down</v-icon>SORT</v-btn>
           <v-btn :disabled="loading" text title="What's going on in all servers" @click="events_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <v-text-field v-model="search" append-icon="search" label="Search" color="white" style="margin-left:5px;" single-line hide-details></v-text-field>
-        <v-divider v-if="loading || pending_servers || servers.length > 0" class="mx-3" inset vertical></v-divider>
+        <v-text-field @change="applyFilter" v-model="search" append-icon="search" label="Search" color="white" style="margin-left:5px;" single-line hide-details></v-text-field>
+        <v-divider class="mx-3" inset vertical></v-divider>
         <v-progress-circular v-if="loading || pending_servers" indeterminate size="20" width="2" color="white"></v-progress-circular>
         <div v-if="loading || pending_servers" class="subheading font-weight-regular" style="margin-left:10px; padding-right:10px;">Loading servers...</div>
         <div v-else-if="!loading && !pending_servers && last_updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
@@ -219,6 +220,9 @@
         filter_item: 'All',
         filter: 'All',
 
+        // Sort
+        sort_active: false,
+
         // Events Dialog
         events_dialog: false,
         events_headers: [
@@ -242,18 +246,14 @@
       this.getSettings()
       this.getMonitoring(true)
     },
-    filters: {
-      truncate: function (text, length, suffix) {
-        if (text.length > length) {
-          return text.substring(0, length) + suffix;
-        } else {
-          return text;
-        }
-      }
-    },
     beforeDestroy() {
       this.active = false
       clearTimeout(this.timer)
+    },
+    watch: {
+      search() {
+        this.applyFilter()
+      }
     },
     methods: {
       monitor(item) {
@@ -318,9 +318,7 @@
         }
         this.pending_servers = pending_servers
         // Apply filter
-        if (this.search.length == 0) {
-          this.applyFilter()
-        }
+        this.applyFilter()
       },
       parseEvents(events) {
         this.events_items = events
@@ -422,25 +420,27 @@
       submitFilter() {
         this.filter = this.filter_item
         this.applyFilter()
-        this.applySearch()
         this.filter_dialog = false
       },
       applyFilter() {
-        this.servers = []
+        let servers = []
+        // Apply Filter
         for (let i = 0; i < this.servers_origin.length; ++i) {
-          if (this.filter == 'All') this.servers.push(this.servers_origin[i])
-          else if (this.filter == 'Available' && this.servers_origin[i]['color'] == 'teal') this.servers.push(this.servers_origin[i])
-          else if (this.filter == 'Unavailable' && this.servers_origin[i]['color'] == 'red') this.servers.push(this.servers_origin[i])
-          else if (this.filter == 'Loading' && this.servers_origin[i]['color'] == 'orange') this.servers.push(this.servers_origin[i])
+          if (this.filter == 'All') servers.push(this.servers_origin[i])
+          else if (this.filter == 'Available' && this.servers_origin[i]['color'] == 'teal') servers.push(this.servers_origin[i])
+          else if (this.filter == 'Unavailable' && this.servers_origin[i]['color'] == 'red') servers.push(this.servers_origin[i])
+          else if (this.filter == 'Loading' && this.servers_origin[i]['color'] == 'orange') servers.push(this.servers_origin[i])
         }
+        // Apply Search
+        servers = servers.filter(x => x['name'].toLowerCase().includes(this.search.toLowerCase()) || x['region'].toLowerCase().includes(this.search.toLowerCase()) || x['hostname'].toLowerCase().includes(this.search.toLowerCase()))
+        // Apply Sort
+        servers.sort((a, b) => a.name.localeCompare(b.name))
+        if (this.sort_active) servers.sort((a, b) => parseInt(b.connections == '?' ? '0' : b.connections) - parseInt(a.connections == '?' ? '0' : a.connections));
+        this.servers = JSON.parse(JSON.stringify(servers))
       },
-      applySearch(value=null) {
-        var newValue = value == null ? this.search : value
-        var search = []
-        for (let i = 0; i < this.servers.length; ++i) {
-          if (this.servers[i]['name'].includes(newValue)) search.push(this.servers[i])
-        }
-        this.servers = search.slice(0)
+      sortClick() {
+        this.sort_active = !this.sort_active
+        this.applyFilter()
       },
       testSlack() {
         // Check if all fields are filled
@@ -471,12 +471,5 @@
         this.snackbar = true
       }
     },
-    watch: {
-      // eslint-disable-next-line
-      search: function (newValue, oldValue) {
-        this.applyFilter()
-        if (newValue.length > 0) this.applySearch(newValue)
-      }
-    }
   }
 </script>
