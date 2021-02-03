@@ -69,7 +69,7 @@
     <!-------------------->
     <!-- COLUMNS DIALOG -->
     <!-------------------->
-    <v-dialog v-model="columnsDialog" persistent max-width="600px">
+    <v-dialog v-model="columnsDialog" max-width="600px">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="text-subtitle-1 white--text">FILTER COLUMNS</v-toolbar-title>
