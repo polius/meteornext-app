@@ -260,7 +260,7 @@
         this.$router.push({ name:'monitor', params: { id: item.id }})
       },
       getMonitoring(refresh=true) {
-        clearTimeout(this.timer)
+        if (refresh || !this.active) clearTimeout(this.timer)
         if (!this.active) return
         axios.get('/monitoring')
         .then((response) => {
@@ -299,7 +299,6 @@
         }
       },
       parseServers(servers) {
-        if (this.servers_origin.length > 0) return
         this.servers_origin = []
         var pending_servers = false
         for (let i = 0; i < servers.length; ++i) {
@@ -374,7 +373,7 @@
       },
       submitServers() {
         this.loading = true
-        const payload = this.treeviewSelected
+        const payload = this.treeviewSelectedRaw
         axios.put('/monitoring', payload)
           .then((response) => {
             this.treeviewSelected = JSON.parse(JSON.stringify(this.treeviewSelectedRaw))
@@ -389,6 +388,7 @@
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
           })
+          .finally(() => this.loading = false)
       },
       submitSettings() {
         this.loading = true

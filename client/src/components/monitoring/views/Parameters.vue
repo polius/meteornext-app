@@ -5,8 +5,8 @@
         <v-toolbar-title class="white--text subtitle-1">PARAMETERS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn :disabled="loading" text title="Select servers to monitor" @click="servers_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
-          <v-btn :disabled="loading" text title="Filter parameters" @click="filter_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn :disabled="loading" text title="Filter parameters" @click="openFilter()" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-text-field v-model="parameters_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
@@ -35,7 +35,7 @@
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
-                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                      <v-treeview :active.sync="treeviewSelectedRaw" item-key="id" :items="treeviewItems" :open="treeviewOpenedRaw" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -112,7 +112,9 @@ export default {
     servers_dialog: false,
     treeviewItems: [],
     treeviewSelected: [],
+    treeviewSelectedRaw: [],
     treeviewOpened: [],
+    treeviewOpenedRaw: [],
     treeviewSearch: '',
 
     // Filter Dialog
@@ -137,14 +139,14 @@ export default {
   },
   methods: {
     getParameters(refresh=true) {
-      clearTimeout(this.timer)
+      if (refresh || !this.active) clearTimeout(this.timer)
       if (!this.active) return
       axios.get('/monitoring/parameters')
       .then((response) => {
         this.parseParameters(response.data.data)
         this.parseTreeView(response.data.data)
         this.parseLastUpdated(response.data.data)
-        if (refresh) this.timer = setTimeout(this.getParameters, 10000, true)
+        if (refresh) this.timer = setTimeout(this.getParameters, 5000, true)
       })
       .catch((error) => {
         if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -237,11 +239,18 @@ export default {
         }
       }
     },
+    openServers() {
+      this.treeviewSelectedRaw = JSON.parse(JSON.stringify(this.treeviewSelected))
+      this.treeviewOpenedRaw = JSON.parse(JSON.stringify(this.treeviewOpened))
+      this.servers_dialog = true
+    },
     submitServers() {
       this.loading = true
-      const payload = this.treeviewSelected
+      const payload = this.treeviewSelectedRaw
       axios.put('/monitoring/parameters', payload)
         .then((response) => {
+          this.treeviewSelected = JSON.parse(JSON.stringify(this.treeviewSelectedRaw))
+          this.treeviewOpened = JSON.parse(JSON.stringify(this.treeviewOpenedRaw))
           this.pending_servers = true
           this.parameters_search = ''
           this.notification(response.data.message, '#00b16a')
@@ -252,6 +261,10 @@ export default {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
+    },
+    openFilter() {
+      this.filter_item = this.filter
+      this.filter_dialog = true
     },
     submitFilter() {
       this.filter = this.filter_item
