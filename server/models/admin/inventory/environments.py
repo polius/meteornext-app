@@ -107,14 +107,14 @@ class Environments:
     def get_servers(self, group_id=None):
         if group_id is not None:
             query = """
-                SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name'
+                SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.owner_id AS 'server_owner', r.id AS 'region_id', r.name AS 'region_name'
                 FROM servers s
                 JOIN regions r ON r.id = s.region_id AND r.group_id = %s
             """
             return self._sql.execute(query, (group_id))
         else:
             query = """
-                SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name'
+                SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.owner_id AS 'server_owner', r.id AS 'region_id', r.name AS 'region_name'
                 FROM servers s
                 JOIN regions r ON r.id = s.region_id
             """

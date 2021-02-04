@@ -147,6 +147,7 @@ export default {
               items[i]['children'].splice(j, 1)
             }
           }
+          if (items[i]['children'].length == 0) items.splice(i, 1)
         }
         return items
       }

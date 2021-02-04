@@ -31,7 +31,7 @@
                       <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                     <v-col v-if="!item.shared" style="margin-left:20px">
-                      <v-autocomplete ref="owner_id" v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="owner_id" @change="ownerChanged" v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-text-field ref="name" v-if="mode!='delete'" @keypress.enter.native.prevent="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
@@ -43,7 +43,7 @@
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
                       <div v-if="treeviewItems.length == 0" class="text-body-2" style="text-align:center">Select a group</div>
-                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewItems" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                      <v-treeview :active.sync="treeviewSelected" item-key="id" :items="treeviewFiltered" :open="treeviewOpened" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -150,6 +150,7 @@ export default {
     users: [],
     // Servers Treeview
     treeviewItems: [],
+    treeviewShared: {0: [], 1: []},
     treeviewSelected: [],
     treeviewOpened: [],
     treeviewSearch: '',
@@ -168,7 +169,31 @@ export default {
     EventBus.$on('delete-environment', this.deleteEnvironment);
   },
   computed: {
-    computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) }
+    computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
+    treeviewFiltered: function() {
+      var items = JSON.parse(JSON.stringify(this.treeviewItems))
+      if (this.item.shared) {
+        for (let i = 0; i < items.length; ++i) {
+          for (let j = items[i]['children'].length - 1; j >= 0; --j) {
+            if (items[i]['children'][j]['shared'] == 0) {
+              items[i]['children'].splice(j, 1)
+            }
+          }
+          if (items[i]['children'].length == 0) items.splice(i, 1)
+        }
+      }
+      else {
+        for (let i = 0; i < items.length; ++i) {
+          for (let j = items[i]['children'].length - 1; j >= 0; --j) {
+            if (items[i]['children'][j]['shared'] == 0 && items[i]['children'][j]['owner'] != this.item.owner_id) {
+              items[i]['children'].splice(j, 1)
+            }
+          }
+          if (items[i]['children'].length == 0) items.splice(i, 1)
+        }
+      }
+      return items
+    },
   },
   methods: {
     groupChanged() {
@@ -178,6 +203,9 @@ export default {
       })
       this.getUsers()
       this.getServers()
+    },
+    ownerChanged() {
+      this.treeviewSelected = []
     },
     getUsers() {
       axios.get('/admin/inventory/users', { params: { group_id: this.item.group_id }})
@@ -242,7 +270,8 @@ export default {
         let region = { id: 'r'+regions[i]['id'], name: regions[i]['name'], children: []}
         for (let j = 0; j < servers.length; ++j) {
           if (regions[i]['name'] == servers[j]['region_name']) {
-            region['children'].push({ id: servers[j]['server_id'], name: servers[j]['server_name'], shared: servers[j]['server_shared'] })
+            region['children'].push({ id: servers[j]['server_id'], name: servers[j]['server_name'], shared: servers[j]['server_shared'], owner: servers[j]['server_owner'] })
+            this.treeviewShared[servers[j]['server_shared']].push(servers[j]['server_id'])
           }
         }
         if (region['children'].length == 0) delete region['children']
@@ -449,7 +478,13 @@ export default {
     tab(val) {
       this.selected = []
       if (val == 0) this.getEnvironments()
-    }
+    },
+    treeviewFiltered() {
+      if (this.item.shared && this.treeviewItems.length > 0) {
+        // Remove shared from treeview selected elements
+        this.treeviewSelected = this.treeviewSelected.filter(x => !this.treeviewShared[0].includes(x))
+      }
+    },
   },
 }
 </script>
