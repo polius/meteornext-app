@@ -50,9 +50,9 @@ class Client:
                     servers_secured = []
                     for s in servers:
                         if s['shared']:
-                            servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "region_shared": s['region_shared'], "folder_id": s['folder_id'], "folder_name": s['folder_name']})
+                            servers_secured.append({"id": s['id'], "name": s['name'], "region_id": s['region_id'], "region": s['region'], "engine": s['engine'], "version": s['version'], "shared": s['shared'], "region_shared": s['region_shared'], "folder_id": s['folder_id'], "folder_name": s['folder_name']})
                         elif s['region_shared']:
-                            servers_secured.append({"id": s['id'], "name": s['name'], "region": s['region'], "engine": s['engine'], "version": s['version'], "hostname": s['hostname'], "port": s['port'], "username": s['username'], "password": s['password'], "shared": s['shared'], "region_shared": s['region_shared'], "folder_id": s['folder_id'], "folder_name": s['folder_name']})
+                            servers_secured.append({"id": s['id'], "name": s['name'], "region_id": s['region_id'], "region": s['region'], "engine": s['engine'], "version": s['version'], "hostname": s['hostname'], "port": s['port'], "username": s['username'], "password": s['password'], "shared": s['shared'], "region_shared": s['region_shared'], "folder_id": s['folder_id'], "folder_name": s['folder_name']})
                         else:
                             servers_secured.append(s)
                     return jsonify({'servers': servers_secured, 'folders': folders}), 200
@@ -583,7 +583,7 @@ class Client:
             if 'host' not in request.args and 'user' not in request.args:
                 try:
                     rights = conn.get_all_rights()
-                    return jsonify({'rights': rights}), 200
+                    return jsonify({'rights': self.__json(rights)}), 200
                 except Exception as e:
                     return jsonify({"message": "Cannot retrieve the user permissions. Please check if the current user has SELECT privileges on the 'mysql.user' table.", "error": str(e)}), 400
             else:
@@ -608,7 +608,7 @@ class Client:
                 except Exception as e:
                     return jsonify({"message": "Cannot retrieve the user permissions. Please check if the current user has SELECT privileges on the 'mysql.procs_priv' table.", "error": str(e)}), 400
                 syntax = conn.get_rights_syntax(request.args['user'], request.args['host'])
-                return jsonify({'server': server, 'database': database, 'table': table, 'column': column, 'proc': proc, 'syntax': syntax}), 200
+                return jsonify({'server': self.__json(server), 'database': self.__json(database), 'table': self.__json(table), 'column': self.__json(column), 'proc': self.__json(proc), 'syntax': self.__json(syntax)}), 200
 
         @client_blueprint.route('/client/close', methods=['GET'])
         @jwt_required

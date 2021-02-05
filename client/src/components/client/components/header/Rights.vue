@@ -345,7 +345,7 @@ export default {
     parseRightsSidebar(data) {
       if ('rights' in data) {
         var rights = []
-        for (let right of data['rights']) {
+        for (let right of JSON.parse(data['rights'])) {
           let index = rights.findIndex(k => k['name'] == right['user'])
           if (index == -1) rights.push({ id: right['user'], name: right['user'], children: [{ id: right['user'] + '|' + right['host'], user: right['user'], name: right['host'] }] })
           else rights[index]['children'].push({ id: right['user'] + '|' + right['host'], user: right['user'], name: right['host'] })
@@ -354,6 +354,12 @@ export default {
         this.rightsSelected = {}
       }
       else {
+        data['server'] = JSON.parse(data['server'])
+        data['database'] = JSON.parse(data['database'])
+        data['table'] = JSON.parse(data['table'])
+        data['column'] = JSON.parse(data['column'])
+        data['proc'] = JSON.parse(data['proc'])
+        data['syntax'] = JSON.parse(data['syntax'])
         // Login
         const login = {
           username: data['server'][0]['User'],
