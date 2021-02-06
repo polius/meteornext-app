@@ -82,10 +82,8 @@
         <v-subheader v-if="notifications.length == 0" class="justify-center">No Notifications</v-subheader>
         <v-subheader v-else>New notifications</v-subheader>
         <div v-for="notification in notifications" :key="notification['id']">
-          <v-list-item :title="notification['name']" @click="openNotification(notification)">
-            <v-list-item-action style="margin-right:10px;">
-              <v-icon small :title="notification.status.charAt(0).toUpperCase() + notification.status.slice(1).toLowerCase()" :color="notification['status'].toLowerCase()">{{ notification['icon'] }}</v-icon>
-            </v-list-item-action>
+          <v-list-item :title="notification['name']" @click="openNotification(notification)" style="padding-left:0px">
+            <div :style="`margin-right:20px; height:51px; width:5px; background-color:` + getStatusColor(notification['status'])"></div>
             <v-list-item-content>
               <v-list-item-title v-if="notification['category'] == 'deployment'"><v-icon small title="Deployment" color="#e74c3c" style="padding-right:5px;">fas fa-meteor</v-icon> {{ notification['name'] }}</v-list-item-title>
               <v-list-item-title v-else-if="notification['category'] == 'monitoring'"><v-icon small title="Monitoring" color="#fa8231" style="padding-right:5px;">fas fa-desktop</v-icon> {{ notification['name'] }}</v-list-item-title>
@@ -298,6 +296,12 @@ export default {
     },
     parseDate(date) {
       return moment.utc(date).local().format('ddd, DD MMM YYYY HH:mm:ss')
+    },
+    getStatusColor(status) {
+      if (status == 'SUCCESS') return '#4caf50'
+      else if (status == 'WARNING') return '#ff9800'
+      else if (status == 'ERROR') return '#e74c3c'
+      return ''
     },
     notification(message, color) {
       this.snackbarText = message
