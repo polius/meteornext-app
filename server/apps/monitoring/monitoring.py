@@ -60,6 +60,7 @@ class Monitoring:
             t.join()
 
     def clean(self):
+        utcnow = self.__utcnow()
         # Clean monitoring entries
         query = """
             DELETE m
@@ -79,8 +80,19 @@ class Monitoring:
         """
         self._sql.execute(query)
 
+        # Clean monitoring events
+        query = """
+            DELETE FROM monitoring_events
+            WHERE DATE_ADD(`time`, INTERVAL 31 DAY) < %s  
+            FROM monitoring_events m
+            WHERE monitor_enabled = 0 
+            AND parameters_enabled = 0
+            AND processlist_enabled = 0
+            AND queries_enabled = 0
+        """
+        self._sql.execute(query, args=(utcnow))
+
         # Clean queries that exceeds the MAX defined data retention
-        utcnow = self.__utcnow()
         query = """
             DELETE q
             FROM monitoring_queries q
@@ -242,7 +254,10 @@ class Monitoring:
                     self.__slack(slack=s['monitor_slack_url'], server=server, mode=2, error=error)
 
         # Check 'Restarted'
-        if server['monitor']['available'] == 1 and available and self.__str2dict(server['monitor']['summary'])['info']['start_time'] < summary['info']['start_time']:
+        if server['monitor']['available'] == 1 and available and summary['info']['uptime'] < self.__str2dict(server['monitor']['summary'])['info']['uptime']:
+            print("RESTARTED")
+            print(self.__str2dict(server['monitor']['summary'])['info']['uptime'])
+            print(summary['info']['uptime'])
             notification = {
                 'name': '{} has restarted'.format(server['sql']['name']),
                 'status': 'ERROR',
