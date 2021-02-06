@@ -39,6 +39,9 @@
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
+                        <template v-slot:append="{ item }">
+                          <v-chip v-if="!item.children" label><v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
+                        </template>
                       </v-treeview>
                     </v-card-text>
                   </v-card>
@@ -195,11 +198,11 @@ export default {
       var current_region = null
       for (let i = 0; i < servers.length; ++i) {
         if ('r' + servers[i]['region_id'] != current_region) {
-          data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'] }] })
+          data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'] }] })
           current_region = 'r' + servers[i]['region_id']
         } else {
           let row = data.pop()
-          row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'] })
+          row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'] })
           data.push(row)
         }
         // Check selected

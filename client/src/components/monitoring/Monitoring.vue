@@ -107,6 +107,9 @@
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
+                        <template v-slot:append="{ item }">
+                          <v-chip v-if="!item.children" label><v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
+                        </template>
                       </v-treeview>
                     </v-card-text>
                   </v-card>
@@ -149,7 +152,7 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="events_dialog" max-width="75%">
+    <v-dialog v-model="events_dialog" max-width="90%">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-rss</v-icon>EVENTS</v-toolbar-title>
@@ -157,10 +160,17 @@
           <v-btn icon @click="events_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
-          <v-container style="padding:0px">
+          <v-container style="padding:0px; max-width:100%!important">
             <v-layout wrap>
               <v-flex xs12>
                 <v-data-table :headers="events_headers" :items="events_items" :search="events_search" :loading="loading" item-key="id" :hide-default-footer="events_items.length < 11" class="elevation-1" style="margin-top:20px;">
+                  <template v-slot:[`item.status`]="{ item }">
+                    <v-icon v-if="item.status == 'available'" small title="OK" color="#00b16a" style="margin-left:8px;">fas fa-circle</v-icon>
+                    <v-icon v-else small title="Alarm" color="error" style="margin-left:8px;">fas fa-circle</v-icon>
+                  </template>
+                  <template v-slot:[`item.time`]="{ item }">
+                    <span>{{ dateFormat(item.time) }}</span>
+                  </template>
                 </v-data-table>
               </v-flex>
             </v-layout>
@@ -333,11 +343,11 @@
         var current_region = null
         for (let i = 0; i < servers.length; ++i) {
           if ('r' + servers[i]['region_id'] != current_region) {
-            data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'] }] })
+            data.push({ id: 'r' + servers[i]['region_id'], name: servers[i]['region_name'], children: [{ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'] }] })
             current_region = 'r' + servers[i]['region_id']
           } else {
             let row = data.pop()
-            row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'] })
+            row['children'].push({ id: servers[i]['server_id'], name: servers[i]['server_name'], shared: servers[i]['server_shared'] })
             data.push(row)
           }
           // Check selected
