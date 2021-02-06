@@ -169,7 +169,7 @@ class Monitoring:
                         self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], i['DB'], i['USER'], i['HOST'], utcnow, i['TIME'], i['TIME'], i['TIME'], i['TIME'], utcnow))
 
             # Monitoring Alarms
-            self.__monitor_alarms(available=True, server=server, summary=summary, params=params)
+            self.__monitor_alarms(available=True, server=server, summary=summary, params=params, processlist=processlist)
 
             # Parse Variables
             summary = self.__dict2str(summary) if bool(summary) else ''
@@ -194,7 +194,7 @@ class Monitoring:
             if conn:
                 conn.stop()
 
-    def __monitor_alarms(self, available, server, summary=None, params=None, error=None):
+    def __monitor_alarms(self, available, server, summary=None, params=None, processlist=None, error=None):
         # Init vars
         users = None
         slack = None
@@ -241,11 +241,34 @@ class Monitoring:
                 for s in slack:
                     self.__slack(slack=s['monitor_slack_url'], server=server, mode=2, error=error)
 
-        # Check parameters
+        # Check 'Restarted'
+        if server['monitor']['available'] == 1 and available and self.__str2dict(server['monitor']['summary'])['info']['start_time'] < summary['info']['start_time']:
+            notification = {
+                'name': '{} has restarted'.format(server['sql']['name']),
+                'status': 'ERROR',
+                'icon': 'fas fa-circle',
+                'category': 'monitoring',
+                'data': '{{"id":"{}"}}'.format(server['id']),
+                'date': self.__utcnow(),
+                'show': 1
+            }
+            self.__add_event(server_id=server['id'], status='restarted')
+            if users is None:
+                users = self.__get_users_server(server_id=server['id'])
+            for user in users:
+                self._notifications.post(user_id=user['user_id'], notification=notification)
 
-        # Check restarted
+            if slack is None:
+                slack = self.__get_slack_server(server_id=server['id'])
+                for s in slack:
+                    self.__slack(slack=s['monitor_slack_url'], server=server, mode=1, error=error)
+
+        # Check parameters
+        # print(server['monitor']['parameters'])
+        # print(params)
 
         # Check connections
+        # print(processlist)
 
     def __slack(self, slack, server, mode, error):
         if mode == 1:
@@ -300,11 +323,13 @@ class Monitoring:
 
     def __add_event(self, server_id, status, error=None):
         if status == 'unavailable':
-            message = 'The server has become unavailable'
+            message = 'The server has become unavailable.'
             if error:
-                message += '. Error: {}'.format(error)
+                message += '. Error: {}.'.format(error)
         elif status == 'available':
-            mesage = 'The server has become available'
+            message = 'The server has become available.'
+        elif status == 'restarted':
+            message = 'The server has restarted.'
             
         query = "INSERT INTO monitoring_events (`server_id`, `status`, `message`) VALUES (%s, %s, %s)"
         self._sql.execute(query=query, args=(server_id, status, message))
