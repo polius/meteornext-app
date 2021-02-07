@@ -218,7 +218,7 @@ export default {
     },
     getNotificationColor(status) {
       if (status == 'SUCCESS') return '#4caf50'
-      else if (event == 'WARNING') return '#ff9800'
+      else if (status == 'WARNING') return '#ff9800'
       else return '#e74c3c'
     },
     getDeploymentMethodColor(item) {

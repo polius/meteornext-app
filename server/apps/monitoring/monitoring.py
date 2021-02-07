@@ -218,7 +218,7 @@ class Monitoring:
                 'date': self.__utcnow(),
                 'show': 1
             }
-            self.__add_event(server_id=server['id'], event='unavailable', data=data)
+            self.__add_event(server_id=server['id'], event='unavailable', data=error)
             users = self.__get_users_server(server_id=server['id'])
             for user in users:
                 self._notifications.post(user_id=user['user_id'], notification=notification)
