@@ -176,7 +176,7 @@
                     <v-row no-gutters align="center">
                       <v-col cols="auto" :style="`width:5px; height:47px; margin-right:10px; background-color:` + getEventColor(item.event)">
                       </v-col>
-                      <v-col cols="auto">
+                      <v-col cols="auto" class="mr-auto">
                         {{ item.event.toUpperCase() }}
                       </v-col>
                       <v-col v-if="item.event == 'parameters'" cols="auto" style="margin-left:10px">
@@ -198,7 +198,7 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="event_details_dialog" max-width="50%">
+    <v-dialog v-model="event_details_dialog" max-width="65%">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-info</v-icon>PARAMETERS</v-toolbar-title>
@@ -207,7 +207,8 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <div class="white--text body-1">{{ dateFormat(event_details_item.time) }}</div>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-spacer></v-spacer>
+          <v-text-field v-model="events_details_search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+          <v-divider class="ml-3 mr-1" inset vertical></v-divider>
           <v-btn icon @click="event_details_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px;">
@@ -215,7 +216,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
-                  <v-data-table :headers="event_details_headers" :items="event_details_items" :hide-default-footer="event_details_items.length < 11" class="elevation-1" style="margin-top:0px;"></v-data-table>
+                  <v-data-table :headers="event_details_headers" :items="event_details_items" :search="events_details_search" :hide-default-footer="event_details_items.length < 11" class="elevation-1" style="margin-top:0px;"></v-data-table>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -302,6 +303,7 @@
           { text: 'Current Value', align: 'left', value: 'current' },
         ],
         event_details_items: [],
+        events_details_search: '',
 
         // Snackbar
         snackbar: false,
