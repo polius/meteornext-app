@@ -63,22 +63,6 @@
                       <v-select filled v-model="settings.monitor_align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>
                     </v-col>
                   </v-row>
-                  <!-- <div class="subtitle-1 font-weight-regular white--text" style="margin-top:15px">
-                    EVENTS
-                    <v-tooltip right>
-                      <template v-slot:activator="{ on }">
-                        <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
-                      </template>
-                      <span>
-                        <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Unavailable</span>: 
-                      </span>
-                    </v-tooltip>
-                  </div>
-                  <v-checkbox v-model="settings.monitor_events" label="Unavailable" value="unavailable" color="info" style="margin-top:5px;" hide-details></v-checkbox>
-                  <v-checkbox v-model="settings.monitor_events" label="Available" value="available" color="info" style="margin-top:5px;" hide-details></v-checkbox>
-                  <v-checkbox v-model="settings.monitor_events" label="Restarted" value="restarted" color="info" style="margin-top:5px;" hide-details></v-checkbox>
-                  <v-checkbox v-model="settings.monitor_events" label="Parameters" value="parameters" color="info" style="margin-top:5px;" hide-details></v-checkbox>
-                  <v-checkbox v-model="settings.monitor_events" label="Connections" value="connections" color="info" style="margin-top:5px;" hide-details></v-checkbox> -->
                   <div class="subtitle-1 font-weight-regular white--text" style="margin-top:15px">
                     SLACK
                     <v-tooltip right>
@@ -92,13 +76,13 @@
                   </div>
                   <v-switch v-model="settings.monitor_slack_enabled" label="Enable Notifications" color="info" style="margin-top:5px;" hide-details></v-switch>
                   <div v-if="settings.monitor_slack_enabled" style="margin-top:10px">
-                    <v-text-field v-model="settings.monitor_slack_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" hide-details></v-text-field>
+                    <v-text-field ref="slack" v-model="settings.monitor_slack_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" hide-details></v-text-field>
                     <v-btn :loading="loading" @click="testSlack" color="info" style="margin-top:15px">Test Slack</v-btn>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitSettings()">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="#00b16a" @click="submitSettings()">CONFIRM</v-btn>
                   <v-btn :disabled="loading" color="error" @click="settings_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                 </div>
               </v-flex>
@@ -195,17 +179,13 @@
                       <v-col cols="auto">
                         {{ item.event.toUpperCase() }}
                       </v-col>
+                      <v-col v-if="item.event == 'parameters'" cols="auto" style="margin-left:10px">
+                        <v-btn small @click="eventDetails(item)">Details</v-btn>
+                      </v-col>
                     </v-row>
                   </template>
                   <template v-slot:[`item.message`]="{ item }">
-                    <v-row align="center" no-gutters>
-                      <v-col cols="auto">
-                        {{ getEventMessage(item) }}
-                      </v-col>
-                      <v-col v-if="item.event == 'parameters'" cols="auto" style="margin-left:10px">
-                        <v-btn small @click="eventDetails(item)"><v-icon small style="margin-right:10px">fas fa-info</v-icon>Details</v-btn>
-                      </v-col>
-                    </v-row>
+                    {{ getEventMessage(item) }}
                   </template>
                   <template v-slot:[`item.time`]="{ item }">
                     {{ dateFormat(item.time) }}
@@ -342,6 +322,13 @@
     watch: {
       search() {
         this.applyFilter()
+      },
+      'settings.monitor_slack_enabled': function (val) {
+        if (val) {
+          requestAnimationFrame(() => {
+            if (typeof this.$refs.slack !== 'undefined') this.$refs.slack.focus()
+          })
+        }
       }
     },
     methods: {
@@ -539,7 +526,7 @@
         }
         // Test Slack Webhook URL
         this.loading = true
-        const payload = { webhook_url: this.settingsslack_url }
+        const payload = { webhook_url: this.settings.monitor_slack_url }
         axios.get('/monitoring/slack', { params: payload })
           .then((response) => {
             this.notification(response.data.message, '#00b16a')
@@ -551,22 +538,26 @@
           .finally(() => this.loading = false)
       },
       getEventColor(event) {
-        if (event == 'available') return '#4caf50'
-        else if (event == 'restarted') return '#ff9800'
+        if (['available','connections_stable'].includes(event)) return '#4caf50'
+        else if (['restarted','connections_warning'].includes(event)) return '#ff9800'
         else if (event == 'parameters') return '#3e9bef'
         else return '#e74c3c'
       },
       getEventMessage(item) {
+        console.log(item)
         var message = ''
-        if (item.event == 'unavailable') message = 'The server has become unavailable.'
-        else if (item.event == 'available') message = 'The server has become available.'
-        else if (item.event == 'restarted') message = 'The server has restarted.'
-        else if (item.event == 'parameters') message = 'The server has changed parameters.'
-        if (item.error != null) message += ' Error: ' + item.error
+        if (item.event == 'unavailable') message = 'Server is unavailable. Error: ' + item.data
+        else if (item.event == 'available') message = 'Server is available.'
+        else if (item.event == 'restarted') message = 'Server has restarted.'
+        else if (item.event == 'parameters') message = 'Server configuration change detected.'
+        else if (item.event == 'connections_critical') message = 'Server entered in a critical state (Current Connections: ' + item.data + ').'
+        else if (item.event == 'connections_warning') message = 'Server entered in a warning state (Current Connections: ' + item.data + ').'
+        else if (item.event == 'connections_stable') message = 'Server recovered (Current Connections: ' + item.data + ').'
         return message
       },
       eventDetails(item) {
         this.event_details_item = item
+        this.event_details_items = []
         for (const [key, value] of Object.entries(JSON.parse(item.data))) {
           this.event_details_items.push({'variable': key, 'previous': value.previous, 'current': value.current})
         }
