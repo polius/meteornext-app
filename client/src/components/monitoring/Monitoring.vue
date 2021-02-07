@@ -55,8 +55,17 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
-                  <v-select filled v-model="settings.monitor_align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>
-                  <v-text-field filled v-model="settings.monitor_interval" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Data Collection Interval (seconds)" required style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
+                  <v-row no-gutters>
+                    <v-col style="margin-right:5px">
+                      <v-text-field filled v-model="settings.monitor_interval" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Data Collection Interval (seconds)" required hide-details></v-text-field>
+                    </v-col>
+                    <v-col style="margin-left:5px">
+                      <v-select filled v-model="settings.monitor_align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <div class="subtitle-1 font-weight-regular white--text" style="margin-top:15px">EVENTS</div>
+                  <v-switch v-model="settings.monitor_slack_enabled" label="Enable Notifications" color="info" style="margin-top:5px;" hide-details></v-switch>
+
                   <div class="subtitle-1 font-weight-regular white--text" style="margin-top:15px">
                   SLACK
                   <v-tooltip right>
@@ -168,17 +177,57 @@
                 <v-data-table :headers="events_headers" :items="events_items" :search="events_search" :loading="loading" item-key="id" :hide-default-footer="events_items.length < 11" class="elevation-1" style="margin-top:0px;">
                   <template v-slot:[`item.event`]="{ item }">
                     <v-row no-gutters align="center">
-                      <v-col cols="auto" :style="`width:5px; height:47px; margin-right:10px; background-color:` + getStatusColor(item.event)">
+                      <v-col cols="auto" :style="`width:5px; height:47px; margin-right:10px; background-color:` + getEventColor(item.event)">
                       </v-col>
                       <v-col cols="auto">
-                        {{ item.status.toUpperCase() }}
+                        {{ item.event.toUpperCase() }}
+                      </v-col>
+                    </v-row>
+                  </template>
+                  <template v-slot:[`item.message`]="{ item }">
+                    <v-row align="center" no-gutters>
+                      <v-col cols="auto">
+                        {{ getEventMessage(item) }}
+                      </v-col>
+                      <v-col v-if="item.event == 'parameters'" cols="auto" style="margin-left:10px">
+                        <v-btn small @click="eventDetails(item)"><v-icon small style="margin-right:10px">fas fa-info</v-icon>Details</v-btn>
                       </v-col>
                     </v-row>
                   </template>
                   <template v-slot:[`item.time`]="{ item }">
-                    <span>{{ dateFormat(item.time) }}</span>
+                    {{ dateFormat(item.time) }}
                   </template>
                 </v-data-table>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="event_details_dialog" max-width="60%">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-info</v-icon>PARAMETERS</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <div class="white--text body-1">{{ event_details_item.server }}</div>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <div class="white--text body-1">{{ dateFormat(event_details_item.time) }}</div>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="event_details_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:15px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-bottom:15px;">
+                  <v-data-table :headers="event_details_headers" :items="event_details_items" :hide-default-footer="event_details_items.length < 11" class="elevation-1" style="margin-top:0px;"></v-data-table>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-btn color="primary" @click="event_details_dialog = false">CLOSE</v-btn>
+                </div>
               </v-flex>
             </v-layout>
           </v-container>
@@ -250,6 +299,16 @@
         ],
         events_items: [],
         events_search: '',
+
+        // Event Details Dialog
+        event_details_dialog: false,
+        event_details_item: {},
+        event_details_headers: [
+          { text: 'Variable Name', align: 'left', value: 'variable' },
+          { text: 'Previous Value', align: 'left', value: 'previous' },
+          { text: 'Current Value', align: 'left', value: 'current' },
+        ],
+        event_details_items: [],
 
         // Snackbar
         snackbar: false,
@@ -478,9 +537,27 @@
           })
           .finally(() => this.loading = false)
       },
-      getStatusColor(status) {
-        if (status == 'available') return '#4caf50'
+      getEventColor(event) {
+        if (event == 'available') return '#4caf50'
+        else if (event == 'restarted') return '#ff9800'
+        else if (event == 'parameters') return '#3e9bef'
         else return '#e74c3c'
+      },
+      getEventMessage(item) {
+        var message = ''
+        if (item.event == 'unavailable') message = 'The server has become unavailable.'
+        else if (item.event == 'available') message = 'The server has become available.'
+        else if (item.event == 'restarted') message = 'The server has restarted.'
+        else if (item.event == 'parameters') message = 'The server has changed parameters.'
+        if (item.error != null) message += ' Error: ' + item.error
+        return message
+      },
+      eventDetails(item) {
+        this.event_details_item = item
+        for (const [key, value] of Object.entries(JSON.parse(item.data))) {
+          this.event_details_items.push({'variable': key, 'previous': value.previous, 'current': value.current})
+        }
+        this.event_details_dialog = true
       },
       dateFormat(date) {
         if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")

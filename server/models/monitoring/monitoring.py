@@ -62,7 +62,7 @@ class Monitoring:
 
     def get_events(self, user):
         query = """
-            SELECT me.id, s.name AS 'server', me.status, me.message, me.time 
+            SELECT me.id, s.name AS 'server', me.event, me.data, me.time 
             FROM monitoring_events me
             JOIN servers s ON s.id = me.server_id AND s.group_id = %s AND (s.owner_id = %s OR s.shared = 1)
             ORDER BY me.id DESC
