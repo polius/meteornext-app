@@ -545,7 +545,6 @@
         else return '#e74c3c'
       },
       getEventMessage(item) {
-        console.log(item)
         var message = ''
         if (item.event == 'unavailable') message = 'Server is unavailable. Error: ' + item.data
         else if (item.event == 'available') message = 'Server is available.'
