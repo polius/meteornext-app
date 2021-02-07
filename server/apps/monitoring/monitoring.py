@@ -85,7 +85,7 @@ class Monitoring:
         # Clean monitoring events
         query = """
             DELETE FROM monitoring_events
-            WHERE DATE_ADD(`time`, INTERVAL 31 DAY) < %s
+            WHERE DATE_ADD(`time`, INTERVAL 15 DAY) < %s
         """
         self._sql.execute(query, args=(utcnow))
 
@@ -225,7 +225,7 @@ class Monitoring:
 
             slack = self.__get_slack_server(server_id=server['id'])
             for s in slack:
-                self.__slack(slack=s['monitor_slack_url'], server=server, event='unavailabe', data=error)
+                self.__slack(webhook_url=s['monitor_slack_url'], server=server, event='unavailable', data=error)
 
         # Check 'Available'
         if server['monitor']['available'] == 0 and available:
@@ -246,7 +246,7 @@ class Monitoring:
             if slack is None:
                 slack = self.__get_slack_server(server_id=server['id'])
                 for s in slack:
-                    self.__slack(slack=s['monitor_slack_url'], server=server, event='available', data=None)
+                    self.__slack(webhook_url=s['monitor_slack_url'], server=server, event='available', data=None)
 
         # Check 'Restarted'
         if server['monitor']['available'] == 1 and available and summary['info']['uptime'] < self.__str2dict(server['monitor']['summary'])['info']['uptime']:
@@ -267,7 +267,7 @@ class Monitoring:
             if slack is None:
                 slack = self.__get_slack_server(server_id=server['id'])
                 for s in slack:
-                    self.__slack(slack=s['monitor_slack_url'], server=server, event='restarted', data=None)
+                    self.__slack(webhook_url=s['monitor_slack_url'], server=server, event='restarted', data=None)
 
         # Check parameters
         if server['monitor']['available'] == 1 and available:
@@ -277,7 +277,7 @@ class Monitoring:
                 data = { k: {"previous": origin[k], "current":v} for k,v in diff.items() }
                 notification = {
                     'name': 'Server \'{}\' has parameters changed'.format(server['sql']['name']),
-                    'status': 'ERROR',
+                    'status': 'INFO',
                     'category': 'monitoring',
                     'data': '{{"id":"{}"}}'.format(server['id']),
                     'date': self.__utcnow(),
@@ -292,7 +292,7 @@ class Monitoring:
                 if slack is None:
                     slack = self.__get_slack_server(server_id=server['id'])
                     for s in slack:
-                        self.__slack(slack=s['monitor_slack_url'], server=server, event='parameters', data=diff)
+                        self.__slack(webhook_url=s['monitor_slack_url'], server=server, event='parameters', data=data)
 
         # Check connections
         if server['monitor']['available'] == 1 and available:
@@ -333,23 +333,23 @@ class Monitoring:
                 if slack is None:
                     slack = self.__get_slack_server(server_id=server['id'])
                     for s in slack:
-                        self.__slack(slack=s['monitor_slack_url'], server=server, event=event, data=len(queries))
+                        self.__slack(webhook_url=s['monitor_slack_url'], server=server, event=event, data=len(queries))
 
-    def __slack(self, slack, server, event, data):
+    def __slack(self, webhook_url, server, event, data):
         if event == 'unavailable':
-            name = '[Monitoring] Unavailable'
+            name = '[{}] Server is unavailable'.format(server['sql']['name'])
         elif event == 'available':
-            name = '[Monitoring] Available'
+            name = '[{}] Server is available'.format(server['sql']['name'])
         elif event == 'restarted':
-            name = '[Monitoring] Restarted'
+            name = '[{}] Server has restarted'.format(server['sql']['name'])
         elif event == 'parameters':
-            name = '[Monitoring] Parameters'
+            name = '[{}] Server configuration change detected'.format(server['sql']['name'])
         elif event == 'connections_critical':
-            name = '[Monitoring] Critical | Current Connections: {}'.format(data)
+            name = '[{}] Server Critical | Current Connections: {}'.format(server['sql']['name'], data)
         elif event == 'connections_warning':
-            name = '[Monitoring] Warning | Current Connections: {}'.format(data)
+            name = '[{}] Server Warning | Current Connections: {}'.format(server['sql']['name'], data)
         elif event == 'connections_stable':
-            name = '[Monitoring] Stable | Current Connections: {}'.format(data)
+            name = '[{}] Server Stable | Current Connections: {}'.format(server['sql']['name'], data)
 
         webhook_data = {
             "attachments": [
@@ -357,22 +357,12 @@ class Monitoring:
                     "text": name,
                     "fields": [
                         {
-                            "title": "Server",
-                            "value": "```{}```".format(server['sql']['name']),
-                            "short": False
-                        },
-                        {
-                            "title": "Region",
-                            "value": "```{}```".format(server['ssh']['name']),
-                            "short": False
-                        },
-                        {
                             "title": "Hostname",
                             "value": "```{}```".format(server['sql']['hostname']),
                             "short": False
                         }
                     ],
-                    "color": 'good' if event in ['available','connections_stable'] else 'warning' if event in ['connections_warning'] else 'danger',
+                    "color": 'good' if event in ['available','connections_stable'] else 'warning' if event in ['restarted','connections_warning'] else '#3e9cef' if event == 'parameters' else 'danger',
                     "ts": calendar.timegm(time.gmtime())
                 }
             ]
@@ -381,12 +371,12 @@ class Monitoring:
             webhook_data['attachments'][0]['fields'].append({"title": "Error", "value": "```{}```".format(data), "short": False})
         elif event == 'parameters':
             for key, value in data.items():
-                webhook_data['attachments'][0]['fields'].append({"title": "Variable Name", "value": key, "short": False})
+                webhook_data['attachments'][0]['fields'].append({"title": "Variable Name", "value": "`{}`".format(key), "short": False})
                 webhook_data['attachments'][0]['fields'].append({"title": "Previous Value", "value": value['previous'], "short": True})
                 webhook_data['attachments'][0]['fields'].append({"title": "Current Value", "value": value['current'], "short": True})
 
         # Send Slack Message
-        response = requests.post(slack['webhook_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
+        response = requests.post(webhook_url, data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
     
     def __get_users_server(self, server_id):
         query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"

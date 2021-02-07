@@ -295,6 +295,7 @@ export default {
       if (status == 'SUCCESS') return '#4caf50'
       else if (status == 'WARNING') return '#ff9800'
       else if (status == 'ERROR') return '#e74c3c'
+      else if (status == 'INFO') return '#3e9cef'
       return ''
     },
     notification(message, color) {
