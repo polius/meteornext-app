@@ -26,6 +26,7 @@ class Monitoring:
             FROM monitoring m
 			LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id
+            JOIN users u ON u.id = m.user_id AND u.disabled = 0
             JOIN servers s ON s.id = m.server_id
             JOIN regions r ON r.id = s.region_id
 			WHERE ms.updated IS NULL
@@ -83,12 +84,7 @@ class Monitoring:
         # Clean monitoring events
         query = """
             DELETE FROM monitoring_events
-            WHERE DATE_ADD(`time`, INTERVAL 31 DAY) < %s  
-            FROM monitoring_events m
-            WHERE monitor_enabled = 0 
-            AND parameters_enabled = 0
-            AND processlist_enabled = 0
-            AND queries_enabled = 0
+            WHERE DATE_ADD(`time`, INTERVAL 31 DAY) < %s
         """
         self._sql.execute(query, args=(utcnow))
 
@@ -222,14 +218,14 @@ class Monitoring:
                 'date': self.__utcnow(),
                 'show': 1
             }
-            self.__add_event(server_id=server['id'], status='unavailable', error=error)
+            self.__add_event(server_id=server['id'], event='unavailable', data=data)
             users = self.__get_users_server(server_id=server['id'])
             for user in users:
                 self._notifications.post(user_id=user['user_id'], notification=notification)
 
             slack = self.__get_slack_server(server_id=server['id'])
             for s in slack:
-                self.__slack(slack=s['monitor_slack_url'], server=server, mode=1, error=error)
+                self.__slack(slack=s['monitor_slack_url'], server=server, event='unavailabe', data=error)
 
         # Check 'Available'
         if server['monitor']['available'] == 0 and available:
@@ -242,7 +238,7 @@ class Monitoring:
                 'date': self.__utcnow(),
                 'show': 1
             }
-            self.__add_event(server_id=server['id'], status='available')
+            self.__add_event(server_id=server['id'], event='available')
             if users is None:
                 users = self.__get_users_server(server_id=server['id'])
             for user in users:
@@ -251,13 +247,10 @@ class Monitoring:
             if slack is None:
                 slack = self.__get_slack_server(server_id=server['id'])
                 for s in slack:
-                    self.__slack(slack=s['monitor_slack_url'], server=server, mode=2, error=error)
+                    self.__slack(slack=s['monitor_slack_url'], server=server, event='available', data=None)
 
         # Check 'Restarted'
         if server['monitor']['available'] == 1 and available and summary['info']['uptime'] < self.__str2dict(server['monitor']['summary'])['info']['uptime']:
-            print("RESTARTED")
-            print(self.__str2dict(server['monitor']['summary'])['info']['uptime'])
-            print(summary['info']['uptime'])
             notification = {
                 'name': '{} has restarted'.format(server['sql']['name']),
                 'status': 'ERROR',
@@ -267,7 +260,7 @@ class Monitoring:
                 'date': self.__utcnow(),
                 'show': 1
             }
-            self.__add_event(server_id=server['id'], status='restarted')
+            self.__add_event(server_id=server['id'], event='restarted')
             if users is None:
                 users = self.__get_users_server(server_id=server['id'])
             for user in users:
@@ -276,20 +269,46 @@ class Monitoring:
             if slack is None:
                 slack = self.__get_slack_server(server_id=server['id'])
                 for s in slack:
-                    self.__slack(slack=s['monitor_slack_url'], server=server, mode=1, error=error)
+                    self.__slack(slack=s['monitor_slack_url'], server=server, event='restarted', data=None)
 
         # Check parameters
-        # print(server['monitor']['parameters'])
-        # print(params)
+        if server['monitor']['available'] == 1 and available:
+            origin = self.__str2dict(server['monitor']['parameters'])
+            diff = { k : params[k] for k, _ in set(params.items()) - set(origin.items())}
+            if len(diff) > 0:
+                data = { k: {"previous": origin[k], "current":v} for k,v in diff.items() }
+                notification = {
+                    'name': '{} has changed parameters'.format(server['sql']['name']),
+                    'status': 'ERROR',
+                    'icon': 'fas fa-circle',
+                    'category': 'monitoring',
+                    'data': '{{"id":"{}"}}'.format(server['id']),
+                    'date': self.__utcnow(),
+                    'show': 1
+                }
+                self.__add_event(server_id=server['id'], event='parameters', data=self.__dict2str(data))
+                if users is None:
+                    users = self.__get_users_server(server_id=server['id'])
+                for user in users:
+                    self._notifications.post(user_id=user['user_id'], notification=notification)
+
+                if slack is None:
+                    slack = self.__get_slack_server(server_id=server['id'])
+                    for s in slack:
+                        self.__slack(slack=s['monitor_slack_url'], server=server, event='parameters', data=diff)
 
         # Check connections
         # print(processlist)
 
-    def __slack(self, slack, server, mode, error):
-        if mode == 1:
+    def __slack(self, slack, server, event, data):
+        if event == 'unavailable':
             name = '[Monitoring] {} has become unavailable'.format(server['sql']['name'])
-        elif mode == 2:
+        elif event == 'available':
             name = '[Monitoring] {} has become available'.format(server['sql']['name'])
+        elif event == 'restarted':
+            name = '[Monitoring] {} has restarted'.format(server['sql']['name'])
+        elif event == 'parameters':
+            name = '[Monitoring] {} has changed parameters'.format(server['sql']['name'])
 
         webhook_data = {
             "attachments": [
@@ -317,8 +336,13 @@ class Monitoring:
                 }
             ]
         }
-        if error is not None:
-            webhook_data['attachments'][0]['fields'].append({"title": "Error", "value": "```{}```".format(error), "short": False})
+        if data is not None and event == 'unavailable':
+            webhook_data['attachments'][0]['fields'].append({"title": "Error", "value": "```{}```".format(data), "short": False})
+        elif event == 'parameters':
+            for key, value in data.items():
+                webhook_data['attachments'][0]['fields'].append({"title": "Variable Name", "value": key, "short": False})
+                webhook_data['attachments'][0]['fields'].append({"title": "Previous Value", "value": value['previous'], "short": True})
+                webhook_data['attachments'][0]['fields'].append({"title": "Current Value", "value": value['current'], "short": True})
 
         # Send Slack Message
         response = requests.post(slack['webhook_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
@@ -336,18 +360,9 @@ class Monitoring:
         """
         return self._sql.execute(query=query, args=(server_id))
 
-    def __add_event(self, server_id, status, error=None):
-        if status == 'unavailable':
-            message = 'The server has become unavailable.'
-            if error:
-                message += '. Error: {}.'.format(error)
-        elif status == 'available':
-            message = 'The server has become available.'
-        elif status == 'restarted':
-            message = 'The server has restarted.'
-            
-        query = "INSERT INTO monitoring_events (`server_id`, `status`, `message`) VALUES (%s, %s, %s)"
-        self._sql.execute(query=query, args=(server_id, status, message))
+    def __add_event(self, server_id, event, data=None):
+        query = "INSERT INTO monitoring_events (`server_id`, `event`, `data`) VALUES (%s, %s, %s)"
+        self._sql.execute(query=query, args=(server_id, event, data))
 
     def __dict2str(self, data):
         return json.dumps(data, separators=(',', ':'))

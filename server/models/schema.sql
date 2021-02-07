@@ -378,8 +378,8 @@ CREATE TABLE `monitoring_queries` (
 CREATE TABLE `monitoring_events` (
   `id` INT UNSIGNED AUTO_INCREMENT,
   `server_id` INT UNSIGNED NOT NULL,
-  `status` VARCHAR(191) NOT NULL,
-  `message` VARCHAR(191) NOT NULL,
+  `event` VARCHAR(191) NOT NULL,
+  `data` TEXT NULL,
   `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   INDEX `server_id` (`server_id`),

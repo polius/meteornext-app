@@ -17,8 +17,8 @@
             <span><v-icon small :color="item.status.toLowerCase()" :title="item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase()" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ item.name }}</span>
           </template>
           <template v-slot:[`item.category`]="{ item }">
-            <v-icon v-if="item.category == 'deployment'" small color="#e74c3c" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-left:14px;">fas fa-meteor</v-icon>
-            <v-icon v-if="item.category == 'monitoring'" small color="#fa8231" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-left:14px;">fas fa-desktop</v-icon>
+            <div v-if="item.category == 'deployment'"><v-icon small color="#e74c3c" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-left:14px; margin-right:10px;">fas fa-meteor</v-icon>Deployments</div>
+            <div v-else-if="item.category == 'monitoring'"><v-icon small color="#fa8231" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-left:14px; margin-right:10px;">fas fa-desktop</v-icon>Monitoring</div>
           </template>
           <template v-slot:[`item.date`]="{ item }">
             <span>{{ dateFormat(item.date) }}</span>

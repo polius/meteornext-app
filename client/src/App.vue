@@ -85,7 +85,7 @@
           <v-list-item :title="notification['name']" @click="openNotification(notification)" style="padding-left:0px">
             <div :style="`margin-right:20px; height:51px; width:5px; background-color:` + getStatusColor(notification['status'])"></div>
             <v-list-item-content>
-              <v-list-item-title v-if="notification['category'] == 'deployment'"><v-icon small title="Deployment" color="#e74c3c" style="padding-right:5px;">fas fa-meteor</v-icon> {{ notification['name'] }}</v-list-item-title>
+              <v-list-item-title v-if="notification['category'] == 'deployment'"><v-icon small title="Deployment" color="#fa8231" style="padding-right:5px;">fas fa-meteor</v-icon> {{ notification['name'] }}</v-list-item-title>
               <v-list-item-title v-else-if="notification['category'] == 'monitoring'"><v-icon small title="Monitoring" color="#fa8231" style="padding-right:5px;">fas fa-desktop</v-icon> {{ notification['name'] }}</v-list-item-title>
               <v-list-item-subtitle>{{ parseDate(notification['date']) }}</v-list-item-subtitle>
             </v-list-item-content>
@@ -102,12 +102,6 @@
         <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
       </template>
     </v-snackbar>
-    <!-- FOOTER -->
-    <!--
-    <v-footer app v-if="isLoggedIn && showBottomNavbar()" style="height:50px;">
-      <span class="px-3" style="text-align:center; margin-left:auto; margin-right:auto;"> Copyright © 2020 Meteor Next</span>
-    </v-footer>
-    -->
     <!----------->
     <!-- COINS -->
     <!----------->
