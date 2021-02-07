@@ -473,13 +473,14 @@
           return
         }
         // Update settings
+        this.settings.monitor_slack_url = this.settings.monitor_slack_url != null && this.settings.monitor_slack_url.trim().length == 0 ? null : this.settings.monitor_slack_url
         const payload = this.settings
         axios.put('/monitoring/settings', payload)
           .then((response) => {
             this.align = this.settings.monitor_align
             this.interval = this.settings.monitor_interval
-            this.slack_enabled = this.settings.slack_enabled
-            this.slack_url = this.settings.slack_url
+            this.slack_enabled = this.settings.monitor_slack_enabled
+            this.slack_url = this.settings.monitor_slack_url
             this.notification(response.data.message, '#00b16a')
             this.settings_dialog = false
           })
