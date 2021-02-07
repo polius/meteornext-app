@@ -184,7 +184,7 @@ class Basic:
 
         for f in finished:
             # Create notifications
-            notification = {'icon': 'fas fa-circle', 'category': 'deployment'}
+            notification = {'category': 'deployment'}
             notification['name'] = '{} has finished'.format(f['name'])
             notification['status'] = 'ERROR' if f['status'] == 'FAILED' else f['status']
             notification['data'] = '{{"id": "{}", "name": "{}", "mode": "BASIC", "environment": "{}", "method": "{}", "overall": "{}"}}'.format(f['id'], f['name'], f['environment'], f['method'], f['overall'])
