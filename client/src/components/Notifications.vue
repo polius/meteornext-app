@@ -14,14 +14,20 @@
         </v-toolbar>
         <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
           <template v-slot:[`item.name`]="{ item }">
-            <span><v-icon small :color="item.status.toLowerCase()" :title="item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase()" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ item.name }}</span>
+            <v-row no-gutters align="center">
+              <v-col cols="auto" :style="`width:5px; height:47px; margin-right:10px; background-color:` + getNotificationColor(item.status)">
+              </v-col>
+              <v-col cols="auto">
+                {{ item.name }}
+              </v-col>
+            </v-row>
           </template>
           <template v-slot:[`item.category`]="{ item }">
-            <div v-if="item.category == 'deployment'"><v-icon small color="#e74c3c" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-left:14px; margin-right:10px;">fas fa-meteor</v-icon>Deployments</div>
-            <div v-else-if="item.category == 'monitoring'"><v-icon small color="#fa8231" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-left:14px; margin-right:10px;">fas fa-desktop</v-icon>Monitoring</div>
+            <div v-if="item.category == 'deployment'"><v-icon small color="#e74c3c" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-right:10px;">fas fa-meteor</v-icon>Deployments</div>
+            <div v-else-if="item.category == 'monitoring'"><v-icon small color="#fa8231" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-right:10px;">fas fa-desktop</v-icon>Monitoring</div>
           </template>
           <template v-slot:[`item.date`]="{ item }">
-            <span>{{ dateFormat(item.date) }}</span>
+            {{ dateFormat(item.date) }}
           </template>
           <template v-slot:[`item.show`]="{ item }">
             <v-btn icon small @click="changeSeen(item)">
@@ -114,7 +120,7 @@ export default {
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Category', align: 'left', value: 'category' },
       { text: 'Date', align: 'left', value: 'date' },
-      { text: 'Show', align: 'left', value: 'show' }
+      { text: 'Visible', align: 'left', value: 'show' }
     ],
     items: [],
     item: {},
@@ -209,6 +215,11 @@ export default {
     dateFormat(date) {
       if (date) return moment.utc(date).local().format('ddd, DD MMM YYYY HH:mm:ss')
       return date
+    },
+    getNotificationColor(status) {
+      if (status == 'SUCCESS') return '#4caf50'
+      else if (event == 'WARNING') return '#ff9800'
+      else return '#e74c3c'
     },
     getDeploymentMethodColor(item) {
       if (item.data.method == 'VALIDATE') return '#00b16a'

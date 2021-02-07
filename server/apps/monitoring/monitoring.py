@@ -1,9 +1,10 @@
 import time
+import json
 import datetime
 import calendar
 import requests
 import threading
-import json
+import statistics
 from collections import OrderedDict
 
 import connectors.base
@@ -210,9 +211,8 @@ class Monitoring:
         # Check 'Unavailable'
         if server['monitor']['available'] == 1 and not available:
             notification = {
-                'name': '{} has become unavailable'.format(server['sql']['name']),
+                'name': 'Server \'{}\' has become unavailable'.format(server['sql']['name']),
                 'status': 'ERROR',
-                'icon': 'fas fa-circle',
                 'category': 'monitoring',
                 'data': '{{"id":"{}", "error":"{}"}}'.format(server['id'], error),
                 'date': self.__utcnow(),
@@ -230,9 +230,8 @@ class Monitoring:
         # Check 'Available'
         if server['monitor']['available'] == 0 and available:
             notification = {
-                'name': '{} has become available'.format(server['sql']['name']),
+                'name': 'Server \'{}\' has become available'.format(server['sql']['name']),
                 'status': 'SUCCESS',
-                'icon': 'fas fa-circle',
                 'category': 'monitoring',
                 'data': '{{"id":"{}"}}'.format(server['id']),
                 'date': self.__utcnow(),
@@ -252,9 +251,8 @@ class Monitoring:
         # Check 'Restarted'
         if server['monitor']['available'] == 1 and available and summary['info']['uptime'] < self.__str2dict(server['monitor']['summary'])['info']['uptime']:
             notification = {
-                'name': '{} has restarted'.format(server['sql']['name']),
+                'name': 'Server \'{}\' has restarted'.format(server['sql']['name']),
                 'status': 'ERROR',
-                'icon': 'fas fa-circle',
                 'category': 'monitoring',
                 'data': '{{"id":"{}"}}'.format(server['id']),
                 'date': self.__utcnow(),
@@ -278,9 +276,8 @@ class Monitoring:
             if len(diff) > 0:
                 data = { k: {"previous": origin[k], "current":v} for k,v in diff.items() }
                 notification = {
-                    'name': '{} has changed parameters'.format(server['sql']['name']),
+                    'name': 'Server \'{}\' has parameters changed'.format(server['sql']['name']),
                     'status': 'ERROR',
-                    'icon': 'fas fa-circle',
                     'category': 'monitoring',
                     'data': '{{"id":"{}"}}'.format(server['id']),
                     'date': self.__utcnow(),
@@ -298,17 +295,61 @@ class Monitoring:
                         self.__slack(slack=s['monitor_slack_url'], server=server, event='parameters', data=diff)
 
         # Check connections
-        # print(processlist)
+        if server['monitor']['available'] == 1 and available:
+            last_event = self.__get_last_event(server['id'])
+            queries = [int(i['TIME']) for i in processlist if i['COMMAND'] in ['Query','Execute']]
+            queries.sort(reverse=True)
+            event = ''
+            # Connections - Critical [+100 connections. 3 top median >= 300. 5 top avg >= 300 seconds]
+            if len(last_event) == 0 or last_event[0]['event'] != 'connections_critical' and len(queries) >= 100 and statistics.median(queries[:3]) >= 300 and sum(queries[:5])/5 >= 300:
+                notification_name = 'Server \'{}\' Critical | {} Connections'.format(server['sql']['name'], len(queries))
+                notification_status = 'ERROR'
+                event = 'connections_critical'
+            # Connections - Warning [+50 connections. 3 top median >= 60. 5 top avg >= 60 seconds]
+            elif len(last_event) == 0 or last_event[0]['event'] != 'connections_warning' and len(queries) >= 50 and statistics.median(queries[:3]) >= 60 and sum(queries[:5])/5 >= 60:
+                notification_name = 'Server \'{}\' Warning | {} Connections'.format(server['sql']['name'], len(queries))
+                notification_status = 'WARNING'
+                event = 'connections_warning'
+            # Connections - Stable
+            elif len(last_event) != 0 and last_event[0]['event'] in ['connections_warning','connections_critical'] and len(queries) <= 25 and statistics.median(queries[:3]) < 60 and sum(queries[:5])/5 < 60:
+                notification_name = 'Server \'{}\' Stable | {} Connections'.format(server['sql']['name'], len(queries))
+                notification_status = 'SUCCESS'
+                event = 'connections_stable'
+
+            if event != '': 
+                notification = {
+                    'name': notification_name,
+                    'status': notification_status,
+                    'category': 'monitoring',
+                    'data': '{{"id":"{}"}}'.format(server['id']),
+                    'date': self.__utcnow(),
+                    'show': 1
+                }
+                self.__add_event(server_id=server['id'], event=event, data=len(queries))
+                if users is None:
+                    users = self.__get_users_server(server_id=server['id'])
+                for user in users:
+                    self._notifications.post(user_id=user['user_id'], notification=notification)
+                if slack is None:
+                    slack = self.__get_slack_server(server_id=server['id'])
+                    for s in slack:
+                        self.__slack(slack=s['monitor_slack_url'], server=server, event=event, data=len(queries))
 
     def __slack(self, slack, server, event, data):
         if event == 'unavailable':
-            name = '[Monitoring] {} has become unavailable'.format(server['sql']['name'])
+            name = '[Monitoring] Unavailable'
         elif event == 'available':
-            name = '[Monitoring] {} has become available'.format(server['sql']['name'])
+            name = '[Monitoring] Available'
         elif event == 'restarted':
-            name = '[Monitoring] {} has restarted'.format(server['sql']['name'])
+            name = '[Monitoring] Restarted'
         elif event == 'parameters':
-            name = '[Monitoring] {} has changed parameters'.format(server['sql']['name'])
+            name = '[Monitoring] Parameters'
+        elif event == 'connections_critical':
+            name = '[Monitoring] Critical | Current Connections: {}'.format(data)
+        elif event == 'connections_warning':
+            name = '[Monitoring] Warning | Current Connections: {}'.format(data)
+        elif event == 'connections_stable':
+            name = '[Monitoring] Stable | Current Connections: {}'.format(data)
 
         webhook_data = {
             "attachments": [
@@ -331,7 +372,7 @@ class Monitoring:
                             "short": False
                         }
                     ],
-                    "color": 'good' if error is None else 'danger',
+                    "color": 'good' if event in ['available','connections_stable'] else 'warning' if event in ['connections_warning'] else 'danger',
                     "ts": calendar.timegm(time.gmtime())
                 }
             ]
@@ -357,6 +398,17 @@ class Monitoring:
             FROM monitoring_settings ms
             JOIN monitoring m ON m.user_id = ms.user_id AND m.server_id = %s
             WHERE ms.monitor_slack_enabled = 1
+        """
+        return self._sql.execute(query=query, args=(server_id))
+
+    def __get_last_event(self, server_id):
+        query = """
+            SELECT event 
+            FROM monitoring_events
+            WHERE server_id = %s
+            AND event IN ('connections_critical','connections_warning','connections_stable')
+            ORDER BY id DESC
+            LIMIT 1
         """
         return self._sql.execute(query=query, args=(server_id))
 
