@@ -225,7 +225,7 @@ class Monitoring:
 
             slack = self.__get_slack_server(server_id=server['id'])
             for s in slack:
-                self.__slack(webhook_url=s['monitor_slack_url'], server=server, event='unavailable', data=error)
+                self.__slack(slack=s, server=server, event='unavailable', data=error)
 
         # Check 'Available'
         if server['monitor']['available'] == 0 and available:
@@ -246,7 +246,7 @@ class Monitoring:
             if slack is None:
                 slack = self.__get_slack_server(server_id=server['id'])
                 for s in slack:
-                    self.__slack(webhook_url=s['monitor_slack_url'], server=server, event='available', data=None)
+                    self.__slack(slack=s, server=server, event='available', data=None)
 
         # Check 'Restarted'
         if server['monitor']['available'] == 1 and available and summary['info']['uptime'] < self.__str2dict(server['monitor']['summary'])['info']['uptime']:
@@ -267,7 +267,7 @@ class Monitoring:
             if slack is None:
                 slack = self.__get_slack_server(server_id=server['id'])
                 for s in slack:
-                    self.__slack(webhook_url=s['monitor_slack_url'], server=server, event='restarted', data=None)
+                    self.__slack(slack=s, server=server, event='restarted', data=None)
 
         # Check parameters
         if server['monitor']['available'] == 1 and available:
@@ -292,7 +292,7 @@ class Monitoring:
                 if slack is None:
                     slack = self.__get_slack_server(server_id=server['id'])
                     for s in slack:
-                        self.__slack(webhook_url=s['monitor_slack_url'], server=server, event='parameters', data=data)
+                        self.__slack(slack=s, server=server, event='parameters', data=data)
 
         # Check connections
         if server['monitor']['available'] == 1 and available:
@@ -301,12 +301,12 @@ class Monitoring:
             queries.sort(reverse=True)
             event = ''
             # Connections - Critical [+100 connections. 3 top median >= 300 seconds. 5 top avg >= 300 seconds]
-            if len(last_event) == 0 or last_event[0]['event'] != 'connections_critical' and len(queries) >= 100 and median(queries[:3]) >= 300 and sum(queries[:5])/5 >= 300:
+            if (len(last_event) == 0 or last_event[0]['event'] != 'connections_critical') and len(queries) >= 100 and median(queries[:3]) >= 300 and sum(queries[:5])/5 >= 300:
                 notification_name = 'Server \'{}\' Critical | {} Connections'.format(server['sql']['name'], len(queries))
                 notification_status = 'ERROR'
                 event = 'connections_critical'
             # Connections - Warning [+50 connections. 3 top median >= 60 seconds. 5 top avg >= 60 seconds]
-            elif len(last_event) == 0 or last_event[0]['event'] != 'connections_warning' and len(queries) >= 50 and median(queries[:3]) >= 60 and sum(queries[:5])/5 >= 60:
+            elif (len(last_event) == 0 or last_event[0]['event'] != 'connections_warning') and len(queries) >= 50 and median(queries[:3]) >= 60 and sum(queries[:5])/5 >= 60:
                 notification_name = 'Server \'{}\' Warning | {} Connections'.format(server['sql']['name'], len(queries))
                 notification_status = 'WARNING'
                 event = 'connections_warning'
@@ -333,9 +333,9 @@ class Monitoring:
                 if slack is None:
                     slack = self.__get_slack_server(server_id=server['id'])
                     for s in slack:
-                        self.__slack(webhook_url=s['monitor_slack_url'], server=server, event=event, data=len(queries))
+                        self.__slack(slack=s, server=server, event=event, data=len(queries))
 
-    def __slack(self, webhook_url, server, event, data):
+    def __slack(self, slack, server, event, data):
         if event == 'unavailable':
             name = '[{}] Server is unavailable'.format(server['sql']['name'])
         elif event == 'available':
@@ -352,13 +352,13 @@ class Monitoring:
             name = '[{}] Server Stable | Current Connections: {}'.format(server['sql']['name'], data)
 
         webhook_data = {
+            "text": "{}".format(name),
             "attachments": [
                 {
-                    "text": name,
                     "fields": [
                         {
-                            "title": "Hostname",
-                            "value": "```{}```".format(server['sql']['hostname']),
+                            "title": "Information",
+                            "value": "```{}/monitor/{}```".format(slack['monitor_base_url'], server['id']),
                             "short": False
                         }
                     ],
@@ -376,7 +376,7 @@ class Monitoring:
                 webhook_data['attachments'][0]['fields'].append({"title": "Current Value", "value": value['current'], "short": True})
 
         # Send Slack Message
-        response = requests.post(webhook_url, data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
+        response = requests.post(slack['monitor_slack_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
     
     def __get_users_server(self, server_id):
         query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
@@ -384,7 +384,7 @@ class Monitoring:
 
     def __get_slack_server(self, server_id):
         query = """
-            SELECT DISTINCT ms.monitor_slack_url
+            SELECT DISTINCT ms.monitor_slack_url, ms.monitor_base_url
             FROM monitoring_settings ms
             JOIN monitoring m ON m.user_id = ms.user_id AND m.server_id = %s
             WHERE ms.monitor_slack_enabled = 1
