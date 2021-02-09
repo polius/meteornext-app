@@ -3,6 +3,7 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 from flask import Response, stream_with_context
 
 import io
+import re
 import csv
 import json
 import utils
@@ -716,6 +717,7 @@ class Client:
                 yield '# ------------------------------------------------------------\n'
                 try:
                     syntax = conn.get_view_syntax(request.args['database'], view)
+                    syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     yield 'DROP VIEW IF EXISTS `{}`;\n\n'.format(view)
                     yield '{};\n\n'.format(syntax)
                 except Exception as e:
@@ -730,6 +732,7 @@ class Client:
                 yield '# ------------------------------------------------------------\n'
                 try:
                     syntax = conn.get_trigger_syntax(request.args['database'], trigger)
+                    syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     yield 'DROP TRIGGER IF EXISTS `{}`;\n\n'.format(trigger)
                     yield '{};\n\n'.format(syntax)
                 except Exception as e:
@@ -744,6 +747,7 @@ class Client:
                 yield '# ------------------------------------------------------------\n'
                 try:
                     syntax = conn.get_function_syntax(request.args['database'], function)
+                    syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     if syntax:
                         yield 'DROP FUNCTION IF EXISTS `{}`;\n\n'.format(function)
                         yield '{};\n\n'.format(syntax)
@@ -762,6 +766,7 @@ class Client:
                 yield '# ------------------------------------------------------------\n'
                 try:
                     syntax = conn.get_procedure_syntax(request.args['database'], procedure)
+                    syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     if syntax:
                         yield 'DROP PROCEDURE IF EXISTS `{}`;\n\n'.format(procedure)
                         yield '{};\n\n'.format(syntax)
@@ -780,6 +785,7 @@ class Client:
                 yield '# ------------------------------------------------------------\n'
                 try:
                     syntax = conn.get_event_syntax(request.args['database'], event)
+                    syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     yield 'DROP EVENT IF EXISTS `{}`;\n\n'.format(event)
                     yield '{};\n\n'.format(syntax)
                 except Exception as e:

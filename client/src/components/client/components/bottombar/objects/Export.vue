@@ -77,7 +77,7 @@
                 <div style="margin-top:10px; margin-bottom:10px;">
                   <v-progress-linear :indeterminate="step == 'export'" value="100" rounded color="primary" height="25">
                     <template>
-                      {{ progress == 0 ? 'Exporting... Please wait, It might take several minutes' : 'Downloading: ' + this.progress }}
+                      {{ progress == 0 ? 'Exporting... Please wait, It might take several minutes to finish.' : 'Downloading: ' + this.progress }}
                     </template>
                   </v-progress-linear>
                   <div class="body-1" style="margin-top:10px">

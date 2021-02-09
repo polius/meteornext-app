@@ -28,7 +28,7 @@ class Monitoring:
 			LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             LEFT JOIN monitoring_settings mset ON mset.user_id = m.user_id
             JOIN users u ON u.id = m.user_id AND u.disabled = 0
-            JOIN servers s ON s.id = m.server_id
+            JOIN servers s ON s.id = m.server_id AND s.usage LIKE '%%M%%'
             JOIN regions r ON r.id = s.region_id
 			WHERE ms.updated IS NULL
             OR (m.processlist_enabled = 1 AND m.processlist_active = 1)

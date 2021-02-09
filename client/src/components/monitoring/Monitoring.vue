@@ -96,6 +96,9 @@
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-database</v-icon>SERVERS</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="selectAllServers" text title="Select all servers" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
+          <v-btn @click="deselectAllServers" text title="Deselect all servers" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
           <v-spacer></v-spacer>
           <v-btn icon @click="servers_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -565,6 +568,14 @@
           this.event_details_items.push({'variable': key, 'previous': value.previous, 'current': value.current})
         }
         this.event_details_dialog = true
+      },
+      selectAllServers() {
+        this.treeviewOpenedRaw = this.treeviewItems.map(x => x.id) 
+        this.treeviewSelectedRaw = this.treeviewItems.reduce((acc, val) => { acc = acc.concat(val.children.map(x => x.id)); return acc },[])
+      },
+      deselectAllServers() {
+        this.treeviewOpenedRaw = []
+        this.treeviewSelectedRaw = []
       },
       dateFormat(date) {
         if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")

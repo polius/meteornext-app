@@ -440,7 +440,7 @@ export default {
       let exportData = this.items.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
       exportData.unshift(this.header.map(row => row['headerName']).join(','))
       exportData = exportData.join('\r\n')
-      this.download('processlist.csv', exportData)
+      this.download(this.server.name + '.csv', exportData)
     },
     exportAnalyze() {
       let replacer = (key, value) => value === null ? undefined : value
@@ -448,7 +448,7 @@ export default {
       let exportData = this.analyzeItems.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
       exportData.unshift(this.analyzeColumns.map(row => row['headerName']).join(','))
       exportData = exportData.join('\r\n')
-      this.download('processlist_analyze.csv', exportData)
+      this.download(this.server.name + '.csv', exportData)
     },
     settingsProcesslist() {
       this.settingsItem.refresh_rate = this.settings['refresh_rate'] || 5
