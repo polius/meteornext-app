@@ -476,6 +476,7 @@
         }
         // Update settings
         this.settings.monitor_slack_url = this.settings.monitor_slack_url != null && this.settings.monitor_slack_url.trim().length == 0 ? null : this.settings.monitor_slack_url
+        this.settings.monitor_base_url = window.location.origin
         const payload = this.settings
         axios.put('/monitoring/settings', payload)
           .then((response) => {

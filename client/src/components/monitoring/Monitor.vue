@@ -14,7 +14,7 @@
       <v-card-text style="padding-top:10px;">
         <v-card style="margin-bottom:10px;">
           <v-toolbar flat dense color="#424242">
-            <v-toolbar-title v-if="!loading" class="body-1" style="font-size:15px!important;"><v-icon small :title="available ? 'Available' : 'Unavailable'" :color="available ? 'success' : 'error'" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ available ? 'Server up and running' : error }}</v-toolbar-title>
+            <v-toolbar-title v-if="!loading && server_name != ''" class="body-1" style="font-size:15px!important;"><v-icon small :title="available ? 'Available' : 'Unavailable'" :color="available ? 'success' : 'error'" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ available ? 'Server up and running' : error }}</v-toolbar-title>
           </v-toolbar>
         </v-card>
 
@@ -220,32 +220,28 @@ export default {
       // Get Deployment Data
       axios.get('/monitoring', { params: { server_id: this.server_id } })
         .then((response) => {
-          this.parseData(response.data.server)
-          const settings = response.data.settings
-          let refreshRate = (settings.length == 0) ? 5000 : parseInt(settings[0]['monitor_interval']) * 1000
-          this.loading = false
-          clearTimeout(this.timer)
-          this.timer = setTimeout(this.getMonitor, refreshRate)
+          this.parseData(response.data.server, response.data.settings)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
+        .finally(() => this.loading = false)
     },
-    parseData(data) {
-      if (data.length == 0) this.notification("The server does not exist", 'error')
+    parseData(server, settings) {
+      if (server.length == 0) this.notification("This server does not exist", 'error')
       else {
         // Parse Information
-        this.server_name = data[0]['name']
-        this.server_hostname = data[0]['hostname']
-        this.region_name = data[0]['region']
-        this.available = data[0]['available']
-        this.error = data[0]['error']
+        this.server_name = server[0]['name']
+        this.server_hostname = server[0]['hostname']
+        this.region_name = server[0]['region']
+        this.available = server[0]['available']
+        this.error = server[0]['error']
 
         // Parse Summary
-        var summary = JSON.parse(data[0]['summary'])
+        var summary = JSON.parse(server[0]['summary'])
         if (summary == null) {
-          this.summary_items = (data[0]['available'] == null) ? [{ available: -1 }] : [{ available: data[0]['available'] }]
+          this.summary_items = (server[0]['available'] == null) ? [{ available: -1 }] : [{ available: server[0]['available'] }]
         }
         else {
           this.summary_items = [summary.info]
@@ -253,25 +249,30 @@ export default {
           if ('connections' in summary) this.connections_items = [summary.connections]
           if ('statements' in summary) this.statements_items = [summary.statements]
           if ('index' in summary) this.indexes_items = [summary.index]
-          this.summary_items[0]['available'] = data[0]['available']
+          this.summary_items[0]['available'] = server[0]['available']
         }
 
         // Parse Parameters
         this.params_items = []
-        var params = JSON.parse(data[0]['parameters'])
+        var params = JSON.parse(server[0]['parameters'])
         for (let key in params) this.params_items.push({'name': key, 'value': params[key]})
 
         // Parse Processlist
         this.processlist_headers = []
         this.processlist_items = []
-        var threads = JSON.parse(data[0]['processlist'])
+        var threads = JSON.parse(server[0]['processlist'])
         if (threads && threads.length > 0) {
           for (let key in threads[0]) this.processlist_headers.push({ text: key, align: 'left', value: key })
           for (let i = 0; i < threads.length; ++i) this.processlist_items.push(threads[i])
         }
 
         // Parse Updated
-        this.updated = data[0]['updated']
+        this.updated = server[0]['updated']
+
+        // Set timeout
+        let refreshRate = (settings.length == 0) ? 5000 : parseInt(settings[0]['monitor_interval']) * 1000
+        clearTimeout(this.timer)
+        this.timer = setTimeout(this.getMonitor, refreshRate)
       }
     },
     dateFormat(date) {
