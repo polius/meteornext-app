@@ -16,7 +16,7 @@
                     <div v-if="start" style="margin-top:15px">
                       <v-progress-linear :value="progress" rounded color="primary" height="25">
                         <template v-slot="{ value }">
-                          {{ 'Uploading: ' + Math.ceil(value) }}%
+                          {{ (progress == 100) ? 'Importing... Please wait, It might take several minutes to finish.' : 'Uploading: ' + Math.ceil(value) + '%' }}
                         </template>
                       </v-progress-linear>
                       <div class="body-1" style="margin-top:10px">

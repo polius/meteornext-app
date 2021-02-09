@@ -9,6 +9,7 @@ class Monitoring:
             JOIN servers s ON s.id = ms.server_id AND s.id = %s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %s
             WHERE (s.shared = 1 OR s.owner_id = %s)
+            AND s.usage LIKE '%%M%%'
         """
         return self._sql.execute(query, (server_id, user['group_id'], user['id']))
 
@@ -20,6 +21,7 @@ class Monitoring:
             LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             WHERE (s.shared = 1 OR s.owner_id = %s)
+            AND s.usage LIKE '%%M%%'
             ORDER BY r.name, s.name;
         """
         return self._sql.execute(query, (user['group_id'], user['id'], user['id']))
