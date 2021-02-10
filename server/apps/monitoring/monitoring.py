@@ -163,8 +163,8 @@ class Monitoring:
                     if i['TIME'] >= server['monitor']['query_execution_time'] and i['COMMAND'] in ['Query','Execute']:
                         db = '' if i['DB'] is None else i['DB']
                         query = """
-                            INSERT INTO monitoring_queries (server_id, query_id, query_text, query_hash, db, user, host, first_seen, last_execution_time, max_execution_time, bavg_execution_time, avg_execution_time)
-                            VALUES (%s, %s, %s, SHA1(%s), %s, %s, %s, %s, %s, %s, %s, %s)
+                            INSERT INTO monitoring_queries (server_id, query_id, query_text, query_hash, db, user, host, first_seen, last_seen, last_execution_time, max_execution_time, bavg_execution_time, avg_execution_time)
+                            VALUES (%s, %s, %s, SHA1(%s), %s, %s, %s, %s, %s, %s, %s, %s, %s)
                             ON DUPLICATE KEY UPDATE
                                 user = VALUES(user),
                                 host = VALUES(host),
@@ -176,7 +176,7 @@ class Monitoring:
                                 count = IF(query_id = VALUES(query_id), count, count+1),
                                 query_id = VALUES(query_id);
                         """
-                        self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], db, i['USER'], i['HOST'], utcnow, i['TIME'], i['TIME'], i['TIME'], i['TIME'], utcnow))
+                        self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], db, i['USER'], i['HOST'], utcnow, utcnow, i['TIME'], i['TIME'], i['TIME'], i['TIME'], utcnow))
 
             # Monitoring Alarms
             self.__monitor_alarms(available=True, server=server, summary=summary, params=params, processlist=processlist)
