@@ -15,10 +15,10 @@ class Monitoring:
 
     def get_monitoring(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.monitor_enabled = 1) AS 'selected', ms.available, ms.summary, ms.error, ms.updated
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.monitor_enabled IS NOT NULL AND m.monitor_enabled = 1) AS 'selected', ms.available, ms.summary, ms.error, ms.updated
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-            JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
+            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             WHERE (s.shared = 1 OR s.owner_id = %s)
             AND s.usage LIKE '%%M%%'
@@ -28,36 +28,39 @@ class Monitoring:
 
     def get_parameters(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.parameters_enabled = 1) AS 'selected', ms.available, ms.parameters, ms.updated
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.parameters_enabled IS NOT NULL AND m.parameters_enabled = 1) AS 'selected', ms.available, ms.parameters, ms.updated
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-            JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
+            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             WHERE (s.shared = 1 OR s.owner_id = %s)
+            AND s.usage LIKE '%%M%%'
             ORDER BY r.name, s.name;
         """
         return self._sql.execute(query, (user['group_id'], user['id'], user['id']))
 
     def get_processlist(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.processlist_enabled = 1) AS 'selected', ms.available, ms.processlist, ms.updated
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.processlist_enabled IS NOT NULL AND m.processlist_enabled = 1) AS 'selected', ms.available, ms.processlist, ms.updated
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-            JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
+            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             WHERE (s.shared = 1 OR s.owner_id = %s)
+            AND s.usage LIKE '%%M%%'
             ORDER BY r.name, s.name;
         """
         return self._sql.execute(query, (user['group_id'], user['id'], user['id']))
 
     def get_queries(self, user):
         query = """
-            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.queries_enabled = 1) AS 'selected'
+            SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.queries_enabled IS NOT NULL AND m.queries_enabled = 1) AS 'selected'
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-            JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
+            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             WHERE (s.shared = 1 OR s.owner_id = %s)
+            AND s.usage LIKE '%%M%%'
             ORDER BY r.name, s.name;
         """
         return self._sql.execute(query, (user['group_id'], user['id'], user['id']))
