@@ -143,7 +143,6 @@
 <style>
 a { text-decoration: none; }
 html { overflow-y: auto!important; }
-.no-scroll { overflow: hidden; }
 
 ::-webkit-scrollbar {
   -webkit-appearance: none;
@@ -200,21 +199,33 @@ export default {
   },
   methods: {
     fullScreen() {
-      if (this.fullScreenEnabled) {
-        document.exitFullscreen()
-        // .then(() => {
-          // var a = Array.prototype.indexOf.call(document.body.classList, 'no-scroll') + 1;
-          // document.body.className = document.body.className.replace(' no-scroll', '');
-          // if (off === false || (off !== true && !a)) document.body.className += " no-scroll";
-        //})
-        .catch(() => {})
-        .finally(() => this.fullScreenEnabled = false)
+      if (!this.fullScreenEnabled) {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen()
+          .catch(() => this.notification('This browser does not support full screen', 'error'))
+          .finally(() => this.fullScreenEnabled = true)
+        } 
+        else if (document.documentElement.mozRequestFullScreen) {
+          document.documentElement.mozRequestFullScreen()
+          .catch(() => this.notification('This browser does not support full screen', 'error'))
+          .finally(() => this.fullScreenEnabled = true)
+        } 
+        else if (document.documentElement.webkitRequestFullscreen) {
+          document.documentElement.webkitRequestFullscreen()
+          .catch(() => this.notification('This browser does not support full screen', 'error'))
+          .finally(() => this.fullScreenEnabled = true)
+        } 
+        else if (document.documentElement.msRequestFullscreen) {
+          document.documentElement.msRequestFullscreen()
+          .catch(() => this.notification('This browser does not support full screen', 'error'))
+          .finally(() => this.fullScreenEnabled = true)
+        }
       }
       else {
-        document.body.requestFullscreen()
-        // .then(() => /* document.body.className += ' no-scroll' */)
-        .catch(() => this.notification('This browser does not support full screen', 'error'))
-        .finally(() => this.fullScreenEnabled = true)
+        if (document.exitFullscreen) document.exitFullscreen()
+        else if (document.mozCancelFullScreen) document.mozCancelFullScreen()
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen()
+        this.fullScreenEnabled = false
       }
     },
     logout() {
