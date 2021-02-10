@@ -17,6 +17,16 @@
     </v-col>
     <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
       <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
+        <v-menu v-model="queryFavMenu" offset-y :close-on-content-click="false" min-width="385px">
+          <template v-slot:activator="{ attrs, on }">
+            <v-btn @click="openFavourites()" v-bind="attrs" v-on="on" title="Query Favourites" style="min-width:52px"><v-icon small style="font-size:15px">far fa-star</v-icon></v-btn>
+          </template>
+          <v-autocomplete v-model="queryFavItem" @change="queryFavMenu = false" ref="queryFav" dense filled no-data-text="No queries found" :items="queryFavItems" style="margin-top:7px;" no-gutters></v-autocomplete>
+        </v-menu>
+      </div>
+    </v-col>
+    <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
+      <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
         <v-btn :disabled="['query','stop'].includes(clientExecuting) || clientQuery['query'].length == 0" @click="beautifyQuery()" title="Beautify Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-stream</v-icon></v-btn>
       </div>
     </v-col>
@@ -50,6 +60,7 @@
 
 <style scoped>
 .v-tabs-active { background-color: #353535; }
+.v-list { padding:0px!important; }
 </style>
 
 <script>
@@ -63,7 +74,10 @@ export default {
     return {
       dragOptions: {
         animation: 200,
-      }
+      },
+      queryFavItems: [],
+      queryFavItem: null,
+      queryFavMenu: false,
     }
   },
   components: { draggable },
@@ -137,6 +151,14 @@ export default {
     },
     minifyQuery() {
       EventBus.$emit('minify-query')
+    },
+    openFavourites() {
+      if (!this.queryFavMenu) {
+        this.queryFavItem = null
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.queryFav !== 'undefined') setTimeout(() => {  this.$refs.queryFav.focus(); this.$refs.queryFav.isMenuActive = true; },100)
+        })
+      }
     },
     // Listeners
     listeners(e) {
