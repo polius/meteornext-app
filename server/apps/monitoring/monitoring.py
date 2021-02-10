@@ -245,8 +245,9 @@ class Monitoring:
 
             if slack is None:
                 slack = self.__get_slack_server(server_id=server['id'])
-                for s in slack:
-                    self.__slack(slack=s, server=server, event='available', data=None)
+            for s in slack:
+                self.__slack(slack=s, server=server, event='available', data=None)
+                
 
         # Check 'Restarted'
         info = None if server['monitor']['summary'] is None else self.__str2dict(server['monitor']['summary'])['info']
@@ -268,8 +269,8 @@ class Monitoring:
             data = {'previous_uptime': info['uptime'], 'previous_start_time': info['start_time'], 'current_uptime': summary['info']['uptime'], 'current_start_time': summary['info']['start_time']}
             if slack is None:
                 slack = self.__get_slack_server(server_id=server['id'])
-                for s in slack:
-                    self.__slack(slack=s, server=server, event='restarted', data=data)
+            for s in slack:
+                self.__slack(slack=s, server=server, event='restarted', data=data)
 
         # Check parameters
         if server['monitor']['available'] == 1 and available:
@@ -293,8 +294,8 @@ class Monitoring:
 
                 if slack is None:
                     slack = self.__get_slack_server(server_id=server['id'])
-                    for s in slack:
-                        self.__slack(slack=s, server=server, event='parameters', data=data)
+                for s in slack:
+                    self.__slack(slack=s, server=server, event='parameters', data=data)
 
         # Check connections
         if server['monitor']['available'] == 1 and available:
@@ -334,8 +335,8 @@ class Monitoring:
                     self._notifications.post(user_id=user['user_id'], notification=notification)
                 if slack is None:
                     slack = self.__get_slack_server(server_id=server['id'])
-                    for s in slack:
-                        self.__slack(slack=s, server=server, event=event, data=len(queries))
+                for s in slack:
+                    self.__slack(slack=s, server=server, event=event, data=len(queries))
 
     def __slack(self, slack, server, event, data):
         if event == 'unavailable':
@@ -369,14 +370,14 @@ class Monitoring:
                 }
             ]
         }
-        if data is not None and event == 'unavailable':
+        if event == 'unavailable':
             webhook_data['attachments'][0]['fields'].append({"title": "Error", "value": "```{}```".format(data), "short": False})
         elif event == 'parameters':
             for key, value in data.items():
                 webhook_data['attachments'][0]['fields'].append({"title": "Variable Name", "value": "`{}`".format(key), "short": False})
                 webhook_data['attachments'][0]['fields'].append({"title": "Previous Value", "value": value['previous'], "short": True})
                 webhook_data['attachments'][0]['fields'].append({"title": "Current Value", "value": value['current'], "short": True})
-        if event == 'restarted':
+        elif event == 'restarted':
             webhook_data['attachments'][0]['fields'].append({"title": "Previous Uptime", "value": data['previous_uptime'], "short": True})
             webhook_data['attachments'][0]['fields'].append({"title": "Previous Start Time", "value": data['previous_start_time'], "short": True})
             webhook_data['attachments'][0]['fields'].append({"title": "Current Uptime", "value": data['current_uptime'], "short": True})
