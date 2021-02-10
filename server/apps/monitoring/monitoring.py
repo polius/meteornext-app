@@ -151,7 +151,7 @@ class Monitoring:
             # Build Summary
             summary = {}
             if server['monitor']['monitor_enabled']:
-                summary['info'] = {'version': params.get('version'), 'uptime': str(datetime.timedelta(seconds=int(status['Uptime']))), 'start_time': str((datetime.datetime.now() - datetime.timedelta(seconds=int(status['Uptime']))).replace(microsecond=0)), 'engine': server['sql']['engine'], 'sql_engine': params.get('default_storage_engine'), 'allocated_memory': params.get('innodb_buffer_pool_size'), 'time_zone': params.get('time_zone')}
+                summary['info'] = {'version': params.get('version'), 'raw_uptime': status['Uptime'], 'uptime': str(datetime.timedelta(seconds=int(status['Uptime']))), 'start_time': str((datetime.datetime.now() - datetime.timedelta(seconds=int(status['Uptime']))).replace(microsecond=0)), 'engine': server['sql']['engine'], 'sql_engine': params.get('default_storage_engine'), 'allocated_memory': params.get('innodb_buffer_pool_size'), 'time_zone': params.get('time_zone')}
                 summary['logs'] = {'general_log': params.get('general_log'), 'general_log_file': params.get('general_log_file'), 'slow_log': params.get('slow_query_log'), 'slow_log_file': params.get('slow_query_log_file'), 'error_log_file': params.get('log_error')}
                 summary['connections'] = {'current': status.get('Threads_connected'), 'max_connections_allowed': params.get('max_connections'), 'max_connections_reached': "{:.2f}%".format((int(status.get('Max_used_connections')) / int(params.get('max_connections'))) * 100), 'max_allowed_packet': params.get('max_allowed_packet'), 'transaction_isolation': params.get('tx_isolation'), 'bytes_received': status.get('Bytes_received'), 'bytes_sent': status.get('Bytes_sent')}
                 summary['statements'] = {'all': status.get('Questions'), 'select': int(status.get('Com_select')) + int(status.get('Qcache_hits')), 'insert': int(status.get('Com_insert')) + int(status.get('Com_insert_select')), 'update': int(status.get('Com_update')) + int(status.get('Com_update_multi')), 'delete': int(status.get('Com_delete')) + int(status.get('Com_delete_multi'))}
@@ -249,7 +249,8 @@ class Monitoring:
                     self.__slack(slack=s, server=server, event='available', data=None)
 
         # Check 'Restarted'
-        if server['monitor']['available'] == 1 and available and summary['info']['uptime'] < self.__str2dict(server['monitor']['summary'])['info']['uptime']:
+        info = None if server['monitor']['summary'] is None else self.__str2dict(server['monitor']['summary'])['info']
+        if summary is not None and info is not None and int(summary['info']['raw_uptime']) < int(info['raw_uptime']):
             notification = {
                 'name': 'Server \'{}\' has restarted'.format(server['sql']['name']),
                 'status': 'ERROR',
@@ -264,10 +265,11 @@ class Monitoring:
             for user in users:
                 self._notifications.post(user_id=user['user_id'], notification=notification)
 
+            data = {'previous_uptime': info['uptime'], 'previous_start_time': info['start_time'], 'current_uptime': summary['info']['uptime'], 'current_start_time': summary['info']['start_time']}
             if slack is None:
                 slack = self.__get_slack_server(server_id=server['id'])
                 for s in slack:
-                    self.__slack(slack=s, server=server, event='restarted', data=None)
+                    self.__slack(slack=s, server=server, event='restarted', data=data)
 
         # Check parameters
         if server['monitor']['available'] == 1 and available:
@@ -374,7 +376,11 @@ class Monitoring:
                 webhook_data['attachments'][0]['fields'].append({"title": "Variable Name", "value": "`{}`".format(key), "short": False})
                 webhook_data['attachments'][0]['fields'].append({"title": "Previous Value", "value": value['previous'], "short": True})
                 webhook_data['attachments'][0]['fields'].append({"title": "Current Value", "value": value['current'], "short": True})
-
+        if event == 'restarted':
+            webhook_data['attachments'][0]['fields'].append({"title": "Previous Uptime", "value": data['previous_uptime'], "short": True})
+            webhook_data['attachments'][0]['fields'].append({"title": "Previous Start Time", "value": data['previous_start_time'], "short": True})
+            webhook_data['attachments'][0]['fields'].append({"title": "Current Uptime", "value": data['current_uptime'], "short": True})
+            webhook_data['attachments'][0]['fields'].append({"title": "Current Start Time", "value": data['current_start_time'], "short": True})
         # Send Slack Message
         response = requests.post(slack['monitor_slack_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
     
