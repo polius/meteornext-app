@@ -69,7 +69,8 @@
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
-                      <v-treeview :active.sync="treeviewSelectedRaw" item-key="id" :items="treeviewItems" :open="treeviewOpenedRaw" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                      <div v-if="treeviewItems.length == 0" class="body-2" style="text-align:center">No servers available</div>
+                      <v-treeview v-else :active.sync="treeviewSelectedRaw" item-key="id" :items="treeviewItems" :open="treeviewOpenedRaw" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>

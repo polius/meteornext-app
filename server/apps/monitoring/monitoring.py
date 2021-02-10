@@ -203,7 +203,7 @@ class Monitoring:
             if conn:
                 conn.stop()
 
-    def __monitor_alarms(self, available, server, summary=None, params=None, processlist=None, error=None):
+    def __monitor_alarms(self, available, server, summary={}, params={}, processlist=[], error=None):
         # Init vars
         users = None
         slack = None
@@ -251,10 +251,10 @@ class Monitoring:
 
         # Check 'Restarted'
         info = None if server['monitor']['summary'] is None else self.__str2dict(server['monitor']['summary'])['info']
-        if summary is not None and info is not None and int(summary['info']['raw_uptime']) < int(info['raw_uptime']):
+        if summary and info and int(summary['info']['raw_uptime']) < int(info['raw_uptime']):
             notification = {
                 'name': 'Server \'{}\' has restarted'.format(server['sql']['name']),
-                'status': 'ERROR',
+                'status': 'WARNING',
                 'category': 'monitoring',
                 'data': '{{"id":"{}"}}'.format(server['id']),
                 'date': self.__utcnow(),

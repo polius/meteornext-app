@@ -11,7 +11,7 @@
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field @change="applyFilter" v-model="search" append-icon="search" label="Search" color="white" style="margin-left:5px;" single-line hide-details></v-text-field>
-        <v-divider class="mx-3" inset vertical></v-divider>
+        <v-divider v-if="available_servers" class="mx-3" inset vertical></v-divider>
         <v-progress-circular v-if="loading || pending_servers" indeterminate size="20" width="2" color="white"></v-progress-circular>
         <div v-if="loading || pending_servers" class="subheading font-weight-regular" style="margin-left:10px; padding-right:10px;">Loading servers...</div>
         <div v-else-if="!loading && !pending_servers && last_updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
@@ -112,7 +112,8 @@
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
-                      <v-treeview :active.sync="treeviewSelectedRaw" item-key="id" :items="treeviewItems" :open="treeviewOpenedRaw" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                      <div v-if="treeviewItems.length == 0" class="body-2" style="text-align:center">No servers available</div>
+                      <v-treeview v-else :active.sync="treeviewSelectedRaw" item-key="id" :items="treeviewItems" :open="treeviewOpenedRaw" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -254,6 +255,7 @@
         last_updated: null,
         servers: [],
         servers_origin: [],
+        available_servers: true,
         search: '',
         pending_servers: true,
         serverRefs: [],
@@ -343,19 +345,23 @@
       getMonitoring(refresh=true) {
         if (refresh || !this.active) clearTimeout(this.timer)
         if (!this.active) return
-        axios.get('/monitoring')
-        .then((response) => {
-          this.parseServers(response.data.servers)
-          this.parseEvents(response.data.events)
-          this.parseTreeView(response.data.servers)
-          this.parseLastUpdated(response.data.servers)
-          if (refresh) setTimeout(this.getMonitoring, parseInt(this.settings.monitor_interval) * 1000, true)
-        })
-        .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
-        })
-        .finally(() => this.loading = false)
+        else if (refresh && !this.available_servers) setTimeout(this.getMonitoring, parseInt(this.settings.monitor_interval) * 1000, true)
+        else {
+          axios.get('/monitoring')
+          .then((response) => {
+            this.parseServers(response.data.servers)
+            this.parseEvents(response.data.events)
+            this.parseTreeView(response.data.servers)
+            this.parseLastUpdated(response.data.servers)
+            this.available_servers = response.data.servers.some(x => x.selected)
+            if (refresh) setTimeout(this.getMonitoring, parseInt(this.settings.monitor_interval) * 1000, true)
+          })
+          .catch((error) => {
+            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          })
+          .finally(() => this.loading = false)
+        }
       },
       openSettings() {
         this.settings = { monitor_align: this.align, monitor_interval: this.interval, monitor_slack_enabled: this.slack_enabled, monitor_slack_url: this.slack_url },

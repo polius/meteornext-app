@@ -48,7 +48,8 @@
                       <v-text-field v-model="treeviewSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding: 10px;">
-                      <v-treeview :active.sync="treeviewSelectedRaw" item-key="id" :items="treeviewItems" :open="treeviewOpenedRaw" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
+                      <div v-if="treeviewItems.length == 0" class="body-2" style="text-align:center">No servers available</div>
+                      <v-treeview v-else :active.sync="treeviewSelectedRaw" item-key="id" :items="treeviewItems" :open="treeviewOpenedRaw" :search="treeviewSearch" hoverable open-on-click multiple-active activatable transition>
                         <template v-slot:prepend="{ item }">
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
@@ -115,7 +116,8 @@ export default {
     active: true,
     loading: true,
     timer: null,
-    pending_servers: true, 
+    pending_servers: true,
+    available_servers: true,
     last_updated: null,
 
     // Processlist
@@ -164,18 +166,22 @@ export default {
     getProcesslist(refresh=true) {
       if (refresh || !this.active) clearTimeout(this.timer)
       if (!this.active) return
-      axios.get('/monitoring/processlist')
-        .then((response) => {
-          this.parseProcesslist(response.data.data)
-          this.parseTreeView(response.data.data)
-          this.parseLastUpdated(response.data.data)
-          if (refresh && !this.stopped) this.timer = setTimeout(this.getProcesslist, this.treeviewItems.length == 0 ? 10000 : 5000, true)
-        })
-        .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
-        })
-        .finally(() => this.loading = false)
+      else if (refresh && !this.available_servers) setTimeout(this.getProcesslist, this.treeviewItems.length == 0 ? 10000 : 5000, true)
+      else {
+        axios.get('/monitoring/processlist')
+          .then((response) => {
+            this.parseProcesslist(response.data.data)
+            this.parseTreeView(response.data.data)
+            this.parseLastUpdated(response.data.data)
+            this.available_servers = response.data.data.some(x => x.selected)
+            if (refresh && !this.stopped) this.timer = setTimeout(this.getProcesslist, this.treeviewItems.length == 0 ? 10000 : 5000, true)
+          })
+          .catch((error) => {
+            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          })
+          .finally(() => this.loading = false)
+      }
     },
     parseProcesslist(data) {
       this.processlist_metadata = {}

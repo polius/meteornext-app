@@ -18,7 +18,7 @@ class Monitoring:
             SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.monitor_enabled = 1) AS 'selected', ms.available, ms.summary, ms.error, ms.updated
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
+            JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             WHERE (s.shared = 1 OR s.owner_id = %s)
             AND s.usage LIKE '%%M%%'
@@ -31,7 +31,7 @@ class Monitoring:
             SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.parameters_enabled = 1) AS 'selected', ms.available, ms.parameters, ms.updated
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
+            JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             WHERE (s.shared = 1 OR s.owner_id = %s)
             ORDER BY r.name, s.name;
@@ -43,7 +43,7 @@ class Monitoring:
             SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.processlist_enabled = 1) AS 'selected', ms.available, ms.processlist, ms.updated
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
+            JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             WHERE (s.shared = 1 OR s.owner_id = %s)
             ORDER BY r.name, s.name;
@@ -55,7 +55,7 @@ class Monitoring:
             SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name', s.hostname, (m.queries_enabled = 1) AS 'selected'
             FROM servers s
 			JOIN regions r ON r.id = s.region_id AND r.group_id = %s
-            LEFT JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
+            JOIN monitoring m ON m.server_id = s.id AND m.user_id = %s
             LEFT JOIN monitoring_servers ms ON ms.server_id = m.server_id
             WHERE (s.shared = 1 OR s.owner_id = %s)
             ORDER BY r.name, s.name;

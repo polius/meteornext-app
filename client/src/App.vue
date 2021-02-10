@@ -143,6 +143,7 @@
 <style>
 a { text-decoration: none; }
 html { overflow-y: auto!important; }
+.no-scroll { overflow: hidden; }
 
 ::-webkit-scrollbar {
   -webkit-appearance: none;
@@ -201,11 +202,17 @@ export default {
     fullScreen() {
       if (this.fullScreenEnabled) {
         document.exitFullscreen()
+        // .then(() => {
+          // var a = Array.prototype.indexOf.call(document.body.classList, 'no-scroll') + 1;
+          // document.body.className = document.body.className.replace(' no-scroll', '');
+          // if (off === false || (off !== true && !a)) document.body.className += " no-scroll";
+        //})
         .catch(() => {})
         .finally(() => this.fullScreenEnabled = false)
       }
       else {
         document.body.requestFullscreen()
+        // .then(() => /* document.body.className += ' no-scroll' */)
         .catch(() => this.notification('This browser does not support full screen', 'error'))
         .finally(() => this.fullScreenEnabled = true)
       }
