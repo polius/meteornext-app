@@ -200,33 +200,17 @@ export default {
   methods: {
     fullScreen() {
       if (!this.fullScreenEnabled) {
-        if (document.documentElement.requestFullscreen) {
-          document.documentElement.requestFullscreen()
-          .catch(() => this.notification('This browser does not support full screen', 'error'))
-          .finally(() => this.fullScreenEnabled = true)
-        } 
-        else if (document.documentElement.mozRequestFullScreen) {
-          document.documentElement.mozRequestFullScreen()
-          .catch(() => this.notification('This browser does not support full screen', 'error'))
-          .finally(() => this.fullScreenEnabled = true)
-        } 
-        else if (document.documentElement.webkitRequestFullscreen) {
-          document.documentElement.webkitRequestFullscreen()
-          .catch(() => this.notification('This browser does not support full screen', 'error'))
-          .finally(() => this.fullScreenEnabled = true)
-        } 
-        else if (document.documentElement.msRequestFullscreen) {
-          document.documentElement.msRequestFullscreen()
-          .catch(() => this.notification('This browser does not support full screen', 'error'))
-          .finally(() => this.fullScreenEnabled = true)
-        }
+        if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {})
+        else if (document.documentElement.mozRequestFullScreen) document.documentElement.mozRequestFullScreen().catch(() => {})
+        else if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen().catch(() => {})
+        else if (document.documentElement.msRequestFullscreen) document.documentElement.msRequestFullscreen().catch(() => {})
       }
       else {
-        if (document.exitFullscreen) document.exitFullscreen()
-        else if (document.mozCancelFullScreen) document.mozCancelFullScreen()
-        else if (document.webkitExitFullscreen) document.webkitExitFullscreen()
-        this.fullScreenEnabled = false
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {})
+        else if (document.mozCancelFullScreen) document.mozCancelFullScreen().catch(() => {})
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {})
       }
+      this.fullScreenEnabled = !this.fullScreenEnabled
     },
     logout() {
       this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
