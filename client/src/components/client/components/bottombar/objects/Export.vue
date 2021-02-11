@@ -2,14 +2,15 @@
   <div>
     <v-dialog v-model="dialog" persistent max-width="90%">
       <v-card >
-        <v-toolbar flat color="primary">
+        <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text">Export Objects</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="tabClick('sql')" :color="sqlColor" style="margin-right:10px;">SQL</v-btn>
           <v-btn @click="tabClick('csv')" :color="csvColor" style="margin-right:10px;">CSV</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field @input="onSearch" v-model="search" label="Search" append-icon="search" color="white" single-line hide-details></v-text-field>
-          <v-btn @click="dialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-divider class="ml-3 mr-1" inset vertical></v-divider>
+          <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:5px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -44,8 +45,15 @@
                     <ag-grid-vue v-show="tabObjectsSelected == 4" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('procedures', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.procedures" :defaultColDef="defaultColDef" :rowData="objectsItems.procedures"></ag-grid-vue>
                     <ag-grid-vue v-show="tabObjectsSelected == 5" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('events', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.events" :defaultColDef="defaultColDef" :rowData="objectsItems.events"></ag-grid-vue>
                   </div>
-                  <v-select v-if="tab == 'sql'" v-model="include" :items="includeItems" dense label="Include" outlined hide-details style="margin-top:15px"></v-select>
-                  <v-checkbox v-if="tab == 'csv'" v-model="includeFields" label="Include field names in first row" hide-details style="padding:0px; margin-top:10px"></v-checkbox>
+                  <v-row v-if="tab == 'sql'" no-gutters>
+                    <v-col cols="auto">
+                      <v-select v-model="include" @change="includeChanged" :items="includeItems" label="Include" dense outlined hide-details style="margin-top:15px; width:250px;"></v-select>
+                    </v-col>
+                    <v-col cols="auto" style="margin-left:10px; margin-top:4px">
+                      <v-checkbox :disabled="include == 'Content'" v-model="includeDropTable" label="Include DROP TABLE syntax" hide-details></v-checkbox>
+                    </v-col>
+                  </v-row>
+                  <v-checkbox v-else-if="tab == 'csv'" v-model="includeFields" label="Include field names in first row" hide-details style="padding:0px; margin-top:10px"></v-checkbox>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -161,6 +169,7 @@ export default {
       // Include
       include: 'Structure + Content',
       includeItems: ['Structure + Content','Structure','Content'],
+      includeDropTable: false,
       includeFields: true,
       // Progress
       dialogProgress: false,
@@ -275,6 +284,9 @@ export default {
         this.databasePrev = this.database
       })
     },
+    includeChanged() {
+      if (this.include == 'Content') this.includeDropTable = false
+    },
     exportObjectsSubmit() {
       // Get selected objects
       let tables = this.gridApi['tables'].getSelectedRows()
@@ -318,6 +330,7 @@ export default {
           mode: this.tab,
           objects: objects,
           include: this.include,
+          includeDropTable: this.includeDropTable,
           fields: this.includeFields
         }
       }
