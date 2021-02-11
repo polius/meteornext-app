@@ -681,8 +681,9 @@ class Client:
                 try:
                     syntax = conn.get_table_syntax(request.args['database'], table)
                     conn.execute(query=f"SELECT SQL_NO_CACHE * FROM {table}", database=request.args['database'], fetch=False)
-                    if options['include'] in ['Structure + Content','Structure']:
+                    if options['includeDropTable']:
                         yield 'DROP TABLE IF EXISTS `{}`;\n\n'.format(table)
+                    if options['include'] in ['Structure','Structure + Content']:
                         yield '{};\n\n'.format(syntax)
                     if options['include'] in ['Structure + Content','Content']:
                         first = True
@@ -718,7 +719,8 @@ class Client:
                 try:
                     syntax = conn.get_view_syntax(request.args['database'], view)
                     syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
-                    yield 'DROP VIEW IF EXISTS `{}`;\n\n'.format(view)
+                    if options['includeDropTable']:
+                        yield 'DROP VIEW IF EXISTS `{}`;\n\n'.format(view)
                     yield '{};\n\n'.format(syntax)
                 except Exception as e:
                     errors['views'].append({'k': view, 'v': str(e)})
@@ -733,7 +735,8 @@ class Client:
                 try:
                     syntax = conn.get_trigger_syntax(request.args['database'], trigger)
                     syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
-                    yield 'DROP TRIGGER IF EXISTS `{}`;\n\n'.format(trigger)
+                    if options['includeDropTable']:
+                        yield 'DROP TRIGGER IF EXISTS `{}`;\n\n'.format(trigger)
                     yield '{};\n\n'.format(syntax)
                 except Exception as e:
                     errors['triggers'].append({'k': trigger, 'v': str(e)})
@@ -749,7 +752,8 @@ class Client:
                     syntax = conn.get_function_syntax(request.args['database'], function)
                     syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     if syntax:
-                        yield 'DROP FUNCTION IF EXISTS `{}`;\n\n'.format(function)
+                        if options['includeDropTable']:
+                            yield 'DROP FUNCTION IF EXISTS `{}`;\n\n'.format(function)
                         yield '{};\n\n'.format(syntax)
                     else:
                         err = "Insufficient privileges to export the function '{}'. You must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table".format(function)
@@ -768,7 +772,8 @@ class Client:
                     syntax = conn.get_procedure_syntax(request.args['database'], procedure)
                     syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     if syntax:
-                        yield 'DROP PROCEDURE IF EXISTS `{}`;\n\n'.format(procedure)
+                        if options['includeDropTable']:
+                            yield 'DROP PROCEDURE IF EXISTS `{}`;\n\n'.format(procedure)
                         yield '{};\n\n'.format(syntax)
                     else:
                         err = "# Error: Insufficient privileges to export the procedure '{}'. You must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table".format(procedure)
@@ -786,7 +791,8 @@ class Client:
                 try:
                     syntax = conn.get_event_syntax(request.args['database'], event)
                     syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
-                    yield 'DROP EVENT IF EXISTS `{}`;\n\n'.format(event)
+                    if options['includeDropTable']:
+                        yield 'DROP EVENT IF EXISTS `{}`;\n\n'.format(event)
                     yield '{};\n\n'.format(syntax)
                 except Exception as e:
                     errors['events'].append({'k': event, 'v': str(e)})

@@ -2,10 +2,10 @@
   <div>
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
-        <v-toolbar flat color="primary">
+        <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text">Create Database</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -88,7 +88,6 @@ export default {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
         EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
       this.loading = true

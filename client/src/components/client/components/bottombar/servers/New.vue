@@ -10,7 +10,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="selected.length == 0 || loading" :loading="loading" @click="newServerSubmit" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
-          <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="dialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:10px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
