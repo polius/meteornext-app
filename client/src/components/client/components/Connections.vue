@@ -21,7 +21,7 @@
           <template v-slot:activator="{ attrs, on }">
             <v-btn @click="openFavourites()" v-bind="attrs" v-on="on" title="Query Favourites" style="min-width:52px"><v-icon small style="font-size:15px">far fa-star</v-icon></v-btn>
           </template>
-          <v-autocomplete v-model="queryFavItem" @change="queryFavMenu = false" ref="queryFav" dense filled no-data-text="No queries found" :items="queryFavItems" style="margin-top:7px;" no-gutters></v-autocomplete>
+          <v-autocomplete :loading="loadingFav" v-model="queryFavItem" @change="selectFavourite()" ref="queryFav" dense filled :items="queryFavItems" item-text="name" no-data-text="No queries found" return-object style="margin-top:7px; background-color:#2c2c2c" no-gutters></v-autocomplete>
         </v-menu>
       </div>
     </v-col>
@@ -75,8 +75,9 @@ export default {
       dragOptions: {
         animation: 200,
       },
+      loadingFav: false,
       queryFavItems: [],
-      queryFavItem: null,
+      queryFavItem: {},
       queryFavMenu: false,
     }
   },
@@ -153,12 +154,27 @@ export default {
       EventBus.$emit('minify-query')
     },
     openFavourites() {
-      if (!this.queryFavMenu) {
-        this.queryFavItem = null
-        requestAnimationFrame(() => {
-          if (typeof this.$refs.queryFav !== 'undefined') setTimeout(() => {  this.$refs.queryFav.focus(); this.$refs.queryFav.isMenuActive = true; },100)
+      this.queryFavItem = {}
+      if (this.queryFavMenu) return
+      this.loadingFav = true
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.queryFav !== 'undefined') setTimeout(() => {  this.$refs.queryFav.focus(); this.$refs.queryFav.isMenuActive = true; },100)
+      })
+      // Get saved queries
+      axios.get('/client/saved')
+        .then((response) => {
+          this.queryFavItems = response.data.saved
         })
-      }
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.loadingFav = false)
+    },
+    selectFavourite() {
+      EventBus.$emit('select-favourite', this.queryFavItem.query)
+      this.queryFavItem = {}
+      this.queryFavMenu = false
     },
     // Listeners
     listeners(e) {

@@ -142,6 +142,7 @@ export default {
     EventBus.$on('stop-query', this.stopQuery);
     EventBus.$on('beautify-query', this.beautifyQuery);
     EventBus.$on('minify-query', this.minifyQuery);
+    EventBus.$on('select-favourite', this.selectFavourite);
   },
   computed: {
     ...mapFields([
@@ -518,6 +519,11 @@ export default {
       let cursor = this.editor.getCursorPosition()
       this.editor.focus()
       this.editor.moveCursorTo(cursor.row, cursor.column)
+    },
+    selectFavourite(query) {
+      let cursor = this.editor.getCursorPosition()
+      this.editor.session.insert(cursor, query)
+      this.editor.focus()
     },
     stopQuery() {
       this.clientExecuting = 'stop'
