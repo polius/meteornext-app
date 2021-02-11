@@ -134,11 +134,6 @@ export default {
         const tab = {'client': 0, 'structure': 1, 'content': 2, 'info': 3, 'objects': 7}
         this.headerTab = tab[this.headerTabSelected]
       }
-      else {
-        requestAnimationFrame(() => {
-          if (typeof this.$refs.search !== 'undefined') this.$refs.search.focus()
-        })
-      }
     },
   },
   methods: {
@@ -152,12 +147,14 @@ export default {
         .then((response) => {
           this.origin = response.data.saved
           this.items = response.data.saved
-          if (this.items.length == 0) this.editor.setReadOnly(true)
+          if (this.items.length == 0) this.addSaved()
           else {
             let current = this.items[0]
             this.name = current['name']
             this.editor.setValue(current['query'], -1)
-            this.editor.setReadOnly(false)
+            requestAnimationFrame(() => {
+              if (typeof this.$refs.search !== 'undefined') this.$refs.search.focus()
+            })
           }
         })
         .catch((error) => {
@@ -172,7 +169,6 @@ export default {
           this.items.push({'id': response.data.data, 'name': payload['name'], 'query': payload['query']})
           this.selected = [this.items.length - 1]
           this.name = payload['name']
-          this.editor.setReadOnly(false)
           this.editor.setValue(payload['query'], -1)
           this.$nextTick(() => {
             this.$refs.list.scrollTop = this.$refs.list.scrollHeight
@@ -290,10 +286,7 @@ export default {
             let current = this.items[this.selected[this.selected.length - 1]]
             this.name = current['name']
             this.editor.setValue(current['query'], -1)
-            if (this.selected.length == 1) this.editor.setReadOnly(false)
-            else this.editor.setReadOnly(true)
           }
-          else this.editor.setReadOnly(true)
           event.preventDefault()
         }
       }
@@ -313,10 +306,7 @@ export default {
           let current = this.items[this.selected[this.selected.length - 1]]
           this.name = current['name']
           this.editor.setValue(current['query'], -1)
-          if (this.selected.length == 1) this.editor.setReadOnly(false)
-          else this.editor.setReadOnly(true)
         }
-        else this.editor.setReadOnly(true)
       })
     },
     onListRightClick(event) {
@@ -325,7 +315,6 @@ export default {
     onSavedSearch(value) {
       if (value.length == 0) this.items = this.origin.slice(0)
       else this.items = this.origin.filter(x => x.name.toLowerCase().includes(value.toLowerCase()))
-      this.editor.setReadOnly(this.items.length == 0)
     },
     checkValues() {
       if (this.items[this.selected[0]] == undefined) return
