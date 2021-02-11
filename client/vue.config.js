@@ -5,6 +5,7 @@ module.exports = {
   // configureWebpack: {
   //   plugins: [new BundleAnalyzerPlugin({ analyzerHost: '10.0.0.229'})]
   // },
+  runtimeCompiler: true,
   productionSourceMap: false,
   devServer: {
     disableHostCheck: true,
