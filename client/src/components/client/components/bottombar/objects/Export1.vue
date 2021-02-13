@@ -80,39 +80,45 @@
         <v-card-text style="padding:10px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <v-row no-gutters align="center">
-                <v-col>
-                  <div class="text-h6" style="font-weight:400;">Export Progress</div>
-                </v-col>
-                <v-col v-if="progressTimeValue != null" class="flex-grow-0 flex-shrink-0">
-                  <div class="body-1">{{ progressTimeValue.format('HH:mm:ss') }}</div>
-                </v-col>
-              </v-row>
+              <div class="text-h6" style="font-weight:400;">Export Progress</div>
               <v-flex xs12>
                 <div style="margin-top:10px; margin-bottom:10px;">
-                  <v-progress-linear :indeterminate="progressStep == 'build'" :value="progressValue" rounded color="primary" height="25">
+                  <v-progress-linear :indeterminate="step == 'export'" value="100" rounded color="primary" height="25">
                     <template>
-                      {{ progressValue + '%' }}
+                      {{ progress == 0 ? 'Exporting... Please wait, It might take several minutes to finish.' : 'Downloading: ' + this.progress }}
                     </template>
                   </v-progress-linear>
                   <div class="body-1" style="margin-top:10px">
-                    <v-icon v-if="progressStep == 'success'" title="Finished successfully" small style="color:rgb(0, 177, 106); padding-bottom:2px;">fas fa-check-circle</v-icon>
-                    <v-icon v-else-if="progressStep == 'fail'" title="Finished with errors" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
-                    <v-icon v-else-if="progressStep == 'stop'" title="Stopped" small style="color:#fa8231; padding-bottom:2px;">fas fa-exclamation-circle</v-icon>
+                    <v-icon v-if="step == 'success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px;">fas fa-check-circle</v-icon>
+                    <v-icon v-else-if="step == 'fail'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
+                    <v-icon v-else-if="step == 'stop'" title="Stopped" small style="color:#fa8231; padding-bottom:2px;">fas fa-exclamation-circle</v-icon>
                     <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
-                    <span style="margin-left:8px">{{ progressText }}</span>  
+                    <span style="margin-left:8px">{{ text }}</span>  
                   </div>
-                  <v-textarea v-if="exportErrors.length > 0" readonly filled label="Errors" :value="exportErrors" height="40vh" style="margin-top:10px; margin-bottom:15px" hide-details></v-textarea>
+                  <v-card v-if="error.length != 0" style="margin-top:10px">
+                    <v-card-text>
+                      <div class="body-1">{{ error }}</div>
+                    </v-card-text>
+                  </v-card>
                 </div>
                 <v-divider></v-divider>
-                <v-row no-gutters style="margin-top:15px;">
-                  <v-col v-if="['export','build'].includes(progressStep)" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                    <v-btn @click="cancelExport" color="#e74c3c">Cancel</v-btn>
-                  </v-col>
-                  <v-col v-else style="margin-bottom:10px;">
-                    <v-btn :disabled="loading" @click="dialogProgress = false" cols="auto" outlined color="#e74d3c">Close</v-btn>
-                  </v-col>
-                </v-row>
+                <div v-if="step == 'export'" style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn @click="cancelExport" color="#e74c3c">Cancel</v-btn>
+                    </v-col>
+                    <v-col style="margin-bottom:10px;">
+                      <v-btn :disabled="loading" @click="dialogProgress = false" outlined color="#e74d3c">Close</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+                <div v-else style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn :loading="loading" @click="dialogProgress = false" color="primary">Close</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
               </v-flex>
             </v-layout>
           </v-container>
@@ -124,14 +130,7 @@
 
 <style scoped src="@/styles/agGridVue.css"></style>
 
-<style scoped>
-::v-deep textarea {
-  color: rgba(255, 255, 255, 0.7)!important;
-}
-</style>
-
 <script>
-import moment from 'moment'
 import {AgGridVue} from "ag-grid-vue";
 import axios from 'axios'
 import EventBus from '../../../js/event-bus'
@@ -174,18 +173,13 @@ export default {
       includeFields: true,
       // Progress
       dialogProgress: false,
-      progressText: '', 
-      progressStep: 'export', 
-      progressValue: 0,
-      progressBytes: 0,
-      progressTimeEvent: null,
-      progressTimeValue: null,
+      text: 'Exporting objects...', 
+      step: 'export', 
+      progress: 0,
+      error: '',
       selected: undefined,
       // Axios Cancel Token
       cancelToken: null,
-      // Export Data
-      exportData: '',
-      exportErrors: '',
     }
   },
   components: { AgGridVue },
@@ -295,159 +289,104 @@ export default {
     },
     exportObjectsSubmit() {
       // Get selected objects
-      let objects = {'tables': [], 'views': [], 'triggers': [], 'functions': [], 'procedures': [], 'events': []}
-      if (this.tab == 'sql') objects['tables'] = this.gridApi['tables'].getSelectedRows().map(x => x.name)
-      else if (this.tab == 'csv') objects['tables'] = this.gridApi['tablesCsv'].getSelectedRows().map(x => x.name)
-      objects['views'] = this.gridApi['views'].getSelectedRows().map(x => x.name)
-      objects['triggers'] = this.gridApi['triggers'].getSelectedRows().map(x => x.name)
-      objects['functions'] = this.gridApi['functions'].getSelectedRows().map(x => x.name)
-      objects['procedures'] = this.gridApi['procedures'].getSelectedRows().map(x => x.name)
-      objects['events'] = this.gridApi['events'].getSelectedRows().map(x => x.name)
+      let tables = this.gridApi['tables'].getSelectedRows()
+      let tablesCsv = this.gridApi['tablesCsv'].getSelectedRows()
+      let views = this.gridApi['views'].getSelectedRows()
+      let triggers = this.gridApi['triggers'].getSelectedRows()
+      let functions = this.gridApi['functions'].getSelectedRows()
+      let procedures = this.gridApi['procedures'].getSelectedRows()
+      let events = this.gridApi['events'].getSelectedRows()
       // Check if no objects are selected
-      if (objects['tables'].length == 0 && objects['views'].length == 0 && objects['triggers'].length == 0 && objects['functions'].length == 0 && objects['procedures'].length == 0 && objects['events'].length == 0) {
+      if ((this.tab == 'sql' && tables.length == 0 && views.length == 0 && triggers.length == 0 && functions.length == 0 && procedures.length == 0 && events.length == 0) ||
+        (this.tab == 'csv' && tablesCsv.length == 0)) {
         EventBus.$emit('send-notification', 'Please select at least one object to export', 'error')
         return
       }
-      // Init Export
       this.loading = true
-      this.progressStep = 'export'
-      this.progressValue = 0
-      this.exportErrors = ''
+      // Init Dialog Progress
+      this.text = 'Exporting objects...'
+      this.step = 'export'
+      this.progress = 0
+      this.error = ''
       this.dialogProgress = true
-
-      // Start Timer
-      this.progressTimeValue = moment().startOf("day");
-      this.progressTimeEvent = setInterval(() => {
-        this.progressTimeValue.add(1, 'second')
-      }, 1000)
-
-      // Build Header
-      if (this.tab == 'sql') {
-        this.exportData += '# ************************************************************\n'
-        this.exportData += '# Meteor Next - Export SQL\n'
-        this.exportData += '# Host: ' + this.server['hostname'] + ' (' + this.server['engine'] + ' ' + this.server['version'] + ')\n'
-        this.exportData += '# Database: ' + this.database + '\n'
-        this.exportData += '# Generation Time: ' + moment.utc().format("YYYY-MM-DD HH:mm:ss") + ' UTC\n'
-        this.exportData += '# ************************************************************\n\n'
-        this.exportData += 'SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;\n'
-        this.exportData += 'SET FOREIGN_KEY_CHECKS = 0;\n\n'
+      // Build request parameters
+      let objects = {}
+      if (this.tab == 'csv') {
+        objects['tables'] = tablesCsv.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
       }
-
-      // Export Objects
-      new Promise((resolve, reject) => {
-        this.exportObjects(objects, resolve, reject)
-      }).then (() => {
-        // Build Footer
-        if (this.tab == 'sql') {
-          this.exportData += 'SET FOREIGN_KEY_CHECKS = 1;\n\n'
-          if (this.exportErrors.length > 0) {
-            this.exportData += '# ************************************************************\n'
-            this.exportData += '# Export finished with errors\n'
-            this.exportData += '# ************************************************************'
-          }
-          else {
-            this.exportData += '# ************************************************************\n'
-            this.exportData += '# Export Finished Successfully\n'
-            this.exportData += '# ************************************************************'
-          }
-        }
-        // Download file
-        this.progressStep = 'build'
-        this.progressText = 'Building export file...'
-        const url = window.URL.createObjectURL(new Blob([this.exportData]))
-        const link = document.createElement('a')
-        link.setAttribute('download', 'export.sql')
-        link.href = url
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
-        // Update export status
-        if (this.exportErrors.length == 0) {
-          this.progressStep = 'success'
-          this.progressText = 'Export finished successfully.'
-        }
-        else {
-          this.progressStep = 'fail'
-          this.progressText = 'Export finished with errors.'
-        }
-      })
-      .catch(() => {})
-      .finally(() => {
-        clearInterval(this.progressTimeEvent)
-        this.loading = false
-      })
-    },
-    exportObjects(objects, resolve, reject) {
-      var payload = {
+      else if (this.tab == 'sql') {
+        objects['tables'] = tables.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+        objects['views'] = views.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+        objects['triggers'] = triggers.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+        objects['functions'] = functions.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+        objects['procedures'] = procedures.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+        objects['events'] = events.reduce((acc, curr) => { acc.push(curr['name']); return acc }, [])
+      }
+      const payload = {
         connection: 0,
         server: this.server.id,
         database: this.database,
         options: {
           mode: this.tab,
+          objects: objects,
           include: this.include,
           includeDropTable: this.includeDropTable,
-          fields: this.includeFields,
-          object: '',
-          items: [],
+          fields: this.includeFields
         }
       }
-      const total = objects['tables'].length + objects['views'].length + objects['triggers'].length + objects['functions'].length + objects['procedures'].length + objects['events'].length
-      let t = 1
-      const jobs = async () => {
-        for (let objSchema of ['tables','views','triggers','functions','procedures','events']) {
-          const n = objects[objSchema].length
-          let i = 1
-          for (let objName of objects[objSchema]) {
-            // Update Progress Text
-            this.progressText = objSchema.charAt(0).toUpperCase() + objSchema.slice(1,-1) + ' ' + i.toString() + ' of ' + n.toString() + ' (' + objName + '). ' + this.progressBytes
-            // Start Object Export
-            payload['options']['object'] = objSchema.slice(0, -1)
-            payload['options']['items'] = [objName]
-            const data = await this.exportObject(payload)
-            this.exportData += data
-            // Update Progress Value
-            this.progressValue = Math.round(100*t/total)
-            i += 1
-            t += 1
-            // Check Errors
-            if (payload['options']['mode'] == 'sql' && data.split("\n")[3].startsWith('# Error: ')) {
-              this.exportError = true
-              if (this.exportErrors.length != 0) this.exportErrors += '\n'
-              this.exportErrors += data.split("\n")[3].substring(9)
-            }
-          }
-        }
+      const CancelToken = axios.CancelToken;
+      this.cancelToken = CancelToken.source();
+      const options = {
+        onDownloadProgress: (progressEvent) => {
+          this.progress = this.parseBytes(progressEvent.loaded)
+        },
+        responseType: 'blob',
+        cancelToken: this.cancelToken.token,
+        params: payload,
       }
-      jobs()
-      .then(() => resolve())
+      // Start request
+      axios.get('/client/export', options)
+      .then((response) => {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a')
+        link.href = url
+        if (this.tab == 'sql') {
+          let fileName = this.database
+          if (payload['options']['objects']['tables'].length == 1 && payload['options']['objects']['views'].length == 0 && payload['options']['objects']['triggers'].length == 0 && payload['options']['objects']['functions'].length == 0 && payload['options']['objects']['procedures'].length == 0 && payload['options']['objects']['events'].length == 0) fileName = payload['options']['objects']['tables'][0]
+          else if (payload['options']['objects']['tables'].length == 0 && payload['options']['objects']['views'].length == 1 && payload['options']['objects']['triggers'].length == 0 && payload['options']['objects']['functions'].length == 0 && payload['options']['objects']['procedures'].length == 0 && payload['options']['objects']['events'].length == 0) fileName = payload['options']['objects']['views'][0]
+          else if (payload['options']['objects']['tables'].length == 0 && payload['options']['objects']['views'].length == 0 && payload['options']['objects']['triggers'].length == 1 && payload['options']['objects']['functions'].length == 0 && payload['options']['objects']['procedures'].length == 0 && payload['options']['objects']['events'].length == 0) fileName = payload['options']['objects']['triggers'][0]
+          else if (payload['options']['objects']['tables'].length == 0 && payload['options']['objects']['views'].length == 0 && payload['options']['objects']['triggers'].length == 0 && payload['options']['objects']['functions'].length == 1 && payload['options']['objects']['procedures'].length == 0 && payload['options']['objects']['events'].length == 0) fileName = payload['options']['objects']['functions'][0]
+          else if (payload['options']['objects']['tables'].length == 0 && payload['options']['objects']['views'].length == 0 && payload['options']['objects']['triggers'].length == 0 && payload['options']['objects']['functions'].length == 0 && payload['options']['objects']['procedures'].length == 1 && payload['options']['objects']['events'].length == 0) fileName = payload['options']['objects']['procedures'][0]
+          else if (payload['options']['objects']['tables'].length == 0 && payload['options']['objects']['views'].length == 0 && payload['options']['objects']['triggers'].length == 0 && payload['options']['objects']['functions'].length == 0 && payload['options']['objects']['procedures'].length == 0 && payload['options']['objects']['events'].length == 1) fileName = payload['options']['objects']['events'][0]
+          link.setAttribute('download', fileName + '.sql')
+        }
+        else if (this.tab == 'csv') link.setAttribute('download', objects['tables'][0] + '.csv')
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        this.step = 'success'
+        this.text = 'Objects successfully exported.'
+      })
       .catch((error) => {
         if (axios.isCancel(error)) {
-          this.progressStep = 'stop'
-          this.progressText = 'Export interrupted by user.'
+          this.step = 'stop'
+          this.text = 'Export stopped.'
           this.error = ''
         }
         else if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-        reject()
+        else {
+          // Convert error from 'arraybuffer' to 'json'
+          let err = JSON.parse(Buffer.from(error.response.data).toString('utf8'))
+          this.step = 'fail'
+          this.text = 'An error occurred during the export process.'
+          this.error = err.message
+          this.loading = false
+        }
       })
-    },
-    async exportObject(payload) {
-      // Build options
-      const CancelToken = axios.CancelToken
-      this.cancelToken = CancelToken.source()
-      this.progressBytes = 0
-      const options = {
-        cancelToken: this.cancelToken.token,
-        onDownloadProgress: (progressEvent) => {
-          this.progressBytes = this.parseBytes(progressEvent.loaded)
-        },
-        // responseType: 'blob',
-        params: payload,
-      }
-      // Execute Query
-      const response = await axios.get('/client/export', options)
-      return response.data
+      .finally(() => this.loading = false)
     },
     cancelExport() {
+      EventBus.$emit('send-notification', 'Stopping the export process...', 'warning')
       this.cancelToken.cancel()
     },
     parseBytes(value) {

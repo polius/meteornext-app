@@ -645,7 +645,7 @@ class Client:
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'sql'}
 
     def __export_csv(self, options, conn):
-        for table in options['objects']['tables']:
+        for table in options['items']:
             first = options['fields']
             conn.execute(query=f"SELECT * FROM {table}", database=request.args['database'], fetch=False)
             while True:
@@ -661,20 +661,9 @@ class Client:
                 yield output.getvalue()
 
     def __export_sql(self, options, cred, conn):
-        errors = {'tables': [], 'views': [], 'triggers': [], 'functions': [], 'procedures': [], 'events': []}
-        # Build header
-        yield '# ************************************************************\n'
-        yield '# Meteor Next - Export SQL\n'
-        yield '# Host: {} ({} {})\n'.format(cred['sql']['hostname'], cred['sql']['engine'], conn.get_version())
-        yield '# Database: {}\n'.format(request.args['database'])
-        yield '# Generation Time: {} UTC\n'.format(datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-        yield '# ************************************************************\n\n'
-        yield 'SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;\n'
-        yield 'SET FOREIGN_KEY_CHECKS = 0;\n\n'
-
         # Build Tables
-        if 'tables' in options['objects']:
-            for table in options['objects']['tables']:
+        if options['object'] == 'table':
+            for table in options['items']:
                 yield '# ------------------------------------------------------------\n'
                 yield '# Table: {}\n'.format(table)
                 yield '# ------------------------------------------------------------\n'
@@ -707,12 +696,11 @@ class Client:
                                 yield ',\n({})'.format(conn.mogrify(','.join(repeat('%s', len(args))), args))
                             i += 1
                 except Exception as e:
-                    errors['tables'].append({'k': table, 'v': str(e)})
                     yield '# Error: {}\n\n'.format(e)
 
         # Build Views
-        if 'views' in options['objects']:
-            for view in options['objects']['views']:
+        elif options['object'] == 'view':
+            for view in options['items']:
                 yield '# ------------------------------------------------------------\n'
                 yield '# View: {}\n'.format(view)
                 yield '# ------------------------------------------------------------\n'
@@ -723,12 +711,11 @@ class Client:
                         yield 'DROP VIEW IF EXISTS `{}`;\n\n'.format(view)
                     yield '{};\n\n'.format(syntax)
                 except Exception as e:
-                    errors['views'].append({'k': view, 'v': str(e)})
                     yield '# Error: {}\n\n'.format(e)
 
         # Build Triggers
-        if 'triggers' in options['objects']:
-            for trigger in options['objects']['triggers']:
+        elif options['object'] == 'trigger':
+            for trigger in options['items']:
                 yield '# ------------------------------------------------------------\n'
                 yield '# Trigger: {}\n'.format(trigger)
                 yield '# ------------------------------------------------------------\n'
@@ -739,12 +726,11 @@ class Client:
                         yield 'DROP TRIGGER IF EXISTS `{}`;\n\n'.format(trigger)
                     yield '{};\n\n'.format(syntax)
                 except Exception as e:
-                    errors['triggers'].append({'k': trigger, 'v': str(e)})
                     yield '# Error: {}\n\n'.format(e)
 
         # Build Functions
-        if 'functions' in options['objects']:
-            for function in options['objects']['functions']:
+        elif options['object'] == 'function':
+            for function in options['items']:
                 yield '# ------------------------------------------------------------\n'
                 yield '# Function: {}\n'.format(function)
                 yield '# ------------------------------------------------------------\n'
@@ -759,12 +745,11 @@ class Client:
                         err = "Insufficient privileges to export the function '{}'. You must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table".format(function)
                         raise Exception(err)
                 except Exception as e:
-                    errors['functions'].append({'k': function, 'v': str(e)})
                     yield '# Error: {}\n\n'.format(e)         
 
         # Build Procedures
-        if 'procedures' in options['objects']:
-            for procedure in options['objects']['procedures']:
+        elif options['object'] == 'procedure':
+            for procedure in options['items']:
                 yield '# ------------------------------------------------------------\n'
                 yield '# Procedure: {}\n'.format(procedure)
                 yield '# ------------------------------------------------------------\n'
@@ -779,12 +764,11 @@ class Client:
                         err = "# Error: Insufficient privileges to export the procedure '{}'. You must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table".format(procedure)
                         raise Exception(err)
                 except Exception as e:
-                    errors['procedures'].append({'k': procedure, 'v': str(e)})
                     yield '# Error: {}\n\n'.format(e)     
 
         # Build Events
-        if 'events' in options['objects']:
-            for event in options['objects']['events']:
+        elif options['object'] == 'event':
+            for event in options['items']:
                 yield '# ------------------------------------------------------------\n'
                 yield '# Event: {}\n'.format(event)
                 yield '# ------------------------------------------------------------\n'
@@ -795,33 +779,4 @@ class Client:
                         yield 'DROP EVENT IF EXISTS `{}`;\n\n'.format(event)
                     yield '{};\n\n'.format(syntax)
                 except Exception as e:
-                    errors['events'].append({'k': event, 'v': str(e)})
                     yield '# Error: {}\n\n'.format(e)
-
-        # Build footer
-        yield 'SET FOREIGN_KEY_CHECKS = 1;\n\n'
-
-        if len(errors['tables']) == 0 and len(errors['views']) == 0 and len(errors['triggers']) == 0 and len(errors['functions']) == 0 and len(errors['procedures']) == 0 and len(errors['events']) == 0:
-            yield '# ************************************************************\n'
-            yield '# Export Successful\n'
-            yield '# ************************************************************'
-        else:
-            yield '# ------------------------------------------------------------\n'
-            yield '# ERRORS\n'
-            yield '# ------------------------------------------------------------\n'
-            for table in errors['tables']:
-                yield '# [ TABLE: {} ]: {}\n'.format(table['k'], table['v'])
-            for view in errors['views']:
-                yield '# [ VIEW: {} ]: {}\n'.format(view['k'], view['v'])
-            for trigger in errors['triggers']:
-                yield '# [ TRIGGER: {} ]: {}\n'.format(trigger['k'], trigger['v'])
-            for function in errors['functions']:
-                yield '# [ FUNCTION: {} ]: {}\n'.format(function['k'], function['v'])
-            for procedure in errors['procedures']:
-                yield '# [ PROCEDURE: {} ]: {}\n'.format(procedure['k'], procedure['v'])
-            for event in errors['events']:
-                yield '# [ EVENT: {} ]: {}\n'.format(event['k'], event['v'])
-
-            yield '\n# ************************************************************\n'
-            yield '# Export finished with errors\n'
-            yield '# ************************************************************'
