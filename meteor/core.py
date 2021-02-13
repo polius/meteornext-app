@@ -382,7 +382,7 @@ class core:
 
         # Logs
         logs_information = "{}/deployment/{}{}".format(self._imports.config['params']['url'], self._imports.config['params']['mode'][0].upper(), self._imports.config['params']['id'])
-        logs_results = "{}/results/{}".format(self._imports.config['params']['url'], self._args.path[self._args.path.rfind('/')+1:])
+        logs_results = "{}/viewer/{}".format(self._imports.config['params']['url'], self._args.path[self._args.path.rfind('/')+1:])
 
         # Current Time
         current_time = calendar.timegm(time.gmtime())
