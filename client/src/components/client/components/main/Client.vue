@@ -384,11 +384,11 @@ export default {
           rawQueries.push({"begin": start, "end": i})
           start = i+1
         }
-        else if (editorText[i] == '"' && (i == 0 || editorText[i-1] != '\\')) {
+        else if (editorText[i] == '"' && (i == 0 || (editorText[i-1] != '\\' || editorText[i-2] == '\\'))) {
           if (chars.length == 0) chars.push('"')
           else if (chars[chars.length-1] == '"') chars.pop()
         }
-        else if (editorText[i] == "'" && (i == 0 || editorText[i-1] != '\\')) {
+        else if (editorText[i] == "'" && (i == 0 || (editorText[i-1] != '\\' || editorText[i-2] == '\\'))) {
           if (chars.length == 0) chars.push("'")
           else if (chars[chars.length-1] == "'") chars.pop()
         }
@@ -607,11 +607,11 @@ export default {
             if (q != ';') queries.push(q)
             start = i+1
           }
-          else if (selectedText[i] == '"' && (i == 0 || selectedText[i-1] != '\\')) {
+          else if (selectedText[i] == '"' && (i == 0 || (selectedText[i-1] != '\\' || selectedText[i-2] == '\\'))) {
             if (chars.length == 0) chars.push('"')
             else if (chars[chars.length-1] == '"') chars.pop()
           }
-          else if (selectedText[i] == "'" && (i == 0 || selectedText[i-1] != '\\')) {
+          else if (selectedText[i] == "'" && (i == 0 || (selectedText[i-1] != '\\' || selectedText[i-2] == '\\'))) {
             if (chars.length == 0) chars.push("'")
             else if (chars[chars.length-1] == "'") chars.pop()
           }
