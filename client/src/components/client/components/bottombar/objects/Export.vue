@@ -443,7 +443,6 @@ export default {
       const options = {
         cancelToken: this.cancelToken.token,
         onDownloadProgress: (progressEvent) => {
-          console.log(progressEvent.loaded)
           this.progressBytes = this.parseBytes(progressEvent.loaded)
         },
         responseType: 'blob',
