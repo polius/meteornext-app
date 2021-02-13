@@ -100,7 +100,7 @@
                     <v-icon v-else-if="progressStep == 'fail'" title="Finished with errors" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
                     <v-icon v-else-if="progressStep == 'stop'" title="Stopped" small style="color:#fa8231; padding-bottom:2px;">fas fa-exclamation-circle</v-icon>
                     <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
-                    <span style="margin-left:8px">{{ progressText }}</span>  
+                    <span style="margin-left:8px">{{ progressText + ' ' + this.progressBytes }}</span>  
                   </div>
                   <v-textarea v-if="exportErrors.length > 0" readonly filled label="Errors" :value="exportErrors" height="40vh" style="margin-top:10px; margin-bottom:15px" hide-details></v-textarea>
                 </div>
@@ -184,7 +184,7 @@ export default {
       // Axios Cancel Token
       cancelToken: null,
       // Export Data
-      exportData: '',
+      exportData: [],
       exportErrors: '',
     }
   },
@@ -312,6 +312,7 @@ export default {
       this.loading = true
       this.progressStep = 'export'
       this.progressValue = 0
+      this.exportData = []
       this.exportErrors = ''
       this.dialogProgress = true
 
@@ -323,14 +324,16 @@ export default {
 
       // Build Header
       if (this.tab == 'sql') {
-        this.exportData += '# ************************************************************\n'
-        this.exportData += '# Meteor Next - Export SQL\n'
-        this.exportData += '# Host: ' + this.server['hostname'] + ' (' + this.server['engine'] + ' ' + this.server['version'] + ')\n'
-        this.exportData += '# Database: ' + this.database + '\n'
-        this.exportData += '# Generation Time: ' + moment.utc().format("YYYY-MM-DD HH:mm:ss") + ' UTC\n'
-        this.exportData += '# ************************************************************\n\n'
-        this.exportData += 'SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;\n'
-        this.exportData += 'SET FOREIGN_KEY_CHECKS = 0;\n\n'
+        let header = ''
+        header += '# ************************************************************\n'
+        header += '# Meteor Next - Export SQL\n'
+        header += '# Host: ' + this.server['hostname'] + ' (' + this.server['engine'] + ' ' + this.server['version'] + ')\n'
+        header += '# Database: ' + this.database + '\n'
+        header += '# Generation Time: ' + moment.utc().format("YYYY-MM-DD HH:mm:ss") + ' UTC\n'
+        header += '# ************************************************************\n\n'
+        header += 'SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;\n'
+        header += 'SET FOREIGN_KEY_CHECKS = 0;\n\n'
+        this.exportData.push(new Blob([header]))
       }
 
       // Export Objects
@@ -339,22 +342,24 @@ export default {
       }).then (() => {
         // Build Footer
         if (this.tab == 'sql') {
-          this.exportData += 'SET FOREIGN_KEY_CHECKS = 1;\n\n'
+          let footer = ''
+          footer += 'SET FOREIGN_KEY_CHECKS = 1;\n\n'
           if (this.exportErrors.length > 0) {
-            this.exportData += '# ************************************************************\n'
-            this.exportData += '# Export finished with errors\n'
-            this.exportData += '# ************************************************************'
+            footer += '# ************************************************************\n'
+            footer += '# Export finished with errors\n'
+            footer += '# ************************************************************'
           }
           else {
-            this.exportData += '# ************************************************************\n'
-            this.exportData += '# Export Finished Successfully\n'
-            this.exportData += '# ************************************************************'
+            footer += '# ************************************************************\n'
+            footer += '# Export Finished Successfully\n'
+            footer += '# ************************************************************'
           }
+          this.exportData.push(new Blob([footer]))
         }
         // Download file
         this.progressStep = 'build'
         this.progressText = 'Building export file...'
-        const url = window.URL.createObjectURL(new Blob([this.exportData]))
+        const url = window.URL.createObjectURL(new Blob(this.exportData))
         const link = document.createElement('a')
         link.setAttribute('download', 'export.sql')
         link.href = url
@@ -399,22 +404,22 @@ export default {
           let i = 1
           for (let objName of objects[objSchema]) {
             // Update Progress Text
-            this.progressText = objSchema.charAt(0).toUpperCase() + objSchema.slice(1,-1) + ' ' + i.toString() + ' of ' + n.toString() + ' (' + objName + '). ' + this.progressBytes
+            this.progressText = objSchema.charAt(0).toUpperCase() + objSchema.slice(1,-1) + ' ' + i.toString() + ' of ' + n.toString() + ' (' + objName + ').'
             // Start Object Export
             payload['options']['object'] = objSchema.slice(0, -1)
             payload['options']['items'] = [objName]
             const data = await this.exportObject(payload)
-            this.exportData += data
+            this.exportData.push(new Blob([data]))
             // Update Progress Value
             this.progressValue = Math.round(100*t/total)
             i += 1
             t += 1
             // Check Errors
-            if (payload['options']['mode'] == 'sql' && data.split("\n")[3].startsWith('# Error: ')) {
-              this.exportError = true
-              if (this.exportErrors.length != 0) this.exportErrors += '\n'
-              this.exportErrors += data.split("\n")[3].substring(9)
-            }
+            // if (payload['options']['mode'] == 'sql' && data.split("\n")[3].startsWith('# Error: ')) {
+            //   this.exportError = true
+            //   if (this.exportErrors.length != 0) this.exportErrors += '\n'
+            //   this.exportErrors += data.split("\n")[3].substring(9)
+            // }
           }
         }
       }
@@ -434,13 +439,14 @@ export default {
       // Build options
       const CancelToken = axios.CancelToken
       this.cancelToken = CancelToken.source()
-      this.progressBytes = 0
+      this.progressBytes = ''
       const options = {
         cancelToken: this.cancelToken.token,
         onDownloadProgress: (progressEvent) => {
+          console.log(progressEvent.loaded)
           this.progressBytes = this.parseBytes(progressEvent.loaded)
         },
-        // responseType: 'blob',
+        responseType: 'blob',
         params: payload,
       }
       // Execute Query
