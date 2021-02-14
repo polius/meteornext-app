@@ -458,7 +458,6 @@ export default {
       jobs()
       .then(() => resolve())
       .catch((error) => {
-        console.log(error)
         if (axios.isCancel(error)) {
           this.progressStep = 'stop'
           this.progressText = 'Export interrupted by user.'
