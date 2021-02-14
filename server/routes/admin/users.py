@@ -22,7 +22,7 @@ class Users:
         users_blueprint = Blueprint('users', __name__, template_folder='users')
 
         @users_blueprint.route('/admin/users', methods=['GET','POST','PUT','DELETE'])
-        @jwt_required
+        @jwt_required()
         def users_method():
             # Check license
             if not self._license.validated:
@@ -52,7 +52,7 @@ class Users:
                 return self.delete()
 
         @users_blueprint.route('/admin/users/mfa', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def users_mfa_method():
             # Check license
             if not self._license.validated:

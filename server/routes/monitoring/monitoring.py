@@ -23,7 +23,7 @@ class Monitoring:
         monitoring_blueprint = Blueprint('monitoring', __name__, template_folder='monitoring')
 
         @monitoring_blueprint.route('/monitoring', methods=['GET','PUT'])
-        @jwt_required
+        @jwt_required()
         def monitoring_method():
             # Check license
             if not self._license.validated:
@@ -45,7 +45,7 @@ class Monitoring:
                 return self.put(user, monitoring_json)
 
         @monitoring_blueprint.route('/monitoring/settings', methods=['GET','PUT'])
-        @jwt_required
+        @jwt_required()
         def monitoring_settings_method():
             # Check license
             if not self._license.validated:
@@ -68,7 +68,7 @@ class Monitoring:
                 return jsonify({'message': 'Settings saved'}), 200
 
         @monitoring_blueprint.route('/monitoring/slack', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def monitoring_slack_test_method():
             # Check license
             if not self._license.validated:

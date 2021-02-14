@@ -16,7 +16,7 @@ class Notifications:
         notifications_blueprint = Blueprint('notifications', __name__, template_folder='notifications')
 
         @notifications_blueprint.route('/notifications', methods=['GET','PUT','DELETE'])
-        @jwt_required
+        @jwt_required()
         def notifications_method():
             # Check license
             if not self._license.validated:
@@ -40,7 +40,7 @@ class Notifications:
                 return self.delete(user['id'], notifications_json)
 
         @notifications_blueprint.route('/notifications/bar', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def notifications_bar_method():
             # Check license
             if not self._license.validated:
@@ -57,7 +57,7 @@ class Notifications:
             return jsonify({'data': self._notifications.get_notification_bar(user['id'])}), 200
     
         @notifications_blueprint.route('/notifications/clear', methods=['DELETE'])
-        @jwt_required
+        @jwt_required()
         def notifications_clear_method():
             # Check license
             if not self._license.validated:

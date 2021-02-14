@@ -15,7 +15,7 @@ class Profile:
         profile_blueprint = Blueprint('profile', __name__, template_folder='profile')
 
         @profile_blueprint.route('/profile', methods=['GET','PUT'])
-        @jwt_required
+        @jwt_required()
         def profile_method():
             # Check license
             if not self._license.validated:
@@ -62,7 +62,7 @@ class Profile:
                 return jsonify({'message': 'Changes saved successfully'}), 200
 
         @profile_blueprint.route('/profile/mfa', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def profile_mfa_method():
             # Check license
             if not self._license.validated:

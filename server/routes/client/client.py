@@ -28,7 +28,7 @@ class Client:
         client_blueprint = Blueprint('client', __name__, template_folder='client')
 
         @client_blueprint.route('/client/servers', methods=['GET','POST','PUT','DELETE'])
-        @jwt_required
+        @jwt_required()
         def client_servers_method():
             # Check license
             if not self._license.validated:
@@ -85,7 +85,7 @@ class Client:
                     return jsonify({"message": "Folder successfully deleted"}), 200
 
         @client_blueprint.route('/client/servers/unassigned', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def client_servers_unassigned_method():
             # Check license
             if not self._license.validated:
@@ -113,7 +113,7 @@ class Client:
                 return jsonify({'servers': servers}), 200
 
         @client_blueprint.route('/client/databases', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def client_databases_method():
             # Check license
             if not self._license.validated:
@@ -149,7 +149,7 @@ class Client:
             return jsonify({'databases': databases, 'version': version, 'engines': engines, 'encodings': encodings, 'defaults': defaults}), 200
 
         @client_blueprint.route('/client/objects', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def client_objects_method():
             # Check license
             if not self._license.validated:
@@ -189,7 +189,7 @@ class Client:
                 return jsonify({"message": str(e)}), 400
 
         @client_blueprint.route('/client/variables', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def client_variables_method():
             # Check license
             if not self._license.validated:
@@ -213,7 +213,7 @@ class Client:
             return jsonify({'variables': variables}), 200
 
         @client_blueprint.route('/client/execute', methods=['POST'])
-        @jwt_required
+        @jwt_required()
         def client_execute_method():
             # Check license
             if not self._license.validated:
@@ -272,7 +272,7 @@ class Client:
             return jsonify({'data': self.__json(execution)}), 200 if not errors else 400
 
         @client_blueprint.route('/client/structure', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def client_structure_method():
             # Check license
             if not self._license.validated:
@@ -299,7 +299,7 @@ class Client:
             return jsonify({'columns': self.__json(columns), 'indexes': self.__json(indexes), 'fks': self.__json(fks), 'triggers': self.__json(triggers)}), 200
 
         @client_blueprint.route('/client/structure/columns', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def client_structure_columns_method():
             # Check license
             if not self._license.validated:
@@ -323,7 +323,7 @@ class Client:
             return jsonify({'columns': self.__json(columns)}), 200
 
         @client_blueprint.route('/client/info', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def client_info_method():
             # Check license
             if not self._license.validated:
@@ -388,7 +388,7 @@ class Client:
             return jsonify({'info': self.__json(info)}), 200
 
         @client_blueprint.route('/client/collations', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def client_collations_method():
             # Check license
             if not self._license.validated:
@@ -412,7 +412,7 @@ class Client:
             return jsonify({'collations': self.__json(collations)}), 200
 
         @client_blueprint.route('/client/import', methods=['POST'])
-        @jwt_required
+        @jwt_required()
         def client_import_method():
             # Check license
             if not self._license.validated:
@@ -455,7 +455,7 @@ class Client:
             # stdout, stderr = proc.communicate()
 
         @client_blueprint.route('/client/export', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def client_export_method():
             # Check license
             if not self._license.validated:
@@ -485,7 +485,7 @@ class Client:
                 return jsonify({"message": str(e)}), 400
 
         @client_blueprint.route('/client/saved', methods=['GET','POST','PUT','DELETE'])
-        @jwt_required
+        @jwt_required()
         def client_saved_method():
             # Check license
             if not self._license.validated:
@@ -515,7 +515,7 @@ class Client:
                 return jsonify({'message': 'Selected saved queries deleted successfully'}), 200
 
         @client_blueprint.route('/client/settings', methods=['GET','PUT'])
-        @jwt_required
+        @jwt_required()
         def client_settings_method():
             # Check license
             if not self._license.validated:
@@ -543,7 +543,7 @@ class Client:
                 return jsonify({'message': 'Changes saved'}), 200
 
         @client_blueprint.route('/client/stop', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def client_stop_query_method():
             # Check license
             if not self._license.validated:
@@ -561,7 +561,7 @@ class Client:
             return jsonify({'message': 'Query successfully stopped'}), 200
 
         @client_blueprint.route('/client/rights', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def client_rights_method():
             # Check license
             if not self._license.validated:
@@ -612,7 +612,7 @@ class Client:
                 return jsonify({'server': self.__json(server), 'database': self.__json(database), 'table': self.__json(table), 'column': self.__json(column), 'proc': self.__json(proc), 'syntax': self.__json(syntax)}), 200
 
         @client_blueprint.route('/client/close', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def client_close_connection_method():
             # Check license
             if not self._license.validated:

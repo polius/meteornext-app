@@ -38,7 +38,7 @@ class Deployments:
         deployments_blueprint = Blueprint('deployments', __name__, template_folder='deployments')
 
         @deployments_blueprint.route('/deployments', methods=['GET','PUT'])
-        @jwt_required
+        @jwt_required()
         def deployments_method():
             # Check license
             if not self._license.validated:
@@ -60,7 +60,7 @@ class Deployments:
                 return self.__put(user['id'], deployment_json)
 
         @deployments_blueprint.route('/deployments/results', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def deployments_results_method():
             # Check license
             if not self._license.validated:

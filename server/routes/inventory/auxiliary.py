@@ -19,7 +19,7 @@ class Auxiliary:
         auxiliary_blueprint = Blueprint('auxiliary', __name__, template_folder='auxiliary')
 
         @auxiliary_blueprint.route('/inventory/auxiliary', methods=['GET','POST','PUT','DELETE'])
-        @jwt_required
+        @jwt_required()
         def auxiliary_method():
             # Check license
             if not self._license.validated:
@@ -45,7 +45,7 @@ class Auxiliary:
                 return self.delete(user)
 
         @auxiliary_blueprint.route('/inventory/auxiliary/test', methods=['POST'])
-        @jwt_required
+        @jwt_required()
         def auxiliary_test_method():
             # Check license
             if not self._license.validated:

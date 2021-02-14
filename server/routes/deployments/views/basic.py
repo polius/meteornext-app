@@ -38,7 +38,7 @@ class Basic:
         deployments_basic_blueprint = Blueprint('deployments_basic', __name__, template_folder='deployments_basic')
 
         @deployments_basic_blueprint.route('/deployments/basic', methods=['GET','POST','PUT'])
-        @jwt_required
+        @jwt_required()
         def deployments_basic_method():
             # Check license
             if not self._license.validated:
@@ -62,7 +62,7 @@ class Basic:
                 return self.__put(user, deployment_json)
 
         @deployments_basic_blueprint.route('/deployments/basic/executions', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def deployments_basic_executions():
             # Check license
             if not self._license.validated:
@@ -87,7 +87,7 @@ class Basic:
             return jsonify({'data': executions }), 200
 
         @deployments_basic_blueprint.route('/deployments/basic/start', methods=['POST'])
-        @jwt_required
+        @jwt_required()
         def deployments_basic_start():
             # Check license
             if not self._license.validated:
@@ -114,7 +114,7 @@ class Basic:
             return self.__start(user, deployment_json)
 
         @deployments_basic_blueprint.route('/deployments/basic/stop', methods=['POST'])
-        @jwt_required
+        @jwt_required()
         def deployments_basic_stop():
             # Check license
             if not self._license.validated:
@@ -145,7 +145,7 @@ class Basic:
             return self.__stop(deployment_json)
 
         @deployments_basic_blueprint.route('/deployments/basic/public', methods=['POST'])
-        @jwt_required
+        @jwt_required()
         def deployments_basic_public():
             # Check license
             if not self._license.validated:

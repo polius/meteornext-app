@@ -24,7 +24,7 @@ class Settings:
         settings_blueprint = Blueprint('settings', __name__, template_folder='settings')
 
         @settings_blueprint.route('/admin/settings', methods=['GET','PUT'])
-        @jwt_required
+        @jwt_required()
         def settings_method():
             # Check license
             if not self._license.validated:
