@@ -129,7 +129,7 @@ class MySQL:
 
     def fetch_many(self, size):
         if self._cursor:
-            return self._cursor.fetchmany(size=None)
+            return self._cursor.fetchmany(size=size)
 
     def begin(self):
         self._sql.begin()

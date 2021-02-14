@@ -52,6 +52,9 @@
                     <v-col cols="auto">
                       <v-select v-model="include" @change="includeChanged" :items="includeItems" label="Include" dense outlined hide-details style="margin-top:15px; width:250px;"></v-select>
                     </v-col>
+                    <v-col cols="auto" style="margin-left:10px">
+                      <v-text-field v-model="rows" outlined dense label="New INSERT statement every X rows" :rules="[v => v == parseInt(v) && v > 0 || '']" hide-details style="margin-top:15px; width:250px;"></v-text-field>
+                    </v-col>
                     <v-col cols="auto" style="margin-left:10px; margin-top:4px">
                       <v-checkbox :disabled="include == 'Content'" v-model="includeDropTable" label="Include DROP syntax" hide-details></v-checkbox>
                     </v-col>
@@ -103,7 +106,7 @@
                     <v-icon v-else-if="progressStep == 'fail'" title="Finished with errors" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
                     <v-icon v-else-if="progressStep == 'stop'" title="Stopped" small style="color:#fa8231; padding-bottom:2px;">fas fa-exclamation-circle</v-icon>
                     <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
-                    <span style="margin-left:8px">{{ progressText + ' ' + this.progressBytes }}</span>  
+                    <span style="margin-left:8px">{{ progressStep == 'export' ? progressText + (progressBytes == 0 ? ' Fetching data... ' : ' Downloading data... [' + this.progressBytes + ']') : progressText }}</span>  
                   </div>
                   <v-textarea v-if="exportErrors.length > 0" readonly filled label="Errors" :value="exportErrors" height="40vh" style="margin-top:10px; margin-bottom:15px" hide-details></v-textarea>
                 </div>
@@ -173,6 +176,7 @@ export default {
       objectsCount: {'tables':0,'views':0,'triggers':0,'functions':0,'procedures':0,'events':0},
       // Include
       include: 'Structure + Content',
+      rows: '1000',
       includeItems: ['Structure + Content','Structure','Content'],
       includeDropTable: true,
       includeFields: true,
@@ -221,6 +225,7 @@ export default {
   methods: {
     showDialog(selected) {
       this.include = 'Structure + Content'
+      this.rows = '1000'
       this.includeFields = true
       this.selected = selected
       this.dialog = true
@@ -314,6 +319,11 @@ export default {
       if (this.include == 'Content') this.includeDropTable = false
     },
     exportObjectsSubmit() {
+      // Check if all fields are filled
+      if (!this.$refs.dialogForm.validate()) {
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
       // Get selected objects
       let objects = {'tables': [], 'views': [], 'triggers': [], 'functions': [], 'procedures': [], 'events': []}
       if (this.tab == 'sql') objects['tables'] = this.gridApi['tables'].getSelectedRows().map(x => x.name)
@@ -338,9 +348,7 @@ export default {
 
       // Start Timer
       this.progressTimeValue = moment().startOf("day");
-      this.progressTimeEvent = setInterval(() => {
-        this.progressTimeValue.add(1, 'second')
-      }, 1000)
+      this.progressTimeEvent = setInterval(() => { this.progressTimeValue.add(1, 'second') }, 1000)
 
       // Build Header
       if (this.tab == 'sql') {
@@ -395,7 +403,6 @@ export default {
           this.progressStep = 'fail'
           this.progressText = 'Export finished with errors.'
         }
-        this.progressBytes = ''
       })
       .catch(() => {})
       .finally(() => {
@@ -411,6 +418,7 @@ export default {
         options: {
           mode: this.tab,
           include: this.include,
+          rows: this.rows,
           includeDropTable: this.includeDropTable,
           fields: this.includeFields,
           object: '',
@@ -427,13 +435,10 @@ export default {
           let i = 1
           for (let objName of objects[objSchema]) {
             // Start Object Export
-            let text = objSchema.charAt(0).toUpperCase() + objSchema.slice(1,-1) + ' ' + i.toString() + ' of ' + n.toString() + ' (' + objName + ').'
             payload['options']['object'] = objSchema.slice(0, -1)
             payload['options']['items'] = [objName]
-            this.progressStep = 'export'
-            this.progressText = text + ' Fetching data...'
+            this.progressText = objSchema.charAt(0).toUpperCase() + objSchema.slice(1,-1) + ' ' + i.toString() + ' of ' + n.toString() + ' (' + objName + ').'
             const data = await this.exportObject(payload)
-            this.progressText = text + ' Writing data...'
             this.exportData = new Blob([this.exportData, data])
             // Check Errors
             let dataSlice = await data.slice(0, 1024).text()
@@ -466,7 +471,7 @@ export default {
       // Build options
       const CancelToken = axios.CancelToken
       this.cancelToken = CancelToken.source()
-      this.progressBytes = ''
+      this.progressBytes = 0
       const options = {
         cancelToken: this.cancelToken.token,
         onDownloadProgress: (progressEvent) => {
