@@ -106,7 +106,7 @@
                     <v-icon v-else-if="progressStep == 'fail'" title="Finished with errors" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
                     <v-icon v-else-if="progressStep == 'stop'" title="Stopped" small style="color:#fa8231; padding-bottom:2px;">fas fa-exclamation-circle</v-icon>
                     <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
-                    <span style="margin-left:8px">{{ progressStep == 'export' ? progressText + (progressBytes == 0 ? ' Fetching data... ' : ' Downloading data... [' + this.progressBytes + ']') : progressText }}</span>  
+                    <span style="margin-left:8px">{{ progressStep == 'export' ? progressText + (progressBytes == 0 ? ' Fetching data... ' : ' Downloading data... [' + this.progressBytes + ' / ' + this.progressTotal + ']') : progressText }}</span>  
                   </div>
                   <v-textarea v-if="exportErrors.length > 0" readonly filled label="Errors" :value="exportErrors" height="40vh" style="margin-top:10px; margin-bottom:15px" hide-details></v-textarea>
                 </div>
@@ -186,6 +186,7 @@ export default {
       progressStep: 'export', 
       progressValue: 0,
       progressBytes: 0,
+      progressTotal: 0,
       progressTimeEvent: null,
       progressTimeValue: null,
       selected: undefined,
@@ -472,10 +473,12 @@ export default {
       const CancelToken = axios.CancelToken
       this.cancelToken = CancelToken.source()
       this.progressBytes = 0
+      this.progressTotal = 0
       const options = {
         cancelToken: this.cancelToken.token,
         onDownloadProgress: (progressEvent) => {
           this.progressBytes = this.parseBytes(progressEvent.loaded)
+          this.progressTotal = this.parseBytes(progressEvent.total)
         },
         responseType: 'blob',
         params: payload,
