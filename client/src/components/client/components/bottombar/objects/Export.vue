@@ -6,7 +6,7 @@
           <v-toolbar-title class="white--text">Export Objects</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="tabClick('sql')" :color="sqlColor" style="margin-right:10px;">SQL</v-btn>
-          <v-btn @click="tabClick('csv')" :color="csvColor" style="margin-right:10px;">CSV</v-btn>
+          <v-btn @click="tabClick('csv')" :color="csvColor">CSV</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="selectAll" text title="Select all" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
           <v-btn @click="deselectAll" text title="Deselect all" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
