@@ -676,25 +676,20 @@ class Client:
                         yield '{};\n\n'.format(syntax)
                     if options['include'] in ['Structure + Content','Content']:
                         first = True
-                        i = 0
                         while True:
-                            row = conn.fetch_one()
-                            if row == None:
-                                if not first:
-                                    yield ';\n\n'
+                            rows = conn.fetch_many(int(options['rows']))
+                            if rows is None or len(rows) == 0:
                                 break
-                            if i == 1000:
-                                yield ';\n\n'
-                                i = 0
-                                first = True
-                            args = [v for k, v in row.items()]
-                            if first:
-                                yield 'INSERT INTO `{}` ({})\nVALUES\n'.format(table, ','.join([f'`{k}`' for k, v in row.items()]))
-                                first = False
-                                yield '({})'.format(conn.mogrify(','.join(repeat('%s', len(args))), args))
-                            else:
-                                yield ',\n({})'.format(conn.mogrify(','.join(repeat('%s', len(args))), args))
-                            i += 1
+                            for row in rows:
+                                args = [v for k, v in row.items()]
+                                if first:
+                                    yield 'INSERT INTO `{}` ({})\nVALUES\n'.format(table, ','.join([f'`{k}`' for k, v in row.items()]))
+                                    yield '({})'.format(conn.mogrify(','.join(repeat('%s', len(args))), args))
+                                    first = False
+                                else:
+                                    yield ',\n({})'.format(conn.mogrify(','.join(repeat('%s', len(args))), args))
+                            yield ';\n\n'
+                            first = True
                 except Exception as e:
                     yield '# Error: {}\n\n'.format(e)
 
