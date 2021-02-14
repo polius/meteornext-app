@@ -17,7 +17,7 @@ class Parameters:
         monitoring_parameters_blueprint = Blueprint('monitoring_parameters', __name__, template_folder='monitoring_parameters')
 
         @monitoring_parameters_blueprint.route('/monitoring/parameters', methods=['GET', 'PUT'])
-        @jwt_required
+        @jwt_required()
         def monitoring_parameters_method():
             # Check license
             if not self._license.validated:

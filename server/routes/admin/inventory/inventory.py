@@ -20,7 +20,7 @@ class Inventory:
         admin_inventory_blueprint = Blueprint('admin_inventory', __name__, template_folder='admin_inventory')
 
         @admin_inventory_blueprint.route('/admin/inventory/groups', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def admin_inventory_groups_method():
             # Check license
             if not self._license.validated:
@@ -41,7 +41,7 @@ class Inventory:
             return jsonify({'groups': self._inventory.get_groups()}), 200
 
         @admin_inventory_blueprint.route('/admin/inventory/users', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def admin_inventory_users_method():
             # Check license
             if not self._license.validated:

@@ -25,7 +25,7 @@ class Deployments:
         admin_deployments_blueprint = Blueprint('admin_deployments', __name__, template_folder='admin_deployments')
 
         @admin_deployments_blueprint.route('/admin/deployments', methods=['GET','PUT'])
-        @jwt_required
+        @jwt_required()
         def admin_deployments_method():
             # Check license
             if not self._license.validated:
@@ -56,7 +56,7 @@ class Deployments:
                 return jsonify({'message': 'Deployment edited successfully'}), 200
 
         @admin_deployments_blueprint.route('/admin/deployments/releases', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def admin_deployments_releases_method():
             # Check license
             if not self._license.validated:
@@ -73,7 +73,7 @@ class Deployments:
             return jsonify({'releases': self._releases.getActive(user_id=request.args['user_id'])}), 200
 
         @admin_deployments_blueprint.route('/admin/deployments/filter', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def admin_deployments_search_method():
             # Check license
             if not self._license.validated:

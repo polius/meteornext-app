@@ -22,7 +22,7 @@ class Environments:
         admin_environments_blueprint = Blueprint('admin_environments', __name__, template_folder='admin_environments')
 
         @admin_environments_blueprint.route('/admin/inventory/environments', methods=['GET','POST','PUT','DELETE'])
-        @jwt_required
+        @jwt_required()
         def admin_environments_method():
             # Check license
             if not self._license.validated:
@@ -52,7 +52,7 @@ class Environments:
                 return self.delete()
 
         @admin_environments_blueprint.route('/admin/inventory/environments/servers', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def admin_environment_servers_method():
             # Check license
             if not self._license.validated:

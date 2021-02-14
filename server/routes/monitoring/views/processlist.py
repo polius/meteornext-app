@@ -17,7 +17,7 @@ class Processlist:
         monitoring_processlist_blueprint = Blueprint('monitoring_processlist', __name__, template_folder='monitoring_processlist')
 
         @monitoring_processlist_blueprint.route('/monitoring/processlist', methods=['GET', 'PUT'])
-        @jwt_required
+        @jwt_required()
         def monitoring_processlist_method():
             # Check license
             if not self._license.validated:
@@ -39,7 +39,7 @@ class Processlist:
                 return self.put(user, monitoring_json)
 
         @monitoring_processlist_blueprint.route('/monitoring/processlist/start', methods=['PUT'])
-        @jwt_required
+        @jwt_required()
         def monitoring_processlist_start_method():
             # Check license
             if not self._license.validated:
@@ -57,7 +57,7 @@ class Processlist:
             return jsonify({'message': 'Processlist started'}), 200
         
         @monitoring_processlist_blueprint.route('/monitoring/processlist/stop', methods=['PUT'])
-        @jwt_required
+        @jwt_required()
         def monitoring_processlist_stop_method():
             # Check license
             if not self._license.validated:

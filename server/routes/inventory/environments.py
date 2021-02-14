@@ -19,7 +19,7 @@ class Environments:
         environments_blueprint = Blueprint('environments', __name__, template_folder='environments')
 
         @environments_blueprint.route('/inventory/environments', methods=['GET','POST','PUT','DELETE'])
-        @jwt_required
+        @jwt_required()
         def environments_method():
             # Check license
             if not self._license.validated:
@@ -45,7 +45,7 @@ class Environments:
                 return self.delete(user)
 
         @environments_blueprint.route('/inventory/environments/list', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def environments_list_method():
             # Check license
             if not self._license.validated:

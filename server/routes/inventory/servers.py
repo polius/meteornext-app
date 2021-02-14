@@ -21,7 +21,7 @@ class Servers:
         servers_blueprint = Blueprint('servers', __name__, template_folder='servers')
 
         @servers_blueprint.route('/inventory/servers', methods=['GET','POST','PUT','DELETE'])
-        @jwt_required
+        @jwt_required()
         def servers_method():
             # Check license
             if not self._license.validated:
@@ -47,7 +47,7 @@ class Servers:
                 return self.delete(user)
 
         @servers_blueprint.route('/inventory/servers/test', methods=['POST'])
-        @jwt_required
+        @jwt_required()
         def servers_test_method():
             # Check license
             if not self._license.validated:

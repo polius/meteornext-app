@@ -2,7 +2,7 @@ import pyotp
 import bcrypt
 import models.admin.users
 from flask import request, jsonify, Blueprint
-from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity)
+from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required)
 
 import routes.admin.settings
 
@@ -80,7 +80,7 @@ class Login:
                 raise
 
         @login_blueprint.route('/login/check', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def login_check():
             return jsonify({'message': 'OK'}), 200
 

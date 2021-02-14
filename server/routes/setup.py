@@ -8,7 +8,6 @@ import requests
 import threading
 from datetime import datetime, timedelta
 from flask import request, jsonify, Blueprint
-from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required, jwt_refresh_token_required, get_jwt_identity)
 
 import routes.login
 import routes.profile

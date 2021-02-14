@@ -22,7 +22,7 @@ class Queries:
         monitoring_queries_blueprint = Blueprint('monitoring_queries', __name__, template_folder='monitoring_queries')
 
         @monitoring_queries_blueprint.route('/monitoring/queries', methods=['GET','PUT'])
-        @jwt_required
+        @jwt_required()
         def monitoring_queries_method():
             # Check license
             if not self._license.validated:

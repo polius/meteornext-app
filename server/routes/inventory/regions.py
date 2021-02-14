@@ -20,7 +20,7 @@ class Regions:
         regions_blueprint = Blueprint('regions', __name__, template_folder='regions')       
 
         @regions_blueprint.route('/inventory/regions', methods=['GET','POST','PUT','DELETE'])
-        @jwt_required
+        @jwt_required()
         def regions_method():
             # Check license
             if not self._license.validated:
@@ -46,7 +46,7 @@ class Regions:
                 return self.delete(user)
 
         @regions_blueprint.route('/inventory/regions/test', methods=['POST'])
-        @jwt_required
+        @jwt_required()
         def regions_test_method():
             # Check license
             if not self._license.validated:

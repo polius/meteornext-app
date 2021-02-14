@@ -18,7 +18,7 @@ class Releases:
         releases_blueprint = Blueprint('releases', __name__, template_folder='releases')
 
         @releases_blueprint.route('/deployments/releases', methods=['GET','POST','PUT','DELETE'])
-        @jwt_required
+        @jwt_required()
         def releases_method():
             # Check license
             if not self._license.validated:
@@ -44,7 +44,7 @@ class Releases:
                 return self.delete(user['id'], release_json)
 
         @releases_blueprint.route('/deployments/releases/active', methods=['GET','PUT'])
-        @jwt_required
+        @jwt_required()
         def releases_active_method():
             # Check license
             if not self._license.validated:

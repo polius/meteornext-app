@@ -40,7 +40,7 @@ class Pro:
         deployments_pro_blueprint = Blueprint('deployments_pro', __name__, template_folder='deployments_pro')
 
         @deployments_pro_blueprint.route('/deployments/pro', methods=['GET','POST','PUT'])
-        @jwt_required
+        @jwt_required()
         def deployments_pro_method():
             # Check license
             if not self._license.validated:
@@ -64,7 +64,7 @@ class Pro:
                 return self.__put(user, deployment_json)
 
         @deployments_pro_blueprint.route('/deployments/pro/code', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def deployments_pro_code():
             # Check license
             if not self._license.validated:
@@ -83,7 +83,7 @@ class Pro:
                 return jsonify({'data': file_open.read()}), 200
 
         @deployments_pro_blueprint.route('/deployments/pro/executions', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def deployments_pro_executions():
             # Check license
             if not self._license.validated:
@@ -108,7 +108,7 @@ class Pro:
             return jsonify({'data': executions }), 200
 
         @deployments_pro_blueprint.route('/deployments/pro/start', methods=['POST'])
-        @jwt_required
+        @jwt_required()
         def deployments_pro_start():
             # Check license
             if not self._license.validated:
@@ -135,7 +135,7 @@ class Pro:
             return self.__start(user, deployment_json)
 
         @deployments_pro_blueprint.route('/deployments/pro/stop', methods=['POST'])
-        @jwt_required
+        @jwt_required()
         def deployments_pro_stop():
             # Check license
             if not self._license.validated:
@@ -166,7 +166,7 @@ class Pro:
             return self.__stop(deployment_json)
 
         @deployments_pro_blueprint.route('/deployments/pro/public', methods=['POST'])
-        @jwt_required
+        @jwt_required()
         def deployments_pro_public():
             # Check license
             if not self._license.validated:

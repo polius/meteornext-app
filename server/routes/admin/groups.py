@@ -27,7 +27,7 @@ class Groups:
         groups_blueprint = Blueprint('groups', __name__, template_folder='groups')
 
         @groups_blueprint.route('/admin/groups', methods=['GET','POST','PUT','DELETE'])
-        @jwt_required
+        @jwt_required()
         def groups_method():
             # Check license
             if not self._license.validated:
@@ -56,7 +56,7 @@ class Groups:
                 return self.delete()
 
         @groups_blueprint.route('/admin/groups/slack', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def groups_slack_test_method():
             # Check license
             if not self._license.validated:
@@ -95,7 +95,7 @@ class Groups:
                 return jsonify({'message': "Slack message successfully sent"}), 200
 
         @groups_blueprint.route('/admin/groups/usage', methods=['GET'])
-        @jwt_required
+        @jwt_required()
         def groups_usage_method():
             # Check license
             if not self._license.validated:
