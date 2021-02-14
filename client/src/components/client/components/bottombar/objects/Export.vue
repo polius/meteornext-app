@@ -8,6 +8,9 @@
           <v-btn @click="tabClick('sql')" :color="sqlColor" style="margin-right:10px;">SQL</v-btn>
           <v-btn @click="tabClick('csv')" :color="csvColor" style="margin-right:10px;">CSV</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="selectAll" text title="Select all" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
+          <v-btn @click="deselectAll" text title="Deselect all" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field @input="onSearch" v-model="search" label="Search" append-icon="search" color="white" single-line hide-details></v-text-field>
           <v-divider class="ml-3 mr-1" inset vertical></v-divider>
           <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
@@ -20,30 +23,30 @@
                   <div style="padding-left:1px; padding-right:1px;">
                     <v-tabs v-model="tabObjectsSelected" show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
                       <v-tabs-slider></v-tabs-slider>
-                      <v-tab><span class="pl-2 pr-2">Tables</span></v-tab>
+                      <v-tab><span class="pl-2 pr-2">{{ `Tables (${objectsCount.tables})` }}</span></v-tab>
                       <v-divider class="mx-3" inset vertical></v-divider>
-                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">Views</span></v-tab>
+                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">{{ `Views (${objectsCount.views})` }}</span></v-tab>
                       <v-divider v-if="tab == 'sql'" class="mx-3" inset vertical></v-divider>
-                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">Triggers</span></v-tab>
+                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">{{ `Triggers (${objectsCount.triggers})` }}</span></v-tab>
                       <v-divider v-if="tab == 'sql'" class="mx-3" inset vertical></v-divider>
-                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">Functions</span></v-tab>
+                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">{{ `Functions (${objectsCount.functions})` }}</span></v-tab>
                       <v-divider v-if="tab == 'sql'" class="mx-3" inset vertical></v-divider>
-                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">Procedures</span></v-tab>
+                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">{{ `Procedures (${objectsCount.procedures})` }}</span></v-tab>
                       <v-divider v-if="tab == 'sql'" class="mx-3" inset vertical></v-divider>
-                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">Events</span></v-tab>
+                      <v-tab v-if="tab == 'sql'"><span class="pl-2 pr-2">{{ `Events (${objectsCount.events})` }}</span></v-tab>
                       <v-divider v-if="tab == 'sql'" class="mx-3" inset vertical></v-divider>
                       <v-spacer></v-spacer>
                       <v-btn :disabled="loading" :loading="loading" @click="buildObjects()" title="Refresh" text style="font-size:16px; padding:0px; min-width:36px; height:36px; margin-top:6px; margin-right:8px;"><v-icon small>fas fa-redo-alt</v-icon></v-btn>
                     </v-tabs>
                   </div>
                   <div style="height:54vh">
-                    <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'csv'" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('tablesCsv', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDefCsv" :rowData="objectsItems.tables"></ag-grid-vue>
-                    <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'sql'" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('tables', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDef" :rowData="objectsItems.tables"></ag-grid-vue>
-                    <ag-grid-vue v-show="tabObjectsSelected == 1" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('views', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.views" :defaultColDef="defaultColDef" :rowData="objectsItems.views"></ag-grid-vue>
-                    <ag-grid-vue v-show="tabObjectsSelected == 2" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('triggers', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.triggers" :defaultColDef="defaultColDef" :rowData="objectsItems.triggers"></ag-grid-vue>
-                    <ag-grid-vue v-show="tabObjectsSelected == 3" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('functions', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.functions" :defaultColDef="defaultColDef" :rowData="objectsItems.functions"></ag-grid-vue>
-                    <ag-grid-vue v-show="tabObjectsSelected == 4" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('procedures', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.procedures" :defaultColDef="defaultColDef" :rowData="objectsItems.procedures"></ag-grid-vue>
-                    <ag-grid-vue v-show="tabObjectsSelected == 5" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('events', $event)" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.events" :defaultColDef="defaultColDef" :rowData="objectsItems.events"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'csv'" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('tablesCsv', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" @selection-changed="onSelectionChanged('tablesCsv')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDefCsv" :rowData="objectsItems.tables"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 0 && tab == 'sql'" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('tables', $event)" @new-columns-loaded="onNewColumnsLoaded('tables')" @selection-changed="onSelectionChanged('tables')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.tables" :defaultColDef="defaultColDef" :rowData="objectsItems.tables"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 1" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('views', $event)" @selection-changed="onSelectionChanged('views')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.views" :defaultColDef="defaultColDef" :rowData="objectsItems.views"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 2" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('triggers', $event)" @selection-changed="onSelectionChanged('triggers')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.triggers" :defaultColDef="defaultColDef" :rowData="objectsItems.triggers"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 3" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('functions', $event)" @selection-changed="onSelectionChanged('functions')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.functions" :defaultColDef="defaultColDef" :rowData="objectsItems.functions"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 4" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('procedures', $event)" @selection-changed="onSelectionChanged('procedures')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.procedures" :defaultColDef="defaultColDef" :rowData="objectsItems.procedures"></ag-grid-vue>
+                    <ag-grid-vue v-show="tabObjectsSelected == 5" suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection @grid-ready="onGridReady('events', $event)" @selection-changed="onSelectionChanged('events')" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="objectsHeaders.events" :defaultColDef="defaultColDef" :rowData="objectsItems.events"></ag-grid-vue>
                   </div>
                   <v-row v-if="tab == 'sql'" no-gutters>
                     <v-col cols="auto">
@@ -90,7 +93,7 @@
               </v-row>
               <v-flex xs12>
                 <div style="margin-top:10px; margin-bottom:10px;">
-                  <v-progress-linear :indeterminate="progressStep == 'build'" :value="progressValue" rounded color="primary" height="25">
+                  <v-progress-linear :value="progressValue" rounded color="primary" height="25">
                     <template>
                       {{ progressValue + '%' }}
                     </template>
@@ -106,7 +109,7 @@
                 </div>
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:15px;">
-                  <v-col v-if="['export','build'].includes(progressStep)" cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                  <v-col v-if="progressStep == 'export'" cols="auto" style="margin-right:5px; margin-bottom:10px;">
                     <v-btn @click="cancelExport" color="#e74c3c">Cancel</v-btn>
                   </v-col>
                   <v-col v-else style="margin-bottom:10px;">
@@ -167,6 +170,7 @@ export default {
         checkboxSelection: (params) => { return params.columnApi.getAllDisplayedColumns()[0] === params.column },
       },
       objects: ['tables','views','triggers','functions','procedures','events'],
+      objectsCount: {'tables':0,'views':0,'triggers':0,'functions':0,'procedures':0,'events':0},
       // Include
       include: 'Structure + Content',
       includeItems: ['Structure + Content','Structure','Content'],
@@ -237,6 +241,18 @@ export default {
     onNewColumnsLoaded(object) {
       if (this.gridApi[object] != null) this.resizeTable(object, true)
     },
+    onSelectionChanged(object) {
+      if (object == 'tablesCsv') this.objectsCount['tables'] = this.gridApi[object].getSelectedRows().length
+      else this.objectsCount[object] = this.gridApi[object].getSelectedRows().length
+    },
+    selectAll() {
+      const objects = (this.tab == 'sql') ? ['tables','views','triggers','functions','procedures','events'] : ['tablesCsv']
+      for (let obj of objects) try { this.gridApi[obj].selectAll() } catch {} // eslint-disable-line
+    },
+    deselectAll() {
+      const objects = (this.tab == 'sql') ? ['tables','views','triggers','functions','procedures','events'] : ['tablesCsv']
+      for (let obj of objects) try { this.gridApi[obj].deselectAll() } catch {} // eslint-disable-line
+    },
     selectRow() {
       if (this.selected === undefined || this.gridApi[this.selected['object']] == null) return
       this.$nextTick(() => { 
@@ -271,6 +287,10 @@ export default {
         this.csvColor = 'primary'
         this.resizeTable('tablesCsv', false)
       }
+      // Deselect all rows
+      const objects = ['tables','tablesCsv','views','triggers','functions','procedures','events']
+      for (let obj of objects) try { this.gridApi[obj].deselectAll() } catch {} // eslint-disable-line
+      // Change tab
       this.tab = object
       this.tabObjectsSelected = 0
     },
@@ -354,14 +374,14 @@ export default {
             footer += '# Export Finished Successfully\n'
             footer += '# ************************************************************'
           }
-          this.exportData.push(new Blob([footer]))
+          this.exportData = new Blob([this.exportData, footer])
         }
         // Download file
-        this.progressStep = 'build'
-        this.progressText = 'Building export file...'
-        const url = window.URL.createObjectURL(new Blob(this.exportData))
+        const url = window.URL.createObjectURL(this.exportData)
         const link = document.createElement('a')
-        link.setAttribute('download', 'export.sql')
+        const name = (this.tab == 'sql') ? this.database : objects['tables'][0]
+        const extension = (this.tab == 'sql') ? 'sql' : 'csv'
+        link.setAttribute('download', name + '.' + extension)
         link.href = url
         document.body.appendChild(link)
         link.click()
@@ -375,6 +395,7 @@ export default {
           this.progressStep = 'fail'
           this.progressText = 'Export finished with errors.'
         }
+        this.progressBytes = ''
       })
       .catch(() => {})
       .finally(() => {
@@ -396,36 +417,42 @@ export default {
           items: [],
         }
       }
-      const total = objects['tables'].length + objects['views'].length + objects['triggers'].length + objects['functions'].length + objects['procedures'].length + objects['events'].length
+      let total = objects['tables'].length
+      if (payload['options']['mode'] == 'sql') total += objects['views'].length + objects['triggers'].length + objects['functions'].length + objects['procedures'].length + objects['events'].length
       let t = 1
       const jobs = async () => {
-        for (let objSchema of ['tables','views','triggers','functions','procedures','events']) {
+        let objectsType = (payload['options']['mode'] == 'csv') ? ['tables'] : ['tables','views','triggers','functions','procedures','events']
+        for (let objSchema of objectsType) {
           const n = objects[objSchema].length
           let i = 1
           for (let objName of objects[objSchema]) {
-            // Update Progress Text
-            this.progressText = objSchema.charAt(0).toUpperCase() + objSchema.slice(1,-1) + ' ' + i.toString() + ' of ' + n.toString() + ' (' + objName + ').'
             // Start Object Export
+            let text = objSchema.charAt(0).toUpperCase() + objSchema.slice(1,-1) + ' ' + i.toString() + ' of ' + n.toString() + ' (' + objName + ').'
             payload['options']['object'] = objSchema.slice(0, -1)
             payload['options']['items'] = [objName]
+            this.progressStep = 'export'
+            this.progressText = text + ' Fetching data...'
             const data = await this.exportObject(payload)
-            this.exportData.push(new Blob([data]))
+            this.progressText = text + ' Writing data...'
+            this.exportData = new Blob([this.exportData, data])
+            // Check Errors
+            let dataSlice = await data.slice(0, 1024).text()
+            if (payload['options']['mode'] == 'sql' && dataSlice.split("\n")[3].startsWith('# Error: ')) {
+              this.exportError = true
+              if (this.exportErrors.length != 0) this.exportErrors += '\n'
+              this.exportErrors += dataSlice.split("\n")[3].substring(9)
+            }
             // Update Progress Value
             this.progressValue = Math.round(100*t/total)
             i += 1
             t += 1
-            // Check Errors
-            // if (payload['options']['mode'] == 'sql' && data.split("\n")[3].startsWith('# Error: ')) {
-            //   this.exportError = true
-            //   if (this.exportErrors.length != 0) this.exportErrors += '\n'
-            //   this.exportErrors += data.split("\n")[3].substring(9)
-            // }
           }
         }
       }
       jobs()
       .then(() => resolve())
       .catch((error) => {
+        console.log(error)
         if (axios.isCancel(error)) {
           this.progressStep = 'stop'
           this.progressText = 'Export interrupted by user.'
