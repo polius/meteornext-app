@@ -353,7 +353,7 @@ export default {
         header += '# ************************************************************\n\n'
         header += 'SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;\n'
         header += 'SET FOREIGN_KEY_CHECKS = 0;\n\n'
-        this.exportData.push(new Blob([header]))
+        this.exportData = new Blob([header])
       }
 
       // Export Objects
