@@ -15,8 +15,12 @@ class Monitoring:
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
 
-    def monitor(self):
+    def init(self):
+        self._sql.execute(query="UPDATE monitoring_servers SET processing = 0")
+
+    def start(self):
         # Get Monitoring Servers
+        print('[{}] START'.format(self.__utcnow()))
         utcnow = self.__utcnow()
         query = """
             SELECT 
@@ -30,11 +34,13 @@ class Monitoring:
             JOIN users u ON u.id = m.user_id AND u.disabled = 0
             JOIN servers s ON s.id = m.server_id AND s.usage LIKE '%%M%%'
             JOIN regions r ON r.id = s.region_id
-			WHERE ms.updated IS NULL
-            OR (m.processlist_enabled = 1 AND m.processlist_active = 1)
-            OR m.queries_enabled = 1
-            OR m.monitor_enabled = 1 
-			OR m.parameters_enabled = 1
+			WHERE ms.processing = 0
+            AND (
+                (m.processlist_enabled = 1 AND m.processlist_active = 1)
+                OR m.queries_enabled = 1
+                OR m.monitor_enabled = 1 
+                OR m.parameters_enabled = 1
+            )
             GROUP BY m.server_id
             HAVING needs_update = 1;
         """
@@ -60,6 +66,7 @@ class Monitoring:
 
         for t in threads:
             t.join()
+        print('[{}] FINISH'.format(self.__utcnow()))
 
     def clean(self):
         utcnow = self.__utcnow()
@@ -107,17 +114,18 @@ class Monitoring:
 
     def __monitor_server(self, server):
         try:
-            # Init Connection
-            conn = None
-
-            # If server is not available check connection every 15 seconds
+            # If server is not available check connection every 30 seconds
             if server['monitor']['updated'] is not None:
                 diff = (datetime.datetime.utcnow() - server['monitor']['updated']).total_seconds()
-                if server['monitor']['available'] == 0 and diff < 15:
+                if server['monitor']['available'] == 0 and diff < 30:
                     return
+
+            # Enable processing
+            self._sql.execute(query="UPDATE monitoring_servers SET processing = 1 WHERE server_id = %s", args=(server['id']))
 
             # Start Connection
             conn = connectors.base.Base({'ssh': server['ssh'], 'sql': server['sql']})
+            conn.test_sql()
             conn.connect()
         except Exception as e:
             # Monitoring Alarms
@@ -200,9 +208,13 @@ class Monitoring:
                 """
                 self._sql.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist, utcnow))
         finally:
+            # Disable processing
+            self._sql.execute(query="UPDATE monitoring_servers SET processing = 0 WHERE server_id = %s", args=(server['id']))
             # Stop Connection
-            if conn:
+            try:
                 conn.stop()
+            except Exception:
+                pass
 
     def __monitor_alarms(self, available, server, summary={}, params={}, processlist=[], error=None):
         # Init vars
@@ -411,8 +423,8 @@ class Monitoring:
         return self._sql.execute(query=query, args=(server_id))
 
     def __add_event(self, server_id, event, data=None):
-        query = "INSERT INTO monitoring_events (`server_id`, `event`, `data`) VALUES (%s, %s, %s)"
-        self._sql.execute(query=query, args=(server_id, event, data))
+        query = "INSERT INTO monitoring_events (`server_id`, `event`, `data`, `time`) VALUES (%s, %s, %s, %s)"
+        self._sql.execute(query=query, args=(server_id, event, data, self.__utcnow()))
 
     def __dict2str(self, data):
         return json.dumps(data, separators=(',', ':'))

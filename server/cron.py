@@ -20,12 +20,15 @@ class Cron:
 
         @app.before_first_request
         def start():
-            # Init Crons
+            # One Time Tasks
+            self.__monitoring_init()
+
+            # Recurring Tasks
             schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
             schedule.every(1).hour.do(self.__run_threaded, self.__monitoring_clean)
-            schedule.every(1).seconds.do(self.__run_threaded, self.__monitoring)
+            schedule.every(10).seconds.do(self.__run_threaded, self.__monitoring_start)
 
             # Start Cron Listener
             t = threading.Thread(target=self.__run_schedule)
@@ -108,6 +111,13 @@ class Cron:
         except Exception as e:
             traceback.print_exc()
 
+    def __monitoring_init(self):
+        try:
+            monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
+            monitoring.init()
+        except Exception as e:
+            traceback.print_exc()
+
     def __monitoring_clean(self):
         try:
             monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
@@ -115,9 +125,9 @@ class Cron:
         except Exception as e:
             traceback.print_exc()
 
-    def __monitoring(self):
+    def __monitoring_start(self):
         try:
             monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
-            monitoring.monitor()
+            monitoring.start()
         except Exception as e:
             traceback.print_exc()

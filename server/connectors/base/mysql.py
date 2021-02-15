@@ -24,6 +24,7 @@ class MySQL:
         try:
             # Start SSH Tunnel
             if 'ssh' in self._server and self._server['ssh']['enabled']:
+                sshtunnel.SSH_TIMEOUT = 5.0
                 password = None if self._server['ssh']['password'] is None or len(self._server['ssh']['password'].strip()) == 0 else self._server['ssh']['password']
                 pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=password)
                 self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']), mute_exceptions=True, logger=self.__logger())
@@ -46,7 +47,7 @@ class MySQL:
             pass        
         try:
             self._tunnel.stop(force=True)
-        except Exception:
+        except Exception as e:
             pass
 
     def execute(self, query, args=None, database=None, retry=True):
