@@ -336,8 +336,10 @@ CREATE TABLE `monitoring_servers` (
   `processlist` MEDIUMTEXT NULL,
   `error` TEXT NULL,
   `updated` DATETIME NULL,
+  `processing` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`server_id`),
-  FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
+  FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`),
+  INDEX `processing` (`processing`),
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `monitoring_queries` (
@@ -380,7 +382,7 @@ CREATE TABLE `monitoring_events` (
   `server_id` INT UNSIGNED NOT NULL,
   `event` VARCHAR(191) NOT NULL,
   `data` TEXT NULL,
-  `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `time` DATETIME NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `server_id` (`server_id`),
   INDEX `time` (`time`),

@@ -57,7 +57,7 @@
                 <v-form ref="form" style="margin-bottom:15px;">
                   <v-row no-gutters>
                     <v-col style="margin-right:5px">
-                      <v-text-field filled v-model="settings.monitor_interval" :rules="[v => v == parseInt(v) && v > 0 || '']" label="Data Collection Interval (seconds)" required hide-details></v-text-field>
+                      <v-text-field filled v-model="settings.monitor_interval" :rules="[v => v == parseInt(v) && v > 9 || '']" label="Data Collection Interval (seconds)" required hide-details></v-text-field>
                     </v-col>
                     <v-col style="margin-left:5px">
                       <v-select filled v-model="settings.monitor_align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>

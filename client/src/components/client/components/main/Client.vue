@@ -55,7 +55,7 @@
     <!------------>
     <!-- DIALOG -->
     <!------------>
-    <v-dialog v-model="dialog" persistent max-width="50%">
+    <v-dialog v-model="dialog" max-width="50%">
       <v-card>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px">
@@ -186,6 +186,7 @@ export default {
     },
     dialog: function(val) {
       this.dialogOpened = val
+      if (!val) this.editor.focus()
     }
   },
   methods: {
