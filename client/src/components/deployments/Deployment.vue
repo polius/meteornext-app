@@ -1,8 +1,8 @@
 <template>
   <div>
     <v-card>
-      <v-toolbar flat color="primary">
-        <v-toolbar-title class="white--text">INFORMATION</v-toolbar-title>
+      <v-toolbar dense flat color="primary">
+        <v-toolbar-title class="white--text subtitle-1">INFORMATION</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="'status' in deployment" text title="Show Parameters" @click="parameters()"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
@@ -33,7 +33,7 @@
 
         <v-spacer></v-spacer>
         <div v-if="last_updated != ''" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
-        <v-btn icon title="Go back" @click="goBack()"><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn>
+        <v-btn icon title="Go back" @click="goBack()"><v-icon size="22">fas fa-arrow-alt-circle-left</v-icon></v-btn>
       </v-toolbar>
 
       <!-- RESULTS -->
@@ -230,22 +230,22 @@
 
     <v-dialog v-model="information_dialog" persistent no-click-animation max-width="70%">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ information_dialog_mode.toUpperCase() }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">{{ information_dialog_mode.toUpperCase() }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="information_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="information_dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <div class="title font-weight-regular" style="margin-top:10px; margin-bottom: 25px;">{{ deployment['mode'] }}</div>
+                <div class="subtitle-1 font-weight-regular" style="margin-top:10px; margin-bottom:20px;">{{ deployment['mode'] }}</div>
                 <v-text-field readonly v-model="information_dialog_data.name" label="Name" style="padding-top:0px;"></v-text-field>
                 <v-autocomplete :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="environments" label="Environment" style="padding-top:0px;"></v-autocomplete>
                 <v-text-field v-if="deployment['mode'] == 'BASIC'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" style="padding-top:0px;"></v-text-field>
                 <v-card v-if="deployment['mode'] == 'BASIC'" style="margin-bottom:20px;">
                   <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
-                    <v-toolbar-title class="white--text">Queries</v-toolbar-title>
+                    <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
                     <v-divider v-if="information_dialog_mode != 'parameters'" class="mx-3" inset vertical></v-divider>
                     <v-toolbar-items v-if="information_dialog_mode != 'parameters'" class="hidden-sm-and-down" style="padding-left:0px;">
                       <v-btn text @click='newQuery()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
@@ -328,8 +328,8 @@
     </v-dialog>
 
     <v-dialog v-model="query_dialog" persistent max-width="600px">
-      <v-toolbar color="primary">
-        <v-toolbar-title class="white--text">{{ query_dialog_title }}</v-toolbar-title>
+      <v-toolbar flat dense color="primary">
+        <v-toolbar-title class="white--text subtitle-1">{{ query_dialog_title }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
         <v-card-text style="padding: 0px 20px 20px;">
@@ -354,10 +354,10 @@
 
     <v-dialog v-model="select_dialog" max-width="90%">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">SELECT EXECUTION</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">SELECT EXECUTION</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="select_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="select_dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 15px 20px 20px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -365,7 +365,7 @@
               <v-flex xs12>
                 <v-card>
                   <v-toolbar flat dense color="#2e3131">
-                    <v-toolbar-title class="white--text">Executions</v-toolbar-title>
+                    <v-toolbar-title class="white--text subtitle-2">EXECUTIONS</v-toolbar-title>
                   </v-toolbar>
                   <v-divider></v-divider>
                   <v-data-table :headers="executions.headers" :items="executions.items" item-key="id" class="elevation-1">
@@ -405,8 +405,8 @@
 
     <v-dialog v-model="action_dialog" persistent max-width="768px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ action_dialog_title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">{{ action_dialog_title }}</v-toolbar-title>
         </v-toolbar>
         <v-card-text style="padding: 10px 20px 20px 20px;">
           <v-container style="padding:0px">
@@ -434,8 +434,8 @@
 
     <v-dialog v-model="shareResults_dialog" max-width="896px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">SHARE RESULTS</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">SHARE RESULTS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-toolbar-items class="hidden-sm-and-down">
             <v-btn text :title="shareResults_dialog_title" @click="resultsShare()"><v-icon small style="padding-right:10px">{{ shareResults_dialog_icon }}</v-icon>{{ shareResults_dialog_text }}</v-btn>
@@ -1152,18 +1152,18 @@
       newQuery() {
         this.query_dialog_mode = 'new'
         this.query_dialog_item = ''
-        this.query_dialog_title = 'New Query'
+        this.query_dialog_title = 'NEW QUERY'
         this.query_dialog = true
       },
       editQuery () {
         this.query_dialog_mode = 'edit'
         this.query_dialog_item = this.information_dialog_query_selected[0]['query']
-        this.query_dialog_title = 'Edit Query'
+        this.query_dialog_title = 'EDIT QUERY'
         this.query_dialog = true
       },
       deleteQuery() {
         this.query_dialog_mode = 'delete'
-        this.query_dialog_title = 'Delete Query'
+        this.query_dialog_title = 'DELETE QUERY'
         this.query_dialog = true
       },
       queryActionConfirm() {

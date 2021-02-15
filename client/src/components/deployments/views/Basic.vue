@@ -3,9 +3,9 @@
     <v-container fluid grid-list-lg>
       <v-layout row wrap>
         <v-flex xs12>
-          <div class="title font-weight-regular" style="margin-left:10px; margin-top:5px;">BASIC</div>
+          <div class="subtitle-1 font-weight-regular" style="margin-left:10px; margin-top:5px;">BASIC</div>
           <v-form ref="form" style="padding:10px;">
-            <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+            <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:5px;"></v-text-field>
             <v-select :loading="loading" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
             
             <!-- EXECUTION -->
@@ -14,7 +14,7 @@
 
             <v-card style="margin-bottom:20px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
-                <v-toolbar-title class="white--text">Queries</v-toolbar-title>
+                <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
                   <v-btn text @click='newQuery()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
@@ -92,8 +92,8 @@
     </v-dialog>
 
     <v-dialog v-model="queryDialog" persistent max-width="896px">
-      <v-toolbar color="primary">
-        <v-toolbar-title class="white--text">{{ queryDialogTitle }}</v-toolbar-title>
+      <v-toolbar flat dense color="primary">
+        <v-toolbar-title class="white--text subtitle-1">{{ queryDialogTitle }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
         <v-card-text style="padding: 0px 20px 20px;">
@@ -233,18 +233,18 @@ export default {
     newQuery() {
       this.query_mode = 'new'
       this.query_item = ''
-      this.queryDialogTitle = 'New Query'
+      this.queryDialogTitle = 'NEW QUERY'
       this.queryDialog = true
     },
     editQuery () {
       this.query_mode = 'edit'
       this.query_item = this.query_selected[0]['query']
-      this.queryDialogTitle = 'Edit Query'
+      this.queryDialogTitle = 'EDIT QUERY'
       this.queryDialog = true
     },
     deleteQuery() {
       this.query_mode = 'delete'
-      this.queryDialogTitle = 'Delete Query'
+      this.queryDialogTitle = 'DELETE QUERY'
       this.queryDialogText = 'Are you sure you want to delete the selected queries?'
       this.queryDialog = true
     },

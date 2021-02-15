@@ -24,8 +24,8 @@
 
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogTitle }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">{{ dialogTitle }}</v-toolbar-title>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 0px;">
           <v-container style="padding:0px">
@@ -107,19 +107,19 @@ export default {
       this.mode = 'new'
       this.name = ''
       this.active = true
-      this.dialogTitle = 'New Release'
+      this.dialogTitle = 'NEW RELEASE'
       this.dialog = true
     },
     editRelease() {
       this.mode = 'edit'
       this.name = this.selected[0]['name']
       this.active = this.selected[0]['active']
-      this.dialogTitle = 'Edit Release'
+      this.dialogTitle = 'EDIT RELEASE'
       this.dialog = true
     },
     deleteRelease() {
       this.mode = 'delete'
-      this.dialogTitle = 'Delete Release'
+      this.dialogTitle = 'DELETE RELEASE'
       this.dialog = true
     },
     submitRelease() {
