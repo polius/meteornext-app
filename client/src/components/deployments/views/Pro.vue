@@ -3,9 +3,9 @@
     <v-container fluid grid-list-lg>
       <v-layout row wrap>
         <v-flex xs12>
-          <div class="title font-weight-regular" style="margin-left:10px; margin-top:5px;">PRO</div>
+          <div class="subtitle-1 font-weight-regular" style="margin-left:10px; margin-top:5px;">PRO</div>
           <v-form ref="form" style="padding:10px;">
-            <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+            <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:5px;"></v-text-field>
             <v-select :loading="loading_rel" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
             <v-autocomplete :loading="loading_env" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;" hide-details></v-autocomplete>
 

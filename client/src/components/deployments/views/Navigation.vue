@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-card>
-      <v-toolbar flat color="primary">
+      <v-toolbar dense flat color="primary">
         <v-toolbar-title class="subtitle-1">NEW DEPLOY</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <div>
@@ -9,13 +9,19 @@
           <v-btn v-if="deployments_pro" :color="proColor" @click="pro()" style="margin-right:10px;">Pro</v-btn>
         </div>
         <v-spacer></v-spacer>
-        <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
+        <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon size="22">fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
       </v-toolbar>
       <Basic v-if="mode=='basic'"/>
       <Pro v-else-if="mode=='pro'"/>
     </v-card>
   </div>
 </template>
+
+<style scoped>
+::v-deep .v-toolbar__content {
+  padding-right:5px;
+}
+</style>
 
 <script>
 import Basic from './Basic'
