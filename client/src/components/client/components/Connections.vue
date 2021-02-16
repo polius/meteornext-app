@@ -15,8 +15,8 @@
         <v-btn text title="New Connection" @click="newConnection()" style="font-size:16px; padding:0px; min-width:36px; height:36px; margin-top:6px;">+</v-btn>
       </v-tabs>
     </v-col>
-    <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
-      <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
+    <v-col v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" cols="auto" class="flex-grow-0 flex-shrink-0">
+      <div style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
         <v-menu v-model="queryFavMenu" offset-y :close-on-content-click="false" min-width="385px">
           <template v-slot:activator="{ attrs, on }">
             <v-btn @click="openFavourites()" v-bind="attrs" v-on="on" title="Query Favourites" style="min-width:52px"><v-icon small style="font-size:15px">far fa-star</v-icon></v-btn>
@@ -25,33 +25,33 @@
         </v-menu>
       </div>
     </v-col>
-    <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
-      <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
+    <v-col v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" cols="auto" class="flex-grow-0 flex-shrink-0">
+      <div style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
         <v-btn :disabled="['query','stop'].includes(clientExecuting) || clientQuery['query'].length == 0" @click="beautifyQuery()" title="Beautify Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-stream</v-icon></v-btn>
       </div>
     </v-col>
-    <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
-      <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
+    <v-col v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" cols="auto" class="flex-grow-0 flex-shrink-0">
+      <div style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
         <v-btn :disabled="['query','stop'].includes(clientExecuting) || clientQuery['query'].length == 0" @click="minifyQuery()" title="Minify Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-remove-format</v-icon></v-btn>
       </div>
     </v-col>
-    <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
-      <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
+    <v-col v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" cols="auto" class="flex-grow-0 flex-shrink-0">
+      <div style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
         <v-divider class="mx-3" inset vertical style="height:29px; padding:0px; margin-top:4px; margin-left:5px!important; margin-right:5px!important;"></v-divider>
       </div>
     </v-col>
-    <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
-      <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
+    <v-col v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" cols="auto" class="flex-grow-0 flex-shrink-0">
+      <div style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
         <v-btn :disabled="['stop',null].includes(clientExecuting)" :loading="clientExecuting == 'stop'" @click="stopQuery()" title="Stop Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-stop</v-icon></v-btn>
       </div>
     </v-col>
-    <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
-      <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
+    <v-col v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" cols="auto" class="flex-grow-0 flex-shrink-0">
+      <div style="background-color:#2c2c2c; padding: 6px 0px 6px 6px; border-bottom: 1px solid #424242;">
         <v-btn :loading="clientExecuting == 'explain'" :disabled="['query','stop'].includes(clientExecuting) || clientQuery['query'].length == 0" @click="explainQuery()" title="Explain Query" style="min-width:52px"><v-icon small style="font-size:15px">fas fa-chart-pie</v-icon></v-btn>
       </div>
     </v-col>
-    <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
-      <div v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" style="background-color:#2c2c2c; padding:6px; border-bottom: 1px solid #424242;">
+    <v-col v-if="sidebarMode == 'objects' && headerTabSelected == 'client'" cols="auto" class="flex-grow-0 flex-shrink-0">
+      <div style="background-color:#2c2c2c; padding:6px; border-bottom: 1px solid #424242;">
         <v-btn :loading="clientExecuting == 'query'" :disabled="['explain','stop'].includes(clientExecuting) || clientQuery['query'].length == 0" @click="runQuery()" title="Run Query"><v-icon small style="padding-right:10px; font-size:15px;">fas fa-bolt</v-icon>Run</v-btn>
       </div>
     </v-col>

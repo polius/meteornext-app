@@ -6,7 +6,7 @@
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
         <v-toolbar v-if="dialogOptions.text.length == 0" dense flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-th</v-icon>{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -181,7 +181,7 @@ export default {
       this.buildSelectors()
       let dialogOptions = { 
         mode: 'createTable', 
-        title: 'Create Table', 
+        title: 'CREATE TABLE', 
         text: '', 
         item: { name: '', encoding: this.encodings[0].value, collation: '', engine: this.engines[0].value }, 
         submit: 'Submit', 
@@ -193,7 +193,7 @@ export default {
     renameTable() {
       let dialogOptions = { 
         mode: 'renameTable', 
-        title: 'Rename Table', 
+        title: 'RENAME TABLE', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit', 
@@ -205,7 +205,7 @@ export default {
     duplicateTable() {
       let dialogOptions = { 
         mode: 'duplicateTable', 
-        title: 'Duplicate Table', 
+        title: 'DUPLICATE TABLE', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '', duplicateContent: false }, 
         submit: 'Submit',
@@ -217,7 +217,7 @@ export default {
     truncateTable() {
       let dialogOptions = { 
         mode: 'truncateTable', 
-        title: 'Truncate Tables', 
+        title: 'TRUNCATE TABLES', 
         text: "Are you sure you want to delete ALL records in the following tables? This operation cannot be undone.", 
         item: { force: false }, 
         submit: 'Submit',
@@ -229,7 +229,7 @@ export default {
     deleteTable() {
       let dialogOptions = { 
         mode: 'deleteTable', 
-        title: 'Delete Tables', 
+        title: 'DELETE TABLES', 
         text: "Are you sure you want to delete the following tables? This operation cannot be undone.",
         item: { force: false }, 
         submit: 'Submit',

@@ -6,7 +6,7 @@
     <v-dialog v-model="dialog" persistent max-width="70%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text">New Servers</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-plus</v-icon>NEW SERVER</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="selected.length == 0 || loading" :loading="loading" @click="newServerSubmit" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
@@ -19,7 +19,7 @@
                 <v-form ref="form" style="margin-top:5px; margin-bottom:10px;">
                   <v-card>
                     <v-toolbar flat dense color="#2e3131">
-                      <v-toolbar-title class="white--text">SERVERS</v-toolbar-title>
+                      <v-toolbar-title class="white--text subtitle-1">SERVERS</v-toolbar-title>
                       <v-divider class="mx-3" inset vertical></v-divider>
                       <v-text-field v-model="search" @input="onServerSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>

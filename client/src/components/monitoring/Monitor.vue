@@ -2,7 +2,7 @@
   <div>
     <v-card>
       <v-toolbar dense flat color="primary">
-        <v-toolbar-title class="white--text"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-database</v-icon>{{ server_name }}</v-toolbar-title>
+        <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-database</v-icon>{{ server_name }}</v-toolbar-title>
         <div v-if="region_name.length > 0" class="subheading font-weight-regular" style="margin-left:5px">({{ region_name }})</div>
         <v-divider class="mx-3" inset vertical></v-divider>
         <div class="subheading font-weight-regular">{{ server_hostname }}</div>

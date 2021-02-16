@@ -3,7 +3,7 @@
     <v-dialog v-model="dialog" persistent max-width="90%">
       <v-card >
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text">Export Objects</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-arrow-down</v-icon>EXPORT OBJECTS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="tabClick('sql')" :color="sqlColor" style="margin-right:10px;">SQL</v-btn>
           <v-btn @click="tabClick('csv')" :color="csvColor">CSV</v-btn>

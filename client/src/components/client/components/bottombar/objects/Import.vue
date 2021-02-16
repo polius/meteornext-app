@@ -3,7 +3,7 @@
     <v-dialog v-model="dialog" persistent max-width="70%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text">Import SQL</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-arrow-up</v-icon>IMPORT SQL</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>

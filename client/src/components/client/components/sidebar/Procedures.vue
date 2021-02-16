@@ -6,7 +6,7 @@
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
         <v-toolbar v-if="dialogOptions.text.length == 0" dense flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-compress</v-icon>{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -170,7 +170,7 @@ WHERE CountryCode = country;
     createProcedure() {
       let dialogOptions = { 
         mode: 'createProcedure', 
-        title: 'Create Procedure', 
+        title: 'CREATE PROCEDURE', 
         text: '', 
         item: { name: '', params: '' }, 
         submit: 'Submit', 
@@ -183,7 +183,7 @@ WHERE CountryCode = country;
     renameProcedure() {
       let dialogOptions = { 
         mode: 'renameProcedure', 
-        title: 'Rename Procedure', 
+        title: 'RENAME PROCEDURE', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit', 
@@ -195,7 +195,7 @@ WHERE CountryCode = country;
     duplicateProcedure() {
       let dialogOptions = { 
         mode: 'duplicateProcedure', 
-        title: 'Duplicate Procedure', 
+        title: 'DUPLICATE PROCEDURE', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit',
@@ -207,7 +207,7 @@ WHERE CountryCode = country;
     deleteProcedure() {
       let dialogOptions = { 
         mode: 'deleteProcedure', 
-        title: 'Delete Procedure?', 
+        title: 'DELETE PROCEDURE', 
         text: "Are you sure you want to delete the following procedures? This operation cannot be undone.",
         item: {}, 
         submit: 'Submit',
