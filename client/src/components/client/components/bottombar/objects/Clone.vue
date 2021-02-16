@@ -14,6 +14,7 @@
                 <v-form @submit.prevent ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
                   <v-text-field readonly v-model="database" :rules="[v => !!v || '']" label="Source Database" required hide-details style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="targetDatabase" :rules="[v => !!v || '']" label="Target Database" autofocus required hide-details style="margin-top:15px"></v-text-field>
+                  <v-checkbox v-model="dropDatabase" label="Drop target database if exists" hide-details></v-checkbox>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -47,6 +48,7 @@ export default {
       dialog: false,
       sourceDatabase: '',
       targetDatabase: '',
+      dropDatabase: false,
     }
   },
   computed: {
@@ -68,6 +70,8 @@ export default {
   methods: {
     showDialog() {
       this.dialog = true
+      this.targetDatabase = ''
+      this.dropDatabase = false
     },
     dialogSubmit() {
       // Check if all fields are filled
