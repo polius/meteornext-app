@@ -28,7 +28,7 @@
             <v-img height="10px" :class="servers[i*align+j].color"></v-img>
             <v-progress-linear v-if="servers[i*align+j].color == 'orange'" indeterminate color="orange" height="3" style="margin-bottom:-3px;"></v-progress-linear>
             <div style="padding:16px">
-              <p class="title" style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px; font-weight:400"><v-icon v-if="!servers[i*align+j].available && servers[i*align+j].error != null" :title="servers[i*align+j].error" small color="orange" style="margin-right:10px;">fas fa-exclamation-triangle</v-icon>{{servers[i*align+j].name}}</p>
+              <p class="title" style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px; font-weight:400; font-size:1.1rem!important;"><v-icon v-if="!servers[i*align+j].available && servers[i*align+j].error != null" :title="servers[i*align+j].error" small color="orange" style="margin-right:10px;">fas fa-exclamation-triangle</v-icon>{{servers[i*align+j].name}}</p>
               <p class="body-2" style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:0px;">{{servers[i*align+j].region}}</p>
             </div>
             <v-divider></v-divider>
