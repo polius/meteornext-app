@@ -24,11 +24,11 @@
     <v-layout v-for="(n, i) in Math.ceil(servers.length/align)" :key="i" style="margin-left:-4px; margin-right:-4px;">
       <v-flex :xs3="align==4" :xs4="align==3" :xs6="align==2" :xs12="align==1" v-for="(m, j) in Math.min(servers.length-i*align,align)" :key="j" style="padding:5px; cursor:pointer;">
         <v-hover>
-          <v-card :height="maxHeight" ref="serverRefs" @click="monitor(servers[i*align+j])" slot-scope="{ hover }" :title="servers[i*align+j].color == 'teal' ? 'Server available' : servers[i*align+j].color == 'orange' ? 'Server loading...': 'Server unavailable'" :class="`elevation-${hover ? 12 : 2}`">
+          <v-card :height="maxHeight" @click="monitor(servers[i*align+j])" slot-scope="{ hover }" :title="servers[i*align+j].color == 'teal' ? 'Server available' : servers[i*align+j].color == 'orange' ? 'Server loading...': 'Server unavailable'" :class="`elevation-${hover ? 12 : 2}`">
             <v-img height="10px" :class="servers[i*align+j].color"></v-img>
             <v-progress-linear v-if="servers[i*align+j].color == 'orange'" indeterminate color="orange" height="3" style="margin-bottom:-3px;"></v-progress-linear>
             <div style="padding:16px">
-              <p class="title" style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px;"><v-icon v-if="!servers[i*align+j].available && servers[i*align+j].error != null" :title="servers[i*align+j].error" small color="orange" style="margin-right:10px;">fas fa-exclamation-triangle</v-icon>{{servers[i*align+j].name}}</p>
+              <p class="title" style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:8px; font-weight:400"><v-icon v-if="!servers[i*align+j].available && servers[i*align+j].error != null" :title="servers[i*align+j].error" small color="orange" style="margin-right:10px;">fas fa-exclamation-triangle</v-icon>{{servers[i*align+j].name}}</p>
               <p class="body-2" style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:0px;">{{servers[i*align+j].region}}</p>
             </div>
             <v-divider></v-divider>
@@ -258,7 +258,6 @@
         available_servers: true,
         search: '',
         pending_servers: true,
-        serverRefs: [],
         maxHeight: '',
 
         // Settings Dialog
