@@ -6,7 +6,7 @@
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text">Move Servers</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-level-up-alt</v-icon>MOVE SERVERS</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>

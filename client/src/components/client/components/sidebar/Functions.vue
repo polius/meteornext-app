@@ -6,7 +6,7 @@
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
         <v-toolbar v-if="dialogOptions.text.length == 0" dense flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-code-branch</v-icon>{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -177,7 +177,7 @@ RETURN (customerLevel);
     createFunction() {
       let dialogOptions = { 
         mode: 'createFunction', 
-        title: 'Create Function', 
+        title: 'CREATE FUNCTION', 
         text: '', 
         item: { name: '', params: '' }, 
         submit: 'Submit', 
@@ -190,7 +190,7 @@ RETURN (customerLevel);
     renameFunction() {
       let dialogOptions = { 
         mode: 'renameFunction', 
-        title: 'Rename Function', 
+        title: 'RENAME FUNCTION', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit', 
@@ -202,7 +202,7 @@ RETURN (customerLevel);
     duplicateFunction() {
       let dialogOptions = { 
         mode: 'duplicateFunction', 
-        title: 'Duplicate Function', 
+        title: 'DUPLICATE FUNCTION', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit',
@@ -214,7 +214,7 @@ RETURN (customerLevel);
     deleteFunction() {
       let dialogOptions = { 
         mode: 'deleteFunction', 
-        title: 'Delete Function', 
+        title: 'DELETE FUNCTION', 
         text: "Are you sure you want to delete the following functions? This operation cannot be undone.",
         item: {}, 
         submit: 'Submit',

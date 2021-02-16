@@ -6,7 +6,7 @@
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
         <v-toolbar v-if="dialogOptions.text.length == 0" dense flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-bolt</v-icon>{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -157,7 +157,7 @@ export default {
     createTrigger() {
       let dialogOptions = { 
         mode: 'createTrigger', 
-        title: 'Create Trigger', 
+        title: 'CREATE TRIGGER', 
         text: '', 
         item: { name: '', table: '', time: '', event: '' }, 
         submit: 'Submit', 
@@ -170,7 +170,7 @@ export default {
     renameTrigger() {
       let dialogOptions = { 
         mode: 'renameTrigger', 
-        title: 'Rename Trigger', 
+        title: 'RENAME TRIGGER', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit', 
@@ -182,7 +182,7 @@ export default {
     duplicateTrigger() {
       let dialogOptions = { 
         mode: 'duplicateTrigger', 
-        title: 'Duplicate Trigger', 
+        title: 'DUPLICATE TRIGGER', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit',
@@ -194,7 +194,7 @@ export default {
     deleteTrigger() {
       let dialogOptions = { 
         mode: 'deleteTrigger', 
-        title: 'Delete Trigger', 
+        title: 'DELETE TRIGGER', 
         text: "Are you sure you want to delete the following triggers? This operation cannot be undone.",
         item: {}, 
         submit: 'Submit',

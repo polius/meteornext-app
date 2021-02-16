@@ -20,7 +20,7 @@ class Monitoring:
 
     def start(self):
         # Get Monitoring Servers
-        print('[{}] START'.format(self.__utcnow()))
+        # print('[{}] START'.format(self.__utcnow()))
         utcnow = self.__utcnow()
         query = """
             SELECT 
@@ -66,7 +66,7 @@ class Monitoring:
 
         for t in threads:
             t.join()
-        print('[{}] FINISH'.format(self.__utcnow()))
+        # print('[{}] FINISH'.format(self.__utcnow()))
 
     def clean(self):
         utcnow = self.__utcnow()

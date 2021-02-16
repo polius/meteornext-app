@@ -6,7 +6,7 @@
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
         <v-toolbar v-if="dialogOptions.text.length == 0" dense flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">far fa-clock</v-icon>{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -266,7 +266,7 @@ export default {
     createEvent() {
       let dialogOptions = { 
         mode: 'createEvent', 
-        title: 'Create Event', 
+        title: 'CREATE EVENT', 
         text: '', 
         item: { 
           name: '',
@@ -287,7 +287,7 @@ export default {
     renameEvent() {
       let dialogOptions = { 
         mode: 'renameEvent', 
-        title: 'Rename Event', 
+        title: 'RENAME EVENT', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit', 
@@ -299,7 +299,7 @@ export default {
     duplicateEvent() {
       let dialogOptions = { 
         mode: 'duplicateEvent', 
-        title: 'Duplicate Event', 
+        title: 'DUPLICATE EVENT', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
         submit: 'Submit',
@@ -311,7 +311,7 @@ export default {
     deleteEvent() {
       let dialogOptions = { 
         mode: 'deleteEvent', 
-        title: 'Delete Events', 
+        title: 'DELETE EVENT', 
         text: "Are you sure you want to delete the following events? This operation cannot be undone.",
         item: {}, 
         submit: 'Submit',
