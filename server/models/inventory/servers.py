@@ -9,7 +9,7 @@ class Servers:
             query = """
                 SELECT s.*, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
-                JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+                LEFT JOIN regions r ON r.id = s.region_id AND r.group_id = %s
                 WHERE (s.shared = 1 OR s.owner_id = %s)
                 ORDER BY `name`
             """
@@ -18,7 +18,7 @@ class Servers:
             query = """
                 SELECT s.*, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
-                JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+                LEFT JOIN regions r ON r.id = s.region_id AND r.group_id = %s
                 WHERE (s.shared = 1 OR s.owner_id = %s)
                 AND s.id = %s
             """

@@ -114,7 +114,7 @@ CREATE TABLE `regions` (
 CREATE TABLE `servers` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `group_id` int(10) unsigned NOT NULL,
+  `group_id` int(10) unsigned NULL,
   `region_id` int(10) unsigned NULL,
   `engine` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `version` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,

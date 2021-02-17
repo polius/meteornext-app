@@ -46,7 +46,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
-                  <v-alert v-if="selected.length == 1 && item.group != selected[0]['group']" type="warning" dense dismissible icon="mdi-alert">This user will lose access to the shared inventory from the previous group.</v-alert>
+                  <v-alert v-if="mode == 'edit' && selected.length == 1 && item.group != selected[0]['group']" type="warning" dense dismissible icon="mdi-alert">This user will lose access to the shared inventory from the previous group.</v-alert>
                   <v-text-field ref="field" v-model="item.username" :rules="[v => !!v || '']" label="Username" required append-icon="person"></v-text-field>
                   <v-text-field v-model="item.email" :rules="[v => !!v || '', v => /.+@.+\..+/.test(v) || '']" label="Email" type="email" required append-icon="email" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" type="password" required append-icon="lock" style="padding-top:0px;"></v-text-field>

@@ -9,7 +9,7 @@ class Servers:
             query = """
                 SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
-                JOIN regions r ON r.id = s.region_id
+                LEFT JOIN regions r ON r.id = s.region_id
                 LEFT JOIN users u ON u.id = s.owner_id
                 LEFT JOIN users u2 ON u2.id = s.created_by
                 LEFT JOIN users u3 ON u3.id = s.updated_by
@@ -22,7 +22,7 @@ class Servers:
             query = """
                 SELECT s.*, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
-                JOIN regions r ON r.id = s.region_id
+                LEFT JOIN regions r ON r.id = s.region_id
                 WHERE s.id = %s
             """
             return self._sql.execute(query, (server_id))
@@ -30,7 +30,7 @@ class Servers:
             query = """
                 SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
-                JOIN regions r ON r.id = s.region_id
+                LEFT JOIN regions r ON r.id = s.region_id
                 LEFT JOIN users u ON u.id = s.owner_id
                 LEFT JOIN users u2 ON u2.id = s.created_by
                 LEFT JOIN users u3 ON u3.id = s.updated_by
