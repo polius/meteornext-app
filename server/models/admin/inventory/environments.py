@@ -113,14 +113,14 @@ class Environments:
             query = """
                 SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.owner_id AS 'server_owner', r.id AS 'region_id', r.name AS 'region_name'
                 FROM servers s
-                JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+                LEFT JOIN regions r ON r.id = s.region_id AND r.group_id = %s
             """
             return self._sql.execute(query, (group_id))
         else:
             query = """
                 SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.owner_id AS 'server_owner', r.id AS 'region_id', r.name AS 'region_name'
                 FROM servers s
-                JOIN regions r ON r.id = s.region_id
+                LEFT JOIN regions r ON r.id = s.region_id
             """
             return self._sql.execute(query)
 
@@ -131,7 +131,7 @@ class Environments:
                 FROM environment_servers es
                 JOIN environments e ON e.id = es.environment_id AND e.group_id = %s
                 JOIN servers s ON s.id = es.server_id
-                JOIN regions r ON r.id = s.region_id
+                LEFT JOIN regions r ON r.id = s.region_id
             """
             return self._sql.execute(query, (group_id))
         else:
@@ -140,6 +140,6 @@ class Environments:
                 FROM environment_servers es
                 JOIN environments e ON e.id = es.environment_id
                 JOIN servers s ON s.id = es.server_id
-                JOIN regions r ON r.id = s.region_id
+                LEFT JOIN regions r ON r.id = s.region_id
             """
             return self._sql.execute(query)
