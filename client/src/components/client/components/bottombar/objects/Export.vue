@@ -241,8 +241,11 @@ export default {
       },100)
     },
     onGridReady(object, params) {
-      this.gridApi[object] = params.api
-      this.columnApi[object] = params.columnApi
+      setTimeout(() => {
+        this.gridApi[object] = params.api
+        this.columnApi[object] = params.columnApi
+        this.gridApi[object].showLoadingOverlay()
+      },0)
     },
     onNewColumnsLoaded(object) {
       if (this.gridApi[object] != null) this.resizeTable(object, true)
@@ -277,10 +280,11 @@ export default {
         this.columnApi[object].autoSizeColumns(allColumnIds);
       })
       this.$nextTick(() => {
-        let obj = (object == 'tablesCsv') ? 'tables' : object 
+        let obj = (object == 'tablesCsv') ? 'tables' : object
         if (this.objectsItems[obj].length > 0) this.gridApi[obj].hideOverlay()
         else this.gridApi[obj].showNoRowsOverlay()
         if (selectRow) this.selectRow()
+        this.loading = false
       })
     },
     tabClick(object) {
@@ -309,10 +313,6 @@ export default {
         EventBus.$emit('get-objects', true, resolve, reject)
       })
       .finally(() => {
-        for (let obj of this.objects) {
-          if (this.gridApi[obj] != null) this.gridApi[obj].hideOverlay()
-        }
-        this.loading = false
         this.databasePrev = this.database
       })
     },
