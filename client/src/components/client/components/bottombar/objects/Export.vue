@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" persistent max-width="90%">
+    <v-dialog v-model="dialog" max-width="90%">
       <v-card >
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-arrow-down</v-icon>EXPORT OBJECTS</v-toolbar-title>
@@ -444,7 +444,6 @@ export default {
             // Check Errors
             let dataSlice = await data.slice(0, 1024).text()
             if (payload['options']['mode'] == 'sql' && dataSlice.split("\n")[3].startsWith('# Error: ')) {
-              this.exportError = true
               if (this.exportErrors.length != 0) this.exportErrors += '\n'
               this.exportErrors += dataSlice.split("\n")[3].substring(9)
             }

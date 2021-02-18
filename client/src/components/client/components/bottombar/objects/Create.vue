@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="dialog" persistent max-width="60%">
+    <v-dialog v-model="dialog" max-width="60%">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-plus</v-icon>CREATE DATABASE</v-toolbar-title>
