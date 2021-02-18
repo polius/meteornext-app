@@ -37,8 +37,8 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn v-if="progress == 0 || ['success','fail','stop'].includes(step)" :loading="loading" @click="importSubmit" color="primary">Import</v-btn>
-                      <v-btn v-else @click="cancelImport" color="#e74c3c">Cancel</v-btn>
+                      <v-btn v-if="['import','success','fail','stop'].includes(step)" :loading="loading" @click="importSubmit" color="primary">Import</v-btn>
+                      <v-btn v-else :loading="step == 'stopping'" @click="cancelImport" color="#e74c3c">Cancel</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
                       <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">Close</v-btn>
@@ -67,7 +67,7 @@ export default {
       dialog: false,
       file: null, 
       text: 'Uploading file...', 
-      step: 'upload', 
+      step: 'import', 
       progress: 0, 
       start: false, 
       error: '',
@@ -97,6 +97,7 @@ export default {
     showDialog() {
       // Init vars
       this.start = false
+      this.step = 'import'
       this.file = null
       this.dialog = true
     },
@@ -104,6 +105,11 @@ export default {
       // Check input file
       if (!this.file) {
         EventBus.$emit('send-notification', 'Please select a file', 'info')
+        return
+      }
+      // Check input file size
+      if (this.file.size > 104857600) {
+        EventBus.$emit('send-notification', 'The upload file exceeds the maximum allowed size (100MB)', 'warning')
         return
       }
       // Init vars
@@ -170,7 +176,7 @@ export default {
         })
     },
     cancelImport() {
-      EventBus.$emit('send-notification', 'Stopping the import process...', 'warning')
+      this.step = 'stopping'
       this.cancelToken.cancel()
     },
   }

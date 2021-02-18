@@ -438,8 +438,8 @@ class Client:
             if not self.__allowed_file(request.files['file'].filename):
                 return jsonify({"message": 'The file extension is not valid'}), 400
 
-            if request.content_length > 10 * 1024 * 1024:
-                return jsonify({"message": 'The upload file exceeds the maximum allowed size (10MB)'}), 400
+            if request.content_length > 100 * 1024 * 1024:
+                return jsonify({"message": 'The upload file exceeds the maximum allowed size (100MB)'}), 400
 
             # Execute uploaded file
             try:
