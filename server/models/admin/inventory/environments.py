@@ -113,7 +113,8 @@ class Environments:
             query = """
                 SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', s.owner_id AS 'server_owner', r.id AS 'region_id', r.name AS 'region_name'
                 FROM servers s
-                LEFT JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+                LEFT JOIN regions r ON r.id = s.region_id
+                WHERE r.group_id = %s
             """
             return self._sql.execute(query, (group_id))
         else:
