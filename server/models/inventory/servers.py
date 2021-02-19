@@ -9,8 +9,9 @@ class Servers:
             query = """
                 SELECT s.*, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
-                LEFT JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+                LEFT JOIN regions r ON r.id = s.region_id
                 WHERE (s.shared = 1 OR s.owner_id = %s)
+                AND r.group_id = %s
                 ORDER BY `name`
             """
             return self._sql.execute(query, (group_id, user_id))
@@ -18,8 +19,9 @@ class Servers:
             query = """
                 SELECT s.*, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
-                LEFT JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+                LEFT JOIN regions r ON r.id = s.region_id
                 WHERE (s.shared = 1 OR s.owner_id = %s)
+                AND r.group_id = %s
                 AND s.id = %s
             """
             return self._sql.execute(query, (group_id, user_id, server_id))

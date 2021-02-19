@@ -114,8 +114,9 @@ class Environments:
         query = """
             SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name'
             FROM servers s
-            LEFT JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            LEFT JOIN regions r ON r.id = s.region_id
             WHERE (s.shared = 1 OR s.owner_id = %s)
+            AND r.group_id = %s
             AND s.usage LIKE '%%D%%'
         """
         return self._sql.execute(query, (group_id, user_id))
