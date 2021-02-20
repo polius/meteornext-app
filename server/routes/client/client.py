@@ -484,6 +484,36 @@ class Client:
             except Exception as e:
                 return jsonify({"message": str(e)}), 400
 
+        @client_blueprint.route('/client/clone', methods=['POST'])
+        @jwt_required()
+        def client_clone_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            client_json = request.get_json()
+
+            # Get Server Credentials + Connection
+            cred = self._client.get_credentials(user['id'], user['group_id'], client_json['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = self._connections.connect(user['id'], client_json['connection'], cred)
+
+            # Start clone
+            try:
+                self.__clone_object(client_json['options'], cred, conn)
+                return jsonify({"message": 'Object cloned successfully'}), 200
+            except Exception as e:
+                return jsonify({"message": str(e)}), 400
+
         @client_blueprint.route('/client/saved', methods=['GET','POST','PUT','DELETE'])
         @jwt_required()
         def client_saved_method():
@@ -701,7 +731,6 @@ class Client:
                 yield '# ------------------------------------------------------------\n'
                 try:
                     syntax = conn.get_view_syntax(request.args['database'], view)
-                    syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     if options['includeDropTable']:
                         yield 'DROP VIEW IF EXISTS `{}`;\n\n'.format(view)
                     yield '{};\n\n'.format(syntax)
@@ -775,3 +804,39 @@ class Client:
                     yield '{};\n\n'.format(syntax)
                 except Exception as e:
                     yield '# Error: {}\n\n'.format(e)
+
+    def __clone_object(self, options, cred, conn):
+        if options['object'] == 'table':
+            for table in options['items']:
+                conn.execute(query=f"DROP TABLE IF EXISTS {table}", database=options['target'])
+                conn.execute(query=f"CREATE TABLE IF NOT EXISTS {table} LIKE {options['origin']}.{table}", database=options['target'])
+                conn.execute(query=f"INSERT INTO {table} SELECT * FROM {options['origin']}.{table}", database=options['target'])
+        elif options['object'] == 'view':
+            for view in options['items']:
+                syntax = conn.get_view_syntax(options['origin'], view)
+                conn.execute(query=f"DROP VIEW IF EXISTS {view}", database=options['target'])
+                conn.execute(query=syntax, database=options['target'])
+        elif options['object'] == 'trigger':
+            for trigger in options['items']:
+                syntax = conn.get_trigger_syntax(options['origin'], trigger)
+                syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
+                conn.execute(query=f"DROP TRIGGER IF EXISTS {trigger}", database=options['target'])
+                conn.execute(query=syntax, database=options['target'])
+        elif options['object'] == 'function':
+            for function in options['items']:
+                syntax = conn.get_function_syntax(options['origin'], function)
+                syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
+                conn.execute(query=f"DROP FUNCTION IF EXISTS {function}", database=options['target'])
+                conn.execute(query=syntax, database=options['target'])
+        elif options['object'] == 'procedure':
+            for procedure in options['items']:
+                syntax = conn.get_procedure_syntax(options['origin'], procedure)
+                syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
+                conn.execute(query=f"DROP PROCEDURE IF EXISTS {procedure}", database=options['target'])
+                conn.execute(query=syntax, database=options['target'])
+        elif options['object'] == 'event':
+            for event in options['items']:
+                syntax = conn.get_event_syntax(options['origin'], event)
+                syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
+                conn.execute(query=f"DROP EVENT IF EXISTS {event}", database=options['target'])
+                conn.execute(query=syntax, database=options['target'])
