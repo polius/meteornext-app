@@ -18,10 +18,6 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
-        <template v-slot:[`item.ssh_tunnel`]="{ item }">
-          <v-icon v-if="item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
-          <v-icon v-else small color="error" style="margin-left:20px">fas fa-circle</v-icon>
-        </template>
         <template v-slot:[`item.shared`]="{ item }">
           <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
           <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
@@ -48,45 +44,25 @@
                   <v-text-field ref="field" v-model="item.name" :readonly="readOnly" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
-                      <v-select v-model="item.sql_engine" :readonly="readOnly" :items="Object.keys(engines)" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
+                      <v-select v-model="item.engine" :readonly="readOnly" :items="Object.keys(engines)" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;" v-on:change="selectEngine"></v-select>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
-                      <v-select v-model="item.sql_version" :readonly="readOnly" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                      <v-select v-model="item.version" :readonly="readOnly" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
                     </v-col>
                   </v-row>
                   <div v-if="!(readOnly && inventory_secured)" style="margin-bottom:20px">
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
-                        <v-text-field v-model="item.sql_hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="item.hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
                       </v-col>
                       <v-col cols="4" style="padding-left:10px">
-                        <v-text-field v-model="item.sql_port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
+                        <v-text-field v-model="item.port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
                       </v-col>
                     </v-row>
-                    <v-text-field v-model="item.sql_username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.sql_password" :readonly="readOnly" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" hide-details></v-text-field>
-                    <v-switch v-model="item.ssh_tunnel" :readonly="readOnly" label="SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
-                    <div v-if="item.ssh_tunnel" style="margin-top:20px; margin-bottom:20px">
-                      <v-row no-gutters>
-                        <v-col cols="8" style="padding-right:10px">
-                          <v-text-field v-model="item.ssh_hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
-                        </v-col>
-                        <v-col cols="4" style="padding-left:10px">
-                          <v-text-field v-model="item.ssh_port" :readonly="readOnly" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
-                        </v-col>
-                      </v-row>
-                      <v-text-field v-model="item.ssh_username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                      <v-row no-gutters>
-                        <v-col style="padding-right:10px">
-                          <v-text-field v-model="item.ssh_password" :readonly="readOnly" label="Password" :append-icon="showSSHPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showSSHPassword ? 'text' : 'password'" @click:append="showSSHPassword = !showSSHPassword" hide-details style="padding-top:0px;"></v-text-field>
-                        </v-col>
-                        <v-col cols="auto" style="padding-left:10px">
-                          <v-btn @click="keyDialog = true" color="#2e3131"><v-icon small :color="item.key == null || item.key.length == 0 ? 'error' : '#00b16a'" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>Private Key</v-btn>
-                        </v-col>
-                      </v-row>                      
-                    </div>
-                    <v-switch v-model="item.sql_ssl" :readonly="readOnly" flat label="SSL Connection" style="margin-top:10px" hide-details></v-switch>
-                    <v-row no-gutters v-if="item.sql_ssl" style="margin-top:20px">
+                    <v-text-field v-model="item.username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="item.password" :readonly="readOnly" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" hide-details></v-text-field>
+                    <v-switch v-model="item.ssl" :readonly="readOnly" flat label="SSL Connection" style="margin-top:20px" hide-details></v-switch>
+                    <v-row no-gutters v-if="item.ssl" style="margin-top:20px">
                       <v-col style="padding-right:10px;">
                         <v-file-input v-model="item.ssl_client_key" :readonly="readOnly" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
                       </v-col>
@@ -112,7 +88,7 @@
                     </div>
                   </v-col>
                   <v-col cols="auto">
-                    <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
+                    <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="openTest()">Test Connection</v-btn>
                   </v-col>
                 </v-row>
               </v-flex>
@@ -122,20 +98,33 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="keyDialog" max-width="768px">
+    <v-dialog v-model="testDialog" max-width="512px">
       <v-toolbar dense flat color="primary">
-        <v-toolbar-title class="white--text subtitle-1">SSH KEY</v-toolbar-title>
+        <v-toolbar-title class="white--text subtitle-1">TEST CONNECTION</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn @click="keyDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+        <v-btn @click="testDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
       <v-card>
         <v-card-text style="padding:0px;">
-          <v-container style="padding:0px; max-width:100%;">
+          <v-container style="padding:15px 20px 20px;">
             <v-layout wrap>
               <v-flex xs12>
-                <div style="max-height:70vh; overflow-y:auto;">
-                  <v-textarea ref="sshKey" v-model="item.ssh_key" :readonly="readOnly" rows="2" placeholder="Enter the private key" filled counter auto-grow style="padding-top:0px;" hide-details></v-textarea>
-                </div>
+                <v-form ref="testForm">
+                  <div class="body-1">Select a region to test the auxiliary connection:</div>
+                  <v-autocomplete ref="testRegion" outlined :loading="testLoading" v-model="regionItem" item-value="id" :rules="[v => !!v || '']" :items="regionsItems" label="Region" required hide-details style="margin-top:15px;">
+                    <template v-slot:[`selection`]="{ item }">
+                      <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                      {{ item.name }}
+                    </template>
+                    <template v-slot:[`item`]="{ item }">
+                      <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                      {{ item.name }}
+                    </template>
+                  </v-autocomplete>
+                </v-form>
+                <v-divider style="margin-top:20px; margin-bottom:20px"></v-divider>
+                <v-btn :loading="testLoading" color="#00b16a" @click="testConnection()">TEST CONNECTION</v-btn>
+                <v-btn :disabled="testLoading" color="error" @click="testDialog = false" style="margin-left:5px">CANCEL</v-btn>
               </v-flex>
             </v-layout>
           </v-container>
@@ -160,17 +149,17 @@ export default {
     filter: 'all',
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
-      { text: 'Engine', align: 'left', value: 'sql_version'},
-      { text: 'Hostname', align: 'left', value: 'sql_hostname'},
-      { text: 'Port', align: 'left', value: 'sql_port'},
-      { text: 'Username', align: 'left', value: 'sql_username'},
+      { text: 'Engine', align: 'left', value: 'version'},
+      { text: 'Hostname', align: 'left', value: 'hostname'},
+      { text: 'Port', align: 'left', value: 'port'},
+      { text: 'Username', align: 'left', value: 'username'},
       { text: 'Scope', align: 'left', value: 'shared' },
     ],
     auxiliary: [],
     items: [],
     selected: [],
     search: '',
-    item: { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', sql_ssl: false, shared: false },
+    item: { name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, shared: false },
     mode: '',
     loading: true,
     engines: {
@@ -182,8 +171,11 @@ export default {
     dialog_title: '',
     dialog_valid: false,
     showPassword: false,
-    showSSHPassword: false,
-    keyDialog: false,
+    // Test Dialog
+    testDialog: false,
+    testLoading: false,
+    regionsItems: [],
+    regionItem: null,
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -213,15 +205,15 @@ export default {
         .finally(() => this.loading = false)
     },
     selectEngine(value) {
-      if (this.item.sql_port == '') {
-        if (['MySQL','Aurora MySQL'].includes(value)) this.item.sql_port = '3306'
-        else if (value == 'PostgreSQL') this.item.sql_port = '5432'
+      if (this.item.port == '') {
+        if (['MySQL','Aurora MySQL'].includes(value)) this.item.port = '3306'
+        else if (value == 'PostgreSQL') this.item.port = '5432'
       }
       this.versions = this.engines[value]
     },
     newAuxiliary() {
       this.mode = 'new'
-      this.item = { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', sql_ssl: false, shared: false }
+      this.item = { name: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, shared: false }
       this.dialog_title = 'NEW AUXILIARY'
       this.dialog = true
     },
@@ -230,14 +222,14 @@ export default {
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item.shared = (!this.owner) ? false : this.item.shared
       delete this.item['id']
-      this.versions = this.engines[this.item.sql_engine]
+      this.versions = this.engines[this.item.engine]
       this.dialog_title = 'CLONE AUXILIARY'
       this.dialog = true
     },
     editAuxiliary() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.versions = this.engines[this.item.sql_engine]
+      this.versions = this.engines[this.item.engine]
       this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'EDIT AUXILIARY'
       this.dialog = true
     },
@@ -313,17 +305,38 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    testConnection() {
+    openTest() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
+        return
+      }
+      this.regionItem = null
+      this.getRegions()
+      this.testDialog = true
+    },
+    getRegions() {
+      this.testLoading = true
+      axios.get('/inventory/regions')
+        .then((response) => {
+          this.regionsItems = response.data.data.map(x => ({id: x.id, name: x.name, shared: x.shared }))
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.testLoading = false)
+    },
+    testConnection() {
+      // Check if all fields are filled
+      if (!this.$refs.testForm.validate()) {
+        this.notification('Please select a region', 'error')
         return
       }
       // Test Connection
       this.notification('Testing Auxiliary Connection...', 'info', true)
-      this.loading = true
-      const payload = (this.readOnly && this.inventory_secured) ? { auxiliary: this.item.id } : this.item
+      this.testLoading = true
+      const payload = (this.readOnly && this.inventory_secured) ? { auxiliary: this.item.id, region: this.regionItem } : { ...this.item, region: this.regionItem }
       axios.post('/inventory/auxiliary/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -332,7 +345,7 @@ export default {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => this.loading = false)
+        .finally(() => this.testLoading = false)
     },
     filterBy(val) {
       this.filter = val
@@ -354,16 +367,16 @@ export default {
     dialog (val) {
       if (!val) return
       this.showPassword = false
-      this.showSSHPassword = false
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
       })
     },
-    keyDialog (val) {
+    testDialog (val) {
       if (!val) return
       requestAnimationFrame(() => {
-        if (typeof this.$refs.sshKey !== 'undefined') this.$refs.sshKey.focus()
+        if (typeof this.$refs.testForm !== 'undefined') this.$refs.testForm.resetValidation()
+        if (typeof this.$refs.testRegion !== 'undefined') this.$refs.testRegion.focus()
       })
     }
   }

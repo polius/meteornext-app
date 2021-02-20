@@ -6,6 +6,7 @@ import connectors.base
 import models.admin.users
 import models.admin.inventory.inventory
 import models.admin.inventory.auxiliary
+import models.admin.inventory.regions
 import routes.admin.settings
 
 class Auxiliary:
@@ -16,6 +17,7 @@ class Auxiliary:
         self._users = models.admin.users.Users(sql)
         self._inventory = models.admin.inventory.inventory.Inventory(sql)
         self._auxiliary = models.admin.inventory.auxiliary.Auxiliary(sql)
+        self._regions = models.admin.inventory.regions.Regions(sql)
         # Init routes
         self._settings = routes.admin.settings.Settings(app, sql, license)
 
@@ -74,11 +76,14 @@ class Auxiliary:
             # Get Request Json
             auxiliary_json = request.get_json()
 
+            # Get region info
+            region = self._regions.get(region_id=auxiliary_json['region'])
+            if len(region) == 0:
+                return jsonify({'message': "Can't test the connection. Invalid region provided."}), 400
+
             # Build Auxiliary Data
-            ssh = {'enabled': False}
-            if auxiliary_json['ssh_tunnel']:
-                ssh = {"enabled": True, "hostname": auxiliary_json['ssh_hostname'], "port": auxiliary_json['ssh_port'], "username": auxiliary_json['ssh_username'], "password": auxiliary_json['ssh_password'], "key": auxiliary_json['ssh_key']}
-            sql = {"engine": auxiliary_json['sql_engine'], "hostname": auxiliary_json['sql_hostname'], "port": auxiliary_json['sql_port'], "username": auxiliary_json['sql_username'], "password": auxiliary_json['sql_password']}
+            ssh = {'enabled': region[0]['ssh_tunnel'], 'hostname': region[0]['hostname'], 'port': region[0]['port'], 'username': region[0]['username'], 'password': region[0]['password'], 'key': region[0]['key']}
+            sql = {"engine": auxiliary_json['engine'], "hostname": auxiliary_json['hostname'], "port": auxiliary_json['port'], "username": auxiliary_json['username'], "password": auxiliary_json['password']}
 
             # Check SQL Connection
             try:

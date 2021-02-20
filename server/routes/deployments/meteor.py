@@ -112,20 +112,13 @@ class Meteor:
         for aux in auxiliary:
             key_path = "{}/{}/keys/a{}".format(self._logs['local']['path'], self._uuid, aux['id'])
             self._config['auxiliary_connections'][aux['name']] = {
-                "ssh": {
-                    "enabled": True if aux['ssh_tunnel'] else False,
-                    "hostname": "" if aux['ssh_hostname'] is None else aux['ssh_hostname'],
-                    "username": "" if aux['ssh_username'] is None else aux['ssh_username'],
-                    "password": "" if aux['ssh_password'] is None else aux['ssh_password'],
-                    "key": "" if aux['ssh_key'] is None else key_path,
-                    "port": "" if aux['ssh_port'] is None else int(aux['ssh_port'])
-                },
+                "ssh": { "enabled": False },
                 "sql": {
-                    "engine": aux['sql_engine'],
-                    "hostname": aux['sql_hostname'],
-                    "username": aux['sql_username'],
-                    "password": aux['sql_password'],
-                    "port": int(aux['sql_port'])
+                    "engine": aux['engine'],
+                    "hostname": aux['hostname'],
+                    "username": aux['username'],
+                    "password": aux['password'],
+                    "port": int(aux['port'])
                 }
             }
 

@@ -13,25 +13,25 @@
               <v-flex xs12>
                 <v-form @submit.prevent ref="dialogForm" style="margin-top:0px; margin-bottom:15px;">
                   <v-file-input v-model="file" dense outlined show-size accept=".sql" label="Click to select a .sql file" hide-details style="padding:0px"></v-file-input>
-                    <div v-if="start" style="margin-top:15px">
-                      <v-progress-linear :value="progress" rounded color="primary" height="25">
-                        <template v-slot="{ value }">
-                          {{ (progress == 100) ? 'Importing... Please wait, It might take several minutes to finish.' : 'Uploading: ' + Math.ceil(value) + '%' }}
-                        </template>
-                      </v-progress-linear>
-                      <div class="body-1" style="margin-top:10px">
-                        <v-icon v-if="step == 'success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px;">fas fa-check-circle</v-icon>
-                        <v-icon v-else-if="step == 'fail'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
-                        <v-icon v-else-if="step == 'stop'" title="Stopped" small style="color:#fa8231; padding-bottom:2px;">fas fa-exclamation-circle</v-icon>
-                        <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
-                        <span style="margin-left:8px">{{ text }}</span>  
-                      </div>
-                      <v-card v-if="error.length != 0" style="margin-top:10px">
-                        <v-card-text>
-                          <div class="body-1">{{ error }}</div>
-                        </v-card-text>
-                      </v-card>
+                  <div v-if="start" style="margin-top:15px">
+                    <v-progress-linear :value="progress" rounded color="primary" height="25">
+                      <template v-slot="{ value }">
+                        {{ (progress == 100) ? 'Importing... Please wait, It might take several minutes to finish.' : 'Uploading: ' + Math.ceil(value) + '%' }}
+                      </template>
+                    </v-progress-linear>
+                    <div class="body-1" style="margin-top:10px">
+                      <v-icon v-if="step == 'success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px;">fas fa-check-circle</v-icon>
+                      <v-icon v-else-if="step == 'fail'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
+                      <v-icon v-else-if="step == 'stop'" title="Stopped" small style="color:#fa8231; padding-bottom:2px;">fas fa-exclamation-circle</v-icon>
+                      <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
+                      <span style="margin-left:8px">{{ text }}</span>  
                     </div>
+                    <v-card v-if="error.length != 0" style="margin-top:10px">
+                      <v-card-text>
+                        <div class="body-1">{{ error }}</div>
+                      </v-card-text>
+                    </v-card>
+                  </div>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
