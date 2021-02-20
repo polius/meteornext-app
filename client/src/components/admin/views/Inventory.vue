@@ -34,17 +34,17 @@
     <!------------------->
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">FILTER</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">FILTER</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="dialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 0px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:20px; margin-bottom:25px;">
-                  <v-autocomplete ref="filter" v-model="filter.group" filled :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-bottom:20px"></v-autocomplete>
+                <v-form ref="form" @submit.prevent style="margin-top:20px; margin-bottom:25px;">
+                  <v-autocomplete ref="filter" v-model="filter.group" v-on:keyup.enter="filterInventory()" filled :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-bottom:20px"></v-autocomplete>
                   <v-row no-gutters style="margin-bottom:12px;">
                     <v-col cols="auto">
                       <div class='text-subtitle-1 font-weight-regular'>Scope:</div>
