@@ -48,11 +48,11 @@
                     <v-col cols="auto">
                       <v-text-field v-model="database" label="Source Database" dense outlined readonly hide-details style="width:300px"></v-text-field>
                     </v-col>
-                    <v-col cols="auto" style="margin-left:12px; margin-right:12px">
-                      <v-icon size="20" style="margin-top:12px">fas fa-arrow-right</v-icon>
+                    <v-col cols="auto" style="margin-left:14px; margin-right:14px">
+                      <v-icon size="18" style="margin-top:13px">fas fa-arrow-right</v-icon>
                     </v-col>
                     <v-col cols="auto">
-                      <v-select v-model="targetDatabase" :items="databaseItems" label="Target Database" dense outlined :rules="[v => !!v || '']" required hide-details style="width:300px"></v-select>
+                      <v-autocomplete v-model="targetDatabase" :items="databaseItems" label="Target Database" dense outlined :rules="[v => !!v || '']" required hide-details style="width:300px"></v-autocomplete>
                     </v-col>
                   </v-row>
                 </v-form>
@@ -101,7 +101,7 @@
                     <v-icon v-else-if="progressStep == 'fail'" title="Finished with errors" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
                     <v-icon v-else-if="progressStep == 'stop'" title="Stopped" small style="color:#fa8231; padding-bottom:2px;">fas fa-exclamation-circle</v-icon>
                     <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
-                    <span style="margin-left:8px">{{ progressStep == 'clone' ? progressText + (progressBytes == 0 ? ' Fetching data... ' : ' Downloading data... [' + this.progressBytes + ' / ' + this.progressTotal + ']') : progressText }}</span>  
+                    <span style="margin-left:8px">{{ progressText }}</span>  
                   </div>
                   <v-textarea v-if="cloneErrors.length > 0" readonly filled label="Errors" :value="cloneErrors" height="40vh" style="margin-top:10px; margin-bottom:15px" hide-details></v-textarea>
                 </div>
@@ -171,8 +171,6 @@ export default {
       progressText: '', 
       progressStep: 'clone', 
       progressValue: 0,
-      progressBytes: 0,
-      progressTotal: 0,
       progressTimeEvent: null,
       progressTimeValue: null,
       selected: undefined,
@@ -208,6 +206,7 @@ export default {
   methods: {
     showDialog(selected) {
       this.selected = selected
+      this.targetDatabase = ''
       this.dialog = true
       setTimeout(() => {
         if (this.database != this.databasePrev) this.buildObjects()
@@ -328,8 +327,9 @@ export default {
       var payload = {
         connection: 0,
         server: this.server.id,
-        database: this.database,
         options: {
+          origin: this.database,
+          target: this.targetDatabase,
           object: '',
           items: [],
         }
@@ -345,9 +345,9 @@ export default {
             payload['options']['object'] = objSchema.slice(0, -1)
             payload['options']['items'] = [objName]
             this.progressText = objSchema.charAt(0).toUpperCase() + objSchema.slice(1,-1) + ' ' + i.toString() + ' of ' + n.toString() + ' (' + objName + ').'
-            const data = await this.cloneObject(payload)
+            const response = await this.cloneObject(payload)
             // Check Errors
-            this.cloneErrors += data
+            if (response.status != 200) this.cloneErrors += (this.cloneErrors.length != 0) ? '\n' + response.data.message : response.data.message
             // Update Progress Value
             this.progressValue = Math.round(100*t/total)
             i += 1
@@ -371,30 +371,13 @@ export default {
       // Build options
       const CancelToken = axios.CancelToken
       this.cancelToken = CancelToken.source()
-      this.progressBytes = 0
-      this.progressTotal = 0
-      const options = {
-        cancelToken: this.cancelToken.token,
-        onDownloadProgress: (progressEvent) => {
-          this.progressBytes = this.parseBytes(progressEvent.loaded)
-          this.progressTotal = this.parseBytes(progressEvent.total)
-        },
-        responseType: 'blob',
-        params: payload,
-      }
+      const options = { cancelToken: this.cancelToken.token }
       // Execute Query
-      const response = await axios.post('/client/clone', options)
-      return response.data
+      try { return await axios.post('/client/clone', payload, options) }
+      catch (error) { return error.response }
     },
     cancelClone() {
       this.cancelToken.cancel()
-    },
-    parseBytes(value) {
-      if (value/1024 < 1) return value + ' B'
-      else if (value/1024/1024 < 1) return Math.trunc(value/1024*100)/100 + ' KB'
-      else if (value/1024/1024/1024 < 1) return Math.trunc(value/1024/1024*100)/100 + ' MB'
-      else if (value/1024/1024/1024/1024 < 1) return Math.trunc(value/1024/1024/1024*100)/100 + ' GB'
-      else return Math.trunc(value/1024/1024/1024/1024*100)/100 + ' TB' 
     },
     onSearch(value) {
       for (let id of ['tables','views','triggers','functions','procedures','events']) this.gridApi[id].setQuickFilter(value)

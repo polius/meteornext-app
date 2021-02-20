@@ -513,9 +513,14 @@ class MySQL:
         return result
 
     def get_view_syntax(self, db, view):
-        query = "SHOW CREATE VIEW {}.{}".format(db, view)
-        result = self.execute(query)['data'][0]['Create View']
-        return result
+        query = """
+            SELECT view_definition 
+            FROM information_schema.views 
+            WHERE table_schema = %s
+            AND table_name = %s
+        """
+        result = self.execute(query, args=(db, view))['data'][0]['view_definition']
+        return f"CREATE VIEW `{view}` AS {result}"
 
     def get_trigger_info(self, db, trigger=None):
         trigger = '' if trigger is None else "AND trigger_name = '{}'".format(trigger)
