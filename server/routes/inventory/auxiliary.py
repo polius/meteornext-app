@@ -5,6 +5,7 @@ import json
 import connectors.base
 import models.admin.users
 import models.inventory.auxiliary
+import models.inventory.regions
 
 class Auxiliary:
     def __init__(self, app, sql, license):
@@ -13,6 +14,7 @@ class Auxiliary:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._auxiliary = models.inventory.auxiliary.Auxiliary(sql)
+        self._regions = models.inventory.regions.Regions(sql)
 
     def blueprint(self):
         # Init blueprint
@@ -61,20 +63,20 @@ class Auxiliary:
             # Get Request Json
             auxiliary_json = request.get_json()
 
+            # Get region info
+            region = self._regions.get(user_id=user['id'], group_id=user['group_id'], region_id=auxiliary_json['region'])
+            if len(region) == 0:
+                return jsonify({'message': "Can't test the connection. Invalid region provided."}), 400
+            ssh = {'enabled': region[0]['ssh_tunnel'], 'hostname': region[0]['hostname'], 'port': region[0]['port'], 'username': region[0]['username'], 'password': region[0]['password'], 'key': region[0]['key']}
+
             # Build Auxiliary Data
             if 'auxiliary' in auxiliary_json:
                 aux = self._auxiliary.get(user['id'], user['group_id'], auxiliary_json['auxiliary'])
                 if len(aux) == 0:
                     return jsonify({'message': "Can't test the connection. Invalid auxiliary provided."}), 400
-                ssh = {'enabled': False}
-                if aux[0]['ssh_tunnel']:
-                    ssh = {"enabled": True, "hostname": aux[0]['ssh_hostname'], "port": aux[0]['ssh_port'], "username": aux[0]['ssh_username'], "password": aux[0]['ssh_password'], "key": aux[0]['ssh_key']}
-                sql = {"engine": aux[0]['sql_engine'], "hostname": aux[0]['sql_hostname'], "port": aux[0]['sql_port'], "username": aux[0]['sql_username'], "password": aux[0]['sql_password']}
+                sql = {"engine": aux[0]['engine'], "hostname": aux[0]['hostname'], "port": aux[0]['port'], "username": aux[0]['username'], "password": aux[0]['password']}
             else:
-                ssh = {'enabled': False}
-                if auxiliary_json['ssh_tunnel']:
-                    ssh = {"enabled": True, "hostname": auxiliary_json['ssh_hostname'], "port": auxiliary_json['ssh_port'], "username": auxiliary_json['ssh_username'], "password": auxiliary_json['ssh_password'], "key": auxiliary_json['ssh_key']}
-                sql = {"engine": auxiliary_json['sql_engine'], "hostname": auxiliary_json['sql_hostname'], "port": auxiliary_json['sql_port'], "username": auxiliary_json['sql_username'], "password": auxiliary_json['sql_password']}
+                sql = {"engine": auxiliary_json['engine'], "hostname": auxiliary_json['hostname'], "port": auxiliary_json['port'], "username": auxiliary_json['username'], "password": auxiliary_json['password']}
 
             # Check SQL Connection
             try:

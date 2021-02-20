@@ -58,8 +58,8 @@ class Groups:
         """
         self._sql.execute(query, (source_group_id, source_group_id, target_group_id, target_group_id))
         query = """
-            INSERT INTO auxiliary (`name`, `group_id`, `ssh_tunnel`, `ssh_hostname`, `ssh_port`, `ssh_username`, `ssh_password`, `ssh_key`, `sql_engine`, `sql_version`, `sql_hostname`, `sql_port`, `sql_username`, `sql_password`, `sql_ssl`, `shared`, `created_by`, `created_at`)
-            SELECT `name`, %s AS 'group_id', `ssh_tunnel`, `ssh_hostname`, `ssh_port`, `ssh_username`, `ssh_password`, `ssh_key`, `sql_engine`, `sql_version`, `sql_hostname`, `sql_port`, `sql_username`, `sql_password`, `sql_ssl`, `shared`, %s AS 'created_by', %s AS 'created_at'
+            INSERT INTO auxiliary (`name`, `group_id`, `engine`, `version`, `hostname`, `port`, `username`, `password`, `ssl`, `shared`, `created_by`, `created_at`)
+            SELECT `name`, %s AS 'group_id', `engine`, `version`, `hostname`, `port`, `username`, `password`, `ssl`, `shared`, %s AS 'created_by', %s AS 'created_at'
             FROM auxiliary
             WHERE group_id = %s
             AND shared = 1
