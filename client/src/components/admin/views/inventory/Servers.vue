@@ -20,13 +20,13 @@
 
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="mode != 'delete'" title="Create the server only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
           <v-btn v-if="mode != 'delete'" title="Create the server for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -76,7 +76,7 @@
                       </v-col>
                     </v-row>
                     <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.password" label="Password" style="padding-top:0px;" hide-details></v-text-field>
+                    <v-text-field v-model="item.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" hide-details></v-text-field>
                     <v-row no-gutters>
                       <v-col cols="auto" style="margin-top:20px">
                         <v-switch v-model="item.ssl" flat label="Use SSL" style="margin-top:0px" hide-details></v-switch>
@@ -224,6 +224,7 @@ export default {
     },
     versions: [],
     usage: [],
+    showPassword: false,
     // Dialog: Item
     dialog: false,
     dialog_title: '',
@@ -328,7 +329,7 @@ export default {
       this.usage = []
       this.item = { group_id: this.filter.group, owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: true, usage: [...this.usage] }
       if (this.filter.group != null) { this.getUsers(); this.getRegions(); this.buildUsage(); }
-      this.dialog_title = 'New Server'
+      this.dialog_title = 'NEW SERVER'
       this.dialog = true
     },
     cloneServer() {
@@ -340,7 +341,7 @@ export default {
       this.getRegions()
       this.buildUsage()
       this.versions = this.engines[this.item.engine]
-      this.dialog_title = 'Clone Server'
+      this.dialog_title = 'CLONE SERVER'
       this.dialog = true
     },
     editServer() {
@@ -351,12 +352,12 @@ export default {
       this.getRegions()
       this.buildUsage()
       this.versions = this.engines[this.item.engine]
-      this.dialog_title = 'Edit Server'
+      this.dialog_title = 'EDIT SERVER'
       this.dialog = true
     },
     deleteServer() {
       this.mode = 'delete'
-      this.dialog_title = 'Delete Server'
+      this.dialog_title = 'DELETE SERVER'
       this.dialog = true
     },
     submitServer(check=true) {
@@ -511,6 +512,7 @@ export default {
   watch: {
     dialog (val) {
       if (!val) return
+      this.showPassword = false
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (this.mode == 'new') {

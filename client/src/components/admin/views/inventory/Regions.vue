@@ -14,13 +14,13 @@
 
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="mode != 'delete'" title="Create the region only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
           <v-btn v-if="mode != 'delete'" title="Create the region for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -36,19 +36,25 @@
                     </v-col>
                   </v-row>
                   <v-text-field ref="name" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <v-switch v-model="item.ssh_tunnel" label="Use SSH Tunnel" color="info" hide-details style="margin-top:0px;"></v-switch>
+                  <v-switch v-model="item.ssh_tunnel" label="SSH Tunnel" color="info" hide-details style="margin-top:0px;"></v-switch>
                   <div v-if="item.ssh_tunnel" style="margin-top:25px;">
                     <v-row no-gutters>
-                      <v-col cols="8" style="padding-right:10px">
+                      <v-col cols="9" style="padding-right:10px">
                         <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
                       </v-col>
-                      <v-col cols="4" style="padding-left:10px">
+                      <v-col cols="3" style="padding-left:10px">
                         <v-text-field v-model="item.port" :rules="[v => v == parseInt(v) || '']" label="Port" style="padding-top:0px;"></v-text-field>
                       </v-col>
                     </v-row>
                     <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.password" label="Password" style="padding-top:0px;"></v-text-field>
-                    <v-textarea v-model="item.key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                    <v-row no-gutters>
+                      <v-col style="padding-right:10px">
+                        <v-text-field v-model="item.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" hide-details style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                      <v-col cols="auto" style="padding-left:10px">
+                        <v-btn @click="keyDialog = true" color="#2e3131"><v-icon small :color="item.key == null || item.key.length == 0 ? 'error' : '#00b16a'" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>Private Key</v-btn>
+                      </v-col>
+                    </v-row>
                   </div>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>
@@ -62,6 +68,29 @@
                     <v-btn v-if="item['ssh_tunnel'] && mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
                   </v-col>
                 </v-row>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!----------------->
+    <!-- PKEY DIALOG -->
+    <!----------------->
+    <v-dialog v-model="keyDialog" max-width="768px">
+      <v-toolbar dense flat color="primary">
+        <v-toolbar-title class="white--text subtitle-1">SSH KEY</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn @click="keyDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+      </v-toolbar>
+      <v-card>
+        <v-card-text style="padding:0px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <v-flex xs12>
+                <div style="max-height:70vh; overflow-y:auto;">
+                  <v-textarea ref="sshKey" v-model="item.key" rows="2" placeholder="Enter the private key" filled counter auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                </div>
               </v-flex>
             </v-layout>
           </v-container>
@@ -145,6 +174,8 @@ export default {
     dialog: false,
     dialog_title: '',
     users: [],
+    showPassword: false,
+    keyDialog: false,
     // Filter Columns Dialog
     columnsDialog: false,
     columns: ['name','ssh_tunnel','hostname','port','username','shared','group','owner'],
@@ -203,7 +234,7 @@ export default {
       this.users = []
       this.item = { group_id: this.filter.group, owner_id: '', name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: true }
       if (this.filter.group != null) this.getUsers()
-      this.dialog_title = 'New Region'
+      this.dialog_title = 'NEW REGION'
       this.dialog = true
     },
     cloneRegion() {
@@ -212,19 +243,19 @@ export default {
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       delete this.item['id']
       this.getUsers()
-      this.dialog_title = 'Clone Region'
+      this.dialog_title = 'CLONE REGION'
       this.dialog = true
     },
     editRegion() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.getUsers()
-      this.dialog_title = 'Edit Region'
+      this.dialog_title = 'EDIT REGION'
       this.dialog = true
     },
     deleteRegion() {
       this.mode = 'delete'
-      this.dialog_title = 'Delete Region'
+      this.dialog_title = 'DELETE REGION'
       this.dialog = true
     },
     submitRegion() {
@@ -354,6 +385,7 @@ export default {
   watch: {
     dialog (val) {
       if (!val) return
+      this.showPassword = false
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (this.mode == 'new') {
@@ -361,6 +393,12 @@ export default {
           else this.$refs.name.focus()
         }
         else if (['clone','edit'].includes(this.mode)) this.$refs.name.focus()
+      })
+    },
+    keyDialog (val) {
+      if (!val) return
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.sshKey !== 'undefined') this.$refs.sshKey.focus()
       })
     },
     selected(val) {

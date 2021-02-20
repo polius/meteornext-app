@@ -14,13 +14,13 @@
 
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="mode != 'delete'" title="Create the auxiliary only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
           <v-btn v-if="mode != 'delete'" title="Create the auxiliary for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -44,7 +44,7 @@
                       <v-select v-model="item.sql_version" :items="versions" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
                     </v-col>
                   </v-row>
-                  <div style="margin-bottom:20px">
+                  <div style="margin-bottom:20px;">
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
                         <v-text-field v-model="item.sql_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
@@ -54,9 +54,9 @@
                       </v-col>
                     </v-row>
                     <v-text-field v-model="item.sql_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.sql_password" label="Password" style="padding-top:0px;" hide-details></v-text-field>
+                    <v-text-field v-model="item.sql_password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" hide-details></v-text-field>
                     <v-switch v-model="item.ssh_tunnel" label="Use SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
-                    <div v-if="item.ssh_tunnel" style="margin-top:20px;">
+                    <div v-if="item.ssh_tunnel" style="margin-top:20px; margin-bottom:20px">
                       <v-row no-gutters>
                         <v-col cols="8" style="padding-right:10px">
                           <v-text-field v-model="item.ssh_hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
@@ -66,8 +66,14 @@
                         </v-col>
                       </v-row>
                       <v-text-field v-model="item.ssh_username" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                      <v-text-field v-model="item.ssh_password" label="Password" style="padding-top:0px;"></v-text-field>
-                      <v-textarea v-model="item.ssh_key" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                      <v-row no-gutters>
+                        <v-col style="padding-right:10px">
+                          <v-text-field v-model="item.ssh_password" label="Password" :append-icon="showSSHPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showSSHPassword ? 'text' : 'password'" @click:append="showSSHPassword = !showSSHPassword" hide-details style="padding-top:0px;"></v-text-field>
+                        </v-col>
+                        <v-col cols="auto" style="padding-left:10px">
+                          <v-btn @click="keyDialog = true" color="#2e3131"><v-icon small :color="item.key == null || item.key.length == 0 ? 'error' : '#00b16a'" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>Private Key</v-btn>
+                        </v-col>
+                      </v-row>                      
                     </div>
                     <v-switch v-model="item.sql_ssl" flat label="Use SSL" style="margin-top:10px" hide-details></v-switch>
                     <v-row no-gutters v-if="item.sql_ssl" style="margin-top:20px">
@@ -94,6 +100,29 @@
                     <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
                   </v-col>
                 </v-row>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!----------------->
+    <!-- PKEY DIALOG -->
+    <!----------------->
+    <v-dialog v-model="keyDialog" max-width="768px">
+      <v-toolbar dense flat color="primary">
+        <v-toolbar-title class="white--text subtitle-1">SSH KEY</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn @click="keyDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+      </v-toolbar>
+      <v-card>
+        <v-card-text style="padding:0px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <v-flex xs12>
+                <div style="max-height:70vh; overflow-y:auto;">
+                  <v-textarea ref="sshKey" v-model="item.ssh_key" rows="2" placeholder="Enter the private key" filled counter auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                </div>
               </v-flex>
             </v-layout>
           </v-container>
@@ -182,6 +211,9 @@ export default {
     dialog: false,
     dialog_title: '',
     users: [],
+    showPassword: false,
+    showSSHPassword: false,
+    keyDialog: false,
     // Filter Columns Dialog
     columnsDialog: false,
     columns: ['name','region','sql_version','sql_hostname','sql_port','sql_username','shared','group','owner'],
@@ -247,7 +279,7 @@ export default {
       this.users = []
       this.item = { group_id: this.filter.group, owner_id: '', name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', sql_ssl: false, shared: true }
       if (this.filter.group != null) this.getUsers()
-      this.dialog_title = 'New Auxiliary'
+      this.dialog_title = 'NEW AUXILIARY'
       this.dialog = true
     },
     cloneAuxiliary() {
@@ -257,7 +289,7 @@ export default {
       delete this.item['id']
       this.getUsers()
       this.versions = this.engines[this.item.sql_engine]
-      this.dialog_title = 'Clone Auxiliary'
+      this.dialog_title = 'CLONE AUXILIARY'
       this.dialog = true
     },
     editAuxiliary() {
@@ -265,12 +297,12 @@ export default {
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.getUsers()
       this.versions = this.engines[this.item.sql_engine]
-      this.dialog_title = 'Edit Auxiliary'
+      this.dialog_title = 'EDIT AUXILIARY'
       this.dialog = true
     },
     deleteAuxiliary() {
       this.mode = 'delete'
-      this.dialog_title = 'Delete Auxiliary'
+      this.dialog_title = 'DELETE AUXILIARY'
       this.dialog = true
     },
     submitAuxiliary() {
@@ -397,6 +429,8 @@ export default {
   watch: {
     dialog (val) {
       if (!val) return
+      this.showPassword = false
+      this.showSSHPassword = false
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (this.mode == 'new') {
@@ -404,6 +438,12 @@ export default {
           else this.$refs.name.focus()
         }
         else if (['clone','edit'].includes(this.mode)) this.$refs.name.focus()
+      })
+    },
+    keyDialog (val) {
+      if (!val) return
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.sshKey !== 'undefined') this.$refs.sshKey.focus()
       })
     },
     selected(val) {
