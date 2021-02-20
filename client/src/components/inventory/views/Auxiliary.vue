@@ -32,15 +32,15 @@
 
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="mode != 'delete'" :readonly="readOnly" title="Create the auxiliary only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = false : ''" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
           <v-btn v-if="mode != 'delete'" :disabled="!owner && !readOnly" :readonly="readOnly" title="Create the auxiliary for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = true : ''"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 20px 20px;">
+        <v-card-text style="padding: 0px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
@@ -64,9 +64,9 @@
                       </v-col>
                     </v-row>
                     <v-text-field v-model="item.sql_username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.sql_password" :readonly="readOnly" label="Password" style="padding-top:0px;" hide-details></v-text-field>
-                    <v-switch v-model="item.ssh_tunnel" :readonly="readOnly" label="Use SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
-                    <div v-if="item.ssh_tunnel" style="margin-top:20px;">
+                    <v-text-field v-model="item.sql_password" :readonly="readOnly" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" hide-details></v-text-field>
+                    <v-switch v-model="item.ssh_tunnel" :readonly="readOnly" label="SSH Tunnel" color="info" hide-details style="margin-top:20px;"></v-switch>
+                    <div v-if="item.ssh_tunnel" style="margin-top:20px; margin-bottom:20px">
                       <v-row no-gutters>
                         <v-col cols="8" style="padding-right:10px">
                           <v-text-field v-model="item.ssh_hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
@@ -76,10 +76,16 @@
                         </v-col>
                       </v-row>
                       <v-text-field v-model="item.ssh_username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" style="padding-top:0px;"></v-text-field>
-                      <v-text-field v-model="item.ssh_password" :readonly="readOnly" label="Password" style="padding-top:0px;"></v-text-field>
-                      <v-textarea v-model="item.ssh_key" :readonly="readOnly" label="Private Key" rows="2" filled auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                      <v-row no-gutters>
+                        <v-col style="padding-right:10px">
+                          <v-text-field v-model="item.ssh_password" :readonly="readOnly" label="Password" :append-icon="showSSHPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showSSHPassword ? 'text' : 'password'" @click:append="showSSHPassword = !showSSHPassword" hide-details style="padding-top:0px;"></v-text-field>
+                        </v-col>
+                        <v-col cols="auto" style="padding-left:10px">
+                          <v-btn @click="keyDialog = true" color="#2e3131"><v-icon small :color="item.key == null || item.key.length == 0 ? 'error' : '#00b16a'" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>Private Key</v-btn>
+                        </v-col>
+                      </v-row>                      
                     </div>
-                    <v-switch v-model="item.sql_ssl" :readonly="readOnly" flat label="Use SSL" style="margin-top:10px" hide-details></v-switch>
+                    <v-switch v-model="item.sql_ssl" :readonly="readOnly" flat label="SSL Connection" style="margin-top:10px" hide-details></v-switch>
                     <v-row no-gutters v-if="item.sql_ssl" style="margin-top:20px">
                       <v-col style="padding-right:10px;">
                         <v-file-input v-model="item.ssl_client_key" :readonly="readOnly" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
@@ -109,6 +115,27 @@
                     <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
                   </v-col>
                 </v-row>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="keyDialog" max-width="768px">
+      <v-toolbar dense flat color="primary">
+        <v-toolbar-title class="white--text subtitle-1">SSH KEY</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn @click="keyDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+      </v-toolbar>
+      <v-card>
+        <v-card-text style="padding:0px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <v-flex xs12>
+                <div style="max-height:70vh; overflow-y:auto;">
+                  <v-textarea ref="sshKey" v-model="item.ssh_key" :readonly="readOnly" rows="2" placeholder="Enter the private key" filled counter auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                </div>
               </v-flex>
             </v-layout>
           </v-container>
@@ -154,6 +181,9 @@ export default {
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
+    showPassword: false,
+    showSSHPassword: false,
+    keyDialog: false,
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -192,7 +222,7 @@ export default {
     newAuxiliary() {
       this.mode = 'new'
       this.item = { name: '', ssh_tunnel: false, ssh_hostname: '', ssh_port: 22, ssh_username: '', ssh_password: '', ssh_key: '', sql_engine: '', sql_version: '', sql_hostname: '', sql_port: '', sql_username: '', sql_password: '', sql_ssl: false, shared: false }
-      this.dialog_title = 'New Auxiliary'
+      this.dialog_title = 'NEW AUXILIARY'
       this.dialog = true
     },
     cloneAuxiliary() {
@@ -201,19 +231,19 @@ export default {
       this.item.shared = (!this.owner) ? false : this.item.shared
       delete this.item['id']
       this.versions = this.engines[this.item.sql_engine]
-      this.dialog_title = 'Clone Auxiliary'
+      this.dialog_title = 'CLONE AUXILIARY'
       this.dialog = true
     },
     editAuxiliary() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.versions = this.engines[this.item.sql_engine]
-      this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'Edit Auxiliary'
+      this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'EDIT AUXILIARY'
       this.dialog = true
     },
     deleteAuxiliary() {
       this.mode = 'delete'
-      this.dialog_title = 'Delete Auxiliary'
+      this.dialog_title = 'DELETE AUXILIARY'
       this.dialog = true
     },
     submitAuxiliary() {
@@ -323,9 +353,17 @@ export default {
   watch: {
     dialog (val) {
       if (!val) return
+      this.showPassword = false
+      this.showSSHPassword = false
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
+      })
+    },
+    keyDialog (val) {
+      if (!val) return
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.sshKey !== 'undefined') this.$refs.sshKey.focus()
       })
     }
   }

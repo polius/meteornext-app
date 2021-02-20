@@ -38,13 +38,13 @@
 
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="mode != 'delete'" :readonly="readOnly" title="Create the server only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = false : ''" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
           <v-btn v-if="mode != 'delete'" :disabled="!owner && !readOnly" :readonly="readOnly" title="Create the server for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = true : ''"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -86,7 +86,7 @@
                       </v-col>
                     </v-row>
                     <v-text-field v-model="item.username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.password" :readonly="readOnly" label="Password" style="padding-top:0px;" hide-details></v-text-field>
+                    <v-text-field v-model="item.password" :readonly="readOnly" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" hide-details></v-text-field>
                     <v-row no-gutters>
                       <v-col cols="auto" style="margin-top:20px">
                         <v-switch v-model="item.ssl" :readonly="readOnly" flat label="Use SSL" hide-details style="margin-top:0px"></v-switch>
@@ -138,7 +138,7 @@
           <v-spacer></v-spacer>
           <v-btn @click="confirm_dialog = false" icon style="width:40px; height:40px"><v-icon size="21">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 20px 20px;">
+        <v-card-text style="padding: 0px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
@@ -196,6 +196,7 @@ export default {
     },
     versions: [],
     usage: [],
+    showPassword: false,
     // Dialog: Item
     dialog: false,
     dialog_title: '',
@@ -264,7 +265,7 @@ export default {
     newServer() {
       this.mode = 'new'
       this.item = { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: [...this.usage] }
-      this.dialog_title = 'New Server'
+      this.dialog_title = 'NEW SERVER'
       this.dialog = true
     },
     cloneServer() {
@@ -274,7 +275,7 @@ export default {
       this.item.shared = (!this.owner) ? false : this.item.shared
       delete this.item['id']
       this.versions = this.engines[this.item.engine]
-      this.dialog_title = 'Clone Server'
+      this.dialog_title = 'CLONE SERVER'
       this.dialog = true
     },
     editServer() {
@@ -282,12 +283,12 @@ export default {
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item.usage = this.parseUsage(this.item.usage)
       this.versions = this.engines[this.item.engine]
-      this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'Edit Server'
+      this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'EDIT SERVER'
       this.dialog = true
     },
     deleteServer() {
       this.mode = 'delete'
-      this.dialog_title = 'Delete Server'
+      this.dialog_title = 'DELETE SERVER'
       this.dialog = true
     },
     submitServer(check=true) {
@@ -425,6 +426,7 @@ export default {
   watch: {
     dialog (val) {
       if (!val) return
+      this.showPassword = false
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()

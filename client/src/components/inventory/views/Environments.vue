@@ -33,13 +33,13 @@
 
     <v-dialog v-model="dialog" persistent max-width="896px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="mode != 'delete'" :readonly="readOnly" title="Create the environment only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = false : ''" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
           <v-btn v-if="mode != 'delete'" :disabled="!owner && !readOnly" :readonly="readOnly" title="Create the environment for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = true : ''"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
-          <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="dialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -270,7 +270,7 @@ export default {
       this.item = { name: '', shared: false }
       this.treeviewSelected = []
       this.treeviewOpened = []
-      this.dialog_title = 'New Environment'
+      this.dialog_title = 'NEW ENVIRONMENT'
       this.dialog = true
     },
     cloneEnvironment() {
@@ -278,14 +278,14 @@ export default {
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item.shared = (!this.owner) ? false : this.item.shared
       delete this.item['id']
-      this.dialog_title = 'Clone Environment'
+      this.dialog_title = 'CLONE ENVIRONMENT'
       this.dialog = true
       setTimeout(this.updateSelected, 1)
     },
     editEnvironment() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'Edit Environment'
+      this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'EDIT ENVIRONMENT'
       this.dialog = true
       setTimeout(this.updateSelected, 1)
     },
@@ -310,7 +310,7 @@ export default {
     },
     deleteEnvironment() {
       this.mode = 'delete'
-      this.dialog_title = 'Delete Environment'
+      this.dialog_title = 'DELETE ENVIRONMENT'
       this.dialog = true
     },
     submitEnvironment() {
