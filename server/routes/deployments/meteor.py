@@ -122,12 +122,6 @@ class Meteor:
                 }
             }
 
-            # Generate auxiliary connection key files
-            if aux['ssh_key'] is not None:
-                with open(key_path, 'w') as outfile:
-                    outfile.write(aux['ssh_key'])
-                os.chmod(key_path, 0o600)
-        
         # Compile Logs
         self._config['amazon_s3'] = {
             "enabled": False,
