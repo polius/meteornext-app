@@ -219,13 +219,9 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-bottom:15px;">
+                <v-form ref="form">
                   <v-data-table :headers="event_details_headers" :items="event_details_items" :search="events_details_search" :hide-default-footer="event_details_items.length < 11" class="elevation-1" style="margin-top:0px;"></v-data-table>
                 </v-form>
-                <v-divider></v-divider>
-                <div style="margin-top:15px;">
-                  <v-btn color="primary" @click="event_details_dialog = false">CLOSE</v-btn>
-                </div>
               </v-flex>
             </v-layout>
           </v-container>
