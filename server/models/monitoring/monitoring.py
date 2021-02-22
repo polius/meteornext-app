@@ -69,10 +69,11 @@ class Monitoring:
         query = """
             SELECT me.id, s.name AS 'server', me.event, me.data, me.time 
             FROM monitoring_events me
-            JOIN servers s ON s.id = me.server_id AND s.group_id = %s AND (s.owner_id = %s OR s.shared = 1)
+            JOIN monitoring m ON m.server_id = me.server_id AND m.user_id = %s
+            JOIN servers s ON s.id = m.server_id
             ORDER BY me.id DESC
         """
-        return self._sql.execute(query, (user['group_id'], user['id']))
+        return self._sql.execute(query, (user['id']))
 
     def put_monitor(self, user, data):
         if len(data) == 0:
