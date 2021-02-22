@@ -244,7 +244,8 @@ export default {
       setTimeout(() => {
         this.gridApi[object] = params.api
         this.columnApi[object] = params.columnApi
-        this.gridApi[object].showLoadingOverlay()
+        if (this.databasePrev != this.database) this.gridApi[object].showLoadingOverlay()
+        else this.resizeTable(object, true)
       },0)
     },
     onNewColumnsLoaded(object) {
