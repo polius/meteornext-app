@@ -143,9 +143,10 @@ export default {
       axios.get('/notifications')
         .then((response) => {
           this.items = response.data.data
-          for (var i = 0; i < this.items.length; ++i) this.items[i]['data'] = JSON.parse(this.items[i]['data'])
+          for (let i = 0; i < this.items.length; ++i) this.items[i]['data'] = JSON.parse(this.items[i]['data'])
         })
         .catch((error) => {
+          console.log(error)
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
@@ -219,7 +220,9 @@ export default {
     getNotificationColor(status) {
       if (status == 'SUCCESS') return '#4caf50'
       else if (status == 'WARNING') return '#ff9800'
-      else return '#e74c3c'
+      else if (status == 'ERROR') return '#e74c3c'
+      else if (status == 'INFO') return '#3e9cef'
+      else return ''
     },
     getDeploymentMethodColor(item) {
       if (item.data.method == 'VALIDATE') return '#00b16a'
