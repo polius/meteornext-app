@@ -210,6 +210,7 @@ export default {
     ], { path: 'client/client' }),
     ...mapFields([
       'index',
+      'id',
       'headerTabSelected',
       'contentHeaders',
       'contentItems',
@@ -352,7 +353,7 @@ export default {
       this.bottomBar.content = { status: '', text: '', info: '' }
       this.gridApi.content.showLoadingOverlay()
       const payload = {
-        connection: this.index,
+        connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,
         table: this.sidebarSelected[0]['name'],
@@ -480,7 +481,7 @@ export default {
       this.gridApi.content.showLoadingOverlay()
       // Execute Query/ies
       const payload = {
-        connection: this.index,
+        connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,
         queries: queries
@@ -597,7 +598,7 @@ export default {
         this.gridApi.content.showLoadingOverlay()
         // Execute Query
         const payload = {
-          connection: this.index,
+          connection: this.id + '-shared',
           server: this.server.id,
           database: this.database,
           queries: [query]
@@ -702,7 +703,7 @@ export default {
       this.gridApi.content.showLoadingOverlay()
       // Build payload
       const payload = {
-        connection: this.index,
+        connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,
         table: this.sidebarSelected[0]['name'],

@@ -148,9 +148,9 @@ class MySQL:
             return cursor.mogrify(query, args)
     
     def kill(self, connection_id):
-        try:
+        if self._server['sql']['engine'] == 'Aurora MySQL':
             self.execute('CALL mysql.rds_kill_query({})'.format(connection_id))
-        except Exception:
+        elif self._server['sql']['engine'] == 'MySQL':
             self.execute('KILL QUERY {}'.format(connection_id))
 
     def __logger(self):

@@ -33,7 +33,8 @@ class Client:
             # print("- [CLIENT] Connections closed: {}".format(total))
 
     def connect(self, user_id, conn_id, server):
-        conn_id = int(conn_id)
+        user_id = int(user_id)
+        conn_id = str(conn_id)
         if user_id not in self._connections or conn_id not in self._connections[user_id] or server['id'] != self._connections[user_id][conn_id].server['id']:
             conn = Connection(server)
             conn.connect()
@@ -45,7 +46,7 @@ class Client:
 
     def kill(self, user_id, conn_id):
         try:
-            connection = self._connections[int(user_id)][int(conn_id)]
+            connection = self._connections[int(user_id)][str(conn_id)]
             conn = Connection(connection.server)
             conn.kill(connection.connection_id)
         except Exception:
@@ -53,8 +54,14 @@ class Client:
 
     def close(self, user_id, conn_id):
         try:
-            connection = self._connections[int(user_id)][int(conn_id)]
-            connection.close()
+            user_id = int(user_id)
+            conn_id = str(conn_id)
+            for conn_name in ['-main','-shared','-shared2']: 
+                if user_id in self._connections and conn_id + conn_name in self._connections[user_id]:
+                    connection = self._connections[user_id][conn_id + conn_name]
+                    conn = Connection(connection.server)
+                    conn.kill(connection.connection_id)
+                    connection.close()
             self._connections[user_id].pop(conn_id, None)
         except Exception:
             pass

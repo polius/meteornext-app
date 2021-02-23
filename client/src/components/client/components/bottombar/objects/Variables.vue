@@ -90,6 +90,7 @@ export default {
     ], { path: 'client/client' }),
     ...mapFields([
       'index',
+      'id',
       'server',
     ], { path: 'client/connection' }),
   },
@@ -117,7 +118,7 @@ export default {
       if (this.gridApi != null) this.gridApi.showLoadingOverlay()
       this.loading = true
       const payload = {
-        connection: 0,
+        connection: this.id + '-shared',
         server: this.server.id
       }
       axios.get('/client/variables', { params: payload })

@@ -99,6 +99,7 @@ export default {
     ], { path: 'client/client' }),
     ...mapFields([
       'index',
+      'id',
       'server',
       'database',
       'sidebarOpened',
@@ -147,7 +148,7 @@ export default {
       // Retrieve Databases
       this.loading = true
       const payload = {
-        connection: this.index,
+        connection: this.id + '-shared',
         server: this.server.id, 
         encoding: encoding
       }

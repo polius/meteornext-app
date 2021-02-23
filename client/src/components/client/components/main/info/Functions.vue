@@ -43,6 +43,7 @@ export default {
     ], { path: 'client/client' }),
     ...mapFields([
       'index',
+      'id',
       'infoHeaders',
       'infoItems',
       'infoEditor',
@@ -85,7 +86,7 @@ export default {
     getInfo() {
       if (this.infoConnection == this.sidebarSelected[0]['id']) return
       const payload = {
-        connection: this.index,
+        connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,
         object: 'function',

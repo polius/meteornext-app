@@ -132,7 +132,7 @@ export default {
       this.currentConn = tabActive;
     },
     deleteConnection(index) {
-      axios.get('/client/close', { params: { connection: index }})
+      axios.get('/client/close', { params: { connection: this.connections[index].id }})
       this.$store.dispatch('client/deleteConnection', index)
     },
     onContextMenu(event) {

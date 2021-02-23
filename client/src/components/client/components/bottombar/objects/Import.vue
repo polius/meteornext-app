@@ -81,6 +81,7 @@ export default {
     ], { path: 'client/client' }),
     ...mapFields([
       'index',
+      'id',
       'server',
       'database',
     ], { path: 'client/connection' }),
@@ -120,7 +121,7 @@ export default {
       this.step = 'upload'
       // Build import
       const data = new FormData();
-      data.append('connection', this.index)
+      data.append('connection', this.id + '-shared')
       data.append('server', this.server.id)
       data.append('database', this.database)
       data.append('file', this.file)
