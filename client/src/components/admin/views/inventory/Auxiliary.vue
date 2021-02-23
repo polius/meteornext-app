@@ -376,7 +376,7 @@ export default {
     },
     getRegions() {
       this.testLoading = true
-      axios.get('/admin/inventory/regions')
+      axios.get('/admin/inventory/regions', { params: { group_id: this.item.group_id }})
         .then((response) => {
           this.regionsItems = response.data.regions.map(x => ({id: x.id, name: x.name, shared: x.shared }))
         })

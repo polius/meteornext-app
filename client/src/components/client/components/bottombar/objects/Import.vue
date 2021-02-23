@@ -153,7 +153,7 @@ export default {
       }
       // Start Timer
       this.progressTimeValue = moment().startOf("day");
-      this.progressTimeEvent = setInterval(() => { this.progressTimeValue.add(1, 'second') }, 1000)
+      this.progressTimeEvent = setInterval(() => requestAnimationFrame(() => this.progressTimeValue.add(1, 'second')), 1000)
       // Start import
       this.start = true
       axios.post('client/import', data, options)
