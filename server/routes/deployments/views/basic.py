@@ -259,7 +259,7 @@ class Basic:
         # Create deployment to the DB
         data['group_id'] = group['id']
         data['id'] = self._deployments.post(user['id'], data)
-        data['execution_id'] = self._deployments_basic.post(data)
+        data['execution_id'] = self._deployments_basic.post(user['id'], data)
 
         # Consume Coins
         self._users.consume_coins(user, group['coins_execution'])
@@ -308,7 +308,7 @@ class Basic:
             deployment['method'] != data['method'] or \
             str(deployment['scheduled']) != str(data['scheduled']) and not (deployment['scheduled'] is None and data['scheduled'] == ''):
                 data['group_id'] = user['group_id']
-                self._deployments_basic.put(data)
+                self._deployments_basic.put(user['id'], data)
             return jsonify({'message': 'Deployment edited successfully', 'data': {'execution_id': data['execution_id']}}), 200
         else:
             # Check Coins
@@ -330,7 +330,7 @@ class Basic:
 
             # Create a new Basic Deployment
             data['group_id'] = group['id']
-            data['execution_id'] = self._deployments_basic.post(data)
+            data['execution_id'] = self._deployments_basic.post(user['id'], data)
 
             # Consume Coins
             if authority[0]['id'] != user['id'] and user['admin']:
