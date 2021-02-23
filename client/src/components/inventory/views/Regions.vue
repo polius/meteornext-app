@@ -62,7 +62,7 @@
                         <v-text-field v-model="item.password" :readonly="readOnly" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" hide-details style="padding-top:0px;"></v-text-field>
                       </v-col>
                       <v-col cols="auto" style="padding-left:10px">
-                        <v-btn @click="keyDialog = true" color="#2e3131"><v-icon small :color="item.key == null || item.key.length == 0 ? 'error' : '#00b16a'" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>Private Key</v-btn>
+                        <v-btn @click="keyDialogOpen()" color="#2e3131"><v-icon small :color="item.key == null || item.key.length == 0 ? 'error' : '#00b16a'" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>Private Key</v-btn>
                       </v-col>
                     </v-row>
                   </div>
@@ -93,6 +93,8 @@
     <v-dialog v-model="keyDialog" max-width="768px">
       <v-toolbar dense flat color="primary">
         <v-toolbar-title class="white--text subtitle-1">SSH KEY</v-toolbar-title>
+        <v-divider class="mx-3" inset vertical></v-divider>
+        <v-btn @click="keyDialogSubmit" color="primary" style="margin-right:10px;">Save</v-btn>
         <v-spacer></v-spacer>
         <v-btn @click="keyDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
@@ -102,7 +104,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <div style="max-height:70vh; overflow-y:auto;">
-                  <v-textarea ref="sshKey" v-model="item.key" :readonly="readOnly" rows="2" placeholder="Enter the private key" filled counter auto-grow style="padding-top:0px;" hide-details></v-textarea>
+                  <v-textarea ref="sshKey" v-model="KeyDialogText" :readonly="readOnly" rows="2" placeholder="Enter the private key" filled counter auto-grow style="padding-top:0px;" hide-details></v-textarea>
                 </div>
               </v-flex>
             </v-layout>
@@ -147,6 +149,7 @@ export default {
     dialog_valid: false,
     showPassword: false,
     keyDialog: false,
+    KeyDialogText: '',
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(5000),
@@ -283,7 +286,7 @@ export default {
       const payload = (this.readOnly && this.inventory_secured) ? { region: this.item.id } : this.item
       axios.post('/inventory/regions/test', payload)
         .then((response) => {
-          this.notification(response.data.message, '#00b16a', 2)
+          this.notification(response.data.message, '#00b16a', 0)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -291,18 +294,26 @@ export default {
         })
         .finally(() => this.loading = false)
     },
+    keyDialogOpen() {
+      this.KeyDialogText = this.item.key
+      this.keyDialog = true
+    },
+    keyDialogSubmit() {
+      this.item.key = this.KeyDialogText
+      this.keyDialog = false
+    },
     filterBy(val) {
       this.filter = val
       if (val == 'all') this.items = this.regions.slice(0)
       else if (val == 'personal') this.items = this.regions.filter(x => !x.shared)
       else if (val == 'shared') this.items = this.regions.filter(x => x.shared)
     },
-    notification(message, color, persistent=false) {
+    notification(message, color, timeout=5) {
       this.snackbar = false
       setTimeout(() => {
         this.snackbarText = message
         this.snackbarColor = color
-        this.snackbarTimeout = persistent ? Number(0) : Number(5000)
+        this.snackbarTimeout = Number(timeout*1000)
         this.snackbar = true
       }, 10)
     }
