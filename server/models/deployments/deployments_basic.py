@@ -22,17 +22,17 @@ class Deployments_Basic:
         """
         return self._sql.execute(query, (execution_id))
 
-    def post(self, deployment):
+    def post(self, user_id, deployment):
         query = """
-            INSERT INTO deployments_basic (deployment_id, environment_id, `databases`, queries, method, `status`, created, scheduled, url)
-            SELECT %s, e.id, %s, %s, %s, %s, %s, IF(%s = '', NULL, %s), %s
+            INSERT INTO deployments_basic (deployment_id, environment_id, `databases`, queries, method, `status`, created, scheduled, url, user_id)
+            SELECT %s, e.id, %s, %s, %s, %s, %s, IF(%s = '', NULL, %s), %s, %s
             FROM environments e
             WHERE e.name = %s
             AND e.group_id = %s
         """
-        return self._sql.execute(query, (deployment['id'], deployment['databases'], str(deployment['queries']), deployment['method'], deployment['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), deployment['scheduled'], deployment['scheduled'], deployment['url'], deployment['environment'], deployment['group_id']))
+        return self._sql.execute(query, (deployment['id'], deployment['databases'], str(deployment['queries']), deployment['method'], deployment['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), deployment['scheduled'], deployment['scheduled'], deployment['url'], user_id, deployment['environment'], deployment['group_id']))
 
-    def put(self, deployment):
+    def put(self, user_id, deployment):
         query = """
             UPDATE deployments_basic
             SET `environment_id` = (SELECT id FROM environments WHERE name = %s AND group_id = %s),
@@ -40,10 +40,11 @@ class Deployments_Basic:
                 `queries` = %s,
                 `method` = %s,
                 `status` = IF (%s != '', 'SCHEDULED', 'CREATED'),
-                `scheduled` = IF(%s = '', NULL, %s)
+                `scheduled` = IF(%s = '', NULL, %s),
+                `user_id` = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (deployment['environment'], deployment['group_id'], deployment['databases'], deployment['queries'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], deployment['execution_id']))
+        self._sql.execute(query, (deployment['environment'], deployment['group_id'], deployment['databases'], deployment['queries'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], user_id, deployment['execution_id']))
 
     def updateStatus(self, deployment_id, status, stopped=None):
         if stopped is None:
@@ -95,7 +96,7 @@ class Deployments_Basic:
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id
             JOIN environments e ON e.id = b.environment_id
-            JOIN users u ON u.id = d.user_id
+            JOIN users u ON u.id <=> b.user_id
             JOIN groups g ON g.id = u.group_id
             WHERE b.status = 'SCHEDULED'
             AND %s >= b.scheduled
@@ -108,7 +109,7 @@ class Deployments_Basic:
             FROM deployments_basic b
             JOIN deployments d ON d.id = b.deployment_id
             JOIN environments e ON e.id = b.environment_id
-            JOIN users u ON u.id = d.user_id
+            JOIN users u ON u.id <=> b.user_id
             JOIN groups g ON g.id = u.group_id
             WHERE b.id IN(%s)
         """

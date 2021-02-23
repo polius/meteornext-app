@@ -287,7 +287,7 @@ class Pro:
         # Create deployment to the DB
         data['group_id'] = group['id']
         data['id'] = self._deployments.post(user['id'], data)
-        data['execution_id'] = self._deployments_pro.post(data)
+        data['execution_id'] = self._deployments_pro.post(user['id'], data)
 
         # Consume Coins
         self._users.consume_coins(user, group['coins_execution'])
@@ -343,7 +343,7 @@ class Pro:
             deployment['method'] != data['method'] or \
             str(deployment['scheduled']) != str(data['scheduled']) and not (deployment['scheduled'] is None and data['scheduled'] == ''):
                 data['group_id'] = user['group_id']
-                self._deployments_pro.put(data)
+                self._deployments_pro.put(user['id'], data)
             return jsonify({'message': 'Deployment edited successfully', 'data': {'execution_id': data['execution_id']}}), 200
 
         else:
@@ -366,7 +366,7 @@ class Pro:
 
             # Create a new Pro Deployment
             data['group_id'] = group['id']
-            data['execution_id'] = self._deployments_pro.post(data)
+            data['execution_id'] = self._deployments_pro.post(user['id'], data)
 
             # Consume Coins
             if authority[0]['id'] != user['id'] and user['admin']:

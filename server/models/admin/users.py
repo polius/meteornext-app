@@ -44,6 +44,8 @@ class Users:
             self._sql.execute("DELETE df FROM deployments_finished df JOIN deployments_pro dp ON dp.id = df.deployment_id JOIN deployments d ON d.id = dp.deployment_id JOIN users u ON u.id = d.user_id AND u.username = %s WHERE df.deployment_mode = 'pro'", (user))
             self._sql.execute("DELETE db FROM deployments_basic db JOIN deployments d ON d.id = db.deployment_id JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE dp FROM deployments_pro dp JOIN deployments d ON d.id = dp.deployment_id JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
+            self._sql.execute("UPDATE deployments_basic JOIN users u ON u.id = deployments_basic.user_id AND u.username = %s SET deployments_basic.user_id = NULL", (user))
+            self._sql.execute("UPDATE deployments_pro JOIN users u ON u.id = deployments_pro.user_id AND u.username = %s SET deployments_pro.user_id = NULL", (user))
             self._sql.execute("DELETE d FROM deployments d JOIN users u ON u.id = d.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE r FROM releases r JOIN users u ON u.id = r.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE n FROM notifications n JOIN users u ON u.id = n.user_id AND u.username = %s", (user))

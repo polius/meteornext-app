@@ -224,6 +224,7 @@ CREATE TABLE `deployments_basic` (
  `engine` VARCHAR(191) NULL,
  `public` TINYINT(1) NOT NULL DEFAULT 0,
  `expired` TINYINT(1) NOT NULL DEFAULT 0,
+ `user_id` INT UNSIGNED NULL,
   PRIMARY KEY (`id`),
   KEY `deployment_id` (`deployment_id`),
   KEY `status` (`status`),
@@ -231,8 +232,10 @@ CREATE TABLE `deployments_basic` (
   KEY `uri` (`uri`),
   KEY `created` (`created`),
   KEY `expired` (`expired`),
+  KEY `user_id` (`user_id`),
   FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`),
-  FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
+  FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `deployments_pro` (
@@ -255,6 +258,7 @@ CREATE TABLE `deployments_pro` (
  `engine` VARCHAR(191) NULL,
  `public` TINYINT(1) NOT NULL DEFAULT 0,
  `expired` TINYINT(1) NOT NULL DEFAULT 0,
+ `user_id` INT UNSIGNED NULL,
   PRIMARY KEY(id),
   KEY `deployment_id` (`deployment_id`),
   KEY `status` (`status`),
@@ -262,8 +266,10 @@ CREATE TABLE `deployments_pro` (
   KEY `uri` (`uri`),
   KEY `created` (`created`),
   KEY `expired` (`expired`),
+  KEY `user_id` (`user_id`),
   FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`),
-  FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`)
+  FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `deployments_queued` (
