@@ -20,11 +20,20 @@
                       </template>
                     </v-progress-linear>
                     <div class="body-1" style="margin-top:10px">
-                      <v-icon v-if="step == 'success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px;">fas fa-check-circle</v-icon>
-                      <v-icon v-else-if="step == 'fail'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
-                      <v-icon v-else-if="step == 'stop'" title="Stopped" small style="color:#fa8231; padding-bottom:2px;">fas fa-exclamation-circle</v-icon>
-                      <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
-                      <span style="margin-left:8px">{{ text }}</span>  
+                      <v-row no-gutters>
+                        <v-col cols="auto">
+                          <v-icon v-if="step == 'success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px;">fas fa-check-circle</v-icon>
+                          <v-icon v-else-if="step == 'fail'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
+                          <v-icon v-else-if="step == 'stop'" title="Stopped" small style="color:#fa8231; padding-bottom:2px;">fas fa-exclamation-circle</v-icon>
+                          <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
+                        </v-col>
+                        <v-col style="margin-left:8px">
+                          <span>{{ text }}</span>
+                        </v-col>
+                        <v-col v-if="progressTimeValue != null" class="flex-grow-0 flex-shrink-0">
+                          <div class="body-1">{{ progressTimeValue.format('HH:mm:ss') }}</div>
+                        </v-col>
+                      </v-row>
                     </div>
                     <v-card v-if="error.length != 0" style="margin-top:10px">
                       <v-card-text>
@@ -56,6 +65,7 @@
 
 <script>
 import axios from 'axios'
+import moment from 'moment'
 import EventBus from '../../../js/event-bus'
 import { mapFields } from '../../../js/map-fields'
 
@@ -69,6 +79,8 @@ export default {
       text: 'Uploading file...', 
       step: 'import', 
       progress: 0, 
+      progressTimeEvent: null,
+      progressTimeValue: null,
       start: false, 
       error: '',
       // Axios Cancel Token
@@ -139,6 +151,9 @@ export default {
         },
         cancelToken: this.cancelToken.token
       }
+      // Start Timer
+      this.progressTimeValue = moment().startOf("day");
+      this.progressTimeEvent = setInterval(() => { this.progressTimeValue.add(1, 'second') }, 1000)
       // Start import
       this.start = true
       axios.post('client/import', data, options)
@@ -175,6 +190,7 @@ export default {
             }) 
           }
         })
+        .finally(() => clearInterval(this.progressTimeEvent))
     },
     cancelImport() {
       this.step = 'stopping'
