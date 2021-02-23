@@ -169,6 +169,7 @@ export default {
     ], { path: 'client/components' }),
     ...mapFields([
       'index',
+      'id',
       'databaseItems',
       'tableItems',
       'sidebarItems',
@@ -381,7 +382,7 @@ export default {
       this.sidebarLoadingServer = true
       // Retrieve Databases
       const payload = {
-        connection: 0,
+        connection: this.id + '-shared',
         server: server.id,
       }
       const index = this.index
@@ -458,7 +459,7 @@ export default {
       this.sidebarLoading = true
       // Retrieve Tables
       const payload = {
-        connection: 0,
+        connection: this.id + '-shared',
         server: this.server.id,
         database: database
       }
@@ -685,7 +686,7 @@ export default {
     execute(queries, resolve, reject) {
       // Execute Query
       const payload = {
-        connection: 0,
+        connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,
         queries: queries

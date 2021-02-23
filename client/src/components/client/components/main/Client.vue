@@ -147,6 +147,7 @@ export default {
   computed: {
     ...mapFields([
       'index',
+      'id',
       'headerTabSelected',
       'clientHeaders',
       'clientItems',
@@ -461,7 +462,7 @@ export default {
     runQuery() {
       this.clientExecuting = 'query'
       const payload = {
-        connection: this.index,
+        connection: this.id + '-main',
         server: this.server.id,
         database: this.database,
         queries: this.parseQueries()
@@ -472,7 +473,7 @@ export default {
     explainQuery() {
       this.clientExecuting = 'explain'
       const payload = {
-        connection: this.index,
+        connection: this.id + '-main',
         server: this.server.id,
         database: this.database,
         queries: this.parseQueries().reduce((acc, val) => { acc.push('EXPLAIN ' + val); return acc }, [])
@@ -528,7 +529,7 @@ export default {
     },
     stopQuery() {
       this.clientExecuting = 'stop'
-      const payload = { connection: this.index }
+      const payload = { connection: this.id + '-main' }
       axios.get('/client/stop', { params: payload })
       .finally(() => {
         let current = this.connections.find(c => c['index'] == payload.connection)

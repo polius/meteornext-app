@@ -220,6 +220,7 @@ export default {
       'dialogOpened',
     ], { path: 'client/client' }),
     ...mapFields([
+      'id',
       'server',
       'database',
       'headerTab',
@@ -317,7 +318,7 @@ export default {
     getRights(resolve, user, host) {
       this.loading = true
       const payload = {
-        connection: 0,
+        connection: this.id + '-shared',
         server: this.server.id,
         user,
         host,
@@ -499,7 +500,7 @@ export default {
       // Execute generated queries
       this.loading = true
       const payload = {
-        connection: 0,
+        connection: this.id + '-shared',
         server: this.server.id,
         database: null,
         queries,

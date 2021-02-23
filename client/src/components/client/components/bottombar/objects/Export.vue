@@ -204,6 +204,7 @@ export default {
     ], { path: 'client/client' }),
     ...mapFields([
       'index',
+      'id',
       'server',
       'database',
       'databasePrev',
@@ -414,7 +415,7 @@ export default {
     },
     exportObjects(objects, resolve, reject) {
       var payload = {
-        connection: 0,
+        connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,
         options: {

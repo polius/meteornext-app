@@ -73,6 +73,7 @@ export default {
   computed: {
     ...mapFields([
       'index',
+      'id',
       'tabStructureSelected',
       'bottomBar',
       'structureHeaders',
@@ -119,7 +120,7 @@ export default {
       this.bottomBar.structure[this.tabStructureSelected] = { status: '', text: '', info: '' }
       // Retrieve Tables
       const payload = {
-        connection: this.index,
+        connection: this.id + '-shared',
         server: this.server.id, 
         database: this.database, 
         table: this.sidebarSelected[0]['name']
@@ -203,7 +204,7 @@ export default {
       // Execute Queries
       const index = this.index
       const payload = {
-        connection: this.index,
+        connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,
         queries: [queries]

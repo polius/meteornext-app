@@ -187,6 +187,7 @@ export default {
     ], { path: 'client/client' }),
     ...mapFields([
       'index',
+      'id',
       'server',
       'database',
       'databasePrev',
@@ -325,7 +326,7 @@ export default {
     },
     cloneObjects(objects, resolve, reject) {
       var payload = {
-        connection: 0,
+        connection: this.id + '-shared',
         server: this.server.id,
         options: {
           origin: this.database,

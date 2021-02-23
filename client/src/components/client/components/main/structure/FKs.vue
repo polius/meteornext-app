@@ -103,6 +103,7 @@ export default {
     ], { path: 'client/client' }),
     ...mapFields([
       'index',
+      'id',
       'structureHeaders',
       'structureItems',
       'sidebarSelected',
@@ -266,7 +267,7 @@ export default {
         this.dialogOptions.item.column = ''
       }
       const payload = {
-        connection: this.index,
+        connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,
         table: table

@@ -1,7 +1,12 @@
+import { v4 as uuidv4 } from 'uuid';
+
 // CONNECTION
 const connection = {
   // Connection Index
   index: 1,
+
+  // Connection Identifier
+  id: uuidv4(),
 
   // Server
   server: {},
@@ -157,6 +162,7 @@ const mutations = {
     state.connectionIndex += 1
     let conn = JSON.parse(JSON.stringify(connection))
     conn.index = state.connectionIndex
+    conn.id = uuidv4()
     state.connections.push(conn)
     // Change connection pointer
     state.currentConn = state.connections.length - 1
@@ -177,6 +183,7 @@ const mutations = {
     if (state.connections.length == 1) {
       // Re-Initialize current connection
       state.connections = [JSON.parse(JSON.stringify(connection))]
+      state.connections[0].id = uuidv4()
       // Init servers list
       state.connections[state.currentConn].sidebarItems = state.servers.slice(0)
       // Clean selected database

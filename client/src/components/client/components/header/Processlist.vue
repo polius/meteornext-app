@@ -200,6 +200,7 @@ export default {
       'headerTab',
       'headerTabSelected',
       'server',
+      'id',
     ], { path: 'client/connection' }),
   },
   mounted() {
@@ -298,7 +299,7 @@ export default {
         return
       }
       const payload = {
-        connection: 0,
+        connection: this.id + '-shared',
         server: this.server.id,
         database: null,
         queries: ['SHOW FULL PROCESSLIST'],
@@ -389,7 +390,7 @@ export default {
       if (queries.length == 0) resolve()
       // Build payload
       const payload = {
-        connection: -1,
+        connection: this.id + '-shared2',
         server: this.server.id,
         database,
         queries,
@@ -527,7 +528,7 @@ export default {
       } 
       // Build payload
       const payload = {
-        connection: -1,
+        connection: this.id + '-shared2',
         server: this.server.id,
         database: null,
         queries,

@@ -51,6 +51,7 @@ export default {
   computed: {
     ...mapFields([
       'index',
+      'id',
       'tabObjectsSelected',
       'server',
       'database',
@@ -71,7 +72,7 @@ export default {
     getObjects(force, resolve, reject) {
       if (this.database == this.databasePrev && !force) { resolve(); return; }
       const payload = {
-        connection: this.index,
+        connection: this.id + '-shared',
         server: this.server.id,
         database: this.database,
         detailed: true
