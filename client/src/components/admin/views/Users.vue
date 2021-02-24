@@ -22,7 +22,7 @@
           <v-icon v-else small title="MFA Disabled" color="error" style="margin-left:4px;">fas fa-unlock</v-icon>
         </template>
         <template v-slot:[`item.admin`]="{ item }">
-          <v-icon v-if="item.admin" title="Admin User" small color="#00b16a" style="margin-left:8px; font-size:17px">fas fa-user-shield</v-icon>
+          <v-icon v-if="item.admin" title="Admin User" small color="#00b16a" style="margin-left:8px; font-size:16px">fas fa-user-shield</v-icon>
           <v-icon v-else small title="Regular User" color="error" style="margin-left:9px; font-size:17px">fas fa-user</v-icon>
         </template>
         <template v-slot:[`item.created_at`]="{ item }">
