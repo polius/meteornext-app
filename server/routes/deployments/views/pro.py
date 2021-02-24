@@ -132,7 +132,7 @@ class Pro:
                 return jsonify({'message': 'Insufficient Privileges'}), 400
 
             # Call Auxiliary Method
-            return self.__start(user, deployment_json)
+            return self.__start(user, authority, deployment_json)
 
         @deployments_pro_blueprint.route('/deployments/pro/stop', methods=['POST'])
         @jwt_required()
@@ -342,13 +342,13 @@ class Pro:
             deployment['code'] != data['code'] or \
             deployment['method'] != data['method'] or \
             str(deployment['scheduled']) != str(data['scheduled']) and not (deployment['scheduled'] is None and data['scheduled'] == ''):
-                data['group_id'] = user['group_id']
+                data['group_id'] = authority[0]['group_id']
                 self._deployments_pro.put(user['id'], data)
             return jsonify({'message': 'Deployment edited successfully', 'data': {'execution_id': data['execution_id']}}), 200
 
         else:
             # Check Coins
-            group = self._groups.get(group_id=user['group_id'])[0]
+            group = self._groups.get(group_id=authority[0]['group_id'])[0]
             if not (authority[0]['id'] != user['id'] and user['admin']) and (user['coins'] - group['coins_execution']) < 0:
                 return jsonify({'message': 'Insufficient Coins'}), 400
 
@@ -380,11 +380,11 @@ class Pro:
 
             if data['start_execution'] and not group['deployments_execution_concurrent']:
                 # Get Meteor Additional Parameters
-                data['group_id'] = user['group_id']
+                data['group_id'] = authority[0]['group_id']
                 data['execution_threads'] = group['deployments_execution_threads']
                 data['execution_timeout'] = group['deployments_execution_timeout']
                 data['mode'] = 'PRO'
-                data['user_id'] = user['id']
+                data['user_id'] = authority[0]['id']
                 data['username'] = user['username']
 
                 # Start Meteor Execution
@@ -393,7 +393,7 @@ class Pro:
 
             return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
 
-    def __start(self, user, data):
+    def __start(self, user, authority, data):
         # Check logs path permissions
         if not self.__check_logs_path():
             return jsonify({'message': 'The local logs path has no write permissions'}), 400
@@ -415,12 +415,12 @@ class Pro:
             return jsonify({'message': ''}), 200
 
         # Get Meteor Additional Parameters
-        group = self._groups.get(group_id=user['group_id'])[0]
-        deployment['group_id'] = user['group_id']
+        group = self._groups.get(group_id=authority[0]['group_id'])[0]
+        deployment['group_id'] = authority[0]['group_id']
         deployment['execution_threads'] = group['deployments_execution_threads']
         deployment['execution_timeout'] = group['deployments_execution_timeout']
         deployment['mode'] = 'PRO'
-        deployment['user_id'] = user['id']
+        deployment['user_id'] = authority[0]['id']
         deployment['username'] = user['username']
 
         # Update Execution Status
