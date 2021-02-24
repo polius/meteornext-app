@@ -51,6 +51,7 @@ CREATE TABLE `users` (
   `admin` tinyint(1) NOT NULL DEFAULT '0',
   `disabled` TINYINT(1) NOT NULL DEFAULT '0',
   `last_login` DATETIME NULL,
+  `last_ping` DATETIME NULL,
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,

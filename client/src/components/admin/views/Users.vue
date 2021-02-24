@@ -18,18 +18,22 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="username" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:[`item.mfa`]="{ item }">
-          <v-icon v-if="item.mfa" small color="#00b16a" style="margin-left:2px;">fas fa-circle</v-icon>
-          <v-icon v-else small color="error" style="margin-left:2px;">fas fa-circle</v-icon>
+          <v-icon v-if="item.mfa" title="MFA Enabled" small color="#00b16a" style="margin-left:4px;">fas fa-lock</v-icon>
+          <v-icon v-else small title="MFA Disabled" color="error" style="margin-left:4px;">fas fa-unlock</v-icon>
         </template>
         <template v-slot:[`item.admin`]="{ item }">
-          <v-icon v-if="item.admin" small color="#00b16a" style="margin-left:8px;">fas fa-circle</v-icon>
-          <v-icon v-else small color="error" style="margin-left:8px;">fas fa-circle</v-icon>
+          <v-icon v-if="item.admin" title="Admin User" small color="#00b16a" style="margin-left:8px; font-size:17px">fas fa-user-shield</v-icon>
+          <v-icon v-else small title="Regular User" color="error" style="margin-left:9px; font-size:17px">fas fa-user</v-icon>
         </template>
         <template v-slot:[`item.created_at`]="{ item }">
           <span>{{ dateFormat(item.created_at) }}</span>
         </template>
         <template v-slot:[`item.last_login`]="{ item }">
           <span>{{ dateFormat(item.last_login) }}</span>
+        </template>
+        <template v-slot:[`item.last_ping`]="{ item }">
+          <v-icon v-if="isOnline(item.last_ping)" :title="lastOnline(item)" small color="#00b16a" style="margin-left:8px;">fas fa-circle</v-icon>
+          <v-icon v-else :title="lastOnline(item)" small color="error" style="margin-left:8px;">fas fa-circle</v-icon>
         </template>
       </v-data-table>
     </v-card>
@@ -104,6 +108,7 @@ export default {
       { text: 'Coins', align: 'left', value: 'coins'},
       { text: 'MFA', align: 'left', value: 'mfa'},
       { text: 'Admin', align: 'left', value: 'admin'},
+      { text: 'Online', align: 'left', value: 'last_ping'},
     ],
     users: [],
     items: [],
@@ -126,6 +131,7 @@ export default {
   components: { QrcodeVue },
   created() {
     this.getUsers()
+    moment.relativeTimeThreshold('ss', 0)
   },
   methods: {
     getUsers() {
@@ -293,6 +299,15 @@ export default {
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
+    },
+    isOnline(last_ping) {
+      if (last_ping == null) return false
+      return moment.utc(last_ping).add(60,'seconds') >= moment.utc()
+    },
+    lastOnline(item) {
+      if (item['last_login'] == null) return 'not logged in'
+      if (item['last_ping'] == null) return moment.utc(item['last_login']).fromNow()
+      return moment.utc(item['last_ping']).fromNow()
     },
     filterBy(val) {
       this.filter = val
