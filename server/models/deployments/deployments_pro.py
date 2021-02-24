@@ -104,11 +104,12 @@ class Deployments_Pro:
 
     def getExecutionsN(self, execution_ids):
         query = """
-            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.id AS 'user_id', u.username AS 'username', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, p.status, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', p.url
+            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.id AS 'user_id', u2.username AS 'username', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, p.status, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', p.url
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id
             JOIN environments e ON e.id = p.environment_id
-            JOIN users u ON u.id <=> p.user_id
+            JOIN users u ON u.id = d.user_id
+            LEFT JOIN users u2 ON u2.id = p.user_id
             JOIN groups g ON g.id = u.group_id
             WHERE p.id IN(%s)
         """
