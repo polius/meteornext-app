@@ -7,7 +7,7 @@ class Users:
     def get(self, username=None):
         if username is None:
             query = """
-                SELECT u.id, u.username, u.email, u.password, u.mfa, u.mfa_hash, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, u.last_login 
+                SELECT u.id, u.username, u.email, u.password, u.mfa, u.mfa_hash, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, u.last_login, u.last_ping
                 FROM users u
                 JOIN groups g ON g.id = u.group_id
                 ORDER BY u.last_login DESC, u.username ASC
@@ -15,7 +15,7 @@ class Users:
             return self._sql.execute(query)
         else:
             query = """
-                SELECT u.id, u.username, u.email, u.password, u.mfa, u.mfa_hash, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, (go.user_id IS NOT NULL) AS 'owner', u.last_login, g.inventory_enabled, g.inventory_secured, g.deployments_enabled, g.deployments_basic, g.deployments_pro, g.monitoring_enabled, g.utils_enabled, g.client_enabled, g.coins_execution, g.coins_day
+                SELECT u.id, u.username, u.email, u.password, u.mfa, u.mfa_hash, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, (go.user_id IS NOT NULL) AS 'owner', u.last_login, u.last_ping, g.inventory_enabled, g.inventory_secured, g.deployments_enabled, g.deployments_basic, g.deployments_pro, g.monitoring_enabled, g.utils_enabled, g.client_enabled, g.coins_execution, g.coins_day
                 FROM users u 
                 JOIN groups g ON g.id = u.group_id
                 LEFT JOIN group_owners go ON go.group_id = g.id AND go.user_id = u.id
@@ -34,6 +34,9 @@ class Users:
 
     def put_last_login(self, username):
         self._sql.execute("UPDATE users SET last_login = %s WHERE username = %s", (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), username))
+
+    def put_last_ping(self, user_id):
+        self._sql.execute("UPDATE users SET last_ping = %s WHERE id = %s", (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_id))
 
     def delete(self, users):
         for user in users:

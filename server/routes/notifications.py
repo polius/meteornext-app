@@ -53,6 +53,9 @@ class Notifications:
             if user['disabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
+            # Update user last ping
+            self._users.put_last_ping(user['id'])
+
             # Return unseen user notifications
             return jsonify({'data': self._notifications.get_notification_bar(user['id'])}), 200
     
