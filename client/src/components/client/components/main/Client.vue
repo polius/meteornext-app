@@ -281,7 +281,7 @@ export default {
         theme: "ace/theme/monokai",
         fontSize: parseInt(this.settings['font_size']) || 14,
         showPrintMargin: false,
-        wrap: true,
+        wrap: false,
         autoScrollEditorIntoView: true,
         enableBasicAutocompletion: true,
         enableLiveAutocompletion: true,
