@@ -3,6 +3,7 @@ import axios from 'axios'
 // initial state
 const state = () => ({
   username: localStorage.getItem('username') || '',
+  remember: localStorage.getItem('remember') == '1' ? true : false,
   token: localStorage.getItem('token') || '',
   coins: localStorage.getItem('coins') || 0,
   admin: localStorage.getItem('admin') || false,
@@ -24,6 +25,7 @@ const state = () => ({
 const getters = {
   isLoggedIn: state => !!state.token,
   username: state => state.username,
+  remember: state => state.remember,
   coins: state => state.coins,
   admin: state => state.admin,
   owner: state => state.owner,
@@ -52,6 +54,7 @@ const actions = {
           if (response.status == 202) resolve(response)
           var data = {
             username: response.data.data.username,
+            remember: user['remember'],
             token: response.data.data.access_token,
             coins: response.data.data.coins,
             admin: response.data.data.admin,
@@ -70,6 +73,7 @@ const actions = {
           }
           // Store variables to the local storage
           localStorage.setItem('username', data['username'])
+          localStorage.setItem('remember', user['remember'] ? '1' : '0')
           localStorage.setItem('token', data['token'])
           localStorage.setItem('coins', data['coins'])
           localStorage.setItem('admin', data['admin'])
@@ -96,7 +100,7 @@ const actions = {
         .catch(error => {
           commit('logout')
           // Remove variables from the local storage
-          localStorage.removeItem('username')
+          if (!user['remember']) localStorage.removeItem('username')
           localStorage.removeItem('token')
           localStorage.removeItem('coins')
           localStorage.removeItem('admin')
@@ -124,11 +128,11 @@ const actions = {
       resolve()
     })
   },
-  logout({ commit }) {
+  logout({ commit, getters }) {
     return new Promise((resolve) => {
       commit('logout')
       // Remove variables from the local storage
-      localStorage.removeItem('username')
+      if (!getters.remember) localStorage.removeItem('username')
       localStorage.removeItem('token')
       localStorage.removeItem('coins')
       localStorage.removeItem('admin')
@@ -156,6 +160,7 @@ const actions = {
 const mutations = {
   auth(state, data) {
     state.username = data.username
+    state.remember = data.remember == 1
     state.token = data.token
     state.coins = data.coins
     state.admin = data.admin == 1
@@ -173,7 +178,7 @@ const mutations = {
     state.coins_day = data.coins_day
   },
   logout(state) {
-    state.username = ''
+    state.username = (state.remember) ? state.username : ''
     state.token = ''
     state.coins = 0
     state.admin = 0

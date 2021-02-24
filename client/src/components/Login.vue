@@ -21,8 +21,9 @@
                   </v-alert>
                   <v-form ref="form" @submit.prevent style="margin-top:20px">
                     <div v-if="mode == 0">
-                      <v-text-field filled v-model="username" name="username" label="Username" required append-icon="person" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
-                      <v-text-field filled v-model="password" name="password" label="Password" required append-icon="lock" type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                      <v-text-field ref="username" filled v-model="username" name="username" label="Username" required append-icon="person" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                      <v-text-field ref="password" filled v-model="password" name="password" label="Password" required append-icon="lock" type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                      <v-checkbox v-model="remember" label="Remember username"></v-checkbox>
                     </div>
                     <div v-else-if="mode == 1">
                       <v-text-field ref="mfa" filled v-model="mfa" name="mfa" label="MFA Code" append-icon="vpn_key" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
@@ -56,6 +57,7 @@
       username: '',
       password: '',
       mfa: '',
+      remember: false,
       loading: false,
       show_alert: false,
 
@@ -75,6 +77,18 @@
         vm.from = from
       })
     },
+    mounted() {
+      if (this.rememberVuex) {
+        this.username = this.usernameVuex
+        this.remember = true
+        this.$refs.password.focus()
+      }
+      else this.$refs.username.focus()
+    },
+    computed: {
+      rememberVuex: function() { return this.$store.getters['app/remember'] },
+      usernameVuex: function() { return this.$store.getters['app/username'] },
+    },
     methods: {
       login() {
         if (!this.$refs.form.validate()) {
@@ -85,6 +99,7 @@
         const payload = {
           username: this.username,
           password: this.password,
+          remember: this.remember,
           mfa: this.mfa
         }
         this.$store.dispatch('app/login', payload)
@@ -96,7 +111,8 @@
           else this.login_success()
         })
         .catch((error) => {
-          if (error.response.status == 401) this.notification(error.response.data.message, 'error')
+          if (error.response === undefined) this.notification("No internet connection", 'error')
+          else if (error.response.status == 401) this.notification(error.response.data.message, 'error')
           else this.checkSetup()
         })
         .finally(() => {
