@@ -17,11 +17,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
-        <template v-slot:[`item.created_at`]="{ item }">
-          <span>{{ dateFormat(item.created_at) }}</span>
-        </template>
-      </v-data-table>
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;"></v-data-table>
     </v-card>
 
     <v-dialog v-model="dialog" persistent max-width="768px">
@@ -108,7 +104,7 @@ export default {
     getGroups() {
       axios.get('/admin/groups')
         .then((response) => {
-          this.items = response.data.data
+          this.items = response.data.data.map(x => ({...x, created_at: this.dateFormat(x.created_at), updated_at: this.dateFormat(x.updated_at)}))
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

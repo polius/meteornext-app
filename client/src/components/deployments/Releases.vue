@@ -58,6 +58,7 @@
 </template>
 
 <script>
+import moment from 'moment';
 import axios from 'axios';
 
 export default {
@@ -95,7 +96,7 @@ export default {
     getReleases() {
       axios.get('/deployments/releases')
         .then((res) => {
-          this.items = res.data.data
+          this.items = res.data.data.map(x => ({...x, created_at: this.dateFormat(x.created_at), updated_at: this.dateFormat(x.updated_at)}))
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -230,6 +231,10 @@ export default {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
+    },
+    dateFormat(date) {
+      if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
+      return date
     },
     notification(message, color) {
       this.snackbarText = message
