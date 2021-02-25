@@ -26,10 +26,10 @@
           <v-icon v-else small title="Regular User" color="error" style="margin-left:9px; font-size:17px">fas fa-user</v-icon>
         </template>
         <template v-slot:[`item.created_at`]="{ item }">
-          <span>{{ dateFormat(item.created_at) }}</span>
+          <span>{{ item.created_at }}</span>
         </template>
         <template v-slot:[`item.last_login`]="{ item }">
-          <span>{{ dateFormat(item.last_login) }}</span>
+          <span>{{ item.last_login }}</span>
         </template>
         <template v-slot:[`item.last_ping`]="{ item }">
           <v-icon v-if="isOnline(item.last_ping)" :title="lastOnline(item)" small color="#00b16a" style="margin-left:8px;">fas fa-circle</v-icon>
@@ -137,8 +137,9 @@ export default {
     getUsers() {
       axios.get('/admin/users')
         .then((response) => {
-          this.users = response.data.data.users
-          this.items = response.data.data.users
+          const data = response.data.data.users.map(x => ({...x, created_at: this.dateFormat(x.created_at), last_login: this.dateFormat(x.last_login), last_ping: this.dateFormat(x.last_ping)}))
+          this.users = JSON.parse(JSON.stringify(data))
+          this.items = JSON.parse(JSON.stringify(data))
           this.groups = response.data.data.groups.map(x => x.name)
         })
         .catch((error) => {
