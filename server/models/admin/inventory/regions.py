@@ -4,7 +4,7 @@ class Regions:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, group_id=None, region_id=None):
+    def get(self, group_id=None, owner_id=None, region_id=None):
         if group_id is not None:
             query = """
                 SELECT r.id, r.name, r.group_id, g.name AS 'group', r.ssh_tunnel, r.hostname, r.port, r.username, r.password, r.key, r.shared, r.owner_id, u.username AS 'owner', u2.username AS 'created_by', r.created_at, u3.username AS 'updated_by', r.updated_at
@@ -14,9 +14,10 @@ class Regions:
                 LEFT JOIN users u3 ON u3.id = r.updated_by
                 LEFT JOIN groups g ON g.id = r.group_id
                 WHERE r.group_id = %s
+                AND r.owner_id = %s
                 ORDER BY r.id DESC
             """
-            return self._sql.execute(query, (group_id))
+            return self._sql.execute(query, (group_id, owner_id))
         elif region_id is not None:
             query = """
                 SELECT *
