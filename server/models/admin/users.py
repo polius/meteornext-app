@@ -33,7 +33,8 @@ class Users:
         self._sql.execute("UPDATE users SET password = %s, mfa = %s, mfa_hash = %s, email = %s WHERE username = %s", (user['password'], user['mfa'], user['mfa_hash'], user['email'], user['username']))
 
     def put_last_login(self, username):
-        self._sql.execute("UPDATE users SET last_login = %s WHERE username = %s", (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), username))
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        self._sql.execute("UPDATE users SET last_login = %s, last_ping = %s WHERE username = %s", (now, now, username))
 
     def put_last_ping(self, user_id):
         self._sql.execute("UPDATE users SET last_ping = %s WHERE id = %s", (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_id))
