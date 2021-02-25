@@ -46,17 +46,8 @@
           <v-icon v-else-if="item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
           <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #e74c3c; margin-left:8px;">fas fa-ban</v-icon>
         </template>
-        <template v-slot:[`item.created`]="{ item }">
-          <span>{{ dateFormat(item.created) }}</span>
-        </template>
         <template v-slot:[`item.scheduled`]="{ item }">
-          <span>{{ item.scheduled === null ? '' : dateFormat(item.scheduled).slice(0,-3) }}</span>
-        </template>
-        <template v-slot:[`item.started`]="{ item }">
-          <span>{{ dateFormat(item.started) }}</span>
-        </template>
-        <template v-slot:[`item.ended`]="{ item }">
-          <span>{{ dateFormat(item.ended) }}</span>
+          <span>{{ item.scheduled === null ? '' : item.scheduled.slice(0,-3) }}</span>
         </template>
       </v-data-table>
     </v-card>
@@ -112,7 +103,7 @@ export default {
       axios.get('/deployments')
         .then((response) => {
           // Deployments
-          this.items = response.data.deployments
+          this.items = response.data.deployments.map(x => ({...x, created: this.dateFormat(x.created), scheduled: this.dateFormat(x.scheduled), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           this.parseScheduled()
           // Releases
           for (var i = 0; i < response.data.releases.length; ++i) this.releases_items.push(response.data.releases[i]['name'])

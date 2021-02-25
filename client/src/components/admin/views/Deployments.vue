@@ -46,15 +46,6 @@
           <v-icon v-else-if="item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
           <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #e74c3c; margin-left:8px;">fas fa-ban</v-icon>
         </template>
-        <template v-slot:[`item.created`]="{ item }">
-          <span>{{ dateFormat(item.created) }}</span>
-        </template>
-        <template v-slot:[`item.started`]="{ item }">
-          <span>{{ dateFormat(item.started) }}</span>
-        </template>
-        <template v-slot:[`item.ended`]="{ item }">
-          <span>{{ dateFormat(item.ended) }}</span>
-        </template>
       </v-data-table>
     </v-card>
 
@@ -189,7 +180,7 @@ export default {
     getDeployments() {
       axios.get('/admin/deployments')
         .then((res) => {
-          this.items = res.data.data
+          this.items = res.data.data.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
