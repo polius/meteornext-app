@@ -307,8 +307,8 @@ export default {
     },
     lastOnline(item) {
       if (item['last_login'] == null) return 'not logged in'
-      if (item['last_ping'] == null) return moment.utc(item['last_login']).fromNow()
-      return moment.utc(item['last_ping']).fromNow()
+      if (item['last_ping'] == null) return moment(item['last_login']).fromNow()
+      return moment(item['last_ping']).fromNow()
     },
     filterBy(val) {
       this.filter = val
