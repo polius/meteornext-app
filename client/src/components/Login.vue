@@ -23,13 +23,13 @@
                     <div v-if="mode == 0">
                       <v-text-field ref="username" filled v-model="username" name="username" label="Username" required append-icon="person" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
                       <v-text-field ref="password" filled v-model="password" name="password" label="Password" required append-icon="lock" type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
-                      <v-checkbox v-model="remember" label="Remember username"></v-checkbox>
                     </div>
                     <div v-else-if="mode == 1">
                       <v-text-field ref="mfa" filled v-model="mfa" name="mfa" label="MFA Code" append-icon="vpn_key" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
                     </div>
                   </v-form>
                   <v-btn x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()">LOGIN</v-btn>
+                  <v-checkbox v-if="mode == 0" v-model="remember" label="Remember username" hide-details style="margin-bottom:2px"></v-checkbox>
                 </v-card-text>
               </v-card>
             </v-slide-y-transition>
