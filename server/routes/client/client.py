@@ -806,6 +806,7 @@ class Client:
                     yield '# Error: {}\n\n'.format(e)
 
     def __clone_object(self, options, cred, conn):
+        conn.execute("SET FOREIGN_KEY_CHECKS = 0")
         if options['object'] == 'table':
             for table in options['items']:
                 conn.execute(query=f"DROP TABLE IF EXISTS {table}", database=options['target'])
@@ -840,3 +841,4 @@ class Client:
                 syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                 conn.execute(query=f"DROP EVENT IF EXISTS {event}", database=options['target'])
                 conn.execute(query=syntax, database=options['target'])
+        conn.execute("SET FOREIGN_KEY_CHECKS = 1")
