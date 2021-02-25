@@ -307,3 +307,9 @@ class Connection:
 
     def get_rights_syntax(self, user, host):
         return self._sql.get_rights_syntax(user, host)
+
+    def enable_fks_checks(self):
+        return self._sql.enable_fks_checks()
+
+    def disable_fks_checks(self):
+        return self._sql.disable_fks_checks()

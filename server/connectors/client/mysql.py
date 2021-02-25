@@ -659,3 +659,11 @@ class MySQL:
     def get_rights_syntax(self, user, host):
         query = "SHOW GRANTS FOR %s@%s"
         return self.execute(query, args=(user, host), database='mysql')['data']
+
+    def enable_fks_checks(self):
+        query = "SET FOREIGN_KEY_CHECKS = 1"
+        self.execute(query)
+
+    def disable_fks_checks(self):
+        query = "SET FOREIGN_KEY_CHECKS = 0"
+        self.execute(query)
