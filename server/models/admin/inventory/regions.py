@@ -13,11 +13,12 @@ class Regions:
                 LEFT JOIN users u2 ON u2.id = r.created_by
                 LEFT JOIN users u3 ON u3.id = r.updated_by
                 LEFT JOIN groups g ON g.id = r.group_id
-                WHERE r.group_id = %s
-                AND r.owner_id = %s
+                WHERE r.group_id = %s{}
                 ORDER BY r.id DESC
             """
-            return self._sql.execute(query, (group_id, owner_id))
+            owner_sql = '%s' if owner_id is None else ' AND r.owner_id = %s'
+            owner_id = '' if owner_id is None else owner_id
+            return self._sql.execute(query.format(owner_sql), (group_id, owner_id))
         elif region_id is not None:
             query = """
                 SELECT *
