@@ -8,23 +8,24 @@ class Client:
 
         @app.before_first_request
         def start():
-            ttl = 300
+            ttl = 60
             t = threading.Thread(target=self.__scheduler, args=(ttl,))
             t.start()
 
     def __scheduler(self, ttl):
         while True:
             self.__close_active_connections(ttl)
-            time.sleep(ttl)
+            time.sleep(10)
 
     def __close_active_connections(self, ttl):
         now = time.time()
         total = 0
-        collector = {k:k2 for k,v in self._connections.items() for k2,v2 in v.items() if (not v2.is_protected and not v2.is_executing and v2.last_execution + ttl < now)}
-        for user_id, conn_id in collector.items():
-            self._connections[user_id][conn_id].close()
-            self._connections[user_id].pop(conn_id, None)
-            total += 1
+        collector = {k:[k2 for k2,v2 in v.items() if (not v2.is_protected and not v2.is_executing and v2.last_execution + ttl < now)] for k,v in self._connections.items()}
+        for user_id, connections in collector.items():
+            for conn_id in connections:
+                self._connections[user_id][conn_id].close()
+                self._connections[user_id].pop(conn_id, None)
+                total += 1
         for user_id in collector.keys():
             if len(self._connections[user_id]) == 0:
                 self._connections.pop(user_id, None)

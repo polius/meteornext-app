@@ -59,6 +59,7 @@ export default {
           }
         },
         { headerName: 'Records', colId: 'records', field: 'records', sortable: true, filter: true, resizable: true, editable: false },
+        { headerName: 'Elapsed', colId: 'elapsed', field: 'elapsed', sortable: true, filter: true, resizable: true, editable: false },
         { headerName: 'Error', colId: 'error', field: 'error', sortable: true, filter: true, resizable: true, editable: false },
       ]
     }
