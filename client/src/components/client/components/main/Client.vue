@@ -12,7 +12,7 @@
         </Pane>
         <Pane size="50" min-size="0">
           <!-- suppressColumnVirtualisation -->
-          <ag-grid-vue ref="agGridClient" suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" @row-data-changed="onRowDataChanged" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
+          <ag-grid-vue ref="agGridClient" suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-clicked="onRowClicked" @cell-context-menu="onContextMenu" @row-data-changed="onRowDataChanged" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
           <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
             <v-list style="padding:0px;">
               <v-list-item-group v-model="contextMenuModel">
@@ -83,6 +83,48 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <!-------------------------->
+    <!-- DIALOG: EDIT CONTENT -->
+    <!-------------------------->
+    <v-dialog v-model="editDialog" persistent max-width="80%">
+      <v-card>
+        <v-card-text style="padding:15px 15px 5px;">
+          <v-container style="padding:0px; max-width:100%;">
+            <v-layout wrap>
+              <v-row no-gutters>
+                <v-col class="flex-grow-1 flex-shrink-1">
+                  <div class="text-h6" style="font-weight:400; margin-top:2px; margin-left:1px;">{{ editDialogTitle }}</div>
+                </v-col>
+                <v-col v-if="editDialogFormat == 'JSON'" cols="auto" class="flex-grow-0 flex-shrink-0" style="margin-right:15px">
+                  <v-btn @click="editDialogValidate" hide-details style="margin-top:2px">Validate</v-btn>
+                </v-col>
+                <v-col cols="2" class="flex-grow-0 flex-shrink-0">
+                  <v-select @change="editDialogApplyFormat" v-model="editDialogFormat" :items="editDialogFormatItems" label="Format" outlined dense hide-details></v-select>
+                </v-col>
+              </v-row>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
+                  <div style="margin-left:auto; margin-right:auto; height:70vh; width:100%">
+                    <div id="editDialogEditor" style="height:100%;"></div>
+                  </div>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                      <v-btn @click="editDialogSubmit" color="primary">Save</v-btn>
+                    </v-col>
+                    <v-col style="margin-bottom:10px;">
+                      <v-btn @click="editDialogCancel" outlined color="#e74d3c">Cancel</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -119,6 +161,10 @@ export default {
     return {
       // Loading
       loading: false,
+      // AG Grid
+      currentCellEditNode: {},
+      currentCellEditValues: {},
+      currentTable: '',
       // Dialog
       dialog: false,
       dialogMode: '',
@@ -126,6 +172,13 @@ export default {
       dialogText: '',
       dialogSubmitText: '',
       dialogCancelText: '',
+      // Dialog - Content Edit
+      editDialog: false,
+      editDialogTitle: '',
+      editDialogFormat: 'Text',
+      editDialogFormatItems: ['Text','JSON','Python'],
+      editDialogValue: '',
+      editDialogEditor: null,
       // Context Menu
       contextMenu: false,
       contextMenuModel: null,
@@ -199,6 +252,12 @@ export default {
     onGridClick(event) {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.client.deselectAll()
+        this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
+      }
+    },
+    onRowClicked(event) {
+      if (Object.keys(this.currentCellEditNode).length != 0 && this.currentCellEditNode.rowIndex != event.rowIndex) {
+        this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
       }
     },
     onCellKeyDown(e) {
@@ -230,6 +289,245 @@ export default {
           }, 200);
         }
       }
+      else if (e.event.key == 'Enter') {
+        this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
+      }
+    },
+    cellEditingStarted(event) {
+      this.$nextTick(() => {
+        // Store row node
+        this.currentCellEditNode = this.gridApi.client.getSelectedNodes()[0]
+      
+        // Store row values
+        if (Object.keys(this.currentCellEditValues).length == 0) {
+          let node = this.gridApi.client.getSelectedNodes()[0].data
+          let keys = Object.keys(node)
+          this.currentCellEditValues = {}
+          for (let i = 0; i < keys.length; ++i) {
+            this.currentCellEditValues[keys[i]] = {'old': node[keys[i]] == 'NULL' ? null : node[keys[i]]}
+          }
+        }
+        // If the cell includes an special character (\n or \t) or the value length > 255 chars, ... then open the extended editor
+        if (event.value.toString().length > 255 || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
+          if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
+          else this.editDialogOpen(event.colDef.headerName, event.value.toString())
+        }
+      })
+    },
+    cellEditingStopped(event) {
+      // Store new value
+      if (event.value == 'NULL') this.currentCellEditNode.setDataValue(event.colDef.field, null)
+      if (this.currentCellEditValues[event.colDef.field] !== undefined) this.currentCellEditValues[event.colDef.field]['new'] = event.value == 'NULL' ? null : event.value
+    },
+    cellEditingSubmit(node, values) {
+      if (Object.keys(values).length == 0) return
+
+      // Clean vars
+      this.currentCellEditNode = {}
+      this.currentCellEditValues = {}
+
+      // Compute queries
+      var query = ''
+      var valuesToUpdate = []
+
+      // EDIT
+      let keys = Object.keys(values)
+      for (let i = 0; i < keys.length; ++i) {
+        if (values[keys[i]]['old'] != values[keys[i]]['new']) {
+          if (values[keys[i]]['new'] !== undefined) {
+            if (values[keys[i]]['new'] == null) valuesToUpdate.push('`' + keys[i] + "` = NULL")
+            else valuesToUpdate.push('`' + keys[i] + "` = " + JSON.stringify(values[keys[i]]['new']))
+          }
+        }
+      }
+      let where = []
+      for (let i = 0; i < keys.length; ++i) {
+        if (values[keys[i]]['old'] == null) where.push('`' + keys[i] + '` IS NULL')
+        else where.push('`' + keys[i] + "` = " + JSON.stringify(values[keys[i]]['old']))
+      }
+      query = "UPDATE `" + this.currentTable + "` SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
+      if (valuesToUpdate.length > 0) {
+        this.gridApi.client.showLoadingOverlay()
+        // Execute Query
+        const payload = {
+          connection: this.id + '-shared',
+          server: this.server.id,
+          database: this.database,
+          queries: [query]
+        }
+        const server = this.server
+        const index = this.index
+        axios.post('/client/execute', payload)
+          .then((response) => {
+            let current = this.connections.find(c => c['index'] == index)
+            if (current === undefined) return
+            this.gridApi.client.hideOverlay()
+            let data = JSON.parse(response.data.data)
+            // Build BottomBar
+            this.parseClientBottomBar(data, current)
+            // Add execution to history
+            const history = { section: 'client', server: server, queries: data } 
+            this.$store.dispatch('client/addHistory', history)
+          })
+          .catch((error) => {
+            this.gridApi.client.hideOverlay()
+            let current = this.connections.find(c => c['index'] == index)
+            if (current === undefined) return
+            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            else {
+              // Show error
+              let data = JSON.parse(error.response.data.data)
+              let dialogOptions = {
+                'mode': 'cellEditingError',
+                'title': 'Unable to write row',
+                'text': data[0]['error'],
+                'button1': 'Edit row',
+                'button2': 'Discard changes'
+              }
+              this.showDialog(dialogOptions)
+              // Build BottomBar
+              this.parseClientBottomBar(data, current)
+              // Restore vars
+              this.currentCellEditNode = node
+              this.currentCellEditValues = values
+              // Add execution to history
+              const history = { section: 'client', server: server, queries: data } 
+              this.$store.dispatch('client/addHistory', history)
+            }
+          })
+      }
+    },
+    editDialogOpen(title, text) {
+      this.editDialogTitle = title
+      this.editDialog = true
+      if (this.editDialogEditor == null) {
+        this.$nextTick(() => {
+          this.editDialogEditor = ace.edit("editDialogEditor", {
+            mode: "ace/mode/text",
+            theme: "ace/theme/monokai",
+            fontSize: 14,
+            showPrintMargin: false,
+            wrap: false,
+            showLineNumbers: true
+          })
+          this.editDialogEditor.container.addEventListener("keydown", (e) => {
+            // - Increase Font Size -
+            if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
+              let size = parseInt(this.editDialogEditor.getFontSize(), 10) || 12
+              this.editDialogEditor.setFontSize(size + 1)
+              e.preventDefault()
+            }
+            // - Decrease Font Size -
+            else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
+              let size = parseInt(this.editDialogEditor.getFontSize(), 10) || 12
+              this.editDialogEditor.setFontSize(Math.max(size - 1 || 1))
+              e.preventDefault()
+            }
+          }, false);
+        })
+      }
+      this.$nextTick(() => {
+        this.editDialogEditor.focus()
+        this.editDialogEditor.setValue(text, 1)
+        this.editDialogDetectFormat()
+      })
+    },
+    editDialogDetectFormat() {
+      // Detect JSON and parse it
+      try {
+        if (!this.editDialogEditor.getValue().startsWith('{')) throw "Value is not a JSON" 
+        let parsed = JSON.parse(this.editDialogEditor.getValue())
+        this.editDialogEditor.session.setMode("ace/mode/json")
+        this.editDialogEditor.session.setTabSize(2)
+        this.editDialogEditor.setValue(JSON.stringify(parsed, null, '\t'), 1)
+        this.editDialogFormat = 'JSON'
+      } catch { 
+        this.editDialogFormat = 'Text'
+        this.editDialogEditor.session.setTabSize(4)
+        this.editDialogEditor.session.setMode("ace/mode/text")
+      }
+    },
+    editDialogApplyFormat(val) {
+      this.editDialogEditor.session.setMode("ace/mode/" + val.toLowerCase())
+      if (val == 'JSON') {
+        try {
+          let parsed = JSON.parse(this.editDialogEditor.getValue())
+          this.editDialogEditor.session.setTabSize(2)
+          this.editDialogEditor.setValue(JSON.stringify(parsed, null, '\t'), 1)
+        } catch { 1==1 }
+      }
+      else {
+        try {
+          let parsed = JSON.parse(this.editDialogEditor.getValue())
+          this.editDialogEditor.session.setTabSize(4)
+          this.editDialogEditor.setValue(JSON.stringify(parsed), 1)
+        } catch { 1==1 }
+      }
+    },
+    editDialogValidate() {
+      try {
+        if (!this.editDialogEditor.getValue().startsWith('{')) throw "A JSON value has to start with a '{'."
+        else {
+          JSON.parse(this.editDialogEditor.getValue())
+          EventBus.$emit('send-notification', 'JSON is valid', '#00b16a', 1)
+        }
+      } catch (error) {
+        var dialogOptions = {
+          'mode': 'info',
+          'title': 'JSON is not valid',
+          'text': error.toString(),
+          'button1': 'Close',
+          'button2': ''
+        }
+        this.showDialog(dialogOptions)
+      }
+    },
+    editDialogSubmit() {
+      let value = this.editDialogEditor.getValue()
+      try {
+        value = JSON.stringify(JSON.parse(value))
+      } catch { 1==1 }
+      this.editDialog = false
+      let nodes = this.gridApi.client.getSelectedNodes()
+      for (let i = 0; i < nodes.length; ++i) nodes[i].setSelected(false)
+      let focusedCell = this.gridApi.client.getFocusedCell()
+      let currentNode = this.gridApi.client.getDisplayedRowAtIndex(focusedCell.rowIndex)
+      currentNode.setSelected(true)
+      currentNode.setDataValue(focusedCell.column.colId, value)
+      this.$nextTick(() => {
+        this.gridApi.client.startEditingCell({
+          rowIndex: focusedCell.rowIndex,
+          colKey: focusedCell.column.colId
+        })
+      })
+    },
+    editDialogCancel() {
+      this.editDialog = false
+      this.editDialogEditor.setValue('')
+    },
+    cellEditingDiscard() {
+      // Close Dialog
+      this.dialog = false
+      // Restore Values
+      const diff = Object.keys(this.currentCellEditValues).filter(x => 'new' in this.currentCellEditValues[x]).reduce((acc,val) => { acc[val] = this.currentCellEditValues[val]['old']; return acc; },{})
+      for (const [k,v] of Object.entries(diff)) this.currentCellEditNode.setDataValue(k, v)
+      // Clean Vars
+      this.currentCellEditNode = {}
+      this.currentCellEditValues = {}
+    },
+    cellEditingEdit() {
+      // Close Dialog
+      this.dialog = false
+      // Edit Row
+      setTimeout(() => {
+        let focused = this.gridApi.client.getFocusedCell()
+        this.currentCellEditNode.setSelected(true)
+        this.gridApi.client.setFocusedCell(focused.rowIndex, focused.column.colId)
+        this.gridApi.client.startEditingCell({
+          rowIndex: focused.rowIndex,
+          colKey: focused.column.colId
+        });
+      }, 100)
     },
     onContextMenu(e) {
       e.node.setSelected(true)
@@ -537,6 +835,9 @@ export default {
       })
     },
     executeQuery(payload) {
+      // Clean vars
+      this.currentCellEditNode = {}
+      this.currentCellEditValues = {}
       // Check database
       let database = payload.queries.find(x => x.replace(/^\s+|\s+$/g, '').substring(0,4).toUpperCase() == 'USE ')
       if (database !== undefined) {
@@ -556,7 +857,7 @@ export default {
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
           let data = JSON.parse(response.data.data)
-          this.parseExecution(data, current)
+          this.parseExecution(payload, data, current)
           this.parseClientBottomBar(data, current)
           // Focus Editor
           let cursor = this.editor.getCursorPosition()
@@ -626,7 +927,21 @@ export default {
       // Return parsed queries
       return queries
     },
-    parseExecution(data, current) {
+    parseExecution(payload, data, current) {
+      // Determine if result can be edited and store current table
+      const beautified = sqlFormatter.format(payload.queries.slice(-1)[0], { reservedWordCase: 'upper', linesBetweenQueries: 2 })
+      let editable = true
+      let found = false
+      for (let line of beautified.split('\n')) {
+        if (line.startsWith('FROM')) {
+          this.currentTable = line.trim().endsWith(',') || line.trim().endsWith(';') ? line.slice(5,-1).trim() : line.slice(5).trim()
+          found = true
+        }
+        else if (found) {
+          if (line.startsWith('  ')) editable = false
+          break
+        }
+      }
       // Build Data Table
       var headers = []
       var items = data[data.length - 1]['data']
@@ -635,7 +950,7 @@ export default {
         var keys = Object.keys(data[data.length - 1]['data'][0])
         for (let i = 0; i < keys.length; ++i) {
           let field = keys[i].trim()
-          headers.push({ headerName: keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: false,
+          headers.push({ headerName: keys[i], colId: field, field: field, sortable: true, filter: true, resizable: true, editable: editable,
             valueGetter: function(params) {
               return (params.data[field] == null) ? 'NULL' : params.data[field]
             },
@@ -655,14 +970,8 @@ export default {
         current.clientHeaders = headers
         current.clientItems = items.slice(0,24)
       }, 0)
-
       // Load the rest of the rows
       setTimeout(() => { current.clientItems = items }, 1000)
-      // new Promise(() => {
-      //   for (let item of items.slice(19, items.length)) {
-      //     setTimeout(() => { this.gridApi.client.applyTransactionAsync({ add: [item]})}, 0)
-      //   }
-      // })
     },
     onRowDataChanged() {
       if (this.columnApi.client != null) this.resizeTable()
@@ -700,8 +1009,10 @@ export default {
         this.editor.focus()
       } 
       else if (this.dialogMode == 'export') this.exportRowsSubmit()
+      else if (this.dialogMode == 'cellEditingError') this.cellEditingEdit()
     },
     dialogCancel() {
+      if (this.dialogMode == 'cellEditingError') this.cellEditingDiscard()
       this.dialog = false
     },
     exportRows() {

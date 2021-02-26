@@ -660,7 +660,9 @@ export default {
     cellEditingDiscard() {
       // Close Dialog
       this.dialog = false
-
+      // Restore Values
+      const diff = Object.keys(this.currentCellEditValues).filter(x => 'new' in this.currentCellEditValues[x]).reduce((acc,val) => { acc[val] = this.currentCellEditValues[val]['old']; return acc; },{})
+      for (const [k,v] of Object.entries(diff)) this.currentCellEditNode.setDataValue(k, v)
       // Clean vars
       this.currentCellEditMode = 'edit'
       this.currentCellEditNode = {}
@@ -754,10 +756,7 @@ export default {
       else if (this.dialogMode == 'export') this.exportRowsSubmit()
     },
     dialogCancel() {
-      if (this.dialogMode == 'cellEditingError') {
-        this.cellEditingDiscard()
-        this.filterClick()
-      }
+      if (this.dialogMode == 'cellEditingError') this.cellEditingDiscard()
       else if (this.dialogMode == 'removeRowConfirm') this.dialog = false
       else if (this.dialogMode == 'info') this.dialog = false
       else if (this.dialogMode == 'export') this.dialog = false
@@ -772,7 +771,7 @@ export default {
             theme: "ace/theme/monokai",
             fontSize: 14,
             showPrintMargin: false,
-            wrap: true,
+            wrap: false,
             showLineNumbers: true
           })
           this.editDialogEditor.container.addEventListener("keydown", (e) => {
@@ -803,7 +802,7 @@ export default {
         let parsed = JSON.parse(this.editDialogEditor.getValue())
         this.editDialogEditor.session.setMode("ace/mode/json")
         this.editDialogEditor.session.setTabSize(2)
-        this.editDialogEditor.setValue(JSON.stringify(parsed, null, '\t'), -1)
+        this.editDialogEditor.setValue(JSON.stringify(parsed, null, '\t'), 1)
         this.editDialogFormat = 'JSON'
       } catch { 
         this.editDialogFormat = 'Text'
@@ -817,14 +816,14 @@ export default {
         try {
           let parsed = JSON.parse(this.editDialogEditor.getValue())
           this.editDialogEditor.session.setTabSize(2)
-          this.editDialogEditor.setValue(JSON.stringify(parsed, null, '\t'), -1)
+          this.editDialogEditor.setValue(JSON.stringify(parsed, null, '\t'), 1)
         } catch { 1==1 }
       }
       else {
         try {
           let parsed = JSON.parse(this.editDialogEditor.getValue())
           this.editDialogEditor.session.setTabSize(4)
-          this.editDialogEditor.setValue(JSON.stringify(parsed), -1)
+          this.editDialogEditor.setValue(JSON.stringify(parsed), 1)
         } catch { 1==1 }
       }
     },

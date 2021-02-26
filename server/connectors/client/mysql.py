@@ -222,7 +222,6 @@ class MySQL:
         return collations
 
     def get_all_databases(self):
-        # , default_character_set_name AS 'encoding', default_collation_name AS 'collation'
         query = """
             SELECT schema_name AS 'name'
             FROM information_schema.schemata
