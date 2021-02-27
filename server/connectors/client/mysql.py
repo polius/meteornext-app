@@ -666,3 +666,14 @@ class MySQL:
     def disable_fks_checks(self):
         query = "SET FOREIGN_KEY_CHECKS = 0"
         self.execute(query)
+
+    def get_table_pks(self, database, table):
+        query = """
+            SELECT column_name
+            FROM information_schema.columns 
+            WHERE table_schema = %s
+            AND table_name = %s
+            AND column_key = 'PRI'
+        """
+        result = self.execute(query, args=(database, table))['data']
+        return [pk['column_name'] for pk in result]

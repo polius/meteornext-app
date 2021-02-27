@@ -659,6 +659,30 @@ class Client:
             self._connections.close(user['id'], request.args['connection'])
             return jsonify({'message': 'Connection successfully closed'}), 200
 
+        @client_blueprint.route('/client/pks', methods=['GET'])
+        @jwt_required()
+        def client_columns_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Server Credentials + Connection
+            cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+            # Get Table PKs
+            pks = conn.get_table_pks(database=request.args['database'], table=request.args['table'])
+            return jsonify({'pks': pks}), 200
+
         return client_blueprint
 
     ####################

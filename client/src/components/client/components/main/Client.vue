@@ -93,7 +93,7 @@
             <v-layout wrap>
               <v-row no-gutters>
                 <v-col class="flex-grow-1 flex-shrink-1">
-                  <div class="text-h6" style="font-weight:400; margin-top:2px; margin-left:1px;">{{ editDialogTitle }}</div>
+                  <div class="white--text text-h6" style="font-weight:400; margin-top:2px; margin-left:1px;">{{ editDialogTitle }}</div>
                 </v-col>
                 <v-col v-if="editDialogFormat == 'JSON'" cols="auto" class="flex-grow-0 flex-shrink-0" style="margin-right:15px">
                   <v-btn @click="editDialogValidate" hide-details style="margin-top:2px">Validate</v-btn>
@@ -164,7 +164,7 @@ export default {
       // AG Grid
       currentCellEditNode: {},
       currentCellEditValues: {},
-      currentTable: '',
+      currentQueryMetadata: { database: null, table: null},
       // Dialog
       dialog: false,
       dialogMode: '',
@@ -232,6 +232,7 @@ export default {
       if (val == 'objects') this.editor.setValue(this.clientQueries, 1)
     },
     currentConn() {
+      this.cellEditingDiscard()
       if (this.headerTabSelected == 'client') {
         this.editor.focus()
         this.editor.setValue(this.clientQueries, 1)
@@ -293,6 +294,21 @@ export default {
         this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
       }
     },
+    getCurrentPKs(resolve, reject) {
+      const payload = { 
+        connection: this.id + '-shared',
+        server: this.server.id,
+        ...this.currentQueryMetadata
+      }
+      axios.get('/client/pks', { params: payload })
+      .then((response) => {
+        resolve(response.data.pks)
+      })
+      .catch((error) => {
+        if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        reject()
+      })
+    },
     cellEditingStarted(event) {
       this.$nextTick(() => {
         // Store row node
@@ -321,81 +337,87 @@ export default {
     },
     cellEditingSubmit(node, values) {
       if (Object.keys(values).length == 0) return
-
-      // Clean vars
-      this.currentCellEditNode = {}
-      this.currentCellEditValues = {}
-
-      // Compute queries
-      var query = ''
-      var valuesToUpdate = []
-
-      // EDIT
-      let keys = Object.keys(values)
-      for (let i = 0; i < keys.length; ++i) {
-        if (values[keys[i]]['old'] != values[keys[i]]['new']) {
-          if (values[keys[i]]['new'] !== undefined) {
-            if (values[keys[i]]['new'] == null) valuesToUpdate.push('`' + keys[i] + "` = NULL")
-            else valuesToUpdate.push('`' + keys[i] + "` = " + JSON.stringify(values[keys[i]]['new']))
+      new Promise((resolve, reject) => this.getCurrentPKs(resolve, reject)).then((pks) => {
+        // Check if PKs exists in the result set
+        if (pks.length == 0 || !pks.every(x => x in values)) {
+          let dialogOptions = {
+            'mode': 'cellEditingError',
+            'title': 'Unable to write row',
+            'text': pks.length == 0 ? "The table '" + this.currentQueryMetadata.table + "' does not contain a primary key constraint." : "The result set does not contain the primary keys. Please include the PK columns: " + pks.join(','),
+            'button1': 'Edit row',
+            'button2': 'Discard changes'
+          }
+          this.showDialog(dialogOptions)
+          return
+        }
+        // Build values to update
+        var valuesToUpdate = []
+        let keys = Object.keys(values)
+        for (let i = 0; i < keys.length; ++i) {
+          if (values[keys[i]]['old'] != values[keys[i]]['new']) {
+            if (values[keys[i]]['new'] !== undefined) {
+              if (values[keys[i]]['new'] == null) valuesToUpdate.push('`' + keys[i] + "` = NULL")
+              else valuesToUpdate.push('`' + keys[i] + "` = " + JSON.stringify(values[keys[i]]['new']))
+            }
           }
         }
-      }
-      let where = []
-      for (let i = 0; i < keys.length; ++i) {
-        if (values[keys[i]]['old'] == null) where.push('`' + keys[i] + '` IS NULL')
-        else where.push('`' + keys[i] + "` = " + JSON.stringify(values[keys[i]]['old']))
-      }
-      query = "UPDATE `" + this.currentTable + "` SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ' LIMIT 1;'
-      if (valuesToUpdate.length > 0) {
-        this.gridApi.client.showLoadingOverlay()
-        // Execute Query
-        const payload = {
-          connection: this.id + '-shared',
-          server: this.server.id,
-          database: this.database,
-          queries: [query]
-        }
-        const server = this.server
-        const index = this.index
-        axios.post('/client/execute', payload)
-          .then((response) => {
-            let current = this.connections.find(c => c['index'] == index)
-            if (current === undefined) return
-            this.gridApi.client.hideOverlay()
-            let data = JSON.parse(response.data.data)
-            // Build BottomBar
-            this.parseClientBottomBar(data, current)
-            // Add execution to history
-            const history = { section: 'client', server: server, queries: data } 
-            this.$store.dispatch('client/addHistory', history)
-          })
-          .catch((error) => {
-            this.gridApi.client.hideOverlay()
-            let current = this.connections.find(c => c['index'] == index)
-            if (current === undefined) return
-            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-            else {
-              // Show error
-              let data = JSON.parse(error.response.data.data)
-              let dialogOptions = {
-                'mode': 'cellEditingError',
-                'title': 'Unable to write row',
-                'text': data[0]['error'],
-                'button1': 'Edit row',
-                'button2': 'Discard changes'
-              }
-              this.showDialog(dialogOptions)
+        if (valuesToUpdate.length > 0) {
+          // Build Query
+          let where = pks.map(x => '`' + x + '` = ' + JSON.stringify(values[x]['old']))
+          let query = "UPDATE `" + this.currentQueryMetadata.database + "`.`" + this.currentQueryMetadata.table + "` SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
+          // Execute Query
+          const payload = {
+            connection: this.id + '-shared',
+            server: this.server.id,
+            database: this.database,
+            queries: [query]
+          }
+          const server = this.server
+          const index = this.index
+          this.gridApi.client.showLoadingOverlay()
+          axios.post('/client/execute', payload)
+            .then((response) => {
+              let current = this.connections.find(c => c['index'] == index)
+              if (current === undefined) return
+              this.gridApi.client.hideOverlay()
+              let data = JSON.parse(response.data.data)
               // Build BottomBar
               this.parseClientBottomBar(data, current)
-              // Restore vars
-              this.currentCellEditNode = node
-              this.currentCellEditValues = values
               // Add execution to history
               const history = { section: 'client', server: server, queries: data } 
               this.$store.dispatch('client/addHistory', history)
-            }
-          })
-      }
+              // Clean vars
+              this.currentCellEditNode = {}
+              this.currentCellEditValues = {}
+            })
+            .catch((error) => {
+              this.gridApi.client.hideOverlay()
+              let current = this.connections.find(c => c['index'] == index)
+              if (current === undefined) return
+              if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+              else {
+                // Show error
+                let data = JSON.parse(error.response.data.data)
+                let dialogOptions = {
+                  'mode': 'cellEditingError',
+                  'title': 'Unable to write row',
+                  'text': data[0]['error'],
+                  'button1': 'Edit row',
+                  'button2': 'Discard changes'
+                }
+                this.showDialog(dialogOptions)
+                // Build BottomBar
+                this.parseClientBottomBar(data, current)
+                // Restore vars
+                this.currentCellEditNode = node
+                this.currentCellEditValues = values
+                // Add execution to history
+                const history = { section: 'client', server: server, queries: data } 
+                this.$store.dispatch('client/addHistory', history)
+              }
+            })
+        }
+      })
     },
     editDialogOpen(title, text) {
       this.editDialogTitle = title
@@ -435,7 +457,6 @@ export default {
     editDialogDetectFormat() {
       // Detect JSON and parse it
       try {
-        if (!this.editDialogEditor.getValue().startsWith('{')) throw "Value is not a JSON" 
         let parsed = JSON.parse(this.editDialogEditor.getValue())
         this.editDialogEditor.session.setMode("ace/mode/json")
         this.editDialogEditor.session.setTabSize(2)
@@ -466,11 +487,9 @@ export default {
     },
     editDialogValidate() {
       try {
-        if (!this.editDialogEditor.getValue().startsWith('{')) throw "A JSON value has to start with a '{'."
-        else {
-          JSON.parse(this.editDialogEditor.getValue())
-          EventBus.$emit('send-notification', 'JSON is valid', '#00b16a', 1)
-        }
+        JSON.parse(this.editDialogEditor.getValue())
+        EventBus.$emit('send-notification', 'JSON is valid', '#00b16a', 1)
+        return true
       } catch (error) {
         var dialogOptions = {
           'mode': 'info',
@@ -480,13 +499,13 @@ export default {
           'button2': ''
         }
         this.showDialog(dialogOptions)
+        return false
       }
     },
     editDialogSubmit() {
+      if (this.editDialogFormat == 'JSON' && !this.editDialogValidate()) return
       let value = this.editDialogEditor.getValue()
-      try {
-        value = JSON.stringify(JSON.parse(value))
-      } catch { 1==1 }
+      try { value = JSON.stringify(JSON.parse(value)) } catch { 1==1 }
       this.editDialog = false
       let nodes = this.gridApi.client.getSelectedNodes()
       for (let i = 0; i < nodes.length; ++i) nodes[i].setSelected(false)
@@ -934,7 +953,10 @@ export default {
       let found = false
       for (let line of beautified.split('\n')) {
         if (line.startsWith('FROM')) {
-          this.currentTable = line.trim().endsWith(',') || line.trim().endsWith(';') ? line.slice(5,-1).trim() : line.slice(5).trim()
+          // Extract DB & Table
+          const raw = line.slice(5).replace(',','').replace(';','').split('.')
+          if (raw.length == 1) this.currentQueryMetadata = { database: this.database, table: raw[0].trim()}
+          else this.currentQueryMetadata = { database: raw[0].trim(), table: raw[1].trim()}
           found = true
         }
         else if (found) {
@@ -1004,12 +1026,10 @@ export default {
       this.dialog = true
     },
     dialogSubmit() {
-      if (this.dialogMode == 'error') { 
-        this.dialog = false
-        this.editor.focus()
-      } 
+      if (this.dialogMode == 'error') { this.dialog = false; this.editor.focus() } 
       else if (this.dialogMode == 'export') this.exportRowsSubmit()
       else if (this.dialogMode == 'cellEditingError') this.cellEditingEdit()
+      else if (this.dialogMode == 'info') { this.dialog = false; this.$nextTick(() => this.editDialogEditor.focus()) }
     },
     dialogCancel() {
       if (this.dialogMode == 'cellEditingError') this.cellEditingDiscard()

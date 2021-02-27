@@ -314,3 +314,6 @@ class Connection:
 
     def disable_fks_checks(self):
         return self._sql.disable_fks_checks()
+
+    def get_table_pks(self, database, table):
+        return self._sql.get_table_pks(database, table)
