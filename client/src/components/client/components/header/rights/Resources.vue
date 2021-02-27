@@ -47,7 +47,7 @@ export default {
         // Compute diff
         let diff = {}
         for (let [key, value] of Object.entries(obj)) {
-          if (value.length > 0 && value != this.rights['resources'][key]) diff[key] = value
+          if (value.length > 0 && key in this.rights['resources'] && value != this.rights['resources'][key]) diff[key] = value
         }
         this.rightsDiff['resources'] = diff
       },
@@ -59,6 +59,7 @@ export default {
       this.mode = mode
       this.rightsForm['resources'] = this.$refs.form
       this.resources = JSON.parse(JSON.stringify(this.rights['resources']))
+      if (mode == 'clone') this.rights['resources'] = { max_queries: '0', max_updates: '0', max_connections: '0', max_simultaneous: '0' }
       requestAnimationFrame(() => { this.$refs.form.resetValidation() })
     },
   }

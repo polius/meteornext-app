@@ -33,7 +33,7 @@ export default {
       theme: "ace/theme/monokai",
       fontSize: parseInt(this.settings['font_size']) || 14,
       showPrintMargin: false,
-      wrap: true,
+      wrap: false,
       readOnly: true,
       showLineNumbers: true
     });
