@@ -131,7 +131,7 @@
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px">
             <v-layout wrap>
-              <div class="text-h6" style="font-weight:400;">{{ dialogTitle }}</div>
+              <div class="white--text text-h6" style="font-weight:400;">{{ dialogTitle }}</div>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
                   <div v-if="dialogText.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
@@ -553,11 +553,6 @@ export default {
     cellEditingSubmit(mode, node, values) {
       if (Object.keys(values).length == 0) return
 
-      // Clean vars
-      this.currentCellEditMode = 'edit'
-      this.currentCellEditNode = {}
-      this.currentCellEditValues = {}
-
       // Compute queries
       var query = ''
       var valuesToUpdate = []
@@ -615,6 +610,10 @@ export default {
             // Add execution to history
             const history = { section: 'content', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
+            // Clean vars
+            this.currentCellEditMode = 'edit'
+            this.currentCellEditNode = {}
+            this.currentCellEditValues = {}
           })
           .catch((error) => {
             this.gridApi.content.hideOverlay()
@@ -752,7 +751,7 @@ export default {
     dialogSubmit() {
       if (this.dialogMode == 'cellEditingError') this.cellEditingEdit()
       else if (this.dialogMode == 'removeRowConfirm') this.removeRowSubmit()
-      else if (this.dialogMode == 'info') this.dialog = false
+      else if (this.dialogMode == 'info') { this.dialog = false; this.$nextTick(() => this.editDialogEditor.focus()) }
       else if (this.dialogMode == 'export') this.exportRowsSubmit()
     },
     dialogCancel() {
@@ -831,6 +830,7 @@ export default {
       try {
         JSON.parse(this.editDialogEditor.getValue())
         EventBus.$emit('send-notification', 'JSON is valid', '#00b16a', 1)
+        return true
       } catch (error) {
         var dialogOptions = {
           'mode': 'info',
@@ -840,13 +840,13 @@ export default {
           'button2': ''
         }
         this.showDialog(dialogOptions)
+        return false
       }
     },
     editDialogSubmit() {
+      if (this.editDialogFormat == 'JSON' && !this.editDialogValidate()) return
       let value = this.editDialogEditor.getValue()
-      try {
-        value = JSON.stringify(JSON.parse(value))
-      } catch { 1==1 }
+      try { value = JSON.stringify(JSON.parse(value)) } catch { 1==1 }
       this.editDialog = false
       let nodes = this.gridApi.content.getSelectedNodes()
       for (let i = 0; i < nodes.length; ++i) nodes[i].setSelected(false)
