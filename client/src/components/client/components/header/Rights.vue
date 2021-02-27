@@ -351,8 +351,7 @@ export default {
           if (index == -1) rights.push({ id: right['user'], name: right['user'], children: [{ id: right['user'] + '|' + right['host'], user: right['user'], name: right['host'] }] })
           else rights[index]['children'].push({ id: right['user'] + '|' + right['host'], user: right['user'], name: right['host'] })
         }
-        this.rights = { sidebar: rights.slice(0), login: {}, server: {}, schema: [], resources: {}, syntax: '' }
-        this.rightsSelected = {}
+        this.rights['sidebar'] = rights.slice(0)
       }
       else {
         data['server'] = JSON.parse(data['server'])
@@ -383,7 +382,8 @@ export default {
         for (let database of data['database']) {
           let row = { type: 'database', schema: database['Db'], rights: [] }
           for (const [key, val] of Object.entries(database)) {
-            if (key.endsWith('_priv') && val == 'Y') row['rights'].push(key.toLowerCase().slice(0,-5))
+            let right = this.matchRight(key)
+            if (right != null && val == 'Y') row['rights'].push(right)
           }
           schema.push(row)
         }
@@ -418,6 +418,8 @@ export default {
       }
       // Reload Rights
       EventBus.$emit('reload-rights', 'edit')
+      // Focus Search Bar
+      EventBus.$emit('focus-search-bar')
     },
     reloadRights(mode) {
       this.mode = mode
@@ -446,7 +448,8 @@ export default {
         let object = 'username' in this.rightsDiff['login'] ? 'User' : 'Password'
         let before = 'username' in this.rightsDiff['login'] ? '' : this.rights['login']['password']
         let after = 'username' in this.rightsDiff['login'] ? '' : this.rightsDiff['login']['password']
-        let query = "GRANT USAGE ON *.* TO " + this.getUserParsed() + " IDENTIFIED " + (passwordType == 'Hash' ? 'BY PASSWORD' : 'BY') + " '" + this.rightsDiff['login']['password'] + "';"
+        let stmt = 'username' in this.rights['login'] ? 'GRANT USAGE ON *.* TO ' : 'CREATE USER '
+        let query = stmt + this.getUserParsed() + " IDENTIFIED " + (passwordType == 'Hash' ? 'BY PASSWORD' : 'BY') + " '" + this.rightsDiff['login']['password'] + "';"
         this.checkItems.push({ section: 'login', action, object, right: '', before, after, query })        
       }
       // - Server -
@@ -504,7 +507,7 @@ export default {
         server: this.server.id,
         database: null,
         queries,
-        executeAll: true,
+        executeAll: false,
       }
       const server = this.server
       axios.post('/client/execute', payload)
@@ -518,7 +521,7 @@ export default {
           // Get rights
           if (queries[0].startsWith('DROP USER')) new Promise((resolve) => { this.getRights(resolve) })
           else {
-            if (this.mode == 'new') new Promise((resolve) => { this.getRights(resolve) })
+            if (['new','clone'].includes(this.mode)) new Promise((resolve) => { this.getRights(resolve) })
             let user = this.getUser()
             new Promise((resolve) => { this.getRights(resolve, user.username, user.hostname) })
           }

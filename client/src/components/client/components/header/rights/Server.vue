@@ -108,13 +108,14 @@ export default {
     reloadRights(mode) {
       this.mode = mode
       this.server = JSON.parse(JSON.stringify(this.rights['server']))
+      if (mode == 'clone') this.rights['server'] = {}
     },
     computeDiff(obj) {
       let diff = { grant: [], revoke: [] }
       for (let [key, value] of Object.entries(obj)) {
         if (value != this.rights['server'][key]) {
           if (value) diff['grant'].push(key)
-          else diff['revoke'].push(key)
+          else if (key in this.rights['server']) diff['revoke'].push(key)
         }
       }
       this.rightsDiff['server'] = diff

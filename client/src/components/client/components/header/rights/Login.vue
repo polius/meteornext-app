@@ -65,10 +65,9 @@ export default {
       this.mode = mode
       this.rightsForm['login'] = this.$refs.form
       this.login = JSON.parse(JSON.stringify(this.rights['login']))
-      if (mode == 'new') {
-        this.login['passwordType'] = 'String'
-        this.$nextTick(() => { this.$refs.username.focus() })
-      }
+      if (mode == 'new') this.login['passwordType'] = 'String'
+      if (['new','clone'].includes(mode)) this.$nextTick(() => { this.$refs.username.focus() })
+      if (mode == 'clone') this.rights['login'] = {}
       requestAnimationFrame(() => { this.$refs.form.resetValidation() })
     },
   }

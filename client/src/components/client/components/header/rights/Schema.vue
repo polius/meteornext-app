@@ -14,7 +14,7 @@
     <!------------>
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
-        <v-toolbar v-if="dialogOptions.mode != 'delete'" flat color="primary">
+        <v-toolbar v-if="dialogOptions.mode != 'delete'" dense flat color="primary">
           <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
@@ -47,7 +47,7 @@
                             <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.trigger" dense label="Trigger" hide-details style="margin:0px;"></v-checkbox>
                             <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.event" dense label="Event" hide-details style="margin:0px;"></v-checkbox>
                             <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.references" dense label="References" hide-details style="margin:0px;"></v-checkbox>
-                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.create_tmp_table" dense label="Create Temporary Table" hide-details style="margin:0px;"></v-checkbox>
+                            <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.create_temporary_tables" dense label="Create Temporary Tables" hide-details style="margin:0px;"></v-checkbox>
                             <v-checkbox :disabled="dialogOptions.item.type != 'Database'" v-model="dialogOptions.item.rights.lock_tables" dense label="Lock Tables" hide-details style="margin:0px;"></v-checkbox>
                           </v-card-text>
                         </v-card>
@@ -178,6 +178,10 @@ export default {
     reloadRights(mode) {
       this.mode = mode
       this.schema = JSON.parse(JSON.stringify(this.rights['schema']))
+      if (mode == 'clone') {
+        this.rights['schema'] = []
+        this.computeDiff()
+      }
     },
     onGridReady(params) {
       this.gridApi = params.api
