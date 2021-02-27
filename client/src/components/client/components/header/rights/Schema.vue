@@ -15,9 +15,9 @@
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
         <v-toolbar v-if="dialogOptions.mode != 'delete'" dense flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1">{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -230,7 +230,7 @@ export default {
       this.dialogOptions = {
         mode: 'new',
         index: -1,
-        title: 'Grant Rights',
+        title: 'GRANT RIGHTS',
         text: '',
         item: { type: 'Database', database: '', table: '', column: '', rights: {} },
         submit: 'Save',
@@ -246,7 +246,7 @@ export default {
       this.dialogOptions = {
         mode: 'edit',
         index,
-        title: 'Edit Rights',
+        title: 'EDIT RIGHTS',
         text: '',
         item: {
           type: data['type'].charAt(0).toUpperCase() + data['type'].slice(1), 
@@ -371,7 +371,7 @@ export default {
       ))
       diff['revoke'] = diff['revoke'].concat(revokes)
       this.rightsDiff['schema'] = diff
-    }
+    },
   }
 }
 </script>
