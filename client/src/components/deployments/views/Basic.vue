@@ -9,7 +9,7 @@
             <v-select :loading="loading" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
             
             <!-- EXECUTION -->
-            <v-autocomplete :loading="loading" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-autocomplete>
+            <v-autocomplete :loading="loading" v-model="environment" :items="environment_items" item-value="id" item-text="name" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-autocomplete>
             <v-text-field v-model="databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
 
             <v-card style="margin-bottom:20px;">
@@ -191,7 +191,7 @@ export default {
     getEnvironments() {
       axios.get('/inventory/environments/list')
         .then((response) => {
-          for (var i = 0; i < response.data.data.length; ++i) this.environment_items.push(response.data.data[i]['name'])
+          this.environment_items = response.data.data.map(x => ({id: x.id, name: x.name }))
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -355,7 +355,7 @@ export default {
         databases: this.databases,
         queries: JSON.stringify(this.query_items),
         method: this.method.toUpperCase(),
-        scheduled: '',
+        scheduled: null,
         start_execution: false,
         url: window.location.protocol + '//' + window.location.host
       }

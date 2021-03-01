@@ -58,9 +58,9 @@ class Meteor:
 
     def __compile_config(self, deployment):
         # Get Data
-        environment = self._environments.get_by_name(deployment['user_id'], deployment['group_id'], deployment['environment'])
-        regions = self._regions.get_by_environment(deployment['user_id'], deployment['group_id'], deployment['environment'])
-        servers = self._servers.get_by_environment(deployment['user_id'], deployment['group_id'], deployment['environment'])
+        environment = self._environments.get(deployment['user_id'], deployment['group_id'], deployment['environment_id'])
+        regions = self._regions.get_by_environment(deployment['user_id'], deployment['group_id'], deployment['environment_id'])
+        servers = self._servers.get_by_environment(deployment['user_id'], deployment['group_id'], deployment['environment_id'])
         auxiliary = self._auxiliary.get(deployment['user_id'], deployment['group_id'])
         slack = self._groups.get_slack(deployment['group_id'])
 
@@ -174,7 +174,7 @@ class Meteor:
             "user": deployment['username'],
             "threads": deployment['execution_threads'],
             "timeout": deployment['execution_timeout'],
-            "environment": deployment['environment'],
+            "environment": deployment['environment_name'],
             "url": deployment['url']
         }
 

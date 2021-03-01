@@ -14,7 +14,7 @@ class Servers:
                 AND r.group_id = %s
                 ORDER BY `name`
             """
-            return self._sql.execute(query, (group_id, user_id))
+            return self._sql.execute(query, (user_id, group_id))
         else:
             query = """
                 SELECT s.*, r.name AS 'region', r.shared AS 'region_shared'
@@ -176,12 +176,12 @@ class Servers:
         """
         return self._sql.execute(query, (server_id, group_id, user_id))[0]['exist'] == 1
 
-    def get_by_environment(self, user_id, group_id, environment_name):
+    def get_by_environment(self, user_id, group_id, environment_id):
         query = """
             SELECT s.*
             FROM servers s
             JOIN environment_servers es ON es.server_id = s.id
-            JOIN environments e ON e.id = es.environment_id AND e.group_id = %s AND e.name = %s
+            JOIN environments e ON e.id = es.environment_id AND e.group_id = %s AND e.id = %s
             WHERE (s.shared = 1 OR s.owner_id = %s)
         """
-        return self._sql.execute(query, (group_id, environment_name, user_id))
+        return self._sql.execute(query, (group_id, environment_id, user_id))
