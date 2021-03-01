@@ -16,7 +16,7 @@ class Regions:
                 WHERE r.group_id = %s{}
                 ORDER BY r.id DESC
             """
-            owner_sql = '%s' if owner_id is None else ' AND r.owner_id = %s'
+            owner_sql = '%s' if owner_id is None else ' AND (r.shared = 1 OR r.owner_id = %s)'
             owner_id = '' if owner_id is None else owner_id
             return self._sql.execute(query.format(owner_sql), (group_id, owner_id))
         elif region_id is not None:
