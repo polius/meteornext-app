@@ -6,7 +6,7 @@ class Deployments_Pro:
 
     def get(self, execution_id):
         query = """
-            SELECT d.id, p.id AS 'execution_id', 'PRO' AS 'mode', d.name, r.name AS 'release', e.name AS 'environment', p.code, p.method, p.status, p.stopped, q.queue, p.created, p.started, p.scheduled, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.url, p.uri, p.engine, p.public
+            SELECT d.id, p.id AS 'execution_id', 'PRO' AS 'mode', d.name, r.name AS 'release', e.id AS 'environment_id', e.name AS 'environment_name', p.code, p.method, p.status, p.stopped, q.queue, p.created, p.started, p.scheduled, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall', p.error, p.progress, p.url, p.uri, p.engine, p.public
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id
             LEFT JOIN releases r ON r.id = d.release_id
@@ -25,25 +25,23 @@ class Deployments_Pro:
     def post(self, user_id, deployment):
         query = """
             INSERT INTO deployments_pro (deployment_id, environment_id, code, method, `status`, created, scheduled, url, user_id)
-            SELECT %s, e.id, %s, %s, %s, %s, IF(%s = '', NULL, %s), %s, %s
-            FROM environments e
-            WHERE e.name = %s
-            AND e.group_id = %s
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (deployment['id'], deployment['code'], deployment['method'], deployment['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), deployment['scheduled'], deployment['scheduled'], deployment['url'], user_id, deployment['environment'], deployment['group_id']))
+        return self._sql.execute(query, (deployment['id'], deployment['environment'], deployment['code'], deployment['method'], deployment['status'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), deployment['scheduled'], deployment['url'], user_id))
 
     def put(self, user_id, deployment):
         query = """
             UPDATE deployments_pro
-            SET `environment_id` = (SELECT id FROM environments WHERE name = %s AND group_id = %s),
+            SET `environment_id` = %s,
                 `code` = %s,
                 `method` = %s,
-                `status` = IF (%s != '', 'SCHEDULED', 'CREATED'),
-                `scheduled` = IF(%s = '', NULL, %s),
+                `status` = %s,
+                `scheduled` = %s,
                 `user_id` = %s
             WHERE id = %s
         """
-        self._sql.execute(query, (deployment['environment'], deployment['group_id'], deployment['code'], deployment['method'], deployment['scheduled'], deployment['scheduled'], deployment['scheduled'], user_id, deployment['execution_id']))
+        status = 'CREATED' if deployment['scheduled'] is None else 'SCHEDULED'
+        self._sql.execute(query, (deployment['environment'], deployment['code'], deployment['method'], status, deployment['scheduled'], user_id, deployment['execution_id']))
 
     def updateStatus(self, deployment_id, status, stopped=None):
         if stopped is None:
@@ -91,7 +89,7 @@ class Deployments_Pro:
 
     def getScheduled(self):
         query = """
-            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.id AS 'user_id', u.username AS 'username', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, p.url, p.status, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', g.deployments_execution_concurrent AS 'concurrent_executions'
+            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.id AS 'user_id', u.username AS 'username', g.id AS 'group_id', e.id AS 'environment_id', e.name AS 'environment_name', p.code, p.method, p.url, p.status, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', g.deployments_execution_concurrent AS 'concurrent_executions'
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id
             JOIN environments e ON e.id = p.environment_id
@@ -104,14 +102,14 @@ class Deployments_Pro:
 
     def getExecutionsN(self, execution_ids):
         query = """
-            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.id AS 'user_id', u2.username AS 'username', g.id AS 'group_id', e.name AS 'environment', p.code, p.method, p.status, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', p.url
+            SELECT p.id AS 'execution_id', 'PRO' AS 'mode', u.id AS 'user_id', u2.username AS 'username', g.id AS 'group_id', e.id AS 'environment_id', e.name AS 'environment_name', p.code, p.method, p.status, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', p.url
             FROM deployments_pro p
             JOIN deployments d ON d.id = p.deployment_id
             JOIN environments e ON e.id = p.environment_id
             JOIN users u ON u.id = d.user_id
             LEFT JOIN users u2 ON u2.id = p.user_id
             JOIN groups g ON g.id = u.group_id
-            WHERE p.id IN(%s)
+            WHERE p.id IN (%s)
         """
         return self._sql.execute(query, (execution_ids))
 

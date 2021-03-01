@@ -45,10 +45,10 @@
     <!--------------------->
     <v-dialog v-model="settingsDialog" max-width="50%">
       <v-card>
-        <v-toolbar flat color="primary">
+        <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text">SETTINGS</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="settingsDialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="settingsDialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px">
           <v-container style="padding:0px;">
@@ -111,13 +111,13 @@
     <!-------------------->
     <v-dialog v-model="analyzeDialog" max-width="90%">
       <v-card>
-        <v-toolbar flat color="primary">
+        <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text">Analyze queries</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="exportAnalyze" color="primary"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field @input="onAnalyzeSearch" v-model="analyzeDialogSearch" label="Search" outlined dense color="white" hide-details></v-text-field>
-          <v-btn @click="analyzeDialog = false" icon style="margin-left:5px"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="analyzeDialog = false" icon style="margin-left:5px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px">
           <v-container style="padding:0px; max-width:100%;">

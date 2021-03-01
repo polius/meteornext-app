@@ -7,7 +7,7 @@
           <v-form ref="form" style="padding:10px;">
             <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:5px;"></v-text-field>
             <v-select :loading="loading_rel" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
-            <v-autocomplete :loading="loading_env" v-model="environment" :items="environment_items" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;" hide-details></v-autocomplete>
+            <v-autocomplete :loading="loading_env" v-model="environment" :items="environment_items" item-value="id" item-text="name" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;" hide-details></v-autocomplete>
 
             <!-- CODE -->
             <div class="subtitle-1 font-weight-regular" style="margin-top:20px; margin-bottom:10px;">
@@ -251,8 +251,7 @@ export default {
     getEnvironments() {
       axios.get('/inventory/environments/list')
         .then((response) => {
-          for (var i = 0; i < response.data.data.length; ++i) this.environment_items.push(response.data.data[i]['name'])
-        })
+          this.environment_items = response.data.data.map(x => ({id: x.id, name: x.name }))        })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
@@ -317,7 +316,7 @@ export default {
         environment: this.environment,
         code: this.code,
         method: this.method.toUpperCase(),
-        scheduled: '',
+        scheduled: null,
         start_execution: false,
         url: window.location.protocol + '//' + window.location.host
       }

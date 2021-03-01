@@ -45,6 +45,9 @@
         <!-- INFORMATION -->
         <v-card>
           <v-data-table :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1">
+            <template v-slot:[`item.environment`]="{ item }">
+              {{ item.environment.name }}
+            </template>
             <template v-slot:[`item.mode`]="{ item }">
               <v-chip outlined :color="getModeColor(item.mode)">{{ item.mode }}</v-chip>
             </template>
@@ -231,7 +234,7 @@
     <v-dialog v-model="information_dialog" persistent no-click-animation max-width="70%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">{{ information_dialog_mode.toUpperCase() }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">{{ information_dialog_mode.toUpperCase() == 'PARAMETERS' ? 'fas fa-cog': 'fas fa-feather-alt' }}</v-icon>{{ information_dialog_mode.toUpperCase() }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="information_dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -239,72 +242,68 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <div class="subtitle-1 font-weight-regular" style="margin-top:10px; margin-bottom:20px;">{{ deployment['mode'] }}</div>
-                <v-text-field readonly v-model="information_dialog_data.name" label="Name" style="padding-top:0px;"></v-text-field>
-                <v-autocomplete :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="environments" label="Environment" style="padding-top:0px;"></v-autocomplete>
-                <v-text-field v-if="deployment['mode'] == 'BASIC'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" style="padding-top:0px;"></v-text-field>
-                <v-card v-if="deployment['mode'] == 'BASIC'" style="margin-bottom:20px;">
-                  <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
-                    <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
-                    <v-divider v-if="information_dialog_mode != 'parameters'" class="mx-3" inset vertical></v-divider>
-                    <v-toolbar-items v-if="information_dialog_mode != 'parameters'" class="hidden-sm-and-down" style="padding-left:0px;">
-                      <v-btn text @click='newQuery()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                      <v-btn v-if="information_dialog_query_selected.length == 1" text @click="editQuery()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-                      <v-btn v-if="information_dialog_query_selected.length > 0" text @click='deleteQuery()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
-                    </v-toolbar-items>
-                  </v-toolbar>
-                  <v-divider></v-divider>
-                  <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="id" :show-select="information_dialog_mode != 'parameters'" :hide-default-header="information_dialog_mode == 'parameters'" :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1">
-                  </v-data-table>
-                </v-card>
-
-                <div v-if="deployment['mode'] == 'PRO'" class="subtitle-1 font-weight-regular" style="margin-top:-5px; margin-bottom:10px;" title="Press ESC when cursor is in the editor to toggle full screen editing">CODE</div>
-                <codemirror v-if="deployment['mode'] == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
-
-                <div class="subtitle-1 font-weight-regular" style="margin-top:20px;">
-                  METHOD
-                  <v-tooltip right>
-                    <template v-slot:activator="{ on }">
-                      <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
-                    </template>
-                    <span>
-                      <b style="color:#00b16a;">VALIDATE</b> Tests all server connections
-                      <br>
-                      <b class="orange--text">TEST</b> A simulation is performed (only SELECTs are executed)
-                      <br>
-                      <b class="red--text">DEPLOY</b> Executes ALL queries
-                    </span>
-                  </v-tooltip>
-                </div>
-
-                <v-radio-group :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" hide-details style="margin-top:10px;">
-                  <v-radio value="validate" color="#00b16a">
-                    <template v-slot:label>
-                      <div style="color:#00b16a;">VALIDATE</div>
-                    </template>
-                  </v-radio>
-                  <v-radio value="test" color="orange">
-                    <template v-slot:label>
-                      <div class="orange--text">TEST</div>
-                    </template>
-                  </v-radio>
-                  <v-radio value="deploy" color="red">
-                    <template v-slot:label>
-                      <div class="red--text">DEPLOY</div>
-                    </template>
-                  </v-radio>
-                </v-radio-group>
-
-                <v-switch v-model="schedule_enabled" @change="schedule_change()" label="Sheduled" color="info" hide-details :readonly="information_dialog_mode == 'parameters'"></v-switch>
-                <v-text-field v-if="schedule_enabled && schedule_datetime != ''" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
-
-                <v-checkbox v-else-if="information_dialog_mode != 'parameters' && deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
-                <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
-
-                <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
-                  <v-btn color="#00b16a" @click="editSubmit()">CONFIRM</v-btn>
-                  <v-btn color="error" @click="information_dialog = false" style="margin-left:10px;">CANCEL</v-btn>
-                </div>
+                <v-form ref="form">
+                  <div class="subtitle-1 font-weight-regular" style="margin-top:10px; margin-bottom:20px;">{{ deployment['mode'] }}</div>
+                  <v-text-field readonly v-model="information_dialog_data.name" label="Name" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
+                  <v-autocomplete :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '']" style="padding-top:0px;"></v-autocomplete>
+                  <v-text-field v-if="deployment['mode'] == 'BASIC'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
+                  <v-card v-if="deployment['mode'] == 'BASIC'" style="margin-bottom:20px;">
+                    <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
+                      <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
+                      <v-divider v-if="information_dialog_mode != 'parameters'" class="mx-3" inset vertical></v-divider>
+                      <v-toolbar-items v-if="information_dialog_mode != 'parameters'" class="hidden-sm-and-down" style="padding-left:0px;">
+                        <v-btn text @click='newQuery()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                        <v-btn v-if="information_dialog_query_selected.length == 1" text @click="editQuery()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                        <v-btn v-if="information_dialog_query_selected.length > 0" text @click='deleteQuery()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                      </v-toolbar-items>
+                    </v-toolbar>
+                    <v-divider></v-divider>
+                    <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="id" :show-select="information_dialog_mode != 'parameters'" :hide-default-header="information_dialog_mode == 'parameters'" :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1">
+                    </v-data-table>
+                  </v-card>
+                  <div v-if="deployment['mode'] == 'PRO'" class="subtitle-1 font-weight-regular" style="margin-top:-5px; margin-bottom:10px;" title="Press ESC when cursor is in the editor to toggle full screen editing">CODE</div>
+                  <codemirror v-if="deployment['mode'] == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
+                  <div class="subtitle-1 font-weight-regular" style="margin-top:20px;">
+                    METHOD
+                    <v-tooltip right>
+                      <template v-slot:activator="{ on }">
+                        <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                      </template>
+                      <span>
+                        <b style="color:#00b16a;">VALIDATE</b> Tests all server connections
+                        <br>
+                        <b class="orange--text">TEST</b> A simulation is performed (only SELECTs are executed)
+                        <br>
+                        <b class="red--text">DEPLOY</b> Executes ALL queries
+                      </span>
+                    </v-tooltip>
+                  </div>
+                  <v-radio-group :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.method" hide-details style="margin-top:10px;">
+                    <v-radio value="validate" color="#00b16a">
+                      <template v-slot:label>
+                        <div style="color:#00b16a;">VALIDATE</div>
+                      </template>
+                    </v-radio>
+                    <v-radio value="test" color="orange">
+                      <template v-slot:label>
+                        <div class="orange--text">TEST</div>
+                      </template>
+                    </v-radio>
+                    <v-radio value="deploy" color="red">
+                      <template v-slot:label>
+                        <div class="red--text">DEPLOY</div>
+                      </template>
+                    </v-radio>
+                  </v-radio-group>
+                  <v-switch v-model="schedule_enabled" @change="schedule_change()" label="Sheduled" color="info" hide-details :readonly="information_dialog_mode == 'parameters'"></v-switch>
+                  <v-text-field v-if="schedule_enabled && schedule_datetime != ''" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
+                  <v-checkbox v-else-if="information_dialog_mode != 'parameters' && deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
+                  <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
+                  <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
+                    <v-btn color="#00b16a" @click="editSubmit()">CONFIRM</v-btn>
+                    <v-btn color="error" @click="information_dialog = false" style="margin-left:10px;">CANCEL</v-btn>
+                  </div>
+                </v-form>
               </v-flex>
             </v-layout>
           </v-container>
@@ -355,7 +354,7 @@
     <v-dialog v-model="select_dialog" max-width="90%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">SELECT EXECUTION</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-mouse-pointer</v-icon>SELECT EXECUTION</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="select_dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -742,7 +741,7 @@
         this.deployment['mode'] = data['mode']
         this.deployment['name'] = data['name']
         this.deployment['release'] = data['release']
-        this.deployment['environment'] = data['environment']
+        this.deployment['environment'] = { id: data['environment_id'], name: data['environment_name'] }
         if (this.deployment['mode'] == 'BASIC') {
           this.deployment['databases'] = data['databases']
           this.deployment['queries'] = []
@@ -1058,7 +1057,7 @@
       schedule_change() {
         if (this.schedule_enabled) {
           if (this.schedule_datetime == '') {
-            const date = moment().add(30, 'minutes')
+            const date = moment()
             this.schedule_date = date.format("YYYY-MM-DD")
             this.schedule_time = date.format("HH:mm")
           }
@@ -1094,6 +1093,10 @@
       // EDIT
       // -------------------------------------
       editSubmit() {
+        if (!this.$refs.form.validate()) {
+          this.notification('Please fill the required fields', 'error')
+          return
+        }
         // Hide Results View
         this.show_results = false
         // Build parameters
@@ -1102,10 +1105,10 @@
           id: this.deployment.id,
           execution_id: this.deployment.execution_id,
           name: this.deployment.name,
-          environment: this.information_dialog_data.environment,
+          environment: this.information_dialog_data.environment.id,
           mode: this.deployment['mode'].toUpperCase(),
           method: this.information_dialog_data.method.toUpperCase(),
-          scheduled: '',
+          scheduled: null,
           start_execution: false,
           url: window.location.protocol + '//' + window.location.host
         }

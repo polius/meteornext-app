@@ -251,7 +251,7 @@ class Pro:
         deployment = self._deployments_pro.get(request.args['execution_id'])
 
         # Get environments
-        environments = [i['name'] for i in self._environments.get(authority[0]['id'], authority[0]['group_id'])]
+        environments = [{"id": i['id'], "name": i['name']} for i in self._environments.get(authority[0]['id'], authority[0]['group_id'])]
 
         # Return data
         return jsonify({'deployment': deployment, 'environments': environments}), 200
@@ -261,6 +261,11 @@ class Pro:
         group = self._groups.get(group_id=user['group_id'])[0]
         if (user['coins'] - group['coins_execution']) < 0:
             return jsonify({'message': 'Insufficient Coins'}), 400
+
+        # Check environment authority
+        environment = self._environments.get(user_id=user['id'], group_id=user['group_id'], environment_id=data['environment'])
+        if len(environment) == 0:
+            return jsonify({'message': 'The environment does not exist'}), 400
 
         # Check logs path permissions
         if not self.__check_logs_path():
@@ -274,7 +279,7 @@ class Pro:
             return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400         
 
         # Set Deployment Status
-        if data['scheduled'] != '':
+        if data['scheduled'] is not None:
             data['status'] = 'SCHEDULED'
             data['start_execution'] = False
             if datetime.datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
@@ -319,6 +324,11 @@ class Pro:
         elif authority[0]['id'] != user['id'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
+        # Check environment authority
+        environment = self._environments.get(user_id=authority[0]['id'], group_id=authority[0]['group_id'], environment_id=data['environment'])
+        if len(environment) == 0:
+            return jsonify({'message': 'The environment does not exist'}), 400
+
         # Check Code Syntax Errors
         try:
             data['code'] = unicodedata.normalize("NFKD", data['code'])
@@ -327,7 +337,7 @@ class Pro:
             return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400  
 
         # Check scheduled date
-        if data['scheduled'] != '':
+        if data['scheduled'] is not None:
             data['start_execution'] = False
             if datetime.datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
@@ -338,7 +348,7 @@ class Pro:
         # Proceed editing the deployment 
         if deployment['status'] in ['CREATED','SCHEDULED'] and not data['start_execution']:
             # Check if user has modified any value
-            if deployment['environment'] != data['environment'] or \
+            if deployment['environment_id'] != data['environment'] or \
             deployment['code'] != data['code'] or \
             deployment['method'] != data['method'] or \
             str(deployment['scheduled']) != str(data['scheduled']) and not (deployment['scheduled'] is None and data['scheduled'] == ''):
@@ -357,7 +367,7 @@ class Pro:
                 return jsonify({'message': 'The local logs path has no write permissions'}), 400
 
             # Set Deployment Status
-            if data['scheduled'] != '':
+            if data['scheduled'] is not None:
                 data['status'] = 'SCHEDULED'
             elif data['start_execution']:
                 data['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
