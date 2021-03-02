@@ -309,23 +309,24 @@ class Monitoring:
                     self.__slack(slack=s, server=server, event='parameters', data=data)
 
         # Check connections
+        connections = None if server['monitor']['summary'] is None else self.__str2dict(server['monitor']['summary'])['connections']
         if server['monitor']['available'] == 1 and available:
             last_event = self.__get_last_event(server['id'])
             queries = [int(i['TIME']) for i in processlist if i['COMMAND'] in ['Query','Execute']]
             queries.sort(reverse=True)
             event = ''
-            # Connections - Critical [+100 connections. 3 top median >= 300 seconds. 5 top avg >= 300 seconds]
-            if (len(last_event) == 0 or last_event[0]['event'] != 'connections_critical') and len(queries) >= 100 and median(queries[:3]) >= 300 and sum(queries[:5])/5 >= 300:
+            # Connections - Critical [+100 connections. 3 top median >= 300 seconds. 5 top avg >= 300]
+            if (len(last_event) == 0 or last_event[0]['event'] != 'connections_critical' or (last_event[0]['event'] == 'connections_critical' and last_event[0]['time'] + datetime.timedelta(minutes=5) < datetime.datetime.utcnow())) and len(queries) >= 100 and median(queries[:3]) >= 300 and sum(queries[:5])/5 >= 300:
                 notification_name = 'Server \'{}\' Critical | {} Connections'.format(server['sql']['name'], len(queries))
                 notification_status = 'ERROR'
                 event = 'connections_critical'
-            # Connections - Warning [+50 connections. 3 top median >= 60 seconds. 5 top avg >= 60 seconds]
-            elif (len(last_event) == 0 or last_event[0]['event'] != 'connections_warning') and len(queries) >= 50 and median(queries[:3]) >= 60 and sum(queries[:5])/5 >= 60:
+            # Connections - Warning [+ 50 connections. 3 top median >= 60 seconds. 5 top avg >= 60]
+            elif (len(last_event) == 0 or last_event[0]['event'] != 'connections_warning' or (last_event[0]['event'] != 'connections_critical' and len(queries) < int(connections['current']))) and len(queries) >= 50 and median(queries[:3]) >= 60 and sum(queries[:5])/5 >= 60:
                 notification_name = 'Server \'{}\' Warning | {} Connections'.format(server['sql']['name'], len(queries))
                 notification_status = 'WARNING'
                 event = 'connections_warning'
-            # Connections - Stable
-            elif len(last_event) != 0 and last_event[0]['event'] in ['connections_warning','connections_critical'] and len(queries) <= 25 and median(queries[:3]) < 60 and sum(queries[:5])/5 < 60:
+            # Connections - Stable [- 20 connections]
+            elif len(last_event) != 0 and last_event[0]['event'] in ['connections_warning','connections_critical'] and len(queries) < 20:
                 notification_name = 'Server \'{}\' Stable | {} Connections'.format(server['sql']['name'], len(queries))
                 notification_status = 'SUCCESS'
                 event = 'connections_stable'
@@ -411,7 +412,7 @@ class Monitoring:
 
     def __get_last_event(self, server_id):
         query = """
-            SELECT event 
+            SELECT event, time
             FROM monitoring_events
             WHERE server_id = %s
             AND event IN ('connections_critical','connections_warning','connections_stable')
