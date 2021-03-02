@@ -123,8 +123,7 @@ class Monitoring:
 
             # Start Connection
             conn = connectors.base.Base({'ssh': server['ssh'], 'sql': server['sql']})
-            conn.test_sql()
-            conn.connect()
+            self.__connect(conn)
         except Exception as e:
             # Monitoring Alarms
             self.__monitor_alarms(available=False, server=server, error=str(e))
@@ -435,3 +434,12 @@ class Monitoring:
     def __utcnow(self):
         # Get current timestamp in utc
         return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+    def __connect(self, conn):
+        try:
+            conn.test_sql()
+        except Exception:
+            time.sleep(5)
+            conn.test_sql()
+        else:
+            conn.connect()

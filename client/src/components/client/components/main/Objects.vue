@@ -111,10 +111,7 @@ export default {
       this.bottomBar.objects[object] = data.length + ' record(s)'
     },
     parseHeaderName(rawName) {
-      let name = rawName.replaceAll('_', ' ')
-      name = name.split(" ")
-      for (let i = 0; i < name.length; i++) name[i] = name[i][0].toUpperCase() + name[i].substr(1)
-      return name.join(" ").trim()
+      return rawName.replaceAll('_',' ').split(' ').map(x => x[0].toUpperCase() + x.substr(1)).join(" ").trim()
     },
     parseBytes(value) {
       if (value/1024 < 1) return value + ' B'

@@ -238,7 +238,7 @@ export default {
     exportRowsSubmit() {
       this.loading = true
       if (this.exportFormat == 'Meteor') {
-        let exportData = 'var DATA = ' + JSON.stringify(this.objectsItems.functions) + ';\n' + 'var COLUMNS = ' + JSON.stringify(this.objectsHeaders.functions.map(x => x.headerName.trim())) + ';'
+        let exportData = 'var DATA = ' + JSON.stringify(this.objectsItems.functions) + ';\n' + 'var COLUMNS = ' + JSON.stringify(this.objectsHeaders.functions.map(x => x.colId)) + ';'
         this.download('export.js', exportData)
       }
       else if (this.exportFormat == 'JSON') {
@@ -255,7 +255,7 @@ export default {
       }
       else if (this.exportFormat == 'SQL') {
         var SqlString = require('sqlstring');
-        let rawQuery = 'INSERT INTO `<table>` (' + this.objectsHeaders.functions.map(x => '`' + x.headerName.trim() + '`').join() + ')\nVALUES\n'
+        let rawQuery = 'INSERT INTO `<table>` (' + this.objectsHeaders.functions.map(x => '`' + x.colId + '`').join() + ')\nVALUES\n'
         let values = ''
         let args = []
         for (let row of this.objectsItems.functions) {
