@@ -326,7 +326,7 @@
       </v-time-picker>
     </v-dialog>
 
-    <v-dialog v-model="query_dialog" persistent max-width="600px">
+    <v-dialog v-model="query_dialog" persistent max-width="896px">
       <v-toolbar flat dense color="primary">
         <v-toolbar-title class="white--text subtitle-1">{{ query_dialog_title }}</v-toolbar-title>
       </v-toolbar>
