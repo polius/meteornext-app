@@ -9,7 +9,7 @@
           <v-btn v-if="deployments_pro" :color="proColor" @click="pro()" style="margin-right:10px;">Pro</v-btn>
         </div>
         <v-spacer></v-spacer>
-        <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon size="22">fas fa-arrow-alt-circle-left</v-icon></v-btn></router-link>
+        <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn></router-link>
       </v-toolbar>
       <Basic v-if="mode=='basic'"/>
       <Pro v-else-if="mode=='pro'"/>
