@@ -6,7 +6,7 @@
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-bell</v-icon>NOTIFICATIONS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-toolbar-items class="hidden-sm-and-down">
-            <v-btn v-if="selected.length == 1" text @click="openNotification()"><v-icon small style="padding-right:10px">fas fa-envelope-open</v-icon>OPEN</v-btn>
+            <v-btn v-if="selected.length == 1" text @click="openNotification()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
             <v-btn v-if="selected.length > 0" text @click="deleteNotification()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           </v-toolbar-items>
           <v-divider v-if="selected.length > 0" class="mx-3" inset vertical></v-divider>
@@ -39,10 +39,10 @@
 
       <v-dialog v-model="openDialog" max-width="640px">
         <v-card>
-          <v-toolbar flat color="primary">
-            <v-toolbar-title class="white--text">NOTIFICATION</v-toolbar-title>
+          <v-toolbar dense flat color="primary">
+            <v-toolbar-title class="white--text subtitle-1">NOTIFICATION</v-toolbar-title>
             <v-spacer></v-spacer>
-            <v-btn icon @click="openDialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+            <v-btn small icon @click="openDialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
           </v-toolbar>
           <v-card-text style="padding:15px">
             <v-container style="padding:0px; max-width:100%;">

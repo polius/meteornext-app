@@ -33,7 +33,7 @@
 
         <v-spacer></v-spacer>
         <div v-if="last_updated != ''" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
-        <v-btn icon title="Go back" @click="goBack()"><v-icon size="22">fas fa-arrow-alt-circle-left</v-icon></v-btn>
+        <v-btn icon @click="goBack()"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
 
       <!-- RESULTS -->
@@ -688,7 +688,7 @@
       },
       goBack() {
         if (this.show_results) this.show_results = false
-        else this.$router.go(-1)
+        else this.$router.push('/deployments')
       },
       getDeployment() {
         // Get Deployment Data
