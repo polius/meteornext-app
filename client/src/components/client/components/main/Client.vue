@@ -65,6 +65,7 @@
                 <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
                   <div v-if="dialogText.length>0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
                   <v-select v-if="dialogMode=='export'" filled v-model="dialogSelect" :items="['SQL','CSV','JSON','Meteor']" label="Format" hide-details></v-select>
+
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
@@ -253,12 +254,14 @@ export default {
     onGridClick(event) {
       if (event.target.className == 'ag-center-cols-viewport') {
         this.gridApi.client.deselectAll()
-        this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
+        // this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
+        this.cellEditConfirm()
       }
     },
     onRowClicked(event) {
       if (Object.keys(this.currentCellEditNode).length != 0 && this.currentCellEditNode.rowIndex != event.rowIndex) {
-        this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
+        // this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
+        this.cellEditConfirm()
       }
     },
     onCellKeyDown(e) {
@@ -291,7 +294,8 @@ export default {
         }
       }
       else if (e.event.key == 'Enter') {
-        this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
+        // this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
+        this.cellEditConfirm()
       }
     },
     getCurrentPKs(resolve, reject) {
@@ -547,6 +551,20 @@ export default {
           colKey: focused.column.colId
         });
       }, 100)
+    },
+    cellEditConfirm() {
+      this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
+      // var dialogOptions = {
+      //   'mode': 'cellEdit',
+      //   'title': 'Confirmation',
+      //   'text': 'Want to confirm these changes?',
+      //   'button1': 'Confirm',
+      //   'button2': 'Cancel'
+      // }
+      // this.showDialog(dialogOptions)
+    },
+    cellEditConfirmSubmit() {
+      this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
     },
     onContextMenu(e) {
       e.node.setSelected(true)
