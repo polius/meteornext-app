@@ -207,7 +207,7 @@ export default {
     ...mapFields([
       'sidebarSelected'
     ], { path: 'client/connection' }),
-    owner: function() { return this.$store.getters['app/owner'] == 1 ? true : false },
+    owner: function() { return this.$store.getters['app/owner'] },
     inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
   },
   mounted() {

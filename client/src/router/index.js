@@ -289,8 +289,7 @@ router.beforeEach((to, from, next) => {
   if (to.path == '/login' && store.getters['app/isLoggedIn']) next('/')
   else if (to.matched.some(record => record.meta.requiresAdmin)) {
     if (store.getters['app/isLoggedIn'] && store.getters['app/admin']) next()
-    else if (to.fullPath != '/') next({ path: '/login', query: { url: to.fullPath.substring(1) } })
-    else next({ path: '/login' })
+    else next({ path: '/' })
   }
   else if (to.matched.some(record => record.meta.requiresInventory)) {
     if (store.getters['app/isLoggedIn'] && store.getters['app/inventory_enabled']) next()

@@ -61,7 +61,7 @@ class Login:
                     'refresh_token': create_refresh_token(identity=user[0]['username']),
                     'username': user[0]['username'],
                     'coins': user[0]['coins'],
-                    'admin': user[0]['admin'] and valid_url,
+                    'admin': 1 if user[0]['admin'] and valid_url else 0,
                     'owner': user[0]['owner'],
                     'inventory_enabled': user[0]['inventory_enabled'],
                     'inventory_secured': user[0]['inventory_secured'],

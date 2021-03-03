@@ -12,6 +12,7 @@ from flask import request, jsonify, Blueprint
 import routes.login
 import routes.profile
 import routes.notifications
+import routes.admin.admin
 import routes.admin.settings
 import routes.admin.groups
 import routes.admin.users
@@ -234,6 +235,7 @@ class Setup:
         login = routes.login.Login(self._app, sql, self._license)
         profile = routes.profile.Profile(self._app, sql, self._license)
         notifications = routes.notifications.Notifications(self._app, sql, self._license)
+        admin = routes.admin.admin.Admin(self._app, sql, self._license)
         settings = routes.admin.settings.Settings(self._app, sql, self._license, self._conf)
         groups = routes.admin.groups.Groups(self._app, sql, self._license)
         users = routes.admin.users.Users(self._app, sql, self._license)
@@ -257,7 +259,7 @@ class Setup:
         monitoring_queries = routes.monitoring.views.queries.Queries(self._app, sql, self._license)
         client = routes.client.client.Client(self._app, sql, self._license)
 
-        self._blueprints = [login, profile, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, environments, regions, servers, auxiliary, releases, deployments, deployments_basic, deployments_pro, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client]
+        self._blueprints = [login, profile, notifications, admin, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, environments, regions, servers, auxiliary, releases, deployments, deployments_basic, deployments_pro, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client]
 
         # Register all blueprints
         for i in self._blueprints:
