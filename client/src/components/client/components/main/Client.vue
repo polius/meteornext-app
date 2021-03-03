@@ -342,18 +342,6 @@ export default {
     cellEditingSubmit(node, values) {
       if (Object.keys(values).length == 0) return
       new Promise((resolve, reject) => this.getCurrentPKs(resolve, reject)).then((pks) => {
-        // Check if PKs exists in the result set
-        if (pks.length == 0 || !pks.every(x => x in values)) {
-          let dialogOptions = {
-            'mode': 'cellEditingError',
-            'title': 'Unable to write row',
-            'text': pks.length == 0 ? "The table '" + this.currentQueryMetadata.table + "' does not contain a primary key constraint." : "The result set does not contain the primary keys. Please include the PK columns: " + pks.join(','),
-            'button1': 'Edit row',
-            'button2': 'Discard changes'
-          }
-          this.showDialog(dialogOptions)
-          return
-        }
         // Build values to update
         var valuesToUpdate = []
         let keys = Object.keys(values)
@@ -366,6 +354,18 @@ export default {
           }
         }
         if (valuesToUpdate.length > 0) {
+          // Check if PKs exists in the result set
+          if (pks.length == 0 || !pks.every(x => x in values)) {
+            let dialogOptions = {
+              'mode': 'cellEditingError',
+              'title': 'Unable to write row',
+              'text': pks.length == 0 ? "The table '" + this.currentQueryMetadata.table + "' does not contain a primary key constraint." : "The result set does not contain the primary keys. Please include the PK columns: " + pks.join(','),
+              'button1': 'Edit row',
+              'button2': 'Discard changes'
+            }
+            this.showDialog(dialogOptions)
+            return
+          }
           // Build Query
           let where = pks.map(x => '`' + x + '` = ' + JSON.stringify(values[x]['old']))
           let query = "UPDATE `" + this.currentQueryMetadata.database + "`.`" + this.currentQueryMetadata.table + "` SET " + valuesToUpdate.join(', ') + " WHERE " + where.join(' AND ') + ';'
