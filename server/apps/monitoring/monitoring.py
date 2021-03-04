@@ -224,7 +224,7 @@ class Monitoring:
                 'name': 'Server \'{}\' has become unavailable'.format(server['sql']['name']),
                 'status': 'ERROR',
                 'category': 'monitoring',
-                'data': '{{"id":"{}", "error":"{}"}}'.format(server['id'], error),
+                'data': '{{"id":"{}"}}'.format(server['id']),
                 'date': self.__utcnow(),
                 'show': 1
             }

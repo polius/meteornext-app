@@ -8,7 +8,7 @@
         <div class="subheading font-weight-regular">{{ server_hostname }}</div>
         <v-spacer></v-spacer>
         <div v-if="updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(updated) }}</b></div>
-        <v-btn icon title="Go back" @click="goBack()" style="width:40px; height:40px"><v-icon size="21">fas fa-arrow-alt-circle-left</v-icon></v-btn>
+        <v-btn icon @click="goBack()"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
 
       <v-card-text style="padding-top:10px;">
@@ -214,7 +214,7 @@ export default {
       }
     },
     goBack() {
-      this.$router.go(-1)
+      this.$router.push('/monitoring')
     },
     getMonitor() {
       // Get Deployment Data

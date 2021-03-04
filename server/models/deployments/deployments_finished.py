@@ -4,7 +4,7 @@ class Deployments_Finished:
 
     def getBasic(self):
         query = """
-            SELECT b.id, d.name, d.user_id, e.name AS 'environment', b.status, b.method, CONCAT(TIMEDIFF(b.ended, b.started)) AS 'overall'
+            SELECT b.id, d.name, d.user_id, e.name AS 'environment', b.status
             FROM deployments_finished f
             JOIN deployments_basic b ON b.id = f.deployment_id AND f.deployment_mode = 'BASIC' AND b.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
             JOIN deployments d ON d.id = b.deployment_id
@@ -15,7 +15,7 @@ class Deployments_Finished:
 
     def getPro(self):
         query = """
-            SELECT p.id, d.name, d.user_id, e.name AS 'environment', p.status, p.method, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall'
+            SELECT p.id, d.name, d.user_id, e.name AS 'environment', p.status
             FROM deployments_finished f
             JOIN deployments_pro p ON p.id = f.deployment_id AND f.deployment_mode = 'PRO' AND p.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
             JOIN deployments d ON d.id = p.deployment_id
