@@ -426,6 +426,7 @@ function updateProgress(evt) {
 
 $("#import-file").change(function (event) {
   $("#import-button").addClass("is-loading");
+  $("#loading").html('');
 
   var error_title = "Invalid File Type";
   var error_message = "Please use a <b>Meteor</b> file format. Example of a <b>meteor.js</b> file:<br><br>";
@@ -444,7 +445,6 @@ $("#import-file").change(function (event) {
   else {
     // If Grid is Loaded then Destroy it and show the loading page again
     if (typeof gridOptions != 'undefined') {
-      $("#loading").html('');
       $("#bestHtml5Grid").hide();
       $("#rowCount").hide();
       $("#footer").hide();
