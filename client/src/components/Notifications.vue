@@ -6,7 +6,7 @@
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-bell</v-icon>NOTIFICATIONS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-toolbar-items class="hidden-sm-and-down">
-            <v-btn v-if="selected.length == 1" text @click="openNotification()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
+            <v-btn v-if="selected.length == 1" text @click="infoNotification()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
             <v-btn v-if="selected.length > 0" text @click="deleteNotification()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           </v-toolbar-items>
           <v-divider v-if="selected.length > 0" class="mx-3" inset vertical></v-divider>
@@ -36,44 +36,6 @@
           </template>
         </v-data-table>
       </v-card>
-
-      <v-dialog v-model="openDialog" max-width="640px">
-        <v-card>
-          <v-toolbar dense flat color="primary">
-            <v-toolbar-title class="white--text subtitle-1">NOTIFICATION</v-toolbar-title>
-            <v-spacer></v-spacer>
-            <v-btn small icon @click="openDialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
-          </v-toolbar>
-          <v-card-text style="padding:15px">
-            <v-container style="padding:0px; max-width:100%;">
-              <v-layout wrap>
-                <v-flex xs12>
-                  <v-card>
-                    <v-toolbar flat dense color="#2e3131">
-                      <v-toolbar-title class="body-1"><v-icon v-if="openDialog" small :color="item.status.toLowerCase()" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ this.item['name'] }}</v-toolbar-title>
-                      <v-spacer></v-spacer>
-                      <v-btn icon @click="openNotificationSubmit()"><v-icon small title="Go to the resource">fas fa-arrow-right</v-icon></v-btn>
-                    </v-toolbar>
-                  </v-card>
-                  <div v-if="this.item.category == 'deployment'" style="padding:5px;">
-                    <div class="headline font-weight-regular" style="margin-top:12px; margin-bottom:12px;">{{ item.data.mode.toUpperCase() }}</div>
-                    <v-text-field v-model="item.data.name" readonly label="Name"></v-text-field>
-                    <v-text-field v-model="item.data.environment" readonly label="Environment" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.data.overall" readonly label="Overall" style="padding-top:0px; margin-bottom:5px;" hide-details></v-text-field>
-                    <v-radio-group v-model="item.data.method" style="margin-top:15px;" readonly hide-details>
-                      <v-radio :value="item.data.method" :color="getDeploymentMethodColor(item)">
-                        <template v-slot:label>
-                          <div :class="`${getDeploymentMethodColor(item)}--text`">{{ item.data.method }}</div>
-                        </template>
-                      </v-radio>
-                    </v-radio-group>
-                  </div>
-                </v-flex>
-              </v-layout>
-            </v-container>
-          </v-card-text>
-        </v-card>
-      </v-dialog>
 
       <v-dialog v-model="deleteDialog" persistent max-width="768px">
         <v-card>
@@ -123,11 +85,9 @@ export default {
       { text: 'Visible', align: 'left', value: 'show' }
     ],
     items: [],
-    item: {},
     selected: [],
     search: '',
     loading: true,
-    openDialog: false,
     deleteDialog: false,
     // Snackbar
     snackbar: false,
@@ -146,28 +106,20 @@ export default {
           for (let i = 0; i < this.items.length; ++i) this.items[i]['data'] = JSON.parse(this.items[i]['data'])
         })
         .catch((error) => {
-          console.log(error)
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
     },
-    openNotification() {
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.openDialog = true
-    },
-    openNotificationSubmit() {
-      if (this.item.category == 'deployments') {
-        const id = this.item.data.mode.substring(0, 1) + this.item.data.id
+    infoNotification() {
+      if (this.selected[0].category == 'deployment') {
+        const id = this.selected[0].data.mode.substring(0, 1) + this.selected[0].data.id
         this.$router.push({ name:'deployment', params: { id: id }})
       }
-      else if (this.item.category == 'monitoring') {
-        const id = this.item.data.id
+      else if (this.selected[0].category == 'monitoring') {
+        const id = this.selected[0].data.id
         this.$router.push({ name:'monitor', params: { id: id }})
       }
-    },
-    editNotification() {
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
     },
     deleteNotification() {
       this.deleteDialog = true
