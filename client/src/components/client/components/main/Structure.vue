@@ -3,17 +3,30 @@
     <!--------------->
     <!-- STRUCTURE -->
     <!--------------->
-    <v-tabs show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
-      <v-tabs-slider></v-tabs-slider>
-      <v-tab @click="tabStructureColumns()"><span class="pl-2 pr-2">Columns</span></v-tab>
-      <v-divider class="mx-3" inset vertical></v-divider>
-      <v-tab @click="tabStructureIndexes()"><span class="pl-2 pr-2">Indexes</span></v-tab>
-      <v-divider class="mx-3" inset vertical></v-divider>
-      <v-tab @click="tabStructureFK()"><span class="pl-2 pr-2">Foreign Keys</span></v-tab>
-      <v-divider class="mx-3" inset vertical></v-divider>
-      <v-tab @click="tabStructureTriggers()"><span class="pl-2 pr-2">Triggers</span></v-tab>
-      <v-divider class="mx-3" inset vertical></v-divider>
-    </v-tabs>
+    <v-row no-gutters>
+      <v-col class="flex-grow-1 flex-shrink-1">
+        <v-tabs show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
+          <v-tabs-slider></v-tabs-slider>
+          <v-tab @click="tabStructureColumns()"><span class="pl-2 pr-2">Columns</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-tab @click="tabStructureIndexes()"><span class="pl-2 pr-2">Indexes</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-tab @click="tabStructureFK()"><span class="pl-2 pr-2">Foreign Keys</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-tab @click="tabStructureTriggers()"><span class="pl-2 pr-2">Triggers</span></v-tab>
+          <v-divider class="mx-3" inset vertical></v-divider>
+        </v-tabs>
+      </v-col>
+      <!-- <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030">
+        <v-progress-circular indeterminate color="white" size="15" width="1.5" style="height:100%"></v-progress-circular>
+      </v-col>
+      <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030; padding-left:10px">
+        <div class="body-2" style="height:100%; display:flex; align-items:center">Applying changes...</div>
+      </v-col>
+      <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030; padding-left:10px">
+        <v-btn style="margin:6px">CANCEL</v-btn>
+      </v-col> -->
+    </v-row>
     <!---------------->
     <!-- COMPONENTS -->
     <!---------------->

@@ -98,7 +98,7 @@ class Auxiliary:
             auxiliary_secured = []
             for a in auxiliary:
                 if a['shared']:
-                    auxiliary_secured.append({"id": a['id'], "name": a['name'], "sql_engine": a['sql_engine'], "sql_version": a['sql_version'], "shared": a['shared']})
+                    auxiliary_secured.append({"id": a['id'], "name": a['name'], "engine": a['engine'], "version": a['version'], "shared": a['shared']})
                 else:
                     auxiliary_secured.append(a)
             return jsonify({'data': auxiliary_secured}), 200
