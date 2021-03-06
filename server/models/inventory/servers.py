@@ -24,7 +24,7 @@ class Servers:
                 AND r.group_id = %s
                 AND s.id = %s
             """
-            return self._sql.execute(query, (group_id, user_id, server_id))
+            return self._sql.execute(query, (user_id, group_id, server_id))
 
     def post(self, user_id, group_id, server):
         query = """
