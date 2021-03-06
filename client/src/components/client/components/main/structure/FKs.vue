@@ -36,10 +36,10 @@
     <!------------>
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
-        <v-toolbar v-if="dialogOptions.mode != 'delete'" flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
+        <v-toolbar v-if="dialogOptions.mode != 'delete'" dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -203,10 +203,10 @@ export default {
     addFK() {
       this.dialogOptions = {
         mode: 'new',
-        title: 'New Foreign Key',
+        title: 'NEW FOREIGN KEY',
         text: '',
         item: { name: '', table: this.sidebarSelected[0]['name'], column_items: [], column: '', fk_table: '', fk_column_items: [], fk_column: '', on_update: '', on_delete: '' },
-        submit: 'Save',
+        submit: 'Submit',
         cancel: 'Cancel'
       }
       this.dialog = true
@@ -214,7 +214,7 @@ export default {
     removeFK() {
       this.dialogOptions = {
         mode: 'delete',
-        title: 'Delete foreign key?',
+        title: 'Delete Foreign Key',
         text: "Are you sure you want to delete the foreign key '" + this.gridApi.structure.fks.getSelectedRows()[0].Name + "' from this table? This action cannot be undone.",
         item: {},
         submit: 'Delete',

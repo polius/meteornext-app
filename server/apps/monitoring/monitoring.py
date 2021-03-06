@@ -126,7 +126,8 @@ class Monitoring:
             self.__connect(conn)
         except Exception as e:
             # Monitoring Alarms
-            self.__monitor_alarms(available=False, server=server, error=str(e))
+            if server['monitor']['monitor_enabled'] == 1:
+                self.__monitor_alarms(available=False, server=server, error=str(e))
 
             # Set server unavailable with error
             query = """
@@ -184,7 +185,8 @@ class Monitoring:
                         self._sql.execute(query=query, args=(server['id'], i['ID'], i['INFO'], i['INFO'], db, i['USER'], i['HOST'], utcnow, utcnow, i['TIME'], i['TIME'], i['TIME'], i['TIME'], utcnow))
 
             # Monitoring Alarms
-            self.__monitor_alarms(available=True, server=server, summary=summary, params=params, processlist=processlist)
+            if server['monitor']['monitor_enabled'] == 1:
+                self.__monitor_alarms(available=True, server=server, summary=summary, params=params, processlist=processlist)
 
             # Parse Variables
             summary = self.__dict2str(summary) if bool(summary) else ''

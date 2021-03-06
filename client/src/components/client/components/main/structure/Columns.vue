@@ -36,10 +36,10 @@
     <!------------------------------->
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
-        <v-toolbar v-if="dialogOptions.mode != 'delete'" flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
+        <v-toolbar v-if="dialogOptions.mode != 'delete'" dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -207,10 +207,10 @@ export default {
     addColumn() {
       this.dialogOptions = {
         mode: 'new',
-        title: 'New Column',
+        title: 'NEW COLUMN',
         text: '',
         item: { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false },
-        submit: 'Save',
+        submit: 'Submit',
         cancel: 'Cancel'
       }
       this.dialog = true
@@ -218,7 +218,7 @@ export default {
     editColumn(data) {
       this.dialogOptions = {
         mode: 'edit',
-        title: 'Edit Column',
+        title: 'EDIT COLUMN',
         text: '',
         item: {
           name: data['Name'], 
@@ -232,7 +232,7 @@ export default {
           current_timestamp: data['Extra'].toLowerCase() == 'on update current_timestamp', 
           auto_increment: data['Extra'].toLowerCase() == 'auto_increment'
         },
-        submit: 'Save',
+        submit: 'Submit',
         cancel: 'Cancel'
       }
       this.dialog = true
@@ -240,7 +240,7 @@ export default {
     removeColumn() {
       this.dialogOptions = {
         mode: 'delete',
-        title: 'Delete column?',
+        title: 'Delete Column',
         text: "Are you sure you want to delete the column '" + this.gridApi.structure.columns.getSelectedRows()[0].Name + "' from this table? This action cannot be undone.",
         item: {},
         submit: 'Delete',

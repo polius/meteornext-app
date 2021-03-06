@@ -36,10 +36,10 @@
     <!------------>
     <v-dialog v-model="dialog" persistent max-width="60%">
       <v-card>
-        <v-toolbar v-if="dialogOptions.mode != 'delete'" flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialogOptions.title }}</v-toolbar-title>
+        <v-toolbar v-if="dialogOptions.mode != 'delete'" dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -193,10 +193,10 @@ export default {
     addIndex() {
       this.dialogOptions = {
         mode: 'new',
-        title: 'New Index',
+        title: 'NEW INDEX',
         text: '',
         item: { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false },
-        submit: 'Save',
+        submit: 'Submit',
         cancel: 'Cancel'
       }
       this.dialog = true
@@ -204,7 +204,7 @@ export default {
     removeIndex() {
       this.dialogOptions = {
         mode: 'delete',
-        title: 'Delete index?',
+        title: 'Delete Index',
         text: "Are you sure you want to delete the index '" + this.gridApi.structure.indexes.getSelectedRows()[0].Name + "' from this table? This action cannot be undone.",
         item: {},
         submit: 'Delete',
