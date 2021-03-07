@@ -5,8 +5,8 @@
         <v-toolbar-title class="white--text subtitle-1">DEPLOYMENTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn v-if="selected.length == 0" text @click='newDeploy()' class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-else-if="selected.length == 1" text @click="infoDeploy()" class="body-2"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
+          <v-btn v-if="selected.length == 0" text @click="newDeploy()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-else-if="selected.length == 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
