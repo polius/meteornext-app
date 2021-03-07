@@ -91,10 +91,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogOptions.submit }}</v-btn>
+                      <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogOptions.cancel }}</v-btn>
+                      <v-btn :disabled="loading" @click="dialog = false" color="error">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -233,7 +233,7 @@ export default {
         title: 'GRANT RIGHTS',
         text: '',
         item: { type: 'Database', database: '', table: '', column: '', rights: {} },
-        submit: 'Save',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialog = true
@@ -255,7 +255,7 @@ export default {
           column: data['type'] == 'column' ? data['schema'].split('.')[2] : '',
           rights,
         },
-        submit: 'Save',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       // Store item
@@ -268,7 +268,7 @@ export default {
         title: 'Revoke rights?',
         text: "Are you sure you want remove the selected rights? This action cannot be undone.",
         item: {},
-        submit: 'Delete',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialog = true

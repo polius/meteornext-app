@@ -47,10 +47,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogOptions.submit }}</v-btn>
+                      <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
                     <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogOptions.cancel }}</v-btn>
+                      <v-btn :disabled="loading" @click="dialog = false" color="error">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -173,7 +173,7 @@ WHERE CountryCode = country;
         title: 'CREATE PROCEDURE', 
         text: '', 
         item: { name: '', params: '' }, 
-        submit: 'Submit', 
+        submit: 'Confirm', 
         cancel: 'Cancel'
       }
       if (this.dialogEditor != null) this.dialogEditor.setValue('')
@@ -186,7 +186,7 @@ WHERE CountryCode = country;
         title: 'RENAME PROCEDURE', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
-        submit: 'Submit', 
+        submit: 'Confirm', 
         cancel: 'Cancel'
       }
       this.dialogOptions = dialogOptions
@@ -198,7 +198,7 @@ WHERE CountryCode = country;
         title: 'DUPLICATE PROCEDURE', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
-        submit: 'Submit',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialogOptions = dialogOptions
@@ -210,7 +210,7 @@ WHERE CountryCode = country;
         title: 'DELETE PROCEDURE', 
         text: "Are you sure you want to delete the following procedures? This operation cannot be undone.",
         item: {}, 
-        submit: 'Submit',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialogOptions = dialogOptions

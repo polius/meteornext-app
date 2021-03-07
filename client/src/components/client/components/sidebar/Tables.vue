@@ -57,10 +57,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogOptions.submit }}</v-btn>
+                      <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
                     <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogOptions.cancel }}</v-btn>
+                      <v-btn :disabled="loading" @click="dialog = false" color="error">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -185,7 +185,7 @@ export default {
         title: 'CREATE TABLE', 
         text: '', 
         item: { name: '', encoding: this.encodings[0].value, collation: '', engine: this.engines[0].value }, 
-        submit: 'Submit', 
+        submit: 'Confirm', 
         cancel: 'Cancel'
       }
       this.dialogOptions = dialogOptions
@@ -197,7 +197,7 @@ export default {
         title: 'RENAME TABLE', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
-        submit: 'Submit', 
+        submit: 'Confirm', 
         cancel: 'Cancel'
       }
       this.dialogOptions = dialogOptions
@@ -209,7 +209,7 @@ export default {
         title: 'DUPLICATE TABLE', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '', duplicateContent: false }, 
-        submit: 'Submit',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialogOptions = dialogOptions
@@ -221,7 +221,7 @@ export default {
         title: 'TRUNCATE TABLES', 
         text: "Are you sure you want to delete ALL records in the following tables? This operation cannot be undone.", 
         item: { force: false }, 
-        submit: 'Submit',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialogOptions = dialogOptions
@@ -233,7 +233,7 @@ export default {
         title: 'DELETE TABLES', 
         text: "Are you sure you want to delete the following tables? This operation cannot be undone.",
         item: { force: false }, 
-        submit: 'Submit',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialogOptions = dialogOptions

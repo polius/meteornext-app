@@ -1930,6 +1930,7 @@ function showError(title, description) {
 }
 function initMeteorNext(data) {
   try {
+    $("#loading").html('');
     // Init variables
     var error_title = "Invalid File Type";
     var error_message = "Please use a <b>Meteor</b> file format. Example of a <b>meteor.js</b> file:<br><br>";

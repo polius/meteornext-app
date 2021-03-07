@@ -43,14 +43,12 @@
                   </div>
                 </v-form>
                 <v-divider></v-divider>
-                <div style="margin-top:15px;">
+                <div style="margin-top:15px; margin-bottom:10px;">
                   <v-row no-gutters>
-                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn v-if="['import','success','fail','stop'].includes(step)" :loading="loading" @click="importSubmit" color="primary">Import</v-btn>
-                      <v-btn v-else :loading="step == 'stopping'" @click="cancelImport" color="#e74c3c">Cancel</v-btn>
-                    </v-col>
-                    <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">Close</v-btn>
+                    <v-col style="margin-right:5px">
+                      <v-btn :loading="loading" @click="importSubmit" color="#00b16a" style="margin-right:5px">Import</v-btn>
+                      <v-btn v-if="['upload','processing','stopping'].includes(step)" :loading="step == 'stopping'" @click="cancelImport" color="error">Cancel</v-btn>
+                      <v-btn v-else :disabled="loading" @click="dialog = false" color="error">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>

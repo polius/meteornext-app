@@ -48,10 +48,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogOptions.submit }}</v-btn>
+                      <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
                     <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogOptions.cancel }}</v-btn>
+                      <v-btn :disabled="loading" @click="dialog = false" color="error">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -160,7 +160,7 @@ export default {
         title: 'CREATE TRIGGER', 
         text: '', 
         item: { name: '', table: '', time: '', event: '' }, 
-        submit: 'Submit', 
+        submit: 'Confirm', 
         cancel: 'Cancel'
       }
       if (this.dialogEditor != null) this.dialogEditor.setValue('')
@@ -173,7 +173,7 @@ export default {
         title: 'RENAME TRIGGER', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
-        submit: 'Submit', 
+        submit: 'Confirm', 
         cancel: 'Cancel'
       }
       this.dialogOptions = dialogOptions
@@ -185,7 +185,7 @@ export default {
         title: 'DUPLICATE TRIGGER', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
-        submit: 'Submit',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialogOptions = dialogOptions
@@ -197,7 +197,7 @@ export default {
         title: 'DELETE TRIGGER', 
         text: "Are you sure you want to delete the following triggers? This operation cannot be undone.",
         item: {}, 
-        submit: 'Submit',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialogOptions = dialogOptions

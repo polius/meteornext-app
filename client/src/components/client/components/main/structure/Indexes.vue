@@ -58,10 +58,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogOptions.submit }}</v-btn>
+                      <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
                     <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogOptions.cancel }}</v-btn>
+                      <v-btn :disabled="loading" @click="dialog = false" color="error">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -196,7 +196,7 @@ export default {
         title: 'NEW INDEX',
         text: '',
         item: { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false },
-        submit: 'Submit',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialog = true
@@ -207,7 +207,7 @@ export default {
         title: 'Delete Index',
         text: "Are you sure you want to delete the index '" + this.gridApi.structure.indexes.getSelectedRows()[0].Name + "' from this table? This action cannot be undone.",
         item: {},
-        submit: 'Delete',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialog = true

@@ -62,14 +62,23 @@
                   </div>
                 </v-form>
                 <v-divider></v-divider>
-                <div style="margin-top:15px;">
+                <div style="margin-top:15px; margin-bottom:10px">
                   <v-row no-gutters>
-                    <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogOptions.submit }}</v-btn>
+                    <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px;">
+                      <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
-                    <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" outlined color="#e74d3c">{{ dialogOptions.cancel }}</v-btn>
+                    <v-col v-if="dialogOptions.cancel.length > 0">
+                      <v-btn :disabled="loading" @click="dialog = false" color="error">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
+                    <!-- <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
+                      <v-progress-circular indeterminate color="white" size="15" width="1.5" style="height:100%"></v-progress-circular>
+                    </v-col>
+                    <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="padding-left:10px">
+                      <div class="body-2" style="height:100%; display:flex; align-items:center">Applying changes...</div>
+                    </v-col>
+                    <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="padding-left:10px">
+                      <v-btn color="error">CANCEL</v-btn>
+                    </v-col> -->
                   </v-row>
                 </div>
               </v-flex>
@@ -210,7 +219,7 @@ export default {
         title: 'NEW COLUMN',
         text: '',
         item: { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false },
-        submit: 'Submit',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialog = true
@@ -232,7 +241,7 @@ export default {
           current_timestamp: data['Extra'].toLowerCase() == 'on update current_timestamp', 
           auto_increment: data['Extra'].toLowerCase() == 'auto_increment'
         },
-        submit: 'Submit',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialog = true
@@ -243,7 +252,7 @@ export default {
         title: 'Delete Column',
         text: "Are you sure you want to delete the column '" + this.gridApi.structure.columns.getSelectedRows()[0].Name + "' from this table? This action cannot be undone.",
         item: {},
-        submit: 'Delete',
+        submit: 'Confirm',
         cancel: 'Cancel'
       }
       this.dialog = true
