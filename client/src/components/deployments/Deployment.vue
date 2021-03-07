@@ -313,16 +313,16 @@
 
     <v-dialog v-model="scheduleDialog" persistent width="290px">
       <v-date-picker v-if="schedule_mode=='date'" v-model="schedule_date" color="info" scrollable>
-        <v-btn text color="info" @click="schedule_now()">Now</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
         <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
+        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn text color="info" @click="schedule_now()">Now</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="schedule_mode=='time'" v-model="schedule_time" color="info" format="24hr" scrollable>
-        <v-btn text color="info" @click="schedule_now()">Now</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
         <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
+        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn text color="info" @click="schedule_now()">Now</v-btn>
       </v-time-picker>
     </v-dialog>
 
@@ -441,7 +441,7 @@
             <v-btn text title="Copy link to clipboard" @click="resultsClipboard()"><v-icon small style="padding-right:10px">fas fa-clipboard</v-icon>CLIPBOARD</v-btn>
           </v-toolbar-items>
           <v-spacer></v-spacer>
-          <v-btn icon @click="shareResults_dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="shareResults_dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text>
           <v-container style="padding:0px 10px 0px 10px">
