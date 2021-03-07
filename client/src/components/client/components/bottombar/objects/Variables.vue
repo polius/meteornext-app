@@ -6,6 +6,7 @@
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-cog</v-icon>SERVER VARIABLES</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field ref="field" :disabled="loading" v-model="search" label="Search" append-icon="search" color="white" single-line hide-details></v-text-field>
+          <v-divider class="ml-3" inset vertical></v-divider>
           <v-btn :disabled="loading" @click="dialog = false" icon style="margin-left:5px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px;">
