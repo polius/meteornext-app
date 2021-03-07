@@ -72,6 +72,7 @@ export default {
     dialog: function(val) {
       this.dialogOpened = val
       if (!val) return
+      this.buildSelectors()
       requestAnimationFrame(() => {
         if (typeof this.$refs.dialogForm !== 'undefined') this.$refs.dialogForm.resetValidation()
       })
@@ -82,7 +83,6 @@ export default {
   },
   methods: {
     showDialog() {
-      this.buildSelectors()
       this.dialog = true
     },
     dialogSubmit() {

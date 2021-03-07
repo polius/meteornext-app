@@ -103,16 +103,14 @@ export default {
     },
     dialog: function(val) {
       this.dialogOpened = val
+      this.buildVariables()
+      if (this.gridApi != null) this.gridApi.sizeColumnsToFit()
     },
   },
   methods: {
     showDialog() {
       this.search = ''
       this.dialog = true
-      this.buildVariables()
-      if (this.gridApi != null) {
-        this.gridApi.sizeColumnsToFit()
-      }
     },
     buildVariables() {
       if (this.gridApi != null) this.gridApi.showLoadingOverlay()
