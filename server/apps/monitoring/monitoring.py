@@ -441,7 +441,7 @@ class Monitoring:
         try:
             conn.test_sql()
         except Exception:
-            time.sleep(5)
+            time.sleep(10)
             conn.test_sql()
         else:
             conn.connect()

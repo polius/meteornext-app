@@ -202,6 +202,7 @@ export default {
   watch: {
     dialog: function(val) {
       this.dialogOpened = val
+      if (this.database != this.databasePrev) this.buildObjects()
     },
   },
   methods: {
@@ -210,7 +211,6 @@ export default {
       this.targetDatabase = ''
       this.dialog = true
       setTimeout(() => {
-        if (this.database != this.databasePrev) this.buildObjects()
         for (let obj of this.objects) {
           if (this.gridApi[obj] != null) this.gridApi[obj].deselectAll()
         }

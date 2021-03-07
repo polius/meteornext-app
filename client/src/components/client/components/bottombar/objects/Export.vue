@@ -222,6 +222,7 @@ export default {
     },
     dialog: function(val) {
       this.dialogOpened = val
+      if (this.database != this.databasePrev) this.buildObjects()
     },
   },
   methods: {
@@ -233,13 +234,12 @@ export default {
       this.dialog = true
       this.tabClick('sql')
       setTimeout(() => {
-        if (this.database != this.databasePrev) this.buildObjects()
         for (let obj of this.objects) {
           if (this.gridApi[obj] != null) this.gridApi[obj].deselectAll()
         }
         if (selected === undefined) this.tabObjectsSelected = 0
         else this.selectRow()
-      },100)
+      },0)
     },
     onGridReady(object, params) {
       setTimeout(() => {
