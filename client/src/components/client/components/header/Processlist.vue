@@ -62,10 +62,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px;">
-                      <v-btn :loading="loading" :disabled="loading" @click="settingsProcesslistSubmit" color="primary">Save</v-btn>
+                      <v-btn :loading="loading" :disabled="loading" @click="settingsProcesslistSubmit" color="#00b16a">Confirm</v-btn>
                     </v-col>
                     <v-col>
-                      <v-btn :disabled="loading" @click="settingsDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="settingsDialog = false" color="error">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -93,10 +93,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="killQuerySubmit" color="primary">Kill</v-btn>
+                      <v-btn :loading="loading" @click="killQuerySubmit" color="#00b16a">Kill</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="killDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="killDialog = false" color="error">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -112,7 +112,7 @@
     <v-dialog v-model="analyzeDialog" max-width="90%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text">Analyze queries</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1">Analyze queries</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="exportAnalyze" color="primary"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>

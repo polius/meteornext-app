@@ -446,9 +446,9 @@ export default {
       // Show confirmation dialog
       var dialogOptions = {
         'mode': 'removeRowConfirm',
-        'title': 'Delete rows?',
+        'title': 'Delete rows',
         'text': 'Are you sure you want to delete the selected ' + this.gridApi.content.getSelectedNodes().length + ' rows from this table? This action cannot be undone.',
-        'button1': 'Delete',
+        'button1': 'Confirm',
         'button2': 'Cancel'
       }
       this.showDialog(dialogOptions)
