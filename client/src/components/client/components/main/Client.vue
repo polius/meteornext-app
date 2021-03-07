@@ -71,7 +71,7 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col v-if="dialogSubmitText.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogSubmitText }}</v-btn>
+                      <v-btn :loading="loading" @click="dialogSubmit" :color="dialogSubmitText == 'Close' ? 'primary' : '#00b16a'">{{ dialogSubmitText }}</v-btn>
                     </v-col>
                     <v-col v-if="dialogCancelText.length > 0" style="margin-bottom:10px;">
                       <v-btn :disabled="loading" @click="dialogCancel" color="error">{{ dialogCancelText }}</v-btn>

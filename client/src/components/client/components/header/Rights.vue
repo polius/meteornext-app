@@ -99,10 +99,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :disabled="loading" :loading="loading" @click="checkSubmit" color="primary">Confirm</v-btn>
+                      <v-btn :disabled="loading" :loading="loading" @click="checkSubmit" color="#00b16a">Confirm</v-btn>
                     </v-col>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="checkDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="checkDialog = false" color="error">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>
