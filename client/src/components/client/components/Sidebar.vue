@@ -32,7 +32,6 @@
               {{ item.name }}
               <v-spacer></v-spacer>
               <v-progress-circular v-if="sidebarLoadingServer && sidebarMode == 'servers' && sidebarSelected.length == 1 && item.id == sidebarSelected[0].id" indeterminate size="16" width="2" color="white" style="margin-right:10px;"></v-progress-circular>
-              <!-- <v-chip label outlined small style="margin-left:10px; margin-right:10px;">Prod</v-chip> -->
             </v-btn>
           </template>
         </v-treeview>

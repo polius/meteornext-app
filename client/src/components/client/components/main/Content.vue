@@ -110,10 +110,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn @click="editDialogSubmit" color="primary">Save</v-btn>
+                      <v-btn @click="editDialogSubmit" color="#00b16a">Save</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn @click="editDialogCancel" outlined color="#e74d3c">Cancel</v-btn>
+                      <v-btn @click="editDialogCancel" color="error">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -141,10 +141,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col v-if="dialogSubmitText.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="dialogSubmit" color="primary">{{ dialogSubmitText }}</v-btn>
+                      <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogSubmitText }}</v-btn>
                     </v-col>
                     <v-col v-if="dialogCancelText.length > 0" style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialogCancel" outlined color="#e74d3c">{{ dialogCancelText }}</v-btn>
+                      <v-btn :disabled="loading" @click="dialogCancel" color="error">{{ dialogCancelText }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
