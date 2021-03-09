@@ -478,7 +478,7 @@ class Pro:
         return u.check_local_path(logs_path)
 
     def __secure_code(self, code):
-        whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','csv','time','json','uuid','locale']
+        whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','secrets','csv','time','json','uuid','locale']
         p = ast.parse(code, 'blueprint', mode='exec')
         modules = []
         # Build modules
