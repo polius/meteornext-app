@@ -1030,7 +1030,7 @@ export default {
         elapsed /= data.length
       }
       current.bottomBar.client['status'] = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
-      current.bottomBar.client['text'] = data[data.length-1]['query'].endsWith(';') ? data[data.length-1]['query'] : data[data.length-1]['query'] + ';'
+      current.bottomBar.client['text'] = data[data.length-1]['query'].endsWith(';') ? data[data.length-1]['query'].trim() : data[data.length-1]['query'].trim() + ';'
       current.bottomBar.client['info'] = data[data.length-1]['data'] === undefined ? '' : data[data.length-1]['rowCount'] + ' records | '
       current.bottomBar.client['info'] += data.length + ' queries'
       if (elapsed != null) current.bottomBar.client['info'] += ' | ' + elapsed.toFixed(3).toString() + 's elapsed'
