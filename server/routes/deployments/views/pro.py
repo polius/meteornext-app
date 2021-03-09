@@ -479,7 +479,7 @@ class Pro:
         return u.check_local_path(logs_path)
 
     def __secure_code(self, code):
-        blacklist = ['os','subprocess','sys']
+        whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','csv','time','json','uuid','locale']
         p = ast.parse(code, 'blueprint', mode='exec')
         modules = []
         # Build modules
@@ -494,10 +494,10 @@ class Pro:
                 modules.append({'module': module, 'name': n.name.split('.'), 'alias': n.asname})
         # Check modules
         for m in modules:
-            match = [item for item in m['module'] if item in blacklist]
+            match = [item for item in m['module'] if item not in whitelist]
             if len(match) > 0:
                 raise ModuleNotAllowed(match[0])
-            match = [item for item in m['name'] if item in blacklist]
+            match = [item for item in m['name'] if item not in whitelist]
             if len(m['module']) == 0 and len(match) > 0:
                 raise ModuleNotAllowed(match[0])
 
