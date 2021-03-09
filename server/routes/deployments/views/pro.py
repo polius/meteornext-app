@@ -1,9 +1,11 @@
 import os
+import ast
 import sys
 import json
 import signal
 import unicodedata
 import datetime
+import copy
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -274,9 +276,12 @@ class Pro:
         # Check Code Syntax Errors
         try:
             data['code'] = unicodedata.normalize("NFKD", data['code'])
-            exec(data['code'])
+            self.__secure_code(data['code'])
+            exec(data['code'], {}, {})
         except Exception as e:
-            return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400         
+            if e.__class__.__name__ == 'ModuleNotAllowed':
+                return jsonify({'message': "Errors in code: Module '{}' is not allowed.".format(str(e))}), 400
+            return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400
 
         # Set Deployment Status
         if data['scheduled'] is not None:
@@ -332,9 +337,12 @@ class Pro:
         # Check Code Syntax Errors
         try:
             data['code'] = unicodedata.normalize("NFKD", data['code'])
-            exec(data['code'])
+            self.__secure_code(data['code'])
+            exec(data['code'], {}, {})
         except Exception as e:
-            return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400  
+            if e.__class__.__name__ == 'ModuleNotAllowed':
+                return jsonify({'message': "Errors in code: Module '{}' is not allowed.".format(str(e))}), 400
+            return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400
 
         # Check scheduled date
         if data['scheduled'] is not None:
@@ -469,3 +477,29 @@ class Pro:
         logs_path = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])['local']['path']
         u = utils.Utils()
         return u.check_local_path(logs_path)
+
+    def __secure_code(self, code):
+        blacklist = ['os','subprocess','sys']
+        p = ast.parse(code, 'blueprint', mode='exec')
+        modules = []
+        # Build modules
+        for node in ast.iter_child_nodes(p):
+            if isinstance(node, ast.Import):
+                module = []
+            elif isinstance(node, ast.ImportFrom):  
+                module = node.module.split('.')
+            else:
+                continue
+            for n in node.names:
+                modules.append({'module': module, 'name': n.name.split('.'), 'alias': n.asname})
+        # Check modules
+        for m in modules:
+            match = [item for item in m['module'] if item in blacklist]
+            if len(match) > 0:
+                raise ModuleNotAllowed(match[0])
+            match = [item for item in m['name'] if item in blacklist]
+            if len(m['module']) == 0 and len(match) > 0:
+                raise ModuleNotAllowed(match[0])
+
+class ModuleNotAllowed(Exception):
+    pass
