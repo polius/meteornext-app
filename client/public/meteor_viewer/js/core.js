@@ -1919,8 +1919,11 @@ function setCookie(cname, cvalue, exdays) {
 // ##############################################################################################
 // METEOR-NEXT
 // ##############################################################################################
-function setLoadingText(text) {
-  $("#loading").append("<p>" + text + "</p>");
+function initMeteorNext() {
+  $("#loading").html('');
+  $("#import-div").remove();
+  $("#import-div-separator").remove();
+  $("#loading").append("<p>- Retrieving Data...</p>");
 }
 function showError(title, description) {
   $("#loading").html('');
@@ -1928,9 +1931,8 @@ function showError(title, description) {
   var error_message = description // "The URL provided is private"
   show_error(title_message, error_message, '');
 }
-function initMeteorNext(data) {
+function loadMeteorNext(data) {
   try {
-    $("#loading").html('');
     // Init variables
     var error_title = "Invalid File Type";
     var error_message = "Please use a <b>Meteor</b> file format. Example of a <b>meteor.js</b> file:<br><br>";

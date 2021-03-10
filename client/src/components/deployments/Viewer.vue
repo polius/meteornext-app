@@ -39,13 +39,13 @@ export default  {
       // If there's no uri in the url --> do not lookup for an execution
       if (this.iframe_src === undefined) return
       // Add status message
-      this.$refs.frame.contentWindow.setLoadingText("- Retrieving Data...")
+      this.$refs.frame.contentWindow.initMeteorNext()
       // Get Execution Results
       axios.get('/deployments/results', { params: { uri: this.iframe_src } })
         .then((response) => {
           // Inject Execution Data to Iframe
           try {
-            this.$refs.frame.contentWindow.initMeteorNext(response.data)
+            this.$refs.frame.contentWindow.loadMeteorNext(response.data)
           } catch (error) { 1==1 }
         })
         .catch((error) => {
