@@ -259,7 +259,6 @@ class Monitoring:
                 slack = self.__get_slack_server(server_id=server['id'])
             for s in slack:
                 self.__slack(slack=s, server=server, event='available', data=None)
-                
 
         # Check 'Restarted'
         info = None if server['monitor']['summary'] is None else self.__str2dict(server['monitor']['summary'])['info']
@@ -322,7 +321,7 @@ class Monitoring:
                 notification_status = 'ERROR'
                 event = 'connections_critical'
             # Connections - Warning [+ 50 connections. 3 top median >= 60 seconds. 5 top avg >= 60]
-            elif (len(last_event) == 0 or last_event[0]['event'] != 'connections_warning' or (last_event[0]['event'] != 'connections_critical' and len(queries) < int(connections['current']))) and len(queries) >= 50 and median(queries[:3]) >= 60 and sum(queries[:5])/5 >= 60:
+            elif (len(last_event) == 0 or last_event[0]['event'] == 'connections_stable' or (last_event[0]['event'] == 'connections_critical' and len(queries) < int(connections['current']))) and len(queries) >= 50 and median(queries[:3]) >= 60 and sum(queries[:5])/5 >= 60:
                 notification_name = 'Server \'{}\' Warning | {} Connections'.format(server['sql']['name'], len(queries))
                 notification_status = 'WARNING'
                 event = 'connections_warning'
