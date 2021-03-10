@@ -28,6 +28,10 @@ class deploy_queries:
         self._execution_log = {"output": []}
 
     @property
+    def transaction(self):
+        return self._transaction
+
+    @property
     def execution_log(self):
         return self._execution_log
 
@@ -63,11 +67,6 @@ class deploy_queries:
 
         # Get Query Syntax
         query_syntax = self.__get_query_type(query_parsed, show_output=False)
-
-        # Apply the execution plan factor
-        # if self._imports.config['params']['limit'] and query_syntax == 'Select':
-        #     query_parsed = query_parsed[:-1] + ' LIMIT ' if query_parsed.endswith(';') else query_parsed + ' LIMIT '
-        #     query_parsed += str(self._imports.config['params']['limit']) + ';'
 
         # Query Alias
         if alias is None:               
