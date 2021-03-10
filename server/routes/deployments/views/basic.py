@@ -275,6 +275,8 @@ class Basic:
         if data['start_execution'] and not group['deployments_execution_concurrent']:
             # Get Meteor Additional Parameters
             data['group_id'] = user['group_id']
+            data['environment_id'] = environment[0]['id']
+            data['environment_name'] = environment[0]['name']
             data['execution_threads'] = group['deployments_execution_threads']
             data['execution_timeout'] = group['deployments_execution_timeout']
             data['mode'] = 'BASIC'
@@ -355,6 +357,8 @@ class Basic:
             if data['start_execution'] and not group['deployments_execution_concurrent']:
                 # Get Meteor Additional Parameters
                 data['group_id'] = authority[0]['group_id']
+                data['environment_id'] = environment[0]['id']
+                data['environment_name'] = environment[0]['name']
                 data['execution_threads'] = group['deployments_execution_threads']
                 data['execution_timeout'] = group['deployments_execution_timeout']
                 data['mode'] = 'BASIC'

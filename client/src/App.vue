@@ -283,7 +283,7 @@ export default {
           })
           .finally(() => {
             this.loading = false
-            if (recurrent) setTimeout(this.getNotifications, 30000, true)
+            if (recurrent) setTimeout(this.getNotifications, 60000, true)
           })
       }
     },
