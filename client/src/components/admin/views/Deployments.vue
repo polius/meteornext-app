@@ -102,16 +102,16 @@
 
     <v-dialog v-model="pickerDialog" persistent width="290px">
       <v-date-picker v-if="picker_mode=='date'" v-model="picker_date" color="info" scrollable>
-        <v-btn text color="info" @click="picker_now()">Now</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn text color="error" @click="picker_close()">Cancel</v-btn>
         <v-btn text color="#00b16a" @click="picker_submit()">Confirm</v-btn>
+        <v-btn text color="error" @click="picker_close()">Cancel</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn text color="info" @click="picker_now()">Now</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="picker_mode=='time'" v-model="picker_time" color="info" format="24hr" scrollable>
-        <v-btn text color="info" @click="picker_now()">Now</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn text color="error" @click="picker_close()">Cancel</v-btn>
         <v-btn text color="#00b16a" @click="picker_submit()">Confirm</v-btn>
+        <v-btn text color="error" @click="picker_close()">Cancel</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn text color="info" @click="picker_now()">Now</v-btn>
       </v-time-picker>
     </v-dialog>
 

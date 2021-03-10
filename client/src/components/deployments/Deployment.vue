@@ -236,7 +236,7 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">{{ information_dialog_mode.toUpperCase() == 'PARAMETERS' ? 'fas fa-cog': 'fas fa-feather-alt' }}</v-icon>{{ information_dialog_mode.toUpperCase() }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="information_dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn :disabled="loading" icon @click="information_dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -300,8 +300,8 @@
                   <v-checkbox v-else-if="information_dialog_mode != 'parameters' && deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
                   <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
                   <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
-                    <v-btn color="#00b16a" @click="editSubmit()">CONFIRM</v-btn>
-                    <v-btn color="error" @click="information_dialog = false" style="margin-left:10px;">CANCEL</v-btn>
+                    <v-btn :loading="loading" color="#00b16a" @click="editSubmit()">CONFIRM</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="information_dialog = false" style="margin-left:10px;">CANCEL</v-btn>
                   </div>
                 </v-form>
               </v-flex>
@@ -649,6 +649,8 @@
           }
         }
       },
+      // Loading
+      loading: false,
 
       // Snackbar
       snackbar: false,
@@ -1125,6 +1127,7 @@
         }
 
         // Add deployment to the DB
+        this.loading = true
         axios.put(path, payload)
         .then((response) => {
           const data = response.data.data
@@ -1148,6 +1151,7 @@
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
+        .finally(() => this.loading = false)
       },
       // -------------------------------------
       // QUERY
