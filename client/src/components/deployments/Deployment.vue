@@ -20,10 +20,11 @@
         <div v-else-if="start_execution || deployment['status'] == 'STARTING'" class="subtitle-1" style="margin-left:5px;">Starting the execution...</div>
         <v-progress-circular v-if="start_execution || (stop_execution && deployment['status'] != 'STOPPED') || deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' ||  deployment['status'] == 'IN PROGRESS'" :size="22" indeterminate color="white" width="2" style="margin-left:20px; margin-right:10px;"></v-progress-circular>
 
-        <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="rgb(0, 177, 106)" style="margin-left:5px; margin-right:15px;" title="The execution finished successfully">SUCCESS</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="rgb(250, 130, 49)" style="margin-left:5px; margin-right:15px;" title="Some queries failed">WARNING</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="#e74c3c" style="margin-left:5px; margin-right:15px;" title="An error has occurred during the execution">FAILED</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'STOPPED'" label color="#e74c3c" style="margin-left:5px; margin-right:15px;" title="The execution has been interrupted">STOPPED</v-chip>
+        <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="rgb(0, 177, 106)" style="margin-left:5px; margin-right:5px;" title="The execution finished successfully">SUCCESS</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="rgb(250, 130, 49)" style="margin-left:5px; margin-right:5px;" title="Some queries failed">WARNING</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="#e74c3c" style="margin-left:5px; margin-right:5px;" title="An error has occurred during the execution">FAILED</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'STOPPED'" label color="#e74c3c" style="margin-left:5px; margin-right:5px;" title="The execution has been interrupted">STOPPED</v-chip>
+        <v-divider v-if="['SUCCESS','WARNING','FAILED','STOPPED'].includes(deployment['status'])" class="mx-3" inset vertical></v-divider>
 
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="padding-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
@@ -33,6 +34,7 @@
 
         <v-spacer></v-spacer>
         <div v-if="last_updated != ''" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
+        <v-divider class="ml-3 mr-1" inset vertical></v-divider>
         <v-btn icon @click="goBack()"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
 
