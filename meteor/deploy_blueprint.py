@@ -38,7 +38,8 @@ class deploy_blueprint:
             self._blueprint.before(query_instance, self._imports.config['params']['environment'], self._region['name'])
 
             # Commit queries
-            query_instance.commit()
+            if not query_instance.transaction:
+                query_instance.commit()
 
             # Store Execution Logs
             execution_log_path = "{0}/execution/{1}/{1}_before.json".format(self._args.path, self._region['name'])
@@ -192,7 +193,7 @@ class deploy_blueprint:
 
         # Commit/Rollback queries
         try:
-            if error:
+            if error or query_instance.transaction:
                 query_instance.rollback()
             else:
                 query_instance.commit()
@@ -229,7 +230,8 @@ class deploy_blueprint:
             self._blueprint.after(query_instance, self._imports.config['params']['environment'], self._region['name'])
 
             # Commit queries
-            query_instance.commit()
+            if not query_instance.transaction:
+                query_instance.commit()
 
             # Store Execution Logs
             execution_log_path = "{0}/execution/{1}/{1}_after.json".format(self._args.path, self._region['name'])
