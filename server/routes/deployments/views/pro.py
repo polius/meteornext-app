@@ -3,8 +3,9 @@ import ast
 import sys
 import json
 import signal
-import unicodedata
 import datetime
+import unicodedata
+import multiprocessing
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -276,10 +277,7 @@ class Pro:
         try:
             data['code'] = unicodedata.normalize("NFKD", data['code'])
             self.__secure_code(data['code'])
-            exec(data['code'], {}, {})
         except Exception as e:
-            if e.__class__.__name__ == 'ModuleNotAllowed':
-                return jsonify({'message': "Errors in code: Module '{}' is not allowed.".format(str(e))}), 400
             return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400
 
         # Set Deployment Status
@@ -307,6 +305,8 @@ class Pro:
         if data['start_execution'] and not group['deployments_execution_concurrent']:
             # Get Meteor Additional Parameters
             data['group_id'] = user['group_id']
+            data['environment_id'] = environment[0]['id']
+            data['environment_name'] = environment[0]['name']
             data['execution_threads'] = group['deployments_execution_threads']
             data['execution_timeout'] = group['deployments_execution_timeout']
             data['mode'] = 'PRO'
@@ -337,10 +337,7 @@ class Pro:
         try:
             data['code'] = unicodedata.normalize("NFKD", data['code'])
             self.__secure_code(data['code'])
-            exec(data['code'], {}, {})
         except Exception as e:
-            if e.__class__.__name__ == 'ModuleNotAllowed':
-                return jsonify({'message': "Errors in code: Module '{}' is not allowed.".format(str(e))}), 400
             return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400
 
         # Check scheduled date
@@ -398,6 +395,8 @@ class Pro:
             if data['start_execution'] and not group['deployments_execution_concurrent']:
                 # Get Meteor Additional Parameters
                 data['group_id'] = authority[0]['group_id']
+                data['environment_id'] = environment[0]['id']
+                data['environment_name'] = environment[0]['name']
                 data['execution_threads'] = group['deployments_execution_threads']
                 data['execution_timeout'] = group['deployments_execution_timeout']
                 data['mode'] = 'PRO'
@@ -478,27 +477,41 @@ class Pro:
         return u.check_local_path(logs_path)
 
     def __secure_code(self, code):
-        whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','secrets','csv','time','json','uuid','locale']
-        p = ast.parse(code, 'blueprint', mode='exec')
-        modules = []
-        # Build modules
-        for node in ast.iter_child_nodes(p):
-            if isinstance(node, ast.Import):
-                module = []
-            elif isinstance(node, ast.ImportFrom):  
-                module = node.module.split('.')
-            else:
-                continue
-            for n in node.names:
-                modules.append({'module': module, 'name': n.name.split('.'), 'alias': n.asname})
-        # Check modules
-        for m in modules:
-            match = [item for item in m['module'] if item not in whitelist]
-            if len(match) > 0:
-                raise ModuleNotAllowed(match[0])
-            match = [item for item in m['name'] if item not in whitelist]
-            if len(m['module']) == 0 and len(match) > 0:
-                raise ModuleNotAllowed(match[0])
+        q = multiprocessing.Queue()
+        p = multiprocessing.Process(target=self.__secure_code2, args=(code,q))
+        p.daemon = True
+        p.start()
+        p.join(5)
+        if p.is_alive():
+            p.terminate()
+            raise Exception('Timeout exceeded')
+        result = q.get_nowait()
+        if result != 'OK':
+            raise Exception(result)
 
-class ModuleNotAllowed(Exception):
-    pass
+    def __secure_code2(self, code, queue):
+        whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','secrets','csv','time','json','uuid','locale']
+        secure_code = f"""import builtins
+import importlib
+
+def secure_importer(name, globals=None, locals=None, fromlist=(), level=0):
+    global importlib
+    whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','secrets','csv','time','json','json.decoder','uuid','locale']
+    frommodule = globals['__name__'] if globals else None
+    if frommodule is None or frommodule == '__main__':
+        if name not in whitelist:
+            raise Exception(f"Module '{{name}}' is restricted.")
+    else:
+        split = frommodule.split('.')
+        if len(split) > 1:
+            if split[0] not in whitelist:
+                raise Exception(f"Module '{{split[0]}}' is restricted.")
+        elif frommodule not in whitelist:
+            raise Exception(f"Module '{{frommodule}}' is restricted.")
+    return importlib.__import__(name, globals, locals, fromlist, level)
+builtins.__import__ = secure_importer\n\n{code}"""
+        try:
+            exec(secure_code, {'__name__':'__main__'}, {})
+            queue.put('OK')
+        except Exception as e:
+            queue.put(str(e))

@@ -303,7 +303,7 @@ export default {
     },
     isOnline(last_ping) {
       if (last_ping == null) return false
-      return moment(last_ping).add(60,'seconds') >= moment.utc()
+      return moment(last_ping).add(70,'seconds') >= moment.utc()
     },
     lastOnline(item) {
       if (item['last_login'] == null) return 'not logged in'
