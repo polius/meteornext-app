@@ -481,7 +481,7 @@ class Pro:
         p = multiprocessing.Process(target=self.__secure_code2, args=(code,q))
         p.daemon = True
         p.start()
-        p.join(5)
+        p.join(3)
         if p.is_alive():
             p.terminate()
             raise Exception('Timeout exceeded')
@@ -490,6 +490,8 @@ class Pro:
             raise Exception(result)
 
     def __secure_code2(self, code, queue):
+        sys.stdout = open(os.devnull, 'w')
+        sys.stderr = open(os.devnull, 'w')
         whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','secrets','csv','time','json','uuid','locale']
         secure_code = f"""import builtins
 import importlib
