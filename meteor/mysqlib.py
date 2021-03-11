@@ -83,7 +83,6 @@ class MySQL:
                 self.start()
                 return self.execute(query, args, database, retry=False)
             else:
-                self.stop()
                 raise
 
     def __execute_query(self, query, args, database):

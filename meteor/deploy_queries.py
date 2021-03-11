@@ -173,7 +173,6 @@ class deploy_queries:
         # Check existing query errors
         if self._transaction and self._query_error:
             self.rollback()
-
         else:
             # Commit server connection
             if self._sql:
