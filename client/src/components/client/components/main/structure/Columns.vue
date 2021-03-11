@@ -312,7 +312,7 @@ export default {
     },
     execute(query) {
       let promise = new Promise((resolve, reject) => {
-        EventBus.$emit('execute-structure', query, resolve, reject)
+        EventBus.$emit('execute-structure', query, this.dialogOptions.mode == 'drag', resolve, reject)
       })
       promise.then(() => { this.dialog = false })
         .catch(() => { if (this.dialogOptions.mode == 'delete') this.dialog = false })
