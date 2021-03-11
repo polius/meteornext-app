@@ -496,7 +496,7 @@ class Pro:
         secure_code = f"""import builtins
 import importlib
 
-def secure_importer(name, globals=None, locals=None, fromlist=(), level=0):
+def import2(name, globals=None, locals=None, fromlist=(), level=0):
     global importlib
     whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','secrets','csv','time','json','json.decoder','uuid','locale']
     frommodule = globals['__name__'] if globals else None
@@ -511,7 +511,14 @@ def secure_importer(name, globals=None, locals=None, fromlist=(), level=0):
         elif frommodule not in whitelist:
             raise Exception(f"Module '{{frommodule}}' is restricted.")
     return importlib.__import__(name, globals, locals, fromlist, level)
-builtins.__import__ = secure_importer\n\n{code}"""
+
+def exec2(name, globals=None, locals=None):
+    raise Exception("Method exec() is restricted.")
+
+builtins.__import__ = import2
+builtins.exec = exec2
+print(builtins.exec)\n\n{code}"""
+
         try:
             exec(secure_code, {'__name__':'__main__'}, {})
             queue.put('OK')
