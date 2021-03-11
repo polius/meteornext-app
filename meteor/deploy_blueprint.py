@@ -173,7 +173,7 @@ class deploy_blueprint:
 
                 # Build error message
                 if e.__class__.__name__ == 'InterfaceError':
-                    current_thread.critical = "- Lost connection to MySQL server: {} ({})".format(server['name'], server['hostname'])
+                    current_thread.critical.append("Lost connection to MySQL server: {} ({})".format(server['name'], server['hostname']))
                 else:
                     inner_frames = inspect.getinnerframes(e.__traceback__)
                     found = False
