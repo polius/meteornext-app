@@ -65,7 +65,13 @@
                       <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
                     <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" color="error">{{ dialogOptions.cancel }}</v-btn>
+                      <v-btn :loading="loading2" @click="dialogCancel" color="error">{{ dialogOptions.cancel }}</v-btn>
+                    </v-col>
+                    <v-col v-if="loading" cols="auto" class="flex-grow-0 flex-shrink-0">
+                      <v-progress-circular indeterminate color="white" size="15" width="1.5" style="height:100%"></v-progress-circular>
+                    </v-col>
+                    <v-col v-if="loading" cols="auto" class="flex-grow-0 flex-shrink-0" style="padding-left:10px">
+                      <div class="body-2" style="height:100%; display:flex; align-items:center">{{ loadingText }}</div>
                     </v-col>
                   </v-row>
                 </div>
@@ -89,6 +95,8 @@ export default {
     return {
       // Loading
       loading: false,
+      loading2: false,
+      loadingText: 'Applying changes...',
       // Dialog
       dialog: false,
       dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
@@ -226,6 +234,7 @@ export default {
       EventBus.$emit('get-structure', true)
     },
     dialogSubmit() {
+      this.loadingText = 'Applying changes...'
       this.loading = true
       let query = ''
       if (this.dialogOptions.mode == 'new') {
@@ -251,11 +260,24 @@ export default {
     },
     execute(query) {
       let promise = new Promise((resolve, reject) => {
-        EventBus.$emit('execute-structure', query, resolve, reject)
+        EventBus.$emit('execute-structure', query, false, resolve, reject)
       })
       promise.then(() => { this.dialog = false })
         .catch(() => { if (this.dialogOptions.mode == 'delete') this.dialog = false })
         .finally(() => { this.loading = false })
+    },
+    dialogCancel() {
+      if (this.loading) {
+        this.loadingText = 'Interrupting changes...'
+        this.loading2 = true
+        new Promise((resolve, reject) => {
+          EventBus.$emit('stop-structure', resolve, reject)
+        }).finally(() => { 
+          this.loading2 = false
+          this.dialog = false
+        })
+      }
+      else this.dialog = false
     },
     getColumns(table, target=false) {
       if (target) {
