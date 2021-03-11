@@ -17,15 +17,15 @@
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-tabs>
       </v-col>
-      <!-- <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030">
+      <v-col v-if="loading" cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030">
         <v-progress-circular indeterminate color="white" size="15" width="1.5" style="height:100%"></v-progress-circular>
       </v-col>
-      <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030; padding-left:10px">
-        <div class="body-2" style="height:100%; display:flex; align-items:center">Applying changes...</div>
+      <v-col v-if="loading"  cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030; padding-left:10px">
+        <div class="body-2" style="height:100%; display:flex; align-items:center">{{ loadingText }}</div>
       </v-col>
-      <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030; padding-left:10px">
-        <v-btn style="margin:6px">CANCEL</v-btn>
-      </v-col> -->
+      <v-col v-if="loading"  cols="auto" class="flex-grow-0 flex-shrink-0" style="background-color:#303030; padding-left:10px">
+        <v-btn :loading="loading2" @click="cancelExecution()" style="margin:6px">CANCEL</v-btn>
+      </v-col>
     </v-row>
     <!---------------->
     <!-- COMPONENTS -->
@@ -79,7 +79,10 @@ export default {
   data() {
     return {
       dialog: false,
-      dialogText: ''
+      dialogText: '',
+      loading: false,
+      loading2: false,
+      loadingText: 'Applying changes...',
     }
   },
   components: { Columns, Indexes, FKs, Triggers },
@@ -108,6 +111,7 @@ export default {
   mounted () {
     EventBus.$on('get-structure', this.getStructure);
     EventBus.$on('execute-structure', this.execute);
+    EventBus.$on('stop-structure', this.stopExecution);
   },
   watch: {
     dialog: function(val) {
@@ -213,7 +217,11 @@ export default {
       // Store the current connection
       this.structureConnection = this.sidebarSelected[0]['id']
     },
-    execute(queries, resolve, reject) {
+    execute(queries, showLoading, resolve, reject) {
+      if (showLoading) {
+        this.loadingText = 'Applying changes...'
+        this.loading = true
+      }
       // Execute Queries
       const index = this.index
       const payload = {
@@ -259,6 +267,7 @@ export default {
             reject()
           }
         })
+        .finally(() => this.loading = false)
     },
     parseBottomBar(data, current) {
       var elapsed = null
@@ -273,6 +282,21 @@ export default {
       current.bottomBar.structure[current.tabStructureSelected]['text'] = data[0]['query']
       if (elapsed != null) current.bottomBar.structure[current.tabStructureSelected]['info'] = elapsed.toFixed(3).toString() + 's elapsed'
     },
+    stopExecution(resolve, reject) {
+      const payload = { connection: this.id + '-shared' }
+      axios.get('/client/stop', { params: payload })
+      .then((response) => resolve(response))
+      .catch((error) => reject(error))
+    },
+    cancelExecution() {
+      this.loadingText = 'Interrupting changes...'
+      this.loading2 = true
+      new Promise((resolve, reject) => { this.stopExecution(resolve, reject)})
+      .finally(() => {
+        this.loading2 = false
+        this.getStructure(true)
+      })
+    }
   },
 }
 </script>
