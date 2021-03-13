@@ -720,13 +720,17 @@ export default {
       var first = true
       for (var i = 0; i < editorText.length; ++i) {
         if (first && editorText.substring(i, i+10).toLowerCase() == 'delimiter ') {
+          let found = false
           for (let j = i+10; j < editorText.length; ++j) {
             if ([' ','\n','\t'].includes(editorText[j])) {
-              delimiter = editorText.substring(i+10, j)
-              i = j
-              start = j
-              break
+              if (found) {
+                delimiter = editorText.substring(i+10, j).trim()
+                i = j
+                start = j
+                break
+              }
             }
+            else found = true
           }
           continue
         }
@@ -748,7 +752,7 @@ export default {
         else if (editorText[i] == "\n" && chars[chars.length-1] == '#') chars.pop()
       }
       if (editorText.substring(start-1, i).trim().length > 0 && !editorText.substring(start-1, i).trim().toLowerCase().startsWith('delimiter ')) {
-        queries.push({"begin": start-1, "end": i})
+        queries.push({"begin": start-1, "end": editorText.substring(i - delimiter.length, i) == delimiter ? i - delimiter.length : i})
       }
 
       // Get Cursor Position Index
