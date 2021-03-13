@@ -732,14 +732,13 @@ export default {
             }
             else found = true
           }
-          continue
         }
         if (first && ![' ','\n','\t',';'].includes(editorText[i])) {
           start = i
           first = false
         }
         else if (editorText.substring(i - delimiter.length, i) == delimiter && chars.length == 0) {
-          if (start != i - delimiter.length) {
+          if (start < i - delimiter.length) {
             queries.push({"begin": start, "end": i - delimiter.length})
           }
           first = true
@@ -769,6 +768,12 @@ export default {
           query = editorText.substring(queries[i]['begin'], queries[i]['end'])
           queryStart = queries[i]['begin']
           queryEnd = queries[i]['end']
+          break
+        }
+        else if (cursorPositionIndex < queries[i]['begin']) {
+          query = editorText.substring(queries[i-1]['begin'], queries[i-1]['end'])
+          queryStart = queries[i-1]['begin']
+          queryEnd = queries[i-1]['end']
           break
         }
       }
