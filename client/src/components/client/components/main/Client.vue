@@ -724,11 +724,15 @@ export default {
       var query = ''
       var queryStart = null
       var queryEnd = null
+      console.log(cursorPositionIndex)
+      console.log(queries)
       for (let i = 0; i < queries.length; ++i) {
         if ((i == 0 && cursorPositionIndex < queries[0]['begin']) || (cursorPositionIndex >= queries[i]['begin'] && cursorPositionIndex <= queries[i]['end'])) {
           query = editorText.substring(queries[i]['begin'], queries[i]['end'])
-          queryStart = queries[i]['begin']
-          queryEnd = queries[i]['end']
+          if (i != 0 && query.trim().toLowerCase().startsWith('delimiter')) { queryStart = queries[i-1]['begin']; queryEnd = queries[i-1]['end']}
+          else { queryStart = queries[i]['begin']; queryEnd = queries[i]['end'] }
+          // queryStart = queries[i]['begin']
+          // queryEnd = queries[i]['end']
           break
         }
         else if (cursorPositionIndex < queries[i]['begin']) {

@@ -484,7 +484,7 @@ class Pro:
         p.join(3)
         if p.is_alive():
             p.terminate()
-            raise Exception('Timeout exceeded')
+            raise Exception('Timeout exceeded.')
         result = q.get_nowait()
         if result != 'OK':
             raise Exception(result)
