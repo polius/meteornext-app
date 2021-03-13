@@ -713,41 +713,42 @@ export default {
       var editorText = this.editor.getValue()
 
       // Get all Query Positions
-      var rawQueries = []
-      var start = 0;
+      var queries = []
       var chars = []
+      var start = 0
+      var delimiter = ';'
+      var first = true
       for (var i = 0; i < editorText.length; ++i) {
-        if (editorText[i] == ';' && chars.length == 0) {
-          rawQueries.push({"begin": start, "end": i})
-          start = i+1
+        if (first && editorText.substring(i, i+10).toLowerCase() == 'delimiter ') {
+          for (let j = i+10; j < editorText.length; ++j) {
+            if ([' ','\n','\t'].includes(editorText[j])) {
+              delimiter = editorText.substring(i+10, j)
+              i = j
+              start = j
+              break
+            }
+          }
+          continue
         }
-        else if (editorText[i] == '"' && (i == 0 || (editorText[i-1] != '\\' || editorText[i-2] == '\\'))) {
-          if (chars.length == 0) chars.push('"')
-          else if (chars[chars.length-1] == '"') chars.pop()
+        if (first && ![' ','\n','\t',';'].includes(editorText[i])) {
+          start = i
+          first = false
         }
-        else if (editorText[i] == "'" && (i == 0 || (editorText[i-1] != '\\' || editorText[i-2] == '\\'))) {
-          if (chars.length == 0) chars.push("'")
-          else if (chars[chars.length-1] == "'") chars.pop()
+        else if (editorText.substring(i - delimiter.length, i) == delimiter && chars.length == 0) {
+          if (start != i - delimiter.length) {
+            queries.push({"begin": start, "end": i - delimiter.length})
+          }
+          first = true
+        }
+        else if (["'",'"','`'].includes(editorText[i]) && (i == 0 || (editorText[i-1] != '\\' || editorText[i-2] == '\\'))) {
+          if (chars.length == 0) chars.push(editorText[i])
+          else if (chars[chars.length-1] == editorText[i]) chars.pop()
         }
         else if (chars.length == 0 && editorText[i] == "#") chars.push("#")
         else if (editorText[i] == "\n" && chars[chars.length-1] == '#') chars.pop()
       }
-      if (start < i && editorText.substring(start, i).trim().length > 0) rawQueries.push({"begin": start, "end": i})
-
-      // Parse Complex Queries (Triggers, Functions, Procedures, Events)
-      var queries = []
-      var detected = false
-      for (let i = 0; i < rawQueries.length; ++i) {
-        let query = editorText.substring(rawQueries[i]['begin'], rawQueries[i]['end'])
-        let queryLower = query.toLowerCase().trim()
-        if (detected) {
-          if (queryLower.startsWith('end') && queryLower.includes(';')) detected = false
-          queries[queries.length-1]['end'] = rawQueries[i]['end']
-        }
-        else {
-          if (queryLower.startsWith('create ') && (queryLower.includes(' trigger ') || queryLower.includes(' function ') || queryLower.includes(' procedure ') || queryLower.includes(' event '))) detected = true
-          queries.push({"begin": rawQueries[i]['begin'], "end": rawQueries[i]['end']})
-        }
+      if (editorText.substring(start-1, i).trim().length > 0 && !editorText.substring(start-1, i).trim().toLowerCase().startsWith('delimiter ')) {
+        queries.push({"begin": start-1, "end": i})
       }
 
       // Get Cursor Position Index
@@ -758,19 +759,16 @@ export default {
       // Get Current Query
       var query = ''
       var queryStart = null
-      for (let i = 0; i < queries.length; ++i) {
-        if (cursorPositionIndex >= queries[i]['begin'] && cursorPositionIndex <= queries[i]['end']) {
+      var queryEnd = null
+      for (i = 0; i < queries.length; ++i) {
+        if ((i == 0 && cursorPositionIndex < queries[0]['begin']) || (cursorPositionIndex >= queries[i]['begin'] && cursorPositionIndex <= queries[i]['end'])) {
           query = editorText.substring(queries[i]['begin'], queries[i]['end'])
           queryStart = queries[i]['begin']
+          queryEnd = queries[i]['end']
           break
         }
       }
-
       // Get Current Query Range in Ace Editor
-      var queryEnd = null
-      for (let q of rawQueries) {
-        if (q.begin == queryStart) { queryEnd = q.end; break; }
-      }
       var queryRange = { start: this.editor.session.doc.indexToPosition(queryStart), end: this.editor.session.doc.indexToPosition(queryEnd)}
 
       // Store Current Query (+ range)
@@ -947,13 +945,9 @@ export default {
             if (q != ';') queries.push(q)
             start = i+1
           }
-          else if (selectedText[i] == '"' && (i == 0 || (selectedText[i-1] != '\\' || selectedText[i-2] == '\\'))) {
-            if (chars.length == 0) chars.push('"')
-            else if (chars[chars.length-1] == '"') chars.pop()
-          }
-          else if (selectedText[i] == "'" && (i == 0 || (selectedText[i-1] != '\\' || selectedText[i-2] == '\\'))) {
-            if (chars.length == 0) chars.push("'")
-            else if (chars[chars.length-1] == "'") chars.pop()
+          else if (["'",'"','`'].includes(selectedText[i]) && (i == 0 || (selectedText[i-1] != '\\' || selectedText[i-2] == '\\'))) {
+            if (chars.length == 0) chars.push(selectedText[i])
+            else if (chars[chars.length-1] == selectedText[i]) chars.pop()
           }
         }
         if (start < i) {

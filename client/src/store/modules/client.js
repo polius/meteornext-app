@@ -224,7 +224,7 @@ const mutations = {
         'query': query['query'],
         'status': 'error' in query ? false : true,
         'records': query['rowCount'],
-        'elapsed': query['time'] + 's',
+        'elapsed': 'time' in query ? query['time'] + 's' : null,
         'error': 'error' in query ? query['error'] : null
       })
     }
