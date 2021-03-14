@@ -721,32 +721,25 @@ export default {
       }
 
       // Get Current Query
-      var query = ''
-      var queryStart = null
-      var queryEnd = null
-      console.log(cursorPositionIndex)
-      console.log(queries)
+      var currentQuery = { query: '', start: null, end: null}
       for (let i = 0; i < queries.length; ++i) {
-        if ((i == 0 && cursorPositionIndex < queries[0]['begin']) || (cursorPositionIndex >= queries[i]['begin'] && cursorPositionIndex <= queries[i]['end'])) {
-          query = editorText.substring(queries[i]['begin'], queries[i]['end'])
-          if (i != 0 && query.trim().toLowerCase().startsWith('delimiter')) { queryStart = queries[i-1]['begin']; queryEnd = queries[i-1]['end']}
-          else { queryStart = queries[i]['begin']; queryEnd = queries[i]['end'] }
-          // queryStart = queries[i]['begin']
-          // queryEnd = queries[i]['end']
+        if (
+          (i == 0 && cursorPositionIndex < queries[0]['begin']) ||
+          (cursorPositionIndex >= queries[i]['begin'] && cursorPositionIndex <= queries[i]['end'])
+         ) {
+          currentQuery = { query: editorText.substring(queries[i]['begin'], queries[i]['end']), start: queries[i]['begin'], end: queries[i]['end']}
           break
         }
         else if (cursorPositionIndex < queries[i]['begin']) {
-          query = editorText.substring(queries[i-1]['begin'], queries[i-1]['end'])
-          queryStart = queries[i-1]['begin']
-          queryEnd = queries[i-1]['end']
+          currentQuery = { query: editorText.substring(queries[i-1]['begin'], queries[i-1]['end']), start: queries[i-1]['begin'], end: queries[i-1]['end']}
           break
         }
       }
       // Get Current Query Range in Ace Editor
-      var queryRange = { start: this.editor.session.doc.indexToPosition(queryStart), end: this.editor.session.doc.indexToPosition(queryEnd)}
+      var queryRange = { start: this.editor.session.doc.indexToPosition(currentQuery.start), end: this.editor.session.doc.indexToPosition(currentQuery.end)}
 
       // Store Current Query (+ range)
-      this.clientQuery = { query, range: queryRange }
+      this.clientQuery = { query: currentQuery.query, range: queryRange }
 
       // Remove Previous Markers
       while (this.editorMarkers.length > 0) {
@@ -754,7 +747,7 @@ export default {
       }
 
       // Highlight Current Query
-      if (query.trim().length > 0 && queryRange != null) {
+      if (currentQuery.query.trim().length > 0 && queryRange != null) {
         var marker = this.editor.session.addMarker(new Range(queryRange['start'].row, queryRange['start'].column, queryRange['end'].row, queryRange['end'].column), 'ace_active-line', true)
         this.editorMarkers.push(marker)
       }
@@ -771,24 +764,25 @@ export default {
           let found = false
           for (let j = i+10; j < text.length; ++j) {
             if ([' ','\n','\t'].includes(text[j])) {
-              if (found) {
-                delimiter = text.substring(i+10, j).trim()
-                i = j
-                start = j
+              if (found) {  
+                delimiter = text.substring(i+10, j).trim().replaceAll('\n','').replaceAll('\t','')
+                i = j + 1
+                start = j + 1
                 break
               }
             }
             else found = true
           }
         }
-        if (first && ![' ','\n','\t',';'].includes(text[i])) {
-          start = i
-          first = false
+        if (first) {
+          if ([' ','\n','\t',';'].includes(text[i])) { start = i + 1; continue; }
+          else first = false          
         }
-        else if (text.substring(i - delimiter.length, i) == delimiter && chars.length == 0) {
-          if (start < i - delimiter.length) {
-            queries.push({"begin": start, "end": i - delimiter.length})
+        if (text.substring(i - delimiter.length+1, i+1) == delimiter && chars.length == 0) {
+          if (!text.substring(start, i).toLowerCase().startsWith('delimiter')) {
+            queries.push({"begin": start, "end": i-delimiter.length+1})
           }
+          start = i + 1
           first = true
         }
         else if (["'",'"','`'].includes(text[i]) && (i == 0 || (text[i-1] != '\\' || text[i-2] == '\\'))) {
@@ -798,8 +792,8 @@ export default {
         else if (chars.length == 0 && text[i] == "#") chars.push("#")
         else if (text[i] == "\n" && chars[chars.length-1] == '#') chars.pop()
       }
-      if (text.substring(start-1, i).trim().length > 0 && !text.substring(start-1, i).trim().toLowerCase().startsWith('delimiter ')) {
-        queries.push({"begin": start-1, "end": text.substring(i - delimiter.length, i) == delimiter ? i - delimiter.length : i})
+      if (i > start && !text.substring(start, i).trim().toLowerCase().startsWith('delimiter')) {
+        queries.push({"begin": start, "end": i})
       }
       return queries
     },
