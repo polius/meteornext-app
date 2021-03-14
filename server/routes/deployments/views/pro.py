@@ -516,8 +516,7 @@ def exec2(name, globals=None, locals=None):
     raise Exception("Method exec() is restricted.")
 
 builtins.__import__ = import2
-builtins.exec = exec2
-print(builtins.exec)\n\n{code}"""
+builtins.exec = exec2\n\n{code}"""
 
         try:
             exec(secure_code, {'__name__':'__main__'}, {})
