@@ -517,7 +517,6 @@ def exec2(name, globals=None, locals=None):
 
 builtins.__import__ = import2
 builtins.exec = exec2\n\n{code}"""
-
         try:
             exec(secure_code, {'__name__':'__main__'}, {})
             queue.put('OK')

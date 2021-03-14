@@ -61,7 +61,7 @@
               </v-radio>
             </v-radio-group>
 
-            <v-switch :disabled="loading" v-model="schedule_enabled" @change="schedule_change()" label="Sheduled" color="info" hide-details style="margin-top:-10px;"></v-switch>
+            <v-switch :disabled="loading" v-model="schedule_enabled" @change="schedule_change()" label="Scheduled" color="info" hide-details style="margin-top:-10px;"></v-switch>
             <v-text-field v-if="schedule_enabled && schedule_datetime != ''" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
 
             <v-checkbox v-else v-model="start_execution" label="Start execution" color="primary" hide-details style="margin-top:15px; margin-bottom:20px;"></v-checkbox>
