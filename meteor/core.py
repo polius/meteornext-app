@@ -392,6 +392,7 @@ class core:
         for query in self._imports.blueprint.queries.values():
             queries += re.sub(' +', ' ', query.replace("\t", " ")).strip().replace("\n ", "\n") + '\n'
         queries = queries[:1990] + '...```' if len(queries) > 1990 else queries + '```'
+        queries = '' if queries == '``````' else queries
 
         # Overall Time
         overall_time = str(timedelta(seconds=time.time() - self._start_time))

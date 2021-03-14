@@ -492,13 +492,12 @@ class Pro:
     def __secure_code2(self, code, queue):
         sys.stdout = open(os.devnull, 'w')
         sys.stderr = open(os.devnull, 'w')
-        whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','secrets','csv','time','json','uuid','locale']
         secure_code = f"""import builtins
 import importlib
 
 def import2(name, globals=None, locals=None, fromlist=(), level=0):
     global importlib
-    whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','secrets','csv','time','json','json.decoder','uuid','locale']
+    whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','fnmatch,'secrets','csv','time','json','json.decoder','uuid','locale']
     frommodule = globals['__name__'] if globals else None
     if frommodule is None or frommodule == '__main__':
         if name not in whitelist:

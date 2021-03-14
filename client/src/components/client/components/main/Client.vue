@@ -997,7 +997,7 @@ export default {
         current.clientItems = items.slice(0,24)
       }, 0)
       // Load the rest of the rows
-      setTimeout(() => { current.clientItems = items }, 1000)
+      setTimeout(() => { current.clientItems = items }, 0)
     },
     onRowDataChanged() {
       if (this.columnApi.client != null) this.resizeTable()
