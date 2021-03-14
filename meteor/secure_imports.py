@@ -16,7 +16,7 @@ def import2(name, globals=None, locals=None, fromlist=(), level=0):
         pass
 
     if (f1 is not None and f1 == 'blueprint') or (f2 is not None and f2 == 'blueprint'):
-        whitelist = ['blueprint','string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','secrets','csv','time','json','json.decoder','uuid','locale']
+        whitelist = ['blueprint','string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','fnmatch','secrets','csv','time','json','json.decoder','uuid','locale']
         frommodule = globals['__name__'] if globals else None
         if frommodule is None or frommodule in ['__main__','blueprint']:
             if name not in whitelist:

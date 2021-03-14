@@ -297,7 +297,7 @@
                       </template>
                     </v-radio>
                   </v-radio-group>
-                  <v-switch v-model="schedule_enabled" @change="schedule_change()" label="Sheduled" color="info" hide-details :readonly="information_dialog_mode == 'parameters'"></v-switch>
+                  <v-switch v-model="schedule_enabled" @change="schedule_change()" label="Scheduled" color="info" hide-details :readonly="information_dialog_mode == 'parameters'"></v-switch>
                   <v-text-field v-if="schedule_enabled && schedule_datetime != ''" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
                   <v-checkbox v-else-if="information_dialog_mode != 'parameters' && deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
                   <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
