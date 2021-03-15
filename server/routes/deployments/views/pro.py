@@ -519,5 +519,7 @@ builtins.exec = exec2\n\n{code}"""
         try:
             exec(secure_code, {'__name__':'__main__'}, {})
             queue.put('OK')
+        except SyntaxError as e:
+            queue.put(e.args[0] + ' (line ' + str(e.lineno-25) + ')')
         except Exception as e:
             queue.put(str(e))
