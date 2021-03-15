@@ -107,9 +107,8 @@ class Environments:
             LEFT JOIN regions r ON r.id = s.region_id
             WHERE (s.shared = 1 OR s.owner_id = %s)
             AND r.group_id = %s
-            AND s.usage LIKE '%%D%%'
         """
-        return self._sql.execute(query, (group_id, user_id))
+        return self._sql.execute(query, (user_id, group_id))
 
     def get_environment_servers(self, user_id, group_id):
         query = """
