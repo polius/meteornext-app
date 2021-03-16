@@ -105,10 +105,10 @@ class Environments:
             SELECT s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared', r.id AS 'region_id', r.name AS 'region_name'
             FROM servers s
             LEFT JOIN regions r ON r.id = s.region_id
-            WHERE (s.shared = 1 OR s.owner_id = %s)
-            AND r.group_id = %s
+            WHERE (s.shared = 1 AND r.group_id = %s)
+            OR s.owner_id = %s
         """
-        return self._sql.execute(query, (user_id, group_id))
+        return self._sql.execute(query, (group_id, user_id))
 
     def get_environment_servers(self, user_id, group_id):
         query = """
