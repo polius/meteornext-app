@@ -159,7 +159,7 @@
             <div style="margin-top:20px;">
               <v-btn color="#00b16a" @click="submitGroup()">Confirm</v-btn>
               <router-link class="nav-link" to="/admin/groups">
-                <v-btn color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
+                <v-btn color="error" @click="dialog=false" style="margin-left:5px">Cancel</v-btn>
               </router-link>
             </div>
           </v-form>

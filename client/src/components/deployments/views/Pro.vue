@@ -65,7 +65,7 @@
 
             <div style="margin-top:20px;">
               <v-btn :loading="loading_env || loading_code" color="#00b16a" @click="submitDeploy()">CREATE DEPLOY</v-btn>
-              <router-link to="/deployments"><v-btn :disabled="loading_env || loading_code" color="error" style="margin-left:10px;">CANCEL</v-btn></router-link>
+              <router-link to="/deployments"><v-btn :disabled="loading_env || loading_code" color="error" style="margin-left:5px">CANCEL</v-btn></router-link>
             </div>
           </v-form>
         </v-flex>
