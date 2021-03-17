@@ -8,7 +8,7 @@
           <v-btn text @click="setSetting('license')"><v-icon small style="padding-right:10px">fas fa-certificate</v-icon>LICENSE</v-btn>
           <v-btn text @click="setSetting('sql')"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SQL</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn text @click="setSetting('logs')"><v-icon small style="padding-right:10px">fas fa-scroll</v-icon>LOGS</v-btn>
+          <v-btn text @click="setSetting('logs')"><v-icon small style="padding-right:10px">fas fa-folder-open</v-icon>LOGS</v-btn>
           <v-btn text @click="setSetting('security')"><v-icon small style="padding-right:10px">fas fa-shield-alt</v-icon>SECURITY</v-btn>
         </v-toolbar-items>
       </v-toolbar>
@@ -42,7 +42,7 @@
 
             <v-card v-if="logs_mode == 'local'" style="margin-left:10px; margin-right:10px; margin-top:15px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
-                <v-toolbar-title class="white--text">LOCAL</v-toolbar-title>
+                <v-toolbar-title class="white--text subtitle-1">LOCAL</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-toolbar-items class="hidden-sm-and-down">
                 <v-btn text :disabled="loading" color="primary" @click="saveLogs()" style="margin-left:0px;">SAVE</v-btn>
@@ -59,7 +59,7 @@
 
             <v-card v-else-if="logs_mode == 'amazon_s3'" style="margin-left:10px; margin-right:10px; margin-top:15px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
-                <v-toolbar-title class="white--text">Amazon S3</v-toolbar-title>
+                <v-toolbar-title class="white--text subtitle-1">AMAZON S3</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-toolbar-items class="hidden-sm-and-down">
                  <v-btn text :disabled="loading" color="primary" @click="saveLogs()" style="margin-left:0px;">SAVE</v-btn>
@@ -81,7 +81,7 @@
           <!-- SECURITY -->
           <v-flex v-else-if="setting_mode == 'security'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="text-h6 font-weight-regular" style="margin-left:10px;">SECURITY</div>
-            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">Restrict access to the <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">Administration</span> panel only to a specific IP address or domain</div>
+            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">Restrict access to the <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">Administration</span> panel only to a specific IP address or domain.</div>
             <v-text-field :loading="loading" :disabled="loading" v-model="security.url" label="Administration URL" :placeholder="security.current" style="margin-left:10px; margin-top:12px;" required :rules="[v => v ? this.validURL(v) : true || '' ]"></v-text-field>
             <v-btn :loading="loading" color="#00b16a" style="margin-left:10px;" @click="saveSecurity()">SAVE</v-btn>
           </v-flex>
