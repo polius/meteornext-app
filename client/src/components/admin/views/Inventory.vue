@@ -35,7 +35,7 @@
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">FILTER</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:1px">fas fa-search</v-icon>FILTER</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -43,20 +43,13 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" @submit.prevent style="margin-top:20px; margin-bottom:25px;">
+                <v-form ref="form" @submit.prevent style="margin-top:20px; margin-bottom:20px;">
                   <v-autocomplete ref="filter" v-model="filter.group" v-on:keyup.enter="filterInventory()" filled :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-bottom:20px"></v-autocomplete>
-                  <v-row no-gutters style="margin-bottom:12px;">
-                    <v-col cols="auto">
-                      <div class='text-subtitle-1 font-weight-regular'>Scope:</div>
-                    </v-col>
-                    <v-col cols="auto" style="margin-left:10px;">
-                      <v-radio-group v-model="filter.scope" row hide-details style="margin-top:0px; padding-top:2px">
-                        <v-radio label="All" value="all"></v-radio>
-                        <v-radio label="Personal" value="personal" color="warning"></v-radio>
-                        <v-radio label="Shared" value="shared" color="error"></v-radio>
-                      </v-radio-group>
-                    </v-col>
-                  </v-row>
+                  <v-radio-group v-model="filter.scope" row hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
+                    <v-radio label="All" value="all"></v-radio>
+                    <v-radio label="Personal" value="personal" color="warning"></v-radio>
+                    <v-radio label="Shared" value="shared" color="error"></v-radio>
+                  </v-radio-group>
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn :loading="loading" color="#00b16a" @click="filterInventory()">Confirm</v-btn>

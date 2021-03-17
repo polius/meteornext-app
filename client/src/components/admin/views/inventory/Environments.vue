@@ -83,7 +83,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:15px; margin-bottom:25px;">
+                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
                   <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
                   <v-checkbox v-model="columnsRaw" label="Name" value="name" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Servers" value="servers" hide-details style="margin-top:5px"></v-checkbox>

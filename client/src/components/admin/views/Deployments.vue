@@ -52,7 +52,7 @@
     <v-dialog v-model="filter_dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="text-subtitle-1 white--text">FILTER DEPLOYMENTS</v-toolbar-title>
+          <v-toolbar-title class="white--text text-subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:1px">fas fa-search</v-icon>FILTER DEPLOYMENTS</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="filter_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -60,7 +60,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:25px; margin-bottom:25px;">
+                <v-form ref="form" style="margin-top:25px; margin-bottom:20px;">
                   <v-text-field v-model="filter_dialog_data.name" label="Name" style="padding-top:0px;"></v-text-field>
                   <v-row no-gutters style="margin-top:5px">
                     <v-col style="padding-right:10px">
