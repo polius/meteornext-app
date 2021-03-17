@@ -3,9 +3,9 @@
     <v-container fluid grid-list-lg>
       <v-layout row wrap>
         <v-flex xs12>
-          <div class="subtitle-1 font-weight-regular" style="margin-left:10px; margin-top:5px;">BASIC</div>
+          <!-- <div class="subtitle-1 font-weight-regular" style="margin-left:10px; margin-top:5px;">BASIC</div> -->
           <v-form ref="form" style="padding:10px;">
-            <v-text-field v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:5px;"></v-text-field>
+            <v-text-field ref="name" v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:5px;"></v-text-field>
             <v-select :loading="loading" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
             
             <!-- EXECUTION -->
@@ -93,7 +93,7 @@
 
     <v-dialog v-model="queryDialog" persistent max-width="896px">
       <v-toolbar flat dense color="primary">
-        <v-toolbar-title class="white--text subtitle-1">{{ queryDialogTitle }}</v-toolbar-title>
+        <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:1px">{{query_mode == 'new' ? 'fas fa-plus' : query_mode == 'edit' ? 'fas fa-feather-alt' : 'fas fa-minus'}}</v-icon>{{ queryDialogTitle }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
         <v-card-text style="padding: 0px 20px 20px;">
@@ -175,6 +175,9 @@ export default {
   created() {
     this.getReleases()
     this.getEnvironments()
+  },
+  mounted() {
+    requestAnimationFrame(() => this.$refs.name.focus())
   },
   methods: {
     getReleases() {
