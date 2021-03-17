@@ -7,7 +7,7 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="'status' in deployment" text title="Show Parameters" @click="parameters()"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
           <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="padding-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
-          <v-btn :disabled="deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING' || deployment['status'] == 'QUEUED'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit execution' : 'Re-Deploy with other parameters'" @click="edit()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
+          <v-btn :disabled="deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING' || deployment['status'] == 'QUEUED'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit execution' : 'Re-Deploy with other parameters'" @click="edit()"><v-icon small style="padding-right:10px">{{ deployment['status'] == 'CREATED' ? 'fas fa-feather-alt' : 'fas fa-meteor' }}</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
           <v-divider v-if="deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="start_execution" v-if="deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED'" text title="Start Execution" @click="start()"><v-icon small style="padding-right:10px">fas fa-play</v-icon>START</v-btn>
           <v-btn :disabled="deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || (deployment['status'] == 'STOPPING' && deployment['stopped'] == 'forceful')" v-if="deployment['status'] == 'QUEUED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
@@ -29,7 +29,7 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="padding-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
           <v-btn v-if="show_results" text title="Share Results" @click="shareResults_dialog = true"><v-icon small style="padding-right:10px;">fas fa-link</v-icon>SHARE</v-btn>
-          <v-btn v-else-if="deployment['method'] != 'validate' && (deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && !validation_error) || (deployment['status'] == 'STOPPED' && deployment['uri'] != null)) && ('progress' in deployment && 'queries' in deployment['progress'] && 'total' in deployment['progress']['queries'] && deployment['progress']['queries']['total'] > 0)" text title="Show Execution Results" @click="showResults()"><v-icon small style="padding-right:10px;">fas fa-meteor</v-icon>RESULTS</v-btn>
+          <v-btn v-else-if="deployment['method'] != 'validate' && (deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && !validation_error) || (deployment['status'] == 'STOPPED' && deployment['uri'] != null)) && ('progress' in deployment && 'queries' in deployment['progress'] && 'total' in deployment['progress']['queries'] && deployment['progress']['queries']['total'] > 0)" text title="Show Execution Results" @click="showResults()"><v-icon small style="padding-right:10px;">fas fa-bars</v-icon>RESULTS</v-btn>
         </v-toolbar-items>
 
         <v-spacer></v-spacer>
@@ -236,7 +236,8 @@
     <v-dialog v-model="information_dialog" persistent no-click-animation max-width="70%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">{{ information_dialog_mode.toUpperCase() == 'PARAMETERS' ? 'fas fa-cog': 'fas fa-feather-alt' }}</v-icon>{{ information_dialog_mode.toUpperCase() }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">{{ information_dialog_mode.toUpperCase() == 'PARAMETERS' ? 'fas fa-cog' : deployment['status'] == 'CREATED' ? 'fas fa-feather-alt' : 'fas fa-meteor' }}</v-icon>{{ information_dialog_mode.toUpperCase() }}</v-toolbar-title>
+          
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" icon @click="information_dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -245,8 +246,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form">
-                  <div class="subtitle-1 font-weight-regular" style="margin-top:10px; margin-bottom:20px;">{{ deployment['mode'] }}</div>
-                  <v-text-field readonly v-model="information_dialog_data.name" label="Name" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
+                  <v-text-field readonly v-model="information_dialog_data.name" label="Name" :rules="[v => !!v || '']" style="margin-top:15px;"></v-text-field>
                   <v-autocomplete :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '']" style="padding-top:0px;"></v-autocomplete>
                   <v-text-field v-if="deployment['mode'] == 'BASIC'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
                   <v-card v-if="deployment['mode'] == 'BASIC'" style="margin-bottom:20px;">
@@ -299,10 +299,10 @@
                   </v-radio-group>
                   <v-switch v-model="schedule_enabled" @change="schedule_change()" label="Scheduled" color="info" hide-details :readonly="information_dialog_mode == 'parameters'"></v-switch>
                   <v-text-field v-if="schedule_enabled && schedule_datetime != ''" solo v-model="schedule_datetime" @click="schedule_change()" title="Click to edit the schedule datetime" hide-details readonly style="margin-top:10px; margin-bottom:10px;"></v-text-field>
-                  <v-checkbox v-else-if="information_dialog_mode != 'parameters' && deployment['status'] != 'CREATED'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
+                  <v-checkbox v-else-if="information_dialog_mode != 'parameters'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.start_execution" label="Start execution" color="primary" hide-details></v-checkbox>
                   <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
                   <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
-                    <v-btn :loading="loading" color="#00b16a" @click="editSubmit()">{{ information_dialog_mode.toUpperCase() }}</v-btn>
+                    <v-btn :loading="loading" color="#00b16a" @click="editSubmit()">{{ information_dialog_mode == 'edit' ? 'CONFIRM' : 'RE-DEPLOY' }}</v-btn>
                     <v-btn :disabled="loading" color="error" @click="information_dialog = false" style="margin-left:5px">CANCEL</v-btn>
                   </div>
                 </v-form>
@@ -1105,6 +1105,7 @@
         this.show_results = false
         // Build parameters
         const path = '/deployments/' + this.deployment['mode'].toLowerCase()
+        let start_execution = (this.information_dialog_data.start_execution === undefined) ? false : this.information_dialog_data.start_execution
         var payload = {
           id: this.deployment.id,
           execution_id: this.deployment.execution_id,
@@ -1113,11 +1114,10 @@
           mode: this.deployment['mode'].toUpperCase(),
           method: this.information_dialog_data.method.toUpperCase(),
           scheduled: null,
-          start_execution: false,
+          start_execution: this.information_dialog_mode == 'edit' ? false : start_execution,
           url: window.location.protocol + '//' + window.location.host
         }
         if (this.schedule_enabled) payload['scheduled'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm") + ':00'
-        else payload['start_execution'] = (this.information_dialog_data.start_execution === undefined) ? false : this.information_dialog_data.start_execution
 
         // Build different modes
         if (this.deployment['mode'] == 'BASIC') {
@@ -1136,16 +1136,19 @@
           this.notification(response.data.message, '#00b16a')
           // Refresh user coins
           if ('coins' in data) this.$store.dispatch('app/coins', data['coins'])
+          // Clear current deployment
+          this.clear()
           // Get new deployment
           if (this.information_dialog_mode == 're-deploy') {
             const id = payload['mode'].substring(0, 1) + data['execution_id']
             this.$router.push({ name:'deployment', params: { id: id }})
           }
-          // Clear current deployment
-          this.clear()
-          // Refresh the deployment
-          this.deployment['execution_id'] = data['execution_id']
-          this.getDeployment()
+          if (this.deployment['status'] == 'CREATED' && start_execution) this.actionSubmitStart()
+          else {
+            // Refresh the deployment
+            this.deployment['execution_id'] = data['execution_id']
+            this.getDeployment()
+          }
           // Hide the Information dialog
           this.information_dialog = false
         })
