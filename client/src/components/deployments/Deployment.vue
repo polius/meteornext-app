@@ -303,7 +303,7 @@
                   <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
                   <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
                     <v-btn :loading="loading" color="#00b16a" @click="editSubmit()">{{ information_dialog_mode.toUpperCase() }}</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="information_dialog = false" style="margin-left:10px;">CANCEL</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="information_dialog = false" style="margin-left:5px">CANCEL</v-btn>
                   </div>
                 </v-form>
               </v-flex>

@@ -72,7 +72,7 @@
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitUser()">Confirm</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:10px">Cancel</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">Cancel</v-btn>
                 </div>
               </v-flex>
             </v-layout>

@@ -145,16 +145,16 @@
     <!-------------->
     <v-dialog v-model="scheduleDialog" persistent width="290px">
       <v-date-picker v-if="scheduleMode == 'date'" v-model="scheduleDate" color="info" scrollable>
-        <v-btn text color="info" @click="scheduleNow()">Now</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn text color="error" @click="scheduleClose()">Cancel</v-btn>
         <v-btn text color="#00b16a" @click="scheduleSubmit()">Confirm</v-btn>
+        <v-btn text color="error" @click="scheduleClose()">Cancel</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn text color="info" @click="scheduleNow()">Now</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="scheduleMode == 'time'" v-model="scheduleTime" color="info" format="24hr" use-seconds scrollable>
-        <v-btn text color="info" @click="scheduleNow()">Now</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn text color="error" @click="scheduleClose()">Cancel</v-btn>
         <v-btn text color="#00b16a" @click="scheduleSubmit()">Confirm</v-btn>
+        <v-btn text color="error" @click="scheduleClose()">Cancel</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn text color="info" @click="scheduleNow()">Now</v-btn>
       </v-time-picker>
     </v-dialog>
   </div>
