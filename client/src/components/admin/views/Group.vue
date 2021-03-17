@@ -2,9 +2,9 @@
   <div>
     <v-card>
       <v-toolbar flat dense color="primary">
-        <v-toolbar-title class="white--text">{{ toolbar_title }}</v-toolbar-title>
+        <v-toolbar-title class="white--text subtitle-1">{{ toolbar_title }}</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn icon title="Go back" @click="goBack()" style="margin-right:-5px;"><v-icon>fas fa-arrow-alt-circle-left</v-icon></v-btn>
+        <v-btn icon @click="goBack()"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
       <v-card-text>
         <v-flex>
@@ -36,7 +36,7 @@
             <!-- INVENTORY -->
             <v-card v-show="tabs==0" style="margin-bottom:10px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
-                <v-toolbar-title class="white--text">INVENTORY</v-toolbar-title>
+                <v-toolbar-title class="white--text subtitle-1">INVENTORY</v-toolbar-title>
               </v-toolbar>
               <v-card-text style="padding-bottom:20px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">
@@ -77,7 +77,7 @@
             <!-- DEPLOYMENTS -->
             <v-card v-show="tabs==1" style="margin-bottom:10px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
-                <v-toolbar-title class="white--text">DEPLOYMENTS</v-toolbar-title>
+                <v-toolbar-title class="white--text subtitle-1">DEPLOYMENTS</v-toolbar-title>
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
@@ -126,7 +126,7 @@
             <!-- MONITORING -->
             <v-card v-show="tabs==2" style="margin-bottom:10px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
-                <v-toolbar-title class="white--text">MONITORING</v-toolbar-title>
+                <v-toolbar-title class="white--text subtitle-1">MONITORING</v-toolbar-title>
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
@@ -137,7 +137,7 @@
             <!-- UTILS -->
             <v-card v-show="tabs==3" style="margin-bottom:10px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
-                <v-toolbar-title class="white--text">UTILS</v-toolbar-title>
+                <v-toolbar-title class="white--text subtitle-1">UTILS</v-toolbar-title>
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
@@ -148,7 +148,7 @@
             <!-- CLIENT -->
             <v-card v-show="tabs==4" style="margin-bottom:10px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
-                <v-toolbar-title class="white--text">CLIENT</v-toolbar-title>
+                <v-toolbar-title class="white--text subtitle-1">CLIENT</v-toolbar-title>
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
@@ -170,10 +170,12 @@
     <!---------------------->
     <!-- Inventory Owners -->
     <!---------------------->
-    <v-dialog v-model="ownersDialog" persistent max-width="50%">
+    <v-dialog v-model="ownersDialog" max-width="50%">
       <v-card>
         <v-toolbar dense v-if="ownersDialogOptions.mode != 'delete'" flat color="primary">
-          <v-toolbar-title class="white--text">{{ ownersDialogOptions.title }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1">{{ ownersDialogOptions.title }}</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="ownersDialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px">
@@ -184,7 +186,7 @@
                   <div v-if="ownersDialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important; margin-top:15px;">{{ ownersDialogOptions.text }}</div>
                   <v-card v-if="ownersDialogOptions.mode == 'new'">
                     <v-toolbar flat dense color="#2e3131">
-                      <v-toolbar-title class="white--text">USERS</v-toolbar-title>
+                      <v-toolbar-title class="white--text subtitle-1">USERS</v-toolbar-title>
                       <v-divider class="mx-3" inset vertical></v-divider>
                       <v-text-field v-model="ownersDialogSearch" @input="onOwnersSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>
@@ -210,10 +212,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :disabled="ownersDialogOptions.mode == 'new' && this.ownersDialogSelected.length == 0" :loading="loading" @click="ownersDialogSubmit" color="primary">{{ ownersDialogOptions.button1 }}</v-btn>
+                      <v-btn :disabled="ownersDialogOptions.mode == 'new' && this.ownersDialogSelected.length == 0" :loading="loading" @click="ownersDialogSubmit" color="#00b16a">{{ ownersDialogOptions.button1 }}</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="ownersDialog = false" outlined color="#e74d3c">{{ ownersDialogOptions.button2 }}</v-btn>
+                      <v-btn :disabled="loading" @click="ownersDialog = false" color="error">{{ ownersDialogOptions.button2 }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -390,9 +392,9 @@ export default {
     newOwners() {
       var ownersDialogOptions = {
       'mode': 'new',
-        'title': 'New owners',
+        'title': 'NEW OWNERS',
         'text': '',
-        'button1': 'Add',
+        'button1': 'Confirm',
         'button2': 'Cancel'
       }
       this.showDialog(ownersDialogOptions)
@@ -459,7 +461,7 @@ export default {
         .finally(() => this.loading = false)
     },
     goBack() {
-      this.$router.go(-1)
+      this.$router.push('/admin/groups')
     },
     // SNACKBAR
     notification(message, color) {

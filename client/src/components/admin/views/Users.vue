@@ -40,10 +40,10 @@
 
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
-        <v-toolbar flat color="primary">
-          <v-toolbar-title class="white--text">{{ dialog_title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">{{ dialog_title }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="dialog = false"><v-icon>fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -151,7 +151,7 @@ export default {
     newUser() {
       this.mode = 'new'
       this.item = { username: '', email: '', password: '', coins: '', group: '', mfa: { enabled: false, origin: false, hash: null, uri: null, value: ''}, admin: false, disabled: false }
-      this.dialog_title = 'New User'
+      this.dialog_title = 'NEW USER'
       this.dialog = true
     },
     editUser() {
@@ -159,12 +159,12 @@ export default {
       let item = JSON.parse(JSON.stringify(this.selected[0]))
       item.mfa = { enabled: item.mfa, origin: item.mfa, hash: this.item.mfa_hash, uri: null, value: ''}
       this.item = item
-      this.dialog_title = 'Edit User'
+      this.dialog_title = 'EDIT USER'
       this.dialog = true
     },
     deleteUser() {
       this.mode = 'delete'
-      this.dialog_title = 'Delete User'
+      this.dialog_title = 'DELETE USER'
       this.dialog = true
     },
     submitUser() {

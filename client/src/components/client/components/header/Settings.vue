@@ -3,11 +3,11 @@
     <v-dialog v-model="dialog" max-width="60%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-cog</v-icon>SETTINGS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-cog</v-icon>SETTINGS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @loading="loading" @disabled="loading" @click="saveSettings" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:10px 15px 0px;">
           <v-container style="padding:0px; max-width:100%;">

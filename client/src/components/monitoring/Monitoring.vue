@@ -46,7 +46,7 @@
     <v-dialog v-model="settings_dialog" max-width="50%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-cog</v-icon>SETTINGS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-cog</v-icon>SETTINGS</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="settings_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -95,7 +95,7 @@
     <v-dialog v-model="servers_dialog" max-width="896px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-database</v-icon>SERVERS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-database</v-icon>SERVERS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="selectAllServers" text title="Select all servers" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
           <v-btn @click="deselectAllServers" text title="Deselect all servers" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
@@ -139,7 +139,7 @@
     <v-dialog v-model="filter_dialog" max-width="50%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-sliders-h</v-icon>FILTER</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-sliders-h</v-icon>FILTER</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="filter_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -165,7 +165,7 @@
     <v-dialog v-model="events_dialog" max-width="90%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-rss</v-icon>EVENTS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-rss</v-icon>EVENTS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field v-model="events_search" append-icon="search" label="Search" color="white" style="margin-left:5px; width:calc(100% - 170px)" single-line hide-details></v-text-field>
           <v-divider class="mx-3" inset vertical style="margin-right:5px!important;"></v-divider>
@@ -205,7 +205,7 @@
     <v-dialog v-model="event_details_dialog" max-width="65%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-info</v-icon>PARAMETERS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-info</v-icon>PARAMETERS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <div class="white--text body-1">{{ event_details_item.server }}</div>
           <v-divider class="mx-3" inset vertical></v-divider>
