@@ -450,7 +450,7 @@
           <v-container>
             <v-layout wrap>
               <v-flex xs12>
-                <v-btn ref="results_url" block text :href="url + `/viewer/` + deployment['uri']" target="_blank" class="font-weight-light text-lowercase" style="font-size:17px">{{url + `/viewer/` + deployment['uri'] }}</v-btn>
+                <v-btn ref="results_url" block text :href="url + `/viewer/` + deployment['uri']" target="_blank" class="font-weight-light text-lowercase" style="font-size:18px">{{url + `/viewer/` + deployment['uri'] }}</v-btn>
               </v-flex>
             </v-layout>
           </v-container>
