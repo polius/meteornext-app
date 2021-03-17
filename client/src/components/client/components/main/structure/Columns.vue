@@ -34,7 +34,7 @@
     <!------------------------------->
     <!-- DIALOG: new, edit, delete -->
     <!------------------------------->
-    <v-dialog v-model="dialog" persistent max-width="60%">
+    <v-dialog v-model="dialog" max-width="60%">
       <v-card>
         <v-toolbar v-if="dialogOptions.mode != 'delete'" dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1">{{ dialogOptions.title }}</v-toolbar-title>

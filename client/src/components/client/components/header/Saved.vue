@@ -3,11 +3,11 @@
     <v-dialog ref="savedDialog" v-model="dialog" @keydown="onKeyDown" max-width="80%" eager>
       <v-card>
         <v-toolbar flat dense color="primary">
-          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-star</v-icon>SAVED QUERIES</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-star</v-icon>SAVED QUERIES</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="selected.length != 1 || saveButtonDisabled" :loading="loading" @click="editSaved" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -68,10 +68,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="deleteSaved" color="primary">Confirm</v-btn>
+                      <v-btn :loading="loading" @click="deleteSaved" color="#00b16a">Confirm</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="confirmDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="confirmDialog = false" color="error">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>

@@ -3,13 +3,13 @@
     <v-dialog v-model="dialog" persistent max-width="85%">
       <v-card>
         <v-toolbar flat dense color="primary">
-          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-shield-alt</v-icon>USER RIGHTS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:4px">fas fa-shield-alt</v-icon>USER RIGHTS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn :disabled="!saveEnabled" @click="saveClick" color="primary" style="margin-right:10px;">Save</v-btn>
           <v-btn v-if="errors['login'].length > 0 || errors['server'].length > 0 || errors['schema'].length > 0 || errors['resources'].length > 0" @click="errorDialog = true" outlined style="margin-right:10px;" title="Show errors"><v-icon small style="padding-right:10px">fas fa-exclamation-triangle</v-icon>Show errors</v-btn>
           <v-progress-circular v-if="loading" indeterminate size="20" width="2" style="margin-left:5px"></v-progress-circular>
           <v-spacer></v-spacer>
-          <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%;">

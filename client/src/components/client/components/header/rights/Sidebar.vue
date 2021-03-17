@@ -41,10 +41,10 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn @click="removeRightSubmit" color="primary">Delete</v-btn>
+                      <v-btn @click="removeRightSubmit" color="#00b16a">Delete</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn @click="sidebarDialog = false" outlined color="#e74d3c">Cancel</v-btn>
+                      <v-btn @click="sidebarDialog = false" color="error">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>

@@ -3,7 +3,7 @@
     <v-dialog v-model="dialog" fullscreen max-width="100%" transition="fade-transition">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text body-1"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-server</v-icon>PROCESSLIST</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-server</v-icon>PROCESSLIST</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <div class="body-1">{{ server.name }}</div>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -15,7 +15,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field @input="onSearch" v-model="search" label="Search" color="white" append-icon="search" single-line hide-details></v-text-field>
           <v-divider class="mx-3" inset vertical style="margin-right:0px!important"></v-divider>
-          <v-btn @click="dialog = false" icon style="margin-left:3px;"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="dialog = false" icon style="margin-left:3px;"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -46,9 +46,9 @@
     <v-dialog v-model="settingsDialog" max-width="50%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text">SETTINGS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1">SETTINGS</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="settingsDialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="settingsDialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px">
           <v-container style="padding:0px;">
@@ -112,12 +112,12 @@
     <v-dialog v-model="analyzeDialog" max-width="90%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">Analyze queries</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1">ANALYZE QUERIES</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="exportAnalyze" color="primary"><v-icon small style="padding-right:10px">fas fa-arrow-down</v-icon>Export</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field @input="onAnalyzeSearch" v-model="analyzeDialogSearch" label="Search" outlined dense color="white" hide-details></v-text-field>
-          <v-btn @click="analyzeDialog = false" icon style="margin-left:5px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="analyzeDialog = false" icon style="margin-left:5px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px">
           <v-container style="padding:0px; max-width:100%;">

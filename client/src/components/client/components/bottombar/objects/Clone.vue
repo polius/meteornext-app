@@ -10,7 +10,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field @input="onSearch" v-model="search" label="Search" append-icon="search" color="white" single-line hide-details></v-text-field>
           <v-divider class="ml-3 mr-1" inset vertical></v-divider>
-          <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:5px 15px 5px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -111,7 +111,7 @@
                     <v-btn @click="cancelClone" color="#e74c3c">Cancel</v-btn>
                   </v-col>
                   <v-col v-else style="margin-bottom:10px;">
-                    <v-btn :disabled="loading" @click="dialogProgress = false" cols="auto" outlined color="#e74d3c">Close</v-btn>
+                    <v-btn :disabled="loading" @click="dialogProgress = false" cols="auto" color="#e74d3c">Close</v-btn>
                   </v-col>
                 </v-row>
               </v-flex>
