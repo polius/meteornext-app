@@ -28,7 +28,7 @@
 
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="padding-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
-          <v-btn v-if="show_results" text title="Share Results" @click="shareResults_dialog = true"><v-icon small style="padding-right:10px;">fas fa-link</v-icon>SHARE</v-btn>
+          <v-btn v-if="show_results" text title="Share Results" @click="shareResults_dialog = true"><v-icon small style="padding-right:10px;">fas fa-share</v-icon>SHARE</v-btn>
           <v-btn v-else-if="deployment['method'] != 'validate' && (deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && !validation_error) || (deployment['status'] == 'STOPPED' && deployment['uri'] != null)) && ('progress' in deployment && 'queries' in deployment['progress'] && 'total' in deployment['progress']['queries'] && deployment['progress']['queries']['total'] > 0)" text title="Show Execution Results" @click="showResults()"><v-icon small style="padding-right:10px;">fas fa-bars</v-icon>RESULTS</v-btn>
         </v-toolbar-items>
 
@@ -237,7 +237,8 @@
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">{{ information_dialog_mode.toUpperCase() == 'PARAMETERS' ? 'fas fa-cog' : deployment['status'] == 'CREATED' ? 'fas fa-feather-alt' : 'fas fa-meteor' }}</v-icon>{{ information_dialog_mode.toUpperCase() }}</v-toolbar-title>
-          
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn readonly color="primary"><v-icon small style="padding-right:10px; padding-bottom:1px">{{ deployment['mode'] == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen'}}</v-icon>{{ deployment['mode'] }}</v-btn>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" icon @click="information_dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -436,20 +437,20 @@
     <v-dialog v-model="shareResults_dialog" max-width="896px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">SHARE RESULTS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-share</v-icon>SHARE RESULTS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-toolbar-items class="hidden-sm-and-down">
             <v-btn text :title="shareResults_dialog_title" @click="resultsShare()"><v-icon small style="padding-right:10px">{{ shareResults_dialog_icon }}</v-icon>{{ shareResults_dialog_text }}</v-btn>
-            <v-btn text title="Copy link to clipboard" @click="resultsClipboard()"><v-icon small style="padding-right:10px">fas fa-clipboard</v-icon>CLIPBOARD</v-btn>
+            <v-btn text title="Copy link to clipboard" @click="resultsClipboard()"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-copy</v-icon>COPY LINK</v-btn>
           </v-toolbar-items>
           <v-spacer></v-spacer>
           <v-btn icon @click="shareResults_dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text>
-          <v-container style="padding:0px 10px 0px 10px">
+        <v-card-text style="padding:0px">
+          <v-container>
             <v-layout wrap>
-              <v-flex xs12 style="padding-bottom:10px">
-                <v-btn ref="results_url" block text :href="url + `/viewer/` + deployment['uri']" target="_blank" class="text-lowercase title font-weight-light" style="margin-top:25px;">{{url + `/viewer/` + deployment['uri'] }}</v-btn>
+              <v-flex xs12>
+                <v-btn ref="results_url" block text :href="url + `/viewer/` + deployment['uri']" target="_blank" class="font-weight-light text-lowercase" style="font-size:17px">{{url + `/viewer/` + deployment['uri'] }}</v-btn>
               </v-flex>
             </v-layout>
           </v-container>
@@ -1275,7 +1276,7 @@
         document.execCommand('copy')
         selection.removeAllRanges()
         document.body.removeChild(textarea)
-        this.notification('Deployment URL added to the clipboard', '#00b16a')
+        this.notification('Deployment URL added to the clipboard', 'primary')
       },
       resultsShare() {
         // Build parameters
