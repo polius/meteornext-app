@@ -5,7 +5,7 @@
         <v-toolbar-title class="white--text subtitle-1">INFORMATION</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn v-if="'status' in deployment" text title="Show Execution Parameters" @click="parameters()"><v-icon small style="padding-right:10px">fas fa-history</v-icon>VIEW</v-btn>
+          <v-btn v-if="'status' in deployment" text title="Show Execution Parameters" @click="parameters()"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
           <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="padding-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
           <v-btn :disabled="deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING' || deployment['status'] == 'QUEUED'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit Execution' : 'Re-Deploy Execution'" @click="edit()"><v-icon small style="padding-right:10px">{{ deployment['status'] == 'CREATED' ? 'fas fa-feather-alt' : 'fas fa-meteor' }}</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
           <v-divider v-if="deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" class="mx-3" inset vertical></v-divider>
@@ -236,7 +236,7 @@
     <v-dialog v-model="information_dialog" persistent no-click-animation max-width="70%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">{{ information_dialog_mode.toUpperCase() == 'PARAMETERS' ? 'fas fa-history' : deployment['status'] == 'CREATED' ? 'fas fa-feather-alt' : 'fas fa-meteor' }}</v-icon>{{ information_dialog_mode.toUpperCase() == 'PARAMETERS' ? 'VIEW' : deployment['status'] == 'CREATED' ? 'EDIT' : 'RE-DEPLOY' }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">{{ information_dialog_mode.toUpperCase() == 'PARAMETERS' ? 'fas fa-cog' : deployment['status'] == 'CREATED' ? 'fas fa-feather-alt' : 'fas fa-meteor' }}</v-icon>{{ information_dialog_mode.toUpperCase() == 'PARAMETERS' ? 'PARAMETERS' : deployment['status'] == 'CREATED' ? 'EDIT' : 'RE-DEPLOY' }}</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn readonly color="primary"><v-icon small style="padding-right:10px; padding-bottom:1px">{{ deployment['mode'] == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen'}}</v-icon>{{ deployment['mode'] }}</v-btn>
           <v-spacer></v-spacer>
