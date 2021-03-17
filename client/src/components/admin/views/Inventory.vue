@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-card>
-      <v-toolbar dense flat color="#3a529b">
+      <v-toolbar dense flat color="primary">
         <v-toolbar-title class="body-2 white--text font-weight-medium"><v-icon small style="margin-right:10px">fas fa-layer-group</v-icon>INVENTORY</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
@@ -45,7 +45,7 @@
               <v-flex xs12>
                 <v-form ref="form" @submit.prevent style="margin-top:20px; margin-bottom:20px;">
                   <v-autocomplete ref="filter" v-model="filter.group" v-on:keyup.enter="filterInventory()" filled :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-bottom:20px"></v-autocomplete>
-                  <v-radio-group v-model="filter.scope" row hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
+                  <v-radio-group v-model="filter.scope" dense row hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
                     <v-radio label="All" value="all"></v-radio>
                     <v-radio label="Personal" value="personal" color="warning"></v-radio>
                     <v-radio label="Shared" value="shared" color="error"></v-radio>

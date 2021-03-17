@@ -17,7 +17,7 @@
           <!-- LICENSE -->
           <v-flex v-if="setting_mode == 'license'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="text-h6 font-weight-regular" style="margin-left:10px;">LICENSE</div>
-            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">This copy of Meteor Next is <span class="body-1 font-weight-medium" style="color:#00b16a;">LICENSED</span></div>
+            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">This copy of Meteor Next is <span class="body-1 font-weight-medium" style="color:#00b16a;">LICENSED</span>.</div>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.email" label="Email" style="margin-left:10px; padding-top:25px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.key" label="Key" style="margin-left:10px; padding-top:0px;" @click:append="show_key = !show_key" :append-icon="show_key ? 'visibility' : 'visibility_off'" :type="show_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.expiration" label="Expiration" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
@@ -26,7 +26,7 @@
           <!-- SQL -->
           <v-flex v-else-if="setting_mode == 'sql'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="text-h6 font-weight-regular" style="margin-left:10px;">SQL</div>
-            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">The SQL credentials where Meteor Next is stored</div>
+            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">The SQL credentials where Meteor Next is stored.</div>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.hostname" label="Hostname" style="margin-left:10px; padding-top:25px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.port" label="Port" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.username" label="Username" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
@@ -37,15 +37,16 @@
           <!-- LOGS -->
           <v-flex v-else-if="setting_mode == 'logs'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="text-h6 font-weight-regular" style="margin-left:10px; margin-bottom:10px;">LOGS</div>
-            <v-btn :loading="loading" color="secondary" style="margin-left:10px;" @click="logs_mode = (logs_mode == 'local') ? '' : 'local'">LOCAL</v-btn>
-            <v-btn :loading="loading" color="secondary" style="margin-left:10px;" @click="logs_mode = (logs_mode == 'amazon_s3') ? '' : 'amazon_s3'">AMAZON S3</v-btn>
+            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px; margin-bottom:15px;">The path where the <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">Deployments</span> logs are stored.</div>
+            <v-btn :loading="loading" color="secondary" style="margin-left:10px;" @click="logs_mode = 'local'">LOCAL</v-btn>
+            <v-btn :loading="loading" color="secondary" style="margin-left:10px;" @click="logs_mode = 'amazon_s3'">AMAZON S3</v-btn>
 
             <v-card v-if="logs_mode == 'local'" style="margin-left:10px; margin-right:10px; margin-top:15px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text subtitle-1">LOCAL</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-toolbar-items class="hidden-sm-and-down">
-                <v-btn text :disabled="loading" color="primary" @click="saveLogs()" style="margin-left:0px;">SAVE</v-btn>
+                <v-btn text :disabled="loading" @click="saveLogs()" style="margin-left:0px;">SAVE</v-btn>
                 </v-toolbar-items>
               </v-toolbar>
               <v-divider></v-divider>
@@ -62,7 +63,7 @@
                 <v-toolbar-title class="white--text subtitle-1">AMAZON S3</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-toolbar-items class="hidden-sm-and-down">
-                 <v-btn text :disabled="loading" color="primary" @click="saveLogs()" style="margin-left:0px;">SAVE</v-btn>
+                 <v-btn text :disabled="loading" @click="saveLogs()" style="margin-left:0px;">SAVE</v-btn>
                 </v-toolbar-items>
               </v-toolbar>
               <v-divider></v-divider>

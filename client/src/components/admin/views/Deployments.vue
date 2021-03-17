@@ -2,7 +2,7 @@
   <div>
     <v-card>
       <v-toolbar dense flat color="primary">
-        <v-toolbar-title class="white--text subtitle-1">DEPLOYMENTS</v-toolbar-title>
+        <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-meteor</v-icon>DEPLOYMENTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
           <v-btn text @click="filter_dialog = true" :style="{ backgroundColor : filter_applied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-search</v-icon>FILTER</v-btn>
