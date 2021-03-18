@@ -998,6 +998,14 @@ export default {
       }, 0)
       // Load the rest of the rows
       setTimeout(() => { current.clientItems = items }, 0)
+
+      // Load rows async
+      // current.clientHeaders = headers
+      // for (let item of items) {
+      //   setTimeout(() => {
+      //     this.gridApi.client.applyTransactionAsync({ add: [item] })
+      //   }, 0)
+      // }
     },
     onRowDataChanged() {
       if (this.columnApi.client != null) this.resizeTable()
