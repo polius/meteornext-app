@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid>
+  <v-container fluid style="padding:10px!important">
     <v-main>
       <v-card>
         <v-toolbar dense flat color="primary">
