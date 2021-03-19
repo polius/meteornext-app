@@ -992,20 +992,15 @@ export default {
         }
       }
       // Load First 25 rows at init
+      // setTimeout(() => {
+      //   current.clientHeaders = headers
+      //   current.clientItems = items.slice(0,24)
+      // }, 0)
+      // Load the rest of the rows
       setTimeout(() => {
         current.clientHeaders = headers
-        current.clientItems = items.slice(0,24)
+        current.clientItems = items
       }, 0)
-      // Load the rest of the rows
-      setTimeout(() => { current.clientItems = items }, 0)
-
-      // Load rows async
-      // current.clientHeaders = headers
-      // for (let item of items) {
-      //   setTimeout(() => {
-      //     this.gridApi.client.applyTransactionAsync({ add: [item] })
-      //   }, 0)
-      // }
     },
     onRowDataChanged() {
       if (this.columnApi.client != null) this.resizeTable()

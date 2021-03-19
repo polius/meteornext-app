@@ -288,7 +288,7 @@ class Monitoring:
             origin = self.__str2dict(server['monitor']['parameters'])
             diff = { k : params[k] for k, _ in set(params.items()) - set(origin.items())}
             if len(diff) > 0 and not (len(diff) == 1 and 'innodb_thread_sleep_delay' in diff):
-                data = { k: {"previous": origin[k], "current":v} for k,v in diff.items() }
+                data = { k: {"previous": origin[k] if k in origin else '', "current":v} for k,v in diff.items() }
                 notification = {
                     'name': 'Server \'{}\' has parameters changed'.format(server['sql']['name']),
                     'status': 'INFO',
