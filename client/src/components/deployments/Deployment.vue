@@ -40,7 +40,7 @@
 
       <!-- RESULTS -->
       <v-card-text v-if="show_results" style="padding:0px; background-color:rgb(55, 53, 64); height:calc(100vh - 180px)">
-        <Viewer :src="deployment['uri']" :height="`calc(100vh - 180px)`"></Viewer>
+        <Viewer :src="deployment['uri']" :height="`calc(100vh - 181px)`"></Viewer>
       </v-card-text>
 
       <v-card-text v-else>
