@@ -93,9 +93,7 @@ import { mapFields } from '../../js/map-fields'
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 
-import * as ace from 'ace-builds';
-import 'ace-builds/webpack-resolver';
-import 'ace-builds/src-noconflict/ext-language_tools';
+import ace from 'ace-builds';
 
 import axios from 'axios'
 

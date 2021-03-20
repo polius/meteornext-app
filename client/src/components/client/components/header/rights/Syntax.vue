@@ -6,9 +6,7 @@
 import EventBus from '../../../js/event-bus'
 import { mapFields } from '../../../js/map-fields'
 
-import * as ace from 'ace-builds';
-import 'ace-builds/webpack-resolver';
-import 'ace-builds/src-noconflict/ext-language_tools';
+import ace from 'ace-builds';
 
 export default {
   data() {

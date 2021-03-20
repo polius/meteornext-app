@@ -147,9 +147,9 @@ import axios from 'axios'
 import { Splitpanes, Pane } from 'splitpanes'
 import 'splitpanes/dist/splitpanes.css'
 
-import * as ace from 'ace-builds';
-import 'ace-builds/webpack-resolver';
-import 'ace-builds/src-noconflict/ext-language_tools';
+import ace from "ace-builds"
+import 'ace-builds/webpack-resolver'
+import 'ace-builds/src-noconflict/ext-language_tools'
 
 import {AgGridVue} from "ag-grid-vue";
 import EventBus from '../../js/event-bus'
@@ -624,7 +624,6 @@ export default {
         highlightActiveLine: false
       });
       this.editor.session.setOptions({ tabSize: 4, useSoftTabs: false })
-      this.editorTools = ace.require("ace/ext/language_tools")
 
       // Highlight Queries
       this.editor.on("changeSelection", this.highlightQueries)
