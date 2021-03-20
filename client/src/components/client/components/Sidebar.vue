@@ -551,13 +551,12 @@ export default {
     },
     editorAddCompleter(list) {
       const newCompleter = {
-        identifierRegexps: [/[a-zA-Z_0-9.\-\u00A2-\uFFFF]/],
+        identifierRegexps: [/[a-zA-Z_0-9\-\u00A2-\uFFFF]/],
         getCompletions: function(editor, session, pos, prefix, callback) {
           callback(
             null,
-            list.filter(entry => {
-              return entry.value.toLowerCase().includes(prefix.toLowerCase())
-            }).map(entry => {
+            list.filter(entry => entry.value.toLowerCase().includes(prefix.toLowerCase()))
+            .map(entry => {
               return { 
                 value: entry.value,
                 meta: entry.meta

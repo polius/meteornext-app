@@ -10,25 +10,25 @@ RUN yum update -y && \
     # ./configure --enable-optimizations --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib" && \ 
     # make install && \
     yum install xz -y && \
-    python3 -m pip install --upgrade pip && \
-    python3 -m pip install boto3 && \
-    python3 -m pip install requests && \
-    python3 -m pip install paramiko && \
-    python3 -m pip install sshtunnel && \
-    python3 -m pip install pymysql && \
-    python3 -m pip install DBUtils && \
+    python3 -m pip install --no-cache-dir --upgrade pip && \
+    python3 -m pip install --no-cache-dir boto3 && \
+    python3 -m pip install --no-cache-dir requests && \
+    python3 -m pip install --no-cache-dir paramiko && \
+    python3 -m pip install --no-cache-dir sshtunnel && \
+    python3 -m pip install --no-cache-dir pymysql && \
+    python3 -m pip install --no-cache-dir DBUtils && \
     # python3 -m pip install mysql-connector-python && \
-    python3 -m pip install bcrypt && \
-    python3 -m pip install pyotp && \
-    python3 -m pip install flask && \
-    python3 -m pip install flask_cors && \
-    python3 -m pip install flask_jwt_extended && \
-    python3 -m pip install flask-compress && \
-    python3 -m pip install schedule && \
-    python3 -m pip install gunicorn && \
-    python3 -m pip install gevent && \
-    python3 -m pip install gunicorn[gevent] && \
-    python3 -m pip install cython && \
-    python3 -m pip install pyinstaller
+    python3 -m pip install --no-cache-dir bcrypt && \
+    python3 -m pip install --no-cache-dir pyotp && \
+    python3 -m pip install --no-cache-dir flask && \
+    python3 -m pip install --no-cache-dir flask_cors && \
+    python3 -m pip install --no-cache-dir flask_jwt_extended && \
+    python3 -m pip install --no-cache-dir flask-compress && \
+    python3 -m pip install --no-cache-dir schedule && \
+    python3 -m pip install --no-cache-dir gunicorn && \
+    python3 -m pip install --no-cache-dir gevent && \
+    python3 -m pip install --no-cache-dir gunicorn[gevent] && \
+    python3 -m pip install --no-cache-dir cython && \
+    python3 -m pip install --no-cache-dir pyinstaller
 WORKDIR /root/build
 CMD [ "python3", "build_server.py" ]
