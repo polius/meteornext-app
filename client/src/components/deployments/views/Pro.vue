@@ -7,7 +7,18 @@
           <v-form ref="form" style="padding:10px;">
             <v-text-field ref="name" v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:5px;"></v-text-field>
             <v-select :loading="loading_rel" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
-            <v-autocomplete :loading="loading_env" v-model="environment" :items="environment_items" item-value="id" item-text="name" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;" hide-details></v-autocomplete>
+            <v-autocomplete :loading="loading_env" v-model="environment" :items="environment_items" item-value="id" item-text="name" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;" hide-details>
+              <template v-slot:item="{ item }" >
+                <v-row no-gutters>
+                  <v-col class="flex-grow-1 flex-shrink-1">
+                    {{ item.name }}
+                  </v-col>
+                  <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
+                    <v-chip label><v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
+                  </v-col>
+                </v-row>
+              </template>
+            </v-autocomplete>
 
             <!-- CODE -->
             <div class="subtitle-1 font-weight-regular" style="margin-top:20px; margin-bottom:10px;">
@@ -254,7 +265,8 @@ export default {
     getEnvironments() {
       axios.get('/inventory/environments/list')
         .then((response) => {
-          this.environment_items = response.data.data.map(x => ({id: x.id, name: x.name }))        })
+          this.environment_items = response.data.data.map(x => ({id: x.id, name: x.name, shared: x.shared }))        
+        })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')

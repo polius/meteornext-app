@@ -9,7 +9,18 @@
             <v-select :loading="loading" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
             
             <!-- EXECUTION -->
-            <v-autocomplete :loading="loading" v-model="environment" :items="environment_items" item-value="id" item-text="name" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-autocomplete>
+            <v-autocomplete :loading="loading" v-model="environment" :items="environment_items" item-value="id" item-text="name" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;">
+              <template v-slot:item="{ item }" >
+                <v-row no-gutters>
+                  <v-col class="flex-grow-1 flex-shrink-1">
+                    {{ item.name }}
+                  </v-col>
+                  <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
+                    <v-chip label><v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
+                  </v-col>
+                </v-row>
+              </template>
+            </v-autocomplete>
             <v-text-field v-model="databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
 
             <v-card style="margin-bottom:20px;">
@@ -194,7 +205,7 @@ export default {
     getEnvironments() {
       axios.get('/inventory/environments/list')
         .then((response) => {
-          this.environment_items = response.data.data.map(x => ({id: x.id, name: x.name }))
+          this.environment_items = response.data.data.map(x => ({id: x.id, name: x.name, shared: x.shared }))
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

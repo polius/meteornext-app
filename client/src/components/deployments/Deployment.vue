@@ -248,7 +248,18 @@
               <v-flex xs12>
                 <v-form ref="form">
                   <v-text-field readonly v-model="information_dialog_data.name" label="Name" :rules="[v => !!v || '']" style="margin-top:15px;"></v-text-field>
-                  <v-autocomplete :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '']" style="padding-top:0px;"></v-autocomplete>
+                  <v-autocomplete :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '']" style="padding-top:0px;">
+                    <template v-slot:item="{ item }" >
+                      <v-row no-gutters>
+                        <v-col class="flex-grow-1 flex-shrink-1">
+                          {{ item.name }}
+                        </v-col>
+                        <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
+                          <v-chip label><v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
+                        </v-col>
+                      </v-row>
+                    </template>
+                  </v-autocomplete>
                   <v-text-field v-if="deployment['mode'] == 'BASIC'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
                   <v-card v-if="deployment['mode'] == 'BASIC'" style="margin-bottom:20px;">
                     <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
