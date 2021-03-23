@@ -230,7 +230,7 @@ class Basic:
         deployment = self._deployments_basic.get(request.args['execution_id'])
 
         # Get environments
-        environments = [{"id": i['id'], "name": i['name']} for i in self._environments.get(authority[0]['id'], authority[0]['group_id'])]
+        environments = [{"id": i['id'], "name": i['name'], "shared": i['shared']} for i in self._environments.get(authority[0]['id'], authority[0]['group_id'])]
 
         # Return data
         return jsonify({'deployment': deployment, 'environments': environments}), 200
