@@ -61,21 +61,21 @@ class Servers:
             self._sql.execute(query, (server['id']))
         query = """
             UPDATE servers
-            SET name = %s,
-                region_id = (SELECT id FROM regions WHERE id = %s),
-                engine = %s,
-                version = %s,
-                hostname = %s,
-                port = %s,
-                username = %s,
-                password = %s,
+            SET `name` = %s,
+                `region_id` = %s,
+                `engine` = %s,
+                `version` = %s,
+                `hostname` = %s,
+                `port` = %s,
+                `username` = %s,
+                `password` = %s,
                 `ssl` = %s,
                 `usage` = %s,
-                shared = %s,
-                owner_id = IF(%s = 1, NULL, %s),
-                updated_by = %s,
-                updated_at = %s
-            WHERE id = %s
+                `shared` = %s,
+                `owner_id` = IF(%s = 1, NULL, %s),
+                `updated_by` = %s,
+                `updated_at` = %s
+            WHERE `id` = %s
         """
         self._sql.execute(query, (server['name'], server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['usage'], server['shared'], server['shared'], server['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 

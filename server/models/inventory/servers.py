@@ -51,25 +51,24 @@ class Servers:
             self._sql.execute(query, (server['id']))
         query = """
             UPDATE servers
-            JOIN regions r ON r.id = servers.region_id AND r.id = %s AND r.group_id = %s
-            SET servers.name = %s,
-                servers.group_id = %s,
-                servers.region_id = (SELECT id FROM regions WHERE group_id = %s AND name = %s),
-                servers.engine = %s,
-                servers.version = %s,
-                servers.hostname = %s,
-                servers.port = %s,
-                servers.username = %s,
-                servers.password = %s,
-                servers.`ssl` = %s,
-                servers.usage = %s,
-                servers.shared = %s,
-                servers.owner_id = IF(%s = 1, NULL, %s),
-                servers.updated_by = %s,
-                servers.updated_at = %s
-            WHERE servers.id = %s
+            SET `name` = %s,
+                `group_id` = %s,
+                `region_id` = %s,
+                `engine` = %s,
+                `version` = %s,
+                `hostname` = %s,
+                `port` = %s,
+                `username` = %s,
+                `password` = %s,
+                `ssl` = %s,
+                `usage` = %s,
+                `shared` = %s,
+                `owner_id` = IF(%s = 1, NULL, %s),
+                `updated_by` = %s,
+                `updated_at` = %s
+            WHERE `id` = %s
         """
-        self._sql.execute(query, (server['region_id'], group_id, server['name'], group_id, group_id, server['region'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['usage'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
+        self._sql.execute(query, (server['name'], group_id, server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['usage'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
     def delete(self, group_id, server_id):
         # Delete from 'monitoring'

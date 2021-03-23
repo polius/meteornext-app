@@ -56,7 +56,7 @@
                       <v-text-field ref="field" v-model="item.name" :readonly="readOnly" :rules="[v => !!v || '']" label="Name" required style="padding-top:0px;"></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
-                      <v-autocomplete v-model="item.region" item-value="name" :readonly="readOnly" :rules="[v => !!v || '']" :items="regions" label="Region" required style="padding-top:0px;">
+                      <v-autocomplete v-model="item.region_id" item-value="id" item-text="name" :readonly="readOnly" :rules="[v => !!v || '']" :items="regions" label="Region" required style="padding-top:0px;">
                         <template v-slot:[`selection`]="{ item }">
                           <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
                           {{ item.name }}
@@ -187,7 +187,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: [] },
+    item: { name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: [] },
     mode: '',
     loading: true,
     engines: {
@@ -264,7 +264,7 @@ export default {
     },
     newServer() {
       this.mode = 'new'
-      this.item = { name: '', region: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: [...this.usage] }
+      this.item = { name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: [...this.usage] }
       this.dialog_title = 'NEW SERVER'
       this.dialog = true
     },
@@ -376,7 +376,7 @@ export default {
       this.notification('Testing Server...', 'info', true)
       this.loading = true
       const payload = {
-        region: (this.readOnly && this.inventory_secured) ? this.item.region_id : this.regions.find(x => x.name == this.item.region).id,
+        region: this.item.region_id,
         server: (this.readOnly && this.inventory_secured) ? this.item.id : { engine: this.item.engine, hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password }
       }
       axios.post('/inventory/servers/test', payload)

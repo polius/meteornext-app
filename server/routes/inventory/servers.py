@@ -116,6 +116,9 @@ class Servers:
         # Check server exists
         if self._servers.exist(user['id'], user['group_id'], server):
             return jsonify({'message': 'This server name currently exists'}), 400
+        # Check region authority
+        if len(self._regions.get(user['owner'], user['group_id'], server['region_id'])) == 0:
+            return jsonify({'message': 'This region does not belong to the user'}), 400
         # Add server
         self._servers.post(user['id'], user['group_id'], server)
         return jsonify({'message': 'Server added successfully'}), 200
@@ -127,6 +130,9 @@ class Servers:
         # Check server exists
         if self._servers.exist(user['id'], user['group_id'], server):
             return jsonify({'message': 'This server name currently exists'}), 400
+        # Check region authority
+        if len(self._regions.get(user['owner'], user['group_id'], server['region_id'])) == 0:
+            return jsonify({'message': 'This region does not belong to the user'}), 400
         # Check usage
         if 'check' in server and server['check'] is True:
             origin = self._servers.get(user['id'], user['group_id'], server['id'])[0]

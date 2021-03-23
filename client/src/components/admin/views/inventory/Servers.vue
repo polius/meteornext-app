@@ -258,9 +258,11 @@ export default {
       requestAnimationFrame(() => {
         if (!this.item.shared) this.$refs.owner_id.focus()
       })
-      this.getRegions()
-      this.getUsers()
-      this.buildUsage()
+      if (this.item.group_id != null) {
+        this.getRegions()
+        this.getUsers()
+        this.buildUsage()
+      }
     },
     getUsers() {
       axios.get('/admin/inventory/users', { params: { group_id: this.item.group_id }})
