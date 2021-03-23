@@ -38,6 +38,7 @@ const connection = {
   clientCursor: null,
   clientQuery: { query: '', range: null },
   clientExecuting: null, // query, explain, stop
+  clientCompleters: { databases: [], objects: [] },
 
   // Structure
   tabStructureSelected: 'columns',
@@ -101,8 +102,7 @@ const getDefaultState = () => {
       editor: null,
       editorTools: null,
       editorMarkers: [],
-      editorCompleters: [],
-
+      editorKeywords: null,
       // AG Grid API
       gridApi: {
         client: null,
@@ -168,8 +168,10 @@ const mutations = {
     state.currentConn = state.connections.length - 1
     // Init servers list
     state.connections[state.currentConn].sidebarItems = state.servers.slice(0)
-    // Init Client ACE Editor
+    // Clear current queries
     state.connections[state.currentConn].clientQueries = ''
+    // Init completers
+    state.connections[state.currentConn].clientCompleters = [state.components.editorKeywords]
   },
   changeConnection(state, data) {
     // Store Client ACE Editor (current connection)
