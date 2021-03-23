@@ -201,8 +201,10 @@ export default {
       requestAnimationFrame(() => {
         if (!this.item.shared) this.$refs.owner_id.focus()
       })
-      this.getUsers()
-      this.getServers()
+      if (this.item.group_id != null) {
+        this.getUsers()
+        this.getServers()
+      }
     },
     ownerChanged() {
       this.treeviewSelected = []

@@ -84,3 +84,4 @@ class Users:
         self._sql.execute("UPDATE auxiliary SET group_id = (SELECT id FROM groups WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
         self._sql.execute("DELETE es FROM environment_servers es JOIN servers s ON s.id = es.server_id AND s.shared = 1 JOIN environments e ON e.id = es.environment_id AND e.shared = 0 AND e.owner_id = %s", (user_id))
         self._sql.execute("UPDATE environments SET group_id = (SELECT id FROM groups WHERE name = %s) WHERE shared = 0 AND owner_id = %s", (group, user_id))
+        self._sql.execute("DELETE cs FROM client_servers cs JOIN servers s ON s.id = cs.server_id AND s.shared = 1 WHERE cs.user_id = %s", (user_id))
