@@ -213,11 +213,13 @@ export default {
       'clientExecuting',
       'database',
       'sidebarMode',
+      'clientCompleters',
     ], { path: 'client/connection' }),
     ...mapFields([
       'editor',
       'editorMarkers',
       'editorTools',
+      'editorKeywords',
       'gridApi',
       'columnApi',
     ], { path: 'client/components' }),
@@ -234,16 +236,21 @@ export default {
     },
     currentConn() {
       this.cellEditingDiscard()
-      if (this.headerTabSelected == 'client') {
-        this.editor.focus()
-        this.editor.setValue(this.clientQueries, 1)
-        if (this.clientCursor != null) this.editor.moveCursorTo(this.clientCursor.row, this.clientCursor.column)
-      }
+      this.editor.setValue(this.clientQueries, 1)
+      if (this.clientCursor != null) this.editor.moveCursorTo(this.clientCursor.row, this.clientCursor.column)
+      if (this.headerTabSelected == 'client') this.editor.focus()
     },
     dialog: function(val) {
       this.dialogOpened = val
       if (!val) this.editor.focus()
-    }
+    },
+    headerTabSelected(newValue) {
+      if (newValue == 'client') {
+        this.editor.setValue(this.clientQueries, 1)
+        if (this.clientCursor != null) this.editor.moveCursorTo(this.clientCursor.row, this.clientCursor.column)
+        this.editor.focus()
+      }
+    },
   },
   methods: {
     onGridReady(params) {
@@ -676,22 +683,23 @@ export default {
       }, false);
 
       // Convert Completer Keywords to Uppercase
-      const defaultUpperCase = {
+      const keywords = {
         getCompletions(editor, session, pos, prefix, callback) {
           if (session.$mode.completer) {
             return session.$mode.completer.getCompletions(editor, session, pos, prefix, callback)
           }
           const state = editor.session.getState(pos.row)
-          let keywordCompletions = session.$mode.getCompletions(state, session, pos, prefix)
-          keywordCompletions = keywordCompletions.map((obj) => {
+          let completion = session.$mode.getCompletions(state, session, pos, prefix)
+          completion = completion.map((obj) => {
             obj.value = obj.value.toUpperCase()
             obj.meta = obj.meta.charAt(0).toUpperCase() + obj.meta.slice(1)
             return obj
           })
-          return callback(null, keywordCompletions)
+          return callback(null, completion)
         },
-      };
-      this.editor.completers = [defaultUpperCase]
+      }
+      this.editorKeywords = keywords
+      this.editor.completers = [keywords]
 
       // Init Autocompleter
       var Autocomplete = ace.require("ace/autocomplete").Autocomplete

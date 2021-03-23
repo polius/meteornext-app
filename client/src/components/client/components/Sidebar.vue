@@ -163,10 +163,10 @@ export default {
       'servers',
       'serversList',
       'dialogOpened',
+      'currentConn',
     ], { path: 'client/client' }),
     ...mapFields([
       'editor',
-      'editorCompleters',
       'gridApi',
     ], { path: 'client/components' }),
     ...mapFields([
@@ -187,6 +187,7 @@ export default {
       'objectsTab',
       'tabObjectsSelected',
       'objectsHeaders',
+      'clientCompleters',
     ], { path: 'client/connection' }),
     database: {
       get() { return this.$store.getters['client/connection']['database'] },
@@ -217,7 +218,11 @@ export default {
         this.serverSearch = {}
         setTimeout(() => this.$refs.server.focus(),100)
       }
-    }
+    },
+    currentConn() {
+      while (this.editor.completers.length > 1) this.editor.completers.pop()
+      for (const [k,v] of Object.entries(this.clientCompleters)) this.editorAddCompleter(k, v)
+    },
   },
   methods: {
     serverChanged(val) {
@@ -423,7 +428,7 @@ export default {
           acc.push({value: val.toString(), meta: 'Database'})
           return acc
         },[])
-        this.editorAddCompleter(completer)
+        this.editorAddCompleter('databases', completer)
       })
 
       // Get Column Types + Collations
@@ -546,35 +551,36 @@ export default {
       current.sidebarItems = objects
 
       // Add objects to the editor autocompleter
-      if (this.editorCompleters.length > 1) this.editorRemoveCompleter(1)
-      this.editorAddCompleter(completer)
+      this.editorAddCompleter('objects', completer)
     },
-    editorAddCompleter(list) {
-      const newCompleter = {
+    editorAddCompleter(object, data) {
+      const completer = {
         identifierRegexps: [/[a-zA-Z_0-9\-\u00A2-\uFFFF]/],
         getCompletions: function(editor, session, pos, prefix, callback) {
           callback(
             null,
-            list.filter(entry => entry.value.toLowerCase().includes(prefix.toLowerCase()))
+            data.filter(entry => entry.value.toLowerCase().includes(prefix.toLowerCase()))
             .map(entry => {
               return { 
                 value: entry.value,
                 meta: entry.meta
-              };
+              }
             })
-          );
+          )
         }
       }
-      this.editor.completers.push(newCompleter)
-      this.editorCompleters.push(newCompleter)
-
+      this.clientCompleters[object] = data
+      if (object == 'databases') {
+        if (this.editor.completers.length > 1) this.editor.completers[1] = completer
+        else this.editor.completers.push(completer)
+      }
+      else if (object == 'objects') {
+        if (this.editor.completers.length > 2) this.editor.completers[2] = completer
+        else this.editor.completers.push(completer)
+      }
       // // Calculate autocomplete width
-      // let width = Math.max(...(list.map(el => el.value.length + el.meta.length)))
+      // let width = Math.max(...(data.map(el => el.value.length + el.meta.length)))
       // this.editor.completer.popup.container.style.width='min(35vw, ' + (width*9+50) + 'px)'
-    },
-    editorRemoveCompleter(index) {
-      this.editor.completers.splice(index+1, 1)
-      this.editorCompleters.splice(index, 1)
     },
     refreshObjects(resolve, reject) {
       new Promise((res, rej) => this.getDatabases(this.server, res, rej))
