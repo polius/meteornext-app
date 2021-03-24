@@ -514,12 +514,16 @@ def import2(name, globals=None, locals=None, fromlist=(), level=0):
 def exec2(name, globals=None, locals=None):
     raise Exception("Method exec() is restricted.")
 
+def open2(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
+    raise Exception("Method open() is restricted.")
+
 builtins.__import__ = import2
-builtins.exec = exec2\n\n{code}\nblueprint()"""
+builtins.exec = exec2
+builtins.open = open2\n\n{code}\nblueprint()"""
         try:
             exec(secure_code, {'__name__':'__main__'}, {})
             queue.put('OK')
         except SyntaxError as e:
-            queue.put(e.args[0] + ' (line ' + str(e.lineno-25) + ')')
+            queue.put(e.args[0] + ' (line ' + str(e.lineno-29) + ')')
         except Exception as e:
             queue.put(str(e))
