@@ -29,12 +29,9 @@ class Servers:
     def post(self, user_id, group_id, server):
         query = """
             INSERT INTO servers (name, group_id, region_id, engine, version, hostname, port, username, password, `ssl`, `usage`, shared, owner_id, created_by, created_at)             
-            SELECT %s, %s, id, %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
-            FROM regions
-            WHERE `name` = %s
-            AND group_id = %s
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s)
         """
-        self._sql.execute(query, (server['name'], group_id, server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['usage'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['region'], group_id))
+        self._sql.execute(query, (server['name'], group_id, server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['usage'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user_id, group_id, server):
         if 'D' not in server['usage']:
