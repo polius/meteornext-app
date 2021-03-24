@@ -21,20 +21,20 @@
             </v-autocomplete>
 
             <!-- CODE -->
-            <div class="subtitle-1 font-weight-regular" style="margin-top:20px; margin-bottom:10px;">
+            <div class="subtitle-1 font-weight-regular white--text" style="margin-top:20px; margin-bottom:10px;">
               CODE
               <v-tooltip right>
                 <template v-slot:activator="{ on }">
                   <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
                 </template>
-                <span>Press ESC when cursor is in the editor to toggle full screen editing</span>
+                <span>Press <span class="font-weight-medium" style="color:rgb(250, 130, 49)">ESC</span> when cursor is in the editor to toggle full screen editing</span>
               </v-tooltip>
             </div>
             <v-progress-linear v-if="loading_code" height="1px" color="info" indeterminate></v-progress-linear>
             <codemirror v-model="code" :options="cmOptions"></codemirror>
 
             <!-- PARAMETERS -->
-            <div class="subtitle-1 font-weight-regular" style="margin-top:20px;">
+            <div class="subtitle-1 font-weight-regular white--text" style="margin-top:20px;">
               METHOD
               <v-tooltip right>
                 <template v-slot:activator="{ on }">
