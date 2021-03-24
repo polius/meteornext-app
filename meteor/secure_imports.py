@@ -38,6 +38,33 @@ def exec2(name, globals=None, locals=None):
             raise Exception("Method exec() is restricted.")
     origin_exec(name, globals, locals)
 
+def open2(path, *args, **kwargs):
+    return File(path, *args, **kwargs)
+
+class File(object):
+    def __init__(self, path, *args, **kwargs):
+        frame = inspect.currentframe().f_back.f_back
+        if frame is not None:
+            module_path = frame.f_globals['__file__']
+            if module_path.endswith('/blueprint.py'):
+                raise Exception("Method open() is restricted.")
+        self._file = origin_open(path, *args, **kwargs)
+
+    def __enter__(self):
+        return self
+
+    def read(self, n_bytes=-1):
+        return self._file.read(n_bytes)
+
+    def write(self, data):
+        self._file.write(data)
+
+    def __exit__(self, e_type, e_val, e_tb):
+        self._file.close()
+        self._file = None
+
 origin_exec = builtins.exec
+origin_open = builtins.open
 builtins.exec = exec2
 builtins.__import__ = import2
+builtins.open = open2

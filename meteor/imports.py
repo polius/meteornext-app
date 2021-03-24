@@ -28,11 +28,9 @@ class imports:
             if not os.path.isfile(file_path):
                 print("The 'config.json' file has not been found in '{}'".format(file_path))
                 sys.exit()
-
             with open(file_path) as data_file:
                 data = json.load(data_file, object_pairs_hook=OrderedDict)
                 return data
-
         except Exception:
             print("The 'config.json' file has syntax errors. Please check if it's a valid JSON.")
             sys.exit()

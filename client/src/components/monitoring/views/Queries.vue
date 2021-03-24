@@ -302,13 +302,10 @@ export default {
             this.submit_servers = false
           }
           let items = response.data.queries
-
-          if (itemsPerPage > 0) {
-            items = items.slice((page - 1) * itemsPerPage, page * itemsPerPage)
-          }
+          this.queries_total = items.length
+          if (itemsPerPage > 0) items = items.slice((page - 1) * itemsPerPage, page * itemsPerPage)
           this.queries_origin = items
           this.queries_items = items
-          this.queries_total = items.length
           // Apply search
           this.applySearch(this.queries_search)
           this.loading = false
