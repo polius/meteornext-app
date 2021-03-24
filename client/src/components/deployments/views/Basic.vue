@@ -38,7 +38,7 @@
             </v-card>
 
             <!-- PARAMETERS -->
-            <div class="subtitle-1 font-weight-regular">
+            <div class="subtitle-1 font-weight-regular white--text">
               METHOD
               <v-tooltip right>
                 <template v-slot:activator="{ on }">

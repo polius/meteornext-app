@@ -275,9 +275,17 @@
                     <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="id" :show-select="information_dialog_mode != 'parameters'" :hide-default-header="information_dialog_mode == 'parameters'" :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1">
                     </v-data-table>
                   </v-card>
-                  <div v-if="deployment['mode'] == 'PRO'" class="subtitle-1 font-weight-regular" style="margin-top:-5px; margin-bottom:10px;" title="Press ESC when cursor is in the editor to toggle full screen editing">CODE</div>
+                  <div v-if="deployment['mode'] == 'PRO'" class="subtitle-1 font-weight-regular white--text" style="margin-top:-5px; margin-bottom:10px;">
+                    CODE
+                    <v-tooltip right>
+                      <template v-slot:activator="{ on }">
+                        <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                      </template>
+                      <span>Press <span class="font-weight-medium" style="color:rgb(250, 130, 49)">ESC</span> when cursor is in the editor to toggle full screen editing</span>
+                    </v-tooltip>
+                  </div>
                   <codemirror v-if="deployment['mode'] == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
-                  <div class="subtitle-1 font-weight-regular" style="margin-top:20px;">
+                  <div class="subtitle-1 font-weight-regular white--text" style="margin-top:20px;">
                     METHOD
                     <v-tooltip right>
                       <template v-slot:activator="{ on }">
