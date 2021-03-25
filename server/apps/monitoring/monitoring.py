@@ -316,12 +316,12 @@ class Monitoring:
             queries.sort(reverse=True)
             event = ''
             # Connections - Critical [+100 connections. 3 top median >= 300 seconds. 5 top avg >= 300]
-            if (len(last_event) == 0 or last_event[0]['event'] != 'connections_critical' or (last_event[0]['event'] == 'connections_critical' and last_event[0]['time'] + datetime.timedelta(minutes=5) < datetime.datetime.utcnow())) and len(queries) >= 100 and median(queries[:3]) >= 300 and sum(queries[:5])/5 >= 300:
+            if (len(last_event) == 0 or last_event[0]['event'] != 'connections_critical' or (last_event[0]['event'] == 'connections_critical' and last_event[0]['time'] + datetime.timedelta(minutes=1) < datetime.datetime.utcnow())) and len(queries) >= 100 and median(queries[:3]) >= 300 and sum(queries[:5])/5 >= 300:
                 notification_name = 'Server \'{}\' Critical | {} Connections'.format(server['sql']['name'], len(queries))
                 notification_status = 'ERROR'
                 event = 'connections_critical'
             # Connections - Warning [+ 50 connections. 3 top median >= 60 seconds. 5 top avg >= 60]
-            elif (len(last_event) == 0 or last_event[0]['event'] == 'connections_stable' or (last_event[0]['event'] == 'connections_critical' and len(queries) < int(connections['current']))) and len(queries) >= 50 and median(queries[:3]) >= 60 and sum(queries[:5])/5 >= 60:
+            elif (len(last_event) == 0 or last_event[0]['event'] == 'connections_stable' or (last_event[0]['event'] == 'connections_critical' and last_event[0]['time'] + datetime.timedelta(minutes=1) < datetime.datetime.utcnow() and len(queries) < int(connections['current']))) and len(queries) >= 50 and median(queries[:3]) >= 60 and sum(queries[:5])/5 >= 60:
                 notification_name = 'Server \'{}\' Warning | {} Connections'.format(server['sql']['name'], len(queries))
                 notification_status = 'WARNING'
                 event = 'connections_warning'
