@@ -25,8 +25,8 @@
                       <v-text-field ref="password" filled v-model="password" name="password" label="Password" required append-icon="lock" type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
                     </div>
                     <div v-if="mode == 2">
-                      <div class="body-1 font-weight-regular">Multi-Factor Authentication (<span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">MFA</span>) is required.</div>
-                      <v-card style="width:220px; margin-top:10px; margin-bottom:10px; padding:10px 0px 2px 0px; margin-left:auto; margin-right:auto;">
+                      <div class="body-1 font-weight-regular">Multi-Factor Authentication (<span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">MFA</span>) is required</div>
+                      <v-card style="width:220px; margin:10px auto 15px; padding:10px 0px 2px 0px; margin-left:auto; margin-right:auto;">
                         <v-card-text style="padding:0px">
                           <qrcode-vue size="200" :value="mfa_uri" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
                         </v-card-text>
