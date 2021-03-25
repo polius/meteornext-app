@@ -8,7 +8,7 @@ CREATE TABLE `settings` (
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-INSERT INTO settings (`id`, `name`, `value`) VALUES (1, 'LOGS', '{"local":{},"amazon_s3":{}}'), (2, 'SECURITY', '{"url":""}');
+INSERT INTO settings (`id`, `name`, `value`) VALUES (1, 'LOGS', '{"local":{},"amazon_s3":{}}'), (2, 'SECURITY', '{}');
 
 CREATE TABLE `groups` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,

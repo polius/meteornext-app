@@ -1,9 +1,11 @@
+import json
 import pyotp
 import bcrypt
 import models.admin.users
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required)
 
+import models.admin.settings
 import routes.admin.settings
 
 class Login:
@@ -12,8 +14,9 @@ class Login:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
+        self._settings = models.admin.settings.Settings(sql)
         # Init routes
-        self._settings = routes.admin.settings.Settings(app, sql, license)
+        self._settings_route = routes.admin.settings.Settings(app, sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -32,8 +35,10 @@ class Login:
                     return jsonify({"message": "Missing JSON in request"}), 400
                 login_json = request.get_json()
 
-                # Check Settings - Security (Administration URL)
-                valid_url = self._settings.check_url()
+                # Check Settings - Security (Administration URL + Force MFA)
+                security = self._settings.get(setting_name='security')
+                valid_url = self._settings_route.check_url(security)
+                force_mfa = self._settings_route.check_mfa(security)
 
                 # Get User from Database
                 user = self._users.get(login_json['username'])
@@ -43,8 +48,18 @@ class Login:
                     return jsonify({"message": "Invalid username or password"}), 401
 
                 # Check MFA
-                if len(login_json['mfa']) == 0 and user[0]['mfa'] == 1:
-                    return jsonify({"message": "Requesting MFA credentials"}), 202
+                if user[0]['mfa'] == 0 and force_mfa and 'mfa' in login_json and 'mfa_hash' in login_json:
+                    mfa = pyotp.TOTP(login_json['mfa_hash'], interval=30)
+                    if len(login_json['mfa']) == 0 or not mfa.verify(login_json['mfa']):
+                        return jsonify({'message': 'Invalid MFA Code'}), 401
+                    else:
+                        self._users.put_mfa({'username': get_jwt_identity(), 'mfa': login_json['mfa'], 'mfa_hash': login_json['mfa_hash']})
+                elif user[0]['mfa'] == 0 and force_mfa:
+                    mfa_hash = pyotp.random_base32()
+                    mfa_uri = pyotp.TOTP(mfa_hash, interval=30).provisioning_uri(user[0]['email'], issuer_name="Meteor Next")
+                    return jsonify({"code": "mfa_setup", "message": "MFA setup is required", "mfa_hash": mfa_hash, "mfa_uri": mfa_uri}), 202
+                if user[0]['mfa'] == 1 and len(login_json['mfa']) == 0:
+                    return jsonify({"code": "mfa_request", "message": "Requesting MFA credentials"}), 202
                 if user[0]['mfa'] == 1 and not pyotp.TOTP(user[0]['mfa_hash'], interval=30).verify(login_json['mfa']):
                     return jsonify({"message": "Invalid MFA Code"}), 401
 
