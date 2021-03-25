@@ -21,8 +21,8 @@
                   </v-alert>
                   <v-form ref="form" @submit.prevent style="margin-top:20px">
                     <div v-if="mode == 0">
-                      <v-text-field ref="username" filled v-model="username" name="username" label="Username" required append-icon="person" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
-                      <v-text-field ref="password" filled v-model="password" name="password" label="Password" required append-icon="lock" type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                      <v-text-field ref="username" filled v-model="username" name="username" label="Username" :rules="[v => !!v || '']" required append-icon="person" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                      <v-text-field ref="password" filled v-model="password" name="password" label="Password" :rules="[v => !!v || '']" required append-icon="lock" type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
                     </div>
                     <div v-if="mode == 2">
                       <div class="body-1 font-weight-regular">Multi-Factor Authentication (<span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">MFA</span>) is required</div>
@@ -33,7 +33,7 @@
                       </v-card>
                     </div>
                     <div v-if="[1,2].includes(mode)">
-                      <v-text-field ref="mfa" filled v-model="mfa" name="mfa" label="MFA Code" append-icon="vpn_key" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                      <v-text-field ref="mfa" filled v-model="mfa" name="mfa" label="MFA Code" append-icon="vpn_key" maxlength="6" :rules="[v => !!v || '']" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
                     </div>
                   </v-form>
                   <v-btn x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()">LOGIN</v-btn>
@@ -95,9 +95,9 @@
       if (this.rememberVuex) {
         this.username = this.usernameVuex
         this.remember = true
-        this.$refs.password.focus()
+        this.$nextTick(() => this.$refs.password.focus())
       }
-      else this.$refs.username.focus()
+      else this.$nextTick(() => this.$refs.username.focus())
     },
     computed: {
       rememberVuex: function() { return this.$store.getters['app/remember'] },
@@ -106,7 +106,7 @@
     methods: {
       login() {
         if (!this.$refs.form.validate()) {
-          this.notification('Please enter the username and password', 'warning')
+          this.notification('Please make sure all required fields are filled out correctly', 'warning')
           return
         }
         this.loading = true
@@ -126,11 +126,12 @@
               this.mfa_uri = response.data.mfa_uri
               this.mode = 2
             }
-            this.$nextTick(() => { this.$refs.mfa.focus() })
+            this.$nextTick(() => { this.$refs.mfa.focus(); this.$refs.form.resetValidation(); })
           }
           else this.login_success()
         })
         .catch((error) => {
+          if (this.$refs.mfa !== undefined) { this.mfa = ''; this.$refs.mfa.focus() }
           if (error.response === undefined) this.notification("No internet connection", 'error')
           else if (error.response.status == 401) this.notification(error.response.data.message, 'error')
           else this.checkSetup()

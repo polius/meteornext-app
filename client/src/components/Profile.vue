@@ -19,7 +19,7 @@
                       <v-card-text>
                         <v-progress-circular v-if="mfa['uri'] == null" indeterminate style="margin-left:auto; margin-right:auto; display:table;"></v-progress-circular>
                         <qrcode-vue v-else :value="mfa['uri']" size="200" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
-                        <v-text-field outlined v-model="mfa['value']" v-on:keyup.enter="saveProfile()" label="MFA Code" append-icon="vpn_key" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px"></v-text-field>
+                        <v-text-field outlined v-model="mfa['value']" v-on:keyup.enter="saveProfile()" label="MFA Code" append-icon="vpn_key" maxlength="6" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px"></v-text-field>
                       </v-card-text>
                     </v-card>
                   </v-form>
@@ -127,6 +127,7 @@ export default {
           this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
+          this.mfa['value'] = ''
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
