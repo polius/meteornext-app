@@ -54,7 +54,7 @@ class Login:
                         return jsonify({'message': 'Invalid MFA Code'}), 401
                     else:
                         self._users.put_mfa({'username': get_jwt_identity(), 'mfa': login_json['mfa'], 'mfa_hash': login_json['mfa_hash']})
-                        user[0]['mfa'] = login_json['mfa']
+                        user[0]['mfa'] = 1
                         user[0]['mfa_hash'] = login_json['mfa_hash']
                 elif user[0]['mfa'] == 0 and force_mfa:
                     mfa_hash = pyotp.random_base32()
