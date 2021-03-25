@@ -32,6 +32,9 @@ class Users:
     def put_profile(self, user):
         self._sql.execute("UPDATE users SET password = %s, mfa = %s, mfa_hash = %s, email = %s WHERE username = %s", (user['password'], user['mfa'], user['mfa_hash'], user['email'], user['username']))
 
+    def put_mfa(self, user):
+        self._sql.execute("UPDATE users SET mfa = %s, mfa_hash = %s WHERE username = %s", (user['mfa'], user['mfa_hash'], user['username']))
+
     def put_last_login(self, username):
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         self._sql.execute("UPDATE users SET last_login = %s, last_ping = %s WHERE username = %s", (now, now, username))

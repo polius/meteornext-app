@@ -1,8 +1,8 @@
 <template>
   <div style="height:100%">
-    <v-main style="height:100%" :style="{ backgroundImage: 'url(' + require('@/assets/bg.jpg') + ')', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }">
-      <v-container grid-list-xl text-center style="padding-top:0px;">
-        <v-layout row wrap align-center style="max-width:500px; margin: 0 auto;">
+    <v-main :style="{ height:'100%', padding:'0px', backgroundImage: 'url(' + require('@/assets/bg.jpg') + ')', backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }">
+      <v-container grid-list-xl text-center style="height:100%; display:flex; justify-content:center; align-items:center;">
+        <v-layout row wrap align-center style="max-width:500px;">
           <v-flex>
             <v-slide-y-transition mode="out-in">
               <v-card style="border-radius:5px;">
@@ -24,7 +24,15 @@
                       <v-text-field ref="username" filled v-model="username" name="username" label="Username" required append-icon="person" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
                       <v-text-field ref="password" filled v-model="password" name="password" label="Password" required append-icon="lock" type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
                     </div>
-                    <div v-else-if="mode == 1">
+                    <div v-if="mode == 2">
+                      <div class="body-1 font-weight-regular">Multi-Factor Authentication (<span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">MFA</span>) is required.</div>
+                      <v-card style="width:220px; margin-top:10px; margin-bottom:10px; padding:10px 0px 2px 0px; margin-left:auto; margin-right:auto;">
+                        <v-card-text style="padding:0px">
+                          <qrcode-vue size="200" :value="mfa_uri" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
+                        </v-card-text>
+                      </v-card>
+                    </div>
+                    <div v-if="[1,2].includes(mode)">
                       <v-text-field ref="mfa" filled v-model="mfa" name="mfa" label="MFA Code" append-icon="vpn_key" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
                     </div>
                   </v-form>
@@ -49,6 +57,7 @@
 
 <script>
   import axios from 'axios'
+  import QrcodeVue from 'qrcode.vue'
 
   export default {
     data: () => ({
@@ -61,6 +70,10 @@
       loading: false,
       show_alert: false,
 
+      // MFA
+      mfa_hash: null,
+      mfa_uri: null,
+
       // Previous Route
       prevRoute: '',
 
@@ -71,6 +84,7 @@
       snackbarText: ''
     }),
     props:['url'],
+    components: { QrcodeVue },
     beforeRouteEnter(to, from, next) {
       next((vm) => {
         vm.prevRoute = from['path']
@@ -96,16 +110,22 @@
           return
         }
         this.loading = true
-        const payload = {
+        var payload = {
           username: this.username,
           password: this.password,
           remember: this.remember,
-          mfa: this.mfa
         }
+        if (this.mfa.length > 0) payload.mfa = this.mfa
+        if (this.mfa_hash) payload.mfa_hash = this.mfa_hash
         this.$store.dispatch('app/login', payload)
         .then((response) => {
           if (response.status == 202) {
-            this.mode = 1
+            if (response.data.code == 'mfa_request') this.mode = 1
+            else if (response.data.code == 'mfa_setup') {
+              this.mfa_hash = response.data.mfa_hash
+              this.mfa_uri = response.data.mfa_uri
+              this.mode = 2
+            }
             this.$nextTick(() => { this.$refs.mfa.focus() })
           }
           else this.login_success()

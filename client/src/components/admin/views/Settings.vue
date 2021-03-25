@@ -22,7 +22,6 @@
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.key" label="Key" style="margin-left:10px; padding-top:0px;" @click:append="show_key = !show_key" :append-icon="show_key ? 'visibility' : 'visibility_off'" :type="show_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.expiration" label="Expiration" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
           </v-flex>
-
           <!-- SQL -->
           <v-flex v-else-if="setting_mode == 'sql'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="text-h6 font-weight-regular" style="margin-left:10px;">SQL</div>
@@ -33,14 +32,12 @@
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.password" label="Password" style="margin-left:10px; padding-top:0px;" @click:append="show_password = !show_password" :append-icon="show_password ? 'visibility' : 'visibility_off'" :type="show_password ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.database" label="Database" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
           </v-flex>
-
           <!-- LOGS -->
           <v-flex v-else-if="setting_mode == 'logs'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="text-h6 font-weight-regular" style="margin-left:10px; margin-bottom:10px;">LOGS</div>
             <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px; margin-bottom:15px;">The path where the <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">Deployments</span> logs are stored.</div>
             <v-btn :loading="loading" color="secondary" style="margin-left:10px;" @click="logs_mode = 'local'">LOCAL</v-btn>
             <v-btn :loading="loading" color="secondary" style="margin-left:10px;" @click="logs_mode = 'amazon_s3'">AMAZON S3</v-btn>
-
             <v-card v-if="logs_mode == 'local'" style="margin-left:10px; margin-right:10px; margin-top:15px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text subtitle-1">LOCAL</v-toolbar-title>
@@ -57,7 +54,6 @@
                 </v-form>
               </v-card-text>
             </v-card>
-
             <v-card v-else-if="logs_mode == 'amazon_s3'" style="margin-left:10px; margin-right:10px; margin-top:15px;">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text subtitle-1">AMAZON S3</v-toolbar-title>
@@ -78,15 +74,15 @@
               </v-card-text>
             </v-card>
           </v-flex>
-
           <!-- SECURITY -->
           <v-flex v-else-if="setting_mode == 'security'" xs12 style="margin-top:5px; margin-bottom:5px;">
             <div class="text-h6 font-weight-regular" style="margin-left:10px;">SECURITY</div>
-            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">Restrict access to the <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">Administration</span> panel only to a specific IP address or domain.</div>
-            <v-text-field :loading="loading" :disabled="loading" v-model="security.url" label="Administration URL" :placeholder="security.current" style="margin-left:10px; margin-top:12px;" required :rules="[v => v ? this.validURL(v) : true || '' ]"></v-text-field>
+            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">Restrict access to the <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49)">Administration</span> panel only to a specific IP address or domain.</div>
+            <v-text-field :loading="loading" :disabled="loading" v-model="security.url" label="Administration URL" :placeholder="security.current" style="margin-left:10px; margin-top:10px;" required :rules="[v => v ? this.validURL(v) : true || '' ]" hide-details></v-text-field>
+            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:20px;">Force all users to have the <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49)">MFA</span> enabled.</div>
+            <v-switch :loading="loading" :disabled="loading" v-model="security.mfa" label="Force Multi-Factor Authentication (MFA)" color="info" style="margin-left:10px; margin-top:10px;"></v-switch>
             <v-btn :loading="loading" color="#00b16a" style="margin-left:10px;" @click="saveSecurity()">SAVE</v-btn>
           </v-flex>
-
         </v-layout>
       </v-container>
     </v-card>

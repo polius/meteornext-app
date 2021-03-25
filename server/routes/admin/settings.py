@@ -96,9 +96,11 @@ class Settings:
         self._settings.post(user_id, data)
         return jsonify({'message': 'Changes saved successfully'}), 200
 
-    def check_url(self):
-        security = self._settings.get(setting_name='security')
-        if len(security) > 0 and json.loads(security[0]['value'])['url'] != '':
+    def check_url(self, security=None):
+        if security is None:
+            security = self._settings.get(setting_name='security')
+        data = json.loads(security[0]['value'])
+        if 'url' in data and len(data['url']) > 0:
             regex = '(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*'
             # Current URL
             r = re.search(regex, request.url_root)
@@ -110,3 +112,11 @@ class Settings:
             if current_url != admin_url:
                 return False
         return True
+    
+    def check_mfa(self, security=None):
+        if security is None:
+            security = self._settings.get(setting_name='security')
+        data = json.loads(security[0]['value'])
+        if 'mfa' in data and data['mfa'] is True:
+            return True
+        return False
