@@ -160,5 +160,5 @@ class Servers:
                     return jsonify({'message': "The selected servers are included in some environments or clients. Are you sure to proceed?"}), 202
         # Delete servers
         for server in servers:    
-            self._servers.delete(user['group_id'], server)
+            self._servers.delete(user['id'], user['group_id'], server)
         return jsonify({'message': 'Selected servers deleted successfully'}), 200

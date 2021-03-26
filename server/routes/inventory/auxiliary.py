@@ -135,5 +135,5 @@ class Auxiliary:
                 return jsonify({'message': "Insufficient privileges"}), 401
         # Delete auxiliary
         for auxiliary in data:
-            self._auxiliary.delete(user['group_id'], auxiliary)
+            self._auxiliary.delete(user['id'], user['group_id'], auxiliary)
         return jsonify({'message': 'Selected auxiliary connections deleted successfully'}), 200

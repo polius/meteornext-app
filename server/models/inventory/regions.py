@@ -50,13 +50,14 @@ class Regions:
         """
         self._sql.execute(query, (region['name'], region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['shared'], region['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, region['id']))
 
-    def delete(self, group_id, region_id):
+    def delete(self, user_id, group_id, region_id):
         query = """
             DELETE FROM regions
             WHERE group_id = %s
+            AND (shared = 1 OR owner_id = %s)
             AND id = %s
         """
-        self._sql.execute(query, (group_id, region_id))
+        self._sql.execute(query, (group_id, user_id, region_id))
 
     def exist(self, user_id, group_id, region):
         if 'id' in region: # (name, group_id) 

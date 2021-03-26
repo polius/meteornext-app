@@ -10,8 +10,8 @@ class Servers:
                 SELECT s.*, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
                 LEFT JOIN regions r ON r.id = s.region_id
-                WHERE (s.shared = 1 AND r.group_id = %s)
-                OR s.owner_id = %s
+                WHERE s.group_id = %s
+                AND (s.shared = 1 OR s.owner_id = %s)
                 ORDER BY `name`
             """
             return self._sql.execute(query, (group_id, user_id))
@@ -20,8 +20,8 @@ class Servers:
                 SELECT s.*, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
                 LEFT JOIN regions r ON r.id = s.region_id
-                WHERE (s.shared = 1 AND r.group_id = %s)
-                OR s.owner_id = %s
+                WHERE s.group_id = %s
+                AND (s.shared = 1 OR s.owner_id = %s)
                 AND s.id = %s
             """
             return self._sql.execute(query, (group_id, user_id, server_id))
@@ -67,58 +67,64 @@ class Servers:
         """
         self._sql.execute(query, (server['name'], group_id, server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['usage'], server['shared'], server['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
-    def delete(self, group_id, server_id):
+    def delete(self, user_id, group_id, server_id):
         # Delete from 'monitoring'
         query = """
             DELETE m 
             FROM monitoring m 
             JOIN servers s ON s.id = m.server_id AND s.id = %s
-            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            WHERE s.group_id = %s
+            AND (s.shared = 1 OR s.owner_id = %s)
         """
-        self._sql.execute(query, (server_id, group_id))
+        self._sql.execute(query, (server_id, group_id, user_id))
         # Delete from 'monitoring_servers'
         query = """
             DELETE ms
             FROM monitoring_servers ms 
             JOIN servers s ON s.id = ms.server_id AND s.id = %s
-            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            WHERE s.group_id = %s
+            AND (s.shared = 1 OR s.owner_id = %s)
         """
-        self._sql.execute(query, (server_id, group_id))
+        self._sql.execute(query, (server_id, group_id, user_id))
         # Delete from 'monitoring_queries'
         query = """
             DELETE mq
             FROM monitoring_queries mq
             JOIN servers s ON s.id = mq.server_id AND s.id = %s
-            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            WHERE s.group_id = %s
+            AND (s.shared = 1 OR s.owner_id = %s)
         """
-        self._sql.execute(query, (server_id, group_id))
+        self._sql.execute(query, (server_id, group_id, user_id))
 
         # Delete from 'environment_servers'
         query = """
             DELETE es
             FROM environment_servers es
             JOIN servers s ON s.id = es.server_id AND s.id = %s
-            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            WHERE s.group_id = %s
+            AND (s.shared = 1 OR s.owner_id = %s)
         """
-        self._sql.execute(query, (server_id, group_id))
+        self._sql.execute(query, (server_id, group_id, user_id))
 
         # Delete from 'client_servers'
         query = """
             DELETE cs
             FROM client_servers cs
             JOIN servers s ON s.id = cs.server_id AND s.id = %s
-            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
+            WHERE s.group_id = %s
+            AND (s.shared = 1 OR s.owner_id = %s)
         """
-        self._sql.execute(query, (server_id, group_id))
+        self._sql.execute(query, (server_id, group_id, user_id))
 
         # Delete from 'servers'
         query = """
             DELETE s
             FROM servers s
-            JOIN regions r ON r.id = s.region_id AND r.group_id = %s
             WHERE s.id = %s
+            AND s.group_id = %s
+            AND (s.shared = 1 OR s.owner_id = %s)
         """
-        self._sql.execute(query, (group_id, server_id))
+        self._sql.execute(query, (server_id, group_id, user_id))
 
     def exist(self, user_id, group_id, server):
         if 'id' in server:
