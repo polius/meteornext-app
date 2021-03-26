@@ -133,5 +133,5 @@ class Regions:
                 return jsonify({'message': "Insufficient privileges"}), 401
         # Delete regions
         for region in regions:
-            self._regions.delete(user['group_id'], region)
+            self._regions.delete(user['id'], user['group_id'], region)
         return jsonify({'message': 'Selected regions deleted successfully'}), 200

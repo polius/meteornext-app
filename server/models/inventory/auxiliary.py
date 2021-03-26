@@ -51,13 +51,14 @@ class Auxiliary:
         """
         self._sql.execute(query, (auxiliary['name'], auxiliary['engine'], auxiliary['version'], auxiliary['hostname'], auxiliary['port'], auxiliary['username'], auxiliary['password'], auxiliary['ssl'], auxiliary['shared'], auxiliary['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), auxiliary['id'], group_id))
 
-    def delete(self, group_id, auxiliary_id):
+    def delete(self, user_id, group_id, auxiliary_id):
         query = """
             DELETE FROM auxiliary
             WHERE group_id = %s
+            AND (shared = 1 OR owner_id = %s)
             AND id = %s
         """
-        self._sql.execute(query, (group_id, auxiliary_id))
+        self._sql.execute(query, (group_id, user_id, auxiliary_id))
 
     def exist(self, user_id, group_id, auxiliary):
         if 'id' in auxiliary:
