@@ -15,7 +15,7 @@ class deploy_queries:
         # Store Server Credentials + SQL Connection + List of Auxiliary Connections
         self._server = None
         self._sql = None
-        self._aux = []
+        self._aux = {}
 
         # Store Transaction & Query Error
         self._transaction = False
@@ -52,9 +52,8 @@ class deploy_queries:
             self._sql.stop()
 
         # Close auxiliary connections
-        for aux in self._aux:
-            for conn in aux.values():
-                conn.stop()
+        for conn in self._aux.values():
+            conn.stop()
 
     def execute(self, query=None, args=None, database=None, auxiliary=None, alias=None):
         # Get Current Thread
@@ -93,8 +92,8 @@ class deploy_queries:
                     conn.start()
                 except Exception as e:
                     raise Exception("Auxiliary Connection [{}]: {}".format(auxiliary['auxiliary_connection'], e.args[1]))
-
-                self._aux.append({auxiliary['auxiliary_connection']: conn})
+                else:
+                    self._aux[auxiliary['auxiliary_connection']] = conn
             else:
                conn = self._aux[auxiliary['auxiliary_connection']]
 
@@ -164,8 +163,8 @@ class deploy_queries:
             self._sql.begin()
 
         # Start auxiliary connections transaction
-        for i in self._aux:
-            list(i.values())[0].begin()
+        for conn in self._aux.values():
+            conn.begin()
 
     def commit(self):
         # End current transaction
@@ -180,8 +179,8 @@ class deploy_queries:
                 self._sql.commit()
 
             # Commit auxiliary connections
-            for i in self._aux:
-                list(i.values())[0].commit()
+            for conn in self._aux.values():
+                conn.commit()
 
             # Transaction tasks
             for i in self._execution_log['output']:
@@ -197,8 +196,8 @@ class deploy_queries:
             self._sql.rollback()
 
         # Rollback auxiliary connections
-        for i in self._aux:
-            list(i.values())[0].rollback()
+        for conn in self._aux.values():
+            conn.rollback()
 
         # Initialize query error
         self._query_error = False

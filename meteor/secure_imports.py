@@ -16,7 +16,7 @@ def import2(name, globals=None, locals=None, fromlist=(), level=0):
         pass
 
     if (f1 is not None and f1 == 'blueprint') or (f2 is not None and f2 == 'blueprint'):
-        whitelist = ['blueprint','string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','fnmatch','secrets','csv','time','json','json.decoder','uuid','locale']
+        whitelist = ['blueprint','traceback','string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','fnmatch','secrets','csv','time','json','json.decoder','uuid','locale']
         frommodule = globals['__name__'] if globals else None
         if frommodule is None or frommodule in ['__main__','blueprint']:
             if name not in whitelist:
@@ -39,32 +39,12 @@ def exec2(name, globals=None, locals=None):
     origin_exec(name, globals, locals)
 
 def open2(path, *args, **kwargs):
-    return File(path, *args, **kwargs)
-
-class File(object):
-    def __init__(self, path, *args, **kwargs):
-        frame = inspect.currentframe().f_back.f_back
-        if frame is not None:
-            module_path = frame.f_globals['__file__']
-            if module_path.endswith('/blueprint.py'):
-                raise Exception("Method open() is restricted.")
-        self._file = origin_open(path, *args, **kwargs)
-
-    def __enter__(self):
-        return self
-
-    def read(self, n_bytes=-1):
-        return self._file.read(n_bytes)
-
-    def write(self, data):
-        self._file.write(data)
-
-    def seek(self, *args, **kwargs):
-        self._file.seek(args, kwargs)
-
-    def __exit__(self, e_type, e_val, e_tb):
-        self._file.close()
-        self._file = None
+    frame = inspect.currentframe().f_back
+    if frame is not None:
+        module_path = frame.f_globals['__file__']
+        if module_path.endswith('/blueprint.py'):
+            raise Exception("Method open() is restricted.")
+    return origin_open(path, *args, **kwargs)
 
 origin_exec = builtins.exec
 origin_open = builtins.open
