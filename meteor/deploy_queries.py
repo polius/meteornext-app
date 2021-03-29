@@ -52,8 +52,9 @@ class deploy_queries:
             self._sql.stop()
 
         # Close auxiliary connections
-        for i in self._aux:
-            list(i.values())[0].stop()
+        for aux in self._aux:
+            for conn in aux.values():
+                conn.stop()
 
     def execute(self, query=None, args=None, database=None, auxiliary=None, alias=None):
         # Get Current Thread

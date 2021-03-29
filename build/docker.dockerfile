@@ -15,6 +15,7 @@ COPY build/start.sh /root/
 
 # Run additional commands
 RUN apt-get update -qq && \
+    apt-get clean -qq && \
     tar -zxf /usr/share/nginx/html/client.tar.gz -C /usr/share/nginx/html/ && \
     mv /usr/share/nginx/html/client/* /usr/share/nginx/html/ && \
     rm -rf /usr/share/nginx/html/client* && \
