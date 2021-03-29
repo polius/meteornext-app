@@ -57,7 +57,7 @@ class deploy_servers:
                     t.join()
 
                 # Check errors
-                current_thread.error = any(t.error for t in threads)
+                current_thread.error = current_thread.error or any(t.error for t in threads)
 
             except (Exception,KeyboardInterrupt):
                 for t in threads:

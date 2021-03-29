@@ -46,6 +46,11 @@ class deploy_blueprint:
             with open(execution_log_path, 'w') as outfile:
                 json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
 
+            # Check Errors
+            for log in query_instance.execution_log['output']:
+                if log['meteor_status'] == '0':
+                    current_thread.error = True
+                    break
         except Exception as e:            
             inner_frames = inspect.getinnerframes(e.__traceback__)
             found = False
@@ -238,6 +243,11 @@ class deploy_blueprint:
             with open(execution_log_path, 'w') as outfile:
                 json.dump(query_instance.execution_log, outfile, default=self.__dtSerializer, separators=(',', ':'))
 
+            # Check Errors
+            for log in query_instance.execution_log['output']:
+                if log['meteor_status'] == '0':
+                    current_thread.error = True
+                    break
         except Exception as e:
             inner_frames = inspect.getinnerframes(e.__traceback__)
             found = False
