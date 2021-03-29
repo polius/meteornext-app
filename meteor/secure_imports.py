@@ -59,6 +59,9 @@ class File(object):
     def write(self, data):
         self._file.write(data)
 
+    def seek(self, *args, **kwargs):
+        self._file.seek(args, kwargs)
+
     def __exit__(self, e_type, e_val, e_tb):
         self._file.close()
         self._file = None
