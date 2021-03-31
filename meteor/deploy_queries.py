@@ -74,28 +74,11 @@ class deploy_queries:
         else:
             query_alias = '[ALIAS] {}'.format(alias)
 
-        # SQL Connection
+        # Get SQL Connection
         if auxiliary is None:
             conn = self._sql
-
-        # Auxiliary Connection
         else:
-            if auxiliary['auxiliary_connection'] not in self._aux:
-                # Check if the auxiliary connection exists
-                if auxiliary['auxiliary_connection'] not in self._imports.config['auxiliary_connections']:
-                    raise Exception("The auxiliary connection '{}' does not exist".format(auxiliary['auxiliary_connection']))
-                # Start connecting to the auxiliary connection
-                try:
-                    aux = self._imports.config['auxiliary_connections'][auxiliary['auxiliary_connection']]
-                    aux['sql']['timeout'] = self._imports.config['params']['timeout']
-                    conn = connector(aux)
-                    conn.start()
-                except Exception as e:
-                    raise Exception("Auxiliary Connection [{}]: {}".format(auxiliary['auxiliary_connection'], e.args[1]))
-                else:
-                    self._aux[auxiliary['auxiliary_connection']] = conn
-            else:
-               conn = self._aux[auxiliary['auxiliary_connection']]
+            conn = self.__get_auxiliary(auxiliary)
 
         # Init a new Row
         date_time = datetime.fromtimestamp(time()).strftime('%Y-%m-%d %H:%M:%S.%f UTC')
@@ -208,6 +191,29 @@ class deploy_queries:
                 i['meteor_status'] = '2'
                 i['meteor_response'] = ''
                 del i['transaction']
+
+    def is_error(self):
+        for log in self._execution_log['output']:
+            if log['meteor_status'] == '0':
+                return True
+        return False
+
+    def __get_auxiliary(self, auxiliary):
+        if auxiliary['auxiliary_connection'] not in self._aux:
+            # Check if the auxiliary connection exists
+            if auxiliary['auxiliary_connection'] not in self._imports.config['auxiliary_connections']:
+                raise Exception("The auxiliary connection '{}' does not exist".format(auxiliary['auxiliary_connection']))
+            # Start connecting to the auxiliary connection
+            try:
+                aux = self._imports.config['auxiliary_connections'][auxiliary['auxiliary_connection']]
+                aux['sql']['timeout'] = self._imports.config['params']['timeout']
+                conn = connector(aux)
+                conn.start()
+            except Exception as e:
+                raise Exception("Auxiliary Connection [{}]: {}".format(auxiliary['auxiliary_connection'], str(e)))
+            else:
+                self._aux[auxiliary['auxiliary_connection']] = conn
+        return self._aux[auxiliary['auxiliary_connection']]
 
     def __get_query_type(self, query, show_output=True):
         for t in self._query_template.query_template:

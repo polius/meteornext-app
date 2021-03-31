@@ -1,4 +1,5 @@
 import builtins
+import traceback
 import importlib
 import inspect
 import sys
@@ -40,10 +41,12 @@ def exec2(name, globals=None, locals=None):
 
 def open2(path, *args, **kwargs):
     frame = inspect.currentframe().f_back
-    if frame is not None:
-        module_path = frame.f_globals['__file__']
-        if module_path.endswith('/blueprint.py'):
-            raise Exception("Method open() is restricted.")
+    if frame is not None and frame.f_globals['__file__'].endswith('/blueprint.py'):
+        a = inspect.currentframe().f_globals['__file__']
+        b = inspect.currentframe().f_back.f_globals['__file__']
+        c = inspect.currentframe().f_back.f_back.f_globals['__file__']
+        d = inspect.currentframe().f_back.f_back.f_back.f_globals['__file__']
+        raise Exception("Method open() is restricted. " + a + ' | ' + b + ' | ' + c + ' | ' + d)
     return origin_open(path, *args, **kwargs)
 
 origin_exec = builtins.exec

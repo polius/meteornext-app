@@ -3,7 +3,7 @@ import pyotp
 import bcrypt
 import models.admin.users
 from flask import request, jsonify, Blueprint
-from flask_jwt_extended import (create_access_token, create_refresh_token, jwt_required)
+from flask_jwt_extended import (create_access_token, jwt_required, set_access_cookies, unset_access_cookies)
 
 import models.admin.settings
 import routes.admin.settings
@@ -73,10 +73,17 @@ class Login:
             # Update user last_login
             self._users.put_last_login(login_json['username'])
 
+            # Show new login
+            if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+                print('- New local login: ' + request.environ['REMOTE_ADDR'])
+            else:
+                print('- New nginx login: ' + request.headers['X-Real-IP'] + ' | ' + request.environ["HTTP_X_FORWARDED_FOR"].split(",")[0].strip() request.environ['HTTP_X_FORWARDED_FOR'])
+
+            # Generate access tokens
+            access_token = create_access_token(identity=user[0]['username'])
+
             # Build return data
             data = {
-                'access_token': create_access_token(identity=user[0]['username']),
-                'refresh_token': create_refresh_token(identity=user[0]['username']),
                 'username': user[0]['username'],
                 'coins': user[0]['coins'],
                 'admin': 1 if user[0]['admin'] and valid_url else 0,
@@ -92,11 +99,20 @@ class Login:
                 'coins_execution': user[0]['coins_execution'],
                 'coins_day': user[0]['coins_day']
             }
-            return jsonify({'data': data}), 200
+            resp = jsonify({'data': data})
+            set_access_cookies(resp, access_token, 12*60*60)
+            return resp, 200
 
         @login_blueprint.route('/login/check', methods=['GET'])
         @jwt_required()
         def login_check():
             return jsonify({'message': 'OK'}), 200
+
+        @login_blueprint.route('/logout', methods=['GET'])
+        @jwt_required()
+        def logout_check():
+            resp = jsonify({'message': 'OK'})
+            unset_access_cookies(resp)
+            return resp
 
         return login_blueprint

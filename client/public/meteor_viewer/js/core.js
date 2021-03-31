@@ -1525,8 +1525,8 @@ function show_error(title, message, code) {
 // THEMES (LIGHT / DARK)
 // ##############################################################################################
 function init_theme() {
-  if (getCookie('theme') == 'light') apply_light_theme();
-  else apply_dark_theme();
+  // if (getCookie('theme') == 'light') apply_light_theme();
+  apply_dark_theme();
 }
 
 $("#theme-button").click(function () {
@@ -1543,7 +1543,7 @@ function apply_light_theme() {
   THEME = 'light';
 
   // Store Theme to a Cookie
-  setCookie('theme', 'light', 365)
+  // setCookie('theme', 'light', 365)
 
   // Change Button Title
   document.getElementById("theme-button").setAttribute('title', 'Dark Mode');
@@ -1653,7 +1653,7 @@ function apply_dark_theme() {
   THEME = 'dark';
 
   // Store Theme to a Cookie
-  setCookie('theme', 'dark', 365)
+  // setCookie('theme', 'dark', 365)
 
   // Change Button Title
   document.getElementById("theme-button").setAttribute('title', 'Light Mode');
