@@ -118,7 +118,7 @@
         if (this.mfa.length > 0) payload.mfa = this.mfa
         if (this.mfa_hash) payload.mfa_hash = this.mfa_hash
         this.$store.dispatch('app/login', payload)
-        .then((response) => {
+        .then((response) => {          
           if (response.status == 202) {
             if (response.data.code == 'mfa_request') this.mode = 1
             else if (response.data.code == 'mfa_setup') {

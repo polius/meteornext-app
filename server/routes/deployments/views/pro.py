@@ -511,10 +511,10 @@ def import2(name, globals=None, locals=None, fromlist=(), level=0):
             raise Exception(f"Module '{{frommodule}}' is restricted.")
     return importlib.__import__(name, globals, locals, fromlist, level)
 
-def exec2(name, globals=None, locals=None):
+def exec2(*args, **kwargs):
     raise Exception("Method exec() is restricted.")
 
-def open2(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
+def open2(*args, **kwargs):
     raise Exception("Method open() is restricted.")
 
 builtins.__import__ = import2

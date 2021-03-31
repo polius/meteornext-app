@@ -1,10 +1,12 @@
 import axios from 'axios'
+import Cookies from 'js-cookie'
 
 // initial state
 const state = () => ({
+  isLoggedIn: Cookies.get('csrf_access_token') !== undefined,
   username: localStorage.getItem('username') || '',
   remember: localStorage.getItem('remember') == '1' ? true : false,
-  token: localStorage.getItem('token') || '',
+  // token: localStorage.getItem('token') || '',
   coins: localStorage.getItem('coins') || 0,
   admin: localStorage.getItem('admin') == '1' ? true : false,
   owner: localStorage.getItem('owner') == '1' ? true : false,
@@ -23,7 +25,7 @@ const state = () => ({
 
 // getters
 const getters = {
-  isLoggedIn: state => !!state.token,
+  isLoggedIn: state => state.isLoggedIn,
   username: state => state.username,
   remember: state => state.remember,
   coins: state => state.coins,
@@ -55,7 +57,7 @@ const actions = {
           var data = {
             username: response.data.data.username,
             remember: user['remember'],
-            token: response.data.data.access_token,
+            // token: response.data.data.access_token,
             coins: response.data.data.coins,
             admin: response.data.data.admin,
             owner: response.data.data.owner,
@@ -74,7 +76,7 @@ const actions = {
           // Store variables to the local storage
           localStorage.setItem('username', data['username'])
           localStorage.setItem('remember', user['remember'] ? '1' : '0')
-          localStorage.setItem('token', data['token'])
+          // localStorage.setItem('token', data['token'])
           localStorage.setItem('coins', data['coins'])
           localStorage.setItem('admin', data['admin'])
           localStorage.setItem('owner', data['owner'])
@@ -91,8 +93,8 @@ const actions = {
           localStorage.setItem('coins_day', data['coins_day'])
 
           // Add the token to the axios lib
-          axios.defaults.headers.common['Authorization'] = `Bearer ${data['token']}`
-
+          // axios.defaults.headers.common['Authorization'] = `Bearer ${data['token']}`
+          axios.defaults.headers.common['X-CSRF-TOKEN'] = Cookies.get('csrf_access_token')
           // Store variables to vuex
           commit('auth', data)
           resolve(response)
@@ -101,7 +103,7 @@ const actions = {
           commit('logout')
           // Remove variables from the local storage
           if (!user['remember']) localStorage.removeItem('username')
-          localStorage.removeItem('token')
+          // localStorage.removeItem('token')
           localStorage.removeItem('coins')
           localStorage.removeItem('admin')
           localStorage.removeItem('owner')
@@ -130,28 +132,30 @@ const actions = {
   },
   logout({ commit, getters }) {
     return new Promise((resolve) => {
-      commit('logout')
-      // Remove variables from the local storage
-      if (!getters.remember) localStorage.removeItem('username')
-      localStorage.removeItem('token')
-      localStorage.removeItem('coins')
-      localStorage.removeItem('admin')
-      localStorage.removeItem('owner')
-      localStorage.removeItem('inventory_enabled')
-      localStorage.removeItem('inventory_secured')
-      localStorage.removeItem('deployments_enabled')
-      localStorage.removeItem('deployments_basic')
-      localStorage.removeItem('deployments_pro')
-      localStorage.removeItem('deployments_inbenta')
-      localStorage.removeItem('monitoring_enabled')
-      localStorage.removeItem('utils_enabled')
-      localStorage.removeItem('client_enabled')
-      localStorage.removeItem('coins_execution')
-      localStorage.removeItem('coins_day')
+      axios.get('/logout').finally(() => {
+        commit('logout')
+        // Remove variables from the local storage
+        if (!getters.remember) localStorage.removeItem('username')
+        // localStorage.removeItem('token')
+        localStorage.removeItem('coins')
+        localStorage.removeItem('admin')
+        localStorage.removeItem('owner')
+        localStorage.removeItem('inventory_enabled')
+        localStorage.removeItem('inventory_secured')
+        localStorage.removeItem('deployments_enabled')
+        localStorage.removeItem('deployments_basic')
+        localStorage.removeItem('deployments_pro')
+        localStorage.removeItem('deployments_inbenta')
+        localStorage.removeItem('monitoring_enabled')
+        localStorage.removeItem('utils_enabled')
+        localStorage.removeItem('client_enabled')
+        localStorage.removeItem('coins_execution')
+        localStorage.removeItem('coins_day')
 
-      // Remove token from axios header
-      delete axios.defaults.headers.common['Authorization']
-      resolve()
+        // Remove token from axios header
+        delete axios.defaults.headers.common['X-CSRF-TOKEN']
+        resolve()
+      })
     })
   }
 }
@@ -159,9 +163,10 @@ const actions = {
 // mutations
 const mutations = {
   auth(state, data) {
+    state.isLoggedIn = true
     state.username = data.username
     state.remember = data.remember == 1
-    state.token = data.token
+    // state.token = data.token
     state.coins = data.coins
     state.admin = data.admin == 1
     state.owner = data.owner == 1
@@ -178,8 +183,9 @@ const mutations = {
     state.coins_day = data.coins_day
   },
   logout(state) {
+    state.isLoggedIn = false
     state.username = (state.remember) ? state.username : ''
-    state.token = ''
+    // state.token = ''
     state.coins = 0
     state.admin = 0
     state.owner = 0
