@@ -5,11 +5,11 @@
         <v-toolbar-title class="subtitle-1">NEW DEPLOY</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <div>
-          <v-btn v-if="deployments_basic" :color="basicColor" @click="basic()"><v-icon small style="padding-right:10px; padding-bottom:1px">fas fa-chess-knight</v-icon>Basic</v-btn>
-          <v-btn v-if="deployments_pro" :color="proColor" @click="pro()" style="margin-left:10px;"><v-icon small style="padding-right:10px; padding-bottom:1px">fas fa-chess-queen</v-icon>Pro</v-btn>
+          <v-btn v-if="deployments_basic" :color="basicColor" @click="basic()"><v-icon small style="margin-right:10px; margin-bottom:1px">fas fa-chess-knight</v-icon>Basic</v-btn>
+          <v-btn v-if="deployments_pro" :color="proColor" @click="pro()" style="margin-left:10px;"><v-icon small style="margin-right:10px; margin-bottom:1px">fas fa-chess-queen</v-icon>Pro</v-btn>
         </div>
         <v-spacer></v-spacer>
-        <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn></router-link>
+        <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon style="width:22px; height:22px;">fas fa-times-circle</v-icon></v-btn></router-link>
       </v-toolbar>
       <Basic v-if="mode=='basic'"/>
       <Pro v-else-if="mode=='pro'"/>

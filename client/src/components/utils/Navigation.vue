@@ -3,7 +3,7 @@
     <div>
       <v-tabs background-color="#1C8D73" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
         <v-tabs-slider></v-tabs-slider>
-          <v-tab to="/utils"><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>UTILS</span></v-tab>
+          <v-tab to="/utils"><span class="pl-2 pr-2"><v-icon small style="margin-right:10px">fas fa-database</v-icon>UTILS</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-tab to="/utils/access"><span class="pl-2 pr-2">SQL Access</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>

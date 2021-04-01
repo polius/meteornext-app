@@ -5,10 +5,10 @@
         <v-toolbar-title class="white--text subtitle-1">REGIONS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text @click="newRegion()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1 && !(inventory_secured && selected[0].shared && !owner)" @click="cloneRegion()" text><v-icon small style="padding-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editRegion()"><v-icon small style="padding-right:10px">{{ !owner && selected[0].shared ? 'fas fa-info' : 'fas fa-feather-alt' }}</v-icon>{{ !owner && selected[0].shared ? 'INFO' : 'EDIT' }}</v-btn>
-          <v-btn v-if="selected.length > 0 && !(!owner && selected.some(x => x.shared))" text @click="deleteRegion()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn text @click="newRegion()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1 && !(inventory_secured && selected[0].shared && !owner)" @click="cloneRegion()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="editRegion()"><v-icon small style="margin-right:10px">{{ !owner && selected[0].shared ? 'fas fa-info' : 'fas fa-feather-alt' }}</v-icon>{{ !owner && selected[0].shared ? 'INFO' : 'EDIT' }}</v-btn>
+          <v-btn v-if="selected.length > 0 && !(!owner && selected.some(x => x.shared))" text @click="deleteRegion()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('personal')" :style="filter == 'personal' ? 'font-weight:600' : 'font-weight:400'">PERSONAL</v-btn>
@@ -38,7 +38,7 @@
           <v-btn v-if="mode != 'delete'" :readonly="readOnly" title="Create the region only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = false : ''" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
           <v-btn v-if="mode != 'delete'" :disabled="!owner && !readOnly" :readonly="readOnly" title="Create the region for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = true : ''"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="dialog = false" icon><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -47,7 +47,7 @@
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" :readonly="readOnly" label="Name" required hide-details></v-text-field>
                   <v-switch v-model="item.ssh_tunnel" :readonly="readOnly" label="SSH Tunnel" color="info" hide-details style="margin-top:15px;"></v-switch>
-                  <div v-if="item.ssh_tunnel && !(readOnly && inventory_secured)" style="margin-top:25px;">
+                  <div v-if="item.ssh_tunnel && !(readOnly && inventory_secured)" style="margin-top:20px;">
                     <v-row no-gutters>
                       <v-col cols="9" style="padding-right:10px">
                         <v-text-field v-model="item.hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
@@ -62,7 +62,8 @@
                         <v-text-field v-model="item.password" :readonly="readOnly" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" hide-details style="padding-top:0px;"></v-text-field>
                       </v-col>
                       <v-col cols="auto" style="padding-left:10px">
-                        <v-btn @click="keyDialogOpen()" color="#2e3131"><v-icon small :color="item.key == null || item.key.length == 0 ? 'error' : '#00b16a'" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>Private Key</v-btn>
+                        <v-btn v-show="item.key == null || item.key.length == 0" @click="keyDialogOpen()" color="#2e3131"><v-icon small color="error" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>Private Key</v-btn>
+                        <v-btn v-show="item.key != null && item.key.length != 0" @click="keyDialogOpen()" color="#2e3131"><v-icon small color="#00b16a" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>Private Key</v-btn>
                       </v-col>
                     </v-row>
                   </div>
@@ -96,7 +97,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-btn @click="keyDialogSubmit" color="primary" style="margin-right:10px;">Save</v-btn>
         <v-spacer></v-spacer>
-        <v-btn @click="keyDialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        <v-btn @click="keyDialog = false" icon><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
       <v-card>
         <v-card-text style="padding:0px;">
@@ -299,6 +300,7 @@ export default {
       this.keyDialog = true
     },
     keyDialogSubmit() {
+      this.item.key = null
       this.item.key = this.KeyDialogText
       this.keyDialog = false
     },

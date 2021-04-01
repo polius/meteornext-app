@@ -5,8 +5,8 @@
         <v-toolbar-title class="white--text subtitle-1">PARAMETERS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
-          <v-btn :disabled="loading" text title="Filter parameters" @click="openFilter()" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()" class="body-2"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn :disabled="loading" text title="Filter parameters" @click="openFilter()" class="body-2"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-text-field v-model="parameters_search" append-icon="search" label="Search" color="white" style="margin-left:10px;" single-line hide-details></v-text-field>
@@ -21,9 +21,9 @@
     <v-dialog v-model="servers_dialog" max-width="896px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-database</v-icon>SERVERS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-database</v-icon>SERVERS</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="servers_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="servers_dialog = false" style="width:40px; height:40px"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -62,9 +62,9 @@
     <v-dialog v-model="filter_dialog" max-width="50%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-sliders-h</v-icon>FILTER</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-sliders-h</v-icon>FILTER</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="filter_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="filter_dialog = false" style="width:40px; height:40px"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px;">
           <v-container style="padding:0px">

@@ -7,19 +7,19 @@
       <v-divider class="mx-3" inset vertical></v-divider>
       <!-- DEPLOYMENTS -->
       <router-link v-if="deployments_enabled" class="nav-link" to="/deployments" style="margin-right:10px;">
-        <v-btn color="#e74c3c"><v-icon small style="padding-right:10px">fas fa-meteor</v-icon>Deployments</v-btn>
+        <v-btn color="#e74c3c"><v-icon small style="margin-right:10px">fas fa-meteor</v-icon>Deployments</v-btn>
       </router-link>
       <!-- MONITORING -->
       <router-link v-if="monitoring_enabled" class="nav-link" to="/monitoring" style="margin-right:10px;">
-        <v-btn color="#fa8231"><v-icon small style="padding-right:10px">fas fa-desktop</v-icon>Monitoring</v-btn>
+        <v-btn color="#fa8231"><v-icon small style="margin-right:10px">fas fa-desktop</v-icon>Monitoring</v-btn>
       </router-link>
       <!-- UTILS -->
       <router-link v-if="utils_enabled" class="nav-link" to="/utils" style="margin-right:10px;">
-        <v-btn color="#00b16a"><v-icon small style="padding-right:10px">fas fa-database</v-icon>Utils</v-btn>
+        <v-btn color="#00b16a"><v-icon small style="margin-right:10px">fas fa-database</v-icon>Utils</v-btn>
       </router-link>
       <!-- CLIENT -->
       <router-link v-if="client_enabled" class="nav-link" to="/client">
-        <v-btn color="#8e44ad"><v-icon small style="padding-right:10px">fas fa-bolt</v-icon>Client</v-btn>
+        <v-btn color="#8e44ad"><v-icon small style="margin-right:10px">fas fa-bolt</v-icon>Client</v-btn>
       </router-link>
       <v-spacer></v-spacer>
       <!-- COINS -->
@@ -73,7 +73,7 @@
       <v-toolbar flat class="primary">
         <v-toolbar-title>Notifications</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn icon title="See all notifications" @click.stop="notificationsSubmit()"><v-icon small>fas fa-bars</v-icon></v-btn>
+        <v-btn icon title="See all notifications" @click.stop="notificationsSubmit()"><v-icon style="width:16px; height:16px;">fas fa-bars</v-icon></v-btn>
         <v-btn :disabled="loading" icon title="Refresh" @click.stop="notificationsRefresh()"><v-icon>refresh</v-icon></v-btn>
         <v-btn icon title="Close" @click.stop="rightDrawer = false"><v-icon>close</v-icon></v-btn>
       </v-toolbar>
@@ -85,8 +85,8 @@
           <v-list-item :title="notification['name']" @click="openNotification(notification)" style="padding-left:0px">
             <div :style="`margin-right:20px; height:51px; width:5px; background-color:` + getStatusColor(notification['status'])"></div>
             <v-list-item-content>
-              <v-list-item-title v-if="notification['category'] == 'deployment'"><v-icon small title="Deployment" color="#fa8231" style="padding-right:5px;">fas fa-meteor</v-icon> {{ notification['name'] }}</v-list-item-title>
-              <v-list-item-title v-else-if="notification['category'] == 'monitoring'"><v-icon small title="Monitoring" color="#fa8231" style="padding-right:5px;">fas fa-desktop</v-icon> {{ notification['name'] }}</v-list-item-title>
+              <v-list-item-title v-if="notification['category'] == 'deployment'"><v-icon small title="Deployment" color="#fa8231" style="margin-right:5px;">fas fa-meteor</v-icon> {{ notification['name'] }}</v-list-item-title>
+              <v-list-item-title v-else-if="notification['category'] == 'monitoring'"><v-icon small title="Monitoring" color="#fa8231" style="margin-right:5px;">fas fa-desktop</v-icon> {{ notification['name'] }}</v-list-item-title>
               <v-list-item-subtitle>{{ parseDate(notification['date']) }}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>

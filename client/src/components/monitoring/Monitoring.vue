@@ -3,11 +3,11 @@
     <v-card style="margin-bottom:7px;">
       <v-toolbar dense flat color="primary">
         <v-toolbar-items class="hidden-sm-and-down" style="margin-left:-16px">
-          <v-btn :disabled="loading" text title="Define monitoring rules and settings" @click="openSettings()" class="body-2"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
-          <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()" class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
-          <v-btn :disabled="loading" text title="Filter servers" @click="openFilter()" class="body-2"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
-          <v-btn :disabled="loading" text title="Sort servers by number of connections" @click="sortClick()" class="body-2" :style="{ backgroundColor : sort_active ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sort-amount-down</v-icon>SORT</v-btn>
-          <v-btn :disabled="loading" text title="What's going on in all servers" @click="events_dialog=true" class="body-2"><v-icon small style="padding-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
+          <v-btn :disabled="loading" text title="Define monitoring rules and settings" @click="openSettings()" class="body-2"><v-icon small style="margin-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+          <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()" class="body-2"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn :disabled="loading" text title="Filter servers" @click="openFilter()" class="body-2"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn :disabled="loading" text title="Sort servers by number of connections" @click="sortClick()" class="body-2" :style="{ backgroundColor : sort_active ? '#4ba2f1' : '' }"><v-icon small style="margin-right:10px">fas fa-sort-amount-down</v-icon>SORT</v-btn>
+          <v-btn :disabled="loading" text title="What's going on in all servers" @click="events_dialog=true" class="body-2"><v-icon small style="margin-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field @change="applyFilter" v-model="search" append-icon="search" label="Search" color="white" style="margin-left:5px;" single-line hide-details></v-text-field>
@@ -46,9 +46,9 @@
     <v-dialog v-model="settings_dialog" max-width="50%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-cog</v-icon>SETTINGS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-cog</v-icon>SETTINGS</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="settings_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="settings_dialog = false" style="width:40px; height:40px"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px;">
           <v-container style="padding:0px">
@@ -63,19 +63,19 @@
                       <v-select filled v-model="settings.monitor_align" label="Servers per line" :items="align_items" :rules="[v => !!v || '']" hide-details></v-select>
                     </v-col>
                   </v-row>
-                  <div class="subtitle-1 font-weight-regular white--text" style="margin-top:15px">
-                    SLACK
+                  <div style="margin-top:15px">
                     <v-tooltip right>
                       <template v-slot:activator="{ on }">
-                        <v-icon small style="margin-left:5px; margin-bottom:3px;" v-on="on">fas fa-question-circle</v-icon>
+                        <span v-on="on" class="subtitle-1 font-weight-regular white--text">
+                          SLACK
+                          <v-icon small style="margin-left:5px; margin-bottom:3px;">fas fa-question-circle</v-icon>
+                        </span>
                       </template>
-                      <span>
-                        Send a <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime a server changes its status (available, unavailable, ...)
-                      </span>
+                      Send a <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime a server changes its status (available, unavailable, ...)
                     </v-tooltip>
                   </div>
                   <v-switch v-model="settings.monitor_slack_enabled" label="Enable Notifications" color="info" style="margin-top:5px;" hide-details></v-switch>
-                  <div v-if="settings.monitor_slack_enabled" style="margin-top:10px">
+                  <div v-if="settings.monitor_slack_enabled" style="margin-top:15px">
                     <v-text-field ref="slack" v-model="settings.monitor_slack_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" hide-details></v-text-field>
                     <v-btn :loading="loading" @click="testSlack" color="info" style="margin-top:15px">Test Slack</v-btn>
                   </div>
@@ -95,12 +95,12 @@
     <v-dialog v-model="servers_dialog" max-width="896px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-database</v-icon>SERVERS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-database</v-icon>SERVERS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="selectAllServers" text title="Select all servers" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
           <v-btn @click="deselectAllServers" text title="Deselect all servers" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
           <v-spacer></v-spacer>
-          <v-btn icon @click="servers_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="servers_dialog = false" style="width:40px; height:40px"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -139,9 +139,9 @@
     <v-dialog v-model="filter_dialog" max-width="50%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-sliders-h</v-icon>FILTER</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-sliders-h</v-icon>FILTER</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="filter_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="filter_dialog = false" style="width:40px; height:40px"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px;">
           <v-container style="padding:0px">
@@ -165,11 +165,11 @@
     <v-dialog v-model="events_dialog" max-width="90%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-rss</v-icon>EVENTS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-rss</v-icon>EVENTS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field v-model="events_search" append-icon="search" label="Search" color="white" style="margin-left:5px; width:calc(100% - 170px)" single-line hide-details></v-text-field>
           <v-divider class="mx-3" inset vertical style="margin-right:5px!important;"></v-divider>
-          <v-btn icon @click="events_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="events_dialog = false" style="width:40px; height:40px"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%!important">
@@ -205,7 +205,7 @@
     <v-dialog v-model="event_details_dialog" max-width="65%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-info</v-icon>PARAMETERS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-info</v-icon>PARAMETERS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <div class="white--text body-1">{{ event_details_item.server }}</div>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -213,7 +213,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field v-model="events_details_search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
           <v-divider class="ml-3 mr-1" inset vertical></v-divider>
-          <v-btn icon @click="event_details_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="event_details_dialog = false" style="width:40px; height:40px"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px;">
           <v-container style="padding:0px">

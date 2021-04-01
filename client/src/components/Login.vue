@@ -21,8 +21,12 @@
                   </v-alert>
                   <v-form ref="form" @submit.prevent style="margin-top:20px">
                     <div v-if="mode == 0">
-                      <v-text-field ref="username" filled v-model="username" name="username" label="Username" :rules="[v => !!v || '']" required append-icon="person" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
-                      <v-text-field ref="password" filled v-model="password" name="password" label="Password" :rules="[v => !!v || '']" required append-icon="lock" type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                      <v-text-field ref="username" filled v-model="username" name="username" label="Username" :rules="[v => !!v || '']" required v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details autocomplete="username">
+                        <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-user</v-icon></template>
+                      </v-text-field>
+                      <v-text-field ref="password" filled v-model="password" name="password" label="Password" :rules="[v => !!v || '']" required type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details autocomplete="new-password">
+                        <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-lock</v-icon></template>
+                      </v-text-field>
                     </div>
                     <div v-if="mode == 2">
                       <div class="body-1 font-weight-regular">Multi-Factor Authentication (<span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">MFA</span>) is required</div>
@@ -33,7 +37,9 @@
                       </v-card>
                     </div>
                     <div v-if="[1,2].includes(mode)">
-                      <v-text-field ref="mfa" filled v-model="mfa" name="mfa" label="MFA Code" append-icon="vpn_key" maxlength="6" :rules="[v => !!v || '']" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details></v-text-field>
+                      <v-text-field ref="mfa" filled v-model="mfa" name="mfa" label="MFA Code" maxlength="6" :rules="[v => !!v || '']" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details>
+                        <template v-slot:append><v-icon small style="margin-top:3px; margin-right:4px">fas fa-key</v-icon></template>
+                      </v-text-field>
                     </div>
                   </v-form>
                   <v-btn x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()">LOGIN</v-btn>

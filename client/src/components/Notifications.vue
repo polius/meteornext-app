@@ -3,11 +3,11 @@
     <v-main>
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-bell</v-icon>NOTIFICATIONS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-bell</v-icon>NOTIFICATIONS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-toolbar-items class="hidden-sm-and-down">
-            <v-btn v-if="selected.length == 1" text @click="infoNotification()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
-            <v-btn v-if="selected.length > 0" text @click="deleteNotification()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+            <v-btn v-if="selected.length == 1" text @click="infoNotification()"><v-icon small style="margin-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
+            <v-btn v-if="selected.length > 0" text @click="deleteNotification()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           </v-toolbar-items>
           <v-divider v-if="selected.length > 0" class="mx-3" inset vertical></v-divider>
           <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -31,7 +31,7 @@
           </template>
           <template v-slot:[`item.show`]="{ item }">
             <v-btn icon small @click="changeSeen(item)">
-              <v-icon small :title="item.show ? 'Show in the notification bar' : 'Don\'t show in the notification bar'" :color="item.show ? '#00b16a' : 'error'">fas fa-circle</v-icon>
+              <v-icon :title="item.show ? 'Show in the notification bar' : 'Don\'t show in the notification bar'" :color="item.show ? '#00b16a' : 'error'" style="width:16px; height:16px;">fas fa-circle</v-icon>
             </v-btn>
           </template>
         </v-data-table>
@@ -102,8 +102,11 @@ export default {
     getNotifications() {
       axios.get('/notifications')
         .then((response) => {
-          this.items = response.data.data
-          for (let i = 0; i < this.items.length; ++i) this.items[i]['data'] = JSON.parse(this.items[i]['data'])
+          this.items = []
+          this.$nextTick(() => {
+            this.items = response.data.data
+            for (let i = 0; i < this.items.length; ++i) this.items[i]['data'] = JSON.parse(this.items[i]['data'])
+          })
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
