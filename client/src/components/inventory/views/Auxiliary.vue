@@ -5,10 +5,10 @@
         <v-toolbar-title class="white--text subtitle-1">AUXILIARY CONNECTIONS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text @click="newAuxiliary()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1 && !(inventory_secured && selected[0].shared && !owner)" @click="cloneAuxiliary()" text><v-icon small style="padding-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editAuxiliary()"><v-icon small style="padding-right:10px">{{ !owner && selected[0].shared ? 'fas fa-info' : 'fas fa-feather-alt' }}</v-icon>{{ !owner && selected[0].shared ? 'INFO' : 'EDIT' }}</v-btn>
-          <v-btn v-if="selected.length > 0 && !(!owner && selected.some(x => x.shared))" text @click="deleteAuxiliary()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn text @click="newAuxiliary()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1 && !(inventory_secured && selected[0].shared && !owner)" @click="cloneAuxiliary()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="editAuxiliary()"><v-icon small style="margin-right:10px">{{ !owner && selected[0].shared ? 'fas fa-info' : 'fas fa-feather-alt' }}</v-icon>{{ !owner && selected[0].shared ? 'INFO' : 'EDIT' }}</v-btn>
+          <v-btn v-if="selected.length > 0 && !(!owner && selected.some(x => x.shared))" text @click="deleteAuxiliary()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('personal')" :style="filter == 'personal' ? 'font-weight:600' : 'font-weight:400'">PERSONAL</v-btn>
@@ -34,7 +34,7 @@
           <v-btn v-if="mode != 'delete'" :readonly="readOnly" title="Create the auxiliary only for you" :color="!item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = false : ''" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
           <v-btn v-if="mode != 'delete'" :disabled="!owner && !readOnly" :readonly="readOnly" title="Create the auxiliary for all users in your group" :color="item.shared ? 'primary' : '#779ecb'" @click="!readOnly ? item.shared = true : ''"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
-          <v-btn @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn @click="dialog = false" icon><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 15px 15px;">
           <v-container style="padding:0px">
@@ -102,7 +102,7 @@
       <v-toolbar dense flat color="primary">
         <v-toolbar-title class="white--text subtitle-1">TEST CONNECTION</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn @click="testDialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        <v-btn @click="testDialog = false" icon><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
       <v-card>
         <v-card-text style="padding:0px;">

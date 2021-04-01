@@ -70,7 +70,7 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1">Database Already Exists</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="setupDialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="setupDialog = false"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">

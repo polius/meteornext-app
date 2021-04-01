@@ -5,9 +5,9 @@
         <v-toolbar-title class="white--text subtitle-1">RELEASES</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn v-if="selected.length == 0" text @click="newRelease()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editRelease()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn v-if="selected.length > 0" text @click="deleteRelease()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn v-if="selected.length == 0" text @click="newRelease()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn v-if="selected.length == 1" text @click="editRelease()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn v-if="selected.length > 0" text @click="deleteRelease()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -15,8 +15,8 @@
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
         <template v-slot:[`item.active`]="{ item }">
           <v-btn icon small @click="changeActive(item)">
-            <v-icon v-if="item.active" small title="Active" color="#00b16a">fas fa-circle</v-icon>
-            <v-icon v-else small title="Inactive" color="error">fas fa-circle</v-icon>
+            <v-icon v-if="item.active" title="Active" color="#00b16a" style="width:16px; height:16px;">fas fa-circle</v-icon>
+            <v-icon v-else title="Inactive" color="error" style="width:16px; height:16px;">fas fa-circle</v-icon>
           </v-btn>
         </template>
       </v-data-table>
@@ -25,7 +25,7 @@
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">{{mode == 'new' ? 'fas fa-plus' : mode == 'edit' ? 'fas fa-feather-alt' : 'fas fa-minus'}}</v-icon>{{ dialogTitle }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">{{mode == 'new' ? 'fas fa-plus' : mode == 'edit' ? 'fas fa-feather-alt' : 'fas fa-minus'}}</v-icon>{{ dialogTitle }}</v-toolbar-title>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 0px;">
           <v-container style="padding:0px">
@@ -96,7 +96,10 @@ export default {
     getReleases() {
       axios.get('/deployments/releases')
         .then((res) => {
-          this.items = res.data.data.map(x => ({...x, created_at: this.dateFormat(x.created_at), updated_at: this.dateFormat(x.updated_at)}))
+          this.items = []
+          this.$nextTick(() => {
+            this.items = res.data.data.map(x => ({...x, created_at: this.dateFormat(x.created_at), updated_at: this.dateFormat(x.updated_at)}))
+          })
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

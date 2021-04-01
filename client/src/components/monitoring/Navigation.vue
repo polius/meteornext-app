@@ -3,7 +3,7 @@
     <div>
       <v-tabs background-color="#ed7b2f" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2"> <!-- #16a085 -->
         <v-tabs-slider></v-tabs-slider>
-          <v-tab to="/monitoring"><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-desktop</v-icon>MONITORING</span></v-tab>
+          <v-tab to="/monitoring"><span class="pl-2 pr-2"><v-icon small style="margin-right:10px">fas fa-desktop</v-icon>MONITORING</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-tab to="/monitoring/parameters"><span class="pl-2 pr-2">Parameters</span></v-tab>
           <v-divider class="mx-3" inset vertical></v-divider>

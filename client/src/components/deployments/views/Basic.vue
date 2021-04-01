@@ -28,9 +28,9 @@
                 <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-                  <v-btn text @click='newQuery()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                  <v-btn v-if="query_selected.length == 1" text @click="editQuery()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-                  <v-btn v-if="query_selected.length > 0" text @click='deleteQuery()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                  <v-btn text @click='newQuery()'><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                  <v-btn v-if="query_selected.length == 1" text @click="editQuery()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                  <v-btn v-if="query_selected.length > 0" text @click='deleteQuery()'><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                 </v-toolbar-items>
               </v-toolbar>
               <v-divider></v-divider>
@@ -38,11 +38,13 @@
             </v-card>
 
             <!-- PARAMETERS -->
-            <div class="subtitle-1 font-weight-regular white--text">
-              METHOD
+            <div>
               <v-tooltip right>
                 <template v-slot:activator="{ on }">
-                  <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                  <span v-on="on" class="subtitle-1 font-weight-regular white--text">
+                    METHOD
+                    <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                  </span>
                 </template>
                 <span>
                   <b style="color:#00b16a">VALIDATE</b> Tests all server connections
@@ -104,7 +106,7 @@
 
     <v-dialog v-model="queryDialog" persistent max-width="896px">
       <v-toolbar flat dense color="primary">
-        <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:1px">{{query_mode == 'new' ? 'fas fa-plus' : query_mode == 'edit' ? 'fas fa-feather-alt' : 'fas fa-minus'}}</v-icon>{{ queryDialogTitle }}</v-toolbar-title>
+        <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:1px">{{query_mode == 'new' ? 'fas fa-plus' : query_mode == 'edit' ? 'fas fa-feather-alt' : 'fas fa-minus'}}</v-icon>{{ queryDialogTitle }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
         <v-card-text style="padding: 0px 20px 20px;">

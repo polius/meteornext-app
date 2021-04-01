@@ -5,12 +5,12 @@
         <v-toolbar-title class="white--text subtitle-1">INFORMATION</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn v-if="'status' in deployment" text title="Show Execution Parameters" @click="parameters()"><v-icon small style="padding-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
-          <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="padding-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
-          <v-btn :disabled="deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING' || deployment['status'] == 'QUEUED'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit Execution' : 'Re-Deploy Execution'" @click="edit()"><v-icon small style="padding-right:10px">{{ deployment['status'] == 'CREATED' ? 'fas fa-feather-alt' : 'fas fa-meteor' }}</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
+          <v-btn v-if="'status' in deployment" text title="Show Execution Parameters" @click="parameters()"><v-icon small style="margin-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
+          <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
+          <v-btn :disabled="deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING' || deployment['status'] == 'QUEUED'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit Execution' : 'Re-Deploy Execution'" @click="edit()"><v-icon small style="margin-right:10px">fas fa-meteor</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
           <v-divider v-if="deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED' || deployment['status'] == 'QUEUED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" class="mx-3" inset vertical></v-divider>
-          <v-btn :disabled="start_execution" v-if="deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED'" text title="Start Execution" @click="start()"><v-icon small style="padding-right:10px">fas fa-play</v-icon>START</v-btn>
-          <v-btn :disabled="deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || (deployment['status'] == 'STOPPING' && deployment['stopped'] == 'forceful')" v-if="deployment['status'] == 'QUEUED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" text title="Stop Execution" @click="stop()"><v-icon small style="padding-right:10px">fas fa-ban</v-icon>STOP</v-btn>
+          <v-btn :disabled="start_execution" v-if="deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED'" text title="Start Execution" @click="start()"><v-icon small style="margin-right:10px">fas fa-play</v-icon>START</v-btn>
+          <v-btn :disabled="deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || (deployment['status'] == 'STOPPING' && deployment['stopped'] == 'forceful')" v-if="deployment['status'] == 'QUEUED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" text title="Stop Execution" @click="stop()"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
         </v-toolbar-items>
         <v-divider v-if="'status' in deployment" class="mx-3" inset vertical></v-divider>
         
@@ -27,15 +27,15 @@
         <v-divider v-if="['SUCCESS','WARNING','FAILED','STOPPED'].includes(deployment['status'])" class="mx-3" inset vertical></v-divider>
 
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="padding-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
-          <v-btn v-if="show_results" text title="Share Results" @click="shareResults_dialog = true"><v-icon small style="padding-right:10px;">fas fa-share</v-icon>SHARE</v-btn>
-          <v-btn v-else-if="deployment['method'] != 'validate' && (deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && !validation_error) || (deployment['status'] == 'STOPPED' && deployment['uri'] != null)) && ('progress' in deployment && 'queries' in deployment['progress'] && 'total' in deployment['progress']['queries'] && deployment['progress']['queries']['total'] > 0)" text title="Show Execution Results" @click="showResults()"><v-icon small style="padding-right:10px;">fas fa-bars</v-icon>RESULTS</v-btn>
+          <v-btn v-if="show_results" text title="Show Execution Progress" @click="show_results = false"><v-icon small style="margin-right:10px;">fas fa-spinner</v-icon>PROGRESS</v-btn>
+          <v-btn v-if="show_results" text title="Share Results" @click="shareResults_dialog = true"><v-icon small style="margin-right:10px;">fas fa-share</v-icon>SHARE</v-btn>
+          <v-btn v-else-if="deployment['method'] != 'validate' && (deployment['status'] == 'SUCCESS' || deployment['status'] == 'WARNING' || (deployment['status'] == 'FAILED' && !validation_error) || (deployment['status'] == 'STOPPED' && deployment['uri'] != null)) && ('progress' in deployment && 'queries' in deployment['progress'] && 'total' in deployment['progress']['queries'] && deployment['progress']['queries']['total'] > 0)" text title="Show Execution Results" @click="showResults()"><v-icon small style="margin-right:10px;">fas fa-bars</v-icon>RESULTS</v-btn>
         </v-toolbar-items>
 
         <v-spacer></v-spacer>
         <div v-if="last_updated != ''" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
         <v-divider class="ml-3 mr-1" inset vertical></v-divider>
-        <v-btn icon @click="goBack()"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        <v-btn icon @click="goBack()"><v-icon style="width:22px; height:22px;">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
 
       <!-- RESULTS -->
@@ -236,11 +236,13 @@
     <v-dialog v-model="information_dialog" persistent no-click-animation max-width="70%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">{{ information_dialog_mode.toUpperCase() == 'PARAMETERS' ? 'fas fa-cog' : deployment['status'] == 'CREATED' ? 'fas fa-feather-alt' : 'fas fa-meteor' }}</v-icon>{{ information_dialog_mode.toUpperCase() == 'PARAMETERS' ? 'PARAMETERS' : deployment['status'] == 'CREATED' ? 'EDIT' : 'RE-DEPLOY' }}</v-toolbar-title>
+          <v-toolbar-title v-show="information_dialog_mode == 'parameters'" class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-cog</v-icon>PARAMETERS</v-toolbar-title>
+          <v-toolbar-title v-show="information_dialog_mode == 'edit'" class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-meteor</v-icon>EDIT</v-toolbar-title>
+          <v-toolbar-title v-show="information_dialog_mode == 're-deploy'" class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-meteor</v-icon>RE-DEPLOY</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn readonly color="primary"><v-icon small style="padding-right:10px; padding-bottom:1px">{{ deployment['mode'] == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen'}}</v-icon>{{ deployment['mode'] }}</v-btn>
+          <v-btn readonly color="primary"><v-icon small style="margin-right:10px; margin-bottom:1px">{{ deployment['mode'] == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen'}}</v-icon>{{ deployment['mode'] }}</v-btn>
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading" icon @click="information_dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn :disabled="loading" icon @click="information_dialog = false"><v-icon style="width:22px; height:22px;">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -266,33 +268,37 @@
                       <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
                       <v-divider v-if="information_dialog_mode != 'parameters'" class="mx-3" inset vertical></v-divider>
                       <v-toolbar-items v-if="information_dialog_mode != 'parameters'" class="hidden-sm-and-down" style="padding-left:0px;">
-                        <v-btn text @click='newQuery()'><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                        <v-btn v-if="information_dialog_query_selected.length == 1" text @click="editQuery()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-                        <v-btn v-if="information_dialog_query_selected.length > 0" text @click='deleteQuery()'><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                        <v-btn text @click='newQuery()'><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                        <v-btn v-if="information_dialog_query_selected.length == 1" text @click="editQuery()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                        <v-btn v-if="information_dialog_query_selected.length > 0" text @click='deleteQuery()'><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                       </v-toolbar-items>
                     </v-toolbar>
                     <v-divider></v-divider>
                     <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="id" :show-select="information_dialog_mode != 'parameters'" :hide-default-header="information_dialog_mode == 'parameters'" :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1">
                     </v-data-table>
                   </v-card>
-                  <div v-if="deployment['mode'] == 'PRO'" class="subtitle-1 font-weight-regular white--text" style="margin-top:-5px; margin-bottom:10px;">
-                    CODE
+                  <div v-if="deployment['mode'] == 'PRO'" style="margin-top:-5px; margin-bottom:10px;">
                     <v-tooltip right>
                       <template v-slot:activator="{ on }">
-                        <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                        <span v-on="on" class="subtitle-1 font-weight-regular white--text">
+                          CODE
+                          <v-icon small style="margin-left:5px; margin-bottom:2px;">fas fa-question-circle</v-icon>
+                        </span>
                       </template>
                       <span>Press <span class="font-weight-medium" style="color:rgb(250, 130, 49)">ESC</span> when cursor is in the editor to toggle full screen editing</span>
                     </v-tooltip>
                   </div>
                   <codemirror v-if="deployment['mode'] == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
-                  <div class="subtitle-1 font-weight-regular white--text" style="margin-top:20px;">
-                    METHOD
+                  <div style="margin-top:20px">
                     <v-tooltip right>
                       <template v-slot:activator="{ on }">
-                        <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                        <span v-on="on" class="subtitle-1 font-weight-regular white--text">
+                          METHOD
+                          <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                        </span>
                       </template>
                       <span>
-                        <b style="color:#00b16a;">VALIDATE</b> Tests all server connections
+                        <b style="color:#00b16a">VALIDATE</b> Tests all server connections
                         <br>
                         <b class="orange--text">TEST</b> A simulation is performed (only SELECTs are executed)
                         <br>
@@ -376,9 +382,9 @@
     <v-dialog v-model="select_dialog" max-width="90%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-mouse-pointer</v-icon>SELECT EXECUTION</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-mouse-pointer</v-icon>SELECT EXECUTION</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="select_dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="select_dialog = false"><v-icon style="width:22px; height:22px;">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 15px 20px 20px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -411,7 +417,7 @@
                         <td>{{ dateFormat(props.item.ended) }}</td>
                         <td>{{ props.item.overall }}</td>
                         <td>
-                          <v-btn icon @click="selectExecution(props.item.id)"><v-icon small title="Select execution">fas fa-arrow-right</v-icon></v-btn>
+                          <v-btn icon @click="selectExecution(props.item.id)"><v-icon title="Select execution" style="width:16px; height:16px;">fas fa-arrow-right</v-icon></v-btn>
                         </td>
                       </tr>
                     </template>
@@ -456,14 +462,14 @@
     <v-dialog v-model="shareResults_dialog" max-width="896px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-share</v-icon>SHARE RESULTS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-share</v-icon>SHARE RESULTS</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-toolbar-items class="hidden-sm-and-down">
-            <v-btn text :title="shareResults_dialog_title" @click="resultsShare()"><v-icon small style="padding-right:10px">{{ shareResults_dialog_icon }}</v-icon>{{ shareResults_dialog_text }}</v-btn>
-            <v-btn text title="Copy link to clipboard" @click="resultsClipboard()"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-copy</v-icon>COPY LINK</v-btn>
+            <v-btn text :title="shareResults_dialog_title" @click="resultsShare()"><v-icon small style="margin-right:10px">{{ shareResults_dialog_icon }}</v-icon>{{ shareResults_dialog_text }}</v-btn>
+            <v-btn text title="Copy link to clipboard" @click="resultsClipboard()"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-copy</v-icon>COPY LINK</v-btn>
           </v-toolbar-items>
           <v-spacer></v-spacer>
-          <v-btn icon @click="shareResults_dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="shareResults_dialog = false"><v-icon style="width:22px; height:22px;">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px">
           <v-container>

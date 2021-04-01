@@ -21,11 +21,13 @@
             </v-autocomplete>
 
             <!-- CODE -->
-            <div class="subtitle-1 font-weight-regular white--text" style="margin-top:20px; margin-bottom:10px;">
-              CODE
+            <div style="margin-top:20px; margin-bottom:10px;">
               <v-tooltip right>
                 <template v-slot:activator="{ on }">
-                  <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                  <span v-on="on" class="subtitle-1 font-weight-regular white--text">
+                    CODE
+                    <v-icon small style="margin-left:5px; margin-bottom:2px;">fas fa-question-circle</v-icon>
+                  </span>
                 </template>
                 <span>Press <span class="font-weight-medium" style="color:rgb(250, 130, 49)">ESC</span> when cursor is in the editor to toggle full screen editing</span>
               </v-tooltip>
@@ -34,14 +36,16 @@
             <codemirror v-model="code" :options="cmOptions"></codemirror>
 
             <!-- PARAMETERS -->
-            <div class="subtitle-1 font-weight-regular white--text" style="margin-top:20px;">
-              METHOD
+            <div style="margin-top:20px">
               <v-tooltip right>
                 <template v-slot:activator="{ on }">
-                  <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                  <span v-on="on" class="subtitle-1 font-weight-regular white--text">
+                    METHOD
+                    <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                  </span>
                 </template>
                 <span>
-                  <b style="color:#00b16a;">VALIDATE</b> Tests all server connections
+                  <b style="color:#00b16a">VALIDATE</b> Tests all server connections
                   <br>
                   <b class="orange--text">TEST</b> A simulation is performed (only SELECTs are executed)
                   <br>
