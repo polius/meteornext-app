@@ -12,14 +12,20 @@
                 <v-flex xs12>
                   <div class="text-h6 font-weight-regular">Hello <span class="font-weight-medium">{{ this.username }}</span> <v-chip color="teal" label text-color="white" style="margin-left:10px; margin-bottom:2px; letter-spacing: 1px;">{{ this.group.toUpperCase() }}</v-chip></div>
                   <v-form ref="form" @submit.prevent style="margin-top:15px">
-                    <v-text-field v-model="email" :loading="loading" :disabled="loading" label="Email" type="email" append-icon="email"></v-text-field>
-                    <v-text-field v-model="newPassword" :loading="loading" :disabled="loading" label="Password" type="password" :placeholder="password" append-icon="lock" hide-details style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="email" :loading="loading" :disabled="loading" label="Email" type="email">
+                      <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-envelope</v-icon></template>
+                    </v-text-field>
+                    <v-text-field v-model="newPassword" :loading="loading" :disabled="loading" label="Password" type="password" :placeholder="password" hide-details style="padding-top:0px;">
+                      <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-lock</v-icon></template>
+                    </v-text-field>
                     <v-switch v-model="mfa['enabled']" @change="onMFAChange" :loading="loading" :disabled="loading" flat label="Multi-Factor Authentication (MFA)" style="margin-top:20px"></v-switch>
                     <v-card v-if="mfa['enabled'] && !mfa['origin']" style="width:232px; margin-bottom:20px;">
                       <v-card-text>
                         <v-progress-circular v-if="mfa['uri'] == null" indeterminate style="margin-left:auto; margin-right:auto; display:table;"></v-progress-circular>
                         <qrcode-vue v-else :value="mfa['uri']" size="200" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
-                        <v-text-field outlined v-model="mfa['value']" v-on:keyup.enter="saveProfile()" label="MFA Code" append-icon="vpn_key" maxlength="6" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px"></v-text-field>
+                        <v-text-field outlined v-model="mfa['value']" v-on:keyup.enter="saveProfile()" label="MFA Code" maxlength="6" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px">
+                          <template v-slot:append><v-icon small style="margin-top:3px; margin-right:4px">fas fa-key</v-icon></template>
+                        </v-text-field>
                       </v-card-text>
                     </v-card>
                   </v-form>
