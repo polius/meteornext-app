@@ -29,8 +29,6 @@ RUN yum update -y && \
     python3 -m pip install --no-cache-dir gevent && \
     python3 -m pip install --no-cache-dir gunicorn[gevent] && \
     python3 -m pip install --no-cache-dir cython && \
-    python3 -m pip install --no-cache-dir pyinstaller && \
-    yum clean all && \
-    rm -rf /var/cache/yum
+    python3 -m pip install --no-cache-dir pyinstaller
 WORKDIR /root/build
 CMD [ "python3", "build_server.py" ]
