@@ -8,10 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-<<<<<<< HEAD
-=======
     "@fortawesome/fontawesome-free": "^5.15.3",
->>>>>>> audit
     "@mdi/font": "^5.9.55",
     "@sqltools/formatter": "^1.2.2",
     "@vue/reactivity": "^3.0.7",
