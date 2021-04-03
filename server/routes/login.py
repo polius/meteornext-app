@@ -73,12 +73,6 @@ class Login:
             # Update user last_login
             self._users.put_last_login(login_json['username'])
 
-            # Show new login
-            if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
-                print('- New local login: ' + request.environ['REMOTE_ADDR'])
-            else:
-                print('- New nginx login: ' + request.headers['X-Real-IP'] + ' | ' + request.environ["HTTP_X_FORWARDED_FOR"].split(",")[0].strip() request.environ['HTTP_X_FORWARDED_FOR'])
-
             # Generate access tokens
             access_token = create_access_token(identity=user[0]['username'])
 
@@ -109,7 +103,6 @@ class Login:
             return jsonify({'message': 'OK'}), 200
 
         @login_blueprint.route('/logout', methods=['GET'])
-        @jwt_required()
         def logout_check():
             resp = jsonify({'message': 'OK'})
             unset_access_cookies(resp)

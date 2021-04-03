@@ -143,7 +143,27 @@
 <style>
 a { text-decoration: none; }
 html { overflow-y: auto!important; }
+body { background: #303030; }
 
+/* Dark Scrollbar */
+.dark_scrollbar::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 15px;
+  background-color: #424242;
+}
+.dark_scrollbar::-webkit-scrollbar-track {
+  background: #424242;
+}
+.dark_scrollbar::-webkit-scrollbar-thumb {
+  min-height: 25px;
+  background: #303030;
+  border: 3px solid transparent;
+  border-radius: 10px;
+  background-clip: content-box;
+}
+.dark_scrollbar::-webkit-scrollbar-corner {
+  background: #303030;
+}
 ::-webkit-scrollbar {
   -webkit-appearance: none;
   width: 15px;
@@ -164,7 +184,14 @@ html { overflow-y: auto!important; }
 }
 </style>
 
+<style src="@/fonts/roboto.css"></style>
+<style src="@/fonts/materialicons.css"></style>
+
 <script>
+// Scrollbar - Firefox
+document.documentElement.style.setProperty('scrollbar-color', '#303030 #424242');
+// Scrollbar - Chrome
+document.documentElement.classList.add("dark_scrollbar");
 import axios from 'axios'
 import moment from 'moment'
 
