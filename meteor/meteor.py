@@ -1,4 +1,3 @@
-import secure_imports
 import argparse
 from core import core
 

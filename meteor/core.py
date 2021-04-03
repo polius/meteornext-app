@@ -11,6 +11,7 @@ import threading
 from collections import OrderedDict
 from datetime import timedelta
 
+from firewall import firewall
 from imports import imports
 from progress import progress
 from logs import logs
@@ -26,6 +27,9 @@ class core:
 
         # Execution Time
         self._start_time = time.time()
+
+        # Protect Code Execution
+        firewall()
 
         # Init Classes
         self._imports = imports(self._args)
