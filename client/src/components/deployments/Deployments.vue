@@ -5,13 +5,8 @@
         <v-toolbar-title class="white--text subtitle-1">DEPLOYMENTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-<<<<<<< HEAD
-          <v-btn text @click="newDeploy()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-show="selected.length == 1" text @click="infoDeploy()"><v-icon small style="margin-right:10px; padding-bottom:2px">fas fa-info</v-icon>INFORMATION</v-btn>
-=======
           <v-btn text @click="newDeploy()"><v-icon small style="padding-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn v-show="selected.length == 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-info</v-icon>INFORMATION</v-btn>
->>>>>>> audit
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
