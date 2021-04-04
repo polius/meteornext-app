@@ -161,6 +161,9 @@ class deploy_queries:
             if self._sql:
                 self._sql.commit()
 
+            # Initialize query error
+            self._query_error = False
+
             # Commit auxiliary connections
             for conn in self._aux.values():
                 conn.commit()
@@ -193,10 +196,7 @@ class deploy_queries:
                 del i['transaction']
 
     def is_error(self):
-        for log in self._execution_log['output']:
-            if log['meteor_status'] == '0':
-                return True
-        return False
+        return self._query_error
 
     def __get_auxiliary(self, auxiliary):
         if auxiliary['auxiliary_connection'] not in self._aux:
