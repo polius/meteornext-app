@@ -13,7 +13,7 @@
         </v-toolbar-items>
         <v-text-field v-model="queries_search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
         <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
-        <v-btn @click="filterColumnsClick" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon style="width:16px; height:16px">fas fa-cog</v-icon></v-btn>
+        <v-btn @click="filterColumnsClick" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
       <v-data-table :headers="computedHeaders" :items="queries_items" :options.sync="queries_options" :server-items-length="queries_total" :hide-default-footer="queries_total < 11" multi-sort :loading="loading" class="elevation-1" style="padding-top:5px;">
         <template v-slot:[`item.first_seen`]="{ item }">

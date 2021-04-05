@@ -417,7 +417,7 @@
                         <td>{{ dateFormat(props.item.ended) }}</td>
                         <td>{{ props.item.overall }}</td>
                         <td>
-                          <v-btn icon @click="selectExecution(props.item.id)"><v-icon title="Select execution" style="width:16px; height:16px;">fas fa-arrow-right</v-icon></v-btn>
+                          <v-btn icon @click="selectExecution(props.item.id)"><v-icon title="Select execution" small>fas fa-arrow-right</v-icon></v-btn>
                         </td>
                       </tr>
                     </template>
