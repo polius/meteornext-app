@@ -73,7 +73,7 @@
       <v-toolbar flat class="primary">
         <v-toolbar-title>Notifications</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn icon title="See all notifications" @click.stop="notificationsSubmit()"><v-icon style="width:16px; height:16px;">fas fa-bars</v-icon></v-btn>
+        <v-btn icon title="See all notifications" @click.stop="notificationsSubmit()"><v-icon small>fas fa-bars</v-icon></v-btn>
         <v-btn :disabled="loading" icon title="Refresh" @click.stop="notificationsRefresh()"><v-icon>refresh</v-icon></v-btn>
         <v-btn icon title="Close" @click.stop="rightDrawer = false"><v-icon>close</v-icon></v-btn>
       </v-toolbar>

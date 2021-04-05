@@ -31,7 +31,7 @@
           </template>
           <template v-slot:[`item.show`]="{ item }">
             <v-btn icon small @click="changeSeen(item)">
-              <v-icon :title="item.show ? 'Show in the notification bar' : 'Don\'t show in the notification bar'" :color="item.show ? '#00b16a' : 'error'" style="width:16px; height:16px;">fas fa-circle</v-icon>
+              <v-icon :title="item.show ? 'Show in the notification bar' : 'Don\'t show in the notification bar'" :color="item.show ? '#00b16a' : 'error'" small>fas fa-circle</v-icon>
             </v-btn>
           </template>
         </v-data-table>

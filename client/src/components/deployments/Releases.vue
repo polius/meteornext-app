@@ -15,8 +15,8 @@
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
         <template v-slot:[`item.active`]="{ item }">
           <v-btn icon small @click="changeActive(item)">
-            <v-icon v-if="item.active" title="Active" color="#00b16a" style="width:16px; height:16px;">fas fa-circle</v-icon>
-            <v-icon v-else title="Inactive" color="error" style="width:16px; height:16px;">fas fa-circle</v-icon>
+            <v-icon v-if="item.active" title="Active" color="#00b16a" small>fas fa-circle</v-icon>
+            <v-icon v-else title="Inactive" color="error" small>fas fa-circle</v-icon>
           </v-btn>
         </template>
       </v-data-table>
