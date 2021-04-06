@@ -659,7 +659,7 @@ export default {
       this.dialog = false
       // Restore Values
       const diff = Object.keys(this.currentCellEditValues).filter(x => 'new' in this.currentCellEditValues[x]).reduce((acc,val) => { acc[val] = this.currentCellEditValues[val]['old']; return acc; },{})
-      if (Object.keys(diff).length == 0) this.gridApi.content.applyTransaction({ remove: [this.currentCellEditNode.data] });
+      if (Object.keys(diff).length == 0 && Object.keys(this.currentCellEditNode).length > 0) this.gridApi.content.applyTransaction({ remove: [this.currentCellEditNode.data] });
       for (const [k,v] of Object.entries(diff)) this.currentCellEditNode.setDataValue(k, v)
       // Clean vars
       this.currentCellEditMode = 'edit'
