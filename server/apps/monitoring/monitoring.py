@@ -437,14 +437,13 @@ class Monitoring:
         return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
     def __connect(self, conn):
-        # Establish connection to the server (30 seconds of retries)
-        for i in range(4):
+        # Establish connection to the server (60 seconds of retries)
+        for i in range(7):
             try:
                 conn.test_sql()
-            except Exception:
-                if i == 3:
-                    raise
-                time.sleep(10)
-            else:
                 conn.connect()
                 break
+            except Exception:
+                if i == 6:
+                    raise
+                time.sleep(10)
