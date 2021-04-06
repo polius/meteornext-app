@@ -276,9 +276,11 @@ export default {
     },
     onCellFocused(event) {
       let row = this.gridApi.client.getDisplayedRowAtIndex(event.rowIndex)
-      let node = this.gridApi.client.getRowNode(row.id)
-      this.gridApi.client.deselectAll()
-      node.setSelected(true)
+      if (row !== undefined) {
+        let node = this.gridApi.client.getRowNode(row.id)
+        this.gridApi.client.deselectAll()
+        node.setSelected(true)
+      }
     },
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
