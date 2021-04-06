@@ -244,11 +244,15 @@ export default {
       this.dialogOpened = val
       if (!val) this.editor.focus()
     },
-    headerTabSelected(newValue) {
+    headerTabSelected(newValue, oldValue) {
       if (newValue == 'client') {
         this.editor.setValue(this.clientQueries, 1)
         if (this.clientCursor != null) this.editor.moveCursorTo(this.clientCursor.row, this.clientCursor.column)
         this.editor.focus()
+      }
+      else if (oldValue == 'client') {
+        this.clientQueries = this.editor.getValue()
+        this.clientCursor = this.editor.getCursorPosition()
       }
     },
   },
