@@ -281,7 +281,8 @@ function build_grid() {
     onDragStarted: onDragStarted,
     onColumnMoved: onColumnMoved,
     onCellMouseOver: onCellMouseOver,
-    onCellMouseOut: onCellMouseOut
+    onCellMouseOut: onCellMouseOut,
+    onCellFocused: onCellFocused
   };
 
   gridOptions.getRowClass = function () {
@@ -305,6 +306,15 @@ function onCellMouseOut() {
   while (rows_hovered.length > 0) {
     if (THEME == 'light') rows_hovered.pop().classList.remove('light-row-hover');
     else if (THEME == 'dark') rows_hovered.pop().classList.remove('dark-row-hover');
+  }
+}
+
+function onCellFocused(event) {
+  let row = gridOptions.api.getDisplayedRowAtIndex(event.rowIndex)
+  if (row !== undefined) {
+    let node = gridOptions.api.getRowNode(row.id)
+    gridOptions.api.deselectAll()
+    node.setSelected(true)
   }
 }
 

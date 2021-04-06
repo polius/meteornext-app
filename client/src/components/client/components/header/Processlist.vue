@@ -21,7 +21,7 @@
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:calc(100vh - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="header" :rowData="items"></ag-grid-vue>
+                <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @first-data-rendered="onFirstDataRendered" @cell-key-down="onCellKeyDown" @cell-focused="onCellFocused" @cell-context-menu="onContextMenu" style="width:100%; height:calc(100vh - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="header" :rowData="items"></ag-grid-vue>
                 <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
                   <v-list style="padding:0px;">
                     <v-list-item-group v-model="contextMenuModel">
@@ -78,7 +78,7 @@
     <!----------------->
     <!-- Kill Dialog -->
     <!----------------->
-    <v-dialog v-model="killDialog" persistent max-width="50%">
+    <v-dialog v-model="killDialog" max-width="50%">
       <v-card>
         <v-card-text style="padding:15px 15px 5px;">
           <v-container style="padding:0px">
@@ -255,16 +255,25 @@ export default {
 
         // Add animation
         window.setTimeout(function () {
-            e.event.target.classList.remove('ag-cell-highlight')
-            e.event.target.classList.add('ag-cell-highlight-animation')
-            e.event.target.style.transition = "background-color " + 200 + "ms"
+          e.event.target.classList.remove('ag-cell-highlight')
+          e.event.target.classList.add('ag-cell-highlight-animation')
+          e.event.target.style.transition = "background-color " + 200 + "ms"
 
-            // Remove animation
-            window.setTimeout(function () {
-                e.event.target.classList.remove('ag-cell-highlight-animation')
-                e.event.target.style.transition = null;
-            }, 200);
+          // Remove animation
+          window.setTimeout(function () {
+            e.event.target.classList.remove('ag-cell-highlight-animation')
+            e.event.target.style.transition = null;
+          }, 200);
         }, 200);
+      }
+      else if (e.event.key == 'Backspace' && e.event.metaKey) this.killQuery()
+    },
+    onCellFocused(event) {
+      let row = this.gridApi.getDisplayedRowAtIndex(event.rowIndex)
+      if (row !== undefined) {
+        let node = this.gridApi.getRowNode(row.id)
+        this.gridApi.deselectAll()
+        node.setSelected(true)
       }
     },
     onContextMenu(e) {

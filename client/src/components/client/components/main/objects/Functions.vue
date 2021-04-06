@@ -3,7 +3,7 @@
     <!--------------->
     <!-- FUNCTIONS -->
     <!--------------->
-    <ag-grid-vue ref="agGridObjectsFunctions" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:calc(100% - 84px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="objectsHeaders.functions" :rowData="objectsItems.functions"></ag-grid-vue>
+    <ag-grid-vue ref="agGridObjectsFunctions" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-focused="onCellFocused" @cell-context-menu="onContextMenu" style="width:100%; height:calc(100% - 84px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="objectsHeaders.functions" :rowData="objectsItems.functions"></ag-grid-vue>
     <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
       <v-list style="padding:0px;">
         <v-list-item-group v-model="contextMenuModel">
@@ -176,6 +176,14 @@ export default {
             }, 200);
           }, 200);
         }
+      }
+    },
+    onCellFocused(event) {
+      let row = this.gridApi.objects.functions.getDisplayedRowAtIndex(event.rowIndex)
+      if (row !== undefined) {
+        let node = this.gridApi.objects.functions.getRowNode(row.id)
+        this.gridApi.objects.functions.deselectAll()
+        node.setSelected(true)
       }
     },
     onContextMenu(e) {

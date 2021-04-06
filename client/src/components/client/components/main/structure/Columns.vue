@@ -4,7 +4,7 @@
     <!-- COLUMNS -->
     <!------------->
     <div style="height:calc(100% - 84px)">
-      <ag-grid-vue ref="agGridStructureColumns" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-clicked="onCellClicked" @row-double-clicked="onRowDoubleClicked" @row-drag-end="onRowDragEnd" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.columns" :rowData="structureItems.columns"></ag-grid-vue>
+      <ag-grid-vue ref="agGridStructureColumns" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-clicked="onCellClicked" @row-double-clicked="onRowDoubleClicked" @cell-focused="onCellFocused" @row-drag-end="onRowDragEnd" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.columns" :rowData="structureItems.columns"></ag-grid-vue>
     </div>
     <!---------------->
     <!-- BOTTOM BAR -->
@@ -200,12 +200,21 @@ export default {
           }, 200);
         }
       }
+      else if (e.event.key == "Enter") this.editColumn(e.data)
     },
     onCellClicked() {
       this.selectedRows = this.gridApi.structure.columns.getSelectedRows().length != 0
     },
     onRowDoubleClicked(event) {
       this.editColumn(event.data)
+    },
+    onCellFocused(event) {
+      let row = this.gridApi.structure.columns.getDisplayedRowAtIndex(event.rowIndex)
+      if (row !== undefined) {
+        let node = this.gridApi.structure.columns.getRowNode(row.id)
+        this.gridApi.structure.columns.deselectAll()
+        node.setSelected(true)
+      }
     },
     onRowDragEnd(event) {
       if (event.overIndex - event.node.id == 0) return
