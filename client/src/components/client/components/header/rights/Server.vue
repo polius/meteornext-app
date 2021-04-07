@@ -6,15 +6,15 @@
           <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Database</div>
           <v-card style="height:337px">
             <v-card-text style="padding:10px; padding-bottom:15px">
-              <v-checkbox :disabled="disabled" v-model="server['create']" dense label="Create" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['drop']" dense label="Drop" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['alter']" dense label="Alter" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['index']" dense label="Index" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['trigger']" dense label="Trigger" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['event']" dense label="Event" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['references']" dense label="References" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['create_temporary_tables']" dense label="Create Temporary Tables" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['lock_tables']" dense label="Lock Tables" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Create" value="create" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Drop" value="drop" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Alter" value="alter" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Index" value="index" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Trigger" value="trigger" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Event" value="event" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="References" value="references" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" value="create_temporary_tables" dense label="Create Temporary Tables" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" value="lock_tables" dense label="Lock Tables" hide-details style="margin:0px;"></v-checkbox>
             </v-card-text>
           </v-card>
         </v-col>
@@ -23,10 +23,10 @@
             <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Tables</div>
             <v-card>
               <v-card-text style="padding:10px; padding-bottom:15px">
-                <v-checkbox :disabled="disabled" v-model="server['select']" dense label="Select" hide-details style="margin:0px;"></v-checkbox>
-                <v-checkbox :disabled="disabled" v-model="server['insert']" dense label="Insert" hide-details style="margin:0px;"></v-checkbox>
-                <v-checkbox :disabled="disabled" v-model="server['update']" dense label="Update" hide-details style="margin:0px;"></v-checkbox>
-                <v-checkbox :disabled="disabled" v-model="server['delete']" dense label="Delete" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server" dense label="Select" value="select" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server" dense label="Insert" value="insert" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server" dense label="Update" value="update" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server" dense label="Delete" value="delete" hide-details style="margin:0px;"></v-checkbox>
               </v-card-text>
             </v-card>
           </v-col>
@@ -34,11 +34,11 @@
             <div class="body-2" style="margin-left:10px; margin-bottom:5px; margin-top:10px">Views and Routines</div>
             <v-card>
               <v-card-text style="padding:10px; padding-bottom:15px">
-                <v-checkbox :disabled="disabled" v-model="server['show_view']" dense label="Show View" hide-details style="margin:0px;"></v-checkbox>
-                <v-checkbox :disabled="disabled" v-model="server['create_view']" dense label="Create View" hide-details style="margin:0px;"></v-checkbox>
-                <v-checkbox :disabled="disabled" v-model="server['create_routine']" dense label="Create Routine" hide-details style="margin:0px;"></v-checkbox>
-                <v-checkbox :disabled="disabled" v-model="server['alter_routine']" dense label="Alter Routine" hide-details style="margin:0px;"></v-checkbox>
-                <v-checkbox :disabled="disabled" v-model="server['execute']" dense label="Execute" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server" dense label="Show View" value="show_view" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server" dense label="Create View" value="create_view" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server" dense label="Create Routine" value="create_routine" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server" dense label="Alter Routine" value="alter_routine" hide-details style="margin:0px;"></v-checkbox>
+                <v-checkbox :disabled="disabled" v-model="server" dense label="Execute" value="execute" hide-details style="margin:0px;"></v-checkbox>
               </v-card-text>
             </v-card>
           </v-col>
@@ -47,16 +47,16 @@
           <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Administration and Replication</div>
           <v-card style="height:337px">
             <v-card-text style="padding:10px; padding-bottom:15px">
-              <v-checkbox :disabled="disabled" v-model="server['reload']" dense label="Reload" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['shutdown']" dense label="Shutdown" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['file']" dense label="File" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['process']" dense label="Process" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['super']" dense label="Super" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['show_databases']" dense label="Show Databases" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['create_user']" dense label="Create User" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['replication_client']" dense label="Replication Client" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['replication_slave']" dense label="Replication Slave" hide-details style="margin:0px;"></v-checkbox>
-              <v-checkbox :disabled="disabled" v-model="server['grant_option']" dense label="Grant" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Reload" value="reload" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Shutdown" value="shutdown" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="File" value="file" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Process" value="process" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Super" value="super" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Show Databases" value="show_databases" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Create User" value="create_user" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Replication Client" value="replication_client" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Replication Slave" value="replication_slave" hide-details style="margin:0px;"></v-checkbox>
+              <v-checkbox :disabled="disabled" v-model="server" dense label="Grant" value="grant_option" hide-details style="margin:0px;"></v-checkbox>
             </v-card-text>
           </v-card>
         </v-col>
@@ -107,24 +107,21 @@ export default {
   methods: {
     reloadRights(mode) {
       this.mode = mode
-      this.server = JSON.parse(JSON.stringify(this.rights['server']))
+      const servers = JSON.parse(JSON.stringify(this.rights['server']))
+      this.server = Object.keys(servers).filter(x => servers[x])
       if (mode == 'clone') this.rights['server'] = {}
     },
     computeDiff(obj) {
-      let diff = { grant: [], revoke: [] }
-      for (let [key, value] of Object.entries(obj)) {
-        if (value != this.rights['server'][key]) {
-          if (value) diff['grant'].push(key)
-          else if (key in this.rights['server']) diff['revoke'].push(key)
-        }
+      this.rightsDiff['server'] = { 
+        grant: obj.filter(x => !(x in this.rights['server']) || this.rights['server'][x] == false), 
+        revoke: Object.keys(this.rights['server']).filter(x => this.rights['server'][x] == true && !obj.includes(x))
       }
-      this.rightsDiff['server'] = diff
     },
     selectAll() {
-      for (let key of Object.keys(this.server)) this.server[key] = true
+      this.server = ['create','drop','alter','index','trigger','event','references','create_temporary_tables','lock_tables','select','insert','update','delete','show_view','create_view','create_routine','alter_routine','execute','reload','shutdown','file','process','super','show_databases','create_user','replication_client','replication_slave','grant_option']
     },
     deselectAll() {
-      for (let key of Object.keys(this.server)) this.server[key] = false
+      this.server = []
     },
   }
 }

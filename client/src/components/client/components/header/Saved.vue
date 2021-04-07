@@ -137,6 +137,7 @@ export default {
   methods: {
     showDialog() {
       this.dialog = true
+      this.selected = (this.items.length > 0) ? [0]: []
       this.getSaved()
     },
     getSaved() {
@@ -147,6 +148,7 @@ export default {
           this.items = response.data.saved
           if (this.items.length == 0) this.addSaved()
           else {
+            this.selected = [0]
             let current = this.items[0]
             this.name = current['name']
             this.editor.setValue(current['query'], -1)
