@@ -123,7 +123,7 @@ class deploy_blueprint:
                                 current_thread.critical.append(i)
 
                 # Check errors
-                current_thread.error = any(t.error for t in threads)
+                current_thread.error = current_thread.error or any(t.error for t in threads)
 
                 # Append existing errors
                 if len(self._databases) > 0:

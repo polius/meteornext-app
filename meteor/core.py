@@ -379,7 +379,7 @@ class core:
         webhook_url = self._imports.config['slack']['webhook_url']
 
         # Execution
-        execution_text = 'Deployment' if self._args.deploy else 'Test'
+        execution_text = 'DEPLOY' if self._args.deploy else 'TEST'
 
         # Status
         status_color = 'good' if status == 0 else 'warning' if status == 1 else 'danger'
