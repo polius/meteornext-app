@@ -51,8 +51,11 @@ class Deployments_Pro:
             query = "UPDATE deployments_pro SET `status` = %s WHERE id = %s AND status != 'STOPPED'"
             self._sql.execute(query, (status, deployment_id))
         elif status == 'STOPPING':
-            query = "UPDATE deployments_pro SET `status` = %s, `stopped` = %s WHERE id = %s"
+            query = "UPDATE deployments_pro SET `status` = %s, `stopped` = %s WHERE id = %s AND `status` IN('STARTING','IN PROGRESS')"
             self._sql.execute(query, (status, extra, deployment_id))
+        elif status == 'STOPPED':
+            query = "UPDATE deployments_pro SET `status` = 'STOPPED' WHERE id = %s AND status = 'QUEUED'"
+            self._sql.execute(query, (deployment_id))
 
     def getExecutions(self, execution_id):
         query = """

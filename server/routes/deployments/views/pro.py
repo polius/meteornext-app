@@ -454,22 +454,25 @@ class Pro:
         return jsonify({'data': response, 'message': 'Deployment Launched'}), 200
 
     def __stop(self, data):
+        # Remove the deployment from the queue
+        self._deployments_pro.updateStatus(data['execution_id'], 'STOPPED', True)
+
         # Get the deployment pid
         deployment = self._deployments_pro.getPid(data['execution_id'])[0]
 
-        # Update Execution Status
-        self._deployments_pro.updateStatus(data['execution_id'], 'STOPPING', data['mode'])
-
-        # Stop the execution
-        try:
-            if data['mode'] == 'graceful':
-                os.kill(deployment['pid'], signal.SIGINT)
-            elif data['mode'] == 'forceful':
-                os.kill(deployment['pid'], signal.SIGTERM)
-        except OSError as e:
-            pass
-        finally:
+        # Stop the execution if the deployment has already started
+        mode = 'mode' in data data['mode'] else 'graceful'
+        if deployment['pid'] is not None:
+            self._deployments_pro.updateStatus(data['execution_id'], 'STOPPING', mode)
+            try:
+                if mode == 'graceful':
+                    os.kill(deployment['pid'], signal.SIGINT)
+                elif mode == 'forceful':
+                    os.kill(deployment['pid'], signal.SIGTERM)
+            except OSError:
+                pass
             return jsonify({'message': 'Stopping the execution...'}), 200
+        return jsonify({'message': 'Execution removed from the queue'}), 200
 
     def __check_logs_path(self):
         logs_path = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])['local']['path']
