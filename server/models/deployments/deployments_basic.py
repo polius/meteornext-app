@@ -44,13 +44,16 @@ class Deployments_Basic:
         status = 'CREATED' if deployment['scheduled'] is None else 'SCHEDULED'
         self._sql.execute(query, (deployment['environment'], deployment['databases'], deployment['queries'], deployment['method'], status, deployment['scheduled'], user_id, deployment['execution_id']))
 
-    def updateStatus(self, deployment_id, status, stopped=None):
-        if stopped is None:
+    def updateStatus(self, deployment_id, status, extra=None):
+        if extra is None:
             query = "UPDATE deployments_basic SET `status` = %s WHERE id = %s"
             self._sql.execute(query, (status, deployment_id))
-        else:
+        elif status == 'STARTING':
+            query = "UPDATE deployments_basic SET `status` = %s WHERE id = %s AND status != 'STOPPED'"
+            self._sql.execute(query, (status, deployment_id))
+        elif status == 'STOPPING':
             query = "UPDATE deployments_basic SET `status` = %s, `stopped` = %s WHERE id = %s"
-            self._sql.execute(query, (status, stopped, deployment_id))
+            self._sql.execute(query, (status, extra, deployment_id))
 
     def getExecutions(self, execution_id):
         query = """

@@ -173,9 +173,9 @@ class Deployments:
             execution = i['executions'].split('|')
             deployment = executions[execution[0]][int(execution[1])]
             if execution[0] == 'basic':
-                self._deployments_basic.updateStatus(execution[1], 'STARTING')
+                self._deployments_basic.updateStatus(execution[1], 'STARTING', True)
             elif execution[0] == 'pro':
-                self._deployments_pro.updateStatus(execution[1], 'STARTING')
+                self._deployments_pro.updateStatus(execution[1], 'STARTING', True)
             self._meteor.execute(deployment)
 
     ####################

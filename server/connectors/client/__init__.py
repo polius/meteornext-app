@@ -20,7 +20,7 @@ class Client:
     def __close_active_connections(self, ttl):
         now = time.time()
         total = 0
-        collector = {k:[k2 for k2,v2 in v.items() if (not v2.is_protected and not v2.is_executing and v2.last_execution + ttl < now)] for k,v in self._connections.items()}
+        collector = {k:[k2 for k2,v2 in v.items() if (not v2.is_protected and not v2.is_executing and ((not v2.is_transaction and v2.last_execution + ttl < now) or (v2.is_transaction and v2.last_execution + 3600 < now)))] for k,v in self._connections.items()}
         for user_id, connections in collector.items():
             for conn_id in connections:
                 self._connections[user_id][conn_id].close()
@@ -88,6 +88,10 @@ class Connection:
     @is_protected.setter
     def is_protected(self, value):
         self._sql.is_protected = value
+
+    @property
+    def is_transaction(self):
+        return self._sql.is_transaction
 
     @property
     def connection_id(self):

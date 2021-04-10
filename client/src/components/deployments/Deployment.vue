@@ -35,7 +35,7 @@
         <v-spacer></v-spacer>
         <div v-if="last_updated != ''" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(last_updated) }}</b></div>
         <v-divider class="ml-3 mr-1" inset vertical></v-divider>
-        <v-btn icon @click="goBack()"><v-icon style="width:22px; height:22px;">fas fa-times-circle</v-icon></v-btn>
+        <v-btn icon @click="goBack()"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
 
       <!-- RESULTS -->
@@ -242,7 +242,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn readonly color="primary"><v-icon small style="margin-right:10px; margin-bottom:1px">{{ deployment['mode'] == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen'}}</v-icon>{{ deployment['mode'] }}</v-btn>
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading" icon @click="information_dialog = false"><v-icon style="width:22px; height:22px;">fas fa-times-circle</v-icon></v-btn>
+          <v-btn :disabled="loading" icon @click="information_dialog = false"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -384,7 +384,7 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-mouse-pointer</v-icon>SELECT EXECUTION</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="select_dialog = false"><v-icon style="width:22px; height:22px;">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="select_dialog = false"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 15px 20px 20px;">
           <v-container style="padding:0px; max-width:100%;">
@@ -469,7 +469,7 @@
             <v-btn text title="Copy link to clipboard" @click="resultsClipboard()"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-copy</v-icon>COPY LINK</v-btn>
           </v-toolbar-items>
           <v-spacer></v-spacer>
-          <v-btn icon @click="shareResults_dialog = false"><v-icon style="width:22px; height:22px;">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="shareResults_dialog = false"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px">
           <v-container>

@@ -25,6 +25,7 @@ class MySQL:
         self._last_execution = None
         self._is_executing = False
         self._is_protected = False
+        self._is_transaction = False
 
     @property
     def last_execution(self):
@@ -41,6 +42,10 @@ class MySQL:
     @is_protected.setter
     def is_protected(self, value):
         self._is_protected = value
+
+    @property
+    def is_transaction(self):
+        return self._is_transaction
 
     @property
     def connection_id(self):
@@ -93,8 +98,13 @@ class MySQL:
             self._sql.ping(reconnect=False)
         except Exception:
             self.connect()
-        # Execute query
         try:
+            # Check transaction
+            if query[:17].upper().startswith('START TRANSACTION') or query[:5].upper().startswith('BEGIN'):
+                self._is_transaction = True
+            elif query[:6].upper().startswith('COMMIT') or query[:8].upper().startswith('ROLLBACK'):
+                self._is_transaction = False
+            # Execute query
             return self.__execute_query(query, args, database, fetch)
         finally:
             self._last_execution = time.time()
@@ -135,7 +145,8 @@ class MySQL:
         self._sql.begin()
 
     def commit(self):
-        self._sql.commit()
+        if not self._is_transaction:
+            self._sql.commit()
 
     def rollback(self):
         try:
