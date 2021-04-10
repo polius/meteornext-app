@@ -461,7 +461,7 @@ class Pro:
         deployment = self._deployments_pro.getPid(data['execution_id'])[0]
 
         # Stop the execution if the deployment has already started
-        mode = 'mode' in data data['mode'] else 'graceful'
+        mode = data['mode'] if 'mode' in data and data['mode'] in ['graceful','forceful'] else 'graceful'
         if deployment['pid'] is not None:
             self._deployments_pro.updateStatus(data['execution_id'], 'STOPPING', mode)
             try:

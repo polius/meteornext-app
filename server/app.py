@@ -1,3 +1,4 @@
+import os
 import datetime
 import secrets
 from flask import Flask, jsonify, request
@@ -12,7 +13,7 @@ app.config.from_object(__name__)
 app.config['JWT_SECRET_KEY'] = secrets.token_urlsafe(nbytes=64)
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=12)
 app.config['JWT_TOKEN_LOCATION'] = ['cookies']
-app.config['JWT_COOKIE_SECURE'] = True
+app.config['JWT_COOKIE_SECURE'] = 'SECURE' in os.environ and os.environ['SECURE'] == 'True'
 app.config['JWT_COOKIE_SAMESITE'] = 'Strict'
 jwt = JWTManager(app)
 
