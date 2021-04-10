@@ -16,7 +16,7 @@ class MySQL:
             "user": config['sql']['username'],
             "charset": "utf8mb4",
             "cursorclass": OrderedDictCursor,
-            "autocommit": True,
+            "autocommit": False,
         }
         POOL_CONFIG = {
             "creator": pymysql,
@@ -31,22 +31,45 @@ class MySQL:
         }
         self._pool = dbutils.pooled_db.PooledDB(**POOL_CONFIG, **SQL_CONFIG)
 
-    def execute(self, query, args=None, database=None):
+    def execute(self, query, args=None, database=None, conn=None):
         try:
-            conn = self._pool.connection()
-            conn.ping(reconnect=True)
+            connection = self._pool.connection() if conn is None else conn
+            connection.ping(reconnect=True)
             if database:
-                conn.select_db(database)
-            with conn.cursor(OrderedDictCursor) as cursor:
+                connection.select_db(database)
+            with connection.cursor(OrderedDictCursor) as cursor:
                 cursor.execute(query, args)
-                return cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
+                result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
+            if conn is None:
+                connection.commit()
+            return result
         finally:
-            conn.close()
+            if conn is None:
+                connection.close()
 
     def mogrify(self, query, args=None):
         try:
-            conn = self._pool.connection()
-            with conn.cursor(OrderedDictCursor) as cursor:
+            connection = self._pool.connection()
+            with connection.cursor(OrderedDictCursor) as cursor:
                 return cursor.mogrify(query, args)
+        finally:
+            connection.close()
+
+    def transaction(self):
+        connection = self._pool.connection()
+        connection.ping(reconnect=True)
+        with connection.cursor(OrderedDictCursor) as cursor:
+            cursor.execute("BEGIN")
+        return connection
+
+    def commit(self, conn):
+        try:
+            conn.commit()
+        finally:
+            conn.close()
+
+    def rollback(self, conn):
+        try:
+            conn.rollback()
         finally:
             conn.close()

@@ -7,10 +7,10 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn v-if="'status' in deployment" text title="Show Execution Parameters" @click="parameters()"><v-icon small style="margin-right:10px">fas fa-cog</v-icon>PARAMETERS</v-btn>
           <v-btn v-if="'status' in deployment" text title="Select Execution" @click="select()"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>SELECT</v-btn>
-          <v-btn :disabled="deployment['status'] == 'STARTING' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING' || deployment['status'] == 'QUEUED'" v-if="'status' in deployment" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit Execution' : 'Re-Deploy Execution'" @click="edit()"><v-icon small style="margin-right:10px">fas fa-meteor</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
-          <v-divider v-if="deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED' || deployment['status'] == 'QUEUED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" class="mx-3" inset vertical></v-divider>
-          <v-btn :disabled="start_execution" v-if="deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED'" text title="Start Execution" @click="start()"><v-icon small style="margin-right:10px">fas fa-play</v-icon>START</v-btn>
-          <v-btn :disabled="deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || (deployment['status'] == 'STOPPING' && deployment['stopped'] == 'forceful')" v-if="deployment['status'] == 'QUEUED' || deployment['status'] == 'IN PROGRESS' || deployment['status'] == 'STOPPING'" text title="Stop Execution" @click="stop()"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
+          <v-btn v-if="'status' in deployment" :disabled="['STARTING','IN PROGRESS','STOPPING','QUEUED'].includes(deployment['status'])" text :title="(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'Edit Execution' : 'Re-Deploy Execution'" @click="edit()"><v-icon small style="margin-right:10px">fas fa-meteor</v-icon>{{(deployment['status'] == 'CREATED' || deployment['status'] == 'SCHEDULED') ? 'EDIT' : 'RE-DEPLOY'}}</v-btn>
+          <v-divider v-if="['CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','STOPPING'].includes(deployment['status'])" class="mx-3" inset vertical></v-divider>
+          <v-btn :disabled="start_execution" v-if="['CREATED','SCHEDULED'].includes(deployment['status'])" text title="Start Execution" @click="start()"><v-icon small style="margin-right:10px">fas fa-play</v-icon>START</v-btn>
+          <v-btn v-if="['QUEUED','STARTING','IN PROGRESS','STOPPING'].includes(deployment['status'])" :disabled="deployment['status'] == 'STARTING' || (deployment['status'] == 'STOPPING' && deployment['stopped'] == 'forceful')" text title="Stop Execution" @click="stop()"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
         </v-toolbar-items>
         <v-divider v-if="'status' in deployment" class="mx-3" inset vertical></v-divider>
         
@@ -440,7 +440,10 @@
             <v-layout wrap>
               <v-flex xs12>
                 <div v-if="action_dialog_text.length > 0" class="subtitle-1" style="margin-bottom:10px">{{ action_dialog_text }}</div>
-                <div v-if="action_dialog_mode == 'stop'">
+                <div v-if="action_dialog_mode == 'stop' && deployment['status'] == 'QUEUED'">
+                  <div class="subtitle-1" style="margin-bottom:10px">Want to remove the execution from the queue?</div>
+                </div>
+                <div v-else-if="action_dialog_mode == 'stop' && deployment['status'] != 'QUEUED'">
                   <div class="subtitle-1 font-weight-medium">METHOD</div>
                   <v-radio-group v-model="stop_execution_mode" hide-details style="margin-top:10px; margin-bottom:20px;">
                     <v-radio :disabled="deployment['stopped'] != null" label="Graceful - Wait current databases to finish." value="graceful" color="warning"></v-radio>
@@ -1052,7 +1055,7 @@
         })
       },
       actionSubmitStop() {
-        if (!(['IN PROGRESS','STOPPING'].includes(this.deployment['status']))) this.notification('The execution has already finished.', 'primary')
+        if (!(['QUEUED','IN PROGRESS','STOPPING'].includes(this.deployment['status']))) this.notification('The execution has already finished.', 'primary')
         else {
           this.notification('Stopping the execution. Please wait...', 'primary')
           this.stop_execution = true
@@ -1066,7 +1069,7 @@
           axios.post(path, payload)
           .catch((error) => {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
           })
         }
         this.action_dialog = false
