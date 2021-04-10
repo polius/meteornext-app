@@ -243,6 +243,7 @@ class Client:
 
             for index, query in enumerate(client_json['queries']):
                 database = client_json['database'][index] if multiple else client_json['database']
+                # Handle 'USE' keyword
                 if query.strip()[:4].upper() == 'USE ':
                     database = use_database = query.strip()[4:-1] if query.endswith(';') else query.strip()[4:]
                 elif use_database is not None:
@@ -258,7 +259,6 @@ class Client:
                         # Get table column names & column type
                         result['columns'] = columns
                         result['pks'] = pks
-
                     conn.commit()
                     execution.append(result)
 

@@ -48,7 +48,7 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-cog</v-icon>SETTINGS</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="settings_dialog = false" style="width:40px; height:40px"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="settings_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px;">
           <v-container style="padding:0px">
@@ -100,7 +100,7 @@
           <v-btn @click="selectAllServers" text title="Select all servers" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
           <v-btn @click="deselectAllServers" text title="Deselect all servers" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
           <v-spacer></v-spacer>
-          <v-btn icon @click="servers_dialog = false" style="width:40px; height:40px"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="servers_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -141,7 +141,7 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-sliders-h</v-icon>FILTER</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="filter_dialog = false" style="width:40px; height:40px"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="filter_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px;">
           <v-container style="padding:0px">
@@ -169,7 +169,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field v-model="events_search" append-icon="search" label="Search" color="white" style="margin-left:5px; width:calc(100% - 170px)" single-line hide-details></v-text-field>
           <v-divider class="mx-3" inset vertical style="margin-right:5px!important;"></v-divider>
-          <v-btn icon @click="events_dialog = false" style="width:40px; height:40px"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="events_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:0px;">
           <v-container style="padding:0px; max-width:100%!important">
@@ -213,7 +213,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-text-field v-model="events_details_search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
           <v-divider class="ml-3 mr-1" inset vertical></v-divider>
-          <v-btn icon @click="event_details_dialog = false" style="width:40px; height:40px"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="event_details_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px;">
           <v-container style="padding:0px">

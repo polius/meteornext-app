@@ -8,7 +8,7 @@
         <div class="subheading font-weight-regular">{{ server_hostname }}</div>
         <v-spacer></v-spacer>
         <div v-if="updated != null" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(updated) }}</b></div>
-        <v-btn icon @click="goBack()"><v-icon style="width:22px; height:22px">fas fa-times-circle</v-icon></v-btn>
+        <v-btn icon @click="goBack()"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
 
       <v-card-text style="padding-top:10px;">
