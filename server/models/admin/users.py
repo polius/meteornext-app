@@ -58,6 +58,8 @@ class Users:
             self._sql.execute("DELETE n FROM notifications n JOIN users u ON u.id = n.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE m FROM monitoring m JOIN users u ON u.id = m.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE ms FROM monitoring_settings ms JOIN users u ON u.id = ms.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE me FROM monitoring_events me JOIN servers s ON s.id = me.server_id JOIN users u ON u.id <=> s.owner_id AND u.username = %s", (user))
+            self._sql.execute("DELETE ms FROM monitoring_servers ms JOIN servers s ON s.id = ms.server_id JOIN users u ON u.id <=> s.owner_id AND u.username = %s", (user))
             self._sql.execute("DELETE csq FROM client_saved_queries csq JOIN users u ON u.id = csq.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE cs FROM client_settings cs JOIN users u ON u.id = cs.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE cs FROM client_servers cs JOIN users u ON u.id = cs.user_id AND u.username = %s", (user))
