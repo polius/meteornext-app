@@ -723,12 +723,12 @@ class Client:
                 yield '# ------------------------------------------------------------\n'
                 try:
                     syntax = conn.get_table_syntax(request.args['database'], table)
-                    conn.execute(query=f"SELECT SQL_NO_CACHE * FROM {table}", database=request.args['database'], fetch=False)
                     if options['includeDropTable']:
                         yield 'DROP TABLE IF EXISTS `{}`;\n\n'.format(table)
                     if options['include'] in ['Structure','Structure + Content']:
                         yield '{};\n\n'.format(syntax)
                     if options['include'] in ['Structure + Content','Content']:
+                        conn.execute(query=f"SELECT SQL_NO_CACHE * FROM {table}", database=request.args['database'], fetch=False)
                         first = True
                         while True:
                             rows = conn.fetch_many(int(options['rows']))
