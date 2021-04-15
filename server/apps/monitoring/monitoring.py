@@ -4,6 +4,7 @@ import datetime
 import calendar
 import requests
 import threading
+import traceback
 from statistics import median
 from collections import OrderedDict
 
@@ -111,6 +112,13 @@ class Monitoring:
         self._sql.execute(query=query, args=(utcnow, utcnow))
 
     def __monitor_server(self, server):
+        # Protect thread against exceptions
+        try:
+            self.__monitor_server2(server)
+        except Exception:
+            traceback.print_exc()
+
+    def __monitor_server2(self, server):
         try:
             # If server is not available check connection every 30 seconds
             if server['monitor']['updated'] is not None:

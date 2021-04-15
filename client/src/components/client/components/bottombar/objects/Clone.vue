@@ -20,17 +20,17 @@
                   <div style="padding-left:1px; padding-right:1px;">
                     <v-tabs v-model="tabObjectsSelected" show-arrows dense background-color="#303030" color="white" slider-color="white" slider-size="1" slot="extension" class="elevation-2">
                       <v-tabs-slider></v-tabs-slider>
-                      <v-tab><span class="pl-2 pr-2">{{ `Tables (${objectsCount.tables})` }}</span></v-tab>
+                      <v-tab><span class="pl-2 pr-2">{{ `Tables (${objectsSelected.tables}/${objectsItems.tables.length})` }}</span></v-tab>
                       <v-divider class="mx-3" inset vertical></v-divider>
-                      <v-tab><span class="pl-2 pr-2">{{ `Views (${objectsCount.views})` }}</span></v-tab>
+                      <v-tab><span class="pl-2 pr-2">{{ `Views (${objectsSelected.views}/${objectsItems.views.length})` }}</span></v-tab>
                       <v-divider class="mx-3" inset vertical></v-divider>
-                      <v-tab><span class="pl-2 pr-2">{{ `Triggers (${objectsCount.triggers})` }}</span></v-tab>
+                      <v-tab><span class="pl-2 pr-2">{{ `Triggers (${objectsSelected.triggers}/${objectsItems.triggers.length})` }}</span></v-tab>
                       <v-divider class="mx-3" inset vertical></v-divider>
-                      <v-tab><span class="pl-2 pr-2">{{ `Functions (${objectsCount.functions})` }}</span></v-tab>
+                      <v-tab><span class="pl-2 pr-2">{{ `Functions (${objectsSelected.functions}/${objectsItems.functions.length})` }}</span></v-tab>
                       <v-divider class="mx-3" inset vertical></v-divider>
-                      <v-tab><span class="pl-2 pr-2">{{ `Procedures (${objectsCount.procedures})` }}</span></v-tab>
+                      <v-tab><span class="pl-2 pr-2">{{ `Procedures (${objectsSelected.procedures}/${objectsItems.procedures.length})` }}</span></v-tab>
                       <v-divider class="mx-3" inset vertical></v-divider>
-                      <v-tab><span class="pl-2 pr-2">{{ `Events (${objectsCount.events})` }}</span></v-tab>
+                      <v-tab><span class="pl-2 pr-2">{{ `Events (${objectsSelected.events}/${objectsItems.events.length})` }}</span></v-tab>
                       <v-divider class="mx-3" inset vertical></v-divider>
                       <v-spacer></v-spacer>
                       <v-btn :disabled="loading" :loading="loading" @click="buildObjects()" title="Refresh" text style="font-size:16px; padding:0px; min-width:36px; height:36px; margin-top:6px; margin-right:8px;"><v-icon small>fas fa-redo-alt</v-icon></v-btn>
@@ -164,7 +164,7 @@ export default {
         checkboxSelection: (params) => { return params.columnApi.getAllDisplayedColumns()[0] === params.column },
       },
       objects: ['tables','views','triggers','functions','procedures','events'],
-      objectsCount: {'tables':0,'views':0,'triggers':0,'functions':0,'procedures':0,'events':0},
+      objectsSelected: {'tables':0,'views':0,'triggers':0,'functions':0,'procedures':0,'events':0},
       targetDatabase: '',
       // Progress
       dialogProgress: false,
@@ -230,7 +230,7 @@ export default {
       if (this.gridApi[object] != null) this.resizeTable(object, true)
     },
     onSelectionChanged(object) {
-      this.objectsCount[object] = this.gridApi[object].getSelectedRows().length
+      this.objectsSelected[object] = this.gridApi[object].getSelectedRows().length
     },
     selectAll() {
       const objects = ['tables','views','triggers','functions','procedures','events']
@@ -250,19 +250,19 @@ export default {
       })
     },
     resizeTable(object, selectRow) {
-      this.$nextTick(() => {
+      setTimeout(() => {
         var allColumnIds = [];
         this.columnApi[object].getAllColumns().forEach(function(column) {
           allColumnIds.push(column.colId);
         })
         this.columnApi[object].autoSizeColumns(allColumnIds);
-      })
-      this.$nextTick(() => {
+      },0)
+      setTimeout(() => {
         if (this.objectsItems[object].length > 0) this.gridApi[object].hideOverlay()
         else this.gridApi[object].showNoRowsOverlay()
         if (selectRow) this.selectRow()
         this.loading = false
-      })
+      },0)
     },
     buildObjects() {
       for (let obj of this.objects) {
