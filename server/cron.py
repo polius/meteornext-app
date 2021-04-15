@@ -58,7 +58,7 @@ class Cron:
             # Deployments
             deployments = routes.deployments.deployments.Deployments(self._app, self._sql, self._license)
             deployments.check_queued()
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
 
     def __coins(self):
@@ -71,7 +71,7 @@ class Cron:
                 SET u.coins = IF (u.coins + g.coins_day > coins_max, coins_max, u.coins + g.coins_day);
             """
             self._sql.execute(query)
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
 
     def __logs(self):
@@ -108,26 +108,26 @@ class Cron:
                             os.remove(execution_path + '.js')
                         # SQL
                         self._sql.execute("UPDATE deployments_{} SET expired = 1 WHERE id = {}".format(i['mode'], i['id']))
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
 
     def __monitoring_init(self):
         try:
             monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
             monitoring.init()
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
 
     def __monitoring_clean(self):
         try:
             monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
             monitoring.clean()
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
 
     def __monitoring_start(self):
         try:
             monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
             monitoring.start()
-        except Exception as e:
+        except Exception:
             traceback.print_exc()

@@ -480,6 +480,7 @@ class Client:
                 if options['mode'] == 'csv':
                     return Response(stream_with_context(self.__export_csv(options, conn)))
                 elif options['mode'] == 'sql':
+                    options['engine'] = request.args['engine']
                     return Response(stream_with_context(self.__export_sql(options, cred, conn)))
             except Exception as e:
                 return jsonify({"message": str(e)}), 400
@@ -772,7 +773,10 @@ class Client:
                     syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     if options['includeDropTable']:
                         yield 'DROP TRIGGER IF EXISTS `{}`;\n\n'.format(trigger)
-                    yield '{};\n\n'.format(syntax)
+                    if options['engine'] in ['MySQL','Aurora MySQL']:
+                        yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
+                    else:
+                        yield '{};\n\n'.format(syntax)
                 except Exception as e:
                     yield '# Error: {}\n\n'.format(e)
 
@@ -788,7 +792,10 @@ class Client:
                     if syntax:
                         if options['includeDropTable']:
                             yield 'DROP FUNCTION IF EXISTS `{}`;\n\n'.format(function)
-                        yield '{};\n\n'.format(syntax)
+                        if options['engine'] in ['MySQL','Aurora MySQL']:
+                            yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
+                        else:
+                            yield '{};\n\n'.format(syntax)
                     else:
                         err = "Insufficient privileges to export the function '{}'. You must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table".format(function)
                         raise Exception(err)
@@ -807,7 +814,10 @@ class Client:
                     if syntax:
                         if options['includeDropTable']:
                             yield 'DROP PROCEDURE IF EXISTS `{}`;\n\n'.format(procedure)
-                        yield '{};\n\n'.format(syntax)
+                        if options['engine'] in ['MySQL','Aurora MySQL']:
+                            yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
+                        else:
+                            yield '{};\n\n'.format(syntax)
                     else:
                         err = "# Error: Insufficient privileges to export the procedure '{}'. You must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table".format(procedure)
                         raise Exception(err)
@@ -825,7 +835,10 @@ class Client:
                     syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     if options['includeDropTable']:
                         yield 'DROP EVENT IF EXISTS `{}`;\n\n'.format(event)
-                    yield '{};\n\n'.format(syntax)
+                    if options['engine'] in ['MySQL','Aurora MySQL']:
+                        yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
+                    else:
+                        yield '{};\n\n'.format(syntax)
                 except Exception as e:
                     yield '# Error: {}\n\n'.format(e)
 

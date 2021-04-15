@@ -30,7 +30,7 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-cog</v-icon>SETTINGS</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="settings_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="settings_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px;">
           <v-container style="padding:0px">
@@ -57,7 +57,7 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-database</v-icon>SERVERS</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="servers_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="servers_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
@@ -98,7 +98,7 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-sliders-h</v-icon>FILTER</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="filter_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="filter_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 10px 15px 15px 15px;">
           <v-container style="padding:0px">
@@ -169,7 +169,7 @@
           <v-btn @click="selectAllColumns" text title="Select all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
           <v-btn @click="deselectAllColumns" text title="Deselect all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
           <v-spacer></v-spacer>
-          <v-btn icon @click="columnsDialog = false" style="width:40px; height:40px"><v-icon style="font-size:23px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="columnsDialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 0px 20px 0px;">
           <v-container style="padding:0px">
