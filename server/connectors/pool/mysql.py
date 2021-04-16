@@ -33,6 +33,7 @@ class MySQL:
 
     def execute(self, query, args=None, database=None, conn=None):
         try:
+            connection = None
             connection = self._pool.connection() if conn is None else conn
             connection.ping(reconnect=True)
             if database:
@@ -44,7 +45,7 @@ class MySQL:
                 connection.commit()
             return result
         finally:
-            if conn is None:
+            if conn is None and connection:
                 connection.close()
 
     def mogrify(self, query, args=None):
