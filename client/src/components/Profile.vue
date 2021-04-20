@@ -23,7 +23,8 @@
                       <v-card-text>
                         <v-progress-circular v-if="mfa['uri'] == null" indeterminate style="margin-left:auto; margin-right:auto; display:table;"></v-progress-circular>
                         <qrcode-vue v-else :value="mfa['uri']" size="200" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
-                        <v-text-field outlined v-model="mfa['value']" v-on:keyup.enter="saveProfile()" label="MFA Code" maxlength="6" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px">
+                        <v-btn @click="mfaCodeDialog = true" text block hide-details>CAN'T SCAN THE QR?</v-btn>
+                        <v-text-field outlined v-model="mfa['value']" v-on:keyup.enter="saveProfile()" label="MFA Code" maxlength="6" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:5px">
                           <template v-slot:append><v-icon small style="margin-top:3px; margin-right:4px">fas fa-key</v-icon></template>
                         </v-text-field>
                       </v-card-text>
@@ -35,6 +36,22 @@
             </v-container>
           </v-card-text>
         </v-card>
+        <v-dialog v-model="mfaCodeDialog" max-width="512px">
+          <v-card>
+            <v-toolbar dense flat color="primary">
+              <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-qrcode</v-icon>QR CODE</v-toolbar-title>
+            </v-toolbar>
+            <v-card-text style="padding:0px">
+              <v-container>
+                <v-layout wrap>
+                  <v-flex xs12>
+                    <div style="font-size:18px; letter-spacing:0.08em; text-align:center;">{{ mfa['hash'] }}</div>
+                  </v-flex>
+                </v-layout>
+              </v-container>
+            </v-card-text>
+          </v-card>
+        </v-dialog>
         <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
           {{ snackbarText }}
           <template v-slot:action="{ attrs }">
@@ -65,6 +82,9 @@ export default {
       value: ''
     },
     loading: true,
+
+    // MFA Dialog
+    mfaCodeDialog: false,
 
     // Snackbar
     snackbar: false,
