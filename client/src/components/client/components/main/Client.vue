@@ -808,6 +808,8 @@ export default {
         }
         else if (chars.length == 0 && text[i] == "#") chars.push("#")
         else if (text[i] == "\n" && chars[chars.length-1] == '#') chars.pop()
+        else if (text[i] == '*' && i != 0 && text[i-1] == '/') chars.push("/*")
+        else if (text[i] == '/' && i != 0 && text[i-1] == '*' && chars[chars.length-1] == '/*') chars.pop()
       }
       if (i > start && !text.substring(start, i).trim().toLowerCase().startsWith('delimiter')) {
         queries.push({"begin": start, "end": i})
