@@ -4,7 +4,7 @@
     <!-- Triggers -->
     <!--------------->
     <div style="height:calc(100% - 84px)">
-      <ag-grid-vue ref="agGridStructureTriggers" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-clicked="onCellClicked" @cell-focused="onCellFocused" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.triggers" :rowData="structureItems.triggers"></ag-grid-vue>
+      <ag-grid-vue ref="agGridStructureTriggers" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-clicked="onCellClicked" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowDragManaged="true" suppressMoveWhenRowDragging="true" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" stopEditingWhenGridLosesFocus="true" :columnDefs="structureHeaders.triggers" :rowData="structureItems.triggers"></ag-grid-vue>
     </div>
     <!---------------->
     <!-- BOTTOM BAR -->
@@ -237,17 +237,16 @@ export default {
           }, 200);
         }
       }
-    },
-    onCellClicked() {
-      this.selectedRows = this.gridApi.structure.triggers.getSelectedRows().length != 0
-    },
-    onCellFocused(event) {
-      let row = this.gridApi.structure.triggers.getDisplayedRowAtIndex(event.rowIndex)
-      if (row !== undefined) {
+      else if (['ArrowUp','ArrowDown'].includes(e.event.key)) {
+        let cell = this.gridApi.structure.triggers.getFocusedCell()
+        let row = this.gridApi.structure.triggers.getDisplayedRowAtIndex(cell.rowIndex)
         let node = this.gridApi.structure.triggers.getRowNode(row.id)
         this.gridApi.structure.triggers.deselectAll()
         node.setSelected(true)
       }
+    },
+    onCellClicked() {
+      this.selectedRows = this.gridApi.structure.triggers.getSelectedRows().length != 0
     },
     addTrigger() {
       this.dialogOptions = {
