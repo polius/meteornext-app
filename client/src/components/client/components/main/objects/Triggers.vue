@@ -3,7 +3,7 @@
     <!-------------->
     <!-- TRIGGERS -->
     <!-------------->
-    <ag-grid-vue ref="agGridObjectsTriggers" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-focused="onCellFocused" @cell-context-menu="onContextMenu" style="width:100%; height:calc(100% - 84px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="objectsHeaders.triggers" :rowData="objectsItems.triggers"></ag-grid-vue>
+    <ag-grid-vue ref="agGridObjectsTriggers" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu suppressColumnVirtualisation @grid-ready="onGridReady" @new-columns-loaded="onNewColumnsLoaded" @cell-key-down="onCellKeyDown" @cell-context-menu="onContextMenu" style="width:100%; height:calc(100% - 84px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="objectsHeaders.triggers" :rowData="objectsItems.triggers"></ag-grid-vue>
     <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
       <v-list style="padding:0px;">
         <v-list-item-group v-model="contextMenuModel">
@@ -177,10 +177,9 @@ export default {
           }, 200);
         }
       }
-    },
-    onCellFocused(event) {
-      let row = this.gridApi.objects.triggers.getDisplayedRowAtIndex(event.rowIndex)
-      if (row !== undefined) {
+      else if (['ArrowUp','ArrowDown'].includes(e.event.key)) {
+        let cell = this.gridApi.objects.triggers.getFocusedCell()
+        let row = this.gridApi.objects.triggers.getDisplayedRowAtIndex(cell.rowIndex)
         let node = this.gridApi.objects.triggers.getRowNode(row.id)
         this.gridApi.objects.triggers.deselectAll()
         node.setSelected(true)

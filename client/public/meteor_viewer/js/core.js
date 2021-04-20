@@ -282,7 +282,7 @@ function build_grid() {
     onColumnMoved: onColumnMoved,
     onCellMouseOver: onCellMouseOver,
     onCellMouseOut: onCellMouseOut,
-    onCellFocused: onCellFocused
+    onCellKeyDown: onCellKeyDown
   };
 
   gridOptions.getRowClass = function () {
@@ -309,9 +309,10 @@ function onCellMouseOut() {
   }
 }
 
-function onCellFocused(event) {
-  let row = gridOptions.api.getDisplayedRowAtIndex(event.rowIndex)
-  if (row !== undefined) {
+function onCellKeyDown(e) {
+  if (['ArrowUp', 'ArrowDown'].includes(e.event.key)) {
+    let cell = gridOptions.api.getFocusedCell()
+    let row = gridOptions.api.getDisplayedRowAtIndex(cell.rowIndex)
     let node = gridOptions.api.getRowNode(row.id)
     gridOptions.api.deselectAll()
     node.setSelected(true)

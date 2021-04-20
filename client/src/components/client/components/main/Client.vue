@@ -12,7 +12,7 @@
         </Pane>
         <Pane size="50" min-size="0">
           <!-- suppressColumnVirtualisation -->
-          <ag-grid-vue ref="agGridClient" suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-clicked="onRowClicked" @cell-focused="onCellFocused" @cell-context-menu="onContextMenu" @row-data-changed="onRowDataChanged" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
+          <ag-grid-vue ref="agGridClient" suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-clicked="onRowClicked" @cell-context-menu="onContextMenu" @row-data-changed="onRowDataChanged" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
           <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
             <v-list style="padding:0px;">
               <v-list-item-group v-model="contextMenuModel">
@@ -274,14 +274,6 @@ export default {
         this.cellEditConfirm()
       }
     },
-    onCellFocused(event) {
-      let row = this.gridApi.client.getDisplayedRowAtIndex(event.rowIndex)
-      if (row !== undefined) {
-        let node = this.gridApi.client.getRowNode(row.id)
-        this.gridApi.client.deselectAll()
-        node.setSelected(true)
-      }
-    },
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
         let selectedRows = this.gridApi.client.getSelectedRows()
@@ -314,6 +306,13 @@ export default {
       else if (e.event.key == 'Enter') {
         // this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
         this.cellEditConfirm()
+      }
+      else if (['ArrowUp','ArrowDown'].includes(e.event.key)) {
+        let cell = this.gridApi.client.getFocusedCell()
+        let row = this.gridApi.client.getDisplayedRowAtIndex(cell.rowIndex)
+        let node = this.gridApi.client.getRowNode(row.id)
+        this.gridApi.client.deselectAll()
+        node.setSelected(true)
       }
     },
     getCurrentPKs(resolve, reject) {
