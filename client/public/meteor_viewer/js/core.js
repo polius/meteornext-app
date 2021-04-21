@@ -15,7 +15,7 @@ var defaultColumnDefs;
 var btBringGridBack;
 var btDestroyGrid;
 // Global Default Column Definitions Variables
-var ENVIRONMENT_COLUMNS = ["meteor_timestamp", "meteor_environment", "meteor_region", "meteor_server", "meteor_database", "meteor_query"];
+var SUMMARY_COLUMNS = ["meteor_timestamp", "meteor_environment", "meteor_region", "meteor_server", "meteor_database", "meteor_query"];
 var EXECUTION_COLUMNS = ["meteor_status", "meteor_response", "meteor_execution_time", "meteor_output"];
 // +--------+
 // | IMPORT |
@@ -116,60 +116,12 @@ function get_column_name(column) {
 
 function build_columns() {
   var AG_GRID_COLUMNS = [];
-
-  // Check if exists an environment column
-  var environment_found = false;
-  for (var i = 0; i < ENVIRONMENT_COLUMNS.length; ++i) {
-    if (COLUMNS.includes(ENVIRONMENT_COLUMNS[i])) {
-      environment_found = true;
-      break;
-    }
-  }
-  if (environment_found) AG_GRID_COLUMNS.push({ headerName: "Environment", children: [] });
-
-  // Check if exists an execution column
-  var execution_found = false;
-  for (var i = 0; i < EXECUTION_COLUMNS.length; ++i) {
-    if (COLUMNS.includes(EXECUTION_COLUMNS[i])) {
-      execution_found = true;
-      break;
-    }
-  }
-  if (execution_found) {
-    if (INFO['mode'] == 'deploy') AG_GRID_COLUMNS.push({ headerName: "Deployment", children: [] });
-    else if (INFO['mode'] == 'test') AG_GRID_COLUMNS.push({ headerName: "Test Execution", children: [] });
-  }
-
-  // Check if exists another column than environment and execution
-  var results_found = false;
-  for (var i = 0; i < COLUMNS.length; ++i) {
-    if (!ENVIRONMENT_COLUMNS.includes(COLUMNS[i]) && !EXECUTION_COLUMNS.includes(COLUMNS[i])) {
-      results_found = true;
-      break;
-    }
-  }
-  if (results_found) AG_GRID_COLUMNS.push({ headerName: "Results", children: [] });
-
-  var ENVIRONMENT_index = null;
-  var EXECUTION_index = null;
-  var RESULT_index = null;
-  // Get the Index of each parent column
-  for (var i = 0; i < AG_GRID_COLUMNS.length; ++i) {
-    if (AG_GRID_COLUMNS[i]['headerName'] == 'Environment') ENVIRONMENT_index = i;
-    else if (AG_GRID_COLUMNS[i]['headerName'] == 'Deployment' || AG_GRID_COLUMNS[i]['headerName'] == 'Test Execution') EXECUTION_index = i;
-    else if (AG_GRID_COLUMNS[i]['headerName'] == 'Results') RESULT_index = i;
-  }
-
   for (var i = 0; i < COLUMNS.length; ++i) {
     var column_name = get_column_name(COLUMNS[i]);
-    // Environment Columns
-    if (ENVIRONMENT_COLUMNS.includes(COLUMNS[i])) {
-      if (COLUMNS[i] == 'meteor_timestamp') AG_GRID_COLUMNS[ENVIRONMENT_index]['children'].push({ headerName: column_name, field: COLUMNS[i], width: 100, sort: 'asc' });
-      else AG_GRID_COLUMNS[ENVIRONMENT_index]['children'].push({ headerName: column_name, field: COLUMNS[i], width: 100 });
-    }
+    if (COLUMNS[i] == 'meteor_timestamp') AG_GRID_COLUMNS.push({ headerName: column_name, field: COLUMNS[i], width: 100, sort: 'asc' });
     else if (COLUMNS[i] == 'meteor_status') {
       header_name = 'Execution Status'
-      AG_GRID_COLUMNS[EXECUTION_index]['children'].push({
+      AG_GRID_COLUMNS.push({
         headerName: header_name,
         field: COLUMNS[i],
         width: 50,
@@ -182,7 +134,7 @@ function build_columns() {
     }
     else if (COLUMNS[i] == 'meteor_response') {
       header_name = 'Execution Response'
-      AG_GRID_COLUMNS[EXECUTION_index]['children'].push({
+      AG_GRID_COLUMNS.push({
         headerName: header_name,
         field: COLUMNS[i],
         width: 200,
@@ -205,7 +157,7 @@ function build_columns() {
     }
     else if (COLUMNS[i] == 'meteor_execution_time') {
       header_name = 'Execution Time'
-      AG_GRID_COLUMNS[EXECUTION_index]['children'].push({
+      AG_GRID_COLUMNS.push({
         headerName: header_name,
         field: COLUMNS[i],
         width: 200,
@@ -222,7 +174,7 @@ function build_columns() {
     }
     else if (COLUMNS[i] == 'meteor_output') {
       header_name = 'Execution Output'
-      AG_GRID_COLUMNS[EXECUTION_index]['children'].push({
+      AG_GRID_COLUMNS.push({
         headerName: header_name,
         field: COLUMNS[i],
         width: 200,
@@ -234,11 +186,10 @@ function build_columns() {
         }
       });
     }
-    // Results Columns
     else {
-      AG_GRID_COLUMNS[RESULT_index]['children'].push(
+      AG_GRID_COLUMNS.push(
         {
-          headerName: COLUMNS[i],
+          headerName: column_name,
           field: COLUMNS[i],
           width: 100,
           valueGetter: function (params) {
@@ -532,7 +483,7 @@ function compile_meteor() {
   }
   // Get the Custom Columns
   for (var i = 0; i < COLUMNS.length; ++i) {
-    if (!ENVIRONMENT_COLUMNS.includes(COLUMNS[i]) && !EXECUTION_COLUMNS.includes(COLUMNS[i])) FILTER_CUSTOM_COLUMNS.push(COLUMNS[i]);
+    if (!SUMMARY_COLUMNS.includes(COLUMNS[i]) && !EXECUTION_COLUMNS.includes(COLUMNS[i])) FILTER_CUSTOM_COLUMNS.push(COLUMNS[i]);
   }
 }
 
@@ -932,8 +883,8 @@ function filter_data() {
   var data2filter = [];
   if (TRANSFORMED_DATA.length == 0) {
     // Reset Grid Columns
-    for (var i = 0; i < columnDefs[0]['children'].length; ++i) {
-      if (columnDefs[0]['children'][i]['field'] == 'meteor_database') columnDefs[0]['children'][i]['pinned'] = null;
+    for (var i = 0; i < columnDefs.length; ++i) {
+      if (columnDefs[i]['field'] == 'meteor_database') columnDefs[i]['pinned'] = null;
     }
     gridOptions.api.setColumnDefs(defaultColumnDefs);
     // Apply Column Properties to Settings Modal
@@ -1143,7 +1094,6 @@ function transform_data() {
 function compile_query(data) {
   var api = gridOptions.api;
   var columns = [];
-  var new_columns = { headerName: 'Results', children: [] };
   var new_data = [];
 
   // Get Dropdown Selected Text Values
@@ -1190,8 +1140,9 @@ function compile_query(data) {
   }
 
   // Rebuild New Columns
+  var columnDefs = gridOptions.columnDefs.slice(0);
   for (var i = 0; i < columns.length; ++i) {
-    new_columns['children'].push(
+    columnDefs.push(
       {
         headerName: columns[i],
         field: columns[i],
@@ -1204,16 +1155,6 @@ function compile_query(data) {
       });
   }
 
-  // Set Columns to Default
-  var columnDefs = gridOptions.columnDefs.slice(0);
-  api.setColumnDefs(columnDefs);
-  for (var i = 0; i < columnDefs.length; ++i) {
-    if (columnDefs['headerName'] == 'Results') {
-      columnDefs.pop(columnDefs[i]);
-      break;
-    }
-  }
-
   // Hide Default Columns
   for (var i = 0; i < COLUMNS.length; ++i) set_column_visible(COLUMNS[i], false);
 
@@ -1224,7 +1165,6 @@ function compile_query(data) {
   }
 
   // Set New Columns
-  columnDefs.push(new_columns);
   api.setColumnDefs(columnDefs);
 
   // Return new Grid Data
@@ -1315,13 +1255,13 @@ function hide_errors() {
 }
 
 function compile_errors(data) {
-  var new_columns = { headerName: 'Error Analyzer', children: [] };
+  var new_columns = [];
   var new_data = [];
 
   // Rebuild Columns
   var columns = ['Query', 'Error', 'Count', 'Databases'];
   for (var i = 0; i < columns.length; ++i) {
-    new_columns['children'].push({
+    new_columns.push({
       headerName: columns[i],
       field: columns[i].toLowerCase(),
       valueGetter: function (params) {
@@ -1368,7 +1308,7 @@ function compile_errors(data) {
   }
 
   // Set New Columns
-  gridOptions.api.setColumnDefs([new_columns]);
+  gridOptions.api.setColumnDefs(new_columns);
 
   // Return new Grid Data
   return new_data;
