@@ -1040,7 +1040,23 @@ function init_transformation_modal() {
   }
   // Get Dropdown Values
   for (var i = 0; i < DATA.length; ++i) {
-    if ('meteor_query' in DATA[i] && !TRANSFORMATION_QUERY.includes(DATA[i]['meteor_query'])) TRANSFORMATION_QUERY.push(DATA[i]['meteor_query']);
+    if (!TRANSFORMATION_QUERY.includes(DATA[i]['meteor_query'])) {
+      if (DATA[i]['meteor_query'].startsWith('[')) {
+        // Parse Query Alias
+        let stack = 0
+        for (let j = 1; j < DATA[i]['meteor_query'].length; ++j) {
+          if (DATA[i]['meteor_query'][j] == '[') stack += 1
+          else if (DATA[i]['meteor_query'][j] == ']') {
+            if (stack == 0) {
+              TRANSFORMATION_QUERY.push('[ALIAS] ' + DATA[i]['meteor_query'].substr(1, j-1))
+              break
+            }
+            else stack -= 1
+          }
+        }
+      }
+      else TRANSFORMATION_QUERY.push(DATA[i]['meteor_query']);
+    }
   }
   // Sort Dropdown Values
   TRANSFORMATION_QUERY.sort();
@@ -1098,42 +1114,37 @@ function compile_query(data) {
 
   // Get Dropdown Selected Text Values
   var transformation_query = $("#transformation-query option:selected").text();
+  var is_alias = transformation_query.startsWith('[ALIAS] ')
 
-  // Get Columns
+  // Rebuild Data + Rebuild Columns
   for (var i = 0; i < data.length; ++i) {
-    var row = data[i];
-    if (row['meteor_query'] != transformation_query || row['meteor_output'] == '' || typeof row['meteor_output'] == 'undefined') continue;
-
-    if (row['meteor_output'] != '[]') {
-      var keys = Object.keys(row['meteor_output'][0]).toString().split(',');
+    if (data[i]['meteor_output'] == '' || typeof data[i]['meteor_output'] == 'undefined') continue;
+    if (!is_alias && data[i]['meteor_query'] != transformation_query) continue;
+    if (is_alias && !data[i]['meteor_query'].startsWith('[' + transformation_query.substr(8, transformation_query.length) + ']')) continue;
+    // Rebuild Columns
+    if (data[i]['meteor_output'] != '[]') {
+      var keys = Object.keys(data[i]['meteor_output'][0]).toString().split(',');
       for (var k = 0; k < keys.length; ++k) {
         if (columns.indexOf(keys[k]) == -1) columns.push(keys[k]);
       }
     }
-  }
-
-  // Rebuild Data + Rebuild Columns
-  for (var i = 0; i < data.length; ++i) {
-    var row = data[i];
-    if (row['meteor_query'] != transformation_query || row['meteor_output'] == '' || typeof row['meteor_output'] == 'undefined') continue;
-
     // Rebuild Data
-    if (row['meteor_output'] == '[]') {
+    if (data[i]['meteor_output'] == '[]') {
       if (!transformation_checkbox_checked) {
-        var new_row = JSON.parse(JSON.stringify(row));
+        var new_row = JSON.parse(JSON.stringify(data[i]));
         for (var c = 0; c < columns.length; ++c) {
           new_row[columns[c]] = '';
         }
         new_data.push(new_row);
       }
     }
-    else if (row['meteor_output'] != '') {
-      for (var j = 0; j < row['meteor_output'].length; ++j) {
-        var new_row = JSON.parse(JSON.stringify(row));
+    else if (data[i]['meteor_output'] != '') {
+      for (var j = 0; j < data[i]['meteor_output'].length; ++j) {
+        var new_row = JSON.parse(JSON.stringify(data[i]));
         for (var c = 0; c < columns.length; ++c) {
-          new_row[columns[c]] = row['meteor_output'][j][columns[c]];
+          new_row[columns[c]] = data[i]['meteor_output'][j][columns[c]];
         }
-        new_row['meteor_output'] = [row['meteor_output'][j]];
+        new_row['meteor_output'] = [data[i]['meteor_output'][j]];
         new_data.push(new_row);
       }
     }
