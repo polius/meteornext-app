@@ -61,6 +61,7 @@
                     <v-card-text>
                       <v-progress-circular v-if="item.mfa.uri == null" indeterminate style="margin-left:auto; margin-right:auto; display:table;"></v-progress-circular>
                       <qrcode-vue v-else :value="item.mfa.uri" size="200" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
+                      <v-btn @click="mfaCodeDialog = true" text block hide-details>CAN'T SCAN THE QR?</v-btn>
                       <v-text-field outlined v-model="item.mfa.value" v-on:keyup.enter="submitUser()" label="MFA Code" append-icon="vpn_key" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px"></v-text-field>
                     </v-card-text>
                   </v-card>
@@ -74,6 +75,23 @@
                   <v-btn :loading="loading" color="#00b16a" @click="submitUser()">Confirm</v-btn>
                   <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">Cancel</v-btn>
                 </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="mfaCodeDialog" max-width="512px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-qrcode</v-icon>QR CODE</v-toolbar-title>
+        </v-toolbar>
+        <v-card-text style="padding:0px">
+          <v-container>
+            <v-layout wrap>
+              <v-flex xs12>
+                <div style="font-size:18px; letter-spacing:0.08em; text-align:center;">{{ item.mfa.hash }}</div>
               </v-flex>
             </v-layout>
           </v-container>
@@ -122,6 +140,8 @@ export default {
     dialog_valid: false,
     // User Groups
     groups: [],
+    // MFA Dialog
+    mfaCodeDialog: false,
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(4000),
