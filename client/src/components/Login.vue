@@ -33,6 +33,7 @@
                       <v-card style="width:220px; margin:10px auto 15px; padding:10px 0px 2px 0px; margin-left:auto; margin-right:auto;">
                         <v-card-text style="padding:0px">
                           <qrcode-vue size="200" :value="mfa_uri" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
+                          <v-btn @click="mfaCodeDialog = true" text block hide-details>CAN'T SCAN THE QR?</v-btn>
                         </v-card-text>
                       </v-card>
                     </div>
@@ -51,6 +52,23 @@
         </v-layout>
       </v-container>
     </v-main>
+
+    <v-dialog v-model="mfaCodeDialog" max-width="512px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-qrcode</v-icon>QR CODE</v-toolbar-title>
+        </v-toolbar>
+        <v-card-text style="padding:0px">
+          <v-container>
+            <v-layout wrap>
+              <v-flex xs12>
+                <div style="font-size:18px; letter-spacing:0.08em; text-align:center;">{{ mfa_hash }}</div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
 
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
@@ -79,6 +97,7 @@
       // MFA
       mfa_hash: null,
       mfa_uri: null,
+      mfaCodeDialog: false,
 
       // Previous Route
       prevRoute: '',
