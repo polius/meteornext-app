@@ -10,7 +10,7 @@ RUN yum update -y && \
     # ./configure --enable-optimizations --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib" && \ 
     # make install && \
     yum install xz -y && \
-    python3 -m pip install --no-cache-dir --upgrade pip && \
+    python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
     python3 -m pip install --no-cache-dir boto3 && \
     python3 -m pip install --no-cache-dir requests && \
     python3 -m pip install --no-cache-dir paramiko && \
