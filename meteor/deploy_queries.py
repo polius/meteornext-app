@@ -69,10 +69,9 @@ class deploy_queries:
         query_syntax = self.__get_query_type(query_parsed, show_output=False)
 
         # Query Alias
-        if alias is None:               
-            query_alias = query_parsed if args is None else query_parsed % args
-        else:
-            query_alias = '[ALIAS] {}'.format(alias)
+        query_alias = query_parsed if args is None else query_parsed % args
+        if alias:
+            query_alias = '[{}] {}'.format(alias, query_alias)
 
         # Get SQL Connection
         if auxiliary is None:
