@@ -12,7 +12,7 @@ class logs:
                 # Write Parsed Data
                 write_file.write('var DATA = {};\n'.format(json.dumps(logs, separators=(',', ':'))))
                 # Write Sorted Displayed Columns
-                write_file.write('var COLUMNS = ["meteor_timestamp", "meteor_environment", "meteor_region", "meteor_server", "meteor_database", "meteor_query", "meteor_status", "meteor_response", "meteor_execution_time", "meteor_output"];\n')
+                write_file.write('var COLUMNS = ["meteor_timestamp", "meteor_environment", "meteor_region", "meteor_server", "meteor_database", "meteor_query", "meteor_status", "meteor_response", "meteor_execution_time", "meteor_execution_rows", "meteor_output"];\n')
                 # Write the Execution Information
                 summary = summary_raw
                 summary['mode'] = 'deploy' if self._args.deploy else 'test' 

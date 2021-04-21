@@ -16,7 +16,7 @@ var btBringGridBack;
 var btDestroyGrid;
 // Global Default Column Definitions Variables
 var SUMMARY_COLUMNS = ["meteor_timestamp", "meteor_environment", "meteor_region", "meteor_server", "meteor_database", "meteor_query"];
-var EXECUTION_COLUMNS = ["meteor_status", "meteor_response", "meteor_execution_time", "meteor_output"];
+var EXECUTION_COLUMNS = ["meteor_status", "meteor_response", "meteor_execution_time", "meteor_execution_rows", "meteor_output"];
 // +--------+
 // | IMPORT |
 // +--------+

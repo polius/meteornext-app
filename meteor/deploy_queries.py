@@ -82,7 +82,7 @@ class deploy_queries:
 
         # Init a new Row
         date_time = datetime.fromtimestamp(time()).strftime('%Y-%m-%d %H:%M:%S.%f UTC')
-        execution_row = {"meteor_timestamp": date_time, "meteor_environment": self._imports.config['params']['environment'], "meteor_region": region, "meteor_server": server_sql, "meteor_database": database_name, "meteor_query": query_alias, "meteor_status": "1", "meteor_response": "", "meteor_execution_time": ""}
+        execution_row = {"meteor_timestamp": date_time, "meteor_environment": self._imports.config['params']['environment'], "meteor_region": region, "meteor_server": server_sql, "meteor_database": database_name, "meteor_query": query_alias, "meteor_status": "1", "meteor_response": "", "meteor_execution_time": "", "meteor_execution_rows": "0"}
 
         # Set query transaction
         if self._transaction:
@@ -116,6 +116,7 @@ class deploy_queries:
                 execution_row['meteor_output'] = query_info['query_result'] if str(query_info['query_result']) != '()' else '[]'
                 execution_row['meteor_response'] = ""
                 execution_row['meteor_execution_time'] = query_info['query_time']
+                execution_row['meteor_execution_rows'] = query_info['query_rows_affected']
                 self._execution_log['output'].append(execution_row)
 
                 # Return the Execution Result

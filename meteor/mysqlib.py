@@ -100,7 +100,7 @@ class MySQL:
             query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
 
         # Return query info
-        query_data = {"query_result": query_result, "query_time": "{0:.3f}".format(time.time() - start_time)}
+        query_data = {"query_result": query_result, "query_time": "{0:.3f}".format(time.time() - start_time), "query_rows_affected": cursor.rowcount}
         return query_data
 
     def begin(self):
