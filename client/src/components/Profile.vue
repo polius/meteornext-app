@@ -15,7 +15,7 @@
                     <v-text-field v-model="email" :loading="loading" :disabled="loading" label="Email" type="email">
                       <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-envelope</v-icon></template>
                     </v-text-field>
-                    <v-text-field v-model="newPassword" :loading="loading" :disabled="loading" label="Password" type="password" :placeholder="password" hide-details style="padding-top:0px;">
+                    <v-text-field v-model="newPassword" :loading="loading" :disabled="loading" label="New password" type="password" :placeholder="password" hide-details style="padding-top:0px;">
                       <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-lock</v-icon></template>
                     </v-text-field>
                     <v-switch v-model="mfa['enabled']" @change="onMFAChange" :loading="loading" :disabled="loading" flat label="Multi-Factor Authentication (MFA)" style="margin-top:20px"></v-switch>
