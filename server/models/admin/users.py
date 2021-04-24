@@ -7,7 +7,7 @@ class Users:
     def get(self, username=None):
         if username is None:
             query = """
-                SELECT u.id, u.username, u.email, u.password, u.mfa, u.mfa_hash, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, u.last_login, u.last_ping
+                SELECT u.id, u.username, u.email, u.password, u.mfa, u.mfa_hash, u.mfa_created, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, u.last_login, u.last_ping
                 FROM users u
                 JOIN groups g ON g.id = u.group_id
                 ORDER BY u.last_login DESC, u.username ASC
@@ -15,7 +15,7 @@ class Users:
             return self._sql.execute(query)
         else:
             query = """
-                SELECT u.id, u.username, u.email, u.password, u.mfa, u.mfa_hash, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, (go.user_id IS NOT NULL) AS 'owner', u.last_login, u.last_ping, g.inventory_enabled, g.inventory_secured, g.deployments_enabled, g.deployments_basic, g.deployments_pro, g.monitoring_enabled, g.utils_enabled, g.client_enabled, g.coins_execution, g.coins_day
+                SELECT u.id, u.username, u.email, u.password, u.mfa, u.mfa_hash, u.mfa_created, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, (go.user_id IS NOT NULL) AS 'owner', u.last_login, u.last_ping, g.inventory_enabled, g.inventory_secured, g.deployments_enabled, g.deployments_basic, g.deployments_pro, g.monitoring_enabled, g.utils_enabled, g.client_enabled, g.coins_execution, g.coins_day
                 FROM users u 
                 JOIN groups g ON g.id = u.group_id
                 LEFT JOIN group_owners go ON go.group_id = g.id AND go.user_id = u.id
@@ -29,11 +29,14 @@ class Users:
     def put(self, user_id, user):
         self._sql.execute("UPDATE users SET username = %s, password = %s, mfa = %s, mfa_hash = %s, email = %s, coins = %s, admin = %s, disabled = %s, group_id = (SELECT id FROM groups WHERE `name` = %s), updated_by = %s, updated_at = %s WHERE username = %s", (user['username'], user['password'], user['mfa']['enabled'], user['mfa']['hash'], user['email'], user['coins'], user['admin'], user['disabled'], user['group'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['current_username']))
 
-    def put_profile(self, user):
-        self._sql.execute("UPDATE users SET password = %s, mfa = %s, mfa_hash = %s, email = %s WHERE username = %s", (user['password'], user['mfa'], user['mfa_hash'], user['email'], user['username']))
+    def change_password(self, user):
+        self._sql.execute("UPDATE users SET password = %s WHERE username = %s", (user['password'], user['username']))
 
-    def put_mfa(self, user):
-        self._sql.execute("UPDATE users SET mfa = 1, mfa_hash = %s WHERE username = %s", (user['mfa_hash'], user['username']))
+    def enable_mfa(self, user):
+        self._sql.execute("UPDATE users SET mfa = 1, mfa_hash = %s, mfa_created = %s WHERE username = %s", (user['mfa_hash'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['username']))
+
+    def disable_mfa(self, user):
+        self._sql.execute("UPDATE users SET mfa = 0, mfa_hash = NULL, mfa_created = NULL WHERE username = %s", (user['username']))
 
     def put_last_login(self, username):
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")

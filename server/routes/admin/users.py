@@ -114,7 +114,7 @@ class Users:
         if data['mfa']['enabled']:
             if 'hash' in data['mfa']:
                 mfa = pyotp.TOTP(data['mfa']['hash'], interval=30)
-                if len(data['mfa']['value']) > 0 and not mfa.verify(data['mfa']['value']):
+                if len(data['mfa']['value']) > 0 and not mfa.verify(data['mfa']['value'], valid_window=1):
                     return jsonify({'message': 'Invalid MFA Code'}), 400
             else:
                 data['mfa']['enabled'] = user[0]['mfa']

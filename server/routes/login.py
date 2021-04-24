@@ -50,10 +50,10 @@ class Login:
             if user[0]['mfa'] == 0 and force_mfa:
                 if 'mfa' in login_json and 'mfa_hash' in login_json:
                     mfa = pyotp.TOTP(login_json['mfa_hash'], interval=30)
-                    if len(login_json['mfa']) == 0 or not mfa.verify(login_json['mfa']):
+                    if len(login_json['mfa']) == 0 or not mfa.verify(login_json['mfa'], valid_window=1):
                         return jsonify({'message': 'Invalid MFA Code'}), 401
                     else:
-                        self._users.put_mfa({'username': user[0]['username'], 'mfa_hash': login_json['mfa_hash']})
+                        self._users.enable_mfa({'username': user[0]['username'], 'mfa_hash': login_json['mfa_hash']})
                         user[0]['mfa'] = 1
                         user[0]['mfa_hash'] = login_json['mfa_hash']
                 else:
@@ -63,7 +63,7 @@ class Login:
             elif user[0]['mfa'] == 1:
                 if 'mfa' not in login_json:
                     return jsonify({"code": "mfa_request", "message": "Requesting MFA credentials"}), 202
-                elif not pyotp.TOTP(user[0]['mfa_hash'], interval=30).verify(login_json['mfa']):
+                elif not pyotp.TOTP(user[0]['mfa_hash'], interval=30).verify(login_json['mfa'], valid_window=1):
                     return jsonify({"message": "Invalid MFA Code"}), 401
 
             # Check disabled

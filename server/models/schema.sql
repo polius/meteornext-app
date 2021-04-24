@@ -45,6 +45,7 @@ CREATE TABLE `users` (
   `password` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `mfa` TINYINT(1) NOT NULL DEFAULT '0',
   `mfa_hash` varchar(191) NULL,
+  `mfa_created` DATETIME NULL,
   `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `coins` INT UNSIGNED NOT NULL DEFAULT '0',
   `group_id` int(10) unsigned NOT NULL,
