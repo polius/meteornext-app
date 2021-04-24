@@ -10,32 +10,111 @@
             <v-container fluid grid-list-lg style="padding:0px">
               <v-layout row wrap>
                 <v-flex xs12>
-                  <div class="text-h6 font-weight-regular">Hello <span class="font-weight-medium">{{ this.username }}</span> <v-chip color="teal" label text-color="white" style="margin-left:10px; margin-bottom:2px; letter-spacing: 1px;">{{ this.group.toUpperCase() }}</v-chip></div>
-                  <v-form ref="form" @submit.prevent style="margin-top:15px">
-                    <v-text-field v-model="email" :loading="loading" :disabled="loading" label="Email" type="email">
-                      <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-envelope</v-icon></template>
-                    </v-text-field>
-                    <v-text-field v-model="newPassword" :loading="loading" :disabled="loading" label="New password" type="password" :placeholder="password" hide-details style="padding-top:0px;">
-                      <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-lock</v-icon></template>
-                    </v-text-field>
-                    <v-switch v-model="mfa['enabled']" @change="onMFAChange" :loading="loading" :disabled="loading" flat label="Multi-Factor Authentication (MFA)" style="margin-top:20px"></v-switch>
-                    <v-card v-if="mfa['enabled'] && !mfa['origin']" style="width:232px; margin-bottom:20px;">
-                      <v-card-text>
-                        <v-progress-circular v-if="mfa['uri'] == null" indeterminate style="margin-left:auto; margin-right:auto; display:table;"></v-progress-circular>
-                        <qrcode-vue v-else :value="mfa['uri']" size="200" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
-                        <v-btn @click="mfaCodeDialog = true" text block hide-details>CAN'T SCAN THE QR?</v-btn>
-                        <v-text-field outlined v-model="mfa['value']" v-on:keyup.enter="saveProfile()" label="MFA Code" maxlength="6" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:5px">
-                          <template v-slot:append><v-icon small style="margin-top:3px; margin-right:4px">fas fa-key</v-icon></template>
-                        </v-text-field>
-                      </v-card-text>
-                    </v-card>
-                  </v-form>
-                  <v-btn color="primary" :loading="loading" @click="saveProfile()" style="margin-left:0px;">Save</v-btn>    
+                  <v-text-field readonly v-model="profile.username" :loading="loading" :disabled="loading" label="Username" style="padding-top:5px"></v-text-field>
+                  <v-text-field readonly v-model="profile.group" :loading="loading" :disabled="loading" label="Group" style="padding-top:0px"></v-text-field>
+                  <v-text-field readonly v-model="profile.email" :loading="loading" :disabled="loading" label="Email" type="email" style="padding-top:0px"></v-text-field>
+                  <v-btn :disabled="loading" @click="passwordDialog = true">Change Password</v-btn>
+                  <v-btn :disabled="loading" @click="mfaDialog = true" style="margin-left:5px">Manage MFA</v-btn>
                 </v-flex>
               </v-layout>
             </v-container>
           </v-card-text>
         </v-card>
+        <v-dialog v-model="passwordDialog" max-width="512px">
+          <v-card>
+            <v-toolbar dense flat color="primary">
+              <v-toolbar-title class="white--text subtitle-1">CHANGE PASSWORD</v-toolbar-title>
+              <v-spacer></v-spacer>
+              <v-btn @click="passwordDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+            </v-toolbar>
+            <v-card-text style="padding:20px">
+              <v-container style="padding:0px">
+                <v-layout wrap>
+                  <v-flex xs12>
+                    <v-form ref="passwordForm" @submit.prevent>
+                      <v-text-field ref="passwordCurrent" v-model="passwordItem.current" :readonly="loadingDialog" label="Current password" type="password" :rules="[v => !!v || '']" required style="padding-top:5px" autocomplete="new-password"></v-text-field>
+                      <v-text-field v-model="passwordItem.new" :readonly="loadingDialog" label="New password" type="password" :rules="[v => !!v || '']" required style="padding-top:0px" autocomplete="new-password"></v-text-field>
+                      <v-text-field v-model="passwordItem.repeat" :readonly="loadingDialog" label="Repeat new password" type="password" :rules="[v => !!v || '']" required style="padding-top:0px" autocomplete="new-password" v-on:keyup.enter="submitPassword"></v-text-field>
+                    </v-form>
+                    <v-divider></v-divider>
+                    <v-row no-gutters style="margin-top:20px;">
+                      <v-btn :loading="loadingDialog" color="#00b16a" @click="submitPassword">CONFIRM</v-btn>
+                      <v-btn :disabled="loadingDialog" color="error" @click="passwordDialog = false" style="margin-left:5px">CANCEL</v-btn>
+                    </v-row>
+                  </v-flex>
+                </v-layout>
+              </v-container>
+            </v-card-text>
+          </v-card>
+        </v-dialog>
+        <v-dialog v-model="mfaDialog" max-width="512px">
+          <v-card>
+            <v-toolbar dense flat color="primary">
+              <v-toolbar-title class="white--text subtitle-1">MANAGE MFA</v-toolbar-title>
+              <v-spacer></v-spacer>
+              <v-btn @click="mfaDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+            </v-toolbar>
+            <v-card-text style="padding:20px">
+              <v-container style="padding:0px">
+                <v-layout wrap>
+                  <v-flex xs12>
+                    <v-form ref="mfaForm" @submit.prevent style="margin-bottom:15px">
+                      <div v-if="profile.mfa == 0">
+                        <div class="text-body-1">Choose the type of MFA device to assign:</div>
+                        <v-radio-group v-model="mfaMode">
+                          <v-radio value="mfa">
+                            <template v-slot:label>
+                              <div>
+                                <div>Virtual MFA device</div>
+                                <div class="font-weight-regular caption" style="font-size:0.85rem !important">Authenticator app installed on your mobile device or computer</div>
+                              </div>
+                            </template>
+                          </v-radio>
+                          <v-radio disabled value="u2f" style="margin-top:10px">
+                            <template v-slot:label>
+                              <div>
+                                <div>U2F security key</div>
+                                <div class="font-weight-regular caption" style="font-size:0.85rem !important">YubiKey or any other compliant U2F device</div>
+                              </div>
+                            </template>
+                          </v-radio>
+                        </v-radio-group>
+                        <v-card>
+                          <v-card-text>
+                            <v-progress-circular v-if="mfa['uri'] == null" indeterminate style="margin-left:auto; margin-right:auto; display:table;"></v-progress-circular>
+                            <qrcode-vue v-else :value="mfa['uri']" size="200" level="H" background="#ffffff" foreground="#000000" style="text-align:center"></qrcode-vue>
+                            <v-btn @click="mfaCodeDialog = true" text block hide-details>CAN'T SCAN THE QR?</v-btn>
+                            <v-text-field ref="mfaCode" outlined v-model="mfa['value']" v-on:keyup.enter="submitMFA" label="MFA Code" maxlength="6" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px">
+                              <template v-slot:append><v-icon small style="margin-top:3px; margin-right:4px">fas fa-key</v-icon></template>
+                            </v-text-field>
+                          </v-card-text>
+                        </v-card>
+                      </div>
+                      <div v-else>
+                        <v-card>
+                          <v-row no-gutters>
+                            <v-col cols="auto" style="display:flex; margin:15px">
+                              <v-icon color="#00b16a">fas fa-check-circle</v-icon>
+                            </v-col>
+                            <v-col style="padding-top:5px">
+                              <div class="text-body-1" style="color:#00b16a">The MFA is currently enabled.</div>
+                              <div class="text-body-2">Active since: {{ dateFormat(profile.mfa_created) }}</div>
+                            </v-col>
+                          </v-row>
+                        </v-card>
+                      </div>
+                    </v-form>
+                    <v-divider></v-divider>
+                    <v-row no-gutters style="margin-top:20px;">
+                      <v-btn :loading="loadingDialog" color="#00b16a" @click="submitMFA">{{ profile.mfa ? 'DISABLE MFA' : 'CONFIRM' }}</v-btn>
+                      <v-btn :disabled="loadingDialog" color="error" @click="mfaDialog = false" style="margin-left:5px">CANCEL</v-btn>
+                    </v-row>
+                  </v-flex>
+                </v-layout>
+              </v-container>
+            </v-card-text>
+          </v-card>
+        </v-dialog>
         <v-dialog v-model="mfaCodeDialog" max-width="512px">
           <v-card>
             <v-toolbar dense flat color="primary">
@@ -45,7 +124,7 @@
               <v-container>
                 <v-layout wrap>
                   <v-flex xs12>
-                    <div style="font-size:18px; letter-spacing:0.08em; text-align:center;">{{ mfa['hash'] }}</div>
+                    <div class="white--text" style="font-size:18px; letter-spacing:0.08em; text-align:center;">{{ mfa['hash'] }}</div>
                   </v-flex>
                 </v-layout>
               </v-container>
@@ -64,27 +143,32 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from 'axios'
+import moment from 'moment'
 import QrcodeVue from 'qrcode.vue'
 
 export default {
   data: () => ({
-    username: '',
-    group: '...',
-    email: '',
-    password: '',
-    newPassword: '',
+    profile: { username: '', group: '', email: '', mfa: 0, mfa_created: null},
+
+    // Loading
+    loading: true,
+    loadingDialog: false,
+
+    // Password Dialog
+    passwordDialog: false,
+    passwordItem: { current: '', new: '', repeat: ''},
+
+    // MFA Dialog
+    mfaDialog: false,
+    mfaCodeDialog: false,
+    mfaMode: 'mfa',
     mfa: {
       enabled: false,
-      origin: false,
       hash: null,
       uri: null,
       value: ''
     },
-    loading: true,
-
-    // MFA Dialog
-    mfaCodeDialog: false,
 
     // Snackbar
     snackbar: false,
@@ -96,17 +180,45 @@ export default {
   created() {
     this.getProfile()
   },
+  watch: {
+    passwordDialog: function(val) {
+      if (val) {
+        this.passwordItem = { current: '', new: '', repeat: ''}
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.passwordForm !== 'undefined') this.$refs.passwordForm.resetValidation()
+          if (typeof this.$refs.passwordCurrent !== 'undefined') this.$refs.passwordCurrent.focus()
+        })
+      }
+    },
+    mfaDialog: function(val) {
+      if (val) {
+        if (this.mfa['uri'] == null) this.getMFA()
+        this.mfa.value = ''
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.mfaForm !== 'undefined') this.$refs.mfaForm.resetValidation()
+          if (typeof this.$refs.mfaCode !== 'undefined') this.$refs.mfaCode.focus()
+        })
+      }
+    },
+    mfaCodeDialog: function(val) {
+      if (val) {
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.mfaForm !== 'undefined') this.$refs.mfaForm.resetValidation()
+        })
+      }
+      if (!val) {
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.mfaForm !== 'undefined') this.$refs.mfaForm.resetValidation()
+          if (typeof this.$refs.mfaCode !== 'undefined') this.$refs.mfaCode.focus()
+        })
+      }
+    }
+  },
   methods: {
     getProfile() {
       axios.get('/profile')
         .then((response) => {
-          this.username = response.data.data['username']
-          this.group = response.data.data['group']
-          this.email = response.data.data['email']
-          var hiddenPassword = ''
-          for (var i = 0; i < response.data.data['password'].length; ++i) hiddenPassword += '·'
-          this.password = hiddenPassword
-          this.mfa['enabled'] = this.mfa['origin'] = response.data.data['mfa']
+          this.profile = response.data.data
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -115,7 +227,7 @@ export default {
         .finally(() => this.loading = false)
     },
     onMFAChange(val) {
-      if (val && !this.mfa['origin'] && this.mfa['uri'] == null) this.getMFA()
+      if (val && this.mfa['uri'] == null) this.getMFA()
     },
     getMFA() {
       axios.get('/profile/mfa')
@@ -128,36 +240,48 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
-    saveProfile() {
+    submitPassword() {
       // Check if all fields are filled
-      if (!this.$refs.form.validate()) {
+      if (!this.$refs.passwordForm.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
         return
       }
-      // Disable the fields while updating fields to the DB
-      this.loading = true
-      // Edit item in the DB
-      const payload = { 
-        email: this.email,
-        password: this.newPassword,
-        mfa: this.mfa['enabled'],
-        mfaHash: this.mfa['hash'],
-        mfaValue: this.mfa['value']
-      }
-      axios.put('/profile', payload)
+      this.loadingDialog = true
+      const payload = this.passwordItem
+      axios.put('/profile/password', payload)
         .then((response) => {
-          this.mfa['origin'] = this.mfa['enabled']
-          this.mfa['hash'] = null
-          this.mfa['uri'] = null
-          this.mfa['value'] = ''
+          this.passwordDialog = false
           this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
-          this.mfa['value'] = ''
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => this.loading = false)
+        .finally(() => this.loadingDialog = false)
+    },
+    submitMFA() {
+      // Check if all fields are filled
+      if (!this.$refs.mfaForm.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
+      this.loadingDialog = true
+      const payload = this.profile.mfa ? {'enabled': 0} : {'enabled': 1, 'mode': 'mfa', 'hash': this.mfa.hash, 'value': this.mfa.value}
+      axios.put('/profile/mfa', payload)
+        .then((response) => {
+          this.mfaDialog = false
+          this.getProfile()
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.loadingDialog = false)
+    },
+    dateFormat(date) {
+      if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
+      return date
     },
     notification(message, color) {
       this.snackbarText = message
