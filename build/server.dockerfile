@@ -10,12 +10,13 @@ RUN yum update -y && \
     # ./configure --enable-optimizations --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib" && \ 
     # make install && \
     yum install xz -y && \
-    python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    python3 -m pip install --no-cache-dir --upgrade pip==21.0.1 setuptools wheel && \
     python3 -m pip install --no-cache-dir boto3 && \
     python3 -m pip install --no-cache-dir requests && \
     python3 -m pip install --no-cache-dir paramiko && \
     python3 -m pip install --no-cache-dir sshtunnel && \
     python3 -m pip install --no-cache-dir pymysql && \
+    python3 -m pip install --no-cache-dir webauthn && \
     python3 -m pip install --no-cache-dir DBUtils && \
     # python3 -m pip install mysql-connector-python && \
     python3 -m pip install --no-cache-dir bcrypt && \
