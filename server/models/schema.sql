@@ -63,6 +63,19 @@ CREATE TABLE `users` (
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE `user_mfa` (
+  `user_id` INT UNSIGNED NOT NULL,
+  `2fa_hash` VARCHAR(191) NULL,
+  `webauthn_ukey` TEXT NULL,
+  `webauthn_credential_id` TEXT NULL,
+  `webauthn_pub_key` TEXT NULL,
+  `webauthn_sign_count` TEXT NULL,
+  `webauthn_rp_id` TEXT NULL,
+  `created_at` DATETIME NOT NULL,
+  PRIMARY KEY (`user_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE `group_owners` (
   `group_id` int(10) unsigned NOT NULL,
   `user_id` int(10) unsigned NOT NULL,
