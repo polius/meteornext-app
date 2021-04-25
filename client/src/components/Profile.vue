@@ -62,7 +62,7 @@
                       <div v-if="profile.mfa == 0">
                         <div class="text-body-1">Choose the type of MFA device to assign:</div>
                         <v-radio-group v-model="mfaMode">
-                          <v-radio value="mfa">
+                          <v-radio value="2fa">
                             <template v-slot:label>
                               <div>
                                 <div>Virtual MFA device</div>
@@ -70,11 +70,11 @@
                               </div>
                             </template>
                           </v-radio>
-                          <v-radio disabled value="u2f" style="margin-top:10px">
+                          <v-radio disabled value="webauthn" style="margin-top:5px">
                             <template v-slot:label>
                               <div>
-                                <div>U2F security key</div>
-                                <div class="font-weight-regular caption" style="font-size:0.85rem !important">YubiKey or any other compliant U2F device</div>
+                                <div>Security Key</div>
+                                <div class="font-weight-regular caption" style="font-size:0.85rem !important">YubiKey or any other compliant device</div>
                               </div>
                             </template>
                           </v-radio>
@@ -143,6 +143,7 @@
 </template>
 
 <script>
+// import base64js from 'base64-js'
 import axios from 'axios'
 import moment from 'moment'
 import QrcodeVue from 'qrcode.vue'
@@ -162,7 +163,7 @@ export default {
     // MFA Dialog
     mfaDialog: false,
     mfaCodeDialog: false,
-    mfaMode: 'mfa',
+    mfaMode: '2fa',
     mfa: {
       enabled: false,
       hash: null,
@@ -212,7 +213,35 @@ export default {
           if (typeof this.$refs.mfaCode !== 'undefined') this.$refs.mfaCode.focus()
         })
       }
-    }
+    },
+    mfaMode: function(val) {
+      if (val == 'webauthn') {
+        if (this.u2fChallenge == null) {
+          console.log("register")
+          const payload = { host: window.location.host }
+          axios.post('/mfa/webauthn/register', payload)
+            .then((response) => {
+              // Convert certain members of the PublicKeyCredentialCreateOptions into byte arrays as expected by the spec.
+              const publicKeyCredentialCreateOptions = this.transformCredentialCreateOptions(response.data)
+              // Request the authenticator(s) to create a new credential keypair.
+              navigator.credentials.create({ publicKey: publicKeyCredentialCreateOptions })
+              .then((resp) => {
+                const newAssertionForServer = this.transformNewAssertionForServer(resp)
+                console.log(newAssertionForServer)
+              })
+              .catch ((err) => { return console.error("Error creating credential:", err) })
+            })
+            .catch((error) => {
+              console.log(error)
+              if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+              else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+            })
+        }
+        else {
+          console.log("sign2")
+        }
+      }
+    },
   },
   methods: {
     getProfile() {
@@ -230,7 +259,7 @@ export default {
       if (val && this.mfa['uri'] == null) this.getMFA()
     },
     getMFA() {
-      axios.get('/profile/mfa')
+      axios.get('/mfa/2fa')
         .then((response) => {
           this.mfa['hash'] = response.data['mfa_hash']
           this.mfa['uri'] = response.data['mfa_uri']
@@ -266,8 +295,8 @@ export default {
         return
       }
       this.loadingDialog = true
-      const payload = this.profile.mfa ? {'enabled': 0} : {'enabled': 1, 'mode': 'mfa', 'hash': this.mfa.hash, 'value': this.mfa.value}
-      axios.put('/profile/mfa', payload)
+      const payload = this.profile.mfa ? {'enabled': 0} : {'enabled': 1, 'hash': this.mfa.hash, 'value': this.mfa.value}
+      axios.post('/mfa/2fa', payload)
         .then((response) => {
           this.mfaDialog = false
           this.getProfile()
@@ -287,6 +316,42 @@ export default {
       this.snackbarText = message
       this.snackbarColor = color 
       this.snackbar = true
+    },
+    // WEBAUTHN
+    // Convert certain members of the PublicKeyCredentialCreateOptions into byte arrays as expected by the spec
+    transformCredentialCreateOptions(credentialCreateOptionsFromServer) {
+      let {challenge, user} = credentialCreateOptionsFromServer
+      user.id = Uint8Array.from (
+        atob(credentialCreateOptionsFromServer.user.id.replace(/_/g, "/").replace(/-/g, "+")), 
+        c => c.charCodeAt(0)
+      )
+      challenge = Uint8Array.from (
+        atob(credentialCreateOptionsFromServer.challenge.replace(/_/g, "/").replace(/-/g, "+")),
+        c => c.charCodeAt(0)
+      )
+      const transformedCredentialCreateOptions = Object.assign(
+        {}, credentialCreateOptionsFromServer, {challenge, user}
+      )
+      return transformedCredentialCreateOptions
+    },
+    // Transforms the binary data in the credential into base64 strings
+    transformNewAssertionForServer(newAssertion) {
+      const attObj = new Uint8Array(newAssertion.response.attestationObject)
+      const clientDataJSON = new Uint8Array(newAssertion.response.clientDataJSON)
+      const rawId = new Uint8Array(newAssertion.rawId)
+      const registrationClientExtensions = newAssertion.getClientExtensionResults()
+      return {
+          id: newAssertion.id,
+          rawId: this.b64enc(rawId),
+          type: newAssertion.type,
+          attObj: this.b64enc(attObj),
+          clientData: this.b64enc(clientDataJSON),
+          registrationClientExtensions: JSON.stringify(registrationClientExtensions)
+      }
+    },
+    b64enc(buf) {
+      var base64js = require('base64-js')
+      return base64js.fromByteArray(buf).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "")
     }
   }
 }
