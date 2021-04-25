@@ -1048,7 +1048,8 @@ function init_transformation_modal() {
           if (DATA[i]['meteor_query'][j] == '[') stack += 1
           else if (DATA[i]['meteor_query'][j] == ']') {
             if (stack == 0) {
-              TRANSFORMATION_QUERY.push('[ALIAS] ' + DATA[i]['meteor_query'].substr(1, j-1))
+              let element = '[ALIAS] ' + DATA[i]['meteor_query'].substr(1, j - 1)
+              if (!TRANSFORMATION_QUERY.includes(element)) TRANSFORMATION_QUERY.push(element)
               break
             }
             else stack -= 1
