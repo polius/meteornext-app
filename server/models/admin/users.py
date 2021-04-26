@@ -7,16 +7,28 @@ class Users:
     def get(self, username=None):
         if username is None:
             query = """
-                SELECT u.id, u.username, u.email, u.password, u.mfa, u.mfa_hash, u.mfa_created, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, u.last_login, u.last_ping
+                SELECT u.id, u.username, u.email, u.password, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, u.last_login, u.last_ping,
+                    CASE
+                        WHEN mfa.2fa_hash IS NOT NULL THEN 'u2f'
+                        WHEN mfa.webauthn_ukey IS NOT NULL THEN 'webauthn'
+                        ELSE NULL
+                    END AS 'mfa'
                 FROM users u
+                LEFT JOIN user_mfa mfa ON mfa.user_id = u.id
                 JOIN groups g ON g.id = u.group_id
                 ORDER BY u.last_login DESC, u.username ASC
             """
             return self._sql.execute(query)
         else:
             query = """
-                SELECT u.id, u.username, u.email, u.password, u.mfa, u.mfa_hash, u.mfa_created, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, (go.user_id IS NOT NULL) AS 'owner', u.last_login, u.last_ping, g.inventory_enabled, g.inventory_secured, g.deployments_enabled, g.deployments_basic, g.deployments_pro, g.monitoring_enabled, g.utils_enabled, g.client_enabled, g.coins_execution, g.coins_day
-                FROM users u 
+                SELECT u.id, u.username, u.email, u.password, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, (go.user_id IS NOT NULL) AS 'owner', u.last_login, u.last_ping, g.inventory_enabled, g.inventory_secured, g.deployments_enabled, g.deployments_basic, g.deployments_pro, g.monitoring_enabled, g.utils_enabled, g.client_enabled, g.coins_execution, g.coins_day,
+                    CASE
+                        WHEN mfa.2fa_hash IS NOT NULL THEN 'u2f'
+                        WHEN mfa.webauthn_ukey IS NOT NULL THEN 'webauthn'
+                        ELSE NULL
+                    END AS 'mfa'
+                FROM users u
+                LEFT JOIN user_mfa mfa ON mfa.user_id = u.id
                 JOIN groups g ON g.id = u.group_id
                 LEFT JOIN group_owners go ON go.group_id = g.id AND go.user_id = u.id
                 WHERE u.username = %s
@@ -27,16 +39,10 @@ class Users:
         self._sql.execute("INSERT INTO users (username, password, mfa, email, coins, group_id, admin, disabled, created_by, created_at) SELECT %s, %s, %s, %s, %s, id, %s, %s, %s, %s FROM groups WHERE name = %s", (user['username'], user['password'], user['mfa']['enabled'], user['email'], user['coins'], user['admin'], user['disabled'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['group']))
 
     def put(self, user_id, user):
-        self._sql.execute("UPDATE users SET username = %s, password = %s, mfa = %s, mfa_hash = %s, email = %s, coins = %s, admin = %s, disabled = %s, group_id = (SELECT id FROM groups WHERE `name` = %s), updated_by = %s, updated_at = %s WHERE username = %s", (user['username'], user['password'], user['mfa']['enabled'], user['mfa']['hash'], user['email'], user['coins'], user['admin'], user['disabled'], user['group'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['current_username']))
+        self._sql.execute("UPDATE users SET username = %s, password = %s, email = %s, coins = %s, admin = %s, disabled = %s, group_id = (SELECT id FROM groups WHERE `name` = %s), updated_by = %s, updated_at = %s WHERE username = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['disabled'], user['group'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['current_username']))
 
     def change_password(self, user):
         self._sql.execute("UPDATE users SET password = %s WHERE username = %s", (user['password'], user['username']))
-
-    def enable_mfa(self, user):
-        self._sql.execute("UPDATE users SET mfa = 1, mfa_hash = %s, mfa_created = %s WHERE username = %s", (user['mfa_hash'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['username']))
-
-    def disable_mfa(self, user):
-        self._sql.execute("UPDATE users SET mfa = 0, mfa_hash = NULL, mfa_created = NULL WHERE username = %s", (user['username']))
 
     def put_last_login(self, username):
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
@@ -73,6 +79,7 @@ class Users:
             self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.shared = 0 JOIN users u ON u.id = e.owner_id AND u.username = %s", (user))
             self._sql.execute("DELETE e FROM environments e JOIN users u ON u.id = e.owner_id AND u.username = %s WHERE e.shared = 0", (user))
             self._sql.execute("DELETE go FROM group_owners go JOIN users u ON u.id = go.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE mfa FROM user_mfa mfa JOIN users u ON u.id = mfa.user_id WHERE u.username = %s", (user))
             self._sql.execute("DELETE FROM users WHERE username = %s", (user))
 
     def exist(self, username):

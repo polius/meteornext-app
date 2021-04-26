@@ -47,10 +47,13 @@
             </v-card-text>
           </v-card>
         </v-dialog>
-        <v-dialog v-model="mfaDialog" max-width="512px">
+        <v-dialog v-model="mfaDialog" max-width="672px">
           <v-card>
             <v-toolbar dense flat color="primary">
               <v-toolbar-title class="white--text subtitle-1">MANAGE MFA</v-toolbar-title>
+              <v-divider v-if="mfaDialogStep == 2" class="mx-3" inset vertical></v-divider>
+              <div v-if="mfaDialogStep == 2 && mfaMode == '2fa'" class="text-body-1">Virtual 2FA Device</div>
+              <div v-if="mfaDialogStep == 2 && mfaMode == 'webauthn'" class="text-body-1">Security Key</div>
               <v-spacer></v-spacer>
               <v-btn @click="mfaDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
             </v-toolbar>
@@ -59,36 +62,64 @@
                 <v-layout wrap>
                   <v-flex xs12>
                     <v-form ref="mfaForm" @submit.prevent style="margin-bottom:15px">
-                      <div v-if="profile.mfa == 0">
-                        <div class="text-body-1">Choose the type of MFA device to assign:</div>
-                        <v-radio-group v-model="mfaMode">
-                          <v-radio value="2fa">
-                            <template v-slot:label>
-                              <div>
-                                <div>Virtual MFA device</div>
-                                <div class="font-weight-regular caption" style="font-size:0.85rem !important">Authenticator app installed on your mobile device or computer</div>
-                              </div>
-                            </template>
-                          </v-radio>
-                          <v-radio disabled value="webauthn" style="margin-top:5px">
-                            <template v-slot:label>
-                              <div>
-                                <div>Security Key</div>
-                                <div class="font-weight-regular caption" style="font-size:0.85rem !important">YubiKey or any other compliant device</div>
-                              </div>
-                            </template>
-                          </v-radio>
-                        </v-radio-group>
-                        <v-card>
-                          <v-card-text>
-                            <v-progress-circular v-if="mfa['uri'] == null" indeterminate style="margin-left:auto; margin-right:auto; display:table;"></v-progress-circular>
-                            <qrcode-vue v-else :value="mfa['uri']" size="200" level="H" background="#ffffff" foreground="#000000" style="text-align:center"></qrcode-vue>
-                            <v-btn @click="mfaCodeDialog = true" text block hide-details>CAN'T SCAN THE QR?</v-btn>
-                            <v-text-field ref="mfaCode" outlined v-model="mfa['value']" v-on:keyup.enter="submitMFA" label="MFA Code" maxlength="6" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px">
-                              <template v-slot:append><v-icon small style="margin-top:3px; margin-right:4px">fas fa-key</v-icon></template>
-                            </v-text-field>
-                          </v-card-text>
-                        </v-card>
+                      <div v-if="profile.mfa == null">
+                        <div v-if="mfaDialogStep == 1">
+                          <v-card>
+                            <v-row no-gutters align="center" justify="center">
+                              <v-col cols="auto" style="display:flex; margin:15px">
+                                <v-icon color="#00b16a">fas fa-shield-alt</v-icon>
+                              </v-col>
+                              <v-col>
+                                <div class="text-body-1">Protect your account by requiring an additional layer of security to sign in.</div>
+                              </v-col>
+                            </v-row>
+                          </v-card>
+                          <div class="text-body-1 white--text" style="margin-top:20px">Choose the type of MFA device to assign:</div>
+                          <v-radio-group v-model="mfaMode" hide-details style="margin-top:10px">
+                            <v-radio value="2fa">
+                              <template v-slot:label>
+                                <div>
+                                  <div class="white--text">Virtual 2FA Device</div>
+                                  <div class="font-weight-regular caption" style="font-size:0.85rem !important">Authenticator app installed on your mobile device or computer</div>
+                                </div>
+                              </template>
+                            </v-radio>
+                            <v-radio value="webauthn" style="margin-top:5px">
+                              <template v-slot:label>
+                                <div>
+                                  <div class="white--text">Security Key</div>
+                                  <div class="font-weight-regular caption" style="font-size:0.85rem !important">YubiKey or any other compliant device</div>
+                                </div>
+                              </template>
+                            </v-radio>
+                          </v-radio-group>
+                        </div>
+                        <div v-else>
+                          <v-card v-if="mfaMode == '2fa'">
+                            <v-card-text>
+                              <v-row no-gutters>
+                                <v-col cols="auto">
+                                  <v-progress-circular v-if="twoFactor['uri'] == null" indeterminate style="margin-left:auto; margin-right:auto; display:table;"></v-progress-circular>
+                                  <qrcode-vue v-else :value="twoFactor['uri']" size="200" level="H" background="#ffffff" foreground="#000000" style="text-align:center"></qrcode-vue>
+                                  <v-btn @click="mfaCodeDialog = true" text block hide-details>CAN'T SCAN THE QR?</v-btn>
+                                  <v-text-field ref="mfaCode" outlined v-model="twoFactor['value']" v-on:keyup.enter="submitU2F" label="MFA Code" maxlength="6" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px">
+                                    <template v-slot:append><v-icon small style="margin-top:3px; margin-right:4px">fas fa-key</v-icon></template>
+                                  </v-text-field>
+                                </v-col>
+                                <v-col style="margin-left:15px">
+                                  <div class="text-body-1 white--text" style="margin-bottom:15px">How to enable app based authentication</div>
+                                  <div class="text-body-1" style="margin-bottom:10px">1. Download and install an app (such as Google Authenticator) on your mobile device.</div>
+                                  <div class="text-body-1" style="margin-bottom:10px">2. Scan the QR code.</div>
+                                  <div class="text-body-1">3. Enter and verify the authentication code generated by the app.</div>
+                                </v-col>
+                              </v-row>
+                            </v-card-text>
+                          </v-card>
+                          <v-card v-if="mfaMode == 'webauthn'">
+                            <v-card-text>
+                            </v-card-text>
+                          </v-card>
+                        </div>
                       </div>
                       <div v-else>
                         <v-card>
@@ -107,7 +138,7 @@
                     <v-divider></v-divider>
                     <v-row no-gutters style="margin-top:20px;">
                       <v-btn :loading="loadingDialog" color="#00b16a" @click="submitMFA">{{ profile.mfa ? 'DISABLE MFA' : 'CONFIRM' }}</v-btn>
-                      <v-btn :disabled="loadingDialog" color="error" @click="mfaDialog = false" style="margin-left:5px">CANCEL</v-btn>
+                      <v-btn :disabled="loadingDialog" color="error" @click="cancelMFA" style="margin-left:5px">CANCEL</v-btn>
                     </v-row>
                   </v-flex>
                 </v-layout>
@@ -124,7 +155,7 @@
               <v-container>
                 <v-layout wrap>
                   <v-flex xs12>
-                    <div class="white--text" style="font-size:18px; letter-spacing:0.08em; text-align:center;">{{ mfa['hash'] }}</div>
+                    <div class="white--text" style="font-size:18px; letter-spacing:0.08em; text-align:center;">{{ twoFactor['hash'] }}</div>
                   </v-flex>
                 </v-layout>
               </v-container>
@@ -143,14 +174,14 @@
 </template>
 
 <script>
-// import base64js from 'base64-js'
+import { webauthnRegister } from './../plugins/webauthn.js'
 import axios from 'axios'
 import moment from 'moment'
 import QrcodeVue from 'qrcode.vue'
 
 export default {
   data: () => ({
-    profile: { username: '', group: '', email: '', mfa: 0, mfa_created: null},
+    profile: { username: '', group: '', email: '', mfa: null, mfa_created: null },
 
     // Loading
     loading: true,
@@ -163,9 +194,9 @@ export default {
     // MFA Dialog
     mfaDialog: false,
     mfaCodeDialog: false,
+    mfaDialogStep: 1,
     mfaMode: '2fa',
-    mfa: {
-      enabled: false,
+    twoFactor: {
       hash: null,
       uri: null,
       value: ''
@@ -191,16 +222,6 @@ export default {
         })
       }
     },
-    mfaDialog: function(val) {
-      if (val) {
-        if (this.mfa['uri'] == null) this.getMFA()
-        this.mfa.value = ''
-        requestAnimationFrame(() => {
-          if (typeof this.$refs.mfaForm !== 'undefined') this.$refs.mfaForm.resetValidation()
-          if (typeof this.$refs.mfaCode !== 'undefined') this.$refs.mfaCode.focus()
-        })
-      }
-    },
     mfaCodeDialog: function(val) {
       if (val) {
         requestAnimationFrame(() => {
@@ -216,30 +237,14 @@ export default {
     },
     mfaMode: function(val) {
       if (val == 'webauthn') {
-        if (this.u2fChallenge == null) {
-          console.log("register")
-          const payload = { host: window.location.host }
-          axios.post('/mfa/webauthn/register', payload)
-            .then((response) => {
-              // Convert certain members of the PublicKeyCredentialCreateOptions into byte arrays as expected by the spec.
-              const publicKeyCredentialCreateOptions = this.transformCredentialCreateOptions(response.data)
-              // Request the authenticator(s) to create a new credential keypair.
-              navigator.credentials.create({ publicKey: publicKeyCredentialCreateOptions })
-              .then((resp) => {
-                const newAssertionForServer = this.transformNewAssertionForServer(resp)
-                console.log(newAssertionForServer)
-              })
-              .catch ((err) => { return console.error("Error creating credential:", err) })
-            })
-            .catch((error) => {
-              console.log(error)
-              if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-              else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
-            })
-        }
-        else {
-          console.log("sign2")
-        }
+        webauthnRegister()
+        .then(() => {
+          console.log("Register complete!")
+        })
+        .catch((error) => {
+          if (status in error && [401,422,503].includes(error.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          console.log(error)
+        })
       }
     },
   },
@@ -255,14 +260,12 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    onMFAChange(val) {
-      if (val && this.mfa['uri'] == null) this.getMFA()
-    },
-    getMFA() {
+    get2FA() {
+      this.twoFactor = { hash: null, uri: null, value: '' }
       axios.get('/mfa/2fa')
         .then((response) => {
-          this.mfa['hash'] = response.data['mfa_hash']
-          this.mfa['uri'] = response.data['mfa_uri']
+          this.twoFactor['hash'] = response.data['mfa_hash']
+          this.twoFactor['uri'] = response.data['mfa_uri']
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -289,13 +292,29 @@ export default {
         .finally(() => this.loadingDialog = false)
     },
     submitMFA() {
+      if (this.mfaDialogStep == 1) {
+        this.mfaDialogStep = 2
+        if (this.mfaMode == '2fa') this.get2FA()
+        this.twoFactor.value = ''
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.mfaForm !== 'undefined') this.$refs.mfaForm.resetValidation()
+          if (typeof this.$refs.mfaCode !== 'undefined') this.$refs.mfaCode.focus()
+        })
+      }
+      else this.submitU2F()
+    },
+    cancelMFA() {
+      if (this.mfaDialogStep == 2) this.mfaDialogStep = 1
+      else this.mfaDialog = false
+    },
+    submitU2F() {
       // Check if all fields are filled
       if (!this.$refs.mfaForm.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
         return
       }
       this.loadingDialog = true
-      const payload = this.profile.mfa ? {'enabled': 0} : {'enabled': 1, 'hash': this.mfa.hash, 'value': this.mfa.value}
+      const payload = this.profile.mfa ? {'enabled': 0} : {'enabled': 1, 'hash': this.twoFactor.hash, 'value': this.twoFactor.value}
       axios.post('/mfa/2fa', payload)
         .then((response) => {
           this.mfaDialog = false
@@ -317,42 +336,6 @@ export default {
       this.snackbarColor = color 
       this.snackbar = true
     },
-    // WEBAUTHN
-    // Convert certain members of the PublicKeyCredentialCreateOptions into byte arrays as expected by the spec
-    transformCredentialCreateOptions(credentialCreateOptionsFromServer) {
-      let {challenge, user} = credentialCreateOptionsFromServer
-      user.id = Uint8Array.from (
-        atob(credentialCreateOptionsFromServer.user.id.replace(/_/g, "/").replace(/-/g, "+")), 
-        c => c.charCodeAt(0)
-      )
-      challenge = Uint8Array.from (
-        atob(credentialCreateOptionsFromServer.challenge.replace(/_/g, "/").replace(/-/g, "+")),
-        c => c.charCodeAt(0)
-      )
-      const transformedCredentialCreateOptions = Object.assign(
-        {}, credentialCreateOptionsFromServer, {challenge, user}
-      )
-      return transformedCredentialCreateOptions
-    },
-    // Transforms the binary data in the credential into base64 strings
-    transformNewAssertionForServer(newAssertion) {
-      const attObj = new Uint8Array(newAssertion.response.attestationObject)
-      const clientDataJSON = new Uint8Array(newAssertion.response.clientDataJSON)
-      const rawId = new Uint8Array(newAssertion.rawId)
-      const registrationClientExtensions = newAssertion.getClientExtensionResults()
-      return {
-          id: newAssertion.id,
-          rawId: this.b64enc(rawId),
-          type: newAssertion.type,
-          attObj: this.b64enc(attObj),
-          clientData: this.b64enc(clientDataJSON),
-          registrationClientExtensions: JSON.stringify(registrationClientExtensions)
-      }
-    },
-    b64enc(buf) {
-      var base64js = require('base64-js')
-      return base64js.fromByteArray(buf).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "")
-    }
   }
 }
 </script>
