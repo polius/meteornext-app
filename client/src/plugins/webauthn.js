@@ -3,31 +3,21 @@ var base64js = require('base64-js')
 
 export async function webauthnRegister() {
   // Get PublicKeyCredentialRequestOptions for this user from the server
-  let credentialCreateOptionsFromServer;
-  try {
-    const payload = { host: window.location.host }
-    credentialCreateOptionsFromServer = await axios.post('/mfa/webauthn/register', payload)
-  } catch (error) {
-    throw {error: error.response}
-  }
+  let credentialCreateOptionsFromServer = await axios.post('/mfa/webauthn/register', { host: window.location.host })
   // Convert certain members of the PublicKeyCredentialCreateOptions into byte arrays as expected by the spec.
   const publicKeyCredentialCreateOptions = transformCredentialCreateOptions(credentialCreateOptionsFromServer.data)
   // Request the authenticator(s) to create a new credential keypair.
-  let credential;
-  try {
-    credential = await navigator.credentials.create({ publicKey: publicKeyCredentialCreateOptions })
-  } catch(error) {
-    throw {error}
-  }
+  let credential = await navigator.credentials.create({ publicKey: publicKeyCredentialCreateOptions })
   // Encode the byte arrays in the credential into strings
   const newAssertionForServer = transformNewAssertionForServer(credential)
   // Posts the new credential data to the server for validation and storage.
-  try {
-    const payload = { host: window.location.host, credential: newAssertionForServer }
-    await axios.post('/mfa/webauthn/verify', payload)
-  } catch (error) {
-    throw {error: error.response}
-  }
+  await axios.post('/mfa/webauthn/verify', { host: window.location.host, credential: newAssertionForServer })
+  return newAssertionForServer
+}
+
+export async function webauthnStore(newAssertionForServer) {
+  // Posts the new credential data to the server for validation and storage.
+  return await axios.post('/mfa/webauthn/verify', { host: window.location.host, credential: newAssertionForServer, store: true })
 }
 
 export async function webauthnLogin() {
