@@ -51,32 +51,6 @@ class Users:
             elif request.method == 'DELETE':
                 return self.delete()
 
-        @users_blueprint.route('/admin/users/mfa', methods=['GET'])
-        @jwt_required()
-        def users_mfa_method():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license['response']}), 401
-
-            # Check Settings - Security (Administration URL)
-            if not self._settings.check_url():
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Get user data
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if user['disabled'] or not user['admin']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Get User
-            user = self._users.get(request.args['username'])[0]
-
-            # Generate MFA hash
-            mfa_hash = pyotp.random_base32()
-            mfa_uri = pyotp.TOTP(mfa_hash, interval=30).provisioning_uri(user['email'], issuer_name="Meteor Next")
-            return jsonify({"mfa_hash": mfa_hash, "mfa_uri": mfa_uri}), 200
-
         return users_blueprint
 
     ####################

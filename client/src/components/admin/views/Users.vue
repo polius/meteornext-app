@@ -18,7 +18,7 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="username" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:[`item.mfa`]="{ item }">
-          <v-icon v-if="item.mfa" title="MFA Enabled" small color="#00b16a" style="margin-left:4px;">fas fa-lock</v-icon>
+          <v-icon v-if="item.mfa" :title="`MFA Enabled (${item.mfa})`" small color="#00b16a" style="margin-left:4px;">fas fa-lock</v-icon>
           <v-icon v-else small title="MFA Disabled" color="error" style="margin-left:4px;">fas fa-unlock</v-icon>
         </template>
         <template v-slot:[`item.admin`]="{ item }">
@@ -49,24 +49,16 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
                   <v-alert v-if="mode == 'edit' && selected.length == 1 && item.group != selected[0]['group']" type="warning" dense dismissible icon="mdi-alert">This user will lose access to the shared inventory from the previous group.</v-alert>
                   <v-text-field ref="field" v-model="item.username" :rules="[v => !!v || '']" label="Username" required ></v-text-field>
                   <v-text-field v-model="item.email" :rules="[v => !!v || '', v => /.+@.+\..+/.test(v) || '']" label="Email" type="email" required style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" type="password" required style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" label="Coins" required style="padding-top:0px;"></v-text-field>
                   <v-autocomplete v-model="item.group" :items="groups" :rules="[v => !!v || '']" label="Group" required hide-details style="padding-top:0px; margin-bottom:20px;"></v-autocomplete>
-                  <v-switch v-if="mode == 'edit'" v-model="item.mfa.enabled" @change="onMFAChange" :loading="loading" :disabled="loading" flat label="Multi-Factor Authentication (MFA)" hide-details style="margin-bottom:10px"></v-switch>
-                  <v-card v-if="item.mfa.enabled && !item.mfa.origin" style="width:232px; margin-bottom:15px;">
-                    <v-card-text>
-                      <v-progress-circular v-if="item.mfa.uri == null" indeterminate style="margin-left:auto; margin-right:auto; display:table;"></v-progress-circular>
-                      <qrcode-vue v-else :value="item.mfa.uri" size="200" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
-                      <v-btn @click="mfaCodeDialog = true" text block hide-details>CAN'T SCAN THE QR?</v-btn>
-                      <v-text-field outlined v-model="item.mfa.value" v-on:keyup.enter="submitUser()" label="MFA Code" append-icon="vpn_key" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px"></v-text-field>
-                    </v-card-text>
-                  </v-card>
                   <v-switch v-model="item.admin" label="Administrator" color="info" style="margin-top:10px;" hide-details></v-switch>
                   <v-switch v-model="item.disabled" label="Disable Account" color="error" style="margin-top:10px;" hide-details></v-switch>
+                  <v-btn :disabled="loading" @click="passwordDialog = true" style="margin-top:15px">Change Password</v-btn>
+                  <v-btn :disabled="loading" @click="mfaDialog = true" style="margin-top:15px; margin-left:5px">Manage MFA</v-btn>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
                 <v-alert v-if="mode=='delete'" type="error" dense>All selected users related data (deployments, client, inventory) will be deleted.</v-alert>
@@ -75,23 +67,6 @@
                   <v-btn :loading="loading" color="#00b16a" @click="submitUser()">Confirm</v-btn>
                   <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">Cancel</v-btn>
                 </div>
-              </v-flex>
-            </v-layout>
-          </v-container>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-
-    <v-dialog v-model="mfaCodeDialog" max-width="512px">
-      <v-card>
-        <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-qrcode</v-icon>QR CODE</v-toolbar-title>
-        </v-toolbar>
-        <v-card-text style="padding:0px">
-          <v-container>
-            <v-layout wrap>
-              <v-flex xs12>
-                <div style="font-size:18px; letter-spacing:0.08em; text-align:center;">{{ item.mfa.hash }}</div>
               </v-flex>
             </v-layout>
           </v-container>
@@ -111,7 +86,6 @@
 <script>
 import axios from 'axios';
 import moment from 'moment';
-import QrcodeVue from 'qrcode.vue'
 
 export default {
   data: () => ({
@@ -132,7 +106,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { username: '', email: '', password: '', coins: '', group: '', mfa: { enabled: false, origin: false, hash: null, uri: null, value: ''}, admin: false, disabled: false },
+    item: { username: '', email: '', coins: '', group: '', admin: false, disabled: false },
     mode: '',
     loading: true,
     dialog: false,
@@ -140,15 +114,15 @@ export default {
     dialog_valid: false,
     // User Groups
     groups: [],
-    // MFA Dialog
-    mfaCodeDialog: false,
+    // Dialogs
+    mfaDialog: false,
+    passwordDialog: false,
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(4000),
     snackbarText: '',
     snackbarColor: ''
   }),
-  components: { QrcodeVue },
   created() {
     this.getUsers()
     moment.relativeTimeThreshold('ss', 0)
@@ -170,14 +144,13 @@ export default {
     },
     newUser() {
       this.mode = 'new'
-      this.item = { username: '', email: '', password: '', coins: '', group: '', mfa: { enabled: false, origin: false, hash: null, uri: null, value: ''}, admin: false, disabled: false }
+      this.item = { username: '', email: '', coins: '', group: '', admin: false, disabled: false }
       this.dialog_title = 'NEW USER'
       this.dialog = true
     },
     editUser() {
       this.mode = 'edit'
       let item = JSON.parse(JSON.stringify(this.selected[0]))
-      item.mfa = { enabled: item.mfa, origin: item.mfa, hash: this.item.mfa_hash, uri: null, value: ''}
       this.item = item
       this.dialog_title = 'EDIT USER'
       this.dialog = true
@@ -244,14 +217,8 @@ export default {
         current_username: this.selected[0]['username'], 
         username: this.item.username, 
         email: this.item.email, 
-        password: this.item.password,
         coins: this.item.coins,
         group: this.item.group,
-        mfa: {
-          enabled: this.item.mfa.enabled,
-          hash: this.item.mfa.hash,
-          value: this.item.mfa.value
-        },
         admin: this.item.admin,
         disabled: this.item.disabled
       }
@@ -259,9 +226,6 @@ export default {
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
           // Edit item in the data table
-          let mfa = this.item.mfa
-          this.item['mfa'] = mfa['enabled']
-          this.item['mfa_hash'] = mfa['mfa_hash']
           this.items.splice(i, 1, this.item)
           this.selected = []
           this.dialog = false
@@ -299,23 +263,6 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
-    },
-    onMFAChange(val) {
-      if (val && !this.item.mfa.origin && this.item.mfa.uri == null) this.getMFA()
-    },
-    getMFA() {
-      const payload = {
-        username: this.item.username
-      } 
-      axios.get('/admin/users/mfa', { params: payload })
-        .then((response) => {
-          this.item.mfa.hash = response.data['mfa_hash']
-          this.item.mfa.uri = response.data['mfa_uri']
-        })
-        .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
-        })
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
