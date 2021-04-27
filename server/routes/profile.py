@@ -1,6 +1,5 @@
 import bcrypt
 import models.admin.users
-import models.admin.user_mfa
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -10,7 +9,6 @@ class Profile:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._user_mfa = models.admin.user_mfa.User_MFA(sql)
 
     def blueprint(self):
         # Init blueprint
@@ -31,11 +29,7 @@ class Profile:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get User Profile
-            profile = {'username': user['username'], 'group': user['group'], 'email': user['email'], 'mfa': None, 'mfa_created': None}
-            mfa = self._user_mfa.get({'user_id': user['id']})
-            if len(mfa) > 0:
-                profile['mfa'] = '2fa' if mfa[0]['2fa_hash'] is not None else 'webauthn'
-                profile['mfa_created'] = mfa[0]['created_at']
+            profile = {'username': user['username'], 'group': user['group'], 'email': user['email']}
             return jsonify({'data': profile}), 200
 
         @profile_blueprint.route('/profile/password', methods=['PUT'])
