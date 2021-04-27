@@ -19,7 +19,25 @@ class MFA:
         # Init blueprint
         mfa_blueprint = Blueprint('mfa', __name__, template_folder='mfa')
 
-        @mfa_blueprint.route('/mfa/2fa', methods=['GET','POST'])
+        @mfa_blueprint.route('/mfa', methods=['DELETE'])
+        @jwt_required()
+        def mfa_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Clean the user MFA
+            self._user_mfa.disable_mfa({'user_id': user['id']})
+            return jsonify({'message': 'MFA successfully disabled'}), 200
+
+        @mfa_blueprint.route('/mfa/2fa', methods=['GET','POST','DELETE'])
         @jwt_required()
         def mfa_2fa_method():
             # Check license
@@ -40,18 +58,11 @@ class MFA:
 
             elif request.method == 'POST':
                 data = request.get_json()
-                if 'enabled' not in data:
-                    return jsonify({'message': 'Insufficient parameters'}), 400
-                # Disable MFA
-                if data['enabled'] == 0:
-                    self._user_mfa.clean_mfa({'user_id': user['id']})
-                    return jsonify({'message': 'MFA successfully disabled'}), 200
-                else:
-                    mfa = pyotp.TOTP(data['hash'], interval=30)
-                    if 'value' not in data or len(data['value']) == 0 or not mfa.verify(data['value'], valid_window=1):
-                        return jsonify({'message': 'Invalid MFA Code'}), 400
-                    self._users.store_2fa({'user_id': user['id'], '2fa_hash': data['hash']})
-                    return jsonify({'message': 'MFA successfully enabled'}), 200
+                mfa = pyotp.TOTP(data['hash'], interval=30)
+                if 'value' not in data or len(data['value']) == 0 or not mfa.verify(data['value'], valid_window=1):
+                    return jsonify({'message': 'Invalid MFA Code'}), 400
+                self._user_mfa.enable_2fa({'user_id': user['id'], '2fa_hash': data['hash']})
+                return jsonify({'message': 'MFA successfully enabled'}), 200
 
         @mfa_blueprint.route('/mfa/webauthn/register', methods=['POST'])
         @jwt_required()
@@ -85,7 +96,7 @@ class MFA:
             session['register_ukey'] = ukey
 
             # Make credentials
-            make_credential_options = webauthn.WebAuthnMakeCredentialOptions(challenge, 'Meteor Next', data['host'], ukey, get_jwt_identity(), user['username'], 'https://meteor2.io')
+            make_credential_options = webauthn.WebAuthnMakeCredentialOptions(challenge, 'Meteor Next', data['host'], ukey, get_jwt_identity(), user['username'], 'https://meteor2.io', attestation='indirect')
             return jsonify(make_credential_options.registration_dict)
 
         @mfa_blueprint.route('/mfa/webauthn/verify', methods=['POST'])
@@ -135,22 +146,23 @@ class MFA:
             # Verify webauthn registration response
             try:
                 webauthn_credential = webauthn_registration_response.verify()
-
             except Exception as e:
                 return jsonify({'message': str(e)}), 400
 
             # Store webauthn credentials
-            storage = {
-                'user_id': user['id'],
-                'webauthn_ukey': ukey,
-                'webauthn_pub_key': webauthn_credential.public_key,
-                'webauthn_credential_id': webauthn_credential.credential_id,
-                'webauthn_sign_count': webauthn_credential.sign_count,
-                'webauthn_rp_id': rp_id
-            }
-            self._user_mfa.store_webauthn(storage)
-            return jsonify({"message": 'OK'}), 200
-            
+            if 'store' in data and data['store'] is True:
+                storage = {
+                    'user_id': user['id'],
+                    'webauthn_ukey': ukey,
+                    'webauthn_pub_key': webauthn_credential.public_key,
+                    'webauthn_credential_id': webauthn_credential.credential_id,
+                    'webauthn_sign_count': webauthn_credential.sign_count,
+                    'webauthn_rp_id': rp_id
+                }
+                self._user_mfa.enable_webauthn(storage)
+                return jsonify({'message': 'MFA successfully enabled'}), 200
+            return jsonify({"message": 'Credentials validated'}), 200
+
         return mfa_blueprint
         
     ####################

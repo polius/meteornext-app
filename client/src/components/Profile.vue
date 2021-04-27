@@ -51,9 +51,9 @@
           <v-card>
             <v-toolbar dense flat color="primary">
               <v-toolbar-title class="white--text subtitle-1">MANAGE MFA</v-toolbar-title>
-              <v-divider v-if="mfaDialogStep == 2" class="mx-3" inset vertical></v-divider>
-              <div v-if="mfaDialogStep == 2 && mfaMode == '2fa'" class="text-body-1">Virtual 2FA Device</div>
-              <div v-if="mfaDialogStep == 2 && mfaMode == 'webauthn'" class="text-body-1">Security Key</div>
+              <v-divider v-if="profile.mfa != null || mfaDialogStep == 2" class="mx-3" inset vertical></v-divider>
+              <div v-if="profile.mfa == '2fa' || (mfaDialogStep == 2 && mfaMode == '2fa')" class="text-body-1">Virtual 2FA Device</div>
+              <div v-if="profile.mfa == 'webauthn' || (mfaDialogStep == 2 && mfaMode == 'webauthn')" class="text-body-1">Security Key</div>
               <v-spacer></v-spacer>
               <v-btn @click="mfaDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
             </v-toolbar>
@@ -101,8 +101,8 @@
                                 <v-col cols="auto">
                                   <v-progress-circular v-if="twoFactor['uri'] == null" indeterminate style="margin-left:auto; margin-right:auto; display:table;"></v-progress-circular>
                                   <qrcode-vue v-else :value="twoFactor['uri']" size="200" level="H" background="#ffffff" foreground="#000000" style="text-align:center"></qrcode-vue>
-                                  <v-btn @click="mfaCodeDialog = true" text block hide-details>CAN'T SCAN THE QR?</v-btn>
-                                  <v-text-field ref="mfaCode" outlined v-model="twoFactor['value']" v-on:keyup.enter="submitU2F" label="MFA Code" maxlength="6" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px">
+                                  <v-btn @click="twoFactorCodeDialog = true" text block hide-details>CAN'T SCAN THE QR?</v-btn>
+                                  <v-text-field ref="twoFactorCode" outlined v-model="twoFactor['value']" v-on:keyup.enter="submitMFA" label="MFA Code" maxlength="6" :rules="[v => v == parseInt(v) && v >= 0 || '']" required hide-details style="margin-top:10px">
                                     <template v-slot:append><v-icon small style="margin-top:3px; margin-right:4px">fas fa-key</v-icon></template>
                                   </v-text-field>
                                 </v-col>
@@ -115,8 +115,11 @@
                               </v-row>
                             </v-card-text>
                           </v-card>
-                          <v-card v-if="mfaMode == 'webauthn'">
+                          <v-card v-else-if="mfaMode == 'webauthn'">
                             <v-card-text>
+                              <div class="text-h5 white--text" style="text-align:center">Verify your identity</div>
+                              <v-icon :style="`display:table; margin-left:auto; margin-right:auto; margin-top:20px; margin-bottom:20px; color:${ webauthn == null ? '#046cdc' : '#00b16a'}`" size="55">{{ webauthn == null ? 'fas fa-fingerprint' : 'fas fa-check-circle' }}</v-icon>
+                              <div class="text-subtitle-1 white--text" :style="`text-align:center; font-size:1.1rem !important; color:${ webauthn == null ? 'white' : '#00b16a'}`">{{ webauthn == null ? 'Touch sensor' : 'Fingerprint recognized' }}</div>
                             </v-card-text>
                           </v-card>
                         </div>
@@ -137,8 +140,8 @@
                     </v-form>
                     <v-divider></v-divider>
                     <v-row no-gutters style="margin-top:20px;">
-                      <v-btn :loading="loadingDialog" color="#00b16a" @click="submitMFA">{{ profile.mfa ? 'DISABLE MFA' : 'CONFIRM' }}</v-btn>
-                      <v-btn :disabled="loadingDialog" color="error" @click="cancelMFA" style="margin-left:5px">CANCEL</v-btn>
+                      <v-btn :disabled="profile.mfa == null && mfaDialogStep == 2 && mfaMode == 'webauthn' && webauthn == null" :loading="loadingDialog" color="#00b16a" @click="submitMFA">{{ profile.mfa ? 'DISABLE MFA' : 'CONFIRM' }}</v-btn>
+                      <v-btn :disabled="loadingDialog" color="error" @click="mfaDialog = false" style="margin-left:5px">CANCEL</v-btn>
                     </v-row>
                   </v-flex>
                 </v-layout>
@@ -146,7 +149,7 @@
             </v-card-text>
           </v-card>
         </v-dialog>
-        <v-dialog v-model="mfaCodeDialog" max-width="512px">
+        <v-dialog v-model="twoFactorCodeDialog" max-width="512px">
           <v-card>
             <v-toolbar dense flat color="primary">
               <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-qrcode</v-icon>QR CODE</v-toolbar-title>
@@ -174,7 +177,7 @@
 </template>
 
 <script>
-import { webauthnRegister } from './../plugins/webauthn.js'
+import { webauthnRegister, webauthnStore } from './../plugins/webauthn.js'
 import axios from 'axios'
 import moment from 'moment'
 import QrcodeVue from 'qrcode.vue'
@@ -193,14 +196,15 @@ export default {
 
     // MFA Dialog
     mfaDialog: false,
-    mfaCodeDialog: false,
     mfaDialogStep: 1,
     mfaMode: '2fa',
+    twoFactorCodeDialog: false,
     twoFactor: {
       hash: null,
       uri: null,
       value: ''
     },
+    webauthn: null,
 
     // Snackbar
     snackbar: false,
@@ -222,30 +226,28 @@ export default {
         })
       }
     },
-    mfaCodeDialog: function(val) {
-      if (val) {
+    mfaDialog: function (val) {
+      if (val && this.profile.mfa == null) this.get2FA()
+      else {
         requestAnimationFrame(() => {
-          if (typeof this.$refs.mfaForm !== 'undefined') this.$refs.mfaForm.resetValidation()
-        })
-      }
-      if (!val) {
-        requestAnimationFrame(() => {
-          if (typeof this.$refs.mfaForm !== 'undefined') this.$refs.mfaForm.resetValidation()
-          if (typeof this.$refs.mfaCode !== 'undefined') this.$refs.mfaCode.focus()
+          this.mfaDialogStep = 1
+          this.mfaMode = '2fa'
         })
       }
     },
-    mfaMode: function(val) {
-      if (val == 'webauthn') {
-        webauthnRegister()
-        .then(() => {
-          console.log("Register complete!")
-        })
-        .catch((error) => {
-          if (status in error && [401,422,503].includes(error.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          console.log(error)
+    mfaDialogStep: function (val) {
+      if (val == 2) {
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.mfaForm !== 'undefined') this.$refs.mfaForm.resetValidation()
+          if (typeof this.$refs.twoFactorCode !== 'undefined') this.$refs.twoFactorCode.focus()
         })
       }
+    },
+    twoFactorCodeDialog: function(val) {
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.mfaForm !== 'undefined') this.$refs.mfaForm.resetValidation()
+        if (!val && typeof this.$refs.twoFactorCode !== 'undefined') this.$refs.twoFactorCode.focus()
+      })
     },
   },
   methods: {
@@ -272,6 +274,19 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
+    getWebauthn() {
+      this.webauthn = null
+      webauthnRegister()
+      .then((credentials) => {
+        this.webauthn = credentials
+      })
+      .catch((error) => {
+        if ('response' in error && [401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        let msg = 'response' in error ? error.response.message : error.message
+        this.notification(msg, 'error')
+        this.mfaDialogStep = 1
+      })
+    },
     submitPassword() {
       // Check if all fields are filled
       if (!this.$refs.passwordForm.validate()) {
@@ -292,29 +307,39 @@ export default {
         .finally(() => this.loadingDialog = false)
     },
     submitMFA() {
+      if (this.profile.mfa) this.disableMFA()
+      else this.enableMFA()
+    },
+    enableMFA() {
       if (this.mfaDialogStep == 1) {
         this.mfaDialogStep = 2
-        if (this.mfaMode == '2fa') this.get2FA()
-        this.twoFactor.value = ''
-        requestAnimationFrame(() => {
-          if (typeof this.$refs.mfaForm !== 'undefined') this.$refs.mfaForm.resetValidation()
-          if (typeof this.$refs.mfaCode !== 'undefined') this.$refs.mfaCode.focus()
-        })
+        if (this.mfaMode == 'webauthn') this.getWebauthn()
       }
-      else this.submitU2F()
+      else if (this.mfaMode == '2fa') this.enable2FA()
+      else if (this.mfaMode == 'webauthn') this.enableWebauthn()
     },
-    cancelMFA() {
-      if (this.mfaDialogStep == 2) this.mfaDialogStep = 1
-      else this.mfaDialog = false
+    disableMFA() {
+      this.loadingDialog = true
+      axios.delete('/mfa')
+        .then((response) => {
+          this.mfaDialog = false
+          this.getProfile()
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.loadingDialog = false)
     },
-    submitU2F() {
+    enable2FA() {
       // Check if all fields are filled
       if (!this.$refs.mfaForm.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
         return
       }
       this.loadingDialog = true
-      const payload = this.profile.mfa ? {'enabled': 0} : {'enabled': 1, 'hash': this.twoFactor.hash, 'value': this.twoFactor.value}
+      const payload = {'hash': this.twoFactor.hash, 'value': this.twoFactor.value}
       axios.post('/mfa/2fa', payload)
         .then((response) => {
           this.mfaDialog = false
@@ -326,6 +351,20 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loadingDialog = false)
+    },
+    enableWebauthn() {
+      this.loadingDialog = true
+      webauthnStore(this.webauthn)
+      .then((response) => {
+          this.mfaDialog = false
+          this.getProfile()
+          this.notification(response.data.message, '#00b16a')
+      })
+      .catch((error) => {
+        if (status in error && [401,422,503].includes(error.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        console.log(error)
+      })
+      .finally(() => this.loadingDialog = false)
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
