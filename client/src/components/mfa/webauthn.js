@@ -3,7 +3,7 @@ var base64js = require('base64-js')
 
 export async function webauthnRegister() {
   // Get PublicKeyCredentialRequestOptions for this user from the server
-  let credentialCreateOptionsFromServer = await axios.post('/mfa/webauthn/register', { host: window.location.host })
+  let credentialCreateOptionsFromServer = await axios.get('/mfa/webauthn', { params: { host: window.location.host } })
   // Convert certain members of the PublicKeyCredentialCreateOptions into byte arrays as expected by the spec.
   const publicKeyCredentialCreateOptions = transformCredentialCreateOptions(credentialCreateOptionsFromServer.data)
   // Request the authenticator(s) to create a new credential keypair.
@@ -11,13 +11,13 @@ export async function webauthnRegister() {
   // Encode the byte arrays in the credential into strings
   const newAssertionForServer = transformNewAssertionForServer(credential)
   // Posts the new credential data to the server for validation and storage.
-  await axios.post('/mfa/webauthn/verify', { host: window.location.host, credential: newAssertionForServer })
+  await axios.post('/mfa/webauthn', { host: window.location.host, credential: newAssertionForServer })
   return newAssertionForServer
 }
 
 export async function webauthnStore(newAssertionForServer) {
   // Posts the new credential data to the server for validation and storage.
-  return await axios.post('/mfa/webauthn/verify', { host: window.location.host, credential: newAssertionForServer, store: true })
+  return await axios.post('/mfa/webauthn', { host: window.location.host, credential: newAssertionForServer, store: true })
 }
 
 export async function webauthnLogin() {
@@ -29,16 +29,16 @@ export async function webauthnLogin() {
 /* ---------------- */
 // Convert certain members of the PublicKeyCredentialCreateOptions into byte arrays as expected by the spec
 function transformCredentialCreateOptions(credentialCreateOptionsFromServer) {
-  let {challenge, user} = credentialCreateOptionsFromServer
+  let { challenge, user } = credentialCreateOptionsFromServer
   user.id = Uint8Array.from(
-    atob(credentialCreateOptionsFromServer.user.id.replace(/_/g, "/").replace(/-/g, "+")), 
+    atob(credentialCreateOptionsFromServer.user.id.replace(/_/g, "/").replace(/-/g, "+")),
     c => c.charCodeAt(0)
   )
   challenge = Uint8Array.from(
     atob(credentialCreateOptionsFromServer.challenge.replace(/_/g, "/").replace(/-/g, "+")),
     c => c.charCodeAt(0)
   )
-  const transformedCredentialCreateOptions = Object.assign({}, credentialCreateOptionsFromServer, {challenge, user})
+  const transformedCredentialCreateOptions = Object.assign({}, credentialCreateOptionsFromServer, { challenge, user })
   return transformedCredentialCreateOptions
 }
 
