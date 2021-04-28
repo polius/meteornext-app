@@ -90,9 +90,9 @@ class MFA:
                 self._user_mfa.enable_2fa({'user_id': user['id'], '2fa_hash': data['hash']})
                 return jsonify({'message': 'MFA successfully enabled'}), 200
 
-        @mfa_blueprint.route('/mfa/webauthn', methods=['GET','POST'])
+        @mfa_blueprint.route('/mfa/webauthn/register', methods=['GET','POST'])
         @jwt_required()
-        def mfa_webauthn_method():
+        def mfa_webauthn_register_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license['response']}), 401
@@ -185,6 +185,53 @@ class MFA:
     ####################
     # Internal Methods #
     ####################
+    def get_webauthn_login(self, user, user_mfa):
+        session.pop('challenge', None)
+        challenge = self.generate_challenge(32)
+        session['challenge'] = challenge.rstrip('=')
+        webauthn_user = webauthn.WebAuthnUser(
+            user_mfa[0]['webauthn_ukey'], 
+            user[0]['username'], 
+            user[0]['username'], 
+            'https://meteor2.io',
+            user_mfa[0]['webauthn_credential_id'], 
+            user_mfa[0]['webauthn_pub_key'], 
+            user_mfa[0]['webauthn_sign_count'], 
+            user_mfa[0]['webauthn_rp_id']
+        )
+        webauthn_assertion_options = webauthn.WebAuthnAssertionOptions(webauthn_user, challenge)
+        return webauthn_assertion_options.assertion_dict
+
+    def post_webauthn_login(self, user, user_mfa):
+        # Get request data
+        data = request.get_json()
+
+        origin = 'https://' + data['host']
+        challenge = session.get('challenge')
+        assertion_response = data['mfa']
+        webauthn_user = webauthn.WebAuthnUser(
+            user_mfa[0]['webauthn_ukey'], 
+            user[0]['username'], 
+            user[0]['username'],
+            'https://meteor2.io',
+            user_mfa[0]['webauthn_credential_id'], 
+            user_mfa[0]['webauthn_pub_key'], 
+            user_mfa[0]['webauthn_sign_count'], 
+            user_mfa[0]['webauthn_rp_id']
+        )
+        webauthn_assertion_response = webauthn.WebAuthnAssertionResponse(
+            webauthn_user,
+            assertion_response,
+            challenge,
+            origin,
+            uv_required=False
+        )
+        # Verify webauthn login response
+        sign_count = webauthn_assertion_response.verify()
+
+        # Update sign_count
+        self._user_mfa.put_webauthn_sign_count({'webauthn_sign_count': sign_count, 'user_id': user[0]['id']})
+
     def generate_challenge(self, challenge_len=32):
         return secrets.token_urlsafe(challenge_len)
 

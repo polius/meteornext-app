@@ -4,16 +4,16 @@ var base64js = require('base64-js')
 export async function webauthnRegister(user='') {
   let payload = (user == '') ? { host: window.location.host } : { user, host: window.location.host }
   // Get PublicKeyCredentialRequestOptions for this user from the server
-  let credentialCreateOptionsFromServer = await axios.get('/mfa/webauthn', { params: payload })
+  const credentialCreateOptionsFromServer = await axios.get('/mfa/webauthn/register', { params: payload })
   // Convert certain members of the PublicKeyCredentialCreateOptions into byte arrays as expected by the spec.
   const publicKeyCredentialCreateOptions = transformCredentialCreateOptions(credentialCreateOptionsFromServer.data)
   // Request the authenticator(s) to create a new credential keypair.
-  let credential = await navigator.credentials.create({ publicKey: publicKeyCredentialCreateOptions })
+  const credential = await navigator.credentials.create({ publicKey: publicKeyCredentialCreateOptions })
   // Encode the byte arrays in the credential into strings
   const newAssertionForServer = transformNewAssertionForServer(credential)
   // Posts the new credential data to the server for validation and storage.
-  payload = {...payload, credential: newAssertionForServer }
-  await axios.post('/mfa/webauthn', payload)
+  payload = { ...payload, credential: newAssertionForServer }
+  await axios.post('/mfa/webauthn/register', payload)
   return newAssertionForServer
 }
 
@@ -21,11 +21,16 @@ export async function webauthnStore(newAssertionForServer, user='') {
   // Posts the new credential data to the server for validation and storage.
   let payload = { host: window.location.host, credential: newAssertionForServer, store: true }
   payload = (user == '') ? payload : {...payload, user}
-  return await axios.post('/mfa/webauthn', payload)
+  return await axios.post('/mfa/webauthn/register', payload)
 }
 
-export async function webauthnLogin() {
-
+export async function webauthnLogin(PublicKeyCredentialRequestOptions) {
+  // Convert certain members of the PublicKeyCredentialRequestOptions into byte arrays as expected by the spec.
+  const transformedCredentialRequestOptions = transformCredentialRequestOptions(PublicKeyCredentialRequestOptions);
+  // Request the authenticator to create an assertion signature using the credential private key
+  const assertion = await navigator.credentials.get({ publicKey: transformedCredentialRequestOptions });
+  // Encode the byte arrays contained in the assertion data as strings for posting to the server
+  return transformAssertionForServer(assertion);
 }
 
 /* ---------------- */
@@ -61,6 +66,58 @@ function transformNewAssertionForServer(newAssertion) {
     registrationClientExtensions: JSON.stringify(registrationClientExtensions)
   }
 }
+
+const transformAssertionForServer = (newAssertion) => {
+  const authData = new Uint8Array(newAssertion.response.authenticatorData);
+  const clientDataJSON = new Uint8Array(newAssertion.response.clientDataJSON);
+  const rawId = new Uint8Array(newAssertion.rawId);
+  const sig = new Uint8Array(newAssertion.response.signature);
+  const assertionClientExtensions = newAssertion.getClientExtensionResults();
+
+  return {
+    id: newAssertion.id,
+    rawId: b64enc(rawId),
+    type: newAssertion.type,
+    authData: b64RawEnc(authData),
+    clientData: b64RawEnc(clientDataJSON),
+    signature: hexEncode(sig),
+    assertionClientExtensions: JSON.stringify(assertionClientExtensions)
+  };
+}
+
+function transformCredentialRequestOptions(credentialRequestOptionsFromServer) {
+  let { challenge, allowCredentials } = credentialRequestOptionsFromServer;
+  challenge = Uint8Array.from(
+    atob(challenge.replace(/_/g, "/").replace(/-/g, "+")), c => c.charCodeAt(0)
+  );
+  allowCredentials = allowCredentials.map(credentialDescriptor => {
+    let { id } = credentialDescriptor;
+    id = id.replace(/_/g, "/").replace(/-/g, "+");
+    id = Uint8Array.from(atob(id), c => c.charCodeAt(0));
+    return Object.assign({}, credentialDescriptor, { id });
+  });
+  const transformedCredentialRequestOptions = Object.assign(
+    {},
+    credentialRequestOptionsFromServer,
+    { challenge, allowCredentials }
+  );
+  return transformedCredentialRequestOptions;
+}
+
 function b64enc(buf) {
   return base64js.fromByteArray(buf).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "")
+}
+
+function b64RawEnc(buf) {
+  return base64js.fromByteArray(buf)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+}
+
+function hexEncode(buf) {
+  return Array.from(buf)
+    .map(function (x) {
+      return ("0" + x.toString(16)).substr(-2);
+    })
+    .join("");
 }

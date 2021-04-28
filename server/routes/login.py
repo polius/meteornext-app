@@ -8,6 +8,7 @@ import models.admin.users
 import models.admin.user_mfa
 import models.admin.settings
 import routes.admin.settings
+import routes.mfa.mfa
 
 class Login:
     def __init__(self, app, sql, license):
@@ -19,6 +20,7 @@ class Login:
         self._settings = models.admin.settings.Settings(sql)
         # Init routes
         self._settings_route = routes.admin.settings.Settings(app, sql, license)
+        self._mfa = routes.mfa.mfa.MFA(app, sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -48,6 +50,10 @@ class Login:
             if len(user) == 0 or not bcrypt.checkpw(login_json['password'].encode('utf-8'), user[0]['password'].encode('utf-8')):
                 return jsonify({"message": "Invalid username or password"}), 401
 
+            # Check disabled
+            if user[0]['disabled']:
+                return jsonify({"message": "Account disabled"}), 401
+
             # Check MFA
             if user[0]['mfa'] is None:
                 if force_mfa:
@@ -64,16 +70,20 @@ class Login:
                         mfa_uri = pyotp.TOTP(mfa_hash, interval=30).provisioning_uri(user[0]['email'], issuer_name="Meteor Next")
                         return jsonify({"code": "mfa_setup", "message": "MFA setup is required", "mfa_hash": mfa_hash, "mfa_uri": mfa_uri}), 202
             else:
-                user_mfa = self._user_mfa.get({'user_id': user[0]['id']})[0]
+                user_mfa = self._user_mfa.get({'user_id': user[0]['id']})
                 if user[0]['mfa'] == '2fa':
                     if 'mfa' not in login_json:
-                        return jsonify({"code": "mfa_request", "message": "Requesting MFA credentials"}), 202
-                    elif not pyotp.TOTP(user_mfa['2fa_hash'], interval=30).verify(login_json['mfa'], valid_window=1):
+                        return jsonify({"code": "2fa", "message": "Requesting 2FA credentials"}), 202
+                    elif not pyotp.TOTP(user_mfa[0]['2fa_hash'], interval=30).verify(login_json['mfa'], valid_window=1):
                         return jsonify({"message": "Invalid MFA Code"}), 401
-
-            # Check disabled
-            if user[0]['disabled']:
-                return jsonify({"message": "Account disabled"}), 401
+                elif user[0]['mfa'] == 'webauthn':
+                    try:
+                        if 'mfa' not in login_json:
+                            return jsonify({"code": "webauthn", "data": self._mfa.get_webauthn_login(user, user_mfa), "message": "Requesting Webauthn credentials"}), 202
+                        else:
+                            self._mfa.post_webauthn_login(user, user_mfa)
+                    except Exception as e:
+                        return jsonify({'message': str(e)}), 400
 
             # Update user last_login
             self._users.put_last_login(login_json['username'])
