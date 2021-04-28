@@ -2,11 +2,12 @@ import os
 import pyotp
 import secrets
 import webauthn
-import models.admin.users
-import models.admin.user_mfa
 from flask import Blueprint, jsonify, request, session
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import models.admin.users
+import models.admin.user_mfa
+import routes.admin.settings
 
 class MFA:
     def __init__(self, app, sql, license):
@@ -14,6 +15,8 @@ class MFA:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._user_mfa = models.admin.user_mfa.User_MFA(sql)
+        # Init routes
+        self._settings = routes.admin.settings.Settings(app, sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -34,6 +37,10 @@ class MFA:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
+                # Check user parameter
+                if 'user' in request.args and request.args['user'] is not None:
+                    user = self.get_user(user, request.args['user'])
+                # Get 2FA challenge
                 user_mfa = self._user_mfa.get({'user_id': user['id']})
                 return_data = { 'mfa': None, 'created': None}
                 if len(user_mfa) > 0:
@@ -41,6 +48,10 @@ class MFA:
                     return_data['created'] = user_mfa[0]['created_at']
                 return jsonify({'data': return_data}), 200
             elif request.method == 'DELETE':
+                data = request.get_json()
+                # Check user parameter
+                if 'user' in data and data['user'] is not None:
+                    user = self.get_user(user, data['user'])
                 # Clean the user MFA
                 self._user_mfa.disable_mfa({'user_id': user['id']})
                 return jsonify({'message': 'MFA successfully disabled'}), 200
@@ -60,12 +71,19 @@ class MFA:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
+                # Check user parameter
+                if 'user' in request.args and request.args['user'] is not None:
+                    user = self.get_user(user, request.args['user'])
                 mfa_hash = pyotp.random_base32()
                 mfa_uri = pyotp.TOTP(mfa_hash, interval=30).provisioning_uri(user['email'], issuer_name="Meteor Next")
                 return jsonify({"mfa_hash": mfa_hash, "mfa_uri": mfa_uri}), 200
 
             elif request.method == 'POST':
                 data = request.get_json()
+                # Check user parameter
+                if 'user' in data and data['user'] is not None:
+                    user = self.get_user(user, data['user'])
+                # Store 2FA
                 mfa = pyotp.TOTP(data['hash'], interval=30)
                 if 'value' not in data or len(data['value']) == 0 or not mfa.verify(data['value'], valid_window=1):
                     return jsonify({'message': 'Invalid MFA Code'}), 400
@@ -87,6 +105,10 @@ class MFA:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             if request.method == 'GET':
+                # Check user parameter
+                if 'user' in request.args and request.args['user'] is not None:
+                    user = self.get_user(user, request.args['user'])
+
                 # Clear session variables prior to starting a new registration
                 session.pop('register_ukey', None)
                 session.pop('register_username', None)
@@ -102,12 +124,16 @@ class MFA:
                 session['register_ukey'] = ukey
 
                 # Make credentials
-                make_credential_options = webauthn.WebAuthnMakeCredentialOptions(challenge, 'Meteor Next', request.args['host'], ukey, get_jwt_identity(), user['username'], 'https://meteor2.io', attestation='indirect')
+                make_credential_options = webauthn.WebAuthnMakeCredentialOptions(challenge, 'Meteor Next', request.args['host'], ukey, get_jwt_identity(), user['username'], 'https://meteor2.io', attestation='none')
                 return jsonify(make_credential_options.registration_dict)
 
             elif request.method == 'POST':
                 # Get request data
                 data = request.get_json()
+
+                # Check user parameter
+                if 'user' in data and data['user'] is not None:
+                    user = self.get_user(user, data['user'])
 
                 # Get session data
                 challenge = session['challenge']
@@ -120,7 +146,7 @@ class MFA:
                 origin = 'https://' + data['host']
                 registration_response = data['credential']
                 trust_anchor_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'trusted_attestation_roots')
-                trusted_attestation_cert_required = True
+                trusted_attestation_cert_required = False
                 self_attestation_permitted = True
                 none_attestation_permitted = True
                 webauthn_registration_response = webauthn.WebAuthnRegistrationResponse(
@@ -164,3 +190,13 @@ class MFA:
 
     def generate_ukey(self):
         return self.generate_challenge(20)
+
+    def get_user(self, current_user, new_user):
+        # Check Settings - Security (Administration URL)
+        if not self._settings.check_url():
+            return jsonify({'message': 'Insufficient Privileges'}), 401
+        # Check user privileges
+        if current_user['disabled'] or not current_user['admin']:
+            return jsonify({'message': 'Insufficient Privileges'}), 401
+        # Get new user
+        return self._users.get(new_user)[0]

@@ -18,7 +18,7 @@
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="username" show-select class="elevation-1" style="padding-top:3px;">
         <template v-slot:[`item.mfa`]="{ item }">
-          <v-icon v-if="item.mfa" :title="`MFA Enabled (${item.mfa})`" small color="#00b16a" style="margin-left:4px;">fas fa-lock</v-icon>
+          <v-icon v-if="item.mfa" :title="`MFA Enabled (${item.mfa == '2fa' ? 'Virtual 2FA Device' : 'Security Key'})`" small color="#00b16a" style="margin-left:4px;">fas fa-lock</v-icon>
           <v-icon v-else small title="MFA Disabled" color="error" style="margin-left:4px;">fas fa-unlock</v-icon>
         </template>
         <template v-slot:[`item.admin`]="{ item }">
@@ -49,30 +49,35 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
+                <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
                   <v-alert v-if="mode == 'edit' && selected.length == 1 && item.group != selected[0]['group']" type="warning" dense dismissible icon="mdi-alert">This user will lose access to the shared inventory from the previous group.</v-alert>
                   <v-text-field ref="field" v-model="item.username" :rules="[v => !!v || '']" label="Username" required ></v-text-field>
                   <v-text-field v-model="item.email" :rules="[v => !!v || '', v => /.+@.+\..+/.test(v) || '']" label="Email" type="email" required style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="item.coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" label="Coins" required style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" type="password" required style="padding-top:0px;"></v-text-field>                  <v-text-field v-model="item.coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" label="Coins" required style="padding-top:0px;"></v-text-field>
                   <v-autocomplete v-model="item.group" :items="groups" :rules="[v => !!v || '']" label="Group" required hide-details style="padding-top:0px; margin-bottom:20px;"></v-autocomplete>
                   <v-switch v-model="item.admin" label="Administrator" color="info" style="margin-top:10px;" hide-details></v-switch>
                   <v-switch v-model="item.disabled" label="Disable Account" color="error" style="margin-top:10px;" hide-details></v-switch>
-                  <v-btn :disabled="loading" @click="passwordDialog = true" style="margin-top:15px">Change Password</v-btn>
-                  <v-btn :disabled="loading" @click="mfaDialog = true" style="margin-top:15px; margin-left:5px">Manage MFA</v-btn>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
                 <v-alert v-if="mode=='delete'" type="error" dense>All selected users related data (deployments, client, inventory) will be deleted.</v-alert>
                 <v-divider></v-divider>
-                <div style="margin-top:20px;">
-                  <v-btn :loading="loading" color="#00b16a" @click="submitUser()">Confirm</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">Cancel</v-btn>
-                </div>
+                <v-row no-gutters style="margin-top:20px;">
+                  <v-col cols="auto" class="mr-auto">
+                    <v-btn :loading="loading" color="#00b16a" @click="submitUser()">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">Cancel</v-btn>
+                  </v-col>
+                  <v-col cols="auto">
+                    <v-btn v-if="mode == 'edit'" :disabled="loading" @click="mfaDialog = true" color="info">Manage MFA</v-btn>
+                  </v-col>
+                </v-row>
               </v-flex>
             </v-layout>
           </v-container>
         </v-card-text>
       </v-card>
     </v-dialog>
+
+    <MFA :enabled="mfaDialog" @update="mfaDialog = $event" :user="item.username" :autoload="false"/>
 
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
@@ -86,6 +91,7 @@
 <script>
 import axios from 'axios';
 import moment from 'moment';
+import MFA from './../../mfa/MFA'
 
 export default {
   data: () => ({
@@ -106,7 +112,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { username: '', email: '', coins: '', group: '', admin: false, disabled: false },
+    item: { username: '', email: '', password: '', coins: '', group: '', admin: false, disabled: false },
     mode: '',
     loading: true,
     dialog: false,
@@ -123,6 +129,7 @@ export default {
     snackbarText: '',
     snackbarColor: ''
   }),
+  components: { MFA },
   created() {
     this.getUsers()
     moment.relativeTimeThreshold('ss', 0)
@@ -144,7 +151,7 @@ export default {
     },
     newUser() {
       this.mode = 'new'
-      this.item = { username: '', email: '', coins: '', group: '', admin: false, disabled: false }
+      this.item = { username: '', email: '', password: '', coins: '', group: '', admin: false, disabled: false }
       this.dialog_title = 'NEW USER'
       this.dialog = true
     },
@@ -217,6 +224,7 @@ export default {
         current_username: this.selected[0]['username'], 
         username: this.item.username, 
         email: this.item.email, 
+        password: this.item.password, 
         coins: this.item.coins,
         group: this.item.group,
         admin: this.item.admin,
@@ -225,8 +233,8 @@ export default {
       axios.put('/admin/users', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
-          // Edit item in the data table
-          this.items.splice(i, 1, this.item)
+          // Retrieve again the users list
+          this.getUsers()
           this.selected = []
           this.dialog = false
         })
