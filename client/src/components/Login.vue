@@ -150,13 +150,24 @@ export default {
     rememberVuex: function() { return this.$store.getters['app/remember'] },
     usernameVuex: function() { return this.$store.getters['app/username'] },
   },
+  watch: {
+    mfa: function (val) {
+      if (val == '2fa') {
+        this.$nextTick(() => { 
+          this.$refs['2fa'].focus()
+          this.$refs.form.resetValidation()
+        })
+      }
+    }
+  },
   methods: {
-    login() {
+    async login() {
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'warning')
         return
       }
       this.loading = true
+      this.webauthn = { status: 'init' }
       var payload = {
         username: this.username,
         password: this.password,
@@ -164,57 +175,42 @@ export default {
       }
       if (this.twoFactor['value'].length > 0) payload['mfa'] = this.twoFactor['value']
       if (this.twoFactor['hash'] != null) payload['2fa_hash'] = this.twoFactor['hash']
-
-      this.$store.dispatch('app/login', payload)
-      .then((response) => {
-        if (response.status == 202) {
+      try {
+        let response = await this.$store.dispatch('app/login', payload)
+        this.loading = false
+        if (response.status == 200) this.login_success()
+        else if (response.status == 202) {
           if (response.data.code == 'mfa_setup') {
-            this.mfa_hash = response.data.mfa_hash
-            this.mfa_uri = response.data.mfa_uri
             this.mode = 2
+            this.mfa_uri = response.data.mfa_uri
+            this.mfa_hash = response.data.mfa_hash
           }
           else {
             this.mode = 1
             this.mfa = response.data.code
-            if (this.mfa == '2fa') {
-              this.$nextTick(() => { 
-                this.$refs['2fa'].focus()
-                this.$refs.form.resetValidation()
-              })
-            }
-            else if (this.mfa == 'webauthn') {
-              webauthnLogin(response.data.data)
-              .then((mfa) => {
+            if (this.mfa == 'webauthn') {
+              try {
+                let mfa = await webauthnLogin(response.data.data)
                 this.loading = true
                 this.webauthn = { status: 'ok' }
-                this.$store.dispatch('app/login', { ...payload, mfa, host: window.location.host })
-                .then(() => {
-                  this.login_success()
-                })
-                .catch((error) => {
-                  this.webauthn = { status: 'ko' }
-                  this.notification(error.response.data.message, 'error')
-                })
-              })
-              .catch((error) => {
+                await this.$store.dispatch('app/login', { ...payload, mfa, host: window.location.host })
+                this.login_success()
+              }
+              catch (error) {
+                this.loading = true
                 this.webauthn = { status: 'ko' }
-                this.notification(error.response.data.message, 'error')
-              })
+                this.notification('response' in error ? error.response.data.message : error.message, 'error')
+                setTimeout(() => { this.loading = false; this.mode = 0 }, 1000)
+              }
             }
           }
-          
         }
-        else this.login_success()
-      })
-      .catch((error) => {
-        if (this.$refs.mfa !== undefined) { this.mfa = ''; this.$refs.mfa.focus() }
+      }
+      catch (error) {
         if (error.response === undefined) this.notification("No internet connection", 'error')
         else if (error.response.status == 401) this.notification(error.response.data.message, 'error')
         else this.checkSetup()
-      })
-      .finally(() => {
-        this.loading = false
-      })
+      }
     },
     checkSetup() {
       this.loading = true
