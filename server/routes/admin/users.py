@@ -1,5 +1,4 @@
 import json
-import pyotp
 import bcrypt
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
@@ -83,18 +82,6 @@ class Users:
             return jsonify({'message': 'This user currently exists'}), 400
         elif data['password'] != user[0]['password']:
             data['password'] = bcrypt.hashpw(data['password'].encode('utf8'), bcrypt.gensalt())
-
-        # Check & Parse MFA
-        if data['mfa']['enabled']:
-            if 'hash' in data['mfa']:
-                mfa = pyotp.TOTP(data['mfa']['hash'], interval=30)
-                if len(data['mfa']['value']) > 0 and not mfa.verify(data['mfa']['value'], valid_window=1):
-                    return jsonify({'message': 'Invalid MFA Code'}), 400
-            else:
-                data['mfa']['enabled'] = user[0]['mfa']
-                data['mfa']['hash'] = user[0]['mfa_hash']
-        else:
-            data['mfa']['hash'] = None
 
         # Clean Shared Inventory References if the group has changed
         if user[0]['group'] != data['group']:

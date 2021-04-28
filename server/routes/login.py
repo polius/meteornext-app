@@ -49,24 +49,27 @@ class Login:
                 return jsonify({"message": "Invalid username or password"}), 401
 
             # Check MFA
-            if user[0]['mfa'] is None and force_mfa:
-                if 'mfa' in login_json and 'mfa_hash' in login_json:
-                    mfa = pyotp.TOTP(login_json['mfa_hash'], interval=30)
-                    if len(login_json['mfa']) == 0 or not mfa.verify(login_json['mfa'], valid_window=1):
-                        return jsonify({'message': 'Invalid MFA Code'}), 401
+            if user[0]['mfa'] is None:
+                if force_mfa:
+                    if 'mfa' in login_json and 'mfa_hash' in login_json:
+                        mfa = pyotp.TOTP(login_json['mfa_hash'], interval=30)
+                        if len(login_json['mfa']) == 0 or not mfa.verify(login_json['mfa'], valid_window=1):
+                            return jsonify({'message': 'Invalid MFA Code'}), 401
+                        else:
+                            self._users.enable_mfa({'username': user[0]['username'], 'mfa_hash': login_json['mfa_hash']})
+                            user[0]['mfa'] = 1
+                            user[0]['mfa_hash'] = login_json['mfa_hash']
                     else:
-                        self._users.enable_mfa({'username': user[0]['username'], 'mfa_hash': login_json['mfa_hash']})
-                        user[0]['mfa'] = 1
-                        user[0]['mfa_hash'] = login_json['mfa_hash']
-                else:
-                    mfa_hash = pyotp.random_base32()
-                    mfa_uri = pyotp.TOTP(mfa_hash, interval=30).provisioning_uri(user[0]['email'], issuer_name="Meteor Next")
-                    return jsonify({"code": "mfa_setup", "message": "MFA setup is required", "mfa_hash": mfa_hash, "mfa_uri": mfa_uri}), 202
-            elif user[0]['mfa'] == '2fa':
-                if 'mfa' not in login_json:
-                    return jsonify({"code": "mfa_request", "message": "Requesting MFA credentials"}), 202
-                elif not pyotp.TOTP(user[0]['mfa_hash'], interval=30).verify(login_json['mfa'], valid_window=1):
-                    return jsonify({"message": "Invalid MFA Code"}), 401
+                        mfa_hash = pyotp.random_base32()
+                        mfa_uri = pyotp.TOTP(mfa_hash, interval=30).provisioning_uri(user[0]['email'], issuer_name="Meteor Next")
+                        return jsonify({"code": "mfa_setup", "message": "MFA setup is required", "mfa_hash": mfa_hash, "mfa_uri": mfa_uri}), 202
+            else:
+                user_mfa = self._user_mfa.get({'user_id': user[0]['id']})[0]
+                if user[0]['mfa'] == '2fa':
+                    if 'mfa' not in login_json:
+                        return jsonify({"code": "mfa_request", "message": "Requesting MFA credentials"}), 202
+                    elif not pyotp.TOTP(user_mfa['2fa_hash'], interval=30).verify(login_json['mfa'], valid_window=1):
+                        return jsonify({"message": "Invalid MFA Code"}), 401
 
             # Check disabled
             if user[0]['disabled']:
