@@ -114,7 +114,7 @@ class MFA:
                 session.pop('register_username', None)
                 session.pop('register_display_name', None)
                 session.pop('challenge', None)
-                session['register_username'] = get_jwt_identity()
+                session['register_username'] = user['username']
                 session['register_display_name'] = user['username']
 
                 # Generate challenge and store it to the user session
@@ -124,7 +124,7 @@ class MFA:
                 session['register_ukey'] = ukey
 
                 # Make credentials
-                make_credential_options = webauthn.WebAuthnMakeCredentialOptions(challenge, 'Meteor Next', request.args['host'], ukey, get_jwt_identity(), user['username'], 'https://meteor2.io', attestation='none')
+                make_credential_options = webauthn.WebAuthnMakeCredentialOptions(challenge, 'Meteor Next', request.args['host'], ukey, user['username'], user['username'], 'https://meteor2.io', attestation='none')
                 return jsonify(make_credential_options.registration_dict)
 
             elif request.method == 'POST':
@@ -185,6 +185,12 @@ class MFA:
     ####################
     # Internal Methods #
     ####################
+    def get_webauthn_register(self):
+        pass
+
+    def post_webauthn_register(self):
+        pass
+    
     def get_webauthn_login(self, user, user_mfa):
         session.pop('challenge', None)
         challenge = self.generate_challenge(32)

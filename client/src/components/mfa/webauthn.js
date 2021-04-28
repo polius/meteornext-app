@@ -4,16 +4,21 @@ var base64js = require('base64-js')
 export async function webauthnRegister(user='') {
   let payload = (user == '') ? { host: window.location.host } : { user, host: window.location.host }
   // Get PublicKeyCredentialRequestOptions for this user from the server
+  console.log("1")
   const credentialCreateOptionsFromServer = await axios.get('/mfa/webauthn/register', { params: payload })
+  console.log("2")
   // Convert certain members of the PublicKeyCredentialCreateOptions into byte arrays as expected by the spec.
   const publicKeyCredentialCreateOptions = transformCredentialCreateOptions(credentialCreateOptionsFromServer.data)
+  console.log("3")
   // Request the authenticator(s) to create a new credential keypair.
   const credential = await navigator.credentials.create({ publicKey: publicKeyCredentialCreateOptions })
   // Encode the byte arrays in the credential into strings
   const newAssertionForServer = transformNewAssertionForServer(credential)
+  console.log("4")
   // Posts the new credential data to the server for validation and storage.
   payload = { ...payload, credential: newAssertionForServer }
   await axios.post('/mfa/webauthn/register', payload)
+  console.log("5")
   return newAssertionForServer
 }
 
