@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="mfaDialog" max-width="672px">
+    <v-dialog v-model="mfaDialog" :persistent="persistent" max-width="672px">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1">MANAGE MFA</v-toolbar-title>
@@ -164,7 +164,8 @@ export default {
   props: { 
     enabled: Boolean, 
     user: { type: String, default: '' }, 
-    autoload: { type: Boolean, default: true }
+    autoload: { type: Boolean, default: true },
+    persistent: {type: Boolean, default: false },
   },
   components: { QrcodeVue },
   computed: {
@@ -240,6 +241,7 @@ export default {
       .catch((error) => {
         if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
         this.webauthn = { status: 'ko', error: error.response.data.message, credentials: null }
+        this.notification(error.message, 'error')
       })
     },
     submitMFA() {

@@ -20,7 +20,7 @@
                     </v-row>
                   </v-alert>
                   <v-form ref="form" @submit.prevent style="margin-top:20px">
-                    <div v-if="mode == 0">
+                    <div v-if="mfa == null">
                       <v-text-field ref="username" filled v-model="username" name="username" label="Username" :rules="[v => !!v || '']" required v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details>
                         <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-user</v-icon></template>
                       </v-text-field>
@@ -28,38 +28,24 @@
                         <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-lock</v-icon></template>
                       </v-text-field>
                     </div>
-                    <div v-else-if="mode == 1">
-                      <div v-if="mfa == '2fa'">
-                        <v-text-field ref="2fa" filled v-model="twoFactor['value']" label="2FA Code" maxlength="6" :rules="[v => !!v || '']" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details>
-                          <template v-slot:append><v-icon small style="margin-top:3px; margin-right:4px">fas fa-key</v-icon></template>
-                        </v-text-field>
-                      </div>
-                      <div v-else-if="mfa == 'webauthn'">
-                        <v-card>
-                          <v-progress-linear v-show="loading" indeterminate></v-progress-linear>
-                          <v-card-text>
-                            <div class="text-h5 white--text" style="text-align:center">Verify your identity</div>
-                            <v-icon :style="`display:table; margin-left:auto; margin-right:auto; margin-top:20px; margin-bottom:20px; color:${ webauthn.status == 'init' ? '#046cdc' : webauthn.status == 'ok' ? '#00b16a' : '#ff5252'}`" size="55">fas fa-fingerprint</v-icon>
-                            <div class="text-subtitle-1 white--text" style="text-align:center; font-size:1.1rem !important;">{{ webauthn.status == 'init' ? 'Touch sensor' : webauthn.status == 'ok' ? 'Fingerprint recognized' : 'Fingerprint not recognized' }}</div>
-                          </v-card-text>
-                        </v-card>
-                      </div>
-                    </div>
-                    <div v-else-if="mode == 2">
-                      <div class="body-1 font-weight-regular">Multi-Factor Authentication (<span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">MFA</span>) is required</div>
-                      <v-card style="width:220px; margin:10px auto 15px; padding:10px 0px 2px 0px; margin-left:auto; margin-right:auto;">
-                        <v-card-text style="padding:0px">
-                          <qrcode-vue size="200" :value="twoFactor['uri']" level="H" background="#ffffff" foreground="#000000"></qrcode-vue>
-                          <v-btn @click="twoFactorCodeDialog = true" text block hide-details>CAN'T SCAN THE QR?</v-btn>
-                        </v-card-text>
-                      </v-card>
+                    <div v-else-if="mfa == '2fa'">
                       <v-text-field ref="2fa" filled v-model="twoFactor['value']" label="2FA Code" maxlength="6" :rules="[v => !!v || '']" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details>
                         <template v-slot:append><v-icon small style="margin-top:3px; margin-right:4px">fas fa-key</v-icon></template>
                       </v-text-field>
                     </div>
+                    <div v-else-if="mfa == 'webauthn'">
+                      <v-card>
+                        <v-progress-linear v-show="loading" indeterminate></v-progress-linear>
+                        <v-card-text>
+                          <div class="text-h5 white--text" style="text-align:center">Verify your identity</div>
+                          <v-icon :style="`display:table; margin-left:auto; margin-right:auto; margin-top:20px; margin-bottom:20px; color:${ webauthn.status == 'init' ? '#046cdc' : webauthn.status == 'ok' ? '#00b16a' : webauthn.status == 'ko' ? '#ff5252' : '#fa8131'}`" size="55">fas fa-fingerprint</v-icon>
+                          <div class="text-subtitle-1 white--text" style="text-align:center; font-size:1.1rem !important;">{{ webauthn.status == 'init' ? 'Touch sensor' : webauthn.status == 'ok' ? 'Fingerprint recognized' : webauthn.status == 'ko' ? 'Fingerprint not recognized' : 'Validating fingerprint...' }}</div>
+                        </v-card-text>
+                      </v-card>
+                    </div>
                   </v-form>
-                  <v-btn v-if="!(mode == 1 && mfa == 'webauthn')" x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()">LOGIN</v-btn>
-                  <v-checkbox v-if="mode == 0" v-model="remember" label="Remember username" hide-details style="margin-bottom:2px"></v-checkbox>
+                  <v-btn v-if="!(mfa == 'webauthn')" x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()">LOGIN</v-btn>
+                  <v-checkbox v-if="mfa == null" v-model="remember" label="Remember username" hide-details style="margin-bottom:2px"></v-checkbox>
                 </v-card-text>
               </v-card>
             </v-slide-y-transition>
@@ -67,24 +53,7 @@
         </v-layout>
       </v-container>
     </v-main>
-
-    <v-dialog v-model="twoFactorCodeDialog" max-width="512px">
-      <v-card>
-        <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-qrcode</v-icon>QR CODE</v-toolbar-title>
-        </v-toolbar>
-        <v-card-text style="padding:0px">
-          <v-container>
-            <v-layout wrap>
-              <v-flex xs12>
-                <div style="font-size:18px; letter-spacing:0.08em; text-align:center;">{{ twoFactor['hash'] }}</div>
-              </v-flex>
-            </v-layout>
-          </v-container>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-
+    <MFA :enabled="mfaDialog" @update="mfaDialog = $event" :autoload="false" :persistent="true"/>
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -96,8 +65,8 @@
 
 <script>
 import axios from 'axios'
-import QrcodeVue from 'qrcode.vue'
 import { webauthnLogin } from './mfa/webauthn.js'
+import MFA from './mfa/MFA'
 
 export default {
   data: () => ({
@@ -111,7 +80,7 @@ export default {
     show_alert: false,
 
     // MFA
-    twoFactorCodeDialog: false,
+    mfaDialog: false,
     twoFactor: {
       hash: null,
       uri: null,
@@ -130,8 +99,8 @@ export default {
     snackbarColor: '',
     snackbarText: ''
   }),
-  props:['url'],
-  components: { QrcodeVue },
+  props: ['url'],
+  components: { MFA },
   beforeRouteEnter(to, from, next) {
     next((vm) => {
       vm.prevRoute = from['path']
@@ -167,6 +136,7 @@ export default {
         return
       }
       this.loading = true
+      this.mfa = null
       this.webauthn = { status: 'init' }
       var payload = {
         username: this.username,
@@ -181,26 +151,26 @@ export default {
         if (response.status == 200) this.login_success()
         else if (response.status == 202) {
           if (response.data.code == 'mfa_setup') {
-            this.mode = 2
-            this.mfa_uri = response.data.mfa_uri
-            this.mfa_hash = response.data.mfa_hash
+            console.log("SETUP")
+            this.twoFactor = { hash: response.data['2fa_hash'], uri: response.data['2fa_uri'], value: '' }
+            this.mfaDialog = true
           }
           else {
-            this.mode = 1
             this.mfa = response.data.code
             if (this.mfa == 'webauthn') {
               try {
                 let mfa = await webauthnLogin(response.data.data)
                 this.loading = true
-                this.webauthn = { status: 'ok' }
+                this.webauthn = { status: 'validating' }
                 await this.$store.dispatch('app/login', { ...payload, mfa, host: window.location.host })
-                this.login_success()
+                this.webauthn = { status: 'ok' }
+                setTimeout(() => this.login_success(), 500)
               }
               catch (error) {
                 this.loading = true
                 this.webauthn = { status: 'ko' }
                 this.notification('response' in error ? error.response.data.message : error.message, 'error')
-                setTimeout(() => { this.loading = false; this.mode = 0 }, 1000)
+                setTimeout(() => { this.loading = false; this.mfa = null }, 1000)
               }
             }
           }
