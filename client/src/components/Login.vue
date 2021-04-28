@@ -207,9 +207,10 @@ export default {
         }
       }
       catch (error) {
+        this.loading = false
         if (error.response === undefined) this.notification("No internet connection", 'error')
         else if (error.response.status == 401) this.notification(error.response.data.message, 'error')
-        else this.checkSetup()
+        else if (this.mfa == null) this.checkSetup()
       }
     },
     checkSetup() {
