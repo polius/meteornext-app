@@ -77,7 +77,7 @@
       </v-card>
     </v-dialog>
 
-    <MFA :enabled="mfaDialog" @update="mfaDialog = $event" :user="item.username" :autoload="false"/>
+    <MFA :enabled="mfaDialog" @update="mfaDialog = $event" mode="admin" :dialog="dialog" :user="{'username': item.username}"/>
 
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}

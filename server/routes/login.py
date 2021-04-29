@@ -57,16 +57,7 @@ class Login:
             # Check MFA
             if user[0]['mfa'] is None:
                 if force_mfa:
-                    if 'mfa' in login_json:
-                        mfa = pyotp.TOTP(login_json['2fa_hash'], interval=30)
-                        if len(login_json['mfa']) == 0 or not mfa.verify(login_json['mfa'], valid_window=1):
-                            return jsonify({'message': 'Invalid MFA Code'}), 401
-                        else:
-                            self._user_mfa.enable_2fa({'user_id': user[0]['id'], '2fa_hash': login_json['2fa_hash']})
-                    else:
-                        twoFactor_hash = pyotp.random_base32()
-                        twoFactor_uri = pyotp.TOTP(twoFactor_hash, interval=30).provisioning_uri(user[0]['email'], issuer_name="Meteor Next")
-                        return jsonify({"code": "mfa_setup", "message": "MFA is required", "2fa_hash": twoFactor_hash, "2fa_uri": twoFactor_uri, "webauthn": self._mfa.get_webauthn_login(user, user_mfa)}), 202
+                    return jsonify({"code": "mfa_setup", "message": "MFA is required"}), 202
             else:
                 user_mfa = self._user_mfa.get({'user_id': user[0]['id']})
                 if user[0]['mfa'] == '2fa':

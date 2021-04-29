@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="mfaDialog" :persistent="persistent" max-width="672px">
+    <v-dialog v-model="mfaDialog" :persistent="mode == 'login'" max-width="672px">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1">MANAGE MFA</v-toolbar-title>
@@ -70,10 +70,11 @@
                         </v-card-text>
                       </v-card>
                       <v-card v-else-if="mfaMode == 'webauthn'">
+                        <v-progress-linear v-show="loadingFingerprint" indeterminate></v-progress-linear>
                         <v-card-text>
                           <div class="text-h5 white--text" style="text-align:center">Verify your identity</div>
-                          <v-icon :style="`display:table; margin-left:auto; margin-right:auto; margin-top:20px; margin-bottom:20px; color:${ webauthn.status == 'init' ? '#046cdc' : webauthn.status == 'ok' ? '#00b16a' : '#ff5252'}`" size="55">fas fa-fingerprint</v-icon>
-                          <div class="text-subtitle-1 white--text" style="text-align:center; font-size:1.1rem !important;">{{ webauthn.status == 'init' ? 'Touch sensor' : webauthn.status == 'ok' ? 'Fingerprint recognized' : 'Fingerprint not recognized' }}</div>
+                          <v-icon :style="`display:table; margin-left:auto; margin-right:auto; margin-top:20px; margin-bottom:20px; color:${ webauthn.status == 'init' ? '#046cdc' : webauthn.status == 'ok' ? '#00b16a' : webauthn.status == 'ko' ? '#ff5252' : '#fa8131'}`" size="55">fas fa-fingerprint</v-icon>
+                          <div class="text-subtitle-1 white--text" style="text-align:center; font-size:1.1rem !important;">{{ ['init','validating'].includes(webauthn.status) ? 'Touch sensor' : webauthn.status == 'ok' ? 'Fingerprint recognized' : 'Fingerprint not recognized' }}</div>
                         </v-card-text>
                       </v-card>
                     </div>
@@ -129,7 +130,7 @@
 </template>
 
 <script>
-import { webauthnRegister, webauthnStore } from './webauthn.js'
+import { webauthnRegisterBegin, webauthnRegisterValidate, webauthnRegisterFinish } from './webauthn.js'
 import axios from 'axios'
 import moment from 'moment'
 import QrcodeVue from 'qrcode.vue'
@@ -140,6 +141,7 @@ export default {
 
     // Loading
     loading: false,
+    loadingFingerprint: false,
 
     // MFA Dialog
     mfaDialogStep: 1,
@@ -159,13 +161,15 @@ export default {
     snackbar: false,
     snackbarTimeout: Number(3000),
     snackbarColor: '',
-    snackbarText: ''
+    snackbarText: '',
+    // Helper var
+    username2: '',
   }),
   props: { 
     enabled: Boolean, 
-    user: { type: String, default: '' }, 
-    autoload: { type: Boolean, default: true },
-    persistent: {type: Boolean, default: false },
+    user: { type: Object }, 
+    mode: String,
+    dialog: Boolean
   },
   components: { QrcodeVue },
   computed: {
@@ -175,11 +179,11 @@ export default {
     }
   },
   created() {
-    if (this.autoload) this.getMFA()
+    if (this.mode == 'profile') this.getMFA()
   },
   watch: {
     user: function() {
-      this.getMFA()
+      if (this.mode == 'admin' && this.dialog == true && this.user.username != this.username2) this.getMFA()
     },
     mfaDialog: function (val) {
       if (val && this.mfa.mode == null) this.get2FA()
@@ -208,9 +212,10 @@ export default {
   methods: {
     getMFA() {
       this.loading = true
-      const payload = (this.user == '') ? {} : { user: this.user }
+      const payload = (this.user !== undefined) ? this.user : {}
       axios.get('/mfa', { params: payload })
         .then((response) => {
+          if (this.user !== undefined) this.username2 = this.user.username
           this.mfa = response.data.data
         })
         .catch((error) => {
@@ -221,7 +226,7 @@ export default {
     },
     get2FA() {
       this.twoFactor = { hash: null, uri: null, value: '' }
-      const payload = (this.user == '') ? {} : { user: this.user }
+      const payload = (this.user !== undefined) ? this.user : {}
       axios.get('/mfa/2fa', { params: payload })
         .then((response) => {
           this.twoFactor['hash'] = response.data['mfa_hash']
@@ -232,17 +237,26 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
     },
-    getWebauthn() {
+    async getWebauthn() {
       this.webauthn = { status: 'init', error: '', credentials: null }
-      webauthnRegister(this.user)
-      .then((credentials) => {
-        this.webauthn = { status: 'ok', error: '', credentials }
-      })
-      .catch((error) => {
+      try {
+        const credentials = await webauthnRegisterBegin(this.user)
+        this.loadingFingerprint = true
+        this.webauthn = { status: 'validating', error: '', credentials }
+      }
+      catch (error) {
         if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
         this.webauthn = { status: 'ko', error: error.response.data.message, credentials: null }
-        this.notification(error.message, 'error')
-      })
+      }
+      try {
+        await webauthnRegisterValidate(this.webauthn.credentials, this.user)
+        this.webauthn['status'] = 'ok'
+      }
+      catch (error) {
+        if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        this.webauthn = { status: 'ko', error: error.response.data.message, credentials: null }
+      }
+      this.loadingFingerprint = false
     },
     submitMFA() {
       if (this.mfa.mode) this.disableMFA()
@@ -262,7 +276,7 @@ export default {
     },
     disableMFA() {
       this.loading = true
-      const payload = (this.user == '') ? {} : { user: this.user }
+      const payload = (this.user !== undefined) ? this.user : {}
       axios.delete('/mfa', { data: payload })
         .then((response) => {
           this.mfaDialog = false
@@ -283,7 +297,7 @@ export default {
       }
       this.loading = true
       let payload = {'hash': this.twoFactor.hash, 'value': this.twoFactor.value}
-      payload = (this.user == '') ? payload : {...payload, user: this.user} 
+      payload = (this.user !== undefined) ? {...payload, ...this.user} : payload
       axios.post('/mfa/2fa', payload)
         .then((response) => {
           this.mfaDialog = false
@@ -298,15 +312,15 @@ export default {
     },
     enableWebauthn() {
       this.loading = true
-      webauthnStore(this.webauthn.credentials, this.user)
+      webauthnRegisterFinish(this.webauthn.credentials, this.user)
       .then((response) => {
         this.mfaDialog = false
         this.getMFA()
         this.notification(response.data.message, '#00b16a')
       })
       .catch((error) => {
-        if (status in error && [401,422,503].includes(error.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-        console.log(error)
+        if ([401,422,503].includes(error.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        this.webauthn = { status: 'ko', error: error.response.data.message, credentials: null }
       })
       .finally(() => this.loading = false)
     },
