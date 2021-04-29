@@ -1,31 +1,28 @@
 var axios = require('axios')
 var base64js = require('base64-js')
 
-export async function webauthnRegister(user='') {
-  let payload = (user == '') ? { host: window.location.host } : { user, host: window.location.host }
+export async function webauthnRegisterBegin(user={}) {
+  let payload = user
   // Get PublicKeyCredentialRequestOptions for this user from the server
-  console.log("1")
   const credentialCreateOptionsFromServer = await axios.get('/mfa/webauthn/register', { params: payload })
-  console.log("2")
   // Convert certain members of the PublicKeyCredentialCreateOptions into byte arrays as expected by the spec.
   const publicKeyCredentialCreateOptions = transformCredentialCreateOptions(credentialCreateOptionsFromServer.data)
-  console.log("3")
   // Request the authenticator(s) to create a new credential keypair.
   const credential = await navigator.credentials.create({ publicKey: publicKeyCredentialCreateOptions })
   // Encode the byte arrays in the credential into strings
   const newAssertionForServer = transformNewAssertionForServer(credential)
-  console.log("4")
-  // Posts the new credential data to the server for validation and storage.
-  payload = { ...payload, credential: newAssertionForServer }
-  await axios.post('/mfa/webauthn/register', payload)
-  console.log("5")
   return newAssertionForServer
 }
 
-export async function webauthnStore(newAssertionForServer, user='') {
+export async function webauthnRegisterValidate(credential, user={}) {
   // Posts the new credential data to the server for validation and storage.
-  let payload = { host: window.location.host, credential: newAssertionForServer, store: true }
-  payload = (user == '') ? payload : {...payload, user}
+  const payload = { ...user, credential }
+  await axios.post('/mfa/webauthn/register', payload)
+}
+
+export async function webauthnRegisterFinish(credential, user={}) {
+  // Posts the new credential data to the server for validation and storage.
+  const payload = {...user, credential, store: true}
   return await axios.post('/mfa/webauthn/register', payload)
 }
 

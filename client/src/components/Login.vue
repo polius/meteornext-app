@@ -53,7 +53,7 @@
         </v-layout>
       </v-container>
     </v-main>
-    <MFA :enabled="mfaDialog" @update="mfaDialog = $event" :autoload="false" :persistent="true"/>
+    <MFA :enabled="mfaDialog" @update="mfaDialog = $event" mode="login" :user="{'username': username, 'password': password}"/>
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -136,7 +136,6 @@ export default {
         return
       }
       this.loading = true
-      this.mfa = null
       this.webauthn = { status: 'init' }
       var payload = {
         username: this.username,
@@ -150,11 +149,7 @@ export default {
         this.loading = false
         if (response.status == 200) this.login_success()
         else if (response.status == 202) {
-          if (response.data.code == 'mfa_setup') {
-            console.log("SETUP")
-            this.twoFactor = { hash: response.data['2fa_hash'], uri: response.data['2fa_uri'], value: '' }
-            this.mfaDialog = true
-          }
+          if (response.data.code == 'mfa_setup') this.mfaDialog = true
           else {
             this.mfa = response.data.code
             if (this.mfa == 'webauthn') {
@@ -163,7 +158,6 @@ export default {
                 this.loading = true
                 this.webauthn = { status: 'validating' }
                 await this.$store.dispatch('app/login', { ...payload, mfa, host: window.location.host })
-                // this.webauthn = { status: 'ok' }
                 this.login_success()
               }
               catch (error) {
