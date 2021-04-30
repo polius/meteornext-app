@@ -58,6 +58,9 @@
                     <v-col cols="auto" style="margin-left:10px; margin-top:4px">
                       <v-checkbox :disabled="include == 'Content'" v-model="includeDropTable" label="Include DROP syntax" hide-details></v-checkbox>
                     </v-col>
+                    <v-col cols="auto" style="margin-left:15px; margin-top:4px">
+                      <v-checkbox :disabled="include == 'Content'" v-model="includeDelimiters" label="Include DELIMITERs" hide-details></v-checkbox>
+                    </v-col>
                   </v-row>
                   <v-checkbox v-else-if="tab == 'csv'" v-model="includeFields" label="Include field names in first row" hide-details style="padding:0px; margin-top:10px"></v-checkbox>
                 </v-form>
@@ -179,6 +182,7 @@ export default {
       rows: '1000',
       includeItems: ['Structure + Content','Structure','Content'],
       includeDropTable: true,
+      includeDelimiters: false,
       includeFields: true,
       // Progress
       dialogProgress: false,
@@ -321,7 +325,10 @@ export default {
       })
     },
     includeChanged() {
-      if (this.include == 'Content') this.includeDropTable = false
+      if (this.include == 'Content') {
+        this.includeDropTable = false
+        this.includeDelimiters = false
+      }
     },
     exportObjectsSubmit() {
       // Check if all fields are filled
@@ -426,6 +433,7 @@ export default {
           include: this.include,
           rows: this.rows,
           includeDropTable: this.includeDropTable,
+          includeDelimiters: this.includeDelimiters,
           fields: this.includeFields,
           object: '',
           items: [],

@@ -112,8 +112,8 @@ class Connection:
     def close(self):
         self._sql.close()
 
-    def execute(self, query, args=None, database=None, fetch=True):
-       return self._sql.execute(query, args, database, fetch)
+    def execute(self, query, args=None, database=None, fetch=True, import_file=False):
+       return self._sql.execute(query, args, database, fetch, import_file)
 
     def fetch_one(self):
         return self._sql.fetch_one()
