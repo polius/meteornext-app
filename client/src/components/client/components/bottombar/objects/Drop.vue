@@ -71,6 +71,7 @@ export default {
   },
   methods: {
     showDialog() {
+      this.name = ''
       this.dialog = true
     },
     dialogSubmit() {

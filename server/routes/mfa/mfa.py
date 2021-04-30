@@ -152,7 +152,7 @@ class MFA:
         rp_id = request.host
         origin = 'https://' + request.host
         registration_response = data['credential']
-        trust_anchor_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'trusted_attestation_roots')
+        trust_anchor_dir = ''
         trusted_attestation_cert_required = False
         self_attestation_permitted = True
         none_attestation_permitted = True
@@ -193,7 +193,7 @@ class MFA:
             'https://www.w3.org',
             user_mfa[0]['webauthn_credential_id'], 
             user_mfa[0]['webauthn_pub_key'], 
-            user_mfa[0]['webauthn_sign_count'], 
+            user_mfa[0]['webauthn_sign_count'],
             user_mfa[0]['webauthn_rp_id']
         )
         webauthn_assertion_options = webauthn.WebAuthnAssertionOptions(webauthn_user, challenge)
@@ -214,8 +214,7 @@ class MFA:
             user_mfa[0]['webauthn_credential_id'], 
             user_mfa[0]['webauthn_pub_key'], 
             user_mfa[0]['webauthn_sign_count'], 
-            # user_mfa[0]['webauthn_rp_id']
-            request.host
+            user_mfa[0]['webauthn_rp_id']
         )
         webauthn_assertion_response = webauthn.WebAuthnAssertionResponse(
             webauthn_user,
