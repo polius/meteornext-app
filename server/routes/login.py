@@ -8,7 +8,7 @@ import models.admin.users
 import models.admin.user_mfa
 import models.admin.settings
 import routes.admin.settings
-import routes.mfa.mfa
+import routes.mfa
 
 class Login:
     def __init__(self, app, sql, license):
@@ -20,7 +20,7 @@ class Login:
         self._settings = models.admin.settings.Settings(sql)
         # Init routes
         self._settings_route = routes.admin.settings.Settings(app, sql, license)
-        self._mfa = routes.mfa.mfa.MFA(app, sql, license)
+        self._mfa = routes.mfa.MFA(app, sql, license)
 
     def blueprint(self):
         # Init blueprint
