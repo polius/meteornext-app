@@ -206,6 +206,7 @@ export default {
       'clientItems',
       'clientQueries',
       'clientCursor',
+      'clientRange',
       'clientQuery',
       'bottomBar',
       'server',
@@ -236,7 +237,11 @@ export default {
     currentConn() {
       this.cellEditingDiscard()
       this.editor.setValue(this.clientQueries, 1)
-      if (this.clientCursor != null) this.editor.moveCursorTo(this.clientCursor.row, this.clientCursor.column)
+      if (this.clientCursor != null && this.clientRange != null) {
+        this.editor.moveCursorTo(this.clientCursor.row, this.clientCursor.column)
+        let reverse = (this.clientCursor.row == this.clientRange.start.row && this.clientCursor.column == this.clientRange.start.column)
+        this.editor.selection.setSelectionRange(this.clientRange, reverse)
+      }
       if (this.headerTabSelected == 'client') this.editor.focus()
     },
     dialog: function(val) {
@@ -246,12 +251,17 @@ export default {
     headerTabSelected(newValue, oldValue) {
       if (newValue == 'client') {
         this.editor.setValue(this.clientQueries, 1)
-        if (this.clientCursor != null) this.editor.moveCursorTo(this.clientCursor.row, this.clientCursor.column)
+        if (this.clientCursor != null && this.clientRange != null) {
+          this.editor.moveCursorTo(this.clientCursor.row, this.clientCursor.column)
+          let reverse = (this.clientCursor.row == this.clientRange.start.row && this.clientCursor.column == this.clientRange.start.column)
+          this.editor.selection.setSelectionRange(this.clientRange, reverse)
+        }
         this.editor.focus()
       }
       else if (oldValue == 'client') {
         this.clientQueries = this.editor.getValue()
         this.clientCursor = this.editor.getCursorPosition()
+        this.clientRange = this.editor.selection.getRange()
       }
     },
   },

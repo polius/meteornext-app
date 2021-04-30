@@ -812,8 +812,27 @@ function init_filter_modal() {
     if ('meteor_region' in DATA[i] && !FILTER_REGION.includes(DATA[i]['meteor_region'])) FILTER_REGION.push(DATA[i]['meteor_region']);
     if ('meteor_server' in DATA[i] && !FILTER_SERVER.includes(DATA[i]['meteor_server'])) FILTER_SERVER.push(DATA[i]['meteor_server']);
     if ('meteor_database' in DATA[i] && !FILTER_DATABASE.includes(DATA[i]['meteor_database'])) FILTER_DATABASE.push(DATA[i]['meteor_database']);
-    if ('meteor_query' in DATA[i] && !FILTER_QUERY.includes(DATA[i]['meteor_query'])) FILTER_QUERY.push(DATA[i]['meteor_query']);
+    if ('meteor_query' in DATA[i] && !FILTER_QUERY.includes(DATA[i]['meteor_query'])) {
+      // FILTER_QUERY.push(DATA[i]['meteor_query']);
+      if (DATA[i]['meteor_query'].startsWith('[')) {
+        // Parse Query Alias
+        let stack = 0
+        for (let j = 1; j < DATA[i]['meteor_query'].length; ++j) {
+          if (DATA[i]['meteor_query'][j] == '[') stack += 1
+          else if (DATA[i]['meteor_query'][j] == ']') {
+            if (stack == 0) {
+              let element = '[ALIAS] ' + DATA[i]['meteor_query'].substr(1, j - 1)
+              if (!FILTER_QUERY.includes(element)) FILTER_QUERY.push(element)
+              break
+            }
+            else stack -= 1
+          }
+        }
+      }
+      else FILTER_QUERY.push(DATA[i]['meteor_query']);
+    }
   }
+
   // Sort Dropdown Values
   FILTER_ENVIRONMENT.sort();
   FILTER_REGION.sort();
@@ -875,6 +894,7 @@ function filter_data() {
   var server_text = $("#filter-server option:selected").text();
   var database_text = $("#filter-database option:selected").text();
   var query_text = $("#filter-query option:selected").text();
+  var is_alias = query_text.startsWith('[ALIAS] ')
 
   // Clear All Cells
   api.setRowData([]);
@@ -900,10 +920,10 @@ function filter_data() {
     var row_match = true;
     // Default Elements
     var environment_condition = (filter_environment_selected == 0) ? 1 : ((data2filter[i]['meteor_environment'] == environment_text) ? 1 : 0)
-    var region_condition = (filter_region_selected == 0) ? 1 : ((data2filter[i]['meteor_region'] == region_text) ? 1 : 0)
-    var server_condition = (filter_server_selected == 0) ? 1 : ((data2filter[i]['meteor_server'] == server_text) ? 1 : 0)
-    var database_condition = (filter_database_selected == 0) ? 1 : ((data2filter[i]['meteor_database'] == database_text) ? 1 : 0)
-    var query_condition = (filter_query_selected == 0) ? 1 : ((data2filter[i]['meteor_query'] == query_text) ? 1 : 0)
+    let region_condition = (filter_region_selected == 0) ? 1 : ((data2filter[i]['meteor_region'] == region_text) ? 1 : 0)
+    let server_condition = (filter_server_selected == 0) ? 1 : ((data2filter[i]['meteor_server'] == server_text) ? 1 : 0)
+    let database_condition = (filter_database_selected == 0) ? 1 : ((data2filter[i]['meteor_database'] == database_text) ? 1 : 0)
+    let query_condition = (filter_query_selected == 0) ? 1 : (!is_alias && data2filter[i]['meteor_query'] == query_text) || (is_alias && data2filter[i]['meteor_query'].startsWith('[' + query_text.substr(8, query_text.length) + ']')) ? 1 : 0
     row_match = (environment_condition & region_condition & server_condition & database_condition & query_condition);
     // Custom Elements
     for (var j = 0; j < FILTER_CUSTOM_COLUMNS.length; ++j) {

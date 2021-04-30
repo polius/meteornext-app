@@ -36,6 +36,7 @@ const connection = {
   clientItems: [],
   clientQueries: '',
   clientCursor: null,
+  clientRange: null,
   clientQuery: { query: '', range: null },
   clientExecuting: null, // query, explain, stop
   clientCompleters: { databases: [], objects: [] },
@@ -158,6 +159,7 @@ const mutations = {
     // Store Client ACE Editor (current connection)
     state.connections[state.currentConn].clientQueries = state.components.editor.getValue()
     state.connections[state.currentConn].clientCursor = state.components.editor.getCursorPosition()
+    state.connections[state.currentConn].clientRange = state.components.editor.selection.getRange()
     // Add new connection
     state.connectionIndex += 1
     let conn = JSON.parse(JSON.stringify(connection))
@@ -177,6 +179,7 @@ const mutations = {
     // Store Client ACE Editor (current connection)
     state.connections[state.currentConn].clientQueries = state.components.editor.getValue()
     state.connections[state.currentConn].clientCursor = state.components.editor.getCursorPosition()
+    state.connections[state.currentConn].clientRange = state.components.editor.selection.getRange()
     // Change current connection
     state.currentConn = data
   },
