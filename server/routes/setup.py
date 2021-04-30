@@ -11,7 +11,7 @@ from flask import request, jsonify, Blueprint
 
 import routes.login
 import routes.profile
-import routes.mfa.mfa
+import routes.mfa
 import routes.notifications
 import routes.admin.admin
 import routes.admin.settings
@@ -236,7 +236,7 @@ class Setup:
         # Init all blueprints
         login = routes.login.Login(self._app, sql, self._license)
         profile = routes.profile.Profile(self._app, sql, self._license)
-        mfa = routes.mfa.mfa.MFA(self._app, sql, self._license)
+        mfa = routes.mfa.MFA(self._app, sql, self._license)
         notifications = routes.notifications.Notifications(self._app, sql, self._license)
         admin = routes.admin.admin.Admin(self._app, sql, self._license)
         settings = routes.admin.settings.Settings(self._app, sql, self._license, self._conf)
