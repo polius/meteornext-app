@@ -443,7 +443,7 @@ class Client:
 
             # Execute uploaded file
             try:
-                conn.execute(request.files['file'].read(), database=request.form['database'])
+                conn.execute(request.files['file'].read().decode("utf-8"), database=request.form['database'], import_file=True)
                 conn.commit()
                 return jsonify({'message': 'File successfully uploaded'}), 200
             except Exception as e:
@@ -774,7 +774,10 @@ class Client:
                     if options['includeDropTable']:
                         yield 'DROP TRIGGER IF EXISTS `{}`;\n\n'.format(trigger)
                     if options['engine'] in ['MySQL','Aurora MySQL']:
-                        yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
+                        if options['includeDelimiters']:
+                            yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
+                        else:
+                            yield '{};\n\n'.format(syntax)
                     else:
                         yield '{};\n\n'.format(syntax)
                 except Exception as e:
@@ -792,7 +795,7 @@ class Client:
                     if syntax:
                         if options['includeDropTable']:
                             yield 'DROP FUNCTION IF EXISTS `{}`;\n\n'.format(function)
-                        if options['engine'] in ['MySQL','Aurora MySQL']:
+                        if options['engine'] in ['MySQL','Aurora MySQL'] and options['includeDelimiters']:
                             yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
                         else:
                             yield '{};\n\n'.format(syntax)
@@ -814,7 +817,7 @@ class Client:
                     if syntax:
                         if options['includeDropTable']:
                             yield 'DROP PROCEDURE IF EXISTS `{}`;\n\n'.format(procedure)
-                        if options['engine'] in ['MySQL','Aurora MySQL']:
+                        if options['engine'] in ['MySQL','Aurora MySQL'] and options['includeDelimiters']:
                             yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
                         else:
                             yield '{};\n\n'.format(syntax)
@@ -835,7 +838,7 @@ class Client:
                     syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
                     if options['includeDropTable']:
                         yield 'DROP EVENT IF EXISTS `{}`;\n\n'.format(event)
-                    if options['engine'] in ['MySQL','Aurora MySQL']:
+                    if options['engine'] in ['MySQL','Aurora MySQL'] and options['includeDelimiters']:
                         yield 'DELIMITER ;;\n{};;\nDELIMITER ;\n\n'.format(syntax)
                     else:
                         yield '{};\n\n'.format(syntax)

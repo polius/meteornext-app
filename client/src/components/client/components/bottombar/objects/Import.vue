@@ -30,9 +30,9 @@
                         <v-col style="margin-left:8px">
                           <span>{{ text }}</span>
                         </v-col>
-                        <v-col v-if="progressTimeValue != null" class="flex-grow-0 flex-shrink-0">
+                        <!-- <v-col v-if="progressTimeValue != null" class="flex-grow-0 flex-shrink-0">
                           <div class="body-1">{{ progressTimeValue.format('HH:mm:ss') }}</div>
-                        </v-col>
+                        </v-col> -->
                       </v-row>
                     </div>
                     <v-card v-if="error.length != 0" style="margin-top:10px">

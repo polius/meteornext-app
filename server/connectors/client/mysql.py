@@ -91,7 +91,7 @@ class MySQL:
         except Exception:
             pass
 
-    def execute(self, query, args=None, database=None, fetch=True):
+    def execute(self, query, args=None, database=None, fetch=True, import_file=False):
         self._is_executing = True
         # Check connection
         try:
@@ -100,10 +100,11 @@ class MySQL:
             self.connect()
         try:
             # Check transaction
-            if query[:17].upper().startswith('START TRANSACTION') or query[:5].upper().startswith('BEGIN'):
-                self._is_transaction = True
-            elif query[:6].upper().startswith('COMMIT') or query[:8].upper().startswith('ROLLBACK'):
-                self._is_transaction = False
+            if not import_file:
+                if query.strip()[:17].upper().startswith('START TRANSACTION') or query.strip()[:5].upper().startswith('BEGIN'):
+                    self._is_transaction = True
+                elif query.strip()[:6].upper().startswith('COMMIT') or query.strip()[:8].upper().startswith('ROLLBACK'):
+                    self._is_transaction = False
             # Execute query
             return self.__execute_query(query, args, database, fetch)
         finally:
