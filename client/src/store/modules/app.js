@@ -50,45 +50,46 @@ const actions = {
     return new Promise((resolve, reject) => {
       axios.post('/login', user)
         .then(response => {
-          if (response.status == 202) resolve(response)
-          var data = {
-            username: response.data.data.username,
-            remember: user['remember'],
-            coins: response.data.data.coins,
-            admin: response.data.data.admin,
-            owner: response.data.data.owner,
-            inventory_enabled: response.data.data.inventory_enabled,
-            inventory_secured: response.data.data.inventory_secured,
-            deployments_enabled: response.data.data.deployments_enabled,
-            deployments_basic: response.data.data.deployments_basic,
-            deployments_pro: response.data.data.deployments_pro,
-            monitoring_enabled: response.data.data.monitoring_enabled,
-            utils_enabled: response.data.data.utils_enabled,
-            client_enabled: response.data.data.client_enabled,
-            coins_execution: response.data.data.coins_execution,
-            coins_day: response.data.data.coins_day,
-          }
-          // Store variables to the local storage
-          localStorage.setItem('username', data['username'])
-          localStorage.setItem('remember', user['remember'] ? '1' : '0')
-          localStorage.setItem('coins', data['coins'])
-          localStorage.setItem('admin', data['admin'])
-          localStorage.setItem('owner', data['owner'])
-          localStorage.setItem('inventory_enabled', data['inventory_enabled'])
-          localStorage.setItem('inventory_secured', data['inventory_secured'])
-          localStorage.setItem('deployments_enabled', data['deployments_enabled'])
-          localStorage.setItem('deployments_basic', data['deployments_basic'])
-          localStorage.setItem('deployments_pro', data['deployments_pro'])
-          localStorage.setItem('monitoring_enabled', data['monitoring_enabled'])
-          localStorage.setItem('utils_enabled', data['utils_enabled'])
-          localStorage.setItem('client_enabled', data['client_enabled'])
-          localStorage.setItem('coins_execution', data['coins_execution'])
-          localStorage.setItem('coins_day', data['coins_day'])
+          if (response.status == 200) {
+            let data = {
+              username: response.data.data.username,
+              remember: user['remember'],
+              coins: response.data.data.coins,
+              admin: response.data.data.admin,
+              owner: response.data.data.owner,
+              inventory_enabled: response.data.data.inventory_enabled,
+              inventory_secured: response.data.data.inventory_secured,
+              deployments_enabled: response.data.data.deployments_enabled,
+              deployments_basic: response.data.data.deployments_basic,
+              deployments_pro: response.data.data.deployments_pro,
+              monitoring_enabled: response.data.data.monitoring_enabled,
+              utils_enabled: response.data.data.utils_enabled,
+              client_enabled: response.data.data.client_enabled,
+              coins_execution: response.data.data.coins_execution,
+              coins_day: response.data.data.coins_day,
+            }
+            // Store variables to the local storage
+            localStorage.setItem('username', data['username'])
+            localStorage.setItem('remember', user['remember'] ? '1' : '0')
+            localStorage.setItem('coins', data['coins'])
+            localStorage.setItem('admin', data['admin'])
+            localStorage.setItem('owner', data['owner'])
+            localStorage.setItem('inventory_enabled', data['inventory_enabled'])
+            localStorage.setItem('inventory_secured', data['inventory_secured'])
+            localStorage.setItem('deployments_enabled', data['deployments_enabled'])
+            localStorage.setItem('deployments_basic', data['deployments_basic'])
+            localStorage.setItem('deployments_pro', data['deployments_pro'])
+            localStorage.setItem('monitoring_enabled', data['monitoring_enabled'])
+            localStorage.setItem('utils_enabled', data['utils_enabled'])
+            localStorage.setItem('client_enabled', data['client_enabled'])
+            localStorage.setItem('coins_execution', data['coins_execution'])
+            localStorage.setItem('coins_day', data['coins_day'])
 
-          // Add the token to the axios lib
-          axios.defaults.headers.common['X-CSRF-TOKEN'] = Cookies.get('csrf_access_token')
-          // Store variables to vuex
-          commit('auth', data)
+            // Add the token to the axios lib
+            axios.defaults.headers.common['X-CSRF-TOKEN'] = Cookies.get('csrf_access_token')
+            // Store variables to vuex
+            commit('auth', data)
+          }
           resolve(response)
         })
         .catch(error => {

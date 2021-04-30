@@ -72,7 +72,7 @@
                       <v-card v-else-if="mfaMode == 'webauthn'">
                         <v-progress-linear v-show="loadingFingerprint" indeterminate></v-progress-linear>
                         <v-card-text>
-                          <div class="text-h5 white--text" style="text-align:center">Verify your identity</div>
+                          <div class="text-h5 font-weight-light white--text" style="text-align:center">Verify your identity</div>
                           <v-icon :style="`display:table; margin-left:auto; margin-right:auto; margin-top:20px; margin-bottom:20px; color:${ webauthn.status == 'init' ? '#046cdc' : webauthn.status == 'ok' ? '#00b16a' : webauthn.status == 'ko' ? '#ff5252' : '#fa8131'}`" size="55">fas fa-fingerprint</v-icon>
                           <div class="text-subtitle-1 white--text" style="text-align:center; font-size:1.1rem !important;">{{ ['init','validating'].includes(webauthn.status) ? 'Touch sensor' : webauthn.status == 'ok' ? 'Fingerprint recognized' : 'Fingerprint not recognized' }}</div>
                         </v-card-text>
