@@ -113,6 +113,7 @@ export default {
       }).catch(() => {}).finally(() => { this.loading = false })
     },
     buildSelectors() {
+      this.name = ''
       // Build Encodings
       this.encodings = [{ text: 'Default (' + this.server.defaults.encoding + ')', value: this.server.defaults.encoding }]
       this.encodings.push({ divider: true })
