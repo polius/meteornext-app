@@ -696,6 +696,11 @@ export default {
           e.preventDefault()
           this.download('editor.txt', this.editor.getValue())
         }
+        // - Add Comments -
+        else if (e.key.toLowerCase() == "c" && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+          e.preventDefault()
+          this.editor.execCommand('togglecomment')
+        }
         // - Disable Default Browser Behaviour -
         else if (e.key.toLowerCase() == "," && (e.ctrlKey || e.metaKey)) {
           e.preventDefault()

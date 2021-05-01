@@ -62,6 +62,7 @@ export default {
         { command: 'Save Editor', binding: 'Ctrl + S', scope: 'Client Editor' },
         { command: 'Increase Font Size', binding: 'Ctrl + +', scope: 'Client Editor' },
         { command: 'Decrease Font Size', binding: 'Ctrl + -', scope: 'Client Editor' },
+        { command: 'Toggle Comment', binding: 'Ctrl + Shift + C', scope: 'Client Editor' },
       ],
     }
   },
