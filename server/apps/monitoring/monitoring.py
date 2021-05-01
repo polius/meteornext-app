@@ -83,9 +83,8 @@ class Monitoring:
             JOIN users u ON u.id = m.user_id AND u.disabled = 0
             JOIN servers s ON s.id = m.server_id AND s.usage LIKE '%%M%%'
             JOIN regions r ON r.id = s.region_id
-			WHERE (ms.server_id IS NULL OR ms.processing = 0)
-            AND (
-                m.processlist_enabled = 1
+            WHERE (
+                (m.processlist_enabled = 1 AND m.processlist_active = 1)
                 OR m.queries_enabled = 1
                 OR m.monitor_enabled = 1 
                 OR m.parameters_enabled = 1
@@ -134,9 +133,6 @@ class Monitoring:
                 diff = (datetime.datetime.utcnow() - server['monitor']['updated']).total_seconds()
                 if server['monitor']['available'] == 0 and diff < 30:
                     return
-
-            # Enable processing
-            self._sql.execute(query="UPDATE monitoring_servers SET processing = 1 WHERE server_id = %s", args=(server['id']))
 
             # Start Connection
             conn = connectors.base.Base({'ssh': server['ssh'], 'sql': server['sql']})
@@ -224,8 +220,6 @@ class Monitoring:
                 """
                 self._sql.execute(query=query, args=(server['id'], summary, summary, params, params, processlist, processlist, utcnow))
         finally:
-            # Disable processing
-            self._sql.execute(query="UPDATE monitoring_servers SET processing = 0 WHERE server_id = %s", args=(server['id']))
             # Stop Connection
             try:
                 conn.stop()
