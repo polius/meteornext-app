@@ -9,7 +9,6 @@ import traceback
 import routes.deployments.deployments
 import routes.deployments.views.basic
 import routes.deployments.views.pro
-
 import apps.monitoring.monitoring
 
 class Cron:
@@ -20,15 +19,11 @@ class Cron:
 
         @app.before_first_request
         def start():
-            # One Time Tasks
-            self.__monitoring_init()
-
-            # Recurring Tasks
+            # Schedule Tasks
             schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
-            schedule.every(1).hour.do(self.__run_threaded, self.__monitoring_clean)
-            schedule.every(10).seconds.do(self.__run_threaded, self.__monitoring_start)
+            schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
 
             # Start Cron Listener
             t = threading.Thread(target=self.__run_schedule)
@@ -111,23 +106,9 @@ class Cron:
         except Exception:
             traceback.print_exc()
 
-    def __monitoring_init(self):
-        try:
-            monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
-            monitoring.init()
-        except Exception:
-            traceback.print_exc()
-
     def __monitoring_clean(self):
         try:
             monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
             monitoring.clean()
-        except Exception:
-            traceback.print_exc()
-
-    def __monitoring_start(self):
-        try:
-            monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
-            monitoring.start()
         except Exception:
             traceback.print_exc()

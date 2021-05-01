@@ -16,10 +16,59 @@ class Monitoring:
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
 
-    def init(self):
-        self._sql.execute(query="UPDATE monitoring_servers SET processing = 0")
-
     def start(self):
+        t = threading.Thread(target=self.__start_monitor)
+        t.daemon = True
+        t.start()
+
+    def clean(self):
+        utcnow = self.__utcnow()
+        # Clean monitoring entries
+        query = """
+            DELETE m
+            FROM monitoring m
+            WHERE monitor_enabled = 0
+            AND parameters_enabled = 0
+            AND processlist_enabled = 0
+            AND queries_enabled = 0
+        """
+        self._sql.execute(query)
+
+        query = """
+            DELETE ms
+            FROM monitoring_servers ms
+            LEFT JOIN monitoring m ON m.server_id = ms.server_id
+            WHERE m.server_id IS NULL
+        """
+        self._sql.execute(query)
+
+        # Clean monitoring events
+        query = """
+            DELETE FROM monitoring_events
+            WHERE DATE_ADD(`time`, INTERVAL 15 DAY) < %s
+        """
+        self._sql.execute(query, args=(utcnow))
+
+        # Clean queries that exceeds the MAX defined data retention
+        query = """
+            DELETE q
+            FROM monitoring_queries q
+            LEFT JOIN
+            (
+                SELECT m.server_id, MAX(s.query_data_retention) AS 'data_retention'
+                FROM monitoring_settings s
+                JOIN monitoring m ON m.user_id = s.user_id
+                GROUP BY m.server_id
+            ) t ON t.server_id = q.server_id
+            WHERE (t.server_id IS NULL AND DATE_ADD(q.first_seen, INTERVAL t.data_retention HOUR) <= %s)
+            OR (t.server_id IS NOT NULL AND DATE_ADD(q.first_seen, INTERVAL 24 HOUR) <= %s);
+        """
+        self._sql.execute(query=query, args=(utcnow, utcnow))
+
+    ####################
+    # Internal Methods #
+    ####################
+    def __start_monitor(self):
         # Get Monitoring Servers
         utcnow = self.__utcnow()
         query = """
@@ -36,7 +85,7 @@ class Monitoring:
             JOIN regions r ON r.id = s.region_id
 			WHERE (ms.server_id IS NULL OR ms.processing = 0)
             AND (
-                (m.processlist_enabled = 1 AND m.processlist_active = 1)
+                m.processlist_enabled = 1
                 OR m.queries_enabled = 1
                 OR m.monitor_enabled = 1 
                 OR m.parameters_enabled = 1
@@ -67,49 +116,9 @@ class Monitoring:
         for t in threads:
             t.join()
 
-    def clean(self):
-        utcnow = self.__utcnow()
-        # Clean monitoring entries
-        query = """
-            DELETE m
-            FROM monitoring m
-            WHERE monitor_enabled = 0 
-            AND parameters_enabled = 0
-            AND processlist_enabled = 0
-            AND queries_enabled = 0
-        """
-        self._sql.execute(query)
-
-        query = """
-            DELETE ms
-            FROM monitoring_servers ms
-            LEFT JOIN monitoring m ON m.server_id = ms.server_id 
-            WHERE m.server_id IS NULL
-        """
-        self._sql.execute(query)
-
-        # Clean monitoring events
-        query = """
-            DELETE FROM monitoring_events
-            WHERE DATE_ADD(`time`, INTERVAL 15 DAY) < %s
-        """
-        self._sql.execute(query, args=(utcnow))
-
-        # Clean queries that exceeds the MAX defined data retention
-        query = """
-            DELETE q
-            FROM monitoring_queries q
-            LEFT JOIN
-            (
-                SELECT m.server_id, MAX(s.query_data_retention) AS 'data_retention'
-                FROM monitoring_settings s
-                JOIN monitoring m ON m.user_id = s.user_id
-                GROUP BY m.server_id
-            ) t ON t.server_id = q.server_id
-            WHERE (t.server_id IS NULL AND DATE_ADD(q.first_seen, INTERVAL t.data_retention HOUR) <= %s)
-            OR (t.server_id IS NOT NULL AND DATE_ADD(q.first_seen, INTERVAL 24 HOUR) <= %s);
-        """
-        self._sql.execute(query=query, args=(utcnow, utcnow))
+        # Wait 10 seconds to monitor again
+        time.sleep(10)
+        self.__start_monitor()
 
     def __monitor_server(self, server):
         # Protect thread against exceptions
@@ -445,13 +454,13 @@ class Monitoring:
         return datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
     def __connect(self, conn):
-        # Establish connection to the server (60 seconds of retries)
-        for i in range(7):
+        # Establish connection to the server (30 seconds of retries)
+        for i in range(4):
             try:
                 conn.test_sql()
                 conn.connect()
                 break
             except Exception:
-                if i == 6:
+                if i == 3:
                     raise
                 time.sleep(10)

@@ -5,7 +5,7 @@ import uuid
 import bcrypt
 import hashlib
 import requests
-import threading
+import traceback
 from datetime import datetime, timedelta
 from flask import request, jsonify, Blueprint
 
@@ -41,6 +41,7 @@ import connectors.pool
 import models.admin.settings
 import models.admin.groups
 import models.admin.users
+import apps.monitoring.monitoring
 from cron import Cron
 
 class Setup:
@@ -69,12 +70,14 @@ class Setup:
             self._license.validate()
             # Register blueprints
             self.__register_blueprints(sql)
-        except Exception as e:
-            print(str(e))
-            self._conf = {}
-        else:
+            # Start monitoring
+            monitoring = apps.monitoring.monitoring.Monitoring(sql)
+            monitoring.start()
             # Init cron
             Cron(self._app, self._license, self._blueprints, sql)
+        except Exception as e:
+            traceback.print_exc()
+            self._conf = {}
 
     def blueprint(self):
         # Init blueprint
