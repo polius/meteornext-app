@@ -297,10 +297,11 @@ export default {
       if ('children' in item) {
         if (item.children.length == 0) this.sidebarSelected = []
       }
-      else if (event.ctrlKey || event.metaKey ) {
-        if (lastElement !== undefined && lastElement.parentId != item.parentId) this.sidebarSelected = [] 
+      else if (event.ctrlKey || event.metaKey) {
+        if ('children' in lastElement || (lastElement !== undefined && lastElement.parentId != item.parentId)) this.sidebarSelected = []
       }
       else if (event.shiftKey) {
+        if ('children' in lastElement) { this.sidebarSelected = []; return }
         // Find last index
         let lastParentIndex = -1
         let lastIndex = -1

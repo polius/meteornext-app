@@ -69,8 +69,12 @@ class Monitoring:
     # Internal Methods #
     ####################
     def __start_monitor(self):
+        while True:
+            time.sleep(10)
+            self.__start_monitor2()
+
+    def __start_monitor2(self):
         # Get Monitoring Servers
-        utcnow = self.__utcnow()
         query = """
             SELECT 
                 s.id, s.name, s.engine, s.hostname, s.port, s.username, s.password,
@@ -86,13 +90,13 @@ class Monitoring:
             WHERE (
                 (m.processlist_enabled = 1 AND m.processlist_active = 1)
                 OR m.queries_enabled = 1
-                OR m.monitor_enabled = 1 
+                OR m.monitor_enabled = 1
                 OR m.parameters_enabled = 1
             )
             GROUP BY m.server_id
-            HAVING needs_update = 1;
+            HAVING needs_update = 1
         """
-        servers_raw = self._sql.execute(query=query, args=(utcnow))
+        servers_raw = self._sql.execute(query=query, args=(self.__utcnow()))
 
         # Build Servers List
         servers = []
@@ -114,10 +118,6 @@ class Monitoring:
 
         for t in threads:
             t.join()
-
-        # Wait 10 seconds to monitor again
-        time.sleep(10)
-        self.__start_monitor()
 
     def __monitor_server(self, server):
         # Protect thread against exceptions

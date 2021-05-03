@@ -17,7 +17,7 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn :loading="loading" @click="removeFolderSubmit" color="primary">Confirm</v-btn>
+                      <v-btn :loading="loading" @click="removeFolderSubmit" color="#00b16a">Confirm</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
                       <v-btn :disabled="loading" @click="dialog = false" color="error">Cancel</v-btn>
