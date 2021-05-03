@@ -7,7 +7,7 @@
       <v-btn :disabled="sidebarLoading" @click="refreshServers" text small title="Refresh Servers" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
       <v-btn :disabled="sidebarLoading" @click="bottomBarClick('new')" text small title="New Server" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-plus</v-icon></v-btn>
-      <v-btn :disabled="sidebarLoading || sidebarSelected.length == 0" @click="bottomBarClick('remove')" text small :title="sidebarSelected.length == 1 ? 'Remove Server' : 'Remove Servers'" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
+      <v-btn :disabled="sidebarLoading || sidebarSelected.length == 0" @click="'children' in sidebarSelected[0] ? bottomBarClick('remove-folder') : bottomBarClick('remove')" text small :title="removeTitle" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-minus</v-icon></v-btn>
       <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
       <v-btn :disabled="sidebarLoading" @click="bottomBarClick('new-folder')" text small title="New Folder" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-folder</v-icon></v-btn>
     </div>
@@ -46,6 +46,14 @@ export default {
       'sidebarLoading',
       'sidebarSelected',
     ], { path: 'client/connection' }),
+    removeTitle: function() {
+      let n = this.sidebarSelected.length
+      if (n > 0) {
+        if ('children' in this.sidebarSelected[0]) return 'Remove Folder'
+        return n == 1 ? 'Remove Server' : 'Remove Servers'
+      }
+      return ''
+    }
   },
   methods: {
     bottomBarClick(option) {

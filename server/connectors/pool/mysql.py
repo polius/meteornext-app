@@ -15,6 +15,7 @@ class MySQL:
             "password": config['sql']['password'],
             "user": config['sql']['username'],
             "charset": "utf8mb4",
+            "use_unicode": True,
             "cursorclass": OrderedDictCursor,
             "autocommit": False,
         }
