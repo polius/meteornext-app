@@ -70,8 +70,8 @@ class Monitoring:
     ####################
     def __start_monitor(self):
         while True:
-            time.sleep(10)
             self.__start_monitor2()
+            time.sleep(10)
 
     def __start_monitor2(self):
         # Get Monitoring Servers

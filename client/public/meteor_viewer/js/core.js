@@ -268,6 +268,9 @@ function onCellKeyDown(e) {
     gridOptions.api.deselectAll()
     node.setSelected(true)
   }
+  else if (e.event.key == 'a' && (e.event.ctrlKey || e.event.metaKey)) {
+    gridOptions.api.selectAll()
+  }
 }
 
 function onFirstDataRendered(params) {
