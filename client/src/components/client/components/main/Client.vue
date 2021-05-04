@@ -324,6 +324,9 @@ export default {
         this.gridApi.client.deselectAll()
         node.setSelected(true)
       }
+      else if (e.event.key == 'a' && (e.event.ctrlKey || e.event.metaKey)) {
+        this.gridApi.client.selectAll()
+      }
     },
     getCurrentPKs(resolve, reject) {
       const payload = { 

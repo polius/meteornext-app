@@ -309,6 +309,9 @@ export default {
         this.gridApi.content.deselectAll()
         node.setSelected(true)
       }
+      else if (e.event.key == 'a' && (e.event.ctrlKey || e.event.metaKey)) {
+        this.gridApi.content.selectAll()
+      }
     },
     onContextMenu(e) {
       e.node.setSelected(true)
