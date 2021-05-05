@@ -183,7 +183,7 @@ export default {
   },
   watch: {
     user: function() {
-      if (this.mode == 'admin' && this.dialog == true && this.user.username != this.username2) this.getMFA()
+      if (this.mode == 'admin' && this.dialog == true && this.user.username.length > 0 && this.user.username != this.username2) this.getMFA()
     },
     mfaDialog: function (val) {
       if (val && this.mfa.mode == null) this.get2FA()
