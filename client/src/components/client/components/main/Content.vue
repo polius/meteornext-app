@@ -649,6 +649,12 @@ export default {
             }
           })
       }
+      else {
+        // Clean vars
+        this.currentCellEditMode = 'edit'
+        this.currentCellEditNode = {}
+        this.currentCellEditValues = {}
+      }
     },
     parseContentBottomBar(data) {
       var elapsed = null

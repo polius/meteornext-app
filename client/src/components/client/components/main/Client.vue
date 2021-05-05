@@ -451,6 +451,11 @@ export default {
               }
             })
         }
+        else {
+          // Clean vars
+          this.currentCellEditNode = {}
+          this.currentCellEditValues = {}
+        }
       })
     },
     editDialogOpen(title, text) {
