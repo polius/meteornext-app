@@ -521,9 +521,13 @@ export default {
           // Get rights
           if (queries[0].startsWith('DROP USER')) new Promise((resolve) => { this.getRights(resolve) })
           else {
-            if (['new','clone'].includes(this.mode)) new Promise((resolve) => { this.getRights(resolve) })
             let user = this.getUser()
-            new Promise((resolve) => { this.getRights(resolve, user.username, user.hostname) })
+            if (['new','clone'].includes(this.mode)) {
+              new Promise((resolve) => { this.getRights(resolve) }).then(() => {
+                new Promise((resolve) => { this.getRights(resolve, user.username, user.hostname) })
+              })
+            }
+            else new Promise((resolve) => { this.getRights(resolve, user.username, user.hostname) })
           }
           resolve()
         })
