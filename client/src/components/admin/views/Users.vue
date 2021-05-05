@@ -77,7 +77,7 @@
       </v-card>
     </v-dialog>
 
-    <MFA :enabled="mfaDialog" @update="mfaDialog = $event" mode="admin" :dialog="dialog" :user="{'username': item.username}"/>
+    <MFA :enabled="mfaDialog" @update="mfaDialog = $event" mode="admin" :dialog="dialog" :user="{'username': mfaUsername}"/>
 
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
@@ -123,6 +123,7 @@ export default {
     // Dialogs
     mfaDialog: false,
     passwordDialog: false,
+    mfaUsername: '',
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(4000),
@@ -152,6 +153,7 @@ export default {
     newUser() {
       this.mode = 'new'
       this.item = { username: '', email: '', password: '', coins: '', group: '', admin: false, disabled: false }
+      this.mfaUsername = ''
       this.dialog_title = 'NEW USER'
       this.dialog = true
     },
@@ -159,6 +161,7 @@ export default {
       this.mode = 'edit'
       let item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item = item
+      this.mfaUsername = item.username
       this.dialog_title = 'EDIT USER'
       this.dialog = true
     },
