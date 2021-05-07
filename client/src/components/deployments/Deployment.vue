@@ -1293,18 +1293,8 @@
       // SHARE RESULTS
       // -------------------------------------
       resultsClipboard() {
-        var textarea = document.createElement('textarea')
-        textarea.textContent = this.url + `/viewer/` + this.deployment['uri']
-        document.body.appendChild(textarea)
-        var selection = document.getSelection()
-        var range = document.createRange()
-        range.selectNode(textarea)
-        selection.removeAllRanges()
-        selection.addRange(range)
-        document.execCommand('copy')
-        selection.removeAllRanges()
-        document.body.removeChild(textarea)
-        this.notification('Deployment URL added to the clipboard', 'primary')
+        navigator.clipboard.writeText(this.url + `/viewer/` + this.deployment['uri'])
+        this.notification('Link copied to clipboard', 'primary')
       },
       resultsShare() {
         // Build parameters
