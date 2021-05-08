@@ -1,14 +1,8 @@
 <template>
-  <v-container>
-    <v-layout text-center wrap>
-      <v-flex xs12 style="margin-top:100px;">
-        <v-avatar :size="200" ><v-img :src="require('../assets/logo.png')" class="my-3" contain height="200"></v-img></v-avatar>
-      </v-flex>
-      <v-flex mb-4 style="margin-top:30px;">
-        <h1 class="display-2 font-weight-bold mb-3"><b>Meteor</b> Next</h1>
-      </v-flex>
-    </v-layout>
-  </v-container>
+  <div style="display:grid; height:100%; align-content:center; text-align:center">
+      <v-avatar size="200" style="margin-left:auto; margin-right:auto"><v-img src="../assets/logo.png"></v-img></v-avatar>
+      <div class="text-h2 font-weight-medium" style="margin:40px">Meteor Next</div>
+  </div>
 </template>
 
 <script>
