@@ -397,7 +397,7 @@ CREATE TABLE `monitoring_events` (
   INDEX `server_id` (`server_id`),
   INDEX `time` (`time`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `client_saved_queries` (
   `id` INT UNSIGNED AUTO_INCREMENT,
@@ -408,7 +408,7 @@ CREATE TABLE `client_saved_queries` (
   INDEX `name` (`name`),
   INDEX `user_id` (`user_id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `client_folders` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -417,7 +417,7 @@ CREATE TABLE `client_folders` (
   PRIMARY KEY (`id`),
   UNIQUE `user_id|name` (`user_id`, `name`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `client_servers` (
   `user_id` INT UNSIGNED NOT NULL,
@@ -429,7 +429,7 @@ CREATE TABLE `client_servers` (
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`),
   FOREIGN KEY (`folder_id`) REFERENCES `client_folders` (`id`)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `client_settings` (
   `user_id` INT UNSIGNED NOT NULL,
@@ -437,4 +437,21 @@ CREATE TABLE `client_settings` (
   `value` VARCHAR(191) NOT NULL,
   PRIMARY KEY (`user_id`, `setting`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `client_queries` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` INT UNSIGNED NOT NULL,
+  `query` TEXT NOT NULL,
+  `database` VARCHAR(191) NULL,
+  `server_id` INT UNSIGNED NOT NULL,
+  `date` DATETIME NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `user_id` (`user_id`),
+  INDEX `query` (`query`(191))
+  INDEX `database` (`database`)
+  INDEX `server_id` (`server_id`),
+  INDEX `date` (`date`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`),
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

@@ -46,8 +46,8 @@ let router = new VueRouter({
         {
           path: '',
           name: 'inventory',
-          component: () => import('../components/inventory/Inventory'),
-          meta: { requiresInventory: true }
+          meta: { requiresInventory: true },
+          redirect: { name: 'inventory.servers' }
         },
         {
           path: 'environments',
@@ -177,14 +177,8 @@ let router = new VueRouter({
         {
           path: '',
           name: 'utils',
-          component: () => import('../components/utils/Utils'),
-          meta: { requiresUtils: true }
-        },
-        {
-          path: 'access',
-          name: 'utils.access',
-          component: () => import('../components/utils/views/Access'),
-          meta: { requiresUtils: true }
+          meta: { requiresUtils: true },
+          redirect: { name: 'utils.compare' }
         },
         {
           path: 'compare',
@@ -221,8 +215,8 @@ let router = new VueRouter({
         {
           path: '',
           name: 'admin',
-          component: () => import('../components/admin/Admin'),
-          meta: { requiresAdmin: true }
+          meta: { requiresAdmin: true },
+          redirect: { name: 'admin.settings' }
         },
         {
           path: 'settings',

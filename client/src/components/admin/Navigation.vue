@@ -2,7 +2,7 @@
   <v-main>
     <div>
       <v-tabs background-color="#323133" color="white" v-model="tabs" slider-color="white" slot="extension" class="elevation-2">
-        <v-tab to="/admin"><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-ankh</v-icon>ADMINISTRATION</span></v-tab>
+        <v-tab disabled to="/admin" style="opacity:1"><span class="pl-2 pr-2 white--text"><v-icon small style="padding-right:10px">fas fa-ankh</v-icon>ADMINISTRATION</span></v-tab>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-tab to="/admin/settings"><span class="pl-2 pr-2">Settings</span></v-tab>
         <v-tab to="/admin/users"><span class="pl-2 pr-2">Users</span></v-tab>
@@ -12,7 +12,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-tab to="/admin/deployments" title="Manage all deployments"><span class="pl-2 pr-2">Deployments</span></v-tab>
         <v-tab to="/admin/monitoring" title="Manage all monitoring"><span class="pl-2 pr-2">Monitoring</span></v-tab>
-        <v-tab to="/admin/utils" title="Manage all utils"><span class="pl-2 pr-2">Utils</span></v-tab>
+        <!-- <v-tab to="/admin/utils" title="Manage all utils"><span class="pl-2 pr-2">Utils</span></v-tab> -->
         <v-tab to="/admin/client" title="Manage all queries"><span class="pl-2 pr-2">Client</span></v-tab>
         <v-divider class="mx-3" inset vertical></v-divider>
       </v-tabs>

@@ -153,6 +153,9 @@
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
                 <v-switch v-model="group.client_enabled" label="Access Client" color="info" style="margin-top:0px;"></v-switch>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px">TRACKING</div>
+                <v-switch v-model="group.client_tracking" label="Track Queries" color="#fa8231" style="margin-top:0px; padding-bottom:20px" hide-details></v-switch>
+                <v-text-field v-if="group.client_tracking" v-model="group.client_tracking_retention" label="Data Retention Timeframe (days)" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -262,7 +265,9 @@ export default {
       deployments_slack_url: '',
       monitoring_enabled: false,
       utils_enabled: false,
-      client_enabled: false
+      client_enabled: false,
+      client_tracking: false,
+      client_tracking_retention: 1,
     },
     toolbar_title: '',
     form_valid: false,
