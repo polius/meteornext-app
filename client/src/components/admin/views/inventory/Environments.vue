@@ -1,6 +1,13 @@
 <template>
   <div>
     <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="filter.search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1">
+      <template v-ripple v-slot:[`header.data-table-select`]="{}">
+        <v-simple-checkbox
+          :value="items.length == 0 ? false : selected.length == items.length"
+          :indeterminate="selected.length > 0 && selected.length != items.length"
+          @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
+        </v-simple-checkbox>
+      </template>
       <template v-slot:[`item.servers`]="{ item }">
         <span class="font-weight-medium">{{item.servers}}</span>
       </template>
@@ -479,7 +486,7 @@ export default {
     },
     tab(val) {
       this.selected = []
-      if (val == 0) this.getEnvironments()
+      if (val == 2) this.getEnvironments()
     },
     treeviewFiltered() {
       if (this.item.shared && this.treeviewItems.length > 0) {

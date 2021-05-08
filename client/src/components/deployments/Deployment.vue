@@ -275,6 +275,13 @@
                     </v-toolbar>
                     <v-divider></v-divider>
                     <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="id" :show-select="information_dialog_mode != 'parameters'" :hide-default-header="information_dialog_mode == 'parameters'" :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1">
+                      <template v-ripple v-slot:[`header.data-table-select`]="{}">
+                        <v-simple-checkbox
+                          :value="information_dialog_data.queries.length == 0 ? false : information_dialog_query_selected.length == information_dialog_data.queries.length"
+                          :indeterminate="information_dialog_query_selected.length > 0 && information_dialog_query_selected.length != information_dialog_data.queries.length"
+                          @click="information_dialog_query_selected.length == information_dialog_data.queries.length ? information_dialog_query_selected = [] : information_dialog_query_selected = JSON.parse(JSON.stringify(information_dialog_data.queries))">
+                        </v-simple-checkbox>
+                      </template>
                     </v-data-table>
                   </v-card>
                   <div v-if="deployment['mode'] == 'PRO'" style="margin-top:-5px; margin-bottom:10px;">

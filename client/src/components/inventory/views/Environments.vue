@@ -18,6 +18,13 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
+        <template v-ripple v-slot:[`header.data-table-select`]="{}">
+          <v-simple-checkbox
+            :value="items.length == 0 ? false : selected.length == items.length"
+            :indeterminate="selected.length > 0 && selected.length != items.length"
+            @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
+          </v-simple-checkbox>
+        </template>
         <template v-slot:[`item.servers`]="{ item }">
           <div v-for="server in item.servers" :key="server.id" style="margin-left:0px; padding-left:0px; float:left; margin-right:5px; padding-top:3px; padding-bottom:3px;">
             <v-chip outlined label :color="server.color" style="margin-left:0px;"><span class="font-weight-medium" style="padding-right:4px;">{{ server.server }}</span> - {{ server.region }}</v-chip>

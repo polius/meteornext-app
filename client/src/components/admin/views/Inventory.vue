@@ -8,9 +8,9 @@
           <v-btn @click="filterClick" text class="body-2" :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-search</v-icon>FILTER</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-tabs v-model="tab" background-color="transparent" color="white" slider-color="white" slot="extension">
-            <v-tab>ENVIRONMENTS</v-tab>
-            <v-tab>REGIONS</v-tab>
             <v-tab>SERVERS</v-tab>
+            <v-tab>REGIONS</v-tab>
+            <v-tab>ENVIRONMENTS</v-tab>
             <v-tab>AUXILIARY</v-tab>
           </v-tabs>
           <v-divider class="mx-3" inset vertical></v-divider>
@@ -24,9 +24,9 @@
         <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
         <v-btn @click="filterColumnsClick" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <Environments v-show="tab == 0" :tab="tab" :groups="groups" :filter="filter"/>
+      <Servers v-show="tab == 0" :tab="tab" :groups="groups" :filter="filter"/>
       <Regions v-show="tab == 1" :tab="tab" :groups="groups" :filter="filter"/>
-      <Servers v-show="tab == 2" :tab="tab" :groups="groups" :filter="filter"/>
+      <Environments v-show="tab == 2" :tab="tab" :groups="groups" :filter="filter"/>
       <Auxiliary v-show="tab == 3" :tab="tab" :groups="groups" :filter="filter"/>
     </v-card>
     <!------------------->
@@ -123,33 +123,33 @@ export default {
         })
     },
     newClick() {
-      if (this.tab == 0) EventBus.$emit('new-environment')
+      if (this.tab == 0) EventBus.$emit('new-server')
       else if (this.tab == 1) EventBus.$emit('new-region')
-      else if (this.tab == 2) EventBus.$emit('new-server')
+      else if (this.tab == 2) EventBus.$emit('new-environment')
       else if (this.tab == 3) EventBus.$emit('new-auxiliary')
     },
     cloneClick() {
-      if (this.tab == 0) EventBus.$emit('clone-environment')
+      if (this.tab == 0) EventBus.$emit('clone-server')
       else if (this.tab == 1) EventBus.$emit('clone-region')
-      else if (this.tab == 2) EventBus.$emit('clone-server')
+      else if (this.tab == 2) EventBus.$emit('clone-environment')
       else if (this.tab == 3) EventBus.$emit('clone-auxiliary')
     },
     editClick() {
-      if (this.tab == 0) EventBus.$emit('edit-environment')
+      if (this.tab == 0) EventBus.$emit('edit-server')
       else if (this.tab == 1) EventBus.$emit('edit-region')
-      else if (this.tab == 2) EventBus.$emit('edit-server')
+      else if (this.tab == 2) EventBus.$emit('edit-environment')
       else if (this.tab == 3) EventBus.$emit('edit-auxiliary')
     },
     deleteClick() {
-      if (this.tab == 0) EventBus.$emit('delete-environment')
+      if (this.tab == 0) EventBus.$emit('delete-server')
       else if (this.tab == 1) EventBus.$emit('delete-region')
-      else if (this.tab == 2) EventBus.$emit('delete-server')
+      else if (this.tab == 2) EventBus.$emit('delete-environment')
       else if (this.tab == 3) EventBus.$emit('delete-auxiliary')
     },
     filterColumnsClick() {
-      if (this.tab == 0) EventBus.$emit('filter-environment-columns')
+      if (this.tab == 0) EventBus.$emit('filter-server-columns')
       else if (this.tab == 1) EventBus.$emit('filter-region-columns')
-      else if (this.tab == 2) EventBus.$emit('filter-server-columns')
+      else if (this.tab == 2) EventBus.$emit('filter-environment-columns')
       else if (this.tab == 3) EventBus.$emit('filter-auxiliary-columns')
     },
     filterClick() {
@@ -161,9 +161,9 @@ export default {
         this.loading = false
         return
       }
-      if (this.tab == 0) EventBus.$emit('filter-environments')
+      if (this.tab == 0) EventBus.$emit('filter-servers')
       else if (this.tab == 1) EventBus.$emit('filter-regions')
-      else if (this.tab == 2) EventBus.$emit('filter-servers')
+      else if (this.tab == 2) EventBus.$emit('filter-environments')
       else if (this.tab == 3) EventBus.$emit('filter-auxiliary')
       this.filterApplied = true
       this.dialog = false
@@ -171,9 +171,9 @@ export default {
     clearFilter() {
       this.filter = { search: '', group: null, scope: 'all' }
       this.$nextTick(() => {
-        if (this.tab == 0) EventBus.$emit('filter-environments')
+        if (this.tab == 0) EventBus.$emit('filter-servers')
         else if (this.tab == 1) EventBus.$emit('filter-regions')
-        else if (this.tab == 2) EventBus.$emit('filter-servers')
+        else if (this.tab == 2) EventBus.$emit('filter-environments')
         else if (this.tab == 3) EventBus.$emit('filter-auxiliary')
       })
       this.filterApplied = false
