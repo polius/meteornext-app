@@ -17,7 +17,15 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;"></v-data-table>
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
+        <template v-ripple v-slot:[`header.data-table-select`]="{}">
+          <v-simple-checkbox
+            :value="items.length == 0 ? false : selected.length == items.length"
+            :indeterminate="selected.length > 0 && selected.length != items.length"
+            @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
+          </v-simple-checkbox>
+        </template>
+      </v-data-table>
     </v-card>
 
     <v-dialog v-model="dialog" persistent max-width="768px">

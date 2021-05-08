@@ -34,7 +34,15 @@
                 </v-toolbar-items>
               </v-toolbar>
               <v-divider></v-divider>
-              <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="id" show-select :hide-default-footer="query_items.length < 11" class="elevation-1"></v-data-table>
+              <v-data-table v-model="query_selected" :headers="query_headers" :items="query_items" item-key="id" show-select :hide-default-footer="query_items.length < 11" class="elevation-1">
+                <template v-ripple v-slot:[`header.data-table-select`]="{}">
+                  <v-simple-checkbox
+                    :value="query_items.length == 0 ? false : query_selected.length == query_items.length"
+                    :indeterminate="query_selected.length > 0 && query_selected.length != query_items.length"
+                    @click="query_selected.length == query_items.length ? query_selected = [] : query_selected = JSON.parse(JSON.stringify(query_items))">
+                  </v-simple-checkbox>
+                </template>
+              </v-data-table>
             </v-card>
 
             <!-- PARAMETERS -->

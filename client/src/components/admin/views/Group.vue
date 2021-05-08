@@ -70,6 +70,13 @@
                   <v-text-field :disabled="mode == 'clone'" v-model="ownersSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                 </v-toolbar>
                 <v-data-table v-model="ownersSelected" :headers="ownersHeaders" :items="ownersItems" :search="ownersSearch" item-key="username" class="elevation-1" no-data-text="No owners created" hide-detault-header hide-default-footer show-select disable-pagination>
+                  <template v-ripple v-slot:[`header.data-table-select`]="{}">
+                    <v-simple-checkbox
+                      :value="ownersItems.length == 0 ? false : ownersSelected.length == ownersItems.length"
+                      :indeterminate="ownersSelected.length > 0 && ownersSelected.length != ownersItems.length"
+                      @click="ownersSelected.length == ownersItems.length ? ownersSelected = [] : ownersSelected = JSON.parse(JSON.stringify(ownersItems))">
+                    </v-simple-checkbox>
+                  </template>
                 </v-data-table>
               </v-card-text>
             </v-card>

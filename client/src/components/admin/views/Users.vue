@@ -17,6 +17,13 @@
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="username" show-select class="elevation-1" style="padding-top:3px;">
+        <template v-ripple v-slot:[`header.data-table-select`]="{}">
+          <v-simple-checkbox
+            :value="items.length == 0 ? false : selected.length == items.length"
+            :indeterminate="selected.length > 0 && selected.length != items.length"
+            @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
+          </v-simple-checkbox>
+        </template>
         <template v-slot:[`item.mfa`]="{ item }">
           <v-icon v-if="item.mfa" :title="`MFA Enabled (${item.mfa == '2fa' ? 'Virtual 2FA Device' : 'Security Key'})`" small color="#00b16a" style="margin-left:4px;">fas fa-lock</v-icon>
           <v-icon v-else small title="MFA Disabled" color="error" style="margin-left:4px;">fas fa-unlock</v-icon>
@@ -118,6 +125,7 @@ export default {
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
+    now: moment.utc(),
     // User Groups
     groups: [],
     // Dialogs
@@ -281,7 +289,7 @@ export default {
     },
     isOnline(last_ping) {
       if (last_ping == null) return false
-      return moment(last_ping).add(70,'seconds') >= moment.utc()
+      return moment(last_ping).add(70,'seconds') >= this.now
     },
     lastOnline(item) {
       if (item['last_login'] == null) return 'not logged in'

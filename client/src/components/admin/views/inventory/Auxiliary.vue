@@ -1,6 +1,13 @@
 <template>
   <div>
     <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="filter.search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
+      <template v-ripple v-slot:[`header.data-table-select`]="{}">
+        <v-simple-checkbox
+          :value="items.length == 0 ? false : selected.length == items.length"
+          :indeterminate="selected.length > 0 && selected.length != items.length"
+          @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
+        </v-simple-checkbox>
+      </template>
       <template v-slot:[`item.shared`]="{ item }">
         <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
         <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
