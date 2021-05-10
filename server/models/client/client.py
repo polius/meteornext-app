@@ -1,3 +1,5 @@
+from datetime import datetime
+
 class Client:
     def __init__(self, sql):
         self._sql = sql
@@ -190,3 +192,10 @@ class Client:
                 ) AS exist
             """
             return self._sql.execute(query, (folder['name'], user_id))[0]['exist']
+
+    def track_query(self, user_id, server_id, database, query, status, records=None, elapsed=None, error=None):
+        query2 = """
+            INSERT INTO client_queries (`date`, `user_id`, `server_id`, `database`, `query`, `status`, `records`, `elapsed`, `error`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        return self._sql.execute(query2, (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_id, server_id, database, query, status, records, elapsed, error))

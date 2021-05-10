@@ -10,6 +10,7 @@ import utils
 import datetime
 from itertools import repeat
 import models.admin.users
+import models.admin.groups
 import models.client.client
 import connectors.client
 
@@ -19,6 +20,7 @@ class Client:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
+        self._groups = models.admin.groups.Groups(sql)
         self._client = models.client.client.Client(sql)
         # Init connections
         self._connections = connectors.client.Client(app)
@@ -222,6 +224,9 @@ class Client:
             # Get User
             user = self._users.get(get_jwt_identity())[0]
 
+            # Get Group
+            group = self._groups.get(group_id=user['group_id'])[0]
+
             # Check user privileges
             if user['disabled'] or not user['client_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
@@ -249,6 +254,7 @@ class Client:
                 elif use_database is not None:
                     database = use_database
                 try:
+                    # Execute query
                     result = conn.execute(query=query, database=database)
                     result['query'] = query
                     result['database'] = database
@@ -261,8 +267,14 @@ class Client:
                         result['pks'] = pks
                     conn.commit()
                     execution.append(result)
+                    # Track query
+                    if group['client_tracking'] and (group['client_tracking_algorithm'] == 1 or query.strip()[:6].upper() != 'SELECT'):
+                        self._client.track_query(user_id=user['id'], server_id=client_json['server'], database=database, query=query, status=1, records=result['rowCount'], elapsed=result['time'])
 
                 except Exception as e:
+                    # Track query
+                    if group['client_tracking'] and (group['client_tracking_algorithm'] == 1 or query.strip()[:6].upper() != 'SELECT'):
+                        self._client.track_query(user_id=user['id'], server_id=client_json['server'], database=database, query=query, status=0, error=str(e))
                     errors = True
                     result = {'query': query, 'database': database, 'error': str(e)}
                     execution.append(result)

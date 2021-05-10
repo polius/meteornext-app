@@ -31,6 +31,9 @@ CREATE TABLE `groups` (
   `monitoring_enabled` tinyint(1) NOT NULL DEFAULT '0',
   `utils_enabled` tinyint(1) NOT NULL DEFAULT '0',
   `client_enabled` tinyint(1) NOT NULL DEFAULT '0',
+  `client_tracking` tinyint(1) NOT NULL DEFAULT '0',
+  `client_tracking_retention` INT UNSIGNED NOT NULL DEFAULT '1',
+  `client_tracking_algorithm` INT UNSIGNED NOT NULL DEFAULT '1',
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,
@@ -440,18 +443,23 @@ CREATE TABLE `client_settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `client_queries` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` INT UNSIGNED NOT NULL,
-  `query` TEXT NOT NULL,
-  `database` VARCHAR(191) NULL,
-  `server_id` INT UNSIGNED NOT NULL,
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `date` DATETIME NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `server_id` INT UNSIGNED NOT NULL,
+  `database` VARCHAR(191) NULL,
+  `query` TEXT NOT NULL,
+  `status` TINYINT(1) NOT NULL,
+  `records` INT UNSIGNED NULL,
+  `elapsed` VARCHAR(191) NULL,
+  `error` TEXT NULL,
   PRIMARY KEY (`id`),
-  INDEX `user_id` (`user_id`),
-  INDEX `query` (`query`(191))
-  INDEX `database` (`database`)
-  INDEX `server_id` (`server_id`),
   INDEX `date` (`date`),
+  INDEX `user_id` (`user_id`),
+  INDEX `server_id` (`server_id`),
+  INDEX `database` (`database`),
+  INDEX `query` (`query`(191)),
+  INDEX `status` (`status`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`),
+  FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

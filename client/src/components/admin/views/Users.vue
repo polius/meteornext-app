@@ -134,7 +134,7 @@ export default {
     mfaUsername: '',
     // Snackbar
     snackbar: false,
-    snackbarTimeout: Number(4000),
+    snackbarTimeout: Number(3000),
     snackbarText: '',
     snackbarColor: ''
   }),
