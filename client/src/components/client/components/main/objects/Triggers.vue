@@ -152,29 +152,27 @@ export default {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
         let selectedRows = this.gridApi.objects.triggers.getSelectedRows()
         if (selectedRows.length > 1) {
+          // Copy values
           let header = Object.keys(selectedRows[0])
           let value = selectedRows.map(row => header.map(fieldName => row[fieldName] == null ? 'NULL' : row[fieldName]).join('\t')).join('\n')
           navigator.clipboard.writeText(value)
+          // Apply effect
+          // this.gridApi.objects.triggers.flashCells({
+          //   rowNodes: this.gridApi.objects.triggers.getSelectedNodes(),
+          //   flashDelay: 200,
+          //   fadeDelay: 200,
+          // })
         }
         else {
+          // Copy value
           navigator.clipboard.writeText(e.value)
-
-          // Highlight cells
-          e.event.target.classList.add('ag-cell-highlight')
-          e.event.target.classList.remove('ag-cell-highlight-animation')
-
-          // Add animation
-          window.setTimeout(function () {
-            e.event.target.classList.remove('ag-cell-highlight')
-            e.event.target.classList.add('ag-cell-highlight-animation')
-            e.event.target.style.transition = "background-color " + 200 + "ms"
-
-            // Remove animation
-            window.setTimeout(function () {
-              e.event.target.classList.remove('ag-cell-highlight-animation')
-              e.event.target.style.transition = null;
-            }, 200);
-          }, 200);
+          // Apply effect
+          this.gridApi.objects.triggers.flashCells({
+            rowNodes: this.gridApi.objects.triggers.getSelectedNodes(),
+            columns: [this.gridApi.objects.triggers.getFocusedCell().column.colId],
+            flashDelay: 200,
+            fadeDelay: 200,
+          })
         }
       }
       else if (['ArrowUp','ArrowDown'].includes(e.event.key)) {
