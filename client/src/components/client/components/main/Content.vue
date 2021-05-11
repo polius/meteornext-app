@@ -408,7 +408,7 @@ export default {
           })
         }
       }
-      this.contentHeaders = []
+      this.gridApi.content.setColumnDefs([])
       this.contentHeaders = headers
       this.contentItems = items
       this.isRowSelected = false
