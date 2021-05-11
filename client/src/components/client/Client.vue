@@ -119,6 +119,9 @@
 ::v-deep .ag-cell-null {
   color: gray;
 }
+::v-deep .ag-theme-alpine-dark .ag-cell-data-changed {
+  background-color:#2196f3 !important;
+}
 ::v-deep tr:hover {
   background-color: transparent !important;
 }

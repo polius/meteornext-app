@@ -200,24 +200,15 @@ export default {
     },
     onCellKeyDown(e) {
       if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
+        // Copy value
         navigator.clipboard.writeText(e.value)
-
-        // Highlight cells
-        e.event.target.classList.add('ag-cell-highlight');
-        e.event.target.classList.remove('ag-cell-highlight-animation')
-
-        // Add animation
-        window.setTimeout(function () {
-          e.event.target.classList.remove('ag-cell-highlight')
-          e.event.target.classList.add('ag-cell-highlight-animation')
-          e.event.target.style.transition = "background-color " + 200 + "ms"
-
-          // Remove animation
-          window.setTimeout(function () {
-            e.event.target.classList.remove('ag-cell-highlight-animation')
-            e.event.target.style.transition = null;
-          }, 200);
-        }, 200);
+        // Apply effect
+        this.gridApi.flashCells({
+          rowNodes: this.gridApi.getSelectedNodes(),
+          columns: [this.gridApi.getFocusedCell().column.colId],
+          flashDelay: 200,
+          fadeDelay: 200,
+        })
       }
       else if (e.event.key == "Enter") this.editRights(e.data, e.rowIndex)
       else if (['ArrowUp','ArrowDown'].includes(e.event.key)) {
