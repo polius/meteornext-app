@@ -47,7 +47,7 @@
             </v-list-item-group>
           </v-list>
         </v-menu>
-        <v-text-field v-if="sidebarMode == 'objects' && sidebarItems.length > 0" :disabled="sidebarMode == 'objects' && database.length == 0" v-model="sidebarSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
+        <v-text-field v-if="sidebarMode == 'objects' && sidebarItems.length > 0" :disabled="sidebarMode == 'objects' && database.length == 0" @input="sidebarSearchChanged" v-model="sidebarSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
       </div>
     </div>
     <!---------------------------->
@@ -582,6 +582,15 @@ export default {
       // // Calculate autocomplete width
       // let width = Math.max(...(data.map(el => el.value.length + el.meta.length)))
       // this.editor.completer.popup.container.style.width='min(35vw, ' + (width*9+50) + 'px)'
+    },
+    sidebarSearchChanged(search) {
+      let occurrences = this.sidebarItems.reduce((a, v) => {
+        a[v.id] = v.children.reduce((a2, v2) => (v2.name.includes(search) ? a2 + 1 : a2), 0)
+        return a
+      }, {})
+      for (let i = 0; i < this.sidebarItems.length; ++i) {
+        this.sidebarItems[i].name = this.sidebarItems[i].id.charAt(0).toUpperCase() + this.sidebarItems[i].id.slice(1) + ' (' + occurrences[this.sidebarItems[i].id] + ')'
+      }
     },
     refreshObjects(resolve, reject) {
       new Promise((res, rej) => this.getDatabases(this.server, res, rej))
