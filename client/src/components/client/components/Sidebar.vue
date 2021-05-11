@@ -23,7 +23,7 @@
         <div class="body-2">Click the + button to add servers</div>
       </div>
       <div v-else-if="sidebarMode == 'servers' || database.length > 0" style="height:100%">
-        <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" :search="sidebarSearch" activatable multiple-active open-on-click transition return-object class="clear_shadow" :style="`${sidebarMode == 'servers' ? `height:calc(100% - 107px)` : `height:calc(100% - 162px)`}; width:100%; overflow-y:auto;`">
+        <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" activatable multiple-active open-on-click transition return-object class="clear_shadow" :style="`${sidebarMode == 'servers' ? `height:calc(100% - 107px)` : `height:calc(100% - 162px)`}; width:100%; overflow-y:auto;`">
           <template v-slot:label="{item, open}">
             <v-btn text @click="sidebarClicked($event, item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
               <v-icon v-if="'children' in item && sidebarMode == 'servers'" small style="padding:10px;">{{ open ? 'fas fa-folder-open' : 'fas fa-folder' }}</v-icon>
@@ -175,6 +175,7 @@ export default {
       'databaseItems',
       'tableItems',
       'sidebarItems',
+      'sidebarOrigin',
       'sidebarSearch',
       'sidebarMode',
       'sidebarOpened',
@@ -380,8 +381,8 @@ export default {
           servers[index]['children'].push(server)
         }
       }
-      this.servers = servers.slice(0)
-      this.sidebarItems = servers.slice(0)
+      this.servers = JSON.parse(JSON.stringify(servers))
+      this.sidebarItems = JSON.parse(JSON.stringify(servers))
       // Parse Servers List
       this.serversList = data.servers.map(x => ({ id: x.id, name: x.name, shared: x.shared, folder: x.folder_name }))
     },
@@ -453,6 +454,7 @@ export default {
       this.sidebarSelected = []
       this.sidebarOpened = []
       this.sidebarItems = []
+      this.sidebarOrigin = []
       // Clear Tab
       this.headerTab = 0
       this.headerTabSelected = 'client'
@@ -549,7 +551,8 @@ export default {
         objects[5]['children'].push({ id: 'event|' + event['name'], ...event, type: 'Event', parentId: 'events' })
         completer.push({ value: event['name'], meta: 'Event' })
       }
-      current.sidebarItems = objects
+      current.sidebarItems = JSON.parse(JSON.stringify(objects))
+      current.sidebarOrigin = JSON.parse(JSON.stringify(objects))
 
       // Add objects to the editor autocompleter
       this.editorAddCompleter('objects', completer)
@@ -584,13 +587,14 @@ export default {
       // this.editor.completer.popup.container.style.width='min(35vw, ' + (width*9+50) + 'px)'
     },
     sidebarSearchChanged(search) {
-      let occurrences = this.sidebarItems.reduce((a, v) => {
-        a[v.id] = v.children.reduce((a2, v2) => (v2.name.includes(search) ? a2 + 1 : a2), 0)
-        return a
-      }, {})
-      for (let i = 0; i < this.sidebarItems.length; ++i) {
-        this.sidebarItems[i].name = this.sidebarItems[i].id.charAt(0).toUpperCase() + this.sidebarItems[i].id.slice(1) + ' (' + occurrences[this.sidebarItems[i].id] + ')'
+      // Get items filtered
+      let items = JSON.parse(JSON.stringify(this.sidebarOrigin))
+      for (let i = 0; i < items.length; ++i) {
+        items[i].children = items[i].children.filter(x => x.name.includes(search))
+        items[i].name = items[i].id.charAt(0).toUpperCase() + items[i].id.slice(1) + ' (' + items[i].children.length + ')'
       }
+      // Assign filtered data
+      this.sidebarItems = items
     },
     refreshObjects(resolve, reject) {
       new Promise((res, rej) => this.getDatabases(this.server, res, rej))

@@ -24,6 +24,7 @@ const connection = {
 
   // Sidebar
   sidebarItems: [],
+  sidebarOrigin: [],
   sidebarSelected: [],
   sidebarOpened: [],
   sidebarMode: 'servers',
