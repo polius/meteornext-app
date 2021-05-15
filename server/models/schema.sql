@@ -33,7 +33,7 @@ CREATE TABLE `groups` (
   `client_enabled` tinyint(1) NOT NULL DEFAULT '0',
   `client_tracking` tinyint(1) NOT NULL DEFAULT '0',
   `client_tracking_retention` INT UNSIGNED NOT NULL DEFAULT '1',
-  `client_tracking_algorithm` INT UNSIGNED NOT NULL DEFAULT '1',
+  `client_tracking_method` INT UNSIGNED NOT NULL DEFAULT '1',
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,
