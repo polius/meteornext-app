@@ -19,11 +19,11 @@
       <v-autocomplete v-else ref="database" v-model="database" :loading="sidebarLoadingServer" :disabled="sidebarLoading || databaseItems.length == 0" @change="databaseChanged" solo :items="databaseItems" label="Database" auto-select-first hide-details background-color="#303030" height="48px" :menu-props="{maxHeight: 'calc(100% - 263px)'}" style="padding:10px;"></v-autocomplete>
       <div v-if="sidebarMode == 'servers' || database.length != 0" class="subtitle-2" style="padding-left:10px; padding-top:8px; padding-bottom:8px; color:rgb(222,222,222);">{{ (sidebarMode == 'servers') ? 'SERVERS' : 'OBJECTS' }}<v-progress-circular v-if="sidebarLoading" indeterminate size="15" width="2" style="margin-left:15px;"></v-progress-circular></div>
       <div v-else-if="database.length == 0" class="body-2" style="padding-left:20px; padding-top:10px; padding-bottom:7px; color:rgb(222,222,222);"><v-icon small style="padding-right:10px; padding-bottom:4px;">fas fa-arrow-up</v-icon>Select a database</div>
-      <div v-if="sidebarMode == 'servers' && sidebarItems.length == 0 && !sidebarLoading" style="display:flex; justify-content:center; align-items:center; height:calc(100% - 158px)">
-        <div class="body-2">Click the + button to add servers</div>
+      <div v-if="sidebarItems.length == 0 && !sidebarLoading" style="display:flex; justify-content:center; align-items:center; height:calc(100% - 162px)">
+        <div class="body-2">{{ sidebarMode == 'servers' ? 'Click the + button to add servers' : 'The search returned no results' }}</div>
       </div>
-      <div v-else-if="sidebarMode == 'servers' || database.length > 0" style="height:100%">
-        <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" activatable multiple-active open-on-click transition return-object class="clear_shadow" :style="`${sidebarMode == 'servers' ? `height:calc(100% - 107px)` : `height:calc(100% - 162px)`}; width:100%; overflow-y:auto;`">
+      <div v-else-if="sidebarMode == 'servers' || database.length > 0" :style="`${sidebarMode == 'servers' ? `height:calc(100% - 107px)` : `height:calc(100% - 162px)`};`">
+        <v-treeview :active.sync="sidebarSelected" item-key="id" :open.sync="sidebarOpened" :items="sidebarItems" activatable multiple-active open-on-click transition return-object class="clear_shadow" style="height:100%; width:100%; overflow-y:auto;`">
           <template v-slot:label="{item, open}">
             <v-btn text @click="sidebarClicked($event, item)" @contextmenu="showContextMenu($event, item)" style="font-size:14px; text-transform:none; font-weight:400; width:100%; justify-content:left; padding:0px;"> 
               <v-icon v-if="'children' in item && sidebarMode == 'servers'" small style="padding:10px;">{{ open ? 'fas fa-folder-open' : 'fas fa-folder' }}</v-icon>
@@ -47,8 +47,8 @@
             </v-list-item-group>
           </v-list>
         </v-menu>
-        <v-text-field v-if="sidebarMode == 'objects' && sidebarItems.length > 0" :disabled="sidebarMode == 'objects' && database.length == 0" @input="sidebarSearchChanged" v-model="sidebarSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
       </div>
+      <v-text-field v-if="sidebarMode == 'objects' && database.length > 0" :disabled="sidebarMode == 'objects' && database.length == 0" @input="sidebarSearchChanged" v-model="sidebarSearch" label="Search" dense solo hide-details height="38px" style="float:left; width:100%; padding:10px;"></v-text-field>
     </div>
     <!---------------------------->
     <!-- CONTEXT MENU - DIALOGs -->
@@ -570,6 +570,9 @@ export default {
 
       // Add objects to the editor autocompleter
       this.editorAddCompleter('objects', completer)
+
+      // Apply search filter
+      this.sidebarSearchChanged(this.sidebarSearch)
     },
     editorAddCompleter(object, data) {
       const completer = {
@@ -603,9 +606,12 @@ export default {
     sidebarSearchChanged(search) {
       // Get items filtered
       let items = JSON.parse(JSON.stringify(this.sidebarOrigin))
-      for (let i = 0; i < items.length; ++i) {
-        items[i].children = items[i].children.filter(x => x.name.includes(search))
-        items[i].name = items[i].id.charAt(0).toUpperCase() + items[i].id.slice(1) + ' (' + items[i].children.length + ')'
+      if (search.length > 0) {
+        for (let i = items.length - 1; i >= 0; --i) {
+          items[i].children = items[i].children.filter(x => x.name.includes(search))
+          items[i].name = items[i].id.charAt(0).toUpperCase() + items[i].id.slice(1) + ' (' + items[i].children.length + ')'
+          if (items[i].children.length == 0) items.splice(i, 1)
+        }
       }
       // Assign filtered data
       this.sidebarItems = items
