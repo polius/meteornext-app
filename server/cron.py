@@ -24,6 +24,7 @@ class Cron:
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
+            schedule.every().day.at("00:00").do(self.__run_threaded, self.__client_clean)
 
             # Start Cron Listener
             t = threading.Thread(target=self.__run_schedule)
@@ -110,5 +111,19 @@ class Cron:
         try:
             monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
             monitoring.clean()
+        except Exception:
+            traceback.print_exc()
+
+    def __client_clean(self):
+        try:
+            query = """
+                DELETE cq
+                FROM client_queries cq
+                JOIN users u ON u.id = cq.user_id
+                JOIN groups g ON g.id = u.group_id
+                WHERE g.client_tracking = 1
+                AND DATE_ADD(DATE(cq.date), INTERVAL g.client_tracking_retention DAY) <= CURRENT_DATE
+            """
+            self._sql.execute(query)
         except Exception:
             traceback.print_exc()

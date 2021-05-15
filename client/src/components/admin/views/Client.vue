@@ -5,7 +5,9 @@
         <v-toolbar-title class="body-2 white--text font-weight-medium"><v-icon small style="margin-right:10px">fas fa-bolt</v-icon>CLIENT</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn @click="serversDialog = true" text class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn text class="body-2"><v-icon small style="padding-right:10px">fas fa-database</v-icon>QUERIES</v-btn>
+          <v-btn @click="serversDialog = true" text class="body-2"><v-icon small style="padding-right:10px">fas fa-server</v-icon>SERVERS</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="filterDialog = true" text class="body-2" :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn @click="refresh" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
