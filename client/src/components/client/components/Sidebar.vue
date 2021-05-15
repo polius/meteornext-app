@@ -256,6 +256,11 @@ export default {
         }, 200)
       }).then((data) => {
         setTimeout(() => {
+          if (item.children !== undefined && item.children.length == 0) {
+            this.headerTab = 0
+            this.headerTabSelected = 'client'
+            this.editor.focus()
+          }
           // Single Click
           if (data == 'single' && item.children === undefined) {
             if (this.sidebarSelected.length > 1) {
@@ -264,10 +269,19 @@ export default {
               this.editor.focus()
             }
             else {
-              if (this.headerTabSelected == 'structure') EventBus.$emit('get-structure')
-              else if (this.headerTabSelected == 'content') EventBus.$emit('get-content', true)
-              else if (this.headerTabSelected.startsWith('info_')) {
+              if (this.headerTabSelected == 'structure' && !(['views','triggers','functions','procedures','events'].includes(item.parentId))) {
+                this.headerTab = 1
+                this.headerTabSelected = 'structure'
+                EventBus.$emit('get-structure')
+              }
+              else if (this.headerTabSelected == 'content' && !(['triggers','functions','procedures','events'].includes(item.parentId))) {
+                this.headerTab = 2
+                this.headerTabSelected = 'content'
+                EventBus.$emit('get-content', true)
+              }
+              else if (this.headerTabSelected != 'client') {
                 let type = item.type.toLowerCase()
+                this.headerTab = 3
                 this.headerTabSelected = 'info_' + type
                 EventBus.$emit('get-info', type)
               }
