@@ -10,10 +10,48 @@
           <v-btn @click="refresh" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
-        <v-text-field append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+        <v-text-field v-model="search" append-icon="search" label="Search" @input="onSearch" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-progress-linear v-show="loading" indeterminate></v-progress-linear>
-      <ag-grid-vue ref="agGrid" suppressColumnVirtualisation suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @row-data-changed="onRowDataChanged" @cell-key-down="onCellKeyDown" style="width:100%; height:calc(100vh - 185px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :columnDefs="headers" :rowData="items"></ag-grid-vue>
+      <v-data-table :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :hide-default-footer="total < 11" :loading="loading" :expanded.sync="expanded" single-expand item-key="id" show-expand class="elevation-1">
+        <template v-slot:[`item.date`]="{ item }">
+          <span style="display:block; min-width:130px">{{ item.date }}</span>
+        </template>
+        <template v-slot:[`item.user`]="{ item }">
+          <span style="display:block; min-width:44px">{{ item.user }}</span>
+        </template>
+        <template v-slot:[`item.server`]="{ item }">
+          <span style="display:block; min-width:55px">{{ item.server }}</span>
+        </template>
+        <template v-slot:[`item.database`]="{ item }">
+          <span style="display:block; min-width:70px">{{ item.database }}</span>
+        </template>
+        <template v-slot:[`item.status`]="{ item }">
+          <span style="display:block; min-width:78px">
+            <v-icon small :title="item.status ? 'Success' : 'Failed'" :style="`color:${item.status ? '#00b16a' : '#e74d3c'}; margin-right:5px; margin-bottom:2px`">{{ item.status ? 'fas fa-check-circle' : 'fas fa-times-circle' }}</v-icon>
+            {{ item.status ? 'Success' : 'Failed' }}
+          </span>
+        </template>
+        <template v-slot:[`item.query`]="{ item }">
+          <span style="white-space:nowrap">{{ item.query }}</span>
+        </template>
+        <template v-slot:expanded-item="{ headers, item }">
+          <td :colspan="headers.length">
+            <div v-if="item.records != null" style="margin-top:10px">
+              Records:
+              <span style="margin-left:6px">{{ item.records }}</span>
+            </div>
+            <div v-if="item.elapsed != null" style="margin-top:2px">
+              Elapsed:
+              <span style="margin-left:8px">{{ item.elapsed + 's' }}</span>
+            </div>
+            <div v-if="item.error != null" style="margin-top:10px">
+              Error:
+              <span style="margin-left:5px">{{ item.error }}</span>
+            </div>
+            <div id="editor" style="width:calc(100vw - 51px); margin-top:10px; margin-bottom:15px"></div>
+          </td>
+        </template>
+      </v-data-table>
     </v-card>
 
     <v-dialog v-model="filterDialog" max-width="50%">
@@ -100,6 +138,9 @@
       </v-time-picker>
     </v-dialog>
 
+    <!-- Preload -->
+    <div v-show="false" id="editor" style="height:50vh; width:100%"></div>
+
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -110,46 +151,45 @@
 </template>
 
 <style scoped>
-@import "../../../../node_modules/ag-grid-community/dist/styles/ag-grid.css";
-@import "../../../../node_modules/ag-grid-community/dist/styles/ag-theme-alpine-dark.css";
+.ace-monokai {
+  background-color: #303030;
+}
+::deep .ace_scroller {
+  padding: 13px!important;
+}
+::deep .ace_scrollbar.ace_scrollbar-v {
+  display: none;
+}
 </style>
-<style scoped src="@/styles/agGridVue.css"></style>
 
 <script>
 import axios from 'axios'
 import moment from 'moment'
-import {AgGridVue} from "ag-grid-vue";
+import ace from 'ace-builds'
+import 'ace-builds/webpack-resolver'
+import 'ace-builds/src-noconflict/ext-language_tools'
+import sqlFormatter from '@sqltools/formatter'
 
 export default {
   data() {
     return {
       loading: true,
-      gridApi: null,
-      columnApi: null,
+      origin: [],
       items: [],
       headers: [
-        { headerName: 'Date', colId: 'date', field: 'date', sortable: true, resizable: true },
-        { headerName: 'User', colId: 'user', field: 'user', sortable: true, resizable: true },
-        { headerName: 'Server', colId: 'server', field: 'server', sortable: true, resizable: true },
-        { headerName: 'Database', colId: 'database', field: 'database', sortable: true, resizable: true },
-        { headerName: 'Query', colId: 'query', field: 'query', sortable: true, resizable: true },
-        {
-          headerName: 'Status', colId: 'status', field: 'status', sortable: true, resizable: true,
-          cellRenderer: function(params) {
-            if (params.value) return '<i class="fas fa-check-circle" title="Success" style="color:#00b16a; margin-right:8px;"></i>Success'
-            else return '<i class="fas fa-times-circle" title="Failed" style="color:#e74d3c; margin-right:8px;"></i>Failed'
-          }
-         },
-        { headerName: 'Records', colId: 'records', field: 'records', sortable: true, resizable: true },
-        {
-          headerName: 'Elapsed', colId: 'elapsed', field: 'elapsed', sortable: true, resizable: true,
-          valueGetter: function(params) {
-            return params.data.elapsed + 's'
-          }
-        },
-        { headerName: 'Error', colId: 'error', field: 'error', sortable: true, resizable: true },
+        { text: 'Date', align: 'left', value: 'date' },
+        { text: 'User', align: 'left', value: 'user' },
+        { text: 'Server', align: 'left', value: 'server' },
+        { text: 'Database', align: 'left', value: 'database' },
+        { text: 'Status', align: 'left', value: 'status' },
+        { text: 'Query', align: 'left', value: 'query', sortable: false },
       ],
-      // Dialogs
+      options: {},
+      total: 0,
+      search: '',
+      editor: null,
+      expanded: [],
+      // Filter Dialog
       filterDialog: false,
       filters: [
         {id: 'equal', name: 'Equal'},
@@ -165,6 +205,8 @@ export default {
       dateTimeField: '',
       dateTimeMode: 'date',
       dateTimeValue: { date: null, time: null },
+      // Info Dialog
+      infoDialog: false,
       // Snackbar
       snackbar: false,
       snackbarTimeout: Number(3000),
@@ -172,22 +214,74 @@ export default {
       snackbarColor: ''
     }
   },
-  components: { AgGridVue },
-  created() {
-    this.getClient()
+  mounted() {
+    this.editor = ace.edit("editor", {
+      mode: "ace/mode/mysql",
+      theme: "ace/theme/monokai",
+    })
+  },
+  watch: {
+    options: {
+      handler () {
+        this.getClient()
+      },
+      deep: true,
+    },
+    expanded: function(val) {
+      if (val.length == 0) return
+      this.$nextTick(() => {
+        // Init ACE Editor
+        this.editor = ace.edit("editor", {
+          mode: "ace/mode/mysql",
+          theme: "ace/theme/monokai",
+          maxLines: 20,
+          fontSize: 14,
+          showPrintMargin: false,
+          // wrap: false,
+          readOnly: true,
+          showGutter: false,
+        })
+        this.editor.commands.removeCommand('showSettingsMenu')
+        this.editor.container.addEventListener("keydown", (e) => {
+          // - Increase Font Size -
+          if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
+            let size = parseInt(this.editor.getFontSize(), 10) || 12
+            this.editor.setFontSize(size + 1)
+            e.preventDefault()
+          }
+          // - Decrease Font Size -
+          else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
+            let size = parseInt(this.editor.getFontSize(), 10) || 12
+            this.editor.setFontSize(Math.max(size - 1 || 1))
+            e.preventDefault()
+          }
+        }, false)
+        let sqlFormatted = sqlFormatter.format(this.expanded[0].query, { reservedWordCase: 'upper', linesBetweenQueries: 2 })
+        this.editor.setValue(sqlFormatted, -1)
+      })
+    }
   },
   methods: {
     getClient() {
       this.loading = true
-      let payload = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : {}
-      // Parse date to utc
-      if ('dateFrom' in payload) payload.dateFrom = moment(this.filter.dateFrom).utc().format("YYYY-MM-DD HH:mm:ss")
-      if ('dateTo' in payload) payload.dateTo = moment(this.filter.dateTo).utc().format("YYYY-MM-DD HH:mm:ss")
+      var payload = {}
+      // Build Filter
+      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
+      if (this.filterApplied && 'dateFrom' in filter) filter.dateFrom = moment(this.filter.dateFrom).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (this.filterApplied && 'dateTo' in filter) filter.dateTo = moment(this.filter.dateTo).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (filter != null) payload['filter'] = filter
+      // Build Sort
+      const { sortBy, sortDesc } = this.options
+      if (sortBy.length > 0) payload['sort'] = { column: sortBy[0], desc: sortDesc[0] }
       // Get Client queries
-      axios.get('/admin/client', { params: payload })
+      axios.get('/admin/client/queries', { params: payload })
         .then((response) => {
           this.items = response.data.queries.map(x => ({...x, date: this.dateFormat(x.date)}))
+          // this.items = response.data.queries.map(x => ({...x, query: x.query.length > 512 ? x.query.substring(0,512) + '...' : x.query, date: this.dateFormat(x.date)}))
+          this.origin = JSON.parse(JSON.stringify(this.items))
+          this.total = this.items.length
           this.filterUsers = response.data.users
+          this.onSearch()
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -195,57 +289,20 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    onGridReady(params) {
-      this.gridApi = params.api
-      this.columnApi = params.columnApi
-    },
-    onRowDataChanged() {
-      if (this.columnApi != null) this.resizeTable()
-    },
-    resizeTable() {
-      let allColumnIds = this.columnApi.getAllColumns().map(v => v.colId)
-      this.columnApi.autoSizeColumns(allColumnIds)
-    },
-    onCellKeyDown(e) {
-      if (e.event.key == "c" && (e.event.ctrlKey || e.event.metaKey)) {
-        let selectedRows = this.gridApi.getSelectedRows()
-        if (selectedRows.length > 1) {
-          // Copy values
-          let header = Object.keys(selectedRows[0])
-          let value = selectedRows.map(row => header.map(fieldName => row[fieldName] == null ? 'NULL' : row[fieldName]).join('\t')).join('\n')
-          navigator.clipboard.writeText(value)
-          // Apply effect
-          // this.gridApi.flashCells({
-          //   rowNodes: this.gridApi.getSelectedNodes(),
-          //   flashDelay: 200,
-          //   fadeDelay: 200,
-          // })
-        }
-        else {
-          // Copy value
-          navigator.clipboard.writeText(e.value)
-          // Apply effect
-          this.gridApi.flashCells({
-            rowNodes: this.gridApi.getSelectedNodes(),
-            columns: [this.gridApi.getFocusedCell().column.colId],
-            flashDelay: 200,
-            fadeDelay: 200,
-          })
-        }
-      }
-      else if (['ArrowUp','ArrowDown'].includes(e.event.key)) {
-        let cell = this.gridApi.getFocusedCell()
-        let row = this.gridApi.getDisplayedRowAtIndex(cell.rowIndex)
-        let node = this.gridApi.getRowNode(row.id)
-        this.gridApi.deselectAll()
-        node.setSelected(true)
-      }
-      else if (e.event.key == 'a' && (e.event.ctrlKey || e.event.metaKey)) {
-        this.gridApi.selectAll()
-      }
-    },
     refresh() {
       this.getClient()
+    },
+    onSearch() {
+      if (this.search.length == 0) this.items = JSON.parse(JSON.stringify(this.origin))
+      else {
+        this.items = this.origin.filter(x => {(
+          x.date.includes(this.search) ||
+          x.user.includes(this.search) ||
+          x.server.includes(this.search) ||
+          x.database.includes(this.search) ||
+          x.query.includes(this.search)
+        )})
+      }
     },
     dateTimeDialogOpen(field) {
       this.dateTimeField = field

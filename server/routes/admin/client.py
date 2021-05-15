@@ -21,9 +21,9 @@ class Client:
         # Init blueprint
         admin_client_blueprint = Blueprint('admin_client', __name__, template_folder='admin_client')
 
-        @admin_client_blueprint.route('/admin/client', methods=['GET'])
+        @admin_client_blueprint.route('/admin/client/queries', methods=['GET'])
         @jwt_required()
-        def admin_client_method():
+        def admin_client_queries_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -39,10 +39,9 @@ class Client:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Get Request Json
-            settings_json = request.get_json()
-
             # Return Client Queries
-            return jsonify({'queries': self._client.get(request.args), 'users': self._client.getUsers()}), 200
+            dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
+            dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
+            return jsonify({'queries': self._client.get(dfilter, dsort), 'users': self._client.getUsers()}), 200
 
         return admin_client_blueprint

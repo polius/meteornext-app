@@ -277,7 +277,7 @@ class License:
     def __init__(self, license):
         self._license_params = license
         self._license_status = {} 
-        self._license_timeout = 1  # Minutes
+        self._license_timeout = 24 # Hours
         self._last_login_date = str(datetime.utcnow())
         self._next_check = None
         self._next_check2 = None
@@ -335,6 +335,6 @@ class License:
         except Exception:
             self._license_status = {"code": 404, "response": "A connection to the licensing server could not be established"}
         else:
-            minutes = self._license_timeout if self._license_status['code'] == 200 else 1
-            self._next_check = str(datetime.utcnow() + timedelta(minutes=minutes))
-            self._next_check2 = str(datetime.strptime(self._license_status['date'], '%Y-%m-%d %H:%M:%S.%f') + timedelta(minutes=minutes))
+            if self._license_status['code'] == 200:
+                self._next_check = str(datetime.utcnow() + timedelta(hours=self._license_timeout))
+                self._next_check2 = str(datetime.strptime(self._license_status['date'], '%Y-%m-%d %H:%M:%S.%f') + timedelta(hours=self._license_timeout))
