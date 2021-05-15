@@ -162,7 +162,7 @@
                 <v-switch v-model="group.client_enabled" label="Access Client" color="info" style="margin-top:0px;"></v-switch>
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px">TRACKING</div>
                 <v-switch v-model="group.client_tracking" label="Track Queries" color="#fa8231" style="margin-top:0px; padding-bottom:20px" hide-details></v-switch>
-                <v-select v-if="group.client_tracking" v-model="group.client_tracking_mode" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'All Queries (exclude SELECTs)'}]" item-value="id" item-text="name" label="Tracking Method" required :rules="[v => !!v || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-select>
+                <v-select v-if="group.client_tracking" v-model="group.client_tracking_mode" :items="[{id: 1, name: 'All Queries'}, {id: 2, name: 'All Queries (exclude SELECTs)'}]" item-value="id" item-text="name" label="Tracking Mode" required :rules="[v => !!v || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-select>
                 <v-text-field v-if="group.client_tracking" v-model="group.client_tracking_retention" label="Tracking Retention Days" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:0px; padding-bottom:20px" hide-details></v-text-field>
               </v-card-text>
             </v-card>
