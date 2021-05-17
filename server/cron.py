@@ -121,8 +121,7 @@ class Cron:
                 FROM client_queries cq
                 JOIN users u ON u.id = cq.user_id
                 JOIN groups g ON g.id = u.group_id
-                WHERE g.client_tracking = 1
-                AND DATE_ADD(DATE(cq.date), INTERVAL g.client_tracking_retention DAY) <= CURRENT_DATE
+                WHERE DATE_ADD(DATE(cq.date), INTERVAL g.client_tracking_retention DAY) <= CURRENT_DATE
             """
             self._sql.execute(query)
         except Exception:
