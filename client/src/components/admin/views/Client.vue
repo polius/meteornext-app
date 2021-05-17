@@ -190,7 +190,7 @@ export default {
         { text: 'Status', align: 'left', value: 'status' },
         { text: 'Query', align: 'left', value: 'query', sortable: false },
       ],
-      options: {},
+      options: null,
       total: 0,
       search: '',
       editor: null,
@@ -228,8 +228,11 @@ export default {
   },
   watch: {
     options: {
-      handler () {
-        this.getClient()
+      handler (newValue, oldValue) {
+        if (oldValue == null || (oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
+          this.getClient()
+        }
+        else this.onSearch()
       },
       deep: true,
     },
@@ -282,10 +285,8 @@ export default {
       // Get Client queries
       axios.get('/admin/client/queries', { params: payload })
         .then((response) => {
-          this.items = response.data.queries.map(x => ({...x, date: this.dateFormat(x.date)}))
-          // this.items = response.data.queries.map(x => ({...x, query: x.query.length > 512 ? x.query.substring(0,512) + '...' : x.query, date: this.dateFormat(x.date)}))
-          this.origin = JSON.parse(JSON.stringify(this.items))
-          this.total = this.items.length
+          this.origin = response.data.queries.map(x => ({...x, date: this.dateFormat(x.date)}))
+          this.total = this.origin.length
           this.filterUsers = response.data.users
           this.onSearch()
         })
@@ -299,7 +300,10 @@ export default {
       this.getClient()
     },
     onSearch() {
-      if (this.search.length == 0) this.items = JSON.parse(JSON.stringify(this.origin))
+      const { page, itemsPerPage } = this.options
+      const itemStart = (page-1) * itemsPerPage
+      const itemEnd = (page-1) * itemsPerPage + itemsPerPage
+      if (this.search.length == 0) this.items = this.origin.slice(itemStart, itemEnd)
       else {
         this.items = this.origin.filter(x => {(
           x.date.includes(this.search) ||
@@ -307,7 +311,7 @@ export default {
           x.server.includes(this.search) ||
           x.database.includes(this.search) ||
           x.query.includes(this.search)
-        )})
+        )}).slice(itemStart, itemEnd)
       }
     },
     dateTimeDialogOpen(field) {
