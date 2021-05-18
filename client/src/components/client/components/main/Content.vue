@@ -363,7 +363,7 @@ export default {
         server: this.server.id,
         database: this.database,
         table: this.sidebarSelected[0]['name'],
-        queries: ['SELECT * FROM ' + this.sidebarSelected[0]['name'] + ' LIMIT 1000;' ]
+        queries: ['SELECT * FROM `' + this.sidebarSelected[0]['name'] + '` LIMIT 1000;' ]
       }
       axios.post('/client/execute', payload)
         .then((response) => {
@@ -469,7 +469,7 @@ export default {
             if (value == null) where.push(key + ' IS NULL')
             else where.push(key + " = " + JSON.stringify(value))
           }
-          queries.push('DELETE FROM ' + this.sidebarSelected[0]['name'] + ' WHERE ' + where.join(' AND ') + ' LIMIT 1;')
+          queries.push('DELETE FROM `' + this.sidebarSelected[0]['name'] + '` WHERE ' + where.join(' AND ') + ' LIMIT 1;')
         }
       }
       else {
@@ -481,7 +481,7 @@ export default {
           }
           pks.push('(' + pk.join(' AND ') + ')')
         }
-        queries = ['DELETE FROM ' + this.sidebarSelected[0]['name'] + ' WHERE ' + pks.join(' OR ') + ';']
+        queries = ['DELETE FROM `' + this.sidebarSelected[0]['name'] + '` WHERE ' + pks.join(' OR ') + ';']
       }
       // Show overlay
       this.gridApi.content.showLoadingOverlay()
@@ -721,7 +721,7 @@ export default {
         server: this.server.id,
         database: this.database,
         table: this.sidebarSelected[0]['name'],
-        queries: ['SELECT * FROM ' + this.sidebarSelected[0]['name'] + condition + pagination + ';' ]
+        queries: ['SELECT * FROM `' + this.sidebarSelected[0]['name'] + '`' + condition + pagination + ';' ]
       }
       const server = this.server
       axios.post('/client/execute', payload)

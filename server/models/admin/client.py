@@ -4,7 +4,7 @@ class Client:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, dfilter=None, dsort=None):
+    def get_queries(self, dfilter=None, dsort=None):
         if dfilter is None and dsort is None:
             query = """
                 SELECT cq.id, cq.date, u.username AS 'user', s.name AS 'server', cq.database, cq.query, cq.status, cq.records, cq.elapsed, cq.error
@@ -67,7 +67,21 @@ class Client:
             """.format(user, server, database, query, status, date_from, date_to, sort_column, sort_order)
             return self._sql.execute(query, args)
 
-    def getUsers(self):
+    def get_users(self):
         query = "SELECT username FROM users ORDER BY username"
         return [i['username'] for i in self._sql.execute(query)]
 
+    def get_servers(self):
+        query = """
+            SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user_username, available.server_id, available.server_name, available.server_shared, cs.server_id IS NOT NULL AS 'server_attached'
+            FROM (
+                SELECT u.id AS 'user_id', u.username AS 'user_username', s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared'
+                FROM servers s
+                JOIN groups g ON g.id = s.group_id
+                LEFT JOIN users u ON u.group_id = g.id
+                WHERE (s.shared = 1 OR u.id IS NOT NULL)
+                AND s.usage LIKE '%C%'
+            ) available
+            LEFT JOIN client_servers cs USING (user_id, server_id)
+        """
+        return self._sql.execute(query)

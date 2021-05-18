@@ -42,6 +42,27 @@ class Client:
             # Return Client Queries
             dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
             dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
-            return jsonify({'queries': self._client.get(dfilter, dsort), 'users': self._client.getUsers()}), 200
+            return jsonify({'queries': self._client.get_queries(dfilter, dsort), 'users': self._client.get_users()}), 200
+
+        @admin_client_blueprint.route('/admin/client/servers', methods=['GET'])
+        @jwt_required()
+        def admin_client_servers_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Check Settings - Security (Administration URL)
+            if not self._settings.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Return Client Servers
+            return jsonify({'servers': self._client.get_servers(), 'users': self._client.get_users()}), 200
 
         return admin_client_blueprint

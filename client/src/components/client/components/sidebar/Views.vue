@@ -226,7 +226,7 @@ export default {
     },
     createViewSubmit() {
       let viewName = this.dialogOptions.item.name
-      let query = "CREATE VIEW " + viewName + " AS " + this.dialogEditor.getValue()
+      let query = "CREATE VIEW `" + viewName + "` AS " + this.dialogEditor.getValue()
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
@@ -266,12 +266,12 @@ export default {
     duplicateViewSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let query = "SHOW CREATE VIEW " + currentName + ";"
+      let query = "SHOW CREATE VIEW `" + currentName + "`;"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => { 
         let syntax = 'SELECT ' + JSON.parse(res.data)[0].data[0]['Create View'].split(' AS select ')[1]
-        let query = "CREATE VIEW " + newName + " AS " + syntax
+        let query = "CREATE VIEW `" + newName + "` AS " + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
@@ -292,7 +292,7 @@ export default {
     },
     deleteViewSubmit() {
       let queries = []
-      for (let item of this.sidebarSelected) queries.push("DROP VIEW " + item.name + ";")
+      for (let item of this.sidebarSelected) queries.push("DROP VIEW `" + item.name + "`;")
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
@@ -311,7 +311,7 @@ export default {
     },
     copyViewSyntaxSubmit() {
       let name = this.contextMenuItem.name
-      let query = "SHOW CREATE VIEW " + name + ";"
+      let query = "SHOW CREATE VIEW `" + name + "`;"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {

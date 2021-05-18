@@ -285,11 +285,11 @@ export default {
         }
         // Build query
         let triggerCode = this.dialogEditor.getValue().endsWith(';') ? this.dialogEditor.getValue() : this.dialogEditor.getValue() + ';'
-        query = "CREATE TRIGGER " + this.dialogOptions.item.name + ' ' + this.dialogOptions.item.time + ' ' + this.dialogOptions.item.event + ' ON ' + this.sidebarSelected[0]['name'] + ' FOR EACH ROW BEGIN\n' + triggerCode + '\nEND;'
+        query = "CREATE TRIGGER `" + this.dialogOptions.item.name + '` ' + this.dialogOptions.item.time + ' ' + this.dialogOptions.item.event + ' ON ' + this.sidebarSelected[0]['name'] + ' FOR EACH ROW BEGIN\n' + triggerCode + '\nEND;'
       }
       else if (this.dialogOptions.mode == 'delete') {
         let row = this.gridApi.structure.triggers.getSelectedRows()[0]
-        query = "DROP TRIGGER " + row.Name + ";"
+        query = "DROP TRIGGER `" + row.Name + "`;"
       }
       // Execute query
       this.execute(query)

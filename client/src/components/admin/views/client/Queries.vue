@@ -8,7 +8,7 @@
         <span style="display:block; min-width:44px">{{ item.user }}</span>
       </template>
       <template v-slot:[`item.server`]="{ item }">
-        <span style="display:block; min-width:55px">{{ item.server }}</span>
+        <v-btn text class="body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">{{ item.server }}</v-btn>
       </template>
       <template v-slot:[`item.database`]="{ item }">
         <span style="display:block; min-width:70px">{{ item.database }}</span>
@@ -174,7 +174,6 @@ export default {
       ],
       options: null,
       total: 0,
-      search: '',
       editor: null,
       expanded: [],
       // Filter Dialog
@@ -200,11 +199,11 @@ export default {
       snackbarColor: ''
     }
   },
+  props: ['search'],
   mounted() {
-    EventBus.$on('search-client-queries', this.onSearch)
     EventBus.$on('filter-client-queries', () => { this.filterDialog = true })
     EventBus.$on('client-toggle-filter', (value) => { this.filterApplied = value })
-    EventBus.$on('refresh-client-queries', this.getClient)
+    EventBus.$on('refresh-client-queries', this.getQueries)
     this.editor = ace.edit("editor", {
       mode: "ace/mode/mysql",
       theme: "ace/theme/monokai",
@@ -214,11 +213,14 @@ export default {
     options: {
       handler (newValue, oldValue) {
         if (oldValue == null || (oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
-          this.getClient()
+          this.getQueries()
         }
-        else this.onSearch(this.search)
+        else this.onSearch()
       },
       deep: true,
+    },
+    search: function() {
+      this.onSearch()
     },
     expanded: function(val) {
       if (val.length == 0) return
@@ -255,7 +257,7 @@ export default {
     }
   },
   methods: {
-    getClient() {
+    getQueries() {
       this.loading = true
       var payload = {}
       // Build Filter
@@ -272,7 +274,7 @@ export default {
           this.origin = response.data.queries.map(x => ({...x, date: this.dateFormat(x.date)}))
           this.total = this.origin.length
           this.filterUsers = response.data.users
-          this.onSearch(this.search)
+          this.onSearch()
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -280,8 +282,7 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    onSearch(search) {
-      this.search = search
+    onSearch() {
       const { page, itemsPerPage } = this.options
       const itemStart = (page-1) * itemsPerPage
       const itemEnd = (page-1) * itemsPerPage + itemsPerPage
@@ -321,13 +322,13 @@ export default {
       }
       this.filterDialog = false
       EventBus.$emit('client-toggle-filter', true)
-      this.getClient()
+      this.getQueries()
     },
     clearFilter() {
       this.filterDialog = false
       this.filter = {}
       EventBus.$emit('client-toggle-filter', false)
-      this.getClient()
+      this.getQueries()
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")

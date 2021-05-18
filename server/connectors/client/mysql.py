@@ -507,7 +507,7 @@ class MySQL:
         return result
 
     def get_table_syntax(self, db, table):
-        query = "SHOW CREATE TABLE {}.{}".format(db, table)
+        query = "SHOW CREATE TABLE `{}`.`{}`".format(db, table)
         result = self.execute(query)['data'][0]['Create Table']
         return result
 
@@ -545,7 +545,7 @@ class MySQL:
         return self.execute(query)['data']
 
     def get_trigger_syntax(self, db, trigger):
-        query = "SHOW CREATE TRIGGER {}.{}".format(db, trigger)
+        query = "SHOW CREATE TRIGGER `{}`.`{}`".format(db, trigger)
         result = self.execute(query)['data'][0]['SQL Original Statement']
         return result
 
@@ -562,7 +562,7 @@ class MySQL:
         return self.execute(query)['data']
 
     def get_function_syntax(self, db, function):
-        query = "SHOW CREATE FUNCTION {}.{}".format(db, function)
+        query = "SHOW CREATE FUNCTION `{}`.`{}`".format(db, function)
         result = self.execute(query)['data'][0]['Create Function']
         return result
 
@@ -579,7 +579,7 @@ class MySQL:
         return self.execute(query)['data']
 
     def get_procedure_syntax(self, db, procedure):
-        query = "SHOW CREATE PROCEDURE {}.{}".format(db, procedure)
+        query = "SHOW CREATE PROCEDURE `{}`.`{}`".format(db, procedure)
         result = self.execute(query)['data'][0]['Create Procedure']
         return result
 
@@ -595,7 +595,7 @@ class MySQL:
         return self.execute(query)['data']
 
     def get_event_syntax(self, db, event):
-        query = "SHOW CREATE EVENT {}.{}".format(db, event)
+        query = "SHOW CREATE EVENT `{}`.`{}`".format(db, event)
         result = self.execute(query)['data'][0]['Create Event']
         return result
 

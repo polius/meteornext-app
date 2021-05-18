@@ -268,7 +268,7 @@ export default {
     dialogSubmit(event) {
       this.loadingText = 'Applying changes...'
       this.loading = true
-      let query = 'ALTER TABLE ' + this.sidebarSelected[0]['name']
+      let query = 'ALTER TABLE `' + this.sidebarSelected[0]['name'] + '`'
 
       if (['new','edit'].includes(this.dialogOptions.mode)) {
         // Parse Form Fields
@@ -285,8 +285,8 @@ export default {
         }
 
         // Build Query
-        if (this.dialogOptions.mode == 'new') query += ' ADD ' + this.dialogOptions.item.name
-        else if (this.dialogOptions.mode == 'edit') query += ' CHANGE ' + this.gridApi.structure.columns.getSelectedRows()[0].Name  + ' ' + this.dialogOptions.item.name
+        if (this.dialogOptions.mode == 'new') query += ' ADD `' + this.dialogOptions.item.name + '`'
+        else if (this.dialogOptions.mode == 'edit') query += ' CHANGE `' + this.gridApi.structure.columns.getSelectedRows()[0].Name  + '` `' + this.dialogOptions.item.name + '`'
         query += ' ' + this.dialogOptions.item.type 
           + (this.dialogOptions.item.length.length > 0 ? (this.dialogOptions.item.length.indexOf(',') == -1) ? '(' + this.dialogOptions.item.length + ')' : '(' + this.dialogOptions.item.length.split(",").map(item => "'" + item.trim() + "'") + ')' : '')
           + (this.dialogOptions.item.unsigned ? ' UNSIGNED' : '')
@@ -297,7 +297,7 @@ export default {
           + (this.dialogOptions.item.auto_increment ? ' AUTO_INCREMENT' : '')
           + (this.dialogOptions.item.comment ? " COMMENT '" + this.dialogOptions.item.comment + "'" : '')
       }
-      else if (this.dialogOptions.mode == 'delete') query += ' DROP COLUMN ' + this.gridApi.structure.columns.getSelectedRows()[0]['Name']
+      else if (this.dialogOptions.mode == 'delete') query += ' DROP COLUMN `' + this.gridApi.structure.columns.getSelectedRows()[0]['Name'] + '`'
       else if (this.dialogOptions.mode == 'drag') {
         query += ' MODIFY ' + this.gridApi.structure.columns.getDisplayedRowAtIndex(event.node.rowIndex).data['Name']
           + ' ' + event.node.data['Type'] 
@@ -309,7 +309,7 @@ export default {
           + (event.node.data['Extra'].toLowerCase() == 'on update current_timestamp' ? ' ON UPDATE CURRENT_TIMESTAMP' : '')
           + (event.node.data['Extra'].toLowerCase() ==  'auto_increment' ? ' AUTO_INCREMENT' : '')
           + (event.node.data['Comment'] ? " COMMENT '" + event.node.data['Comment'] + "'" : '')
-          + (event.node.rowIndex == 0 ? ' FIRST' : ' AFTER ' + this.gridApi.structure.columns.getDisplayedRowAtIndex(event.node.rowIndex - 1).data['Name'])
+          + (event.node.rowIndex == 0 ? ' FIRST' : ' AFTER `' + this.gridApi.structure.columns.getDisplayedRowAtIndex(event.node.rowIndex - 1).data['Name']) + '`'
       }
       query += ';'
 

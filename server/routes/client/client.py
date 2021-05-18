@@ -493,7 +493,7 @@ class Client:
                     return Response(stream_with_context(self.__export_csv(options, conn)))
                 elif options['mode'] == 'sql':
                     options['engine'] = request.args['engine']
-                    return Response(stream_with_context(self.__export_sql(options, cred, conn)))
+                    return Response(stream_with_context(self.__export_sql(options, conn)))
             except Exception as e:
                 return jsonify({"message": str(e)}), 400
 
@@ -714,7 +714,7 @@ class Client:
     def __export_csv(self, options, conn):
         for table in options['items']:
             first = options['fields']
-            conn.execute(query=f"SELECT * FROM {table}", database=request.args['database'], fetch=False)
+            conn.execute(query=f"SELECT * FROM `{table}`", database=request.args['database'], fetch=False)
             while True:
                 output = io.StringIO()
                 row = conn.fetch_one()
@@ -727,7 +727,7 @@ class Client:
                 writer.writerow(row)
                 yield output.getvalue()
 
-    def __export_sql(self, options, cred, conn):
+    def __export_sql(self, options, conn):
         # Build Tables
         if options['object'] == 'table':
             for table in options['items']:
@@ -741,7 +741,7 @@ class Client:
                     if options['include'] in ['Structure','Structure + Content']:
                         yield '{};\n\n'.format(syntax)
                     if options['include'] in ['Structure + Content','Content']:
-                        conn.execute(query=f"SELECT SQL_NO_CACHE * FROM {table}", database=request.args['database'], fetch=False)
+                        conn.execute(query=f"SELECT SQL_NO_CACHE * FROM `{table}`", database=request.args['database'], fetch=False)
                         first = True
                         while True:
                             rows = conn.fetch_many(int(options['rows']))
@@ -861,36 +861,36 @@ class Client:
         conn.disable_fks_checks()
         if options['object'] == 'table':
             for table in options['items']:
-                conn.execute(query=f"DROP TABLE IF EXISTS {table}", database=options['target'])
-                conn.execute(query=f"CREATE TABLE IF NOT EXISTS {table} LIKE {options['origin']}.{table}", database=options['target'])
-                conn.execute(query=f"INSERT INTO {table} SELECT * FROM {options['origin']}.{table}", database=options['target'])
+                conn.execute(query=f"DROP TABLE IF EXISTS `{table}`", database=options['target'])
+                conn.execute(query=f"CREATE TABLE IF NOT EXISTS `{table}` LIKE `{options['origin']}`.`{table}`", database=options['target'])
+                conn.execute(query=f"INSERT INTO `{table}` SELECT * FROM `{options['origin']}`.`{table}`", database=options['target'])
         elif options['object'] == 'view':
             for view in options['items']:
                 syntax = conn.get_view_syntax(options['origin'], view)
-                conn.execute(query=f"DROP VIEW IF EXISTS {view}", database=options['target'])
+                conn.execute(query=f"DROP VIEW IF EXISTS `{view}`", database=options['target'])
                 conn.execute(query=syntax, database=options['target'])
         elif options['object'] == 'trigger':
             for trigger in options['items']:
                 syntax = conn.get_trigger_syntax(options['origin'], trigger)
                 syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
-                conn.execute(query=f"DROP TRIGGER IF EXISTS {trigger}", database=options['target'])
+                conn.execute(query=f"DROP TRIGGER IF EXISTS `{trigger}`", database=options['target'])
                 conn.execute(query=syntax, database=options['target'])
         elif options['object'] == 'function':
             for function in options['items']:
                 syntax = conn.get_function_syntax(options['origin'], function)
                 syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
-                conn.execute(query=f"DROP FUNCTION IF EXISTS {function}", database=options['target'])
+                conn.execute(query=f"DROP FUNCTION IF EXISTS `{function}`", database=options['target'])
                 conn.execute(query=syntax, database=options['target'])
         elif options['object'] == 'procedure':
             for procedure in options['items']:
                 syntax = conn.get_procedure_syntax(options['origin'], procedure)
                 syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
-                conn.execute(query=f"DROP PROCEDURE IF EXISTS {procedure}", database=options['target'])
+                conn.execute(query=f"DROP PROCEDURE IF EXISTS `{procedure}`", database=options['target'])
                 conn.execute(query=syntax, database=options['target'])
         elif options['object'] == 'event':
             for event in options['items']:
                 syntax = conn.get_event_syntax(options['origin'], event)
                 syntax = re.sub('DEFINER\s*=\s*`(.*?)`\s*@\s*`(.*?)`\s', '', syntax)
-                conn.execute(query=f"DROP EVENT IF EXISTS {event}", database=options['target'])
+                conn.execute(query=f"DROP EVENT IF EXISTS `{event}`", database=options['target'])
                 conn.execute(query=syntax, database=options['target'])
         conn.enable_fks_checks()
