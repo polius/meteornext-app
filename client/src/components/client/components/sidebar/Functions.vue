@@ -244,7 +244,7 @@ RETURN (customerLevel);
       let functionReturns = this.dialogOptions.item.returns
       let functionCode = this.dialogEditor.getValue().endsWith(';') ? this.dialogEditor.getValue() : this.dialogEditor.getValue() + ';'
       let functionDeterministic = this.dialogOptions.item.deterministic ? '\nDETERMINISTIC' : ''
-      let query = "CREATE FUNCTION " + functionName + ' (' + functionParams + ')\nRETURNS ' + functionReturns + functionDeterministic + '\nBEGIN\n' + functionCode + '\nEND;'
+      let query = "CREATE FUNCTION `" + functionName + '` (' + functionParams + ')\nRETURNS ' + functionReturns + functionDeterministic + '\nBEGIN\n' + functionCode + '\nEND;'
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
@@ -267,12 +267,12 @@ RETURN (customerLevel);
     renameFunctionSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let queries = ["SHOW CREATE FUNCTION " + currentName, "DROP FUNCTION IF EXISTS " + currentName]
+      let queries = ["SHOW CREATE FUNCTION `" + currentName + "`", "DROP FUNCTION IF EXISTS `" + currentName + "`"]
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Function'].split(' FUNCTION `' + currentName + '`')[1]
-        let query = "CREATE FUNCTION " + newName + " " + syntax
+        let query = "CREATE FUNCTION `" + newName + "` " + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
@@ -294,12 +294,12 @@ RETURN (customerLevel);
     duplicateFunctionSubmit() {
       let currentName = this.dialogOptions.item.currentName
       let newName = this.dialogOptions.item.newName
-      let queries = ["SHOW CREATE FUNCTION " + currentName]
+      let queries = ["SHOW CREATE FUNCTION `" + currentName + "`"]
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Function'].split(' FUNCTION `' + currentName + '`')[1]
-        let query = "CREATE FUNCTION " + newName + " " + syntax
+        let query = "CREATE FUNCTION `" + newName + "` " + syntax
         return new Promise((resolve, reject) => {
           EventBus.$emit('execute-sidebar', [query], resolve, reject)
         }).then(() => { 
@@ -320,7 +320,7 @@ RETURN (customerLevel);
     },
     deleteFunctionSubmit() {
       let queries = []
-      for (let item of this.sidebarSelected) queries.push("DROP FUNCTION " + item.name + ";")
+      for (let item of this.sidebarSelected) queries.push("DROP FUNCTION `" + item.name + "`;")
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
@@ -339,7 +339,7 @@ RETURN (customerLevel);
     },
     copyFunctionSyntaxSubmit() {
       let name = this.contextMenuItem.name
-      let query = "SHOW CREATE FUNCTION " + name + ";"
+      let query = "SHOW CREATE FUNCTION `" + name + "`;"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {

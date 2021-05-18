@@ -259,7 +259,7 @@ export default {
     },
     createTableSubmit() {
       let tableName = this.dialogOptions.item.name
-      let query = "CREATE TABLE " + tableName + " (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) ENGINE=" + this.dialogOptions.item.engine + " DEFAULT CHARSET=" + this.dialogOptions.item.encoding + " COLLATE= " + this.dialogOptions.item.collation + ";"
+      let query = "CREATE TABLE `" + tableName + "` (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY) ENGINE=" + this.dialogOptions.item.engine + " DEFAULT CHARSET=" + this.dialogOptions.item.encoding + " COLLATE= " + this.dialogOptions.item.collation + ";"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
@@ -301,8 +301,8 @@ export default {
       let currentName = this.contextMenuItem.name
       let newName = this.dialogOptions.item.newName
       let duplicateContent = this.dialogOptions.item.duplicateContent
-      let queries = ["CREATE TABLE " + newName + " LIKE " + currentName + ";"]
-      if (duplicateContent) queries.push("INSERT INTO " + newName + " SELECT * FROM " + currentName + ";")
+      let queries = ["CREATE TABLE `" + newName + "` LIKE `" + currentName + "`;"]
+      if (duplicateContent) queries.push("INSERT INTO `" + newName + "` SELECT * FROM `" + currentName + "`;")
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
       }).then(() => { 
@@ -335,7 +335,7 @@ export default {
       let force = this.dialogOptions.item.force
       let queries = []
       if (force) queries.push("SET FOREIGN_KEY_CHECKS = 0")
-      for (let item of this.sidebarSelected) queries.push("DROP TABLE " + item.name + ";")
+      for (let item of this.sidebarSelected) queries.push("DROP TABLE `" + item.name + "`;")
       if (force) queries.push("SET FOREIGN_KEY_CHECKS = 1")
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', queries, resolve, reject)
@@ -355,7 +355,7 @@ export default {
     },
     copyTableSyntaxSubmit() {
       let name = this.contextMenuItem.name
-      let query = "SHOW CREATE TABLE " + name + ";"
+      let query = "SHOW CREATE TABLE `" + name + "`;"
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {

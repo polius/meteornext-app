@@ -95,7 +95,7 @@ export default {
       let databaseName = this.name
       let databaseEncoding = this.encoding 
       let databaseCollation = this.collation
-      let query = "CREATE DATABASE " + databaseName + " CHARACTER SET " + databaseEncoding + " COLLATE " + databaseCollation + ';'
+      let query = "CREATE DATABASE `" + databaseName + "` CHARACTER SET " + databaseEncoding + " COLLATE " + databaseCollation + ';'
       new Promise((resolve, reject) => { 
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then(() => { 
