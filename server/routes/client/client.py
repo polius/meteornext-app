@@ -717,14 +717,14 @@ class Client:
             conn.execute(query=f"SELECT * FROM `{table}`", database=request.args['database'], fetch=False)
             while True:
                 output = io.StringIO()
-                row = conn.fetch_one()
-                if row == None:
+                rows = conn.fetch_many(1000)
+                if rows == None or len(rows) == 0:
                     break
-                writer = csv.DictWriter(output, fieldnames=row.keys())
+                writer = csv.DictWriter(output, fieldnames=list(rows[0]))
                 if first:
                     writer.writeheader()
                     first = False
-                writer.writerow(row)
+                writer.writerows(rows)
                 yield output.getvalue()
 
     def __export_sql(self, options, conn):
@@ -747,15 +747,18 @@ class Client:
                             rows = conn.fetch_many(int(options['rows']))
                             if rows is None or len(rows) == 0:
                                 break
+                            data = ''
                             for row in rows:
-                                args = [v for k, v in row.items()]
+                                keys = [f'`{k}`' for k in row.keys()]
+                                vals = row.values()
                                 if first:
-                                    yield 'INSERT INTO `{}` ({})\nVALUES\n'.format(table, ','.join([f'`{k}`' for k, v in row.items()]))
-                                    yield '({})'.format(conn.mogrify(','.join(repeat('%s', len(args))), args))
+                                    data += 'INSERT INTO `{}` ({})\nVALUES\n'.format(table, ','.join(keys))
+                                    data += '({})'.format(conn.mogrify(','.join(repeat('%s', len(vals))), vals))
                                     first = False
                                 else:
-                                    yield ',\n({})'.format(conn.mogrify(','.join(repeat('%s', len(args))), args))
-                            yield ';\n\n'
+                                    data += ',\n({})'.format(conn.mogrify(','.join(repeat('%s', len(vals))), vals))
+                            data += ';\n\n'
+                            yield data
                             first = True
                 except Exception as e:
                     yield '# Error: {}\n\n'.format(e)
