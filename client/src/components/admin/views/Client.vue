@@ -10,8 +10,9 @@
             <v-tab title="Show Attached / Detached Servers"><span class="pl-2 pr-2"><v-icon small style="padding-right:10px">fas fa-server</v-icon>SERVERS</span></v-tab>
           </v-tabs>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn @click="filterClick" text class="body-2" :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn @click="refreshClick" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
+          <v-btn @click="filterClick" text class="body-2" :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn v-show="tabs == 1" @click="attachClick" text class="body-2"><v-icon small style="padding-right:10px">{{ attached ? 'fas fa-unlink' : 'fas fa-link' }}</v-icon>{{ attached ? 'DEATACH' : 'ATTACH' }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -19,7 +20,7 @@
       <Queries v-show="tabs == 0" :search="search" />
       <Servers v-show="tabs == 1" :search="search" />
     </v-card>
-    <v-dialog v-model="serverDialog" persistent max-width="768px">
+    <v-dialog v-model="serverDialog" max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1">SERVER</v-toolbar-title>
@@ -29,6 +30,7 @@
           <v-spacer></v-spacer>
           <v-btn @click="serverDialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
+        <v-progress-linear v-show="loading" indeterminate></v-progress-linear>
         <v-card-text style="padding: 0px 20px 20px;">
           <v-container style="padding:0px">
             <v-layout wrap>
@@ -36,56 +38,50 @@
                 <v-form ref="form" style="margin-top:20px;">
                   <v-row no-gutters style="margin-bottom:15px">
                     <v-col>
-                      <v-autocomplete readonly v-model="server.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-text-field readonly v-model="server.group" label="Group" hide-details style="padding-top:0px"></v-text-field>
                     </v-col>
                     <v-col v-if="!server.shared" style="margin-left:20px">
-                      <v-autocomplete readonly v-model="server.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-text-field readonly v-model="server.owner" label="Owner" hide-details style="padding-top:0px"></v-text-field>
                     </v-col>
                   </v-row>
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
-                      <v-text-field readonly ref="name" v-model="server.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
+                      <v-text-field readonly v-model="server.name" label="Name"></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
-                      <v-autocomplete readonly v-model="server.region_id" item-value="id" item-text="name" :rules="[v => !!v || '']" :items="[server.region_id]" label="Region" required>
-                        <template v-slot:[`selection`]="{ item }">
-                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ server.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                          {{ item.name }}
+                      <v-text-field readonly v-model="server.region" label="Region">
+                        <template v-slot:prepend-inner>
+                          <v-icon small :color="server.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:4px; margin-right:5px">{{ server.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
                         </template>
-                        <template v-slot:[`item`]="{ item }">
-                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                          {{ server.name }}
-                        </template>
-                      </v-autocomplete>
+                      </v-text-field>
                     </v-col>
                   </v-row>
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
-                      <v-select readonly v-model="server.engine" :items="[server.engine]" label="Engine" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                      <v-text-field readonly v-model="server.engine" label="Engine" style="padding-top:0px;"></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-left:10px">
-                      <v-select readonly v-model="server.version" :items="[server.version]" label="Version" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
+                      <v-text-field readonly v-model="server.version" label="Version" style="padding-top:0px;"></v-text-field>
                     </v-col>
                   </v-row>
                   <div style="margin-bottom:20px">
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
-                        <v-text-field readonly v-model="server.hostname" :rules="[v => !!v || '']" label="Hostname" required style="padding-top:0px;"></v-text-field>
+                        <v-text-field readonly v-model="server.hostname" label="Hostname" style="padding-top:0px;"></v-text-field>
                       </v-col>
                       <v-col cols="4" style="padding-left:10px">
-                        <v-text-field readonly v-model="server.port" :rules="[v => v == parseInt(v) || '']" label="Port" required style="padding-top:0px;"></v-text-field>
+                        <v-text-field readonly v-model="server.port" label="Port" style="padding-top:0px;"></v-text-field>
                       </v-col>
                     </v-row>
-                    <v-text-field readonly v-model="server.username" :rules="[v => !!v || '']" label="Username" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field readonly v-model="server.username" label="Username" style="padding-top:0px;"></v-text-field>
                     <v-text-field readonly v-model="server.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" hide-details></v-text-field>
-                    <v-select readonly outlined v-model="server.usage" :items="[server.usage]" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
+                    <v-text-field readonly outlined v-model="server.usage" label="Usage" hide-details style="margin-top:20px"></v-text-field>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:20px;">
-                  <v-col cols="auto" class="mr-auto">
-                    <v-btn :loading="loading" color="info" @click="serverDialog = false">CLOSE</v-btn>
-                    <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
+                  <v-col>
+                    <v-btn :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
                   </v-col>
                 </v-row>
               </v-flex>
@@ -98,6 +94,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 import EventBus from '../js/event-bus'
 import Queries from './client/Queries'
 import Servers from './client/Servers'
@@ -106,6 +103,8 @@ export default {
   data() {
     return {
       tabs: 0,
+      loading: false,
+      attached: false,
       search: '',
       filterApplied: false,
       // Server Dialog
@@ -117,8 +116,25 @@ export default {
   components: { Queries, Servers },
   mounted() {
     EventBus.$on('client-toggle-filter', (value) => { this.filterApplied = value })
+    EventBus.$on('client-get-server', this.getServer)
   },
   methods: {
+    getServer(server_id) {
+      // Get Server
+      this.showPassword = false
+      this.serverDialog = true
+      this.loading = true
+      const payload = { server_id }
+      axios.get('/admin/client/server', { params: payload })
+        .then((response) => {
+          this.server = response.data.server[0]
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.loading = false)
+    },
     filterClick() {
       if (this.tabs == 0) EventBus.$emit('filter-client-queries')
       else EventBus.$emit('filter-client-servers')
@@ -126,6 +142,28 @@ export default {
     refreshClick() {
       if (this.tabs == 0) EventBus.$emit('refresh-client-queries')
       else EventBus.$emit('refresh-client-servers')
+    },
+    attachClick() {
+      
+    },
+    testConnection() {
+      // Test Connection
+      // this.notification('Testing Server...', 'info', true)
+      this.loading = true
+      const payload = {
+        region_id: this.server.region_id,
+        server: { engine: this.server.engine, hostname: this.server.hostname, port: this.server.port, username: this.server.username, password: this.server.password }
+      }
+      axios.post('/admin/inventory/servers/test', payload)
+        .then((response) => {
+          console.log(response.data.message)
+          // this.notification(response.data.message, '#00b16a', 2)
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+        .finally(() => this.loading = false)
     },
   },
 }

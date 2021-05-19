@@ -8,7 +8,12 @@
         <span style="display:block; min-width:44px">{{ item.user }}</span>
       </template>
       <template v-slot:[`item.server`]="{ item }">
-        <v-btn text class="body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">{{ item.server }}</v-btn>
+        <v-btn @click="getServer(item.server_id)" text class="body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
+          <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
+            {{ item.shared ? 'fas fa-users' : 'fas fa-user' }}
+          </v-icon>
+          {{ item.server }}
+        </v-btn>
       </template>
       <template v-slot:[`item.database`]="{ item }">
         <span style="display:block; min-width:70px">{{ item.database }}</span>
@@ -281,6 +286,9 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
+    },
+    getServer(server_id) {
+      EventBus.$emit('client-get-server', server_id)
     },
     onSearch() {
       const { page, itemsPerPage } = this.options

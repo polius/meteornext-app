@@ -7,7 +7,7 @@ class Client:
     def get_queries(self, dfilter=None, dsort=None):
         if dfilter is None and dsort is None:
             query = """
-                SELECT cq.id, cq.date, u.username AS 'user', s.name AS 'server', cq.database, cq.query, cq.status, cq.records, cq.elapsed, cq.error
+                SELECT cq.id, cq.date, u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, cq.database, cq.query, cq.status, cq.records, cq.elapsed, cq.error
                 FROM client_queries cq
                 JOIN users u ON u.id = cq.user_id
                 JOIN servers s ON s.id = cq.server_id
@@ -56,7 +56,7 @@ class Client:
                 sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
             query = """
-                SELECT cq.id, cq.date, u.username AS 'user', s.name AS 'server', cq.database, cq.query, cq.status, cq.records, cq.elapsed, cq.error
+                SELECT cq.id, cq.date, u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared, cq.database, cq.query, cq.status, cq.records, cq.elapsed, cq.error
                 FROM client_queries cq
                 JOIN users u ON u.id = cq.user_id
                 JOIN servers s ON s.id = cq.server_id
@@ -71,9 +71,9 @@ class Client:
         query = "SELECT username FROM users ORDER BY username"
         return [i['username'] for i in self._sql.execute(query)]
 
-    def get_servers(self):
+    def get_servers(self, dfilter=None, dsort=None):
         query = """
-            SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user_username, available.server_id, available.server_name, available.server_shared, cs.server_id IS NOT NULL AS 'server_attached'
+            SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user_username, available.server_id, available.server_name, available.server_shared, cs.server_id IS NOT NULL AS 'server_attached', cs.date, cf.name AS 'folder_name'
             FROM (
                 SELECT u.id AS 'user_id', u.username AS 'user_username', s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared'
                 FROM servers s
@@ -83,5 +83,9 @@ class Client:
                 AND s.usage LIKE '%C%'
             ) available
             LEFT JOIN client_servers cs USING (user_id, server_id)
+            LEFT JOIN client_folders cf ON cf.id = cs.folder_id
+            WHERE available.user_id IS NOT NULL
+            ORDER BY cs.date DESC
+            LIMIT 1000
         """
         return self._sql.execute(query)

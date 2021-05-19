@@ -426,9 +426,11 @@ CREATE TABLE `client_servers` (
   `user_id` INT UNSIGNED NOT NULL,
   `server_id` INT UNSIGNED NOT NULL,
   `folder_id` INT UNSIGNED NULL,
+  `date` DATETIME NOT NULL,
   PRIMARY KEY (`user_id`, `server_id`),
   INDEX `server_id` (`server_id`),
   INDEX `folder_id` (`folder_id`),
+  INDEX `date` (`date`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`),
   FOREIGN KEY (`folder_id`) REFERENCES `client_folders` (`id`)
