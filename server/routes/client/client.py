@@ -6,7 +6,6 @@ import io
 import re
 import csv
 import json
-import utils
 import datetime
 from itertools import repeat
 import models.admin.users
@@ -750,7 +749,7 @@ class Client:
                             data = ''
                             for row in rows:
                                 keys = [f'`{k}`' for k in row.keys()]
-                                vals = row.values()
+                                vals = list(row.values())
                                 if first:
                                     data += 'INSERT INTO `{}` ({})\nVALUES\n'.format(table, ','.join(keys))
                                     data += '({})'.format(conn.mogrify(','.join(repeat('%s', len(vals))), vals))
