@@ -123,14 +123,14 @@ class Client:
     def add_servers(self, data, user):
         for server in data:
             query = """
-                INSERT INTO client_servers (user_id, server_id) 
-                SELECT %s, id
+                INSERT INTO client_servers (user_id, server_id, `date`) 
+                SELECT %s, id, %s
                 FROM servers
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)
                 AND id = %s
             """
-            self._sql.execute(query, (user['id'], user['group_id'], user['id'], server))
+            self._sql.execute(query, (user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['group_id'],  user['id'], server))
     
     def remove_servers(self, data, user_id):
         for server in data:

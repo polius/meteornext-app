@@ -20,9 +20,11 @@ class Servers:
             return self._sql.execute(query, (group_id))
         elif server_id is not None:
             query = """
-                SELECT s.*, r.name AS 'region', r.shared AS 'region_shared'
+                SELECT s.*, r.name AS 'region', r.shared AS 'region_shared', g.name AS 'group', u.username AS 'owner'
                 FROM servers s
+                LEFT JOIN groups g ON g.id = s.group_id
                 LEFT JOIN regions r ON r.id = s.region_id
+                LEFT JOIN users u ON u.id = s.owner_id
                 WHERE s.id = %s
             """
             return self._sql.execute(query, (server_id))

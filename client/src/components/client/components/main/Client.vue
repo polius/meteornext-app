@@ -11,7 +11,6 @@
           </div>
         </Pane>
         <Pane size="50" min-size="0">
-          <!-- suppressColumnVirtualisation -->
           <ag-grid-vue ref="agGridClient" suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @row-clicked="onRowClicked" @cell-context-menu="onContextMenu" @row-data-changed="onRowDataChanged" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" style="width:100%; height:100%;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" :stopEditingWhenGridLosesFocus="true" :columnDefs="clientHeaders" :rowData="clientItems"></ag-grid-vue>
           <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
             <v-list style="padding:0px;">
@@ -44,6 +43,7 @@
             <v-icon v-if="bottomBar.client['status']=='executing'" title="Executing" small style="color:rgb(250, 130, 49); padding-bottom:1px; padding-right:7px;">fas fa-spinner</v-icon>
             <v-icon v-else-if="bottomBar.client['status']=='success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:1px; padding-right:7px;">fas fa-check-circle</v-icon>
             <v-icon v-else-if="bottomBar.client['status']=='failure'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:7px;">fas fa-times-circle</v-icon>
+            <v-icon v-else-if="bottomBar.client['status']=='stopped'" title="Stopped" small style="color:rgb(231, 76, 60); padding-bottom:1px; padding-right:7px;">fas fa-exclamation-circle</v-icon>
             <span :title="bottomBar.client['text']">{{ bottomBar.client['text'] }}</span>
           </div>
         </v-col>
@@ -208,6 +208,7 @@ export default {
       'clientCursor',
       'clientRange',
       'clientQuery',
+      'clientQueryStopped',
       'bottomBar',
       'server',
       'clientExecuting',
@@ -355,8 +356,8 @@ export default {
             this.currentCellEditValues[keys[i]] = {'old': node[keys[i]] == 'NULL' ? null : node[keys[i]]}
           }
         }
-        // If the cell includes an special character (\n or \t) or the value length > 255 chars, ... then open the extended editor
-        if (event.value.toString().length > 255 || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
+        // If the cell includes an special character (\n or \t) or the value length >= 50 chars, ... then open the extended editor
+        if (event.value.toString().length >= 50 || (event.value.toString().match(/\n/g)||[]).length > 0 || (event.value.toString().match(/\t/g)||[]).length > 0) {
           if (this.editDialogEditor != null && this.editDialogEditor.getValue().length > 0) this.editDialogEditor.setValue('')
           else this.editDialogOpen(event.colDef.headerName, event.value.toString())
         }
@@ -913,6 +914,7 @@ export default {
       this.editor.focus()
     },
     stopQuery() {
+      this.clientQueryStopped = true
       this.clientExecuting = 'stop'
       const payload = { connection: this.id + '-main' }
       const index = this.index
@@ -920,12 +922,11 @@ export default {
       .finally(() => {
         let current = this.connections.find(c => c['index'] == index)
         if (current !== undefined) current.clientExecuting = null
-        // if (current !== undefined) current.clientItems = []
-        // this.gridApi.client.setRowData([])
       })
     },
     executeQuery(payload) {
       // Clean vars
+      this.clientQueryStopped = false
       this.currentCellEditNode = {}
       this.currentCellEditValues = {}
       // Check database
@@ -947,19 +948,19 @@ export default {
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
           let data = JSON.parse(response.data.data)
-          this.parseExecution(payload, data, current)
-          this.parseClientBottomBar(data, current)
-          // Focus Editor
-          let cursor = this.editor.getCursorPosition()
-          this.editor.focus()
-          this.editor.moveCursorTo(cursor.row, cursor.column)
-          current.clientExecuting = null
-          // Add execution to history
-          const history = { section: 'client', server: server, queries: data } 
-          this.$store.dispatch('client/addHistory', history)
+          this.parseExecution(payload, data, current, gridApi).finally(() => {
+            this.parseClientBottomBar(data, current)
+            // Focus Editor
+            let cursor = this.editor.getCursorPosition()
+            this.editor.focus()
+            this.editor.moveCursorTo(cursor.row, cursor.column)
+            current.clientExecuting = null
+            // Add execution to history
+            const history = { section: 'client', server: server, queries: data }
+            this.$store.dispatch('client/addHistory', history)
+          })
         })
         .catch((error) => {
-          gridApi.hideOverlay()
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -983,7 +984,7 @@ export default {
             const history = { section: 'client', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
           }
-        })
+        }).finally(() => gridApi.hideOverlay())
     },
     parseQueries() {
       // Get Query/ies (selected or highlighted)
@@ -993,7 +994,7 @@ export default {
       else queries = this.analyzeQueries(selectedText).map(x => selectedText.substring(x.begin, x.end))
       return queries
     },
-    parseExecution(payload, data, current) {
+    async parseExecution(payload, data, current, gridApi) {
       // Determine if result can be edited and store current table
       const beautified = sqlFormatter.format(payload.queries.slice(-1)[0], { reservedWordCase: 'upper', linesBetweenQueries: 2 })
       let editable = true
@@ -1034,16 +1035,34 @@ export default {
           })
         }
       }
-      // Load First 25 rows at init
-      // setTimeout(() => {
-      //   current.clientHeaders = headers
-      //   current.clientItems = items.slice(0,24)
-      // }, 0)
-      // Load the rest of the rows
-      setTimeout(() => {
-        current.clientHeaders = headers
-        current.clientItems = items
-      }, 0)
+      // Load Table Header
+      current.clientHeaders = headers
+      let itemsToLoad = []
+      var startDate = new Date();
+      await new Promise((resolve) => {
+        // Load Table Items
+        const chunk = 1000
+        const n = items.length
+        for (let i = 0; i < n; i+=chunk) {
+          if (current.clientQueryStopped) { resolve(); break }
+          setTimeout(() => {
+            if (!current.clientQueryStopped) {
+              let sliced = items.slice(i, i+chunk)
+              gridApi.applyTransaction({ add: sliced })
+              itemsToLoad = itemsToLoad.concat(sliced)
+              // console.log(i)
+              if (i+chunk >= n) resolve()
+            }
+            else resolve()
+          }, 0)
+        }
+      })
+      current.clientItems = itemsToLoad
+      // console.log("ITEMS: " + itemsToLoad.length.toString())
+      // console.log("FINISHED")
+      var endDate = new Date();
+      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
+      // console.log(seconds)
     },
     onRowDataChanged() {
       if (this.columnApi.client != null) this.resizeTable()
@@ -1061,9 +1080,9 @@ export default {
         }
         elapsed /= data.length
       }
-      current.bottomBar.client['status'] = data[data.length-1]['error'] === undefined ? 'success' : 'failure'
+      current.bottomBar.client['status'] = this.clientQueryStopped ? 'stopped' : data[data.length-1]['error'] === undefined ? 'success' : 'failure'
       current.bottomBar.client['text'] = data[data.length-1]['query'].trim().endsWith(';') ? data[data.length-1]['query'].trim() : data[data.length-1]['query'].trim() + ';'
-      current.bottomBar.client['info'] = data[data.length-1]['data'] === undefined ? '' : data[data.length-1]['rowCount'] + ' records | '
+      current.bottomBar.client['info'] = current.clientItems.length + ' records | '
       current.bottomBar.client['info'] += data.length + ' queries'
       if (elapsed != null) current.bottomBar.client['info'] += ' | ' + elapsed.toFixed(3).toString() + 's elapsed'
     },

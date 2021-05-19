@@ -39,6 +39,7 @@ const connection = {
   clientCursor: null,
   clientRange: null,
   clientQuery: { query: '', range: null },
+  clientQueryStopped: false,
   clientExecuting: null, // query, explain, stop
   clientCompleters: { databases: [], objects: [] },
 

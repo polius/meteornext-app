@@ -4,6 +4,7 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
 import models.admin.client
+import models.admin.inventory.servers
 import routes.admin.settings
 
 class Client:
@@ -14,6 +15,7 @@ class Client:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._client = models.admin.client.Client(sql)
+        self._servers = models.admin.inventory.servers.Servers(sql)
         # Init routes
         self._settings = routes.admin.settings.Settings(app, sql, license)
 
@@ -64,5 +66,26 @@ class Client:
 
             # Return Client Servers
             return jsonify({'servers': self._client.get_servers(), 'users': self._client.get_users()}), 200
+
+        @admin_client_blueprint.route('/admin/client/server', methods=['GET'])
+        @jwt_required()
+        def admin_client_server_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Check Settings - Security (Administration URL)
+            if not self._settings.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Return Client Servers
+            return jsonify({'server': self._servers.get(server_id=request.args['server_id'])}), 200
 
         return admin_client_blueprint
