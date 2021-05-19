@@ -980,11 +980,12 @@ export default {
             }
             if (this.index == index) this.showDialog(dialogOptions)
             current.clientExecuting = null
+            gridApi.showNoRowsOverlay()
             // Add execution to history
             const history = { section: 'client', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)
           }
-        }).finally(() => gridApi.hideOverlay())
+        })
     },
     parseQueries() {
       // Get Query/ies (selected or highlighted)
@@ -1037,12 +1038,12 @@ export default {
       }
       // Load Table Header
       current.clientHeaders = headers
+      // Load Table Items
       let itemsToLoad = []
-      var startDate = new Date();
       await new Promise((resolve) => {
-        // Load Table Items
-        const chunk = 1000
         const n = items.length
+        const chunk = 1000
+        if (n == 0) resolve()
         for (let i = 0; i < n; i+=chunk) {
           if (current.clientQueryStopped) { resolve(); break }
           setTimeout(() => {
@@ -1058,11 +1059,6 @@ export default {
         }
       })
       current.clientItems = itemsToLoad
-      // console.log("ITEMS: " + itemsToLoad.length.toString())
-      // console.log("FINISHED")
-      var endDate = new Date();
-      var seconds = (endDate.getTime() - startDate.getTime()) / 1000;
-      // console.log(seconds)
     },
     onRowDataChanged() {
       if (this.columnApi.client != null) this.resizeTable()
