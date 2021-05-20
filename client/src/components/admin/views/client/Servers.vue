@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-data-table v-model="selected" :headers="headers" :items="items" :hide-default-footer="items.length < 11" :loading="loading" item-key="id" show-select class="elevation-1">
+    <v-data-table v-model="selected" :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :hide-default-footer="items.length < 11" :loading="loading" item-key="id" show-select class="elevation-1">
       <template v-ripple v-slot:[`header.data-table-select`]="{}">
         <v-simple-checkbox
           :value="items.length == 0 ? false : selected.length == items.length"
@@ -8,20 +8,20 @@
           @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
         </v-simple-checkbox>
       </template>
-      <template v-slot:[`item.server_name`]="{ item }">
+      <template v-slot:[`item.server`]="{ item }">
         <v-btn @click="getServer(item.server_id)" text class="body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
-          <v-icon small :title="item.server_shared ? 'Shared' : 'Personal'" :color="item.server_shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
-            {{ item.server_shared ? 'fas fa-users' : 'fas fa-user' }}
+          <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
+            {{ item.shared ? 'fas fa-users' : 'fas fa-user' }}
           </v-icon>
-          {{ item.server_name }}
+          {{ item.server }}
         </v-btn>
       </template>
-      <template v-slot:[`item.server_shared`]="{ item }">
-        <v-icon small :title="item.server_shared ? 'Shared' : 'Personal'" :color="item.server_shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">{{ item.server_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+      <template v-slot:[`item.shared`]="{ item }">
+        <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
         {{ item.shared ? 'Shared' : 'Personal' }}
       </template>
-      <template v-slot:[`item.server_attached`]="{ item }">
-        <v-icon small :title="item.server_attached ? 'Attached' : 'Detached'" :color="item.server_attached ? '#00b16a' : 'error'" style="margin-left:15px">fas fa-circle</v-icon>
+      <template v-slot:[`item.attached`]="{ item }">
+        <v-icon small :title="item.attached ? 'Attached' : 'Detached'" :color="item.attached ? '#00b16a' : 'error'" style="margin-left:15px">fas fa-circle</v-icon>
       </template>
     </v-data-table>
 
@@ -32,7 +32,7 @@
           <v-spacer></v-spacer>
           <v-btn icon @click="filterDialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 10px 15px 15px 15px;">
+        <v-card-text style="padding: 15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
@@ -55,27 +55,12 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-autocomplete :loading="loading" text v-model="filter.server" :items="filterServers" item-value="name" item-text="name" label="Server" style="padding-top:0px" hide-details>
-                        <template v-slot:item="{ item }" >
-                          <v-row no-gutters align="center">
-                            <v-col class="flex-grow-1 flex-shrink-1">
-                              {{ item.name }}
-                            </v-col>
-                            <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
-                              <v-chip label><v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
-                            </v-col>
-                          </v-row>
-                        </template>
-                        <template v-slot:selection="{ item }" >
-                          <v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:7px; margin-top:2px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                          {{ item.name }}
-                        </template>
-                      </v-autocomplete>
+                      <v-autocomplete :loading="loading" text v-model="filter.server" :items="filterServers" label="Server" style="padding-top:0px" hide-details></v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-checkbox v-model="filter.attached" label="Attached" style="margin-top:0px" hide-details></v-checkbox>
+                      <v-checkbox v-model="filter.attached" label="Server Attached" style="margin-top:0px" hide-details></v-checkbox>
                     </v-col>
                   </v-row>
                 </v-form>
@@ -103,15 +88,18 @@ export default {
   data() {
     return {
       loading: true,
+      origin: [],
       items: [],
       headers: [
-        { text: 'User', align: 'left', value: 'user_username' },
-        { text: 'Server', align: 'left', value: 'server_name' },
-        { text: 'Attached', align: 'left', value: 'server_attached' },
+        { text: 'User', align: 'left', value: 'user' },
+        { text: 'Server', align: 'left', value: 'server' },
+        { text: 'Attached', align: 'left', value: 'attached' },
         { text: 'Attached Date', align: 'left', value: 'date' },
-        { text: 'Folder Name', align: 'left', value: 'folder_name' },
+        { text: 'Folder', align: 'left', value: 'folder' },
       ],
       selected: [],
+      options: null,
+      total: 0,
       // Filter Dialog
       filterDialog: false,
       filter: {},
@@ -126,9 +114,20 @@ export default {
     EventBus.$on('refresh-client-servers', this.getServers)
     EventBus.$on('attach-client-servers', this.attachServers)
     EventBus.$on('detach-client-servers', this.detachServers)
-    this.getServers()
   },
   watch: {
+    options: {
+      handler (newValue, oldValue) {
+        if (oldValue == null || (oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
+          this.getServers()
+        }
+        else this.onSearch()
+      },
+      deep: true,
+    },
+    search: function() {
+      this.onSearch()
+    },
     selected: function(val) {
       EventBus.$emit('client-servers-select', val)
     },
@@ -136,18 +135,24 @@ export default {
   methods: {
     getServers() {
       this.loading = true
-      // Get Client queries
-      axios.get('/admin/client/servers')
+      var payload = {}
+      // Build Filter
+      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
+      if (filter != null) payload['filter'] = filter
+      // Build Sort
+      const { sortBy, sortDesc } = this.options
+      if (sortBy.length > 0) payload['sort'] = { column: sortBy[0], desc: sortDesc[0] }
+      // Get Client Servers
+      axios.get('/admin/client/servers', { params: payload })
         .then((response) => {
-          this.items = response.data.servers.map(x => ({...x, date: this.dateFormat(x.date)}))
+          this.origin = response.data.servers.map(x => ({...x, date: this.dateFormat(x.date)}))
+          this.total = this.origin.length
           this.filterUsers = response.data.users
-          this.filterServers = this.items.reduce((acc, val) => {
-            if (!(acc.find(x => x.name == val.server_name && x.shared == val.server_shared))) {
-              acc.push({ name: val.server_name, shared: val.server_shared })
-            }
+          this.filterServers = this.origin.reduce((acc, val) => {
+            if (!(acc.find(x => x.name == val.server))) acc.push(val.server)
             return acc
           },[])
-          // this.onSearch()
+          this.onSearch()
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -155,16 +160,40 @@ export default {
         })
         .finally(() => this.loading = false)
     },
+    onSearch() {
+      const { page, itemsPerPage } = this.options
+      const itemStart = (page-1) * itemsPerPage
+      const itemEnd = (page-1) * itemsPerPage + itemsPerPage
+      if (this.search.length == 0) this.items = this.origin.slice(itemStart, itemEnd)
+      else {
+        this.items = this.origin.filter(x => {(
+          x.user.includes(this.search) ||
+          x.server.includes(this.search) ||
+          x.attached.includes(this.search) ||
+          x.date.includes(this.search) ||
+          x.folder.includes(this.search)
+        )}).slice(itemStart, itemEnd)
+      }
+    },
     getServer(server_id) {
       EventBus.$emit('client-get-server', server_id)
     },
     submitFilter() {
-
+      // Check if some filter was applied
+      if (!Object.keys(this.filter).some(x => this.filter[x] != null && this.filter[x].length != 0)) {
+        this.notification('Enter at least one filter', 'error')
+        return
+      }
+      this.filterDialog = false
+      EventBus.$emit('client-toggle-filter', { from: 'servers', value: true })
+      this.filterApplied = true
+      this.getServers()
     },
     clearFilter() {
       this.filterDialog = false
       this.filter = {}
-      EventBus.$emit('client-toggle-filter', false)
+      EventBus.$emit('client-toggle-filter', { from: 'servers', value: false })
+      this.filterApplied = false
       this.getServers()
     },
     attachServers() {

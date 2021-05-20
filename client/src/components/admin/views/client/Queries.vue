@@ -53,7 +53,7 @@
           <v-spacer></v-spacer>
           <v-btn icon @click="filterDialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 10px 15px 15px 15px;">
+        <v-card-text style="padding: 15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
@@ -76,22 +76,7 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-autocomplete :loading="loading" text v-model="filter.server" :items="filterServers" item-value="name" item-text="name" label="Server" style="padding-top:0px" hide-details>
-                        <template v-slot:item="{ item }" >
-                          <v-row no-gutters align="center">
-                            <v-col class="flex-grow-1 flex-shrink-1">
-                              {{ item.name }}
-                            </v-col>
-                            <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
-                              <v-chip label><v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
-                            </v-col>
-                          </v-row>
-                        </template>
-                        <template v-slot:selection="{ item }" >
-                          <v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:7px; margin-top:2px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                          {{ item.name }}
-                        </template>
-                      </v-autocomplete>
+                      <v-autocomplete :loading="loading" text v-model="filter.server" :items="filterServers" label="Server" style="padding-top:0px" hide-details></v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
@@ -234,7 +219,6 @@ export default {
   props: ['search'],
   mounted() {
     EventBus.$on('filter-client-queries', () => { this.filterDialog = true })
-    EventBus.$on('client-toggle-filter', (value) => { this.filterApplied = value })
     EventBus.$on('refresh-client-queries', this.getQueries)
     this.editor = ace.edit("editor", {
       mode: "ace/mode/mysql",
@@ -307,9 +291,7 @@ export default {
           this.total = this.origin.length
           this.filterUsers = response.data.users
           this.filterServers = this.origin.reduce((acc, val) => {
-            if (!(acc.find(x => x.name == val.server && x.shared == val.shared))) {
-              acc.push({ name: val.server, shared: val.shared })
-            }
+            if (!(acc.find(x => x.name == val.server))) acc.push(val.server)
             return acc
           },[])
           this.onSearch()
@@ -362,13 +344,15 @@ export default {
         return
       }
       this.filterDialog = false
-      EventBus.$emit('client-toggle-filter', true)
+      EventBus.$emit('client-toggle-filter', { from: 'queries', value: true })
+      this.filterApplied = true
       this.getQueries()
     },
     clearFilter() {
       this.filterDialog = false
       this.filter = {}
-      EventBus.$emit('client-toggle-filter', false)
+      EventBus.$emit('client-toggle-filter', { from: 'queries', value: false })
+      this.filterApplied = false
       this.getQueries()
     },
     dateFormat(date) {

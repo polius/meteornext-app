@@ -77,20 +77,59 @@ class Client:
         return self._sql.execute(query)
 
     def get_servers(self, dfilter=None, dsort=None):
-        query = """
-            SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user_username, available.server_id, available.server_name, available.server_shared, cs.server_id IS NOT NULL AS 'server_attached', cs.date, cf.name AS 'folder_name'
-            FROM (
-                SELECT u.id AS 'user_id', u.username AS 'user_username', s.id AS 'server_id', s.name AS 'server_name', s.shared AS 'server_shared'
-                FROM servers s
-                JOIN groups g ON g.id = s.group_id
-                LEFT JOIN users u ON u.group_id = g.id
-                WHERE (s.shared = 1 OR u.id IS NOT NULL)
-                AND s.usage LIKE '%C%'
-            ) available
-            LEFT JOIN client_servers cs USING (user_id, server_id)
-            LEFT JOIN client_folders cf ON cf.id = cs.folder_id
-            WHERE available.user_id IS NOT NULL
-            ORDER BY cs.date DESC
-            LIMIT 1000
-        """
-        return self._sql.execute(query)
+        if dfilter is None and dsort is None:
+            query = """
+                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user, available.server_id, available.server, available.shared, cs.server_id IS NOT NULL AS 'attached', cs.date, cf.name AS 'folder'
+                FROM (
+                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared
+                    FROM servers s
+                    JOIN groups g ON g.id = s.group_id
+                    LEFT JOIN users u ON u.group_id = g.id
+                    WHERE (s.shared = 1 OR u.id IS NOT NULL)
+                    AND s.usage LIKE '%C%'
+                ) available
+                LEFT JOIN client_servers cs USING (user_id, server_id)
+                LEFT JOIN client_folders cf ON cf.id = cs.folder_id
+                WHERE available.user_id IS NOT NULL
+                ORDER BY cs.date DESC
+                LIMIT 1000
+            """
+            return self._sql.execute(query)
+        else:
+            user = server = attached = ''
+            args = []
+            sort_column = 'cs.date'
+            sort_order = 'DESC'
+            if dfilter is not None:
+                if 'user' in dfilter and len(dfilter['user']) > 0:
+                    user = 'AND u.username = %s'
+                    args.append(dfilter['user'])
+                if 'server' in dfilter and len(dfilter['server']) > 0:
+                    server = 'AND s.name = %s'
+                    args.append(dfilter['server'])
+                if 'attached' in dfilter:
+                    attached = 'AND cs.server_id IS NOT NULL' if dfilter['attached'] else 'AND cs.server_id IS NULL'
+
+            if dsort is not None:
+                sort_column = dsort['column']
+                sort_order = 'DESC' if dsort['desc'] else 'ASC'
+
+            query = """
+                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user, available.server_id, available.server, available.shared, cs.server_id IS NOT NULL AS 'attached', cs.date, cf.name AS 'folder'
+                FROM (
+                    SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared
+                    FROM servers s
+                    JOIN groups g ON g.id = s.group_id
+                    LEFT JOIN users u ON u.group_id = g.id
+                    WHERE (s.shared = 1 OR u.id IS NOT NULL)
+                    AND s.usage LIKE '%%C%%'
+                    {} {}
+                ) available
+                LEFT JOIN client_servers cs USING (user_id, server_id)
+                LEFT JOIN client_folders cf ON cf.id = cs.folder_id
+                WHERE available.user_id IS NOT NULL
+                {}
+                ORDER BY {} {}
+                LIMIT 1000
+            """.format(user, server, attached, sort_column, sort_order)
+            return self._sql.execute(query, args)
