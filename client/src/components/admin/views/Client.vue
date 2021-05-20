@@ -11,7 +11,7 @@
           </v-tabs>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="refreshClick" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
-          <v-btn @click="filterClick" text class="body-2" :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn @click="filterClick" text class="body-2" :style="{ backgroundColor : filterActive ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn v-show="tabs == 1 && attached != null" @click="attachClick" text class="body-2"><v-icon small style="padding-right:10px">{{ attached ? 'fas fa-minus' : 'fas fa-plus' }}</v-icon>{{ attached ? 'DETACH' : 'ATTACH' }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
@@ -106,7 +106,10 @@ export default {
       loading: false,
       attached: null,
       search: '',
-      filterApplied: false,
+      filter: {
+        queries: false,
+        servers: false
+      },
       // Server Dialog
       serverDialog: false,
       server: {},
@@ -115,9 +118,14 @@ export default {
   },
   components: { Queries, Servers },
   mounted() {
-    EventBus.$on('client-toggle-filter', (value) => { this.filterApplied = value })
+    EventBus.$on('client-toggle-filter', (value) => { this.filter[value.from] = value.value })
     EventBus.$on('client-get-server', this.getServer)
     EventBus.$on('client-servers-select', this.selectServer)
+  },
+  computed: {
+    filterActive: function() {
+      return (this.filter['queries'] && this.tabs == 0) || (this.filter['servers'] && this.tabs == 1)
+    },
   },
   methods: {
     getServer(server_id) {
