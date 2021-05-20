@@ -86,6 +86,6 @@ class Client:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Return Client Servers
-            return jsonify({'server': self._servers.get(server_id=request.args['server_id'])}), 200
+            return jsonify({'server': self._servers.get(server_id=request.args['server_id']), 'users': self._client.get_users()}), 200
 
         return admin_client_blueprint

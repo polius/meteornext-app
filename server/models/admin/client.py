@@ -68,8 +68,13 @@ class Client:
             return self._sql.execute(query, args)
 
     def get_users(self):
-        query = "SELECT username FROM users ORDER BY username"
-        return [i['username'] for i in self._sql.execute(query)]
+        query = """
+            SELECT u.username AS 'user', g.name AS 'group'
+            FROM users u
+            JOIN groups g ON g.id = u.group_id
+            ORDER BY u.username
+        """
+        return self._sql.execute(query)
 
     def get_servers(self, dfilter=None, dsort=None):
         query = """

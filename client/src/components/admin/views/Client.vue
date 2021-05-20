@@ -12,7 +12,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="refreshClick" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
           <v-btn @click="filterClick" text class="body-2" :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
-          <v-btn v-show="tabs == 1" @click="attachClick" text class="body-2"><v-icon small style="padding-right:10px">{{ attached ? 'fas fa-unlink' : 'fas fa-link' }}</v-icon>{{ attached ? 'DEATACH' : 'ATTACH' }}</v-btn>
+          <v-btn v-show="tabs == 1 && attached != null" @click="attachClick" text class="body-2"><v-icon small style="padding-right:10px">{{ attached ? 'fas fa-minus' : 'fas fa-plus' }}</v-icon>{{ attached ? 'DETACH' : 'ATTACH' }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -104,7 +104,7 @@ export default {
     return {
       tabs: 0,
       loading: false,
-      attached: false,
+      attached: null,
       search: '',
       filterApplied: false,
       // Server Dialog
@@ -117,6 +117,7 @@ export default {
   mounted() {
     EventBus.$on('client-toggle-filter', (value) => { this.filterApplied = value })
     EventBus.$on('client-get-server', this.getServer)
+    EventBus.$on('client-servers-select', this.selectServer)
   },
   methods: {
     getServer(server_id) {
@@ -135,6 +136,12 @@ export default {
         })
         .finally(() => this.loading = false)
     },
+    selectServer(val) {
+      if (val.length == 0) this.attached = null
+      else if (val.every(x => x.server_attached == 1)) this.attached = true
+      else if (val.every(x => x.server_attached == 0)) this.attached = false
+      else this.attached = null
+    },
     filterClick() {
       if (this.tabs == 0) EventBus.$emit('filter-client-queries')
       else EventBus.$emit('filter-client-servers')
@@ -144,7 +151,8 @@ export default {
       else EventBus.$emit('refresh-client-servers')
     },
     attachClick() {
-      
+      if (this.attached) EventBus.$emit('detach-client-servers')
+      else EventBus.$emit('attach-client-servers')
     },
     testConnection() {
       // Test Connection

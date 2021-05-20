@@ -166,8 +166,18 @@
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">fas fa-rss</v-icon>EVENTS</v-toolbar-title>
+          <!-- <v-select background-color="primary" solo dense @change="changeEventFilter" v-model="events_filter" label="Filter" :items="events_filter_items" hide-details>
+            <template v-slot:[`selection`]="{ item }">
+              <div :style="`width:5px; height:30px; margin-right:10px; background-color:` + getEventColor(item)"></div>
+              {{ item.toUpperCase() }}
+            </template>
+            <template v-slot:[`item`]="{ item }">
+              <div :style="`width:5px; height:30px; margin-right:10px; background-color:` + getEventColor(item)"></div>
+              {{ item.toUpperCase() }}
+            </template>
+          </v-select> -->
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-text-field v-model="events_search" append-icon="search" label="Search" color="white" style="margin-left:5px; width:calc(100% - 170px)" single-line hide-details></v-text-field>
+          <v-text-field v-model="events_search" append-icon="search" label="Search" color="white" style="margin-left:5px; width:calc(100% - 640px)" single-line hide-details></v-text-field>
           <v-divider class="mx-3" inset vertical style="margin-right:5px!important;"></v-divider>
           <v-btn icon @click="events_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -291,8 +301,11 @@
           { text: 'Message', align: 'left', value: 'message' },
           { text: 'Time', align: 'left', value: 'time' },
         ],
+        events_origin: [],
         events_items: [],
         events_search: '',
+        events_filter_items: ['all','unavailable','available','restarted','parameters','connections_critical','connections_warning','connections_stable'],
+        events_filter: 'All events',
 
         // Event Details Dialog
         event_details_dialog: false,
@@ -403,7 +416,12 @@
         this.applyFilter()
       },
       parseEvents(events) {
-        this.events_items = events
+        this.events_origin = events
+        this.events_items = JSON.parse(JSON.stringify(events))
+      },
+      changeEventFilter(value) {
+        console.log(value)
+        console.log(this.events_items)
       },
       parseTreeView(servers) {
         var data = []
@@ -546,7 +564,8 @@
           .finally(() => this.loading = false)
       },
       getEventColor(event) {
-        if (['available','connections_stable'].includes(event)) return '#4caf50'
+        if (event == 'all') return ''
+        else if (['available','connections_stable'].includes(event)) return '#4caf50'
         else if (['restarted','connections_warning'].includes(event)) return '#ff9800'
         else if (event == 'parameters') return '#3e9bef'
         else return '#e74c3c'

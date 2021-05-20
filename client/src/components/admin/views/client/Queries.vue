@@ -60,12 +60,38 @@
                 <v-form ref="form" style="margin-top:10px; margin-bottom:20px;">
                   <v-row>
                     <v-col>
-                      <v-autocomplete :loading="loading" text v-model="filter.user" :items="filterUsers" label="User" clearable style="padding-top:0px" hide-details></v-autocomplete>
+                      <v-autocomplete :loading="loading" text v-model="filter.user" :items="filterUsers" item-value="user" item-text="user" label="User" style="padding-top:0px" hide-details>
+                        <template v-slot:item="{ item }" >
+                          <v-row no-gutters align="center">
+                            <v-col class="flex-grow-1 flex-shrink-1">
+                              {{ item.user }}
+                            </v-col>
+                            <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
+                              <v-chip label>{{ item.group }}</v-chip>
+                            </v-col>
+                          </v-row>
+                        </template>
+                      </v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-text-field text v-model="filter.server" label="Server" style="padding-top:0px" hide-details></v-text-field>
+                      <v-autocomplete :loading="loading" text v-model="filter.server" :items="filterServers" item-value="name" item-text="name" label="Server" style="padding-top:0px" hide-details>
+                        <template v-slot:item="{ item }" >
+                          <v-row no-gutters align="center">
+                            <v-col class="flex-grow-1 flex-shrink-1">
+                              {{ item.name }}
+                            </v-col>
+                            <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
+                              <v-chip label><v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
+                            </v-col>
+                          </v-row>
+                        </template>
+                        <template v-slot:selection="{ item }" >
+                          <v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:7px; margin-top:2px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
+                      </v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
@@ -192,6 +218,7 @@ export default {
       ],
       filter: {},
       filterUsers: [],
+      filterServers: [],
       filterApplied: false,
       dateTimeDialog: false,
       dateTimeField: '',
@@ -279,6 +306,12 @@ export default {
           this.origin = response.data.queries.map(x => ({...x, date: this.dateFormat(x.date)}))
           this.total = this.origin.length
           this.filterUsers = response.data.users
+          this.filterServers = this.origin.reduce((acc, val) => {
+            if (!(acc.find(x => x.name == val.server && x.shared == val.shared))) {
+              acc.push({ name: val.server, shared: val.shared })
+            }
+            return acc
+          },[])
           this.onSearch()
         })
         .catch((error) => {
