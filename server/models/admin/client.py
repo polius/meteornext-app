@@ -29,10 +29,10 @@ class Client:
                     'contains': "LIKE '%%%s%%'",
                     'not_contains': "NOT LIKE '%%%s%%",
                 }
-                if 'user' in dfilter and len(dfilter['user']) > 0:
+                if 'user' in dfilter and dfilter['user'] is not None:
                     user = 'AND u.username = %s'
                     args.append(dfilter['user'])
-                if 'server' in dfilter and len(dfilter['server']) > 0:
+                if 'server' in dfilter and dfilter['server'] is not None:
                     server = 'AND s.name = %s'
                     args.append(dfilter['server'])
                 if 'database' in dfilter and len(dfilter['database']) > 0 and 'databaseFilter' in dfilter and dfilter['databaseFilter'] in matching:
@@ -41,7 +41,7 @@ class Client:
                 if 'query' in dfilter and len(dfilter['query']) > 0 and 'queryFilter' in dfilter and dfilter['queryFilter'] in matching:
                     database = f"AND cq.query {dfilter['queryFilter']}"
                     args.append(dfilter['query'])
-                if 'status' in dfilter and len(dfilter['status']) > 0:
+                if 'status' in dfilter and dfilter['status'] is not None:
                     status = 'AND cq.status = %s'
                     args.append(dfilter['status'])
                 if 'dateFrom' in dfilter and len(dfilter['dateFrom']) > 0:
@@ -79,7 +79,7 @@ class Client:
     def get_servers(self, dfilter=None, dsort=None):
         if dfilter is None and dsort is None:
             query = """
-                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user, available.server_id, available.server, available.shared, cs.server_id IS NOT NULL AS 'attached', cs.date, cf.name AS 'folder'
+                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, available.shared, cs.server_id IS NOT NULL AS 'attached', cs.date, cf.name AS 'folder'
                 FROM (
                     SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared
                     FROM servers s
@@ -101,21 +101,21 @@ class Client:
             sort_column = 'cs.date'
             sort_order = 'DESC'
             if dfilter is not None:
-                if 'user' in dfilter and len(dfilter['user']) > 0:
+                if 'user' in dfilter and dfilter['user'] is not None:
                     user = 'AND u.username = %s'
                     args.append(dfilter['user'])
-                if 'server' in dfilter and len(dfilter['server']) > 0:
+                if 'server' in dfilter and dfilter['server'] is not None:
                     server = 'AND s.name = %s'
                     args.append(dfilter['server'])
-                if 'attached' in dfilter:
-                    attached = 'AND cs.server_id IS NOT NULL' if dfilter['attached'] else 'AND cs.server_id IS NULL'
+                if 'attached' in dfilter and dfilter['attached'] is not None:
+                    attached = 'AND cs.server_id IS NOT NULL' if dfilter['attached'] == 'attached' else 'AND cs.server_id IS NULL'
 
             if dsort is not None:
                 sort_column = dsort['column']
                 sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
             query = """
-                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user, available.server_id, available.server, available.shared, cs.server_id IS NOT NULL AS 'attached', cs.date, cf.name AS 'folder'
+                SELECT CONCAT(available.user_id, '|', available.server_id) AS 'id', available.user_id, available.user, available.server_id, available.server, available.shared, cs.server_id IS NOT NULL AS 'attached', cs.date, cf.name AS 'folder'
                 FROM (
                     SELECT u.id AS 'user_id', u.username AS 'user', s.id AS 'server_id', s.name AS 'server', s.shared
                     FROM servers s
@@ -127,9 +127,25 @@ class Client:
                 ) available
                 LEFT JOIN client_servers cs USING (user_id, server_id)
                 LEFT JOIN client_folders cf ON cf.id = cs.folder_id
-                WHERE available.user_id IS NOT NULL
-                {}
+                WHERE available.user_id IS NOT NULL {}
                 ORDER BY {} {}
                 LIMIT 1000
             """.format(user, server, attached, sort_column, sort_order)
             return self._sql.execute(query, args)
+
+    def attach_servers(self, data):
+        for server in data['servers']:
+            query = """
+                INSERT INTO client_servers (`user_id`, `server_id`, `date`)
+                VALUES (%s, %s, %s)
+            """
+            self._sql.execute(query, (server['user_id'], server['server_id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+
+    def detach_servers(self, data):
+        for server in data:
+            query = """
+                DELETE FROM client_servers
+                WHERE user_id = %s
+                AND server_id = %s
+            """
+            self._sql.execute(query, (server['user_id'], server['server_id']))

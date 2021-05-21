@@ -17,8 +17,8 @@
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
-      <Queries v-show="tabs == 0" :search="search" />
-      <Servers v-show="tabs == 1" :search="search" />
+      <Queries v-show="tabs == 0" :active="tabs == 0" :search="search" />
+      <Servers v-show="tabs == 1" :active="tabs == 1" :search="search" />
     </v-card>
     <v-dialog v-model="serverDialog" max-width="768px">
       <v-card>
@@ -140,14 +140,14 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
     },
     selectServer(val) {
       if (val.length == 0) this.attached = null
-      else if (val.every(x => x.server_attached == 1)) this.attached = true
-      else if (val.every(x => x.server_attached == 0)) this.attached = false
+      else if (val.every(x => x.attached == 1)) this.attached = true
+      else if (val.every(x => x.attached == 0)) this.attached = false
       else this.attached = null
     },
     filterClick() {
@@ -164,7 +164,7 @@ export default {
     },
     testConnection() {
       // Test Connection
-      // this.notification('Testing Server...', 'info', true)
+      EventBus.$emit('send-notification', 'Testing Server...', 'info')
       this.loading = true
       const payload = {
         region_id: this.server.region_id,
@@ -173,11 +173,11 @@ export default {
       axios.post('/admin/inventory/servers/test', payload)
         .then((response) => {
           console.log(response.data.message)
-          // this.notification(response.data.message, '#00b16a', 2)
+          EventBus.$emit('send-notification', response.data.message, '#00b16a')
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
     },

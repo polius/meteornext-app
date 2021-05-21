@@ -46,7 +46,7 @@ class Client:
             dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
             return jsonify({'queries': self._client.get_queries(dfilter, dsort), 'users': self._client.get_users()}), 200
 
-        @admin_client_blueprint.route('/admin/client/servers', methods=['GET'])
+        @admin_client_blueprint.route('/admin/client/servers', methods=['GET','POST','DELETE'])
         @jwt_required()
         def admin_client_servers_method():
             # Check license
@@ -64,10 +64,19 @@ class Client:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Return Client Servers
-            dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
-            dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
-            return jsonify({'servers': self._client.get_servers(dfilter, dsort), 'users': self._client.get_users()}), 200
+            if request.method == 'GET':
+                # Return Client Servers
+                dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
+                dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
+                return jsonify({'servers': self._client.get_servers(dfilter, dsort), 'users': self._client.get_users()}), 200
+            elif request.method == 'POST':
+                # Attach Servers
+                self._client.attach_servers(request.get_json())
+                return jsonify({'message': 'Server(s) Successfully Attached'}), 200
+            elif request.method == 'DELETE':
+                # Detach Servers
+                self._client.detach_servers(json.loads(request.args['servers']))
+                return jsonify({'message': 'Server(s) Successfully Detached'}), 200
 
         @admin_client_blueprint.route('/admin/client/server', methods=['GET'])
         @jwt_required()
