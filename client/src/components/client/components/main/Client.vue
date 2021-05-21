@@ -945,9 +945,12 @@ export default {
       axios.post('/client/execute', payload)
         .then((response) => {
           // Parse execution result
+          let data = JSON.parse(response.data.data)
+          // Add execution to history
+          const history = { section: 'client', server: server, queries: data }
+          this.$store.dispatch('client/addHistory', history)
           let current = this.connections.find(c => c['index'] == index)
           if (current === undefined) return
-          let data = JSON.parse(response.data.data)
           this.parseExecution(payload, data, current, gridApi).finally(() => {
             this.parseClientBottomBar(data, current)
             // Focus Editor
@@ -955,9 +958,6 @@ export default {
             this.editor.focus()
             this.editor.moveCursorTo(cursor.row, cursor.column)
             current.clientExecuting = null
-            // Add execution to history
-            const history = { section: 'client', server: server, queries: data }
-            this.$store.dispatch('client/addHistory', history)
           })
         })
         .catch((error) => {

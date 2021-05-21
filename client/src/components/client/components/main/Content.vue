@@ -33,7 +33,7 @@
             </v-col>
           </v-row>
         </div>
-        <ag-grid-vue ref="agGridContent" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @row-clicked="onRowClicked" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" @cell-context-menu="onContextMenu" @row-data-changed="onRowDataChanged" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
+        <ag-grid-vue ref="agGridContent" suppressDragLeaveHidesColumns suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" @cell-key-down="onCellKeyDown" @selection-changed="onSelectionChanged" @row-clicked="onRowClicked" @cell-editing-started="cellEditingStarted" @cell-editing-stopped="cellEditingStopped" @cell-context-menu="onContextMenu" @row-data-changed="onRowDataChanged" @sort-changed="onSortChanged" style="width:100%; height:calc(100% - 48px);" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="multiple" rowDeselection="true" :stopEditingWhenGridLosesFocus="true" :columnDefs="contentHeaders" :rowData="contentItems"></ag-grid-vue>
         <v-menu v-model="contextMenu" :position-x="contextMenuX" :position-y="contextMenuY" absolute offset-y style="z-index:10">
           <v-list style="padding:0px;">
             <v-list-item-group v-model="contextMenuModel">
@@ -205,6 +205,7 @@ export default {
   computed: {
     ...mapFields([
       'dialogOpened',
+      'connections',
     ], { path: 'client/client' }),
     ...mapFields([
       'index',
@@ -222,6 +223,7 @@ export default {
       'contentSearchColumn',
       'contentColumnsName',
       'contentConnection',
+      'contentSortState',
       'bottomBar'
     ], { path: 'client/connection' }),
     ...mapFields([
@@ -311,6 +313,9 @@ export default {
         this.gridApi.content.selectAll()
       }
     },
+    onSortChanged() {
+      this.filterClick()
+    },
     onContextMenu(e) {
       e.node.setSelected(true)
       this.contextMenuModel = null
@@ -356,6 +361,7 @@ export default {
     },
     getContent(force) {
       if (!force && this.contentConnection == this.sidebarSelected[0]['id']) return
+      this.contentSortState = []
       this.bottomBar.content = { status: '', text: '', info: '' }
       this.gridApi.content.showLoadingOverlay()
       const payload = {
@@ -406,8 +412,13 @@ export default {
           })
         }
       }
+      if (this.contentSortState.length > 0) {
+        headers = headers.map(x => (x.colId == this.contentSortState[0].colId ? {...x, sort: this.contentSortState[0].sort} : x))
+      }
       this.gridApi.content.setColumnDefs([])
       this.contentHeaders = headers
+
+      // Build Items
       this.contentItems = items
       this.isRowSelected = false
 
@@ -713,6 +724,9 @@ export default {
       else if (this.contentSearchFilterText.length != 0) condition = ' WHERE `' + this.contentSearchColumn + '` ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "'"
       // Build pagination
       var pagination = (this.page == 1) ? ' LIMIT 1000' : ' LIMIT ' + this.page * 1000 + ' OFFSET ' + this.page * 1000
+      // Build sort
+      this.contentSortState = this.columnApi.content.getColumnState().filter(x => x.sort != null).map(x => ({ colId: x.colId, sort: x.sort }))
+      const sort = this.contentSortState.length == 0 ? '' : ' ORDER BY `' + this.contentSortState[0].colId + '` ' + this.contentSortState[0].sort.toUpperCase()
       // Show overlay
       this.gridApi.content.showLoadingOverlay()
       // Build payload
@@ -721,16 +735,19 @@ export default {
         server: this.server.id,
         database: this.database,
         table: this.sidebarSelected[0]['name'],
-        queries: ['SELECT * FROM `' + this.sidebarSelected[0]['name'] + '`' + condition + pagination + ';' ]
+        queries: ['SELECT * FROM `' + this.sidebarSelected[0]['name'] + '`' + condition + sort + pagination + ';' ]
       }
       const server = this.server
+      const index = this.index
       axios.post('/client/execute', payload)
         .then((response) => {
           let data = JSON.parse(response.data.data)
-          this.parseContentExecution(data)
           // Add execution to history
           const history = { section: 'content', server: server, queries: data } 
           this.$store.dispatch('client/addHistory', history)
+          let current = this.connections.find(c => c['index'] == index)
+          if (current === undefined) return
+          this.parseContentExecution(data)
         })
         .catch((error) => {
           this.gridApi.content.hideOverlay()

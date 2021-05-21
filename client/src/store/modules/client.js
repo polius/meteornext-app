@@ -61,6 +61,7 @@ const connection = {
   contentSearchFilterText2: '',
   contentHeaders: [],
   contentItems: [],
+  contentSortState: [],
   contentConnection: null,
 
   // Info
