@@ -60,7 +60,7 @@
                 <v-form ref="form" style="margin-top:10px; margin-bottom:20px;">
                   <v-row>
                     <v-col>
-                      <v-autocomplete :loading="loading" text v-model="filter.user" :items="filterUsers" item-value="user" item-text="user" label="User" style="padding-top:0px" hide-details>
+                      <v-autocomplete :loading="loading" text v-model="filter.user" :items="filterUsers" item-value="user" item-text="user" label="User" clearable style="padding-top:0px" hide-details>
                         <template v-slot:item="{ item }" >
                           <v-row no-gutters align="center">
                             <v-col class="flex-grow-1 flex-shrink-1">
@@ -76,7 +76,7 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-autocomplete :loading="loading" text v-model="filter.server" :items="filterServers" label="Server" style="padding-top:0px" hide-details></v-autocomplete>
+                      <v-autocomplete :loading="loading" text v-model="filter.server" :items="filterServers" label="Server" clearable style="padding-top:0px" hide-details></v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
@@ -143,13 +143,6 @@
 
     <!-- Preload -->
     <div v-show="false" id="editor" style="height:50vh; width:100%"></div>
-
-    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
-      {{ snackbarText }}
-      <template v-slot:action="{ attrs }">
-        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
-      </template>
-    </v-snackbar>
   </div>
 </template>
 
@@ -209,14 +202,9 @@ export default {
       dateTimeField: '',
       dateTimeMode: 'date',
       dateTimeValue: { date: null, time: null },
-      // Snackbar
-      snackbar: false,
-      snackbarTimeout: Number(3000),
-      snackbarText: '',
-      snackbarColor: ''
     }
   },
-  props: ['search'],
+  props: ['active','search'],
   mounted() {
     EventBus.$on('filter-client-queries', () => { this.filterDialog = true })
     EventBus.$on('refresh-client-queries', this.getQueries)
@@ -235,8 +223,11 @@ export default {
       },
       deep: true,
     },
+    active: function(newVal) {
+      if (newVal) this.onSearch()
+    },
     search: function() {
-      this.onSearch()
+      if (this.active) this.onSearch()
     },
     expanded: function(val) {
       if (val.length == 0) return
@@ -298,7 +289,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
         .finally(() => this.loading = false)
     },
@@ -311,13 +302,13 @@ export default {
       const itemEnd = (page-1) * itemsPerPage + itemsPerPage
       if (this.search.length == 0) this.items = this.origin.slice(itemStart, itemEnd)
       else {
-        this.items = this.origin.filter(x => {(
+        this.items = this.origin.filter(x =>
           x.date.includes(this.search) ||
           x.user.includes(this.search) ||
           x.server.includes(this.search) ||
           x.database.includes(this.search) ||
           x.query.includes(this.search)
-        )}).slice(itemStart, itemEnd)
+        ).slice(itemStart, itemEnd)
       }
     },
     dateTimeDialogOpen(field) {
@@ -340,7 +331,7 @@ export default {
     submitFilter() {
       // Check if some filter was applied
       if (!Object.keys(this.filter).some(x => this.filter[x] != null && this.filter[x].length != 0)) {
-        this.notification('Enter at least one filter', 'error')
+        EventBus.$emit('send-notification', 'Enter at least one filter.', 'error')
         return
       }
       this.filterDialog = false
@@ -359,11 +350,6 @@ export default {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
     },
-    notification(message, color) {
-      this.snackbarText = message
-      this.snackbarColor = color 
-      this.snackbar = true
-    }
   }
 }
 </script>
