@@ -252,7 +252,7 @@
                   <v-text-field readonly v-model="information_dialog_data.name" label="Name" :rules="[v => !!v || '']" style="margin-top:15px;"></v-text-field>
                   <v-autocomplete :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '']" style="padding-top:0px;">
                     <template v-slot:item="{ item }" >
-                      <v-row no-gutters>
+                      <v-row align="center" no-gutters>
                         <v-col class="flex-grow-1 flex-shrink-1">
                           {{ item.name }}
                         </v-col>

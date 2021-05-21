@@ -9,7 +9,7 @@
             <v-select :loading="loading_rel" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
             <v-autocomplete :loading="loading_env" v-model="environment" :items="environment_items" item-value="id" item-text="name" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;" hide-details>
               <template v-slot:item="{ item }" >
-                <v-row no-gutters>
+                <v-row align="center" no-gutters>
                   <v-col class="flex-grow-1 flex-shrink-1">
                     {{ item.name }}
                   </v-col>
