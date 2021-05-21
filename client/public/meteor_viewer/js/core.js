@@ -843,11 +843,11 @@ function init_filter_modal() {
   FILTER_DATABASE.sort();
   FILTER_QUERY.sort();
   // Init Dropdown Values
-  for (var i = 0; i < FILTER_ENVIRONMENT.length; ++i) $('#filter-environment').append('<option value="' + (i + 1) + '">' + FILTER_ENVIRONMENT[i] + '</option>');
-  for (var i = 0; i < FILTER_REGION.length; ++i) $('#filter-region').append('<option value="' + (i + 1) + '">' + FILTER_REGION[i] + '</option>');
-  for (var i = 0; i < FILTER_SERVER.length; ++i) $('#filter-server').append('<option value="' + (i + 1) + '">' + FILTER_SERVER[i] + '</option>');
-  for (var i = 0; i < FILTER_DATABASE.length; ++i) $('#filter-database').append('<option value="' + (i + 1) + '">' + FILTER_DATABASE[i] + '</option>');
-  for (var i = 0; i < FILTER_QUERY.length; ++i) $('#filter-query').append('<option value="' + (i + 1) + '">' + FILTER_QUERY[i] + '</option>');
+  for (var i = 0; i < FILTER_ENVIRONMENT.length; ++i) $('#filter-environment').append($('<option>', { value: i + 1, text: FILTER_ENVIRONMENT[i] }))
+  for (var i = 0; i < FILTER_REGION.length; ++i) $('#filter-region').append($('<option>', { value: i + 1, text: FILTER_REGION[i] }))
+  for (var i = 0; i < FILTER_SERVER.length; ++i) $('#filter-server').append($('<option>', { value: i + 1, text: FILTER_SERVER[i] }))
+  for (var i = 0; i < FILTER_DATABASE.length; ++i) $('#filter-database').append($('<option>', { value: i + 1, text: FILTER_DATABASE[i] }))
+  for (var i = 0; i < FILTER_QUERY.length; ++i) $('#filter-query').append($('<option>', { value: i + 1, text: FILTER_QUERY[i] }))
 
   /////////////////////
   // CUSTOM ELEMENTS //
@@ -881,7 +881,7 @@ function init_filter_modal() {
   // Init Dropdown Values
   for (var i = 0; i < FILTER_CUSTOM_COLUMNS.length; ++i) {
     for (var j = 0; j < FILTER_CUSTOM_DATA[FILTER_CUSTOM_COLUMNS[i]].length; ++j) {
-      $('#filter-' + FILTER_CUSTOM_COLUMNS[i]).append('<option value="' + (i + 1) + '">' + FILTER_CUSTOM_DATA[FILTER_CUSTOM_COLUMNS[i]][j] + '</option>');
+      $('#filter-' + FILTER_CUSTOM_COLUMNS[i]).append($('<option>', { value: i + 1, text: FILTER_CUSTOM_DATA[FILTER_CUSTOM_COLUMNS[i]][j] }))
     }
   }
 }
@@ -1086,10 +1086,7 @@ function init_transformation_modal() {
   TRANSFORMATION_QUERY.sort()
   // Init Dropdown Values
   for (let i = 0; i < TRANSFORMATION_QUERY.length; ++i) {
-    $('#transformation-query').append($('<option>', {
-      value: i + 1,
-      text: TRANSFORMATION_QUERY[i]
-    }))
+    $('#transformation-query').append($('<option>', { value: i + 1, text: TRANSFORMATION_QUERY[i] }))
   }
 }
 
