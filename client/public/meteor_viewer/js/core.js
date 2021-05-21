@@ -1079,13 +1079,18 @@ function init_transformation_modal() {
           }
         }
       }
-      else TRANSFORMATION_QUERY.push(DATA[i]['meteor_query']);
+      else TRANSFORMATION_QUERY.push(DATA[i]['meteor_query'])
     }
   }
   // Sort Dropdown Values
-  TRANSFORMATION_QUERY.sort();
+  TRANSFORMATION_QUERY.sort()
   // Init Dropdown Values
-  for (var i = 0; i < TRANSFORMATION_QUERY.length; ++i) $('#transformation-query').append('<option value="' + (i + 1) + '">' + TRANSFORMATION_QUERY[i] + '</option>');
+  for (let i = 0; i < TRANSFORMATION_QUERY.length; ++i) {
+    $('#transformation-query').append($('<option>', {
+      value: i + 1,
+      text: TRANSFORMATION_QUERY[i]
+    }))
+  }
 }
 
 function transform_data() {
