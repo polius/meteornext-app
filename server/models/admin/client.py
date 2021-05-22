@@ -22,12 +22,12 @@ class Client:
             sort_order = 'DESC'
             if dfilter is not None:
                 matching = {
-                    'equal': '= %s',
-                    'not_equal': '!= %s',
-                    'starts': "LIKE '%s%%'",
-                    'not_starts': "NOT LIKE '%s%%",
-                    'contains': "LIKE '%%%s%%'",
-                    'not_contains': "NOT LIKE '%%%s%%",
+                    'equal':        { 'operator': '=', 'args': '{}' },
+                    'not_equal':    { 'operator': '!=', 'args': '{}' },
+                    'starts':       { 'operator': 'LIKE', 'args': '%{}' },
+                    'not_starts':   { 'operator': 'NOT LIKE', 'args': '%{}' },
+                    'contains':     { 'operator': 'LIKE', 'args': '%{}%' },
+                    'not_contains': { 'operator': 'NOT LIKE', 'args': '%{}%' }
                 }
                 if 'user' in dfilter and dfilter['user'] is not None:
                     user = 'AND u.username = %s'
@@ -36,11 +36,11 @@ class Client:
                     server = 'AND s.name = %s'
                     args.append(dfilter['server'])
                 if 'database' in dfilter and len(dfilter['database']) > 0 and 'databaseFilter' in dfilter and dfilter['databaseFilter'] in matching:
-                    database = f"AND cq.database {dfilter['databaseFilter']}"
-                    args.append(dfilter['database'])
+                    database = f"AND cq.database {matching[dfilter['databaseFilter']]['operator']} %s"
+                    args.append(matching[dfilter['databaseFilter']]['args'].format(dfilter['database']))
                 if 'query' in dfilter and len(dfilter['query']) > 0 and 'queryFilter' in dfilter and dfilter['queryFilter'] in matching:
-                    database = f"AND cq.query {dfilter['queryFilter']}"
-                    args.append(dfilter['query'])
+                    query = f"AND cq.query {matching[dfilter['queryFilter']]['operator']} %s"
+                    args.append(matching[dfilter['queryFilter']]['args'].format(dfilter['query']))
                 if 'status' in dfilter and dfilter['status'] is not None:
                     status = 'AND cq.status = %s'
                     args.append(dfilter['status'])

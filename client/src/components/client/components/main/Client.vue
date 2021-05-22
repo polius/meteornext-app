@@ -1051,7 +1051,6 @@ export default {
               let sliced = items.slice(i, i+chunk)
               gridApi.applyTransaction({ add: sliced })
               itemsToLoad = itemsToLoad.concat(sliced)
-              // console.log(i)
               if (i+chunk >= n) resolve()
             }
             else resolve()
