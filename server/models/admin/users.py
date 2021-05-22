@@ -73,6 +73,7 @@ class Users:
             self._sql.execute("DELETE cs FROM client_settings cs JOIN users u ON u.id = cs.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE cs FROM client_servers cs JOIN users u ON u.id = cs.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE cf FROM client_folders cf JOIN users u ON u.id = cf.user_id AND u.username = %s", (user))
+            self._sql.execute("DELETE cq FROM client_queries cq JOIN users u ON u.id = cq.user_id AND u.username = %s", (user))
             self._sql.execute("DELETE es FROM environment_servers es JOIN servers s ON s.id = es.server_id AND s.shared = 0 JOIN users u ON u.id = s.owner_id AND u.username = %s", (user))
             self._sql.execute("DELETE s FROM servers s JOIN users u ON u.id = s.owner_id AND u.username = %s WHERE s.shared = 0", (user))
             self._sql.execute("DELETE a FROM auxiliary a JOIN users u ON u.id = a.owner_id AND u.username = %s WHERE a.shared = 0", (user))

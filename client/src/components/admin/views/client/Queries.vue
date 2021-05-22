@@ -84,7 +84,7 @@
                       <v-text-field text v-model="filter.database" label="Database" required style="padding-top:0px" hide-details></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-left:5px;">
-                      <v-select text v-model="filter.databaseFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.database === undefined || filter.database.length == 0) || (filter.database.length > 0 && !!v)) || '']" style="padding-top:0px" hide-details></v-select>
+                      <v-select text v-model="filter.databaseFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.database === undefined || filter.database.length == 0) || (filter.database.length > 0 && !!v)) || '']" clearable style="padding-top:0px" hide-details></v-select>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
@@ -92,7 +92,7 @@
                       <v-text-field text v-model="filter.query" label="Query" required style="padding-top:0px" hide-details></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-left:5px;">
-                      <v-select text v-model="filter.queryFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.query === undefined || filter.query.length == 0) || (filter.query.length > 0 && !!v)) || '']" style="padding-top:0px" hide-details></v-select>
+                      <v-select text v-model="filter.queryFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.query === undefined || filter.query.length == 0) || (filter.query.length > 0 && !!v)) || '']" clearable style="padding-top:0px" hide-details></v-select>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
@@ -192,7 +192,8 @@ export default {
         {id: 'not_equal', name: 'Not equal'},
         {id: 'starts', name: 'Starts'},
         {id: 'not_starts', name: 'Not starts'},
-        {id: 'contains', name: 'Contains'}
+        {id: 'contains', name: 'Contains'},
+        {id: 'not_contains', name: 'Not contains'}
       ],
       filter: {},
       filterUsers: [],
@@ -329,6 +330,11 @@ export default {
       this.dateTimeValue = { date: moment().format("YYYY-MM-DD"), time: moment().format("HH:mm") }
     },
     submitFilter() {
+      // Check if all necessary fields are filled
+      if (!this.$refs.form.validate()) {
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
       // Check if some filter was applied
       if (!Object.keys(this.filter).some(x => this.filter[x] != null && this.filter[x].length != 0)) {
         EventBus.$emit('send-notification', 'Enter at least one filter.', 'error')
