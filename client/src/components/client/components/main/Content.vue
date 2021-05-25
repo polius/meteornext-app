@@ -723,7 +723,7 @@ export default {
       }
       else if (this.contentSearchFilterText.length != 0) condition = ' WHERE `' + this.contentSearchColumn + '` ' + this.contentSearchFilter + " '" + this.contentSearchFilterText + "'"
       // Build pagination
-      var pagination = (this.page == 1) ? ' LIMIT 1000' : ' LIMIT ' + this.page * 1000 + ' OFFSET ' + this.page * 1000
+      var pagination = (this.page == 1) ? ' LIMIT 1000' : ' LIMIT 1000 OFFSET ' + (this.page-1) * 1000
       // Build sort
       this.contentSortState = this.columnApi.content.getColumnState().filter(x => x.sort != null).map(x => ({ colId: x.colId, sort: x.sort }))
       const sort = this.contentSortState.length == 0 ? '' : ' ORDER BY `' + this.contentSortState[0].colId + '` ' + this.contentSortState[0].sort.toUpperCase()
