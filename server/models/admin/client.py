@@ -91,7 +91,7 @@ class Client:
                 LEFT JOIN client_servers cs USING (user_id, server_id)
                 LEFT JOIN client_folders cf ON cf.id = cs.folder_id
                 WHERE available.user_id IS NOT NULL
-                ORDER BY cs.date DESC
+                ORDER BY cs.date DESC, available.user ASC, available.server ASC
                 LIMIT 1000
             """
             return self._sql.execute(query)

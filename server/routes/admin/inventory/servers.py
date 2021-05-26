@@ -101,8 +101,13 @@ class Servers:
     # Internal Methods #
     ####################
     def get(self):
-        group_id = request.args['group_id'] if 'group_id' in request.args else None
-        return jsonify({'servers': self._servers.get(group_id=group_id)}), 200
+        if 'group_id' in request.args:
+            servers = self._servers.get(group_id=request.args['group_id'])
+        elif 'server_id' in request.args:
+            servers = self._servers.get(server_id=request.args['server_id'])
+        else:
+            servers = self._servers.get()
+        return jsonify({'servers': servers}), 200
 
     def post(self, user, server):
         # Check group & user
