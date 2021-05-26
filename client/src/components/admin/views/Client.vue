@@ -133,10 +133,17 @@ export default {
       this.showPassword = false
       this.serverDialog = true
       this.loading = true
-      const payload = { server_id }
-      axios.get('/admin/client/server', { params: payload })
+      const payload = { server_id: server_id }
+      axios.get('/admin/inventory/servers', { params: payload })
         .then((response) => {
-          this.server = response.data.server[0]
+          // Build usage
+          let usage = []
+          if (response.data.servers[0].usage.includes('D')) usage.push('Deployments')
+          if (response.data.servers[0].usage.includes('M')) usage.push('Monitoring')
+          if (response.data.servers[0].usage.includes('U')) usage.push('Utils')
+          if (response.data.servers[0].usage.includes('C')) usage.push('Client')
+          // Add server
+          this.server = {...response.data.servers[0], usage: usage.join(', ')}
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -172,7 +179,6 @@ export default {
       }
       axios.post('/admin/inventory/servers/test', payload)
         .then((response) => {
-          console.log(response.data.message)
           EventBus.$emit('send-notification', response.data.message, '#00b16a')
         })
         .catch((error) => {

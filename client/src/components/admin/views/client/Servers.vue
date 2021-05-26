@@ -241,7 +241,7 @@ export default {
     },
     submitAttachServers() {
       this.loading = true
-      const payload = { 
+      const payload = {
         servers: this.selected.map(x => ({ user_id: x.user_id, server_id: x.server_id }))
       }
       axios.post('/admin/client/servers', payload)
@@ -259,12 +259,11 @@ export default {
     },
     submitDetachServers() {
       this.loading = true
-      const payload = { 
+      const payload = {
         servers: JSON.stringify(this.selected.map(x => ({ user_id: x.user_id, server_id: x.server_id })))
       }
       axios.delete('/admin/client/servers', { params: payload })
         .then((response) => {
-          console.log(response.data.message)
           EventBus.$emit('send-notification', response.data.message, '#00b16a')
           this.getServers()
           this.selected = []

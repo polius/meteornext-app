@@ -26,7 +26,7 @@ class MySQL:
         sys.stderr = open(os.devnull, 'w')
 
         error = None
-        for i in range(3):
+        for i in range(6):
             # Check if thread is alive
             if getattr(threading.current_thread(), 'alive', False) and not threading.current_thread().alive:
                 self.stop()
@@ -35,8 +35,8 @@ class MySQL:
             try:
                 # Start SSH Tunnel
                 if 'ssh' in self._server and self._server['ssh']['enabled']:
-                    sshtunnel.SSH_TIMEOUT = 5.0
-                    sshtunnel.TUNNEL_TIMEOUT = 5.0
+                    sshtunnel.SSH_TIMEOUT = 10.0
+                    sshtunnel.TUNNEL_TIMEOUT = 10.0
                     pkey = paramiko.RSAKey.from_private_key_file(self._server['ssh']['key'], password=self._server['ssh']['password'])
                     self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']))
                     self._tunnel.start()

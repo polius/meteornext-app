@@ -324,8 +324,10 @@ CREATE TABLE `monitoring` (
 	`processlist_enabled` TINYINT(1) NOT NULL DEFAULT 0,
   `processlist_active` TINYINT(1) NOT NULL DEFAULT 0,
 	`queries_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+  `date` DATETIME NOT NULL,
   PRIMARY KEY (`user_id`, `server_id`),
   INDEX (`server_id`),
+  INDEX (`date`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
