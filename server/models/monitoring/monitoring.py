@@ -1,3 +1,5 @@
+from datetime import datetime
+
 class Monitoring:
     def __init__(self, sql):
         self._sql = sql
@@ -94,14 +96,14 @@ class Monitoring:
             
             for i in data:
                 query = """
-                    INSERT INTO monitoring (user_id, server_id, monitor_enabled)
-                    SELECT %s, s.id, 1
+                    INSERT INTO monitoring (user_id, server_id, monitor_enabled, `date`)
+                    SELECT %s, s.id, 1, %s
                     FROM servers s
                     JOIN regions r ON r.id = s.region_id AND r.group_id = %s
                     WHERE s.id = %s
                     ON DUPLICATE KEY UPDATE monitor_enabled = 1
                 """
-                self._sql.execute(query, (user['id'], user['group_id'], i))
+                self._sql.execute(query, (user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['group_id'], i))
 
     def put_parameters(self, user, data):
         if len(data) == 0:
@@ -122,14 +124,14 @@ class Monitoring:
             
             for i in data:
                 query = """
-                    INSERT INTO monitoring (user_id, server_id, parameters_enabled)
-                    SELECT %s, s.id, 1
+                    INSERT INTO monitoring (user_id, server_id, parameters_enabled, `date`)
+                    SELECT %s, s.id, 1, %s
                     FROM servers s
                     JOIN regions r ON r.id = s.region_id AND r.group_id = %s
                     WHERE s.id = %s
                     ON DUPLICATE KEY UPDATE parameters_enabled = 1
                 """
-                self._sql.execute(query, (user['id'], user['group_id'], i))
+                self._sql.execute(query, (user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['group_id'], i))
 
     def put_processlist(self, user, data):
         if len(data) == 0:
@@ -152,14 +154,14 @@ class Monitoring:
             
             for i in data:
                 query = """
-                    INSERT INTO monitoring (user_id, server_id, processlist_enabled, processlist_active)
-                    SELECT %s, s.id, 1, 1
+                    INSERT INTO monitoring (user_id, server_id, processlist_enabled, processlist_active, `date`)
+                    SELECT %s, s.id, 1, 1, %s
                     FROM servers s
                     JOIN regions r ON r.id = s.region_id AND r.group_id = %s
                     WHERE s.id = %s
                     ON DUPLICATE KEY UPDATE processlist_enabled = 1, processlist_active = 1
                 """
-                self._sql.execute(query, (user['id'], user['group_id'], i))
+                self._sql.execute(query, (user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['group_id'], i))
 
     def put_queries(self, user, data):
         if len(data) == 0:
@@ -180,14 +182,14 @@ class Monitoring:
             
             for i in data:
                 query = """
-                    INSERT INTO monitoring (user_id, server_id, queries_enabled)
-                    SELECT %s, s.id, 1
+                    INSERT INTO monitoring (user_id, server_id, queries_enabled, `date`)
+                    SELECT %s, s.id, 1, %s
                     FROM servers s
                     JOIN regions r ON r.id = s.region_id AND r.group_id = %s
                     WHERE s.id = %s
                     ON DUPLICATE KEY UPDATE queries_enabled = 1
                 """
-                self._sql.execute(query, (user['id'], user['group_id'], i))
+                self._sql.execute(query, (user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['group_id'], i))
 
     def start_processlist(self, user):
         query = """
