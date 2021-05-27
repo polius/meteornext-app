@@ -56,9 +56,6 @@ class deploy_queries:
             conn.stop()
 
     def execute(self, query=None, args=None, database=None, auxiliary=None, alias=None):
-        # Get Current Thread
-        current_thread = threading.current_thread()
-
         # Core Variables
         database_name = auxiliary['database'] if auxiliary is not None else database if database is not None else ''
         query_parsed = query.strip() if auxiliary is None else auxiliary['query'].strip()

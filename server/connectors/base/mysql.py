@@ -70,7 +70,7 @@ class MySQL:
             cursor.execute(query, args)
 
             # Get the query results
-            query_result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
+            query_result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
 
         # Return query info
         return query_result

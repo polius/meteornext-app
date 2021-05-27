@@ -247,6 +247,7 @@ class Client:
 
             for index, query in enumerate(client_json['queries']):
                 database = client_json['database'][index] if multiple else client_json['database']
+                database = None if database and len(database) == 0 else database
                 # Handle 'USE' keyword
                 if query.strip()[:4].upper() == 'USE ':
                     database = use_database = query.strip()[4:-1] if query.endswith(';') else query.strip()[4:]
@@ -281,6 +282,52 @@ class Client:
                         return jsonify({'data': self.__json(execution)}), 400
 
             return jsonify({'data': self.__json(execution)}), 200 if not errors else 400
+
+        @client_blueprint.route('/client/processlist', methods=['GET'])
+        @jwt_required()
+        def client_processlist_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Server Credentials + Connection
+            cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+            # Retrieve Processlist
+            return jsonify({'processlist': conn.get_processlist()}), 200
+
+        @client_blueprint.route('/client/explain', methods=['GET'])
+        @jwt_required()
+        def client_explain_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get User
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['client_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Server Credentials + Connection
+            cred = self._client.get_credentials(user['id'], user['group_id'], request.args['server'])
+            if cred is None:
+                return jsonify({"message": 'This server does not exist'}), 400
+            conn = self._connections.connect(user['id'], request.args['connection'], cred)
+
+            # Explain Query
+            return jsonify({'explain': conn.explain(request.args['query'])}), 200
 
         @client_blueprint.route('/client/structure', methods=['GET'])
         @jwt_required()
@@ -579,7 +626,7 @@ class Client:
             elif request.method == 'PUT':
                 # Check JSON
                 for key in settings_json.keys():
-                    if key not in ['font_size','refresh_rate','analyze_queries']:
+                    if key not in ['font_size','refresh_rate']:
                         return jsonify({"message": 'Invalid JSON provided'}), 400
                 self._client.save_settings(user['id'], settings_json)
                 return jsonify({'message': 'Changes saved'}), 200

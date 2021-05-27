@@ -223,6 +223,9 @@ export default {
   },
   created() {
     this.getNotifications(true)
+    // window.addEventListener('contextmenu', function (e) {
+    //   e.preventDefault();
+    // }, false)
   },
   methods: {
     fullScreen() {

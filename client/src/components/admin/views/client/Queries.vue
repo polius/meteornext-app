@@ -307,7 +307,7 @@ export default {
           x.date.includes(this.search) ||
           x.user.includes(this.search) ||
           x.server.includes(this.search) ||
-          x.database.includes(this.search) ||
+          (x.database != null && x.database.includes(this.search)) ||
           x.query.includes(this.search)
         ).slice(itemStart, itemEnd)
       }

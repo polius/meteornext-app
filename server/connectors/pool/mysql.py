@@ -41,7 +41,7 @@ class MySQL:
                 connection.select_db(database)
             with connection.cursor(OrderedDictCursor) as cursor:
                 cursor.execute(query, args)
-                result = cursor.fetchall() if not query.lstrip().startswith('INSERT INTO') else cursor.lastrowid
+                result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
             if conn is None:
                 connection.commit()
             return result
