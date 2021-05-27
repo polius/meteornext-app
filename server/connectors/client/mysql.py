@@ -165,6 +165,9 @@ class MySQL:
         elif self._server['sql']['engine'] == 'MySQL':
             self.execute('KILL QUERY {}'.format(connection_id))
 
+    def explain(self, query):
+        return self.execute('EXPLAIN {}'.format(query))['data']
+
     def __logger(self):
         # Create a Logger to suppress sshtunnel warnings
         log = logging.getLogger('sshtunnel')
@@ -689,3 +692,7 @@ class MySQL:
         """
         result = self.execute(query, args=(database, table))['data']
         return [pk['column_name'] for pk in result]
+
+    def get_processlist(self):
+        query = "SHOW FULL PROCESSLIST"
+        return self.execute(query)['data']

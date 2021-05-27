@@ -136,6 +136,9 @@ class Connection:
     def kill(self, connection_id):
         self._sql.kill(connection_id)
 
+    def explain(self, query):
+        return self._sql.explain(query)
+
     ####################
     # INTERNAL QUERIES #
     ####################
@@ -321,3 +324,6 @@ class Connection:
 
     def get_table_pks(self, database, table):
         return self._sql.get_table_pks(database, table)
+
+    def get_processlist(self):
+        return self._sql.get_processlist()

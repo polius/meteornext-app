@@ -16,7 +16,7 @@
                 <v-form ref="form" @submit.prevent style="margin-bottom:15px;">
                   <v-text-field filled v-model="editorFontSize" @keyup.enter="saveSettings" label="Editor Font Size" :rules="[v => v == parseInt(v) && v > 0 || '']" hide-details style="margin-top:10px"></v-text-field>
                   <div class="subtitle-1 font-weight-regular white--text" style="margin-top:12px; margin-bottom:10px; margin-left:2px">SHORTCUTS</div>
-                  <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressContextMenu preventDefaultOnContextMenu @grid-ready="onGridReady" style="width:100%; height:60vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="shortcuts"></ag-grid-vue>
+                  <ag-grid-vue suppressDragLeaveHidesColumns suppressColumnVirtualisation suppressRowClickSelection suppressContextMenu preventDefaultOnContextMenu oncontextmenu="return false" @grid-ready="onGridReady" style="width:100%; height:60vh;" class="ag-theme-alpine-dark" rowHeight="35" headerHeight="35" rowSelection="single" :columnDefs="header" :rowData="shortcuts"></ag-grid-vue>
                 </v-form>
               </v-flex>
             </v-layout>
