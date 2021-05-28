@@ -458,7 +458,6 @@ export default {
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Event'] + ';'
         navigator.clipboard.writeText(syntax)
-        EventBus.$emit('send-notification', "Syntax copied to clipboard", 'info')
       }).catch(() => {}).finally(() => { this.loading = false })
     },
     // SCHEDULE
