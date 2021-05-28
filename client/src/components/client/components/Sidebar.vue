@@ -615,6 +615,9 @@ export default {
       }
       // Assign filtered data
       this.sidebarItems = items
+      // Show matching objects
+      if (search.length == 0) this.sidebarOpened = []
+      else this.sidebarOpened = items.map(item => ({id: item.id}))
     },
     refreshObjects(resolve, reject) {
       new Promise((res, rej) => this.getDatabases(this.server, res, rej))

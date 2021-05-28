@@ -43,7 +43,10 @@ class Monitoring:
                 # Return Monitoring Servers
                 dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
                 dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
-                return jsonify({'servers': self._monitoring.get_servers(dfilter, dsort), 'users': self._monitoring.get_users()}), 200
+                servers = self._monitoring.get_servers(dfilter, dsort)
+                users_list = self._monitoring.get_users_list()
+                servers_list = self._monitoring.get_servers_list()
+                return jsonify({'servers': servers, 'users_list': users_list, 'servers_list': servers_list }), 200
             elif request.method == 'POST':
                 # Attach Servers
                 self._monitoring.attach_servers(request.get_json())

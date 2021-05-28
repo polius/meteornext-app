@@ -42,7 +42,10 @@ class Client:
             # Return Client Queries
             dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
             dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
-            return jsonify({'queries': self._client.get_queries(dfilter, dsort), 'users': self._client.get_users()}), 200
+            queries = self._client.get_queries(dfilter, dsort)
+            users_list = self._client.get_users_list()
+            servers_list = self._client.get_servers_list()
+            return jsonify({'queries': queries, 'users_list': users_list, 'servers_list': servers_list}), 200
 
         @admin_client_blueprint.route('/admin/client/servers', methods=['GET','POST','DELETE'])
         @jwt_required()
@@ -66,7 +69,10 @@ class Client:
                 # Return Client Servers
                 dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
                 dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
-                return jsonify({'servers': self._client.get_servers(dfilter, dsort), 'users': self._client.get_users()}), 200
+                servers = self._client.get_servers(dfilter, dsort)
+                users_list = self._client.get_users_list()
+                servers_list = self._client.get_servers_list()
+                return jsonify({'servers': servers, 'users_list': users_list, 'servers_list': servers_list}), 200
             elif request.method == 'POST':
                 # Attach Servers
                 self._client.attach_servers(request.get_json())

@@ -281,11 +281,8 @@ export default {
         .then((response) => {
           this.origin = response.data.queries.map(x => ({...x, date: this.dateFormat(x.date)}))
           this.total = this.origin.length
-          this.filterUsers = response.data.users
-          this.filterServers = this.origin.reduce((acc, val) => {
-            if (!(acc.find(x => x.name == val.server))) acc.push(val.server)
-            return acc
-          },[])
+          this.filterUsers = response.data.users_list
+          this.filterServers = response.data.servers_list
           this.onSearch()
         })
         .catch((error) => {
@@ -305,10 +302,10 @@ export default {
       else {
         this.items = this.origin.filter(x =>
           x.date.includes(this.search) ||
-          x.user.includes(this.search) ||
-          x.server.includes(this.search) ||
-          (x.database != null && x.database.includes(this.search)) ||
-          x.query.includes(this.search)
+          x.user.toLowerCase().includes(this.search.toLowerCase()) ||
+          x.server.toLowerCase().includes(this.search.toLowerCase()) ||
+          (x.database != null && x.database.toLowerCase().includes(this.search.toLowerCase())) ||
+          x.query.toLowerCase().includes(this.search.toLowerCase())
         ).slice(itemStart, itemEnd)
       }
     },

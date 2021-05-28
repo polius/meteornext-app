@@ -255,11 +255,8 @@ export default {
         .then((response) => {
           this.origin = response.data.servers.map(x => ({...x, date: this.dateFormat(x.date)}))
           this.total = this.origin.length
-          this.filterUsers = response.data.users
-          this.filterServers = this.origin.reduce((acc, val) => {
-            if (!(acc.find(x => x.name == val.server))) acc.push(val.server)
-            return acc
-          },[])
+          this.filterUsers = response.data.users_list
+          this.filterServers = response.data.servers_list
           this.onSearch()
         })
         .catch((error) => {

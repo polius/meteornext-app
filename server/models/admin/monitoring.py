@@ -89,7 +89,7 @@ class Monitoring:
             """
             self._sql.execute(query, (server['user_id'], server['server_id']))
 
-    def get_users(self):
+    def get_users_list(self):
         query = """
             SELECT u.username AS 'user', g.name AS 'group'
             FROM users u
@@ -97,3 +97,11 @@ class Monitoring:
             ORDER BY u.username
         """
         return self._sql.execute(query)
+
+    def get_servers_list(self):
+        query = """
+            SELECT DISTINCT(name) AS 'name'
+            FROM servers
+            ORDER BY name ASC
+        """
+        return [server['name'] for server in self._sql.execute(query)]
