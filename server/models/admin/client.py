@@ -67,7 +67,7 @@ class Client:
             """.format(user, server, database, query, status, date_from, date_to, sort_column, sort_order)
             return self._sql.execute(query, args)
 
-    def get_users(self):
+    def get_users_list(self):
         query = """
             SELECT u.username AS 'user', g.name AS 'group'
             FROM users u
@@ -75,6 +75,14 @@ class Client:
             ORDER BY u.username
         """
         return self._sql.execute(query)
+
+    def get_servers_list(self):
+        query = """
+            SELECT DISTINCT(name) AS 'name'
+            FROM servers
+            ORDER BY name ASC
+        """
+        return [server['name'] for server in self._sql.execute(query)]
 
     def get_servers(self, dfilter=None, dsort=None):
         if dfilter is None and dsort is None:

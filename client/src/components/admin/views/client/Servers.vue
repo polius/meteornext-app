@@ -179,11 +179,8 @@ export default {
         .then((response) => {
           this.origin = response.data.servers.map(x => ({...x, date: this.dateFormat(x.date)}))
           this.total = this.origin.length
-          this.filterUsers = response.data.users
-          this.filterServers = this.origin.reduce((acc, val) => {
-            if (!(acc.find(x => x.name == val.server))) acc.push(val.server)
-            return acc
-          },[])
+          this.filterUsers = response.data.users_list
+          this.filterServers = response.data.servers_list
           this.onSearch()
         })
         .catch((error) => {
@@ -199,10 +196,10 @@ export default {
       if (this.search.length == 0) this.items = this.origin.slice(itemStart, itemEnd)
       else {
         this.items = this.origin.filter(x =>
-          x.user.includes(this.search) ||
-          x.server.includes(this.search) ||
+          x.user.toLowerCase().includes(this.search.toLowerCase()) ||
+          x.server.toLowerCase().includes(this.search.toLowerCase()) ||
           (x.date != null && x.date.includes(this.search)) ||
-          (x.folder != null && x.folder.includes(this.search))
+          (x.folder != null && x.folder.toLowerCase().includes(this.search.toLowerCase()))
         ).slice(itemStart, itemEnd)
       }
     },
