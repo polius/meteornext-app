@@ -46,7 +46,7 @@
     <v-dialog v-model="settingsDialog" max-width="50%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">SETTINGS</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-cog</v-icon>SETTINGS</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="settingsDialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -108,10 +108,10 @@
     <!-------------------->
     <!-- Explain Dialog -->
     <!-------------------->
-    <v-dialog v-model="explainDialog" max-width="90%">
+    <v-dialog v-model="explainDialog" max-width="100%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">EXPLAIN QUERY</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-chart-pie</v-icon>EXPLAIN QUERY</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn @click="explainDialog = false" icon style="margin-left:5px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -248,7 +248,11 @@ export default {
       this.resizeTable()
     },
     onFirstExplainDataRendered() {
-      if (this.explainGridApi != null) this.explainGridApi.sizeColumnsToFit()
+      if (this.explainGridApi != null) {
+        // this.explainGridApi.sizeColumnsToFit()
+        let allColumnIds = this.explainColumnApi.getAllColumns().map(v => v.colId)
+        this.explainColumnApi.autoSizeColumns(allColumnIds)
+      }
     },
     resizeTable() {
       if (this.gridApi != null) {
@@ -432,15 +436,17 @@ export default {
     },
     explainQuery() {
       const selectedQuery = this.selected.map(x => x.Info)[0]
+      const selectedDatabase = this.selected.map(x => x.db)[0]
       if (selectedQuery == null || !(['SELECT','DELETE','INSERT','REPLACE','UPDATE'].some(x => selectedQuery.trim().substring(0, 7).toUpperCase().startsWith(x)))) {
         EventBus.$emit('send-notification', "The selected queries can't be analyzed (not a DML query)", 'error')
       }
       else {
-        const payload = {
+        let payload = {
           connection: this.id + '-shared',
           server: this.server.id,
           query: selectedQuery.trim()
         }
+        if (selectedDatabase != null) payload['database'] = selectedDatabase
         axios.get('/client/explain', { params: payload })
         .then((response) => {
           this.parseExplain(response.data.explain)

@@ -136,8 +136,8 @@ class Connection:
     def kill(self, connection_id):
         self._sql.kill(connection_id)
 
-    def explain(self, query):
-        return self._sql.explain(query)
+    def explain(self, query, database=None):
+        return self._sql.explain(query, database)
 
     ####################
     # INTERNAL QUERIES #

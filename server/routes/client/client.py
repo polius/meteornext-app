@@ -327,7 +327,8 @@ class Client:
             conn = self._connections.connect(user['id'], request.args['connection'], cred)
 
             # Explain Query
-            return jsonify({'explain': conn.explain(request.args['query'])}), 200
+            database = request.args['database'] if 'database' in request.args else None
+            return jsonify({'explain': conn.explain(request.args['query'], database=database)}), 200
 
         @client_blueprint.route('/client/structure', methods=['GET'])
         @jwt_required()
