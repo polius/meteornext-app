@@ -227,6 +227,19 @@ export default {
         clearTimeout(this.timer)
       }
     },
+    explainDialog: function(value) {
+      if (!value) return
+      if (this.explainEditor != null) {
+        let sqlFormatted = sqlFormatter.format(this.selected[0].Info, { reservedWordCase: 'upper', linesBetweenQueries: 2 })
+        this.explainEditor.setValue(sqlFormatted, -1)
+      }
+      if (this.explainGridApi != null) {
+        this.$nextTick(() => {
+          let allColumnIds = this.explainColumnApi.getAllColumns().map(v => v.colId)
+          this.explainColumnApi.autoSizeColumns(allColumnIds)
+        })
+      }
+    }
   },
   methods: {
     showDialog() {
@@ -442,7 +455,7 @@ export default {
       }
       else {
         let payload = {
-          connection: this.id + '-shared',
+          connection: this.id + '-shared2',
           server: this.server.id,
           query: selectedQuery.trim()
         }
@@ -460,7 +473,6 @@ export default {
     parseExplain(data) {
       this.explainColumns = Object.keys(data[0]).map(key => ({ headerName: key, colId: key, field: key, sortable: true, filter: true, resizable: true, editable: false }))
       this.explainItems = data
-      if (this.explainGridApi != null) this.explainGridApi.sizeColumnsToFit()
       this.explainDialog = true
     },
     killQuery() {
