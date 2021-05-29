@@ -165,8 +165,8 @@ class MySQL:
         elif self._server['sql']['engine'] == 'MySQL':
             self.execute('KILL QUERY {}'.format(connection_id))
 
-    def explain(self, query):
-        return self.execute('EXPLAIN {}'.format(query))['data']
+    def explain(self, query, database=None):
+        return self.execute('EXPLAIN {}'.format(query), database=database)['data']
 
     def __logger(self):
         # Create a Logger to suppress sshtunnel warnings

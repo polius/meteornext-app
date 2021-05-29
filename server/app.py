@@ -10,6 +10,7 @@ import routes.setup
 # Instantiate Flask App
 app = Flask(__name__)
 app.config.from_object(__name__)
+app.config['JSON_SORT_KEYS'] = False
 app.config['JWT_SECRET_KEY'] = secrets.token_urlsafe(nbytes=64)
 app.secret_key = app.config['JWT_SECRET_KEY']
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = datetime.timedelta(hours=12)
