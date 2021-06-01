@@ -132,12 +132,11 @@ class Deployments:
     def check_queued(self):
         # Notify finished queue deployments and remove it from queue
         finished = self._deployments_queued.getFinished()
-        ids = ''
         for i in finished:
-            ids += '{},'.format(i['id'])
-            # self._deployments_finished.post({"mode": i['execution_mode'], "id": i['execution_id']})
+            if i['scheduled']:
+                self._deployments_finished.post({"mode": i['execution_mode'], "id": i['execution_id']})
         if len(finished) > 0:
-            ids = ids[:-1]
+            ids = ','.join([str(i['id']) for i in finished])
             self._deployments_queued.delete(ids)
 
         # Populate new queued deployments
@@ -145,38 +144,37 @@ class Deployments:
 
         # Build dictionary of executions
         executions_raw = self._deployments_queued.getNext()
-        executions = {'basic':{},'pro':{}}
+        executions_queued = {'basic':[],'pro':[]}
+        executions_data = {'basic':[],'pro':[]}
         if len(executions_raw) == 1 and executions_raw[0]['executions'] is None:
             return
 
-        for i in [i for i in executions_raw if i['executions'].split('|')[2] == 'QUEUED']:
-            execution = i['executions'].split('|')
-            executions[execution[0]][int(execution[1])] = None
+        for i in [j for i in executions_raw for j in i['executions'].split(',') if j.split('|')[2] == 'QUEUED']:
+            execution = i.split('|')
+            executions_queued[execution[0]].append(int(execution[1]))
 
-        if executions['basic']:
-            basic = self._deployments_basic.getExecutionsN(','.join(str(i) for i in executions['basic'].keys()))
+        if len(executions_queued['basic']) > 0:
+            basic = self._deployments_basic.getExecutionsN(','.join(str(i) for i in executions_queued['basic']))
             for b in basic:
-                for e in executions['basic'].keys():
+                for e in executions_queued['basic']:
                     if b['execution_id'] == e:
-                        executions['basic'][e] = b
+                        executions_data['basic'].append(b)
                         break
-        if executions['pro']:
-            pro = self._deployments_pro.getExecutionsN(','.join(str(i) for i in executions['pro'].keys()))
+        if len(executions_queued['pro']) > 0:
+            pro = self._deployments_pro.getExecutionsN(','.join(str(i) for i in executions_queued['pro']))
             for p in pro:
-                for e in executions['pro'].keys():
+                for e in executions_queued['pro']:
                     if p['execution_id'] == e:
-                        executions['pro'][e] = p
+                        executions_data['pro'].append(p)
                         break
 
         # Start Queued Executions
-        for i in [i for i in executions_raw if i['executions'].split('|')[2] == 'QUEUED']:
-            execution = i['executions'].split('|')
-            deployment = executions[execution[0]][int(execution[1])]
-            if execution[0] == 'basic':
-                self._deployments_basic.updateStatus(execution[1], 'STARTING', True)
-            elif execution[0] == 'pro':
-                self._deployments_pro.updateStatus(execution[1], 'STARTING', True)
-            self._meteor.execute(deployment)
+        for basic in executions_data['basic']:
+            self._deployments_basic.updateStatus(basic['execution_id'], 'STARTING', True)
+            self._meteor.execute(basic)
+        for pro in executions_data['pro']:
+            self._deployments_pro.updateStatus(pro['execution_id'], 'STARTING', True)
+            self._meteor.execute(pro)
 
     ####################
     # Internal Methods #

@@ -108,7 +108,7 @@
     <!-------------------->
     <!-- Explain Dialog -->
     <!-------------------->
-    <v-dialog v-model="explainDialog" max-width="100%">
+    <v-dialog v-model="explainDialog" max-width="100%" fullscreen>
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-chart-pie</v-icon>EXPLAIN QUERY</v-toolbar-title>
@@ -119,7 +119,7 @@
           <v-container style="padding:0px; max-width:100%">
             <v-layout wrap>
               <v-flex xs12>
-                <Splitpanes horizontal @ready="initAceClient()" style="height:80vh">
+                <Splitpanes horizontal @ready="initAceClient()" style="height:calc(100vh - 48px)">
                   <Pane size="50">
                     <div id="explainEditor" style="float:left; height:100%; width:100%"></div>
                   </Pane>
