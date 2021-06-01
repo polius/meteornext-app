@@ -18,12 +18,12 @@ class Deployments_Queued:
 
     def getFinished(self):
         query = """
-            SELECT q.id, 'basic' AS 'execution_mode', b.id AS 'execution_id'
+            SELECT q.id, 'basic' AS 'execution_mode', b.id AS 'execution_id', b.scheduled IS NOT NULL AS 'scheduled'
             FROM deployments_basic b
             JOIN deployments_queued q ON q.execution_mode = 'basic' AND q.execution_id = b.id
             WHERE b.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
             UNION
-            SELECT q.id, 'pro' AS 'execution_mode', p.id AS 'execution_id'
+            SELECT q.id, 'pro' AS 'execution_mode', p.id AS 'execution_id', p.scheduled IS NOT NULL AS 'scheduled'
             FROM deployments_pro p
             JOIN deployments_queued q ON q.execution_mode = 'pro' AND q.execution_id = p.id
             WHERE p.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
@@ -48,5 +48,5 @@ class Deployments_Queued:
         return self._sql.execute(query)
 
     def delete(self, elements):
-        query = "DELETE FROM deployments_queued WHERE id IN(%s)"
-        self._sql.execute(query, (elements))
+        query = "DELETE FROM deployments_queued WHERE id IN({})".format(elements)
+        self._sql.execute(query)

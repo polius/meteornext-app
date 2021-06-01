@@ -116,9 +116,9 @@ class Deployments_Basic:
             JOIN users u ON u.id = d.user_id
             LEFT JOIN users u2 ON u2.id = b.user_id
             JOIN groups g ON g.id = u.group_id
-            WHERE b.id IN (%s)
-        """
-        return self._sql.execute(query, (execution_ids))
+            WHERE b.id IN ({})
+        """.format(execution_ids)
+        return self._sql.execute(query)
 
     def setError(self, execution_id, error):
         query = """
