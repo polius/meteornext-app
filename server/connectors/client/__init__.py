@@ -57,7 +57,7 @@ class Client:
         try:
             user_id = int(user_id)
             conn_id = str(conn_id)
-            for conn_name in ['-main','-shared','-shared2']: 
+            for conn_name in ['-main','-shared','-shared2']:
                 if user_id in self._connections and conn_id + conn_name in self._connections[user_id]:
                     connection = self._connections[user_id][conn_id + conn_name]
                     conn = Connection(connection.server)

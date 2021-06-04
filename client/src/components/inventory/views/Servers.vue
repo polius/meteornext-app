@@ -94,22 +94,34 @@
                     </v-row>
                     <v-text-field v-model="item.username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" required autocomplete="username" style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="item.password" :readonly="readOnly" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" autocomplete="new-password" style="padding-top:0px;" hide-details></v-text-field>
-                    <v-row no-gutters>
-                      <v-col cols="auto" style="margin-top:20px">
-                        <v-switch v-model="item.ssl" :readonly="readOnly" flat label="Use SSL" hide-details style="margin-top:0px"></v-switch>
-                      </v-col>
-                    </v-row>
-                    <v-row no-gutters v-if="item.ssl" style="margin-top:20px; margin-bottom:20px;">
-                      <v-col style="padding-right:10px;">
-                        <v-file-input v-model="item.ssl_client_key" :readonly="readOnly" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
-                      </v-col>
-                      <v-col style="padding-right:5px; padding-left:5px;">
-                        <v-file-input v-model="item.ssl_client_certificate" :readonly="readOnly" filled dense label="Client Certificate" prepend-icon="" hide-details></v-file-input>
-                      </v-col>
-                      <v-col style="padding-left:10px;">
-                        <v-file-input v-model="item.ssl_client_ca_certificate" :readonly="readOnly" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
-                      </v-col>
-                    </v-row>
+                    <div v-if="(item.ssl_client_key == null || typeof item.ssl_client_key === 'object') && (item.ssl_client_certificate == null || typeof item.ssl_client_certificate === 'object') && (item.ssl_ca_certificate == null || typeof item.ssl_ca_certificate === 'object')">
+                      <v-switch v-model="item.ssl" :readonly="readOnly" flat label="SSL Connection" hide-details style="margin-top:20px"></v-switch>
+                      <v-row no-gutters v-if="item.ssl" style="margin-top:20px; margin-bottom:20px;">
+                        <v-col style="padding-right:10px;">
+                          <v-file-input v-model="item.ssl_client_key" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
+                        </v-col>
+                        <v-col style="padding-right:5px; padding-left:5px;">
+                          <v-file-input v-model="item.ssl_client_certificate" filled dense label="Client Certificate" prepend-icon="" hide-details></v-file-input>
+                        </v-col>
+                        <v-col style="padding-left:10px;">
+                          <v-file-input v-model="item.ssl_ca_certificate" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
+                        </v-col>
+                      </v-row>
+                    </div>
+                    <v-card v-else style="height:52px; margin-top:20px">
+                      <v-row no-gutters>
+                        <v-col cols="auto" style="display:flex; margin:15px">
+                          <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
+                        </v-col>
+                        <v-col>
+                          <div class="text-body-1" style="color:#00b16a; margin-top:15px">{{ 'Using a SSL connection (' + ssl_active + ')' }}</div>
+                        </v-col>
+                        <v-col cols="auto" class="text-right">
+                          <v-btn v-if="!readOnly" @click="removeSSL" icon title="Remove SSL connection" style="margin:8px"><v-icon style="font-size:18px">fas fa-times</v-icon></v-btn>
+                        </v-col>
+                      </v-row>
+                    </v-card>
+                    <v-checkbox v-if="item.ssl" v-model="item.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox>
                     <v-select outlined v-model="item.usage" :items="usage" :readonly="readOnly" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
@@ -194,7 +206,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: [] },
+    item: { name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, client_disabled: false, shared: false, usage: [] },
     mode: '',
     loading: true,
     engines: {
@@ -226,6 +238,13 @@ export default {
     monitoring_enabled: function() { return this.$store.getters['app/monitoring_enabled'] },
     utils_enabled: function() { return this.$store.getters['app/utils_enabled'] },
     client_enabled: function() { return this.$store.getters['app/client_enabled'] },
+    ssl_active: function() {
+      let elements = []
+      if (this.item.ssl_client_key != null) elements.push('Client Key')
+      if (this.item.ssl_client_certificate != null) elements.push('Client Certificate')
+      if (this.item.ssl_ca_certificate != null) elements.push('CA Certificate')
+      return elements.join(' + ')
+    }
   },
   created() {
     this.buildUsage()
@@ -271,7 +290,7 @@ export default {
     },
     newServer() {
       this.mode = 'new'
-      this.item = { name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: false, usage: [...this.usage] }
+      this.item = { name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, client_disabled: false, shared: false, usage: [...this.usage] }
       this.dialog_title = 'NEW SERVER'
       this.dialog = true
     },
@@ -280,7 +299,6 @@ export default {
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item.usage = this.parseUsage(this.item.usage)
       this.item.shared = (!this.owner) ? false : this.item.shared
-      delete this.item['id']
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'CLONE SERVER'
       this.dialog = true
@@ -300,20 +318,32 @@ export default {
     },
     submitServer(check=true) {
       this.confirm_dialog = false
-      this.loading = true
       if (['new','clone'].includes(this.mode)) this.newServerSubmit()
       else if (this.mode == 'edit') this.editServerSubmit(check)
       else if (this.mode == 'delete') this.deleteServerSubmit(check)
     },
-    newServerSubmit() {
+    async newServerSubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
+      // Get SSL Imported Files
+      let ssl_ca_certificate = await this.readFileAsync(this.item.ssl_ca_certificate)
+      let ssl_client_key = await this.readFileAsync(this.item.ssl_client_key)
+      let ssl_client_certificate = await this.readFileAsync(this.item.ssl_client_certificate)
+      // Check SSL fields
+      if (this.item.ssl && ssl_ca_certificate == null && ssl_client_key == null && ssl_client_certificate == null) {
+        this.notification('Import at least one SSL certificate/key', 'error')
+        return
+      }
+      // Parse SSL
+      ssl_ca_certificate = (ssl_ca_certificate === undefined) ? null : ssl_ca_certificate
+      ssl_client_key = (ssl_client_key === undefined) ? null : ssl_client_key
+      ssl_client_certificate = (ssl_client_certificate === undefined) ? null : ssl_client_certificate
       // Add item in the DB
-      const payload = {...this.item, usage: this.parseUsage(this.item.usage)}
+      this.loading = true
+      const payload = {...this.item, usage: this.parseUsage(this.item.usage), ssl_ca_certificate, ssl_client_key, ssl_client_certificate}
       axios.post('/inventory/servers', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -327,15 +357,27 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    editServerSubmit(check) {
+    async editServerSubmit(check) {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
+      // Get SSL Imported Files
+      let ssl_ca_certificate = await this.readFileAsync(this.item.ssl_ca_certificate)
+      let ssl_client_key = await this.readFileAsync(this.item.ssl_client_key)
+      let ssl_client_certificate = await this.readFileAsync(this.item.ssl_client_certificate)
+      if (this.item.ssl && ssl_ca_certificate == null && ssl_client_key == null && ssl_client_certificate == null) {
+        this.notification('Import at least one SSL certificate/key', 'error')
+        return
+      }
+      // Parse SSL
+      ssl_ca_certificate = (ssl_ca_certificate === undefined) ? null : ssl_ca_certificate
+      ssl_client_key = (ssl_client_key === undefined) ? null : ssl_client_key
+      ssl_client_certificate = (ssl_client_certificate === undefined) ? null : ssl_client_certificate
       // Edit item in the DB
-      const payload = {...this.item, usage: this.parseUsage(this.item.usage), check}
+      this.loading = true
+      const payload = {...this.item, usage: this.parseUsage(this.item.usage), check, ssl_ca_certificate, ssl_client_key, ssl_client_certificate}
       axios.put('/inventory/servers', payload)
         .then((response) => {
           if (response.status == 202) this.confirm_dialog = true
@@ -353,6 +395,7 @@ export default {
         .finally(() => this.loading = false)
     },
     deleteServerSubmit(check) {
+      this.loading = true
       // Build payload
       const payload = { servers: JSON.stringify(this.selected.map((x) => x.id)), check }
       // Delete items to the DB
@@ -372,23 +415,29 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    testConnection() {
+    async testConnection() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
+        return
+      }
+      // Get SSL Imported Files
+      let ssl_ca_certificate = await this.readFileAsync(this.item.ssl_ca_certificate)
+      let ssl_client_key = await this.readFileAsync(this.item.ssl_client_key)
+      let ssl_client_certificate = await this.readFileAsync(this.item.ssl_client_certificate)
+      if (this.item.ssl && ssl_ca_certificate == null && ssl_client_key == null && ssl_client_certificate == null) {
+        this.notification('Import at least one SSL certificate/key', 'error')
         return
       }
       // Test Connection
-      this.notification('Testing Server...', 'info', true)
       this.loading = true
       const payload = {
         region: this.item.region_id,
-        server: (this.readOnly && this.inventory_secured) ? this.item.id : { engine: this.item.engine, hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password }
+        server: (this.readOnly && this.inventory_secured) ? this.item.id : { id: this.item.id, engine: this.item.engine, hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password, ssl: this.item.ssl, ssl_client_key, ssl_client_certificate, ssl_ca_certificate, ssl_verify_ca: this.item.ssl_verify_ca }
       }
       axios.post('/inventory/servers/test', payload)
         .then((response) => {
-          this.notification(response.data.message, '#00b16a', 2)
+          this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -419,6 +468,20 @@ export default {
         if (val.includes('Client')) ret += 'C'
         return ret
       }
+    },
+    readFileAsync(file) {
+      if (file == null || typeof file !== 'object') return file
+      return new Promise((resolve, reject) => {
+        let reader = new FileReader()
+        reader.onload = () => { resolve(reader.result)}
+        reader.onerror = reject
+        reader.readAsText(file, 'utf-8')
+      })
+    },
+    removeSSL() {
+      this.item.ssl_ca_certificate = null
+      this.item.ssl_client_key = null
+      this.item.ssl_client_certificate = null
     },
     notification(message, color, persistent=false) {
       this.snackbar = false

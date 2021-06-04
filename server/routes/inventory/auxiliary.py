@@ -74,9 +74,14 @@ class Auxiliary:
                 aux = self._auxiliary.get(user['id'], user['group_id'], auxiliary_json['auxiliary'])
                 if len(aux) == 0:
                     return jsonify({'message': "Can't test the connection. Invalid auxiliary provided."}), 400
-                sql = {"engine": aux[0]['engine'], "hostname": aux[0]['hostname'], "port": aux[0]['port'], "username": aux[0]['username'], "password": aux[0]['password']}
+                sql = {"engine": aux[0]['engine'], "hostname": aux[0]['hostname'], "port": aux[0]['port'], "username": aux[0]['username'], "password": aux[0]['password'], 'ssl': aux[0]['ssl'], 'ssl_client_key': aux[0]['ssl_client_key'], 'ssl_client_certificate': aux[0]['ssl_client_certificate'], 'ssl_ca_certificate': aux[0]['ssl_ca_certificate'], 'ssl_verify_ca': aux[0]['ssl_verify_ca']}
             else:
-                sql = {"engine": auxiliary_json['engine'], "hostname": auxiliary_json['hostname'], "port": auxiliary_json['port'], "username": auxiliary_json['username'], "password": auxiliary_json['password']}
+                sql = {"engine": auxiliary_json['engine'], "hostname": auxiliary_json['hostname'], "port": auxiliary_json['port'], "username": auxiliary_json['username'], "password": auxiliary_json['password'], "ssl": auxiliary_json['ssl'], "ssl_client_key": auxiliary_json['ssl_client_key'], "ssl_client_certificate": auxiliary_json['ssl_client_certificate'], "ssl_ca_certificate": auxiliary_json['ssl_ca_certificate'], 'ssl_verify_ca': auxiliary_json['ssl_verify_ca']}
+                if 'id' in auxiliary_json:
+                    auxiliary_origin = self._auxiliary.get(user['id'], user['group_id'], auxiliary_json['id'])
+                    sql['ssl_client_key'] = auxiliary_origin[0]['ssl_client_key'] if sql['ssl_client_key'] == '<ssl_client_key>' else sql['ssl_client_key']
+                    sql['ssl_client_certificate'] = auxiliary_origin[0]['ssl_client_certificate'] if sql['ssl_client_certificate'] == '<ssl_client_certificate>' else sql['ssl_client_certificate']
+                    sql['ssl_ca_certificate'] = auxiliary_origin[0]['ssl_ca_certificate'] if sql['ssl_ca_certificate'] == '<ssl_ca_certificate>' else sql['ssl_ca_certificate']
 
             # Check SQL Connection
             try:
@@ -111,6 +116,12 @@ class Auxiliary:
         # Check auxiliary exists
         if self._auxiliary.exist(user['id'], user['group_id'], auxiliary):
             return jsonify({'message': 'This auxiliary name currently exists'}), 400
+        # Parse ssl
+        if auxiliary['ssl'] and (auxiliary['ssl_client_key'] == '<ssl_client_key>' or auxiliary['ssl_client_certificate'] == '<ssl_client_certificate>' or auxiliary['ssl_ca_certificate'] == '<ssl_ca_certificate>'):
+            origin = self._auxiliary.get(user['id'], user['group_id'], auxiliary['id'])[0]
+            auxiliary['ssl_client_key'] = origin['ssl_client_key'] if auxiliary['ssl_client_key'] == '<ssl_client_key>' else auxiliary['ssl_client_key']
+            auxiliary['ssl_client_certificate'] = origin['ssl_client_certificate'] if auxiliary['ssl_client_certificate'] == '<ssl_client_certificate>' else auxiliary['ssl_client_certificate']
+            auxiliary['ssl_ca_certificate'] = origin['ssl_ca_certificate'] if auxiliary['ssl_ca_certificate'] == '<ssl_ca_certificate>' else auxiliary['ssl_ca_certificate']
         # Add auxiliary
         self._auxiliary.post(user['id'], user['group_id'], auxiliary)
         return jsonify({'message': 'Auxiliary connection added successfully'}), 200

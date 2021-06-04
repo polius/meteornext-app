@@ -73,18 +73,22 @@ class Servers:
             # Get Server
             if type(server_json['server']) is dict:
                 server = server_json['server']
+                if 'id' in server_json['server']:
+                    server_origin = self._servers.get(user['id'], user['group_id'], server_json['server']['id'])
+                    server['ssl_client_key'] = server_origin[0]['ssl_client_key'] if server['ssl_client_key'] == '<ssl_client_key>' else server['ssl_client_key']
+                    server['ssl_client_certificate'] = server_origin[0]['ssl_client_certificate'] if server['ssl_client_certificate'] == '<ssl_client_certificate>' else server['ssl_client_certificate']
+                    server['ssl_ca_certificate'] = server_origin[0]['ssl_ca_certificate'] if server['ssl_ca_certificate'] == '<ssl_ca_certificate>' else server['ssl_ca_certificate']
             else:
-                server = self._servers.get(user['id'], user['group_id'], server_json['server'])
-                if len(server) == 0:
+                server_origin = self._servers.get(user['id'], user['group_id'], server_json['server'])
+                if len(server_origin) == 0:
                     return jsonify({'message': "Can't test the connection. Invalid server provided."}), 400
-                else:
-                    server = server[0]
+                server = server_origin[0]
 
             # Check SQL Connection
             try:
                 conf = {}
                 conf['ssh'] = {'enabled': region['ssh_tunnel'], 'hostname': region['hostname'], 'port': region['port'], 'username': region['username'], 'password': region['password'], 'key': region['key']}
-                conf['sql'] = {'engine': server['engine'], 'hostname': server['hostname'], 'port': server['port'], 'username': server['username'], 'password': server['password']}
+                conf['sql'] = {'engine': server['engine'], 'hostname': server['hostname'], 'port': server['port'], 'username': server['username'], 'password': server['password'], 'ssl': server['ssl'], 'ssl_client_key': server['ssl_client_key'], 'ssl_client_certificate': server['ssl_client_certificate'], 'ssl_ca_certificate': server['ssl_ca_certificate'], 'ssl_verify_ca': server['ssl_verify_ca']}
                 sql = connectors.base.Base(conf)
                 sql.test_sql()
             except Exception as e:
@@ -119,6 +123,12 @@ class Servers:
         # Check region authority
         if len(self._regions.get(user['owner'], user['group_id'], server['region_id'])) == 0:
             return jsonify({'message': 'This region does not belong to the user'}), 400
+        # Parse ssl
+        if server['ssl'] and (server['ssl_client_key'] == '<ssl_client_key>' or server['ssl_client_certificate'] == '<ssl_client_certificate>' or server['ssl_ca_certificate'] == '<ssl_ca_certificate>'):
+            origin = self._servers.get(user['id'], user['group_id'], server['id'])[0]
+            server['ssl_client_key'] = origin['ssl_client_key'] if server['ssl_client_key'] == '<ssl_client_key>' else server['ssl_client_key']
+            server['ssl_client_certificate'] = origin['ssl_client_certificate'] if server['ssl_client_certificate'] == '<ssl_client_certificate>' else server['ssl_client_certificate']
+            server['ssl_ca_certificate'] = origin['ssl_ca_certificate'] if server['ssl_ca_certificate'] == '<ssl_ca_certificate>' else server['ssl_ca_certificate']
         # Add server
         self._servers.post(user['id'], user['group_id'], server)
         return jsonify({'message': 'Server added successfully'}), 200

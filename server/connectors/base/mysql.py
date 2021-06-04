@@ -1,8 +1,8 @@
-import os
+from os import fchmod
+import tempfile
 import pymysql
 import paramiko
 import sshtunnel
-import threading
 import logging
 from io import StringIO
 from collections import OrderedDict
@@ -35,7 +35,8 @@ class MySQL:
             hostname = '127.0.0.1' if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['hostname']
             port = self._tunnel.local_bind_port if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['port']
             database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-            self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True)
+            ssl = self.__ssl()
+            self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
         except Exception:
             self.stop()
             raise
@@ -103,7 +104,8 @@ class MySQL:
                 conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=self._server['sql']['username'], passwd=self._server['sql']['password'])
                 conn.close()
         else:
-            conn = pymysql.connect(host=self._server['sql']['hostname'], port=int(self._server['sql']['port']), user=self._server['sql']['username'], passwd=self._server['sql']['password'])
+            ssl = self.__ssl()
+            conn = pymysql.connect(host=self._server['sql']['hostname'], port=int(self._server['sql']['port']), user=self._server['sql']['username'], passwd=self._server['sql']['password'], ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
             conn.close()
 
     def __logger(self):
@@ -115,6 +117,34 @@ class MySQL:
             sh.setLevel(level=logging.CRITICAL)
             log.addHandler(sh)
         return log
+
+    def __ssl(self):
+        ssl = {'ssl_ca': None, 'ssl_cert': None, 'ssl_key': None, 'ssl_verify_cert': None, 'ssl_verify_identity': None}
+        if 'ssl' not in self._server['sql'] or not self._server['sql']['ssl']:
+            return ssl
+        # Generate CA Certificate
+        if self._server['sql']['ssl_ca_certificate']:
+            ssl['ssl_ca_file'] = tempfile.NamedTemporaryFile()
+            ssl['ssl_ca_file'].write(self._server['sql']['ssl_ca_certificate'].encode())
+            ssl['ssl_ca_file'].flush()
+            ssl['ssl_ca'] = ssl['ssl_ca_file'].name
+        # Generate Client Certificate
+        if self._server['sql']['ssl_client_certificate']:
+            ssl['ssl_cert_file'] = tempfile.NamedTemporaryFile()
+            ssl['ssl_cert_file'].write(self._server['sql']['ssl_client_certificate'].encode())
+            ssl['ssl_cert_file'].flush()
+            ssl['ssl_cert'] = ssl['ssl_cert_file'].name
+        # Generate Client Key
+        if self._server['sql']['ssl_client_key']:
+            ssl['ssl_key_file'] = tempfile.NamedTemporaryFile()
+            ssl['ssl_key_file'].write(self._server['sql']['ssl_client_key'].encode())
+            ssl['ssl_key_file'].flush()
+            ssl['ssl_key'] = ssl['ssl_key_file'].name
+        # Add optional parameters
+        ssl['ssl_verify_cert'] = self._server['sql']['ssl_verify_ca'] == 1
+        ssl['ssl_verify_identity'] = self._server['sql']['ssl_verify_ca'] == 1
+        # Return SSL Data
+        return ssl
 
     ####################
     # INTERNAL METHODS #

@@ -81,9 +81,17 @@ class Auxiliary:
             if len(region) == 0:
                 return jsonify({'message': "Can't test the connection. Invalid region provided."}), 400
 
+            # Get auxiliary
+            auxiliary = auxiliary_json
+            if 'id' in auxiliary:
+                auxiliary_origin = self._servers.get(user['id'], user['group_id'], auxiliary['id'])
+                auxiliary['ssl_client_key'] = auxiliary_origin[0]['ssl_client_key'] if auxiliary['ssl_client_key'] == '<ssl_client_key>' else auxiliary['ssl_client_key']
+                auxiliary['ssl_client_certificate'] = auxiliary_origin[0]['ssl_client_certificate'] if auxiliary['ssl_client_certificate'] == '<ssl_client_certificate>' else auxiliary['ssl_client_certificate']
+                auxiliary['ssl_ca_certificate'] = auxiliary_origin[0]['ssl_ca_certificate'] if auxiliary['ssl_ca_certificate'] == '<ssl_ca_certificate>' else auxiliary['ssl_ca_certificate']
+
             # Build Auxiliary Data
             ssh = {'enabled': region[0]['ssh_tunnel'], 'hostname': region[0]['hostname'], 'port': region[0]['port'], 'username': region[0]['username'], 'password': region[0]['password'], 'key': region[0]['key']}
-            sql = {"engine": auxiliary_json['engine'], "hostname": auxiliary_json['hostname'], "port": auxiliary_json['port'], "username": auxiliary_json['username'], "password": auxiliary_json['password']}
+            sql = {"engine": auxiliary['engine'], "hostname": auxiliary['hostname'], "port": auxiliary['port'], "username": auxiliary['username'], "password": auxiliary['password'], "ssl": auxiliary['ssl'], "ssl_client_key": auxiliary['ssl_client_key'], "ssl_client_certificate": auxiliary['ssl_client_certificate'], "ssl_ca_certificate": auxiliary['ssl_ca_certificate'], "ssl_verify_ca": auxiliary['ssl_verify_ca']}
 
             # Check SQL Connection
             try:

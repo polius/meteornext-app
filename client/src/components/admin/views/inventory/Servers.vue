@@ -30,8 +30,8 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1">{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
-          <v-btn v-if="mode != 'delete'" title="Create the server only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="item.shared = false" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
-          <v-btn v-if="mode != 'delete'" title="Create the server for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="item.shared = true"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-btn v-if="mode != 'delete'" title="Create the server only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="personalClick" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn v-if="mode != 'delete'" title="Create the server for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="sharedClick"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -45,7 +45,7 @@
                       <v-autocomplete ref="group_id" :readonly="mode == 'edit'" @change="groupChanged" v-model="item.group_id" :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                     <v-col v-if="!item.shared" style="margin-left:20px">
-                      <v-autocomplete ref="owner_id" v-model="item.owner_id" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
+                      <v-autocomplete ref="owner_id" v-model="item.owner_id" @change="ownerChanged" :items="users" item-value="id" item-text="username" label="Owner" :rules="[v => !!v || '']" hide-details style="padding-top:0px"></v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row no-gutters>
@@ -84,22 +84,34 @@
                     </v-row>
                     <v-text-field v-model="item.username" :rules="[v => !!v || '']" label="Username" required autocomplete="username" style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="item.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" autocomplete="new-password" style="padding-top:0px;" hide-details></v-text-field>
-                    <v-row no-gutters>
-                      <v-col cols="auto" style="margin-top:20px">
-                        <v-switch v-model="item.ssl" flat label="Use SSL" style="margin-top:0px" hide-details></v-switch>
-                      </v-col>
-                    </v-row>
-                    <v-row no-gutters v-if="item.ssl" style="margin-top:20px; margin-bottom:20px;">
-                      <v-col style="padding-right:10px;">
-                        <v-file-input v-model="item.ssl_client_key" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
-                      </v-col>
-                      <v-col style="padding-right:5px; padding-left:5px;">
-                        <v-file-input v-model="item.ssl_client_certificate" filled dense label="Client Certificate" prepend-icon="" hide-details></v-file-input>
-                      </v-col>
-                      <v-col style="padding-left:10px;">
-                        <v-file-input v-model="item.ssl_client_ca_certificate" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
-                      </v-col>
-                    </v-row>
+                    <div v-if="(item.ssl_client_key == null || typeof item.ssl_client_key === 'object') && (item.ssl_client_certificate == null || typeof item.ssl_client_certificate === 'object') && (item.ssl_ca_certificate == null || typeof item.ssl_ca_certificate === 'object')">
+                      <v-switch v-model="item.ssl" flat label="SSL Connection" hide-details style="margin-top:20px"></v-switch>
+                      <v-row no-gutters v-if="item.ssl" style="margin-top:20px; margin-bottom:20px;">
+                        <v-col style="padding-right:10px;">
+                          <v-file-input v-model="item.ssl_client_key" filled dense label="Client Key" prepend-icon="" hide-details></v-file-input>
+                        </v-col>
+                        <v-col style="padding-right:5px; padding-left:5px;">
+                          <v-file-input v-model="item.ssl_client_certificate" filled dense label="Client Certificate" prepend-icon="" hide-details></v-file-input>
+                        </v-col>
+                        <v-col style="padding-left:10px;">
+                          <v-file-input v-model="item.ssl_ca_certificate" filled dense label="CA Certificate" prepend-icon="" hide-details></v-file-input>
+                        </v-col>
+                      </v-row>
+                    </div>
+                    <v-card v-else style="height:52px; margin-top:20px">
+                      <v-row no-gutters>
+                        <v-col cols="auto" style="display:flex; margin:15px">
+                          <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
+                        </v-col>
+                        <v-col>
+                          <div class="text-body-1" style="color:#00b16a; margin-top:15px">{{ 'Using a SSL connection (' + ssl_active + ')' }}</div>
+                        </v-col>
+                        <v-col cols="auto" class="text-right">
+                          <v-btn @click="removeSSL" icon title="Remove SSL connection" style="margin:8px"><v-icon style="font-size:18px">fas fa-times</v-icon></v-btn>
+                        </v-col>
+                      </v-row>
+                    </v-card>
+                    <v-checkbox v-if="item.ssl" v-model="item.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox>
                     <v-select :disabled="item.group_id == null" outlined v-model="item.usage" :items="usage" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
@@ -222,7 +234,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { group_id: null, owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false,  client_disabled: false, shared: true, usage: [] },
+    item: { group_id: null, owner_id: null, name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, client_disabled: false, shared: true, usage: [] },
     mode: '',
     loading: true,
     engines: {
@@ -256,8 +268,21 @@ export default {
   },
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
+    ssl_active: function() {
+      let elements = []
+      if (this.item.ssl_client_key != null) elements.push('Client Key')
+      if (this.item.ssl_client_certificate != null) elements.push('Client Certificate')
+      if (this.item.ssl_ca_certificate != null) elements.push('CA Certificate')
+      return elements.join(' + ')
+    }
   },
   methods: {
+    personalClick() {
+      this.item.shared = false
+    },
+    sharedClick() {
+      this.item.shared = true
+    },
     groupChanged() {
       this.item.owner_id = null
       this.item.region_id = null
@@ -270,6 +295,9 @@ export default {
         this.getUsers()
         this.buildUsage()
       }
+    },
+    ownerChanged() {
+      this.getRegions()
     },
     getUsers() {
       axios.get('/admin/inventory/users', { params: { group_id: this.item.group_id }})
@@ -315,7 +343,9 @@ export default {
         .finally(() => this.loading = false)
     },
     getRegions() {
-      axios.get('/admin/inventory/regions', { params: { group_id: this.item.group_id, owner_id: this.item.owner_id }})
+      if (!this.item.shared && this.item.owner_id == null) return
+      const payload = this.item.shared ? { group_id: this.item.group_id } : { group_id: this.item.group_id, owner_id: this.item.owner_id }
+      axios.get('/admin/inventory/regions', { params: payload})
         .then((response) => {
           this.regions = response.data.regions.map(x => ({ id: x.id, name: x.name, shared: x.shared }))
         })
@@ -336,7 +366,7 @@ export default {
       this.users = []
       this.regions = []
       this.usage = []
-      this.item = { group_id: this.filter.group, owner_id: '', name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, client_disabled: false, shared: true, usage: [...this.usage] }
+      this.item = { group_id: this.filter.group, owner_id: null, name: '', region_id: '', engine: '', version: '', hostname: '', port: '', username: '', password: '', ssl: false, ssl_ca_certificate: null, ssl_client_key: null, ssl_client_certificate: null, ssl_verify_ca: false, client_disabled: false, shared: true, usage: [...this.usage] }
       if (this.filter.group != null) { this.getUsers(); this.getRegions(); this.buildUsage(); }
       this.dialog_title = 'NEW SERVER'
       this.dialog = true
@@ -345,7 +375,6 @@ export default {
       this.mode = 'clone'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item.usage = this.parseUsage(this.item.usage)
-      delete this.item['id']
       this.getUsers()
       this.getRegions()
       this.buildUsage()
@@ -371,20 +400,31 @@ export default {
     },
     submitServer(check=true) {
       this.confirm_dialog = false
-      this.loading = true
       if (['new','clone'].includes(this.mode)) this.newServerSubmit()
       else if (this.mode == 'edit') this.editServerSubmit(check)
       else if (this.mode == 'delete') this.deleteServerSubmit(check)
     },
-    newServerSubmit() {
+    async newServerSubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
+      // Get SSL Imported Files
+      let ssl_ca_certificate = await this.readFileAsync(this.item.ssl_ca_certificate)
+      let ssl_client_key = await this.readFileAsync(this.item.ssl_client_key)
+      let ssl_client_certificate = await this.readFileAsync(this.item.ssl_client_certificate)
+      if (this.item.ssl && ssl_ca_certificate == null && ssl_client_key == null && ssl_client_certificate == null) {
+        this.notification('Import at least one SSL certificate/key', 'error')
+        return
+      }
+      // Parse SSL
+      ssl_ca_certificate = (ssl_ca_certificate === undefined) ? null : ssl_ca_certificate
+      ssl_client_key = (ssl_client_key === undefined) ? null : ssl_client_key
+      ssl_client_certificate = (ssl_client_certificate === undefined) ? null : ssl_client_certificate
       // Add item in the DB
-      const payload = {...this.item, usage: this.parseUsage(this.item.usage)}
+      this.loading = true
+      const payload = {...this.item, usage: this.parseUsage(this.item.usage), ssl_ca_certificate, ssl_client_key, ssl_client_certificate}
       axios.post('/admin/inventory/servers', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -398,15 +438,27 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    editServerSubmit(check) {
+    async editServerSubmit(check) {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
+      // Get SSL Imported Files
+      let ssl_ca_certificate = await this.readFileAsync(this.item.ssl_ca_certificate)
+      let ssl_client_key = await this.readFileAsync(this.item.ssl_client_key)
+      let ssl_client_certificate = await this.readFileAsync(this.item.ssl_client_certificate)
+      if (this.item.ssl && ssl_ca_certificate == null && ssl_client_key == null && ssl_client_certificate == null) {
+        this.notification('Import at least one SSL certificate/key', 'error')
+        return
+      }
+      // Parse SSL
+      ssl_ca_certificate = (ssl_ca_certificate === undefined) ? null : ssl_ca_certificate
+      ssl_client_key = (ssl_client_key === undefined) ? null : ssl_client_key
+      ssl_client_certificate = (ssl_client_certificate === undefined) ? null : ssl_client_certificate
       // Edit item in the DB
-      const payload = {...this.item, usage: this.parseUsage(this.item.usage), check}
+      this.loading = true
+      const payload = {...this.item, usage: this.parseUsage(this.item.usage), check, ssl_ca_certificate, ssl_client_key, ssl_client_certificate}
       axios.put('/admin/inventory/servers', payload)
         .then((response) => {
           if (response.status == 202) this.confirm_dialog = true
@@ -424,6 +476,7 @@ export default {
         .finally(() => this.loading = false)
     },
     deleteServerSubmit(check) {
+      this.loading = true
       // Build payload
       const payload = { servers: JSON.stringify(this.selected.map((x) => x.id)), check }
       // Delete items to the DB
@@ -443,23 +496,29 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    testConnection() {
+    async testConnection() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
+        return
+      }
+      // Get SSL Imported Files
+      let ssl_ca_certificate = await this.readFileAsync(this.item.ssl_ca_certificate)
+      let ssl_client_key = await this.readFileAsync(this.item.ssl_client_key)
+      let ssl_client_certificate = await this.readFileAsync(this.item.ssl_client_certificate)
+      if (this.item.ssl && ssl_ca_certificate == null && ssl_client_key == null && ssl_client_certificate == null) {
+        this.notification('Import at least one SSL certificate/key', 'error')
         return
       }
       // Test Connection
-      this.notification('Testing Server...', 'info', true)
       this.loading = true
       const payload = {
         region_id: this.item.region_id,
-        server: { engine: this.item.engine, hostname: this.item.hostname, port: this.item.port, username: this.item.username, password: this.item.password }
+        server: { ...this.item, ssl_client_key, ssl_client_certificate, ssl_ca_certificate, ssl_verify_ca: this.item.ssl_verify_ca }
       }
       axios.post('/admin/inventory/servers/test', payload)
         .then((response) => {
-          this.notification(response.data.message, '#00b16a', 2)
+          this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -514,6 +573,20 @@ export default {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
     },
+    readFileAsync(file) {
+      if (file == null || typeof file !== 'object') return file
+      return new Promise((resolve, reject) => {
+        let reader = new FileReader()
+        reader.onload = () => { resolve(reader.result)}
+        reader.onerror = reject
+        reader.readAsText(file, 'utf-8')
+      })
+    },
+    removeSSL() {
+      this.item.ssl_ca_certificate = null
+      this.item.ssl_client_key = null
+      this.item.ssl_client_certificate = null
+    },
     notification(message, color, persistent=false) {
       EventBus.$emit('notification', message, color, persistent)
     }
@@ -537,7 +610,10 @@ export default {
     tab(val) {
       this.selected = []
       if (val == 0) this.getServers()
-    }
+    },
+    'item.shared': function (newVal, oldVal) {
+      if (newVal != oldVal) this.getRegions()
+    },
   }
 }
 </script> 

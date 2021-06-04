@@ -1,5 +1,5 @@
-import os
 import time
+import tempfile
 import logging
 import pymysql
 import paramiko
@@ -68,7 +68,8 @@ class MySQL:
             hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
             port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
             database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-            self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, client_flag=CLIENT.MULTI_STATEMENTS)
+            ssl = self.__ssl()
+            self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, client_flag=CLIENT.MULTI_STATEMENTS, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'])
             self._connection_id = self.execute('SELECT CONNECTION_ID()')['data'][0]['CONNECTION_ID()']
 
         except Exception:
@@ -177,6 +178,31 @@ class MySQL:
             sh.setLevel(level=logging.CRITICAL)
             log.addHandler(sh)
         return log
+
+    def __ssl(self):
+        ssl = {'ssl_ca': None, 'ssl_cert': None, 'ssl_key': None}
+        if 'ssl' not in self._server['sql'] or not self._server['sql']['ssl']:
+            return ssl
+        # Generate CA Certificate
+        if self._server['sql']['ssl_ca_certificate']:
+            ssl['ssl_ca_file'] = tempfile.NamedTemporaryFile(mode = 'w')
+            ssl['ssl_ca_file'].write(self._server['sql']['ssl_ca_certificate'])
+            ssl['ssl_ca_file'].flush()
+            ssl['ssl_ca'] = ssl['ssl_ca_file'].name
+        # Generate Client Certificate
+        if self._server['sql']['ssl_client_certificate']:
+            ssl['ssl_cert_file'] = tempfile.NamedTemporaryFile(mode = 'w')
+            ssl['ssl_cert_file'].write(self._server['sql']['ssl_client_certificate'])
+            ssl['ssl_cert_file'].flush()
+            ssl['ssl_cert'] = ssl['ssl_cert_file'].name
+        # Generate Client Key
+        if self._server['sql']['ssl_client_key']:
+            ssl['ssl_key_file'] = tempfile.NamedTemporaryFile(mode = 'w')
+            ssl['ssl_key_file'].write(self._server['sql']['ssl_client_key'])
+            ssl['ssl_key_file'].flush()
+            ssl['ssl_key'] = ssl['ssl_key_file'].name
+        # Return SSL Data
+        return ssl
 
     ####################
     # INTERNAL QUERIES #
