@@ -64,7 +64,7 @@
                               <v-flex ref="item" v-show="Object.keys(item).length != 0">
                                 <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Server details</div>
                                 <v-card>
-                                  <v-card-text style="padding:23px 20px 5px 20px; margin-bottom:20px;">
+                                  <v-card-text style="padding:25px 20px 5px 20px; margin-bottom:20px;">
                                     <v-row no-gutters>
                                       <v-col cols="8" style="padding-right:10px">
                                         <v-text-field v-model="item.name" readonly label="Name" required style="padding-top:0px; font-size:1rem;"></v-text-field>
@@ -92,7 +92,7 @@
                                     <div v-if="!(inventory_secured && !owner && item.shared)">
                                       <v-row no-gutters style="margin-top:10px;">
                                         <v-col cols="8" style="padding-right:10px">
-                                          <v-text-field v-model="item.hostname" readonly label="MySQL Hostname" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                                          <v-text-field v-model="item.hostname" readonly label="Hostname" required style="padding-top:0px; font-size:1rem;"></v-text-field>
                                         </v-col>
                                         <v-col cols="4" style="padding-left:10px">
                                           <v-text-field v-model="item.port" readonly label="Port" required style="padding-top:0px; font-size:1rem;"></v-text-field>
@@ -100,27 +100,29 @@
                                       </v-row>
                                       <v-text-field v-model="item.username" readonly label="Username" required style="padding-top:0px; font-size:1rem;"></v-text-field>
                                       <v-text-field v-model="item.password" readonly label="Password" :append-icon="sqlPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="sqlPassword ? 'text' : 'password'" @click:append="sqlPassword = !sqlPassword" style="padding-top:0px; font-size:1rem;"></v-text-field>
-                                      <!-- SSH -->
-                                      <div v-if="'ssh_hostname' in item && item.ssh_enabled">
-                                        <v-row no-gutters style="margin-top:15px;">
-                                          <v-col cols="8" style="padding-right:10px">
-                                            <v-text-field v-model="item.ssh_hostname" readonly label="SSH Hostname" required style="padding-top:0px; font-size:1rem;"></v-text-field>
-                                          </v-col>
-                                          <v-col cols="4" style="padding-left:10px">
-                                            <v-text-field v-model="item.ssh_port" readonly label="Port" required style="padding-top:0px; font-size:1rem;"></v-text-field>
-                                          </v-col>
-                                        </v-row>
-                                        <v-text-field v-model="item.ssh_username" readonly label="Username" required style="padding-top:0px; font-size:1rem;"></v-text-field>
-                                        <v-row no-gutters>
-                                          <v-col style="padding-right:10px">
-                                            <v-text-field v-model="item.ssh_password" readonly label="Password" :append-icon="sshPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="sshPassword ? 'text' : 'password'" @click:append="sshPassword = !sshPassword" style="padding-top:0px; font-size:1rem;"></v-text-field>
-                                          </v-col>
-                                          <v-col cols="auto" style="padding-left:10px">
-                                           <v-btn @click="sshClick" color="#2e3131"><v-icon small :color="item.ssh_key == null || item.ssh_key.length == 0 ? 'error' : '#00b16a'" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>SSH Key</v-btn>
-                                          </v-col>
-                                        </v-row>
-                                      </div>
                                     </div>
+                                    <!-- SSL -->
+                                    <v-card v-if="item.ssl" style="height:52px; margin-bottom:15px">
+                                      <v-row no-gutters>
+                                        <v-col cols="auto" style="display:flex; margin:15px">
+                                          <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
+                                        </v-col>
+                                        <v-col>
+                                          <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a SSL connection</div>
+                                        </v-col>
+                                      </v-row>
+                                    </v-card>
+                                    <!-- SSH -->
+                                    <v-card v-if="item.ssh" style="height:52px; margin-bottom:15px">
+                                      <v-row no-gutters>
+                                        <v-col cols="auto" style="display:flex; margin:15px">
+                                          <v-icon color="#2196f3" style="font-size:20px">fas fa-terminal</v-icon>
+                                        </v-col>
+                                        <v-col>
+                                          <div class="text-body-1" style="color:#2196f3; margin-top:15px">Using a SSH connection</div>
+                                        </v-col>
+                                      </v-row>
+                                    </v-card>
                                   </v-card-text>
                                 </v-card>
                               </v-flex>
@@ -131,33 +133,6 @@
                     </v-card-text>
                   </v-card>
                 </v-form>
-              </v-flex>
-            </v-layout>
-          </v-container>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-    <!------------>
-    <!-- DIALOG -->
-    <!------------>
-    <v-dialog v-model="infoDialog" max-width="50%">
-      <v-card>
-        <v-card-text style="padding:15px 15px 5px;">
-          <v-container style="padding:0px; max-width:100%;">
-            <v-layout wrap>
-              <div class="text-h6" style="font-weight:400;">{{ infoDialogTitle }}</div>
-              <v-flex xs12>
-                <div style="max-height:70vh; padding:15px 10px 0px 5px; overflow-y:auto;">
-                  <v-textarea readonly solo counter auto-grow :value="infoDialogText"></v-textarea>
-                </div>
-                <v-divider></v-divider>
-                <div style="margin-top:15px;">
-                  <v-row no-gutters>
-                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                      <v-btn @click="infoDialog = false" color="primary">Close</v-btn>
-                    </v-col>
-                  </v-row>
-                </div>
               </v-flex>
             </v-layout>
           </v-container>
@@ -192,10 +167,6 @@ export default {
       height: '100%',
       sqlPassword: false,
       sshPassword: false,
-      // Info Dialog
-      infoDialog: false,
-      infoDialogTitle: '',
-      infoDialogText: '',
     }
   },
   components: { Splitpanes, Pane },
@@ -243,14 +214,6 @@ export default {
       const current = this.servers.reduce((acc, val) => { 'children' in val ? acc = acc.concat(val['children'].map(x => x.id)) : acc.push(val.id) ; return acc }, [])
       this.origin = data.filter(x => !current.includes(x.id))
       this.items = this.origin.slice(0)
-    },
-    sshClick() {
-      if (this.item.ssh_key == null || this.item.ssh_key.length == 0) EventBus.$emit('send-notification', 'This server does not have an SSH key configured', 'error')
-      else {
-        this.infoDialogTitle = 'SSH Key'
-        this.infoDialogText = this.item.ssh_key
-        this.infoDialog = true
-      }
     },
     onServerSearch(value) {
       if (value.length == 0) this.items = this.origin.slice(0)
