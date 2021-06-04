@@ -1,5 +1,5 @@
 import time
-import json
+import simplejson
 import datetime
 import calendar
 import requests
@@ -77,7 +77,7 @@ class Monitoring:
         # Get Monitoring Servers
         query = """
             SELECT 
-                s.id, s.name, s.engine, s.hostname, s.port, s.username, s.password,
+                s.id, s.name, s.engine, s.hostname, s.port, s.username, s.password, s.ssl, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca,
                 r.name AS 'rname', r.ssh_tunnel, r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key,
                 ms.available AS 'available', ms.summary, ms.parameters, SUM(m.monitor_enabled > 0) AS 'monitor_enabled', SUM(m.parameters_enabled > 0) AS 'parameters_enabled', SUM(m.processlist_enabled > 0) AS 'processlist_enabled', SUM(m.queries_enabled > 0) AS 'queries_enabled', IFNULL(MIN(mset.query_execution_time), 10) AS 'query_execution_time',
 				ms.updated, IF(ms.updated IS NULL, 1, DATE_ADD(ms.updated, INTERVAL IFNULL(MIN(mset.monitor_interval), 10) SECOND) <= %s) AS 'needs_update'
@@ -104,7 +104,7 @@ class Monitoring:
             server = {'ssh': {}, 'sql': {}}
             server['id'] = s['id']
             server['ssh'] = {'name': s['rname'], 'enabled': s['ssh_tunnel'], 'hostname': s['rhostname'], 'port': s['rport'], 'username': s['rusername'], 'password': s['rpassword'], 'key': s['key']}
-            server['sql'] = {'name': s['name'], 'engine': s['engine'], 'hostname': s['hostname'], 'port': s['port'], 'username': s['username'], 'password': s['password']}
+            server['sql'] = {'name': s['name'], 'engine': s['engine'], 'hostname': s['hostname'], 'port': s['port'], 'username': s['username'], 'password': s['password'], 'ssl': s['ssl'], 'ssl_client_key': s['ssl_client_key'], 'ssl_client_certificate': s['ssl_client_certificate'], 'ssl_ca_certificate': s['ssl_ca_certificate'], 'ssl_verify_ca': s['ssl_verify_ca']}
             server['monitor'] = {'available': s['available'], 'summary': s['summary'], 'parameters': s['parameters'], 'monitor_enabled': s['monitor_enabled'], 'parameters_enabled': s['parameters_enabled'], 'processlist_enabled': s['processlist_enabled'], 'queries_enabled': s['queries_enabled'], 'query_execution_time': s['query_execution_time'], 'updated': s['updated']}
             servers.append(server)
 
@@ -406,7 +406,7 @@ class Monitoring:
             webhook_data['attachments'][0]['fields'].append({"title": "Current Uptime", "value": data['current_uptime'], "short": True})
             webhook_data['attachments'][0]['fields'].append({"title": "Current Start Time", "value": data['current_start_time'], "short": True})
         # Send Slack Message
-        response = requests.post(slack['monitor_slack_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
+        response = requests.post(slack['monitor_slack_url'], data=simplejson.dumps(webhook_data), headers={'Content-Type': 'application/json'})
     
     def __get_users_server(self, server_id):
         query = "SELECT user_id FROM monitoring WHERE server_id = %s AND monitor_enabled = 1"
@@ -437,11 +437,11 @@ class Monitoring:
         self._sql.execute(query=query, args=(server_id, event, data, self.__utcnow()))
 
     def __dict2str(self, data):
-        return json.dumps(data, separators=(',', ':'))
+        return simplejson.dumps(data, separators=(',', ':'))
 
     def __str2dict(self, data):
         # Convert a string representation of a dictionary to a dictionary
-        return json.loads(data, object_pairs_hook=OrderedDict)
+        return simplejson.loads(data, object_pairs_hook=OrderedDict)
 
     def __utcnow(self):
         # Get current timestamp in utc
