@@ -6,7 +6,10 @@ class Client:
 
     def get_servers(self, user_id, group_id):
         query = """
-            SELECT s.*, cs.folder_id, cf.name AS 'folder_name', r.name AS 'region', r.shared AS 'region_shared', r.ssh_tunnel AS 'ssh_enabled', r.hostname AS 'ssh_hostname', r.`port` AS 'ssh_port', r.username AS 'ssh_username', r.`password` AS 'ssh_password', r.`key` AS 'ssh_key'
+            SELECT 
+                s.id, s.name, s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.shared,
+                cs.folder_id, cf.name AS 'folder_name',
+                r.name AS 'region', r.shared AS 'region_shared', r.ssh_tunnel AS 'ssh'
             FROM servers s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
             JOIN client_servers cs ON cs.server_id = s.id AND cs.user_id = %(user_id)s
@@ -18,7 +21,9 @@ class Client:
 
     def get_servers_unassigned(self, user_id, group_id):
         query = """
-            SELECT s.*, cs.folder_id, r.name AS 'region', r.shared AS 'region_shared', r.ssh_tunnel AS 'ssh_enabled', r.hostname AS 'ssh_hostname', r.`port` AS 'ssh_port', r.username AS 'ssh_username', r.`password` AS 'ssh_password', r.`key` AS 'ssh_key'
+            SELECT
+                s.id, s.name, s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.shared,
+                r.name AS 'region', r.shared AS 'region_shared', r.ssh_tunnel AS 'ssh'
             FROM servers s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %(group_id)s
             LEFT JOIN client_servers cs ON cs.server_id = s.id AND cs.user_id = %(user_id)s
