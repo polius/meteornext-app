@@ -7,7 +7,7 @@ class Servers:
     def get(self, group_id=None, server_id=None):
         if group_id is not None:
             query = """
-                SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared'
+                SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, IF(s.ssl_client_key IS NULL, NULL, '<ssl_client_key>') AS 'ssl_client_key', IF(s.ssl_client_certificate IS NULL, NULL, '<ssl_client_certificate>') AS 'ssl_client_certificate', IF(s.ssl_ca_certificate IS NULL, NULL, '<ssl_ca_certificate>') AS 'ssl_ca_certificate', s.ssl_verify_ca, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
                 LEFT JOIN regions r ON r.id = s.region_id
                 LEFT JOIN users u ON u.id = s.owner_id
@@ -30,7 +30,7 @@ class Servers:
             return self._sql.execute(query, (server_id))
         else:
             query = """
-                SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared'
+                SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, `ssl_client_key`, `ssl_client_certificate`, `ssl_ca_certificate`, `ssl_verify_ca`, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s
                 LEFT JOIN regions r ON r.id = s.region_id
                 LEFT JOIN users u ON u.id = s.owner_id
@@ -43,10 +43,10 @@ class Servers:
 
     def post(self, user, server):
         query = """
-            INSERT INTO servers (name, group_id, region_id, engine, version, hostname, port, username, password, `ssl`, `usage`, shared, owner_id, created_by, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s)
+            INSERT INTO servers (name, group_id, region_id, engine, version, hostname, port, username, password, `ssl`, `ssl_client_key`, `ssl_client_certificate`, `ssl_ca_certificate`, `ssl_verify_ca`, `usage`, shared, owner_id, created_by, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s)
         """
-        self._sql.execute(query, (server['name'], server['group_id'], server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['usage'], server['shared'], server['shared'], server['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        self._sql.execute(query, (server['name'], server['group_id'], server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['ssl_client_key'], server['ssl_client_certificate'], server['ssl_ca_certificate'], server['ssl_verify_ca'], server['usage'], server['shared'], server['shared'], server['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user, server):
         if 'D' not in server['usage']:
@@ -72,6 +72,10 @@ class Servers:
                 `username` = %s,
                 `password` = %s,
                 `ssl` = %s,
+                `ssl_client_key` = IF(%s = '<ssl_client_key>', `ssl_client_key`, %s),
+                `ssl_client_certificate` = IF(%s = '<ssl_client_certificate>', `ssl_client_certificate`, %s),
+                `ssl_ca_certificate` = IF(%s = '<ssl_ca_certificate>', `ssl_ca_certificate`, %s),
+                `ssl_verify_ca` = %s,
                 `usage` = %s,
                 `shared` = %s,
                 `owner_id` = IF(%s = 1, NULL, %s),
@@ -79,7 +83,7 @@ class Servers:
                 `updated_at` = %s
             WHERE `id` = %s
         """
-        self._sql.execute(query, (server['name'], server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['usage'], server['shared'], server['shared'], server['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
+        self._sql.execute(query, (server['name'], server['region_id'], server['engine'], server['version'], server['hostname'], server['port'], server['username'], server['password'], server['ssl'], server['ssl_client_key'], server['ssl_client_key'], server['ssl_client_certificate'], server['ssl_client_certificate'], server['ssl_ca_certificate'], server['ssl_ca_certificate'], server['ssl_verify_ca'], server['usage'], server['shared'], server['shared'], server['owner_id'], user['id'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), server['id']))
 
     def delete(self, server_id):
         # Delete from 'monitoring'

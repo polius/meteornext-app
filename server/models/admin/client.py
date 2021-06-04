@@ -93,7 +93,7 @@ class Client:
                     FROM servers s
                     JOIN groups g ON g.id = s.group_id
                     LEFT JOIN users u ON u.group_id = g.id
-                    WHERE (s.shared = 1 OR u.id IS NOT NULL)
+                    WHERE (s.shared = 1 OR s.owner_id = u.id)
                     AND s.usage LIKE '%C%'
                 ) available
                 LEFT JOIN client_servers cs USING (user_id, server_id)
@@ -129,7 +129,7 @@ class Client:
                     FROM servers s
                     JOIN groups g ON g.id = s.group_id
                     LEFT JOIN users u ON u.group_id = g.id
-                    WHERE (s.shared = 1 OR u.id IS NOT NULL)
+                    WHERE (s.shared = 1 OR s.owner_id = u.id)
                     AND s.usage LIKE '%%C%%'
                     {} {}
                 ) available

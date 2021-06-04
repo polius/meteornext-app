@@ -289,12 +289,11 @@ export default {
         return
       }
       // Test Connection
-      this.notification('Testing Region...', 'info', true)
       this.loading = true
       const payload = (this.readOnly && this.inventory_secured) ? { region: this.item.id } : this.item
       axios.post('/inventory/regions/test', payload)
         .then((response) => {
-          this.notification(response.data.message, '#00b16a', 0)
+          this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

@@ -83,11 +83,19 @@ class Servers:
             else:
                 region = region[0]
 
+            # Get server
+            server = server_json['server']
+            if 'id' in server:
+                server_origin = self._servers.get(user['id'], user['group_id'], server['id'])
+                server['ssl_client_key'] = server_origin[0]['ssl_client_key'] if server['ssl_client_key'] == '<ssl_client_key>' else server['ssl_client_key']
+                server['ssl_client_certificate'] = server_origin[0]['ssl_client_certificate'] if server['ssl_client_certificate'] == '<ssl_client_certificate>' else server['ssl_client_certificate']
+                server['ssl_ca_certificate'] = server_origin[0]['ssl_ca_certificate'] if server['ssl_ca_certificate'] == '<ssl_ca_certificate>' else server['ssl_ca_certificate']
+
             # Check SQL Connection
             try:
                 conf = {}
                 conf['ssh'] = {'enabled': region['ssh_tunnel'], 'hostname': region['hostname'], 'port': region['port'], 'username': region['username'], 'password': region['password'], 'key': region['key']}
-                conf['sql'] = server_json['server']
+                conf['sql'] = server
                 sql = connectors.base.Base(conf)
                 sql.test_sql()
             except Exception as e:
@@ -118,6 +126,12 @@ class Servers:
         # Check server exists
         if self._servers.exist(server):
             return jsonify({'message': 'This server name currently exists'}), 400
+        # Parse ssl
+        if server['ssl'] and (server['ssl_client_key'] == '<ssl_client_key>' or server['ssl_client_certificate'] == '<ssl_client_certificate>' or server['ssl_ca_certificate'] == '<ssl_ca_certificate>'):
+            origin = self._servers.get(user['id'], user['group_id'], server['id'])[0]
+            server['ssl_client_key'] = origin['ssl_client_key'] if server['ssl_client_key'] == '<ssl_client_key>' else server['ssl_client_key']
+            server['ssl_client_certificate'] = origin['ssl_client_certificate'] if server['ssl_client_certificate'] == '<ssl_client_certificate>' else server['ssl_client_certificate']
+            server['ssl_ca_certificate'] = origin['ssl_ca_certificate'] if server['ssl_ca_certificate'] == '<ssl_ca_certificate>' else server['ssl_ca_certificate']
         # Add server
         self._servers.post(user, server)
         return jsonify({'message': 'Server added successfully'}), 200

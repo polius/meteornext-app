@@ -43,6 +43,7 @@ class Client:
         query = """
             SELECT 
                 s.id, s.engine, s.hostname, s.port, s.username, s.password,
+                s.ssl, s.ssl_client_key, s.ssl_client_certificate, s.ssl_ca_certificate, s.ssl_verify_ca,
                 r.ssh_tunnel AS 'rtunnel', r.hostname AS 'rhostname', r.port AS 'rport', r.username AS 'rusername', r.password AS 'rpassword', r.key AS 'rkey'
             FROM servers s
             JOIN regions r ON r.id = s.region_id AND r.group_id = %s
@@ -68,7 +69,12 @@ class Client:
                 'hostname': result[0]['hostname'],
                 'port': result[0]['port'],
                 'username': result[0]['username'],
-                'password': result[0]['password']
+                'password': result[0]['password'],
+                'ssl': result[0]['ssl'],
+                'ssl_client_key': result[0]['ssl_client_key'],
+                'ssl_client_certificate': result[0]['ssl_client_certificate'],
+                'ssl_ca_certificate': result[0]['ssl_ca_certificate'],
+                'ssl_verify_ca': result[0]['ssl_verify_ca']
             }
         }
         return credentials
