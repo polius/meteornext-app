@@ -203,7 +203,8 @@ export default {
     },
     getRegions() {
       this.loading = true
-      axios.get('/admin/inventory/regions', { params: { group_id: this.filter.group }})
+      const payload = (this.filter.by == 'group' & this.filter.group != null) ? { group_id: this.filter.group } : (this.filter.by == 'user') ? { user_id: this.filter.user } : {}
+      axios.get('/admin/inventory/regions', { params: payload})
         .then((response) => {
           response.data.regions.map(x => {
             x['created_at'] = this.dateFormat(x['created_at'])

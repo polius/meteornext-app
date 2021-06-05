@@ -326,7 +326,8 @@ export default {
     },
     getServers() {
       this.loading = true
-      axios.get('/admin/inventory/servers', { params: { group_id: this.filter.group }})
+      const payload = (this.filter.by == 'group' & this.filter.group != null) ? { group_id: this.filter.group } : (this.filter.by == 'user') ? { user_id: this.filter.user } : {}
+      axios.get('/admin/inventory/servers', { params: payload})
         .then((response) => {
           response.data.servers.map(x => {
             x['created_at'] = this.dateFormat(x['created_at'])

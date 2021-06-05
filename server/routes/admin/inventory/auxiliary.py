@@ -109,7 +109,8 @@ class Auxiliary:
     ####################
     def get(self):
         group_id = request.args['group_id'] if 'group_id' in request.args else None
-        return jsonify({'auxiliary': self._auxiliary.get(group_id=group_id)}), 200
+        user_id = request.args['user_id'] if 'user_id' in request.args else None
+        return jsonify({'auxiliary': self._auxiliary.get(group_id=group_id, user_id=user_id)}), 200
 
     def post(self, user, auxiliary):
         # Check group & user

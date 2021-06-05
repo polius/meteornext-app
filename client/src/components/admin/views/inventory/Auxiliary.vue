@@ -273,7 +273,8 @@ export default {
     },
     getAuxiliary() {
       this.loading = true
-      axios.get('/admin/inventory/auxiliary', { params: { group_id: this.filter.group }})
+      const payload = (this.filter.by == 'group' & this.filter.group != null) ? { group_id: this.filter.group } : (this.filter.by == 'user') ? { user_id: this.filter.user } : {}
+      axios.get('/admin/inventory/auxiliary', { params: payload})
         .then((response) => {
           response.data.auxiliary.map(x => {
             x['created_at'] = this.dateFormat(x['created_at'])
