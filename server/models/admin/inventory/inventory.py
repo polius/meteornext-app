@@ -6,9 +6,18 @@ class Inventory:
         query = "SELECT id, name FROM groups ORDER BY name"
         return self._sql.execute(query)
 
-    def get_users(self, group_id):
-        query = "SELECT id, username FROM users WHERE group_id = %s ORDER BY username"
-        return self._sql.execute(query, (group_id))
+    def get_users(self, group_id=None):
+        if group_id is None:
+            query = """
+                SELECT u.id, u.username, g.name AS 'group'
+                FROM users u
+                JOIN groups g ON g.id = u.group_id
+                ORDER BY u.username
+            """
+            return self._sql.execute(query)
+        else:
+            query = "SELECT id, username FROM users WHERE group_id = %s ORDER BY username"
+            return self._sql.execute(query, (group_id))
 
     def exist_group(self, group_id):
         query = "SELECT EXISTS(SELECT * FROM groups WHERE id = %s) AS exist"

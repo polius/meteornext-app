@@ -95,7 +95,8 @@ class Regions:
     def get(self):
         group_id = request.args['group_id'] if 'group_id' in request.args else None
         owner_id = request.args['owner_id'] if 'owner_id' in request.args else None
-        return jsonify({'regions': self._regions.get(group_id=group_id, owner_id=owner_id)}), 200
+        user_id = request.args['user_id'] if 'user_id' in request.args else None
+        return jsonify({'regions': self._regions.get(group_id=group_id, owner_id=owner_id, user_id=user_id)}), 200
 
     def post(self, user, region):
         # Check group & user

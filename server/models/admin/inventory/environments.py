@@ -4,8 +4,23 @@ class Environments:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, group_id=None):
-        if group_id is not None:
+    def get(self, group_id=None, user_id=None):
+        if user_id is not None:
+            query = """
+                SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
+                FROM environments e
+                JOIN users u0 ON u0.id = %(user_id)s
+                JOIN groups g ON g.id = e.group_id AND g.id = u0.group_id
+                LEFT JOIN environment_servers es ON es.environment_id = e.id
+                LEFT JOIN users u ON u.id = e.owner_id
+                LEFT JOIN users u2 ON u2.id = e.created_by
+                LEFT JOIN users u3 ON u3.id = e.updated_by
+                WHERE (e.shared = 1 OR e.owner_id = %(user_id)s)
+                GROUP BY e.id
+                ORDER BY e.id DESC
+            """
+            return self._sql.execute(query, {"user_id": user_id})
+        elif group_id is not None:
             query = """
                 SELECT e.id, e.name, e.group_id, e.shared, e.owner_id, u2.username AS 'created_by', e.created_at, u3.username AS 'updated_by', e.updated_at, u.username AS 'owner', g.name AS 'group', COUNT(es.server_id) AS 'servers'
                 FROM environments e

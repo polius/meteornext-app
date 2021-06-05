@@ -4,8 +4,22 @@ class Servers:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, group_id=None, server_id=None):
-        if group_id is not None:
+    def get(self, group_id=None, server_id=None, user_id=None):
+        if user_id is not None:
+            query = """
+                SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, IF(s.ssl_client_key IS NULL, NULL, '<ssl_client_key>') AS 'ssl_client_key', IF(s.ssl_client_certificate IS NULL, NULL, '<ssl_client_certificate>') AS 'ssl_client_certificate', IF(s.ssl_ca_certificate IS NULL, NULL, '<ssl_ca_certificate>') AS 'ssl_ca_certificate', s.ssl_verify_ca, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared'
+                FROM servers s
+                JOIN users u0 ON u0.id = %(user_id)s
+                JOIN groups g ON g.id = s.group_id AND g.id = u0.group_id
+                LEFT JOIN regions r ON r.id = s.region_id
+                LEFT JOIN users u ON u.id = s.owner_id
+                LEFT JOIN users u2 ON u2.id = s.created_by
+                LEFT JOIN users u3 ON u3.id = s.updated_by
+                WHERE (s.shared = 1 OR s.owner_id = %(user_id)s)
+                ORDER BY s.id DESC
+            """
+            return self._sql.execute(query, {"user_id": user_id})
+        elif group_id is not None:
             query = """
                 SELECT s.id, s.name, s.group_id, g.name AS 'group', s.region_id, s.engine, s.version, s.hostname, s.port, s.username, s.password, s.`ssl`, IF(s.ssl_client_key IS NULL, NULL, '<ssl_client_key>') AS 'ssl_client_key', IF(s.ssl_client_certificate IS NULL, NULL, '<ssl_client_certificate>') AS 'ssl_client_certificate', IF(s.ssl_ca_certificate IS NULL, NULL, '<ssl_ca_certificate>') AS 'ssl_ca_certificate', s.ssl_verify_ca, s.usage, s.shared, s.owner_id, u.username AS 'owner', u2.username AS 'created_by', s.created_at, u3.username AS 'updated_by', s.updated_at, r.name AS 'region', r.shared AS 'region_shared'
                 FROM servers s

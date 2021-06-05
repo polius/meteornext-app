@@ -109,7 +109,9 @@ class Servers:
     # Internal Methods #
     ####################
     def get(self):
-        if 'group_id' in request.args:
+        if 'user_id' in request.args:
+            servers = self._servers.get(user_id=request.args['user_id'])
+        elif 'group_id' in request.args:
             servers = self._servers.get(group_id=request.args['group_id'])
         elif 'server_id' in request.args:
             servers = self._servers.get(server_id=request.args['server_id'])

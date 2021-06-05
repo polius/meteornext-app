@@ -58,11 +58,8 @@ class Inventory:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Check params
-            if 'group_id' not in request.args:
-                return jsonify({'message': 'Missing "group_id" parameter'}), 400
-
             # Return users
-            return jsonify({'users': self._inventory.get_users(request.args['group_id'])}), 200
+            group_id = request.args['group_id'] if 'group_id' in request.args else None
+            return jsonify({'users': self._inventory.get_users(group_id=group_id)}), 200
 
         return admin_inventory_blueprint

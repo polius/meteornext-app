@@ -44,11 +44,27 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" @submit.prevent style="margin-top:20px; margin-bottom:20px;">
-                  <v-autocomplete ref="filter" v-model="filter.group" v-on:keyup.enter="filterInventory()" filled :items="groups" item-value="id" item-text="name" label="Group" :rules="[v => !!v || '']" hide-details style="padding-top:0px; margin-bottom:20px"></v-autocomplete>
-                  <v-radio-group v-model="filter.scope" dense row hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
+                  <v-radio-group v-model="filter.by" label="Filter by:" dense row hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
+                    <v-radio label="Group" value="group"></v-radio>
+                    <v-radio label="User" value="user"></v-radio>
+                  </v-radio-group>
+                  <v-autocomplete v-show="filter.by == 'group'" ref="filter_group" v-model="filter.group" v-on:keyup.enter="filterInventory()" filled :items="groups" item-value="id" item-text="name" label="Group" hide-details style="padding-top:0px; margin-bottom:20px"></v-autocomplete>
+                  <v-autocomplete v-show="filter.by == 'user'" ref="filter_user" v-model="filter.user" v-on:keyup.enter="filterInventory()" filled :items="users" item-value="id" item-text="username" label="User" hide-details style="padding-top:0px; margin-bottom:20px">
+                    <template v-slot:item="{ item }" >
+                      <v-row align="center" no-gutters>
+                        <v-col class="flex-grow-1 flex-shrink-1">
+                          {{ item.username }}
+                        </v-col>
+                        <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
+                          <v-chip label>{{ item.group }}</v-chip>
+                        </v-col>
+                      </v-row>
+                    </template>
+                  </v-autocomplete>
+                  <v-radio-group v-model="filter.scope" label="Scope:" dense row hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
                     <v-radio label="All" value="all"></v-radio>
-                    <v-radio label="Personal" value="personal" color="warning"></v-radio>
-                    <v-radio label="Shared" value="shared" color="error"></v-radio>
+                    <v-radio label="Personal" value="personal" color="#fb8c00"></v-radio>
+                    <v-radio label="Shared" value="shared" color="#eb5f5d"></v-radio>
                   </v-radio-group>
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
@@ -92,7 +108,8 @@ export default {
       dialog: false,
       loading: false,
       groups: [],
-      filter: { search: '', group: null, scope: 'all'},
+      users: [],
+      filter: { by: 'group', search: '', group: null, user: null, scope: 'all'},
       filterApplied: false,
       // Snackbar
       snackbar: false,
@@ -104,6 +121,7 @@ export default {
   components: { Environments, Regions, Servers, Auxiliary },
   created() {
     this.getGroups()
+    this.getUsers()
   },
   mounted() {
     EventBus.$on('init-columns', this.initColumns)
@@ -116,6 +134,16 @@ export default {
       axios.get('/admin/inventory/groups')
         .then((response) => {
           this.groups = response.data.groups
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+        })
+    },
+    getUsers() {
+      axios.get('/admin/inventory/users')
+        .then((response) => {
+          this.users = response.data.users
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -153,6 +181,7 @@ export default {
       else if (this.tab == 3) EventBus.$emit('filter-auxiliary-columns')
     },
     filterClick() {
+      this.filter_by = 'group'
       this.dialog = true
     },
     filterInventory() {
@@ -169,7 +198,7 @@ export default {
       this.dialog = false
     },
     clearFilter() {
-      this.filter = { search: '', group: null, scope: 'all' }
+      this.filter = { by: 'group', search: '', group: null, user: null, scope: 'all' }
       this.$nextTick(() => {
         if (this.tab == 0) EventBus.$emit('filter-servers')
         else if (this.tab == 1) EventBus.$emit('filter-regions')
@@ -192,12 +221,16 @@ export default {
   watch: {
     dialog (val) {
       if (!val) return
-      if (!this.filterApplied) this.filter = { search: '', group: null, scope: 'all' }
+      if (!this.filterApplied) this.filter = { by: 'group', search: '', group: null, scope: 'all' }
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
-        if (typeof this.$refs.filter !== 'undefined') this.$refs.filter.focus()
+        if (typeof this.$refs.filter_group !== 'undefined' && this.filter.by == 'group') this.$refs.filter_group.focus()
       })
     },
+    'filter.by': function(val) {
+      if (typeof this.$refs.filter_group !== 'undefined' && val == 'group') this.$refs.filter_group.focus()
+        else if (typeof this.$refs.filter_user !== 'undefined' && val == 'user') this.$refs.filter_user.focus()
+    }
   },
 }
 </script>
