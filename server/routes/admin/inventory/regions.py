@@ -74,6 +74,9 @@ class Regions:
 
             # Get Request Json
             region_json = request.get_json()
+            if 'id' in region_json:
+                region_origin = self._regions.get(user['id'], user['group_id'], region_json['id'])
+                region_json['key'] = region_origin[0]['key'] if region_json['key'] == '<ssh_key>' else region_json['key']
 
             # Check SSH Connection
             try:
@@ -103,6 +106,10 @@ class Regions:
         # Check region exists
         if self._regions.exist(region):
             return jsonify({'message': 'This region name currently exists'}), 400
+        # Parse private key
+        if region['ssh_tunnel'] and region['key'] == '<ssh_key>':
+            origin = self._regions.get(user['id'], user['group_id'], region['id'])[0]
+            region['key'] = origin['key'] if region['key'] == '<ssh_key>' else region['key']
         # Add region
         self._regions.post(user, region)
         return jsonify({'message': 'Region added successfully'}), 200

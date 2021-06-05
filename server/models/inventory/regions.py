@@ -7,7 +7,7 @@ class Regions:
     def get(self, user_id, group_id, region_id=None):
         if region_id is None:
             query = """
-                SELECT *
+                SELECT id, name, group_id, ssh_tunnel, hostname, port, username, password, IF(`key` IS NULL, NULL, '<ssh_key>') AS 'key', shared, owner_id, created_by, created_at
                 FROM regions 
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)
@@ -26,21 +26,21 @@ class Regions:
 
     def post(self, user_id, group_id, region):
         query = """
-            INSERT INTO regions (name, group_id, ssh_tunnel, hostname, port, username, password, `key`, shared, owner_id, created_by, created_at)             
-            SELECT %s, %s, %s, IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), IF(%s = '', NULL, %s), %s, IF(%s = 1, NULL, %s), %s, %s
+            INSERT INTO regions (name, group_id, ssh_tunnel, hostname, port, username, password, `key`, shared, owner_id, created_by, created_at)
+            SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
         """
-        self._sql.execute(query, (region['name'], group_id, region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'], region['username'], region['password'], region['password'], region['key'], region['key'], region['shared'], region['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        self._sql.execute(query, (region['name'], group_id, region['ssh_tunnel'], region['hostname'], region['port'], region['username'], region['password'], region['key'], region['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user_id, group_id, region):
         query = """
             UPDATE regions
             SET name = %s,
                 ssh_tunnel = %s,
-                hostname = IF(%s = '', NULL, %s),
-                port = IF(%s = '', NULL, %s),
-                username = IF(%s = '', NULL, %s),
-                password = IF(%s = '', NULL, %s),
-                `key` = IF(%s = '', NULL, %s),
+                hostname = %s,
+                port = %s,
+                username = %s,
+                password = %s,
+                `key` = IF(%s = '<ssh_key>', `key`, %s),
                 shared = %s,
                 owner_id = IF(%s = 1, NULL, %s),
                 updated_by = %s,
@@ -48,7 +48,7 @@ class Regions:
             WHERE group_id = %s 
             AND id = %s
         """
-        self._sql.execute(query, (region['name'], region['ssh_tunnel'], region['hostname'], region['hostname'], region['port'], region['port'], region['username'],region['username'], region['password'], region['password'], region['key'], region['key'], region['shared'], region['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, region['id']))
+        self._sql.execute(query, (region['name'], region['ssh_tunnel'], region['hostname'], region['port'], region['username'], region['password'], region['key'], region['key'], region['shared'], region['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group_id, region['id']))
 
     def delete(self, user_id, group_id, region_id):
         query = """
@@ -60,7 +60,7 @@ class Regions:
         self._sql.execute(query, (group_id, user_id, region_id))
 
     def exist(self, user_id, group_id, region):
-        if 'id' in region: # (name, group_id) 
+        if 'id' in region:
             query = """
                 SELECT EXISTS ( 
                     SELECT * 

@@ -54,7 +54,7 @@
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" :readonly="readOnly" label="Name" required hide-details></v-text-field>
                   <v-switch v-model="item.ssh_tunnel" :readonly="readOnly" label="SSH Tunnel" color="info" hide-details style="margin-top:15px;"></v-switch>
-                  <div v-if="item.ssh_tunnel && !(readOnly && inventory_secured)" style="margin-top:20px;">
+                  <div v-if="item.ssh_tunnel && !(readOnly && inventory_secured)" style="margin-top:25px;">
                     <v-row no-gutters>
                       <v-col cols="9" style="padding-right:10px">
                         <v-text-field v-model="item.hostname" :readonly="readOnly" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>
@@ -64,15 +64,21 @@
                       </v-col>
                     </v-row>
                     <v-text-field v-model="item.username" :readonly="readOnly" :rules="[v => !!v || '']" label="Username" autocomplete="username"  style="padding-top:0px;"></v-text-field>
-                    <v-row no-gutters>
-                      <v-col style="padding-right:10px">
-                        <v-text-field v-model="item.password" :readonly="readOnly" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" hide-details autocomplete="new-password" style="padding-top:0px;"></v-text-field>
-                      </v-col>
-                      <v-col cols="auto" style="padding-left:10px">
-                        <v-btn v-show="item.key == null || item.key.length == 0" @click="keyDialogOpen()" color="#2e3131"><v-icon small color="error" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>Private Key</v-btn>
-                        <v-btn v-show="item.key != null && item.key.length != 0" @click="keyDialogOpen()" color="#2e3131"><v-icon small color="#00b16a" style="margin-right:10px; font-size:12px; margin-top:1px;">fas fa-circle</v-icon>Private Key</v-btn>
-                      </v-col>
-                    </v-row>
+                    <v-text-field v-model="item.password" :readonly="readOnly" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" autocomplete="new-password" style="padding-top:0px;"></v-text-field>
+                    <v-file-input v-if="item.key == null || typeof item.key === 'object'" v-model="item.key" filled label="Private Key" prepend-icon="" hide-details style="padding-top:0px"></v-file-input>
+                    <v-card v-else style="height:52px">
+                      <v-row no-gutters>
+                        <v-col cols="auto" style="display:flex; margin:15px">
+                          <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
+                        </v-col>
+                        <v-col>
+                          <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a Private Key</div>
+                        </v-col>
+                        <v-col cols="auto" class="text-right">
+                          <v-btn @click="item.key = null" icon title="Remove Private Key" style="margin:8px"><v-icon style="font-size:18px">fas fa-times</v-icon></v-btn>
+                        </v-col>
+                      </v-row>
+                    </v-card>
                   </div>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected regions?</div>
@@ -97,30 +103,6 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-
-    <v-dialog v-model="keyDialog" max-width="768px">
-      <v-toolbar dense flat color="primary">
-        <v-toolbar-title class="white--text subtitle-1">SSH KEY</v-toolbar-title>
-        <v-divider class="mx-3" inset vertical></v-divider>
-        <v-btn @click="keyDialogSubmit" color="primary" style="margin-right:10px;">Save</v-btn>
-        <v-spacer></v-spacer>
-        <v-btn @click="keyDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
-      </v-toolbar>
-      <v-card>
-        <v-card-text style="padding:0px;">
-          <v-container style="padding:0px; max-width:100%;">
-            <v-layout wrap>
-              <v-flex xs12>
-                <div style="max-height:70vh; overflow-y:auto;">
-                  <v-textarea ref="sshKey" v-model="KeyDialogText" :readonly="readOnly" rows="2" placeholder="Enter the private key" filled counter auto-grow style="padding-top:0px;" hide-details></v-textarea>
-                </div>
-              </v-flex>
-            </v-layout>
-          </v-container>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -149,15 +131,13 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: false },
+    item: { name: '', ssh_tunnel: false, hostname: null, port: null, username: null, password: null, key: null, shared: false },
     mode: '',
     loading: true,
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
     showPassword: false,
-    keyDialog: false,
-    KeyDialogText: '',
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(5000),
@@ -188,7 +168,7 @@ export default {
     },
     newRegion() {
       this.mode = 'new'
-      this.item = { name: '', ssh_tunnel: false, hostname: '', port: '', username: '', password: '', key: '', shared: false }
+      this.item = { name: '', ssh_tunnel: false, hostname: null, port: '22', username: null, password: null, key: null, shared: false }
       this.dialog_title = 'NEW REGION'
       this.dialog = true
     },
@@ -196,7 +176,6 @@ export default {
       this.mode = 'clone'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
       this.item.shared = (!this.owner) ? false : this.item.shared
-      delete this.item['id']
       this.dialog_title = 'CLONE REGION'
       this.dialog = true
     },
@@ -212,21 +191,21 @@ export default {
       this.dialog = true
     },
     submitRegion() {
-      this.loading = true
       if (['new','clone'].includes(this.mode)) this.newRegionSubmit()
       else if (this.mode == 'edit') this.editRegionSubmit()
       else if (this.mode == 'delete') this.deleteRegionSubmit()
     },
-    newRegionSubmit() {
+    async newRegionSubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
+      // Get SSH Private Key
+      let key = await this.readFileAsync(this.item.key)
       // Add item in the DB
-      // this.notification('Adding Region...', 'info', true)
-      const payload = this.item
+      this.loading = true
+      const payload = {...this.item, key}
       axios.post('/inventory/regions', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -240,16 +219,17 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    editRegionSubmit() {
+    async editRegionSubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
+      // Get SSH Private Key
+      let key = await this.readFileAsync(this.item.key)
       // Edit item in the DB
-      this.notification('Editing Region...', 'info', true)
-      const payload = this.item
+      this.loading = true
+      const payload = {...this.item, key}
       axios.put('/inventory/regions', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -264,10 +244,10 @@ export default {
         .finally(() => this.loading = false)
     },
     deleteRegionSubmit() {
+      this.loading = true
       // Build payload
       const payload = { regions: JSON.stringify(this.selected.map((x) => x.id)) }
       // Delete items to the DB
-      this.notification('Deleting Region...', 'info', true)
       axios.delete('/inventory/regions', { params: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -281,16 +261,17 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    testConnection() {
+    async testConnection() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', 'error')
-        this.loading = false
         return
       }
+      // Get SSH Private Key
+      let key = await this.readFileAsync(this.item.key)
       // Test Connection
       this.loading = true
-      const payload = (this.readOnly && this.inventory_secured) ? { region: this.item.id } : this.item
+      const payload = (this.readOnly && this.inventory_secured) ? { region: this.item.id } : {...this.item, key}
       axios.post('/inventory/regions/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -301,20 +282,20 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    keyDialogOpen() {
-      this.KeyDialogText = this.item.key
-      this.keyDialog = true
-    },
-    keyDialogSubmit() {
-      this.item.key = null
-      this.item.key = this.KeyDialogText
-      this.keyDialog = false
-    },
     filterBy(val) {
       this.filter = val
       if (val == 'all') this.items = this.regions.slice(0)
       else if (val == 'personal') this.items = this.regions.filter(x => !x.shared)
       else if (val == 'shared') this.items = this.regions.filter(x => x.shared)
+    },
+    readFileAsync(file) {
+      if (file == null || typeof file !== 'object') return file
+      return new Promise((resolve, reject) => {
+        let reader = new FileReader()
+        reader.onload = () => { resolve(reader.result)}
+        reader.onerror = reject
+        reader.readAsText(file, 'utf-8')
+      })
     },
     notification(message, color, timeout=5) {
       this.snackbar = false
@@ -335,12 +316,6 @@ export default {
         if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
       })
     },
-    keyDialog (val) {
-      if (!val) return
-      requestAnimationFrame(() => {
-        if (typeof this.$refs.sshKey !== 'undefined') this.$refs.sshKey.focus()
-      })
-    }
   }
 }
 </script> 
