@@ -7,7 +7,7 @@ class Auxiliary:
     def get(self, group_id=None, auxiliary_id=None, user_id=None):
         if user_id is not None:
             query = """
-                SELECT a.id, a.name, a.group_id, g.name AS 'group', a.engine, a.version, a.hostname, a.port, a.username, a.password, a.ssl, IF(a.ssl_client_key IS NULL, NULL, '<ssl_client_key>') AS 'ssl_client_key', IF(a.ssl_client_certificate IS NULL, NULL, '<ssl_client_certificate>') AS 'ssl_client_certificate', IF(a.ssl_ca_certificate IS NULL, NULL, '<ssl_ca_certificate>') AS 'ssl_ca_certificate', a.ssl_verify_ca, a.shared, a.owner_id, u.username AS 'owner', u2.username AS 'created_by', a.created_at, u3.username AS 'updated_by', a.updated_at
+                SELECT a.id, a.name, a.group_id, g.name AS 'group', a.engine, a.version, a.hostname, a.port, a.username, a.password, a.ssl, a.ssl_client_key, a.ssl_client_certificate, a.ssl_ca_certificate, a.ssl_verify_ca, a.shared, a.owner_id, u.username AS 'owner', u2.username AS 'created_by', a.created_at, u3.username AS 'updated_by', a.updated_at
                 FROM auxiliary a
                 JOIN users u0 ON u0.id = %(user_id)s
                 JOIN groups g ON g.id = a.group_id AND g.id = u0.group_id
@@ -20,7 +20,7 @@ class Auxiliary:
             return self._sql.execute(query, {"user_id": user_id})
         elif group_id is not None:
             query = """
-                SELECT a.id, a.name, a.group_id, g.name AS 'group', a.engine, a.version, a.hostname, a.port, a.username, a.password, a.ssl, IF(a.ssl_client_key IS NULL, NULL, '<ssl_client_key>') AS 'ssl_client_key', IF(a.ssl_client_certificate IS NULL, NULL, '<ssl_client_certificate>') AS 'ssl_client_certificate', IF(a.ssl_ca_certificate IS NULL, NULL, '<ssl_ca_certificate>') AS 'ssl_ca_certificate', a.ssl_verify_ca, a.shared, a.owner_id, u.username AS 'owner', u2.username AS 'created_by', a.created_at, u3.username AS 'updated_by', a.updated_at
+                SELECT a.id, a.name, a.group_id, g.name AS 'group', a.engine, a.version, a.hostname, a.port, a.username, a.password, a.ssl, a.ssl_client_key, a.ssl_client_certificate, a.ssl_ca_certificate, a.ssl_verify_ca, a.shared, a.owner_id, u.username AS 'owner', u2.username AS 'created_by', a.created_at, u3.username AS 'updated_by', a.updated_at
                 FROM auxiliary a
                 LEFT JOIN users u ON u.id = a.owner_id
                 LEFT JOIN users u2 ON u2.id = a.created_by

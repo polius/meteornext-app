@@ -84,7 +84,7 @@ class Auxiliary:
             # Get auxiliary
             auxiliary = auxiliary_json
             if 'id' in auxiliary:
-                auxiliary_origin = self._servers.get(user['id'], user['group_id'], auxiliary['id'])
+                auxiliary_origin = self._auxiliary.get(auxiliary_id=auxiliary['id'])
                 auxiliary['ssl_client_key'] = auxiliary_origin[0]['ssl_client_key'] if auxiliary['ssl_client_key'] == '<ssl_client_key>' else auxiliary['ssl_client_key']
                 auxiliary['ssl_client_certificate'] = auxiliary_origin[0]['ssl_client_certificate'] if auxiliary['ssl_client_certificate'] == '<ssl_client_certificate>' else auxiliary['ssl_client_certificate']
                 auxiliary['ssl_ca_certificate'] = auxiliary_origin[0]['ssl_ca_certificate'] if auxiliary['ssl_ca_certificate'] == '<ssl_ca_certificate>' else auxiliary['ssl_ca_certificate']
@@ -108,9 +108,18 @@ class Auxiliary:
     # Internal Methods #
     ####################
     def get(self):
+        # Get args
         group_id = request.args['group_id'] if 'group_id' in request.args else None
         user_id = request.args['user_id'] if 'user_id' in request.args else None
-        return jsonify({'auxiliary': self._auxiliary.get(group_id=group_id, user_id=user_id)}), 200
+        # Get auxiliary
+        auxiliary = self._auxiliary.get(group_id=group_id, user_id=user_id)
+        # Protect SSL Keys
+        for aux in auxiliary:
+            aux['ssl_client_key'] = '<ssl_client_key>' if aux['ssl_client_key'] is not None else None
+            aux['ssl_client_certificate'] = '<ssl_client_certificate>' if aux['ssl_client_certificate'] is not None else None
+            aux['ssl_ca_certificate'] = '<ssl_ca_certificate>' if aux['ssl_ca_certificate'] is not None else None
+        # Return data
+        return jsonify({'auxiliary': auxiliary}), 200
 
     def post(self, user, auxiliary):
         # Check group & user

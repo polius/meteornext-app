@@ -7,7 +7,7 @@ class Regions:
     def get(self, user_id, group_id, region_id=None):
         if region_id is None:
             query = """
-                SELECT id, name, group_id, ssh_tunnel, hostname, port, username, password, IF(`key` IS NULL, NULL, '<ssh_key>') AS 'key', shared, owner_id, created_by, created_at
+                SELECT id, name, group_id, ssh_tunnel, hostname, port, username, password, `key`, shared, owner_id, created_by, created_at
                 FROM regions 
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)

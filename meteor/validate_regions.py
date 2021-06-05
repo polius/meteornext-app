@@ -100,10 +100,10 @@ class validate_regions:
                     sshtunnel.SSH_TIMEOUT = 10.0
                     sshtunnel.TUNNEL_TIMEOUT = 10.0
                     with sshtunnel.SSHTunnelForwarder((self._region['ssh']['hostname'], int(self._region['ssh']['port'])), ssh_username=self._region['ssh']['username'], ssh_password=self._region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=(server['hostname'], int(server['port']))) as tunnel:
-                        conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'])
+                        conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'], ssl_ca=server['ssl_ca_certificate'], ssl_cert=server['ssl_client_certificate'], ssl_key=server['ssl_client_key'], ssl_verify_cert=server['ssl_verify_ca'] == 1, ssl_verify_identity=server['ssl_verify_ca'] == 1)
                         conn.close()
                 else:
-                    conn = pymysql.connect(host=server['hostname'], port=int(server['port']), user=server['username'], passwd=server['password'])
+                    conn = pymysql.connect(host=server['hostname'], port=int(server['port']), user=server['username'], passwd=server['password'], ssl_ca=server['ssl_ca_certificate'], ssl_cert=server['ssl_client_certificate'], ssl_key=server['ssl_client_key'], ssl_verify_cert=server['ssl_verify_ca'] == 1, ssl_verify_identity=server['ssl_verify_ca'] == 1)
                     conn.close()
                 current_thread.progress = {"region": self._region['name'], "sql": server['name'], "success": True}
                 break

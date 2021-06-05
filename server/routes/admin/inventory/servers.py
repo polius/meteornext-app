@@ -86,7 +86,7 @@ class Servers:
             # Get server
             server = server_json['server']
             if 'id' in server:
-                server_origin = self._servers.get(user['id'], user['group_id'], server['id'])
+                server_origin = self._servers.get(server_id=server['id'])
                 server['ssl_client_key'] = server_origin[0]['ssl_client_key'] if server['ssl_client_key'] == '<ssl_client_key>' else server['ssl_client_key']
                 server['ssl_client_certificate'] = server_origin[0]['ssl_client_certificate'] if server['ssl_client_certificate'] == '<ssl_client_certificate>' else server['ssl_client_certificate']
                 server['ssl_ca_certificate'] = server_origin[0]['ssl_ca_certificate'] if server['ssl_ca_certificate'] == '<ssl_ca_certificate>' else server['ssl_ca_certificate']
@@ -109,14 +109,18 @@ class Servers:
     # Internal Methods #
     ####################
     def get(self):
-        if 'user_id' in request.args:
-            servers = self._servers.get(user_id=request.args['user_id'])
-        elif 'group_id' in request.args:
-            servers = self._servers.get(group_id=request.args['group_id'])
-        elif 'server_id' in request.args:
-            servers = self._servers.get(server_id=request.args['server_id'])
-        else:
-            servers = self._servers.get()
+        # Get args
+        group_id = request.args['group_id'] if 'group_id' in request.args else None
+        server_id = request.args['server_id'] if 'server_id' in request.args else None
+        user_id = request.args['user_id'] if 'user_id' in request.args else None
+        # Get servers
+        servers = self._servers.get(group_id=group_id, server_id=server_id, user_id=user_id)
+        # Protect SSL Keys
+        for server in servers:
+            server['ssl_client_key'] = '<ssl_client_key>' if server['ssl_client_key'] is not None else None
+            server['ssl_client_certificate'] = '<ssl_client_certificate>' if server['ssl_client_certificate'] is not None else None
+            server['ssl_ca_certificate'] = '<ssl_ca_certificate>' if server['ssl_ca_certificate'] is not None else None
+        # Return data
         return jsonify({'servers': servers}), 200
 
     def post(self, user, server):

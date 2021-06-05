@@ -7,7 +7,7 @@ class Auxiliary:
     def get(self, user_id, group_id, auxiliary_id=None):
         if auxiliary_id is None:
             query = """
-                SELECT id, name, group_id, engine, version, hostname, port, username, password, `ssl`, IF(ssl_client_key IS NULL, NULL, '<ssl_client_key>') AS 'ssl_client_key', IF(ssl_client_certificate IS NULL, NULL, '<ssl_client_certificate>') AS 'ssl_client_certificate', IF(ssl_ca_certificate IS NULL, NULL, '<ssl_ca_certificate>') AS 'ssl_ca_certificate', ssl_verify_ca, shared, owner_id, created_by, created_at
+                SELECT id, name, group_id, engine, version, hostname, port, username, password, `ssl`, ssl_client_key, ssl_client_certificate, ssl_ca_certificate, ssl_verify_ca, shared, owner_id, created_by, created_at
                 FROM auxiliary
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)
