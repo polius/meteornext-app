@@ -7,7 +7,7 @@ class Regions:
     def get(self, group_id=None, owner_id=None, region_id=None, user_id=None):
         if user_id is not None:
             query = """
-                SELECT r.id, r.name, r.group_id, g.name AS 'group', r.ssh_tunnel, r.hostname, r.port, r.username, r.password, IF(`key` IS NULL, NULL, '<ssh_key>') AS 'key', r.shared, r.owner_id, u.username AS 'owner', u2.username AS 'created_by', r.created_at, u3.username AS 'updated_by', r.updated_at
+                SELECT r.id, r.name, r.group_id, g.name AS 'group', r.ssh_tunnel, r.hostname, r.port, r.username, r.password, `key`, r.shared, r.owner_id, u.username AS 'owner', u2.username AS 'created_by', r.created_at, u3.username AS 'updated_by', r.updated_at
                 FROM regions r
                 JOIN users u0 ON u0.id = %(user_id)s
                 JOIN groups g ON g.id = r.group_id AND g.id = u0.group_id
@@ -20,7 +20,7 @@ class Regions:
             return self._sql.execute(query, {"user_id": user_id})
         elif group_id is not None:
             query = """
-                SELECT r.id, r.name, r.group_id, g.name AS 'group', r.ssh_tunnel, r.hostname, r.port, r.username, r.password, IF(`key` IS NULL, NULL, '<ssh_key>') AS 'key', r.shared, r.owner_id, u.username AS 'owner', u2.username AS 'created_by', r.created_at, u3.username AS 'updated_by', r.updated_at
+                SELECT r.id, r.name, r.group_id, g.name AS 'group', r.ssh_tunnel, r.hostname, r.port, r.username, r.password, `key`, r.shared, r.owner_id, u.username AS 'owner', u2.username AS 'created_by', r.created_at, u3.username AS 'updated_by', r.updated_at
                 FROM regions r
                 LEFT JOIN users u ON u.id = r.owner_id
                 LEFT JOIN users u2 ON u2.id = r.created_by

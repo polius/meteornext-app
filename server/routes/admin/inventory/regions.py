@@ -75,7 +75,7 @@ class Regions:
             # Get Request Json
             region_json = request.get_json()
             if 'id' in region_json:
-                region_origin = self._regions.get(user['id'], user['group_id'], region_json['id'])
+                region_origin = self._regions.get(region_id=region_json['id'])
                 region_json['key'] = region_origin[0]['key'] if region_json['key'] == '<ssh_key>' else region_json['key']
 
             # Check SSH Connection
@@ -93,10 +93,17 @@ class Regions:
     # Internal Methods #
     ####################
     def get(self):
+        # Get args
         group_id = request.args['group_id'] if 'group_id' in request.args else None
         owner_id = request.args['owner_id'] if 'owner_id' in request.args else None
         user_id = request.args['user_id'] if 'user_id' in request.args else None
-        return jsonify({'regions': self._regions.get(group_id=group_id, owner_id=owner_id, user_id=user_id)}), 200
+        # Get regions
+        regions = self._regions.get(group_id=group_id, owner_id=owner_id, user_id=user_id)
+        # Protect SSH Private Key
+        for region in regions:
+            region['key'] = '<ssh_key>' if region['key'] is not None else None
+        # Return data
+        return jsonify({'regions': regions}), 200
 
     def post(self, user, region):
         # Check group & user

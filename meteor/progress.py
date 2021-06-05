@@ -14,7 +14,18 @@ class progress:
 
     def __init(self):
         ssh = {"enabled": False}
-        sql = {"engine": "MySQL", "hostname": self._config['meteor_next']['hostname'], "port": self._config['meteor_next']['port'], "username": self._config['meteor_next']['username'], "password": self._config['meteor_next']['password'], "database": self._config['meteor_next']['database']}
+        sql = {
+            "engine": "MySQL",
+            "hostname": self._config['meteor_next']['hostname'],
+            "port": self._config['meteor_next']['port'],
+            "username": self._config['meteor_next']['username'],
+            "password": self._config['meteor_next']['password'],
+            "database": self._config['meteor_next']['database'],
+            "ssl_ca_certificate": self._config['meteor_next']['ssl_ca_certificate'],
+            "ssl_client_certificate": self._config['meteor_next']['ssl_client_certificate'],
+            "ssl_client_key": self._config['meteor_next']['ssl_client_key'],
+            "ssl_verify_ca": self._config['meteor_next']['ssl_verify_ca']
+        }
         self._sql = connector({"ssh": ssh, "sql": sql})
 
     def start(self, pid):

@@ -90,6 +90,10 @@ class Regions:
     ####################
     def get(self, user):
         regions = self._regions.get(user['id'], user['group_id'])
+        # Protect SSH Private Key
+        for region in regions:
+            region['key'] = '<ssh_key>' if region['key'] is not None else None
+        # Check Inventory Secured
         if user['inventory_secured'] and not user['owner']:
             regions_secured = []
             for r in regions:

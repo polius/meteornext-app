@@ -46,7 +46,7 @@ class MySQL:
                 port = self._tunnel.local_bind_port if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['port']
                 database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
                 timeout = None if 'timeout' not in self._server['sql'] else self._server['sql']['timeout']
-                self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, read_timeout=timeout, write_timeout=timeout)
+                self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, read_timeout=timeout, write_timeout=timeout, ssl_ca=self._server['sql']['ssl_ca_certificate'], ssl_cert=self._server['sql']['ssl_client_certificate'], ssl_key=self._server['sql']['ssl_client_key'], ssl_verify_cert=self._server['sql']['ssl_verify_ca'] == 1, ssl_verify_identity=self._server['sql']['ssl_verify_ca'] == 1)
                 return
 
             except Exception as e:
@@ -115,6 +115,9 @@ class MySQL:
         except Exception:
             pass
 
+    ####################
+    # INTERNAL QUERIES #
+    ####################
     def get_all_databases(self):
         query = "SHOW DATABASES"
         result = self.execute(query)['query_result']

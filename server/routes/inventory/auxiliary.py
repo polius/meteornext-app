@@ -99,6 +99,12 @@ class Auxiliary:
     ####################
     def get(self, user):
         auxiliary = self._auxiliary.get(user['id'], user['group_id'])
+        # Protect SSL Keys
+        for aux in auxiliary:
+            aux['ssl_client_key'] = '<ssl_client_key>' if aux['ssl_client_key'] is not None else None
+            aux['ssl_client_certificate'] = '<ssl_client_certificate>' if aux['ssl_client_certificate'] is not None else None
+            aux['ssl_ca_certificate'] = '<ssl_ca_certificate>' if aux['ssl_ca_certificate'] is not None else None
+        # Check Inventory Secured
         if user['inventory_secured'] and not user['owner']:
             auxiliary_secured = []
             for a in auxiliary:

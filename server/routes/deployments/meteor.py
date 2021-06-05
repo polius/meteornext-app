@@ -70,9 +70,12 @@ class Meteor:
         # Compile Regions
         self._config['regions'] = []
 
+        # Generate Keys Base Path
+        keys = []
+        keys_path = "{}/{}/keys".format(self._logs['local']['path'], self._uuid)
+
         for region in regions:
             # Compile SSH
-            key_path = "{}/{}/keys/r{}".format(self._logs['local']['path'], self._uuid, region['id'])
             region_data = {
                 "name": region['name'],
                 "ssh": {
@@ -80,29 +83,44 @@ class Meteor:
                     "hostname": "" if region['hostname'] is None else region['hostname'],
                     "username": "" if region['username'] is None else region['username'],
                     "password": "" if region['password'] is None else region['password'],
-                    "key": "" if region['key'] is None else key_path,
-                    "port": "" if region['port'] is None else region['port']
+                    "key": "",
+                    "port": "" if region['port'] is None else region['port'],
                 },
                 "sql": []
             }
-
-            # Generate region key files
-            if region['key'] is not None:
-                with open(key_path, 'w') as outfile:
-                    outfile.write(region['key'])
-                os.chmod(key_path, 0o600)
+            # Parse Keys
+            if region['key']:
+                keys.append({"path": f"{keys_path}/r{region['id']}.ssh_key", "data": region['key']})
+                region_data['ssh']['key'] = f"{keys_path}/r{region['id']}.ssh_key"
 
             # Compile SQL
             for server in servers:
                 if server['region_id'] == region['id']:
-                    region_data['sql'].append({
+                    # Init Server Conf
+                    s = {
                         "name": server['name'],
                         "engine": server['engine'],
                         "hostname": server['hostname'],
                         "username": server['username'],
                         "password": server['password'],
-                        "port": int(server['port'])
-                    })
+                        "port": int(server['port']),
+                        "ssl_ca_certificate": None,
+                        "ssl_client_certificate": None,
+                        "ssl_client_key": None,
+                        "ssl_verify_ca": server['ssl_verify_ca']
+                    }
+                    # Parse Keys
+                    if server['ssl_ca_certificate']:
+                        keys.append({"path": f"{keys_path}/s{server['id']}.ssl_ca_certificate", "data": server['ssl_ca_certificate']})
+                        s['ssl_ca_certificate'] = f"{keys_path}/s{server['id']}.ssl_ca_certificate"
+                    if server['ssl_client_certificate']:
+                        keys.append({"path": f"{keys_path}/s{server['id']}.ssl_client_certificate", "data": server['ssl_client_certificate']})
+                        s['ssl_client_certificate'] = f"{keys_path}/s{server['id']}.ssl_client_certificate"
+                    if server['ssl_client_key']:
+                        keys.append({"path": f"{keys_path}/s{server['id']}.ssl_client_key", "data": server['ssl_client_key']})
+                        s['ssl_client_key'] = f"{keys_path}/s{server['id']}.ssl_client_key"
+                    # Add Server
+                    region_data['sql'].append(s)
 
             # Add region data to the credentials
             self._config['regions'].append(region_data)
@@ -110,17 +128,39 @@ class Meteor:
         # Compile Auxiliary Connections
         self._config['auxiliary_connections'] = {}
         for aux in auxiliary:
-            key_path = "{}/{}/keys/a{}".format(self._logs['local']['path'], self._uuid, aux['id'])
-            self._config['auxiliary_connections'][aux['name']] = {
+            # Init Auxiliary Conf
+            a = {
                 "ssh": { "enabled": False },
                 "sql": {
                     "engine": aux['engine'],
                     "hostname": aux['hostname'],
                     "username": aux['username'],
                     "password": aux['password'],
-                    "port": int(aux['port'])
+                    "port": int(aux['port']),
+                    "ssl_ca_certificate": None,
+                    "ssl_client_certificate": None,
+                    "ssl_client_key": None,
+                    "ssl_verify_ca": aux['ssl_verify_ca']
                 }
             }
+            # Parse Keys
+            if aux['ssl_ca_certificate']:
+                keys.append({"path": f"{keys_path}/a{aux['id']}.ssl_ca_certificate", "data": aux['ssl_ca_certificate']})
+                a['sql']['ssl_ca_certificate'] = f"{keys_path}/a{aux['id']}.ssl_ca_certificate"
+            if aux['ssl_client_certificate']:
+                keys.append({"path": f"{keys_path}/a{aux['id']}.ssl_client_certificate", "data": aux['ssl_client_certificate']})
+                a['sql']['ssl_client_certificate'] = f"{keys_path}/a{aux['id']}.ssl_client_certificate"
+            if aux['ssl_client_key']:
+                keys.append({"path": f"{keys_path}/a{aux['id']}.ssl_client_key", "data": aux['ssl_client_key']})
+                a['sql']['ssl_client_key'] = f"{keys_path}/a{aux['id']}.ssl_client_key"
+            # Add Auxiliary
+            self._config['auxiliary_connections'][aux['name']] = a
+
+        # Generate key files (ssh, ssl)
+        for key in keys:
+            with open(key['path'], 'w') as outfile:
+                outfile.write(key['data'])
+            os.chmod(key['path'], 0o600)
 
         # Compile Logs
         self._config['amazon_s3'] = {
@@ -164,7 +204,11 @@ class Meteor:
             "port": int(next_credentials['port']),
             "username": next_credentials['username'],
             "password": next_credentials['password'],
-            "database": next_credentials['database']
+            "database": next_credentials['database'],
+            "ssl_ca_certificate": None,
+            "ssl_client_certificate": None,
+            "ssl_client_key": None,
+            "ssl_verify_ca": None
         }
 
         # Compile Meteor Next Params
