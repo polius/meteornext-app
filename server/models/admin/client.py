@@ -24,8 +24,8 @@ class Client:
                 matching = {
                     'equal':        { 'operator': '=', 'args': '{}' },
                     'not_equal':    { 'operator': '!=', 'args': '{}' },
-                    'starts':       { 'operator': 'LIKE', 'args': '%{}' },
-                    'not_starts':   { 'operator': 'NOT LIKE', 'args': '%{}' },
+                    'starts':       { 'operator': 'LIKE', 'args': '{}%' },
+                    'not_starts':   { 'operator': 'NOT LIKE', 'args': '{}%' },
                     'contains':     { 'operator': 'LIKE', 'args': '%{}%' },
                     'not_contains': { 'operator': 'NOT LIKE', 'args': '%{}%' }
                 }

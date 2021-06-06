@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify, request, send_from_directory
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
-import models.deployments.deployments
+import models.admin.deployments
 import models.deployments.releases
 import routes.admin.settings
 
@@ -15,7 +15,7 @@ class Deployments:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
-        self._deployments = models.deployments.deployments.Deployments(sql)
+        self._deployments = models.admin.deployments.Deployments(sql)
         self._releases = models.deployments.releases.Releases(sql)
         # Init routes
         self._settings = routes.admin.settings.Settings(app, sql, license)
@@ -47,12 +47,16 @@ class Deployments:
 
             if request.method == 'GET':
                 # Get Deployments
-                return jsonify({'data': self._deployments.get()}), 200
+                dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
+                dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
+                deployments = self._deployments.get(dfilter, dsort)
+                users_list = self._deployments.get_users_list()
+                return jsonify({'deployments': deployments, 'users_list': users_list}), 200
             elif request.method == 'PUT':
                 if deployment_json['put'] == 'name':
-                    self._deployments.putName(deployment_json['user_id'], deployment_json)
+                    self._deployments.put_name(deployment_json['user_id'], deployment_json)
                 elif deployment_json['put'] == 'release':
-                    self._deployments.putRelease(deployment_json['user_id'], deployment_json)
+                    self._deployments.put_release(deployment_json['user_id'], deployment_json)
                 return jsonify({'message': 'Deployment edited successfully'}), 200
 
         @admin_deployments_blueprint.route('/admin/deployments/releases', methods=['GET'])

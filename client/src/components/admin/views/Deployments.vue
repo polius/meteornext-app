@@ -5,13 +5,13 @@
         <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-meteor</v-icon>DEPLOYMENTS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-          <v-btn text @click="filter_dialog = true" :style="{ backgroundColor : filter_applied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-search</v-icon>FILTER</v-btn>
+          <v-btn text @click="filterDialog = true" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-search</v-icon>FILTER</v-btn>
           <v-btn text v-if="selected.length == 1" @click="infoDeployment()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
-        <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+        <v-text-field @input="onSearch" v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
+      <v-data-table v-model="selected" :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :hide-default-footer="total < 11" :loading="loading" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
         <template v-ripple v-slot:[`header.data-table-select`]="{}">
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
@@ -23,7 +23,7 @@
           <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)"> 
             {{ item.name }}
             <template v-slot:input>
-              <v-text-field v-model="inline_editing_name" label="Name" single-line hide-details style="margin-bottom:20px;"></v-text-field>
+              <v-text-field v-model="inlineEditingName" label="Name" single-line hide-details style="margin-bottom:20px;"></v-text-field>
             </template>
           </v-edit-dialog>
         </template>
@@ -31,7 +31,7 @@
           <v-edit-dialog :return-value.sync="item.release" large @open="openRelease(item)" @save="saveRelease(item)"> 
             {{ item.release }}
             <template v-slot:input>
-              <v-autocomplete v-model="inline_editing_release" :items="releases_items" :loading="loading_releases" label="Releases" hide-details style="margin-top:15px; margin-bottom:5px;"></v-autocomplete>
+              <v-autocomplete v-model="inlineEditingRelease" :items="releasesItems" :loading="loadingReleases" label="Releases" hide-details style="margin-top:15px; margin-bottom:5px;"></v-autocomplete>
             </template>
           </v-edit-dialog>
         </template>
@@ -56,50 +56,77 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="filter_dialog" persistent max-width="768px">
+    <v-dialog v-model="filterDialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text text-subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:1px">fas fa-search</v-icon>FILTER DEPLOYMENTS</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn icon @click="filter_dialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn icon @click="filterDialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 20px 0px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:25px; margin-bottom:20px;">
-                  <v-text-field v-model="filter_dialog_data.name" label="Name" style="padding-top:0px;"></v-text-field>
-                  <v-row no-gutters style="margin-top:5px">
-                    <v-col style="padding-right:10px">
-                      <v-text-field v-model="filter_dialog_data.username" label="Username" style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                    <v-col style="padding-left:10px">
-                      <v-text-field v-model="filter_dialog_data.release" label="Release" style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                  </v-row>
-                  <v-row no-gutters style="margin-top:5px">
-                    <v-col style="padding-right:10px">
-                      <v-select v-model="filter_dialog_data.mode" :items="deployment_modes" multiple label="Mode" style="padding-top:0px;"></v-select>
-                    </v-col>
-                    <v-col style="padding-left:10px">
-                      <v-select v-model="filter_dialog_data.status" :items="deployment_status" multiple label="Status" style="padding-top:0px;"></v-select>
-                    </v-col>
-                  </v-row>
-                  <v-row no-gutters style="margin-top:5px">
-                    <v-col style="padding-right:10px">
-                      <v-text-field v-model="filter_dialog_data.created_from" label="Created (From)" placeholder="YYYY-MM-DD hh:mm:ss" @click="picker_change('created_from')" readonly style="padding-top:0px;"></v-text-field>
-                    </v-col>
-                    <v-col style="padding-left:10px">
-                      <v-text-field v-model="filter_dialog_data.created_to" label="Created (To)" placeholder="YYYY-MM-DD hh:mm:ss" @click="picker_change('created_to')" readonly style="padding-top:0px;"></v-text-field>
+                <v-form ref="form" style="margin-top:10px; margin-bottom:20px;">
+                  <v-row>
+                    <v-col>
+                      <v-autocomplete :loading="loading" text v-model="filter.user" :items="filterUsers" item-value="user" item-text="user" label="User" clearable style="padding-top:0px" hide-details>
+                        <template v-slot:item="{ item }" >
+                          <v-row no-gutters align="center">
+                            <v-col class="flex-grow-1 flex-shrink-1">
+                              {{ item.user }}
+                            </v-col>
+                            <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
+                              <v-chip label>{{ item.group }}</v-chip>
+                            </v-col>
+                          </v-row>
+                        </template>
+                      </v-autocomplete>
                     </v-col>
                   </v-row>
-                  <v-divider></v-divider>
-                  <div style="margin-top:20px;">
-                    <v-btn :loading="loading" color="#00b16a" @click="filterDeployments()">Confirm</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="closeFilter()" style="margin-left:5px;">Cancel</v-btn>
-                    <v-btn v-if="filter_applied" :disabled="loading" color="info" @click="clearFilter()" style="float:right;">Remove Filter</v-btn>
-                  </div>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="8" style="padding-right:5px;">
+                      <v-text-field v-model="filter.name" label="Name" style="padding-top:0px" hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:5px;">
+                      <v-select text v-model="filter.nameFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.name === undefined || filter.name.length == 0) || (filter.name.length > 0 && !!v)) || '']" clearable style="padding-top:0px" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="8" style="padding-right:5px">
+                      <v-text-field v-model="filter.release" label="Release" style="padding-top:0px" hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:5px">
+                      <v-select text v-model="filter.releaseFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.release === undefined || filter.release.length == 0) || (filter.release.length > 0 && !!v)) || '']" clearable style="padding-top:0px" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col style="padding-right:10px">
+                      <v-select v-model="filter.mode" :items="deploymentMode" multiple label="Mode" style="padding-top:0px;" hide-details></v-select>
+                    </v-col>
+                    <v-col style="padding-left:10px">
+                      <v-select v-model="filter.status" :items="deploymentStatus" multiple label="Status" style="padding-top:0px;" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="6" style="padding-right:8px;">
+                      <v-text-field v-model="filter.dateFrom" label="Created (From)" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                    <v-col cols="6" style="padding-left:8px;">
+                      <v-text-field v-model="filter.dateTo" label="Created (To)" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                  </v-row>
                 </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn :loading="loading" color="#00b16a" @click="submitFilter">Confirm</v-btn>
+                  <v-btn :disabled="loading" color="error" @click="filterDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  <v-btn v-if="filterApplied" :disabled="loading" color="info" @click="clearFilter" style="float:right;">Remove Filter</v-btn>
+                </div>
               </v-flex>
             </v-layout>
           </v-container>
@@ -107,18 +134,18 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="pickerDialog" persistent width="290px">
-      <v-date-picker v-if="picker_mode=='date'" v-model="picker_date" color="info" scrollable>
-        <v-btn text color="#00b16a" @click="picker_submit()">Confirm</v-btn>
-        <v-btn text color="error" @click="picker_close()">Cancel</v-btn>
+    <v-dialog v-model="dateTimeDialog" persistent width="290px">
+      <v-date-picker v-if="dateTimeMode == 'date'" v-model="dateTimeValue.date" color="info" scrollable>
+        <v-btn text color="#00b16a" @click="dateTimeSubmit">Confirm</v-btn>
+        <v-btn text color="error" @click="dateTimeDialog = false">Cancel</v-btn>
         <v-spacer></v-spacer>
-        <v-btn text color="info" @click="picker_now()">Now</v-btn>
+        <v-btn text color="info" @click="dateTimeNow">Now</v-btn>
       </v-date-picker>
-      <v-time-picker v-else-if="picker_mode=='time'" v-model="picker_time" color="info" format="24hr" scrollable>
-        <v-btn text color="#00b16a" @click="picker_submit()">Confirm</v-btn>
-        <v-btn text color="error" @click="picker_close()">Cancel</v-btn>
+      <v-time-picker v-else-if="dateTimeMode == 'time'" v-model="dateTimeValue.time" color="info" format="24hr" scrollable>
+        <v-btn text color="#00b16a" @click="dateTimeSubmit">Confirm</v-btn>
+        <v-btn text color="error" @click="dateTimeDialog = false">Cancel</v-btn>
         <v-spacer></v-spacer>
-        <v-btn text color="info" @click="picker_now()">Now</v-btn>
+        <v-btn text color="info" @click="dateTimeNow">Now</v-btn>
       </v-time-picker>
     </v-dialog>
 
@@ -137,6 +164,7 @@ import moment from 'moment';
 
 export default {
   data: () => ({
+    loading: true,
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Release', align: 'left', value: 'release' },
@@ -149,30 +177,40 @@ export default {
       { text: 'Started', align: 'left', value: 'started' },
       { text: 'Ended', align: 'left', value: 'ended' }
     ],
+    origin: [],
     items: [],
+    total: 0,
     selected: [],
     search: '',
-    loading: true,
+    options: null,
 
     // Inline Editing
-    releases_items: [],
-    loading_releases: false,
-    inline_editing_name: '',
-    inline_editing_release: '',
+    releasesItems: [],
+    loadingReleases: false,
+    inlineEditingName: '',
+    inlineEditingRelease: '',
 
     // Filter Dialog
-    filter_dialog: false,
-    filter_dialog_data: {},
-    filter_applied: false,
-    deployment_modes: ['Basic','Pro'],
-    deployment_status: ['CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED'],
+    filterDialog: false,
+    filters: [
+      {id: 'equal', name: 'Equal'},
+      {id: 'not_equal', name: 'Not equal'},
+      {id: 'starts', name: 'Starts'},
+      {id: 'not_starts', name: 'Not starts'},
+      {id: 'contains', name: 'Contains'},
+      {id: 'not_contains', name: 'Not contains'}
+    ],
+    filter: {},
+    filterApplied: false,
+    filterUsers: [],
+    deploymentMode: ['Basic','Pro'],
+    deploymentStatus: ['CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED'],
 
     // Date / Time Picker
-    pickerDialog: false,
-    picker_mode: 'date',
-    picker_component: '',
-    picker_date: '',
-    picker_time: '',
+    dateTimeDialog: false,
+    dateTimeField: '',
+    dateTimeMode: 'date',
+    dateTimeValue: { date: null, time: null },
 
     // Snackbar
     snackbar: false,
@@ -180,39 +218,36 @@ export default {
     snackbarText: '',
     snackbarColor: ''
   }),
-  created() {
-    this.getDeployments()
+  watch: {
+    options: {
+      handler (newValue, oldValue) {
+        if (oldValue == null || (oldValue.page == newValue.page && oldValue.itemsPerPage == newValue.itemsPerPage)) {
+          this.getDeployments()
+        }
+        else this.onSearch()
+      },
+      deep: true,
+    },
   },
   methods: {
     getDeployments() {
-      axios.get('/admin/deployments')
-        .then((res) => {
-          this.items = res.data.data.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
-        })
-        .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
-        })
-        .finally(() => this.loading = false)
-    },
-    filterDeployments() {
-      // Parse Filter
-      if (this.filter_dialog_data.name == '') delete this.filter_dialog_data.name
-      if (this.filter_dialog_data.release == '') delete this.filter_dialog_data.release
-      if (this.filter_dialog_data.username == '') delete this.filter_dialog_data.username
-      if (this.filter_dialog_data.mode == '') delete this.filter_dialog_data.mode
-      if (this.filter_dialog_data.status == '') delete this.filter_dialog_data.status
-      if (this.filter_dialog_data.created_from == '') delete this.filter_dialog_data.created_from
-      if (this.filter_dialog_data.created_to == '') delete this.filter_dialog_data.created_to
-      // Set filter var
-      this.filter_applied = Object.keys(this.filter_dialog_data).length > 0
-      // Enable Loading
       this.loading = true
-      // Get Deployment Data
-      axios.get('/admin/deployments/filter', { params: { data: this.filter_dialog_data }})
-        .then((response) => {
-          this.items = response.data.data
-          this.filter_dialog = false
+      var payload = {}
+      // Build Filter
+      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
+      if (this.filterApplied && 'dateFrom' in filter) filter.dateFrom = moment(this.filter.dateFrom).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (this.filterApplied && 'dateTo' in filter) filter.dateTo = moment(this.filter.dateTo).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (filter != null) payload['filter'] = filter
+      // Build Sort
+      const { sortBy, sortDesc } = this.options
+      if (sortBy.length > 0) payload['sort'] = { column: sortBy[0], desc: sortDesc[0] }
+      // Get Deployments
+      axios.get('/admin/deployments', { params: payload })
+        .then((res) => {
+          this.origin = res.data.deployments.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
+          this.total = this.origin.length
+          this.filterUsers = res.data.users_list
+          this.onSearch()
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -220,56 +255,88 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    closeFilter() {
-      this.filter_dialog = false
-      if (!this.filter_applied) this.filter_dialog_data = {}
+    onSearch() {
+      const { page, itemsPerPage } = this.options
+      const itemStart = (page-1) * itemsPerPage
+      const itemEnd = (page-1) * itemsPerPage + itemsPerPage
+      if (this.search.length == 0) this.items = this.origin.slice(itemStart, itemEnd)
+      else {
+        this.items = this.origin.filter(x =>
+          (x.name != null && x.name.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.release != null && x.release.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.username != null && x.username.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.environment != null && x.environment.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.mode != null && x.mode.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.method != null && x.method.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.status != null && x.status.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.created != null && x.created.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.ended != null && x.ended.toLowerCase().includes(this.search.toLowerCase()))
+        ).slice(itemStart, itemEnd)
+      }
+    },
+    submitFilter() {
+      // Check if all necessary fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        return
+      }
+      // Check if some filter was applied
+      if (!Object.keys(this.filter).some(x => this.filter[x] != null && this.filter[x].length != 0)) {
+        this.notification('Enter at least one filter.', 'error')
+        return
+      }
+      this.filterDialog = false
+      this.filterApplied = true
+      this.getDeployments()
     },
     clearFilter() {
-      this.loading = true
-      this.filter_applied = false
-      this.filter_dialog_data = {}
-      this.filter_dialog = false
+      this.filterDialog = false
+      this.filter = {}
+      this.filterApplied = false
       this.getDeployments()
     },
     infoDeployment() {
       const id = this.selected[0]['mode'].substring(0, 1) + this.selected[0]['execution_id']
       this.$router.push({ name:'deployment', params: { id: id }})
     },
-    picker_close() {
-      this.pickerDialog = false
-      this.picker_mode = 'date'
+    dateTimeDialogOpen(field) {
+      this.dateTimeField = field
+      this.dateTimeMode = 'date'
+      this.dateTimeValue = { date: moment().format("YYYY-MM-DD"), time: moment().format("HH:mm") }
+      if (this.dateTimeField == 'from' && this.filter.dateFrom !== undefined && this.filter.dateFrom.length > 0) {
+        let isValid = moment(this.filter.dateFrom, 'YYYY-MM-DD HH:mm', true).isValid()
+        if (!isValid) {
+          this.notification("Enter a valid date in 'Date From'", 'error')
+          return
+        }
+        this.dateTimeValue = { date: moment(this.filter.dateFrom).format("YYYY-MM-DD"), time: moment(this.filter.dateFrom).format("HH:mm") }
+      }
+      else if (this.dateTimeField == 'to' && this.filter.dateTo !== undefined && this.filter.dateTo.length > 0) {
+        let isValid = moment(this.filter.dateTo, 'YYYY-MM-DD HH:mm', true).isValid()
+        if (!isValid) {
+          this.notification("Enter a valid date in 'Date To'", 'error')
+          return
+        }
+        this.dateTimeValue = { date: moment(this.filter.dateTo).format("YYYY-MM-DD"), time: moment(this.filter.dateTo).format("HH:mm") }
+      }
+      this.dateTimeDialog = true
     },
-    picker_init(datetime='') {
-      var date = moment()
-      if (datetime) date = moment(datetime)
-      this.picker_date = date.format("YYYY-MM-DD")
-      this.picker_time = date.format("HH:mm")
-    },
-    picker_now() {
-      const date = moment()
-      if (this.picker_mode == 'date') this.picker_date = date.format("YYYY-MM-DD")
-      else if (this.picker_mode == 'time') this.picker_time = date.format("HH:mm")
-    },
-    picker_change(component) {
-      this.picker_component = component
-      if (component == 'created_from') this.picker_init(this.filter_dialog_data.created_from)
-      else if (component == 'created_to') this.picker_init(this.filter_dialog_data.created_to)
-      this.pickerDialog = true
-    },
-    picker_submit() {
-      if (this.picker_mode == 'date') this.picker_mode = 'time'
-      else if (this.picker_mode == 'time') {
-        if (this.picker_component == 'created_from') this.filter_dialog_data.created_from = this.picker_date + ' ' + this.picker_time
-        else if (this.picker_component == 'created_to') this.filter_dialog_data.created_to = this.picker_date + ' ' + this.picker_time
-        this.pickerDialog = false
-        this.picker_mode = 'date'
+    dateTimeSubmit() {
+      if (this.dateTimeMode == 'date') this.dateTimeMode = 'time'
+      else {
+        if (this.dateTimeField == 'from') this.filter.dateFrom = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
+        else if (this.dateTimeField == 'to') this.filter.dateTo = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
+        this.dateTimeDialog = false
       }
     },
+    dateTimeNow() {
+      this.dateTimeValue = { date: moment().format("YYYY-MM-DD"), time: moment().format("HH:mm") }
+    },
     openName(item) {
-      this.inline_editing_name = item.name
+      this.inlineEditingName = item.name
     },
     saveName(item) {
-      if (this.inline_editing_name == item.name) {
+      if (this.inlineEditingName == item.name) {
         this.notification('Deployment edited successfully', '#00b16a')
         return
       }
@@ -278,7 +345,7 @@ export default {
       const payload = {
         put: 'name',
         id: item.id,
-        name: this.inline_editing_name,
+        name: this.inlineEditingName,
         user_id: item.user_id
       }
       axios.put('/admin/deployments', payload)
@@ -293,20 +360,20 @@ export default {
         }) 
     },
     openRelease(item) {
-      this.loading_releases = true
-      this.inline_editing_release = item.release
+      this.loadingReleases = true
+      this.inlineEditingRelease = item.release
       axios.get('/admin/deployments/releases', { params: { user_id: item.user_id }})
         .then((response) => {
-          this.releases_items = response.data.releases.map(x => x.name)
+          this.releasesItems = response.data.releases.map(x => x.name)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
         })
-        .finally(() => this.loading_releases = false)
+        .finally(() => this.loadingReleases = false)
     },
     saveRelease(item) {
-      if (this.inline_editing_release == item.release) {
+      if (this.inlineEditingRelease == item.release) {
         this.notification('Deployment edited successfully', '#00b16a')
         return
       }
@@ -315,7 +382,7 @@ export default {
       const payload = {
         put: 'release',
         id: item.id,
-        release: this.inline_editing_release,
+        release: this.inlineEditingRelease,
         user_id: item.user_id
       }
       axios.put('/admin/deployments', payload)

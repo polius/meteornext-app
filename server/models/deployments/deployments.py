@@ -2,58 +2,8 @@ class Deployments:
     def __init__(self, sql):
         self._sql = sql
 
-    def get(self, user_id=None, deployment_id=None, search=None):
-        if user_id is None and deployment_id is None:
-            # Search Options
-            search_name = " AND d.name = '{}'".format(search['name']) if search and 'name' in search else ''
-            search_release = " AND r.name = '{}'".format(search['release']) if search and 'release' in search else ''
-            search_username = " AND u.username = '{}'".format(search['username']) if search and 'username' in search else ''
-            search_mode = " AND d.mode IN ({})".format(",".join("'{}'".format(i) for i in search['mode'])) if search and 'mode' in search else ''
-            search_status = " AND d.status IN ({})".format(",".join("'{}'".format(i) for i in search['status'])) if search and 'status' in search else ''
-            search_created_from = " AND d.created >= '{}'".format(search['created_from']) if search and 'created_from' in search else ''
-            search_created_to = " AND d.created <= '{}'".format(search['created_to']) if search and 'created_to' in search else ''
-
-            # Build Query
-            query = """
-                SELECT *, e.name AS 'environment', r.name AS 'release'
-                FROM
-                (
-                    (
-                        SELECT d.id, db.id AS 'execution_id', u.username, d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.scheduled, db.started, db.ended, CONCAT(TIMEDIFF(db.ended, db.started)) AS 'overall'
-                        FROM deployments_basic db
-                        JOIN deployments d ON d.id = db.deployment_id
-                        JOIN users u ON u.id = d.user_id{0}
-                        WHERE db.id IN (
-                            SELECT MAX(id)
-                            FROM deployments_basic db2
-                            WHERE db2.deployment_id = db.deployment_id
-                        )
-                        ORDER BY db.created DESC
-                        LIMIT 1000
-                    )
-                    UNION ALL
-                    (
-                        SELECT d.id, dp.id AS 'execution_id', u.username, d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.scheduled, dp.started, dp.ended, CONCAT(TIMEDIFF(dp.ended, dp.started)) AS 'overall'
-                        FROM deployments_pro dp
-                        JOIN deployments d ON d.id = dp.deployment_id
-                        JOIN users u ON u.id = d.user_id{0}
-                        WHERE dp.id IN (
-                            SELECT MAX(id)
-                            FROM deployments_pro dp2
-                            WHERE dp2.deployment_id = dp.deployment_id
-                        )
-                        ORDER BY dp.created DESC
-                        LIMIT 1000
-                    )
-                ) d
-                LEFT JOIN environments e ON e.id = d.environment_id
-                LEFT JOIN releases r ON r.id = d.release_id
-                WHERE 1=1{1}{2}{3}{4}{5}{6}
-                ORDER BY d.created DESC
-                LIMIT 1000
-            """.format(search_username, search_name, search_release, search_mode, search_status, search_created_from, search_created_to)
-            results = self._sql.execute(query)
-        elif deployment_id is not None:
+    def get(self, user_id=None, deployment_id=None):
+        if deployment_id is not None:
             query = """
                 SELECT d.id, d.execution_id, d.name, e.name AS 'environment', r.name AS 'release', d.mode, d.method, d.status, d.created, d.scheduled, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
                 FROM

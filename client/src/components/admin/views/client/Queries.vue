@@ -53,7 +53,7 @@
           <v-spacer></v-spacer>
           <v-btn icon @click="filterDialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 15px">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
@@ -313,6 +313,22 @@ export default {
       this.dateTimeField = field
       this.dateTimeMode = 'date'
       this.dateTimeValue = { date: moment().format("YYYY-MM-DD"), time: moment().format("HH:mm") }
+      if (this.dateTimeField == 'from' && this.filter.dateFrom !== undefined && this.filter.dateFrom.length > 0) {
+        let isValid = moment(this.filter.dateFrom, 'YYYY-MM-DD HH:mm', true).isValid()
+        if (!isValid) {
+          this.notification("Enter a valid date in 'Date From'", 'error')
+          return
+        }
+        this.dateTimeValue = { date: moment(this.filter.dateFrom).format("YYYY-MM-DD"), time: moment(this.filter.dateFrom).format("HH:mm") }
+      }
+      else if (this.dateTimeField == 'to' && this.filter.dateTo !== undefined && this.filter.dateTo.length > 0) {
+        let isValid = moment(this.filter.dateTo, 'YYYY-MM-DD HH:mm', true).isValid()
+        if (!isValid) {
+          this.notification("Enter a valid date in 'Date To'", 'error')
+          return
+        }
+        this.dateTimeValue = { date: moment(this.filter.dateTo).format("YYYY-MM-DD"), time: moment(this.filter.dateTo).format("HH:mm") }
+      }
       this.dateTimeDialog = true
     },
     dateTimeSubmit() {
