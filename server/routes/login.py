@@ -74,8 +74,10 @@ class Login:
                     except Exception as e:
                         return jsonify({'message': str(e)}), 400
 
-            # Update user last_login
-            self._users.put_last_login(login_json['username'])
+            # Update user data
+            ip = request.headers.getlist("X-Forwarded-For")[0] if request.headers.getlist("X-Forwarded-For") else request.remote_addr
+            user_agent = request.user_agent.string
+            self._users.put_last_login({"username": login_json['username'], "ip": ip, "user_agent": user_agent})
 
             # Generate access tokens
             access_token = create_access_token(identity=user[0]['username'])
