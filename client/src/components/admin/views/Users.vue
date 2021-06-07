@@ -9,14 +9,19 @@
           <v-btn v-if="selected.length == 1" text @click="editUser()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
           <v-btn v-if="selected.length > 0" text @click="deleteUser()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="refreshClick" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
+          <v-btn @click="filterClick" text class="body-2" :style="{ backgroundColor : filterActive ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('enabled')" :style="filter == 'enabled' ? 'font-weight:600' : 'font-weight:400'">ENABLED</v-btn>
           <v-btn text class="body-2" @click="filterBy('disabled')" :style="filter == 'disabled' ? 'font-weight:600' : 'font-weight:400'">DISABLED</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+        <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
+        <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="username" show-select class="elevation-1" style="padding-top:3px;">
+      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="username" show-select class="elevation-1" style="padding-top:3px;">
         <template v-ripple v-slot:[`header.data-table-select`]="{}">
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
@@ -63,8 +68,8 @@
                   <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" type="password" required autocomplete="new-password" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" label="Coins" required style="padding-top:0px;"></v-text-field>
                   <v-autocomplete v-model="item.group" :items="groups" :rules="[v => !!v || '']" label="Group" required hide-details style="padding-top:0px; margin-bottom:20px;"></v-autocomplete>
-                  <v-switch v-model="item.admin" label="Administrator" color="info" style="margin-top:10px;" hide-details></v-switch>
-                  <v-switch v-model="item.disabled" label="Disable Account" color="error" style="margin-top:10px;" hide-details></v-switch>
+                  <v-checkbox v-model="item.admin" label="Administrator" color="info" style="margin-top:10px;" hide-details></v-checkbox>
+                  <v-checkbox v-model="item.disabled" label="Disable Account" color="error" style="margin-top:10px;" hide-details></v-checkbox>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
                 <v-alert v-if="mode=='delete'" type="error" dense>All selected users related data (deployments, client, inventory) will be deleted.</v-alert>
@@ -87,6 +92,52 @@
 
     <MFA :enabled="mfaDialog" @update="mfaDialog = $event" mode="admin" :dialog="dialog" :user="{'username': mfaUsername}"/>
 
+    <!-------------------->
+    <!-- COLUMNS DIALOG -->
+    <!-------------------->
+    <v-dialog v-model="columnsDialog" max-width="600px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="text-subtitle-1 white--text">FILTER COLUMNS</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="selectAllColumns" text title="Select all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
+          <v-btn @click="deselectAllColumns" text title="Deselect all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="columnsDialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 0px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
+                  <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
+                  <v-checkbox v-model="columnsRaw" label="Username" value="username" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Group" value="group" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Email" value="email" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Created By" value="created_by" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Created At" value="created_at" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Updated By" value="updated_by" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Updated At" value="updated_at" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Last Login" value="last_login" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="IP" value="ip" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="User Agent" value="user_agent" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Coins" value="coins" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="MFA" value="mfa" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Admin" value="admin" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Online" value="last_ping" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-divider style="margin-top:15px;"></v-divider>
+                  <div style="margin-top:20px;">
+                    <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  </div>
+                </v-form>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -104,12 +155,18 @@ import MFA from './../../mfa/MFA'
 export default {
   data: () => ({
     // Data Table
+    filterActive: false,
     filter: 'all',
     headers: [
       { text: 'Username', align: 'left', value: 'username' },
       { text: 'Group', align: 'left', value: 'group' },
       { text: 'Email', align: 'left', value: 'email'},
-      { text: 'Created', align: 'left', value: 'created_at'},
+      { text: 'IP', align: 'left', value: 'ip'},
+      { text: 'User Agent', align: 'left', value: 'user_agent'},
+      { text: 'Created By', align: 'left', value: 'created_by'},
+      { text: 'Created At', align: 'left', value: 'created_at'},
+      { text: 'Updated By', align: 'left', value: 'updated_by'},
+      { text: 'Updated At', align: 'left', value: 'updated_at'},
       { text: 'Last login', align: 'left', value: 'last_login'},
       { text: 'Coins', align: 'left', value: 'coins'},
       { text: 'MFA', align: 'left', value: 'mfa'},
@@ -133,6 +190,10 @@ export default {
     mfaDialog: false,
     passwordDialog: false,
     mfaUsername: '',
+    // Filter Columns Dialog
+    columnsDialog: false,
+    columns: ['username','group','email','created_at','last_login','coins','mfa','admin','last_ping'],
+    columnsRaw: [],
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -144,8 +205,18 @@ export default {
     this.getUsers()
     moment.relativeTimeThreshold('ss', 0)
   },
+  computed: {
+    computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
+  },
   methods: {
+    refreshClick() {
+      this.getUsers()
+    },
+    filterClick() {
+
+    },
     getUsers() {
+      this.loading = true
       axios.get('/admin/users')
         .then((response) => {
           const data = response.data.data.users.map(x => ({...x, created_at: this.dateFormat(x.created_at), last_login: this.dateFormat(x.last_login), last_ping: this.dateFormat(x.last_ping)}))
@@ -302,6 +373,20 @@ export default {
       if (val == 'all') this.items = this.users.slice(0)
       else if (val == 'enabled') this.items = this.users.filter(x => !x.disabled)
       else if (val == 'disabled') this.items = this.users.filter(x => x.disabled)
+    },
+    openColumnsDialog() {
+      this.columnsRaw = [...this.columns]
+      this.columnsDialog = true
+    },
+    selectAllColumns() {
+      this.columnsRaw = ['username','group','email','created_at','last_login','coins','mfa','admin','last_ping']
+    },
+    deselectAllColumns() {
+      this.columnsRaw = []
+    },
+    filterColumns() {
+      this.columns = [...this.columnsRaw]
+      this.columnsDialog = false
     },
     notification(message, color) {
       this.snackbarText = message
