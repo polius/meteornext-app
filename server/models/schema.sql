@@ -53,6 +53,8 @@ CREATE TABLE `users` (
   `disabled` TINYINT(1) NOT NULL DEFAULT '0',
   `last_login` DATETIME NULL,
   `last_ping` DATETIME NULL,
+  `ip` VARCHAR(191) NULL,
+  `user_agent` TEXT NULL,
   `created_by` INT UNSIGNED NOT NULL,
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,

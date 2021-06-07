@@ -817,7 +817,7 @@ class Client:
                 yield '# View: {}\n'.format(view)
                 yield '# ------------------------------------------------------------\n'
                 try:
-                    syntax = conn.get_view_syntax(request.args['database'], view)
+                    syntax = conn.get_view_syntax(request.args['database'], view).replace(f"`{request.args['database']}`.", '')
                     if options['includeDropTable']:
                         yield 'DROP VIEW IF EXISTS `{}`;\n\n'.format(view)
                     yield '{};\n\n'.format(syntax)
