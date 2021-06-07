@@ -44,7 +44,7 @@
                   </v-row>
                   <v-text-field ref="name" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-switch v-model="item.ssh_tunnel" label="SSH Tunnel" color="info" hide-details style="margin-top:0px;"></v-switch>
-                  <div v-if="item.ssh_tunnel" style="margin-top:25px;">
+                  <div v-if="item.ssh_tunnel" style="margin-top:20px">
                     <v-row no-gutters>
                       <v-col cols="9" style="padding-right:10px">
                         <v-text-field v-model="item.hostname" :rules="[v => !!v || '']" label="Hostname" style="padding-top:0px;"></v-text-field>

@@ -7,7 +7,9 @@ class Users:
     def get(self, username=None):
         if username is None:
             query = """
-                SELECT u.id, u.username, u.email, u.password, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, u.ip, u.user_agent, u.last_login, u.last_ping,
+                SELECT
+                    u.*,
+                    g.name AS `group`,
                     CASE
                         WHEN mfa.2fa_hash IS NOT NULL THEN '2fa'
                         WHEN mfa.webauthn_ukey IS NOT NULL THEN 'webauthn'
@@ -21,7 +23,11 @@ class Users:
             return self._sql.execute(query)
         else:
             query = """
-                SELECT u.id, u.username, u.email, u.password, u.created_at, u.coins, u.group_id, g.name AS `group`, u.admin, u.disabled, (go.user_id IS NOT NULL) AS 'owner', u.ip, u.user_agent, u.last_login, u.last_ping, g.inventory_enabled, g.inventory_secured, g.deployments_enabled, g.deployments_basic, g.deployments_pro, g.monitoring_enabled, g.utils_enabled, g.client_enabled, g.coins_execution, g.coins_day,
+                SELECT
+                    u.*,
+                    g.name AS `group`,
+                    go.user_id IS NOT NULL AS 'owner',
+                    g.inventory_enabled, g.inventory_secured, g.deployments_enabled, g.deployments_basic, g.deployments_pro, g.monitoring_enabled, g.utils_enabled, g.client_enabled, g.coins_execution, g.coins_day,
                     CASE
                         WHEN mfa.2fa_hash IS NOT NULL THEN '2fa'
                         WHEN mfa.webauthn_ukey IS NOT NULL THEN 'webauthn'
