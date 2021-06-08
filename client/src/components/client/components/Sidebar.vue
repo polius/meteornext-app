@@ -217,7 +217,7 @@ export default {
     sidebarMode: function(val) {
       if (val == 'servers') {
         this.serverSearch = {}
-        setTimeout(() => this.$refs.server.focus(),100)
+        if (this.$refs.server !== undefined) setTimeout(() => this.$refs.server.focus(),100)
       }
     },
     currentConn() {
@@ -463,7 +463,6 @@ export default {
     },
     databaseChanged(database) {
       this.database = database
-      if (database == null) { this.database = ''; return }
       // Clear Sidebar
       this.sidebarSelected = []
       this.sidebarOpened = []
@@ -472,12 +471,14 @@ export default {
       // Clear Tab
       this.headerTab = 0
       this.headerTabSelected = 'client'
-      // Focus Editor
-      this.editor.focus()
-      // Get Objects
-      new Promise((resolve, reject) => { 
-        this.getObjects(database, resolve, reject)
-      })
+      if (database != null) {
+        // Focus Editor
+        this.editor.focus()
+        // Get Objects
+        new Promise((resolve, reject) => {
+          this.getObjects(database, resolve, reject)
+        })
+      }
     },
     getObjects(database, resolve, reject) {
       this.sidebarLoading = true

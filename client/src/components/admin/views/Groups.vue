@@ -13,11 +13,15 @@
           <v-btn v-if="selected.length == 1" text @click="cloneGroup()"><v-icon small style="padding-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
           <v-btn v-if="selected.length == 1" text @click="editGroup()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
           <v-btn v-if="selected.length > 0" text @click="deleteGroup()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="getGroups" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+        <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
+        <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
+      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="name" show-select class="elevation-1" style="padding-top:3px;">
         <template v-ripple v-slot:[`header.data-table-select`]="{}">
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
@@ -53,6 +57,45 @@
       </v-card>
     </v-dialog>
 
+    <!-------------------->
+    <!-- COLUMNS DIALOG -->
+    <!-------------------->
+    <v-dialog v-model="columnsDialog" max-width="600px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="text-subtitle-1 white--text">FILTER COLUMNS</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="selectAllColumns" text title="Select all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
+          <v-btn @click="deselectAllColumns" text title="Deselect all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="columnsDialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 0px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
+                  <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
+                  <v-checkbox v-model="columnsRaw" label="Name" value="name" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Description" value="description" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Created By" value="created_by" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Created At" value="created_at" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Updated By" value="updated_by" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Updated At" value="updated_at" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Users" value="users" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-divider style="margin-top:15px;"></v-divider>
+                  <div style="margin-top:20px;">
+                    <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  </div>
+                </v-form>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -75,8 +118,10 @@ export default {
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Description', align: 'left', value: 'description' },
-      { text: 'Created', align: 'left', value: 'created_at' },
-      { text: 'Updated', align: 'left', value: 'updated_at' },
+      { text: 'Created By', align: 'left', value: 'created_by' },
+      { text: 'Created At', align: 'left', value: 'created_at' },
+      { text: 'Updated By', align: 'left', value: 'updated_by' },
+      { text: 'Updated At', align: 'left', value: 'updated_at' },
       { text: 'Users', align: 'left', value: 'users' }
     ],
     items: [],
@@ -85,7 +130,10 @@ export default {
     item: { name: '', description: '' },
     loading: true,
     dialog: false,
-  
+    // Filter Columns Dialog
+    columnsDialog: false,
+    columns: ['name','description','created_at','updated_at','users'],
+    columnsRaw: [],
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -105,11 +153,12 @@ export default {
     }
     this.$route.params.msg = null
   },
+  computed: {
+    computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
+  },
   methods: {
-    // +--------+
-    // | GROUPS |
-    // +--------+
     getGroups() {
+      this.loading = true
       axios.get('/admin/groups')
         .then((response) => {
           this.items = response.data.data.map(x => ({...x, created_at: this.dateFormat(x.created_at), updated_at: this.dateFormat(x.updated_at)}))
@@ -164,7 +213,20 @@ export default {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
     },
-    // SNACKBAR
+    openColumnsDialog() {
+      this.columnsRaw = [...this.columns]
+      this.columnsDialog = true
+    },
+    selectAllColumns() {
+      this.columnsRaw = ['name','description','created_by','created_at','updated_by','updated_at','users']
+    },
+    deselectAllColumns() {
+      this.columnsRaw = []
+    },
+    filterColumns() {
+      this.columns = [...this.columnsRaw]
+      this.columnsDialog = false
+    },
     notification(message, color) {
       this.snackbarText = message
       this.snackbarColor = color 

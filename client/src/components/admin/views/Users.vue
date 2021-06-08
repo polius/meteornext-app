@@ -9,8 +9,7 @@
           <v-btn v-if="selected.length == 1" text @click="editUser()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
           <v-btn v-if="selected.length > 0" text @click="deleteUser()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn @click="refreshClick" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
-          <v-btn @click="filterClick" text class="body-2" :style="{ backgroundColor : filterActive ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn @click="getUsers" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('enabled')" :style="filter == 'enabled' ? 'font-weight:600' : 'font-weight:400'">ENABLED</v-btn>
@@ -155,7 +154,6 @@ import MFA from './../../mfa/MFA'
 export default {
   data: () => ({
     // Data Table
-    filterActive: false,
     filter: 'all',
     headers: [
       { text: 'Username', align: 'left', value: 'username' },
@@ -167,7 +165,7 @@ export default {
       { text: 'Created At', align: 'left', value: 'created_at'},
       { text: 'Updated By', align: 'left', value: 'updated_by'},
       { text: 'Updated At', align: 'left', value: 'updated_at'},
-      { text: 'Last login', align: 'left', value: 'last_login'},
+      { text: 'Last Login', align: 'left', value: 'last_login'},
       { text: 'Coins', align: 'left', value: 'coins'},
       { text: 'MFA', align: 'left', value: 'mfa'},
       { text: 'Admin', align: 'left', value: 'admin'},
@@ -209,12 +207,6 @@ export default {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
   },
   methods: {
-    refreshClick() {
-      this.getUsers()
-    },
-    filterClick() {
-
-    },
     getUsers() {
       this.loading = true
       axios.get('/admin/users')
@@ -379,7 +371,7 @@ export default {
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['username','group','email','created_at','last_login','coins','mfa','admin','last_ping']
+      this.columnsRaw = ['username','group','email','created_by','created_at','updated_by','updated_at','last_login','ip','user_agent','coins','mfa','admin','last_ping']
     },
     deselectAllColumns() {
       this.columnsRaw = []
