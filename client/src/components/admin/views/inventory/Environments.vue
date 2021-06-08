@@ -55,7 +55,7 @@
                           <v-icon v-if="!item.children" small>fas fa-database</v-icon>
                         </template>
                         <template v-slot:append="{ item }">
-                          <v-chip v-if="!item.children" label><v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
+                          <v-chip v-if="!item.children" label><v-icon small :color="item.shared ? '#EF5354' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
                         </template>
                       </v-treeview>
                     </v-card-text>
@@ -223,7 +223,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
     },
     getServers() {
@@ -235,7 +235,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
     },
     getEnvironments() {
@@ -254,7 +254,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
     },
     parseTreeView(servers) {
@@ -378,7 +378,7 @@ export default {
     newEnvironmentSubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
-        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         this.loading = false
         return
       }
@@ -393,14 +393,14 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
     editEnvironmentSubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
-        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         this.loading = false
         return
       }
@@ -417,7 +417,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -433,7 +433,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },

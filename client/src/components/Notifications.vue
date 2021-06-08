@@ -38,7 +38,7 @@
           </template>
           <template v-slot:[`item.show`]="{ item }">
             <v-btn icon small @click="changeSeen(item)">
-              <v-icon :title="item.show ? 'Show in the notification bar' : 'Don\'t show in the notification bar'" :color="item.show ? '#00b16a' : 'error'" small>fas fa-circle</v-icon>
+              <v-icon :title="item.show ? 'Show in the notification bar' : 'Don\'t show in the notification bar'" :color="item.show ? '#00b16a' : '#EF5354'" small>fas fa-circle</v-icon>
             </v-btn>
           </template>
         </v-data-table>
@@ -117,7 +117,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -159,7 +159,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -172,7 +172,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
     },
     dateFormat(date) {
@@ -189,7 +189,7 @@ export default {
     getDeploymentMethodColor(item) {
       if (item.data.method == 'VALIDATE') return '#00b16a'
       else if (item.data.method == 'TEST') return 'orange'
-      else if (item.data.method == 'DEPLOY') return 'red'
+      else if (item.data.method == 'DEPLOY') return '#EF5354'
       return ''
     },
     notification(message, color) {

@@ -105,14 +105,14 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
     submitPassword() {
       // Check if all fields are filled
       if (!this.$refs.passwordForm.validate()) {
-        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
       this.loadingDialog = true
@@ -124,7 +124,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loadingDialog = false)
     },

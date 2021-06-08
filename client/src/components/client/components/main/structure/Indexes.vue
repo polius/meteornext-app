@@ -235,7 +235,7 @@ export default {
       if (this.dialogOptions.mode == 'new') {
         // Check if all fields are filled
         if (!this.$refs.dialogForm.validate()) {
-          EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+          EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', '#EF5354')
           this.loading = false
           return
         }

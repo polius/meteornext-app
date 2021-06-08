@@ -221,7 +221,7 @@ WHERE CountryCode = country;
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
-        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', '#EF5354')
         this.loading = false
         return
       }
@@ -336,7 +336,7 @@ WHERE CountryCode = country;
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Procedure']
-        if (syntax == null) EventBus.$emit('send-notification', "Insufficient privileges to copy the procedure syntax", 'error')
+        if (syntax == null) EventBus.$emit('send-notification', "Insufficient privileges to copy the procedure syntax", '#EF5354')
         else navigator.clipboard.writeText(syntax) + ';'
       }).catch(() => {}).finally(() => { this.loading = false })
     },

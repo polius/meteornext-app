@@ -110,7 +110,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -142,14 +142,14 @@ export default {
     newReleaseSubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
-        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         this.loading = false
         return
       }
       // Check if new item already exists
       for (var i = 0; i < this.items.length; ++i) {
         if (this.items[i]['name'] == this.name) {
-          this.notification('This release currently exists', 'error')
+          this.notification('This release currently exists', '#EF5354')
           this.loading = false
           return
         }
@@ -164,14 +164,14 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
     editReleaseSubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
-        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         this.loading = false
         return
       }
@@ -182,7 +182,7 @@ export default {
       // Check if edited item already exists
       for (var j = 0; j < this.items.length; ++j) {
         if (this.items[j]['name'] == this.name && this.name != this.selected[0]['name']) {
-          this.notification('This release currently exists', 'error')
+          this.notification('This release currently exists', '#EF5354')
           this.loading = false
           return
         }
@@ -198,7 +198,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -226,7 +226,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -239,7 +239,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
     },
     dateFormat(date) {

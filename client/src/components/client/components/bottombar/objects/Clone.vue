@@ -277,7 +277,7 @@ export default {
     cloneObjectsSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
-        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
       // Get selected objects
@@ -290,7 +290,7 @@ export default {
       objects['events'] = this.gridApi['events'].getSelectedRows().map(x => x.name)
       // Check if no objects are selected
       if (objects['tables'].length == 0 && objects['views'].length == 0 && objects['triggers'].length == 0 && objects['functions'].length == 0 && objects['procedures'].length == 0 && objects['events'].length == 0) {
-        EventBus.$emit('send-notification', 'Please select at least one object to clone', 'error')
+        EventBus.$emit('send-notification', 'Please select at least one object to clone', '#EF5354')
         return
       }
       // Init Clone

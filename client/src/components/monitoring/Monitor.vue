@@ -14,7 +14,7 @@
       <v-card-text style="padding-top:10px;">
         <v-card style="margin-bottom:10px;">
           <v-toolbar flat dense color="#424242">
-            <v-toolbar-title v-if="!loading && server_name != ''" class="body-1" style="font-size:15px!important;"><v-icon small :title="available ? 'Available' : 'Unavailable'" :color="available ? 'success' : 'error'" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ available ? 'Server up and running' : error }}</v-toolbar-title>
+            <v-toolbar-title v-if="!loading && server_name != ''" class="body-1" style="font-size:15px!important;"><v-icon small :title="available ? 'Available' : 'Unavailable'" :color="available ? 'success' : '#EF5354'" style="margin-bottom:2px; margin-right:15px;">fas fa-circle</v-icon>{{ available ? 'Server up and running' : error }}</v-toolbar-title>
           </v-toolbar>
         </v-card>
 
@@ -207,7 +207,7 @@ export default {
     // -------------
     init() {
       const id = this.$route.params.id
-      if (id === undefined) this.notification('Invalid Monitor Identifier', 'error')
+      if (id === undefined) this.notification('Invalid Monitor Identifier', '#EF5354')
       else {
         this.server_id = id
         this.getMonitor()
@@ -224,12 +224,12 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
     parseData(server, settings) {
-      if (server.length == 0) this.notification("This server does not exist", 'error')
+      if (server.length == 0) this.notification("This server does not exist", '#EF5354')
       else {
         // Parse Information
         this.server_name = server[0]['name']

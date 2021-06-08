@@ -278,7 +278,7 @@ export default {
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          else this.notification(error.response.data.message, '#EF5354')
         })
     },
     clearNotifications() {
@@ -289,7 +289,7 @@ export default {
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message, 'error')
+          else this.notification(error.response.data.message, '#EF5354')
         })
     },
     notificationsSubmit() {
@@ -306,10 +306,6 @@ export default {
         axios.get('/notifications/bar')
           .then((response) => {
             this.notifications = response.data.data
-          })
-          .catch(() => {
-            // if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-            // else this.notification(error.response.data.message, 'error')
           })
           .finally(() => {
             this.loading = false
