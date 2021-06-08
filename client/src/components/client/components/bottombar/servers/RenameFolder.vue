@@ -84,7 +84,7 @@ export default {
     renameFolderSubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
-        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
       this.loading = true
@@ -98,7 +98,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },

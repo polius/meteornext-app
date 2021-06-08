@@ -148,7 +148,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
     },
     parseStructure(data) {
@@ -163,7 +163,7 @@ export default {
         }
         columns_headers[0]['rowDrag'] = true
       }
-      else EventBus.$emit('send-notification', "This table no longer exists", 'error')
+      else EventBus.$emit('send-notification', "This table no longer exists", '#EF5354')
       this.structureHeaders.columns = columns_headers
       this.structureItems.columns = columns_items
       if (columns_items.length == 0) this.gridApi.structure.columns.showNoRowsOverlay()

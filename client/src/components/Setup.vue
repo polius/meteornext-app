@@ -164,7 +164,7 @@
             this.buttonText = 'CHECK CONNECTION'
           })
           .catch((error) => {
-            this.notification(error.response.data.message, 'error')
+            this.notification(error.response.data.message, '#EF5354')
           })
           .finally(() => this.loading = false)
       },
@@ -182,7 +182,7 @@
             else this.setupDialogSubmit(true)
           })
           .catch((error) => {
-            this.notification(error.response.data.message, 'error')
+            this.notification(error.response.data.message, '#EF5354')
           })
           .finally(() => this.loading = false)
       },
@@ -215,7 +215,7 @@
             this.buttonText = 'LOGIN'
           })
           .catch((error) => {
-            this.notification(error.response.data.message, 'error')
+            this.notification(error.response.data.message, '#EF5354')
           })
           .finally(() => this.loading = false)
       },

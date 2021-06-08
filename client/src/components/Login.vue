@@ -163,7 +163,7 @@ export default {
               catch (error) {
                 this.loading = true
                 this.webauthn = { status: 'ko' }
-                this.notification('response' in error ? error.response.data.message : error.message, 'error')
+                this.notification('response' in error ? error.response.data.message : error.message, '#EF5354')
                 setTimeout(() => { this.loading = false; this.mfa = null }, 1000)
               }
             }
@@ -172,8 +172,8 @@ export default {
       }
       catch (error) {
         this.loading = false
-        if (error.response === undefined) this.notification("No internet connection", 'error')
-        else if (error.response.status == 401) this.notification(error.response.data.message, 'error')
+        if (error.response === undefined) this.notification("No internet connection", '#EF5354')
+        else if (error.response.status == 401) this.notification(error.response.data.message, '#EF5354')
         else if (this.mfa == null) this.checkSetup()
       }
     },
@@ -185,8 +185,8 @@ export default {
           else this.login_success()
         })
         .catch((error) => {
-          if (error.response.status != 400) this.notification("Can't establish a connection to the server", 'error')
-          else this.notification(error.response.data.message, 'error')
+          if (error.response.status != 400) this.notification("Can't establish a connection to the server", '#EF5354')
+          else this.notification(error.response.data.message, '#EF5354')
         })
         .finally(() => this.loading = false)
     },

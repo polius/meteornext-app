@@ -380,7 +380,7 @@ export default {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
             let data = JSON.parse(error.response.data.data)
-            EventBus.$emit('send-notification', data[0]['error'], 'error')
+            EventBus.$emit('send-notification', data[0]['error'], '#EF5354')
           }
         })
     },
@@ -755,7 +755,7 @@ export default {
           else {
             // Show error
             let data = JSON.parse(error.response.data.data)
-            EventBus.$emit('send-notification', data[0]['error'], 'error')
+            EventBus.$emit('send-notification', data[0]['error'], '#EF5354')
             // Add execution to history
             const history = { section: 'content', server: server, queries: data } 
             this.$store.dispatch('client/addHistory', history)

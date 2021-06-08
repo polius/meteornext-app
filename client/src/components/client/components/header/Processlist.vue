@@ -335,7 +335,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
     },
     parseProcesslist(data) {
@@ -374,7 +374,7 @@ export default {
       }
       else {
         this.snackbarText = 'Processlist stopped'
-        this.snackbarColor = 'error'
+        this.snackbarColor = '#EF5354'
         clearTimeout(this.timer)
       }
       this.snackbar = true
@@ -394,7 +394,7 @@ export default {
     settingsProcesslistSubmit() {
       // Check if all required fields are filled
       if (!this.$refs.form.validate()) {
-        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
       this.loading = true
@@ -407,7 +407,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -451,7 +451,7 @@ export default {
       const selectedQuery = this.selected.map(x => x.Info)[0]
       const selectedDatabase = this.selected.map(x => x.db)[0]
       if (selectedQuery == null || !(['SELECT','DELETE','INSERT','REPLACE','UPDATE'].some(x => selectedQuery.trim().substring(0, 7).toUpperCase().startsWith(x)))) {
-        EventBus.$emit('send-notification', "The selected queries can't be analyzed (not a DML query)", 'error')
+        EventBus.$emit('send-notification', "The selected queries can't be analyzed (not a DML query)", '#EF5354')
       }
       else {
         let payload = {
@@ -466,7 +466,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
       }
     },

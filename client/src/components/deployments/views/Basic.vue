@@ -3,7 +3,6 @@
     <v-container fluid grid-list-lg>
       <v-layout row wrap>
         <v-flex xs12>
-          <!-- <div class="subtitle-1 font-weight-regular" style="margin-left:10px; margin-top:5px;">BASIC</div> -->
           <v-form ref="form" style="padding:10px;">
             <v-text-field ref="name" v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:5px;"></v-text-field>
             <v-select :loading="loading" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
@@ -16,7 +15,7 @@
                     {{ item.name }}
                   </v-col>
                   <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
-                    <v-chip label><v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
+                    <v-chip label><v-icon small :color="item.shared ? '#EF5354' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
                   </v-col>
                 </v-row>
               </template>
@@ -208,7 +207,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -219,7 +218,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -280,7 +279,7 @@ export default {
     newQueryConfirm() {
       // Check if all fields are filled
       if (!this.$refs.query_form.validate()) {
-        this.notification('Please fill the required fields', 'error')
+        this.notification('Please fill the required fields', '#EF5354')
         return
       }
 
@@ -300,13 +299,13 @@ export default {
     editQueryConfirm() {
       // Check if all fields are filled
       if (!this.$refs.query_form.validate()) {
-        this.notification('Please fill the required fields', 'error')
+        this.notification('Please fill the required fields', '#EF5354')
         return
       }
 
       // Parse Queries
       if (this.parseQueries().length > 1) {
-        this.notification('Multiple queries detected', 'error')
+        this.notification('Multiple queries detected', '#EF5354')
         return
       }
 
@@ -363,11 +362,11 @@ export default {
     submitDeploy() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
-        this.notification('Please fill the required fields', 'error')
+        this.notification('Please fill the required fields', '#EF5354')
         return
       }
       if (this.query_items.length == 0) {
-        this.notification('Please enter a query to deploy', 'error')
+        this.notification('Please enter a query to deploy', '#EF5354')
         return
       }
       this.loading = true
@@ -397,7 +396,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },

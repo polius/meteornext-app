@@ -257,7 +257,7 @@
                           {{ item.name }}
                         </v-col>
                         <v-col cols="auto" class="flex-grow-0 flex-shrink-0">
-                          <v-chip label><v-icon small :color="item.shared ? 'error' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
+                          <v-chip label><v-icon small :color="item.shared ? '#EF5354' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>{{ item.shared ? 'Shared' : 'Personal' }}</v-chip>
                         </v-col>
                       </v-row>
                     </template>
@@ -716,7 +716,7 @@
       // -------------
       init() {
         const id = this.$route.params.id
-        if (id === undefined || id.length < 2) this.notification('Invalid Deployment Identifier', 'error')
+        if (id === undefined || id.length < 2) this.notification('Invalid Deployment Identifier', '#EF5354')
         else {
           // Init parameters and get deployment
           this.deployment['execution_id'] = id.substring(1, id.length)
@@ -745,7 +745,7 @@
           })
           .catch((error) => {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
           })
       },
       clear() {
@@ -999,7 +999,7 @@
           })
           .catch((error) => {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
           })
       },
       // ------------------
@@ -1058,7 +1058,7 @@
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
       },
       actionSubmitStop() {
@@ -1076,7 +1076,7 @@
           axios.post(path, payload)
           .catch((error) => {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
           })
         }
         this.action_dialog = false
@@ -1134,7 +1134,7 @@
       // -------------------------------------
       editSubmit() {
         if (!this.$refs.form.validate()) {
-          this.notification('Please fill the required fields', 'error')
+          this.notification('Please fill the required fields', '#EF5354')
           return
         }
         // Hide Results View
@@ -1190,7 +1190,7 @@
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
       },
@@ -1222,7 +1222,7 @@
       newQueryConfirm() {
         // Check if all fields are filled
         if (!this.$refs.query_form.validate()) {
-          this.notification('Please fill the required fields', 'error')
+          this.notification('Please fill the required fields', '#EF5354')
           return
         }
 
@@ -1242,7 +1242,7 @@
       editQueryConfirm() {
         // Parse Queries
         if (this.parseQueriesFormat().length > 1) {
-          this.notification('Multiple queries detected', 'error')
+          this.notification('Multiple queries detected', '#EF5354')
           return
         }
 
@@ -1323,7 +1323,7 @@
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
       },
       // -------------------------------------

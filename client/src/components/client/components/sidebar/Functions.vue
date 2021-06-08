@@ -228,7 +228,7 @@ RETURN (customerLevel);
     dialogSubmit() {
       // Check if all fields are filled
       if (!this.$refs.dialogForm.validate()) {
-        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', '#EF5354')
         this.loading = false
         return
       }
@@ -344,7 +344,7 @@ RETURN (customerLevel);
         EventBus.$emit('execute-sidebar', [query], resolve, reject)
       }).then((res) => {
         let syntax = JSON.parse(res.data)[0].data[0]['Create Function']
-        if (syntax == null) EventBus.$emit('send-notification', "Insufficient privileges to copy the function syntax", 'error')
+        if (syntax == null) EventBus.$emit('send-notification', "Insufficient privileges to copy the function syntax", '#EF5354')
         else navigator.clipboard.writeText(syntax) + ';'
       }).catch(() => {}).finally(() => { this.loading = false })
     },

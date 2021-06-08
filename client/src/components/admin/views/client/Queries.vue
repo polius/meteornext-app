@@ -287,7 +287,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else EventBus.$emit('send-notification', error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -316,7 +316,7 @@ export default {
       if (this.dateTimeField == 'from' && this.filter.dateFrom !== undefined && this.filter.dateFrom.length > 0) {
         let isValid = moment(this.filter.dateFrom, 'YYYY-MM-DD HH:mm', true).isValid()
         if (!isValid) {
-          this.notification("Enter a valid date in 'Date From'", 'error')
+          this.notification("Enter a valid date in 'Date From'", '#EF5354')
           return
         }
         this.dateTimeValue = { date: moment(this.filter.dateFrom).format("YYYY-MM-DD"), time: moment(this.filter.dateFrom).format("HH:mm") }
@@ -324,7 +324,7 @@ export default {
       else if (this.dateTimeField == 'to' && this.filter.dateTo !== undefined && this.filter.dateTo.length > 0) {
         let isValid = moment(this.filter.dateTo, 'YYYY-MM-DD HH:mm', true).isValid()
         if (!isValid) {
-          this.notification("Enter a valid date in 'Date To'", 'error')
+          this.notification("Enter a valid date in 'Date To'", '#EF5354')
           return
         }
         this.dateTimeValue = { date: moment(this.filter.dateTo).format("YYYY-MM-DD"), time: moment(this.filter.dateTo).format("HH:mm") }
@@ -345,12 +345,12 @@ export default {
     submitFilter() {
       // Check if all necessary fields are filled
       if (!this.$refs.form.validate()) {
-        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
       // Check if some filter was applied
       if (!Object.keys(this.filter).some(x => this.filter[x] != null && this.filter[x].length != 0)) {
-        EventBus.$emit('send-notification', 'Enter at least one filter.', 'error')
+        EventBus.$emit('send-notification', 'Enter at least one filter.', '#EF5354')
         return
       }
       this.filterDialog = false

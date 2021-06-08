@@ -285,19 +285,19 @@ export default {
           }
         })
         if (error) {
-          EventBus.$emit('send-notification', 'This schema currently exists', 'error')
+          EventBus.$emit('send-notification', 'This schema currently exists', '#EF5354')
           return
         }
         // Retrieve current item
         item = this.getItem()
         // Check if all fields are filled
         if (!this.$refs.form.validate()) {
-          EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', 'error')
+          EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', '#EF5354')
           return
         }
         // Check if some right is selected
         if (item.rights.length == 0) {
-          EventBus.$emit('send-notification', 'Please select at least one right', 'error')
+          EventBus.$emit('send-notification', 'Please select at least one right', '#EF5354')
           return
         }
       }

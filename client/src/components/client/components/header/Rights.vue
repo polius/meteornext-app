@@ -429,12 +429,12 @@ export default {
     saveClick() {
       // Check if all login fields are filled
       if (!this.rightsForm.login.validate()) {
-        EventBus.$emit('send-notification', 'Please make sure all required login fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required login fields are filled out correctly', '#EF5354')
         return
       }
       // Check if all resources fields are filled
       if (!this.rightsForm.resources.validate()) {
-        EventBus.$emit('send-notification', 'Please make sure all required resources fields are filled out correctly', 'error')
+        EventBus.$emit('send-notification', 'Please make sure all required resources fields are filled out correctly', '#EF5354')
         return
       }
       // Build check dialog
@@ -540,7 +540,7 @@ export default {
         .catch((error) => {
           this.checkDialog = false
           let data = JSON.parse(error.response.data.data)
-          if (queries[0].startsWith('DROP USER')) EventBus.$emit('send-notification', data[0].error, 'error')
+          if (queries[0].startsWith('DROP USER')) EventBus.$emit('send-notification', data[0].error, '#EF5354')
           else {
             // Build error dialog
             this.errors = { login: [], server: [], schema: [], resources: [] }

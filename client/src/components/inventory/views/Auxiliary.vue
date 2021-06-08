@@ -33,7 +33,7 @@
           {{ !item.shared ? 'Personal' : 'Shared' }}
         </template>
         <template v-slot:[`item.ssl`]="{ item }">
-          <v-icon small :title="item.ssl ? 'SSL Enabled' : 'SSL Disabled'" :color="item.ssl ? '#00b16a' : 'error'" style="margin-left:2px">fas fa-circle</v-icon>
+          <v-icon small :title="item.ssl ? 'SSL Enabled' : 'SSL Disabled'" :color="item.ssl ? '#00b16a' : '#EF5354'" style="margin-left:2px">fas fa-circle</v-icon>
         </template>
       </v-data-table>
     </v-card>
@@ -280,7 +280,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -325,7 +325,7 @@ export default {
     async newAuxiliarySubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
-        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
       // Get SSL Imported Files
@@ -334,7 +334,7 @@ export default {
       let ssl_client_certificate = await this.readFileAsync(this.item.ssl_client_certificate)
       // Check SSL fields
       if (this.item.ssl && ssl_ca_certificate == null && ssl_client_key == null && ssl_client_certificate == null) {
-        this.notification('Import at least one SSL certificate/key', 'error')
+        this.notification('Import at least one SSL certificate/key', '#EF5354')
         return
       }
       // Parse SSL
@@ -353,14 +353,14 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
     async editAuxiliarySubmit() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
-        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
       // Get SSL Imported Files
@@ -368,7 +368,7 @@ export default {
       let ssl_client_key = await this.readFileAsync(this.item.ssl_client_key)
       let ssl_client_certificate = await this.readFileAsync(this.item.ssl_client_certificate)
       if (this.item.ssl && ssl_ca_certificate == null && ssl_client_key == null && ssl_client_certificate == null) {
-        this.notification('Import at least one SSL certificate/key', 'error')
+        this.notification('Import at least one SSL certificate/key', '#EF5354')
         return
       }
       // Parse SSL
@@ -387,7 +387,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
@@ -405,14 +405,14 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
     openTest() {
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
-        this.notification('Please make sure all required fields are filled out correctly', 'error')
+        this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
       this.regionItem = null
@@ -427,14 +427,14 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.testLoading = false)
     },
     async testConnection() {
       // Check if all fields are filled
       if (!this.$refs.testForm.validate()) {
-        this.notification('Please select a region', 'error')
+        this.notification('Please select a region', '#EF5354')
         return
       }
       // Get SSL Imported Files
@@ -442,7 +442,7 @@ export default {
       let ssl_client_key = await this.readFileAsync(this.item.ssl_client_key)
       let ssl_client_certificate = await this.readFileAsync(this.item.ssl_client_certificate)
       if (this.item.ssl && ssl_ca_certificate == null && ssl_client_key == null && ssl_client_certificate == null) {
-        this.notification('Import at least one SSL certificate/key', 'error')
+        this.notification('Import at least one SSL certificate/key', '#EF5354')
         return
       }
       // Test Connection
@@ -454,7 +454,7 @@ export default {
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', 'error')
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.testLoading = false)
     },
