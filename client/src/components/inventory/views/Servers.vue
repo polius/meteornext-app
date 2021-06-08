@@ -16,8 +16,10 @@
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+        <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
+        <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
+      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:3px;">
         <template v-ripple v-slot:[`header.data-table-select`]="{}">
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
@@ -39,6 +41,9 @@
           <v-icon v-if="item.usage.includes('M')" title="Monitoring" small color="#fa8231" style="margin-right:5px">fas fa-circle</v-icon>
           <v-icon v-if="item.usage.includes('U')" title="Utils" small color="#00b16a" style="margin-right:5px">fas fa-circle</v-icon>
           <v-icon v-if="item.usage.includes('C')" title="Client" small color="#8e44ad">fas fa-circle</v-icon>
+        </template>
+        <template v-slot:[`item.ssl`]="{ item }">
+          <v-icon small :title="item.ssl ? 'SSL Enabled' : 'SSL Disabled'" :color="item.ssl ? '#00b16a' : 'error'" style="margin-left:2px">fas fa-circle</v-icon>
         </template>
       </v-data-table>
     </v-card>
@@ -148,6 +153,46 @@
       </v-card>
     </v-dialog>
     <!-------------------->
+    <!-- COLUMNS DIALOG -->
+    <!-------------------->
+    <v-dialog v-model="columnsDialog" max-width="600px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="text-subtitle-1 white--text">FILTER COLUMNS</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="selectAllColumns" text title="Select all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
+          <v-btn @click="deselectAllColumns" text title="Deselect all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="columnsDialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 0px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
+                  <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
+                  <v-checkbox v-model="columnsRaw" label="Name" value="name" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Region" value="region" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Engine" value="version" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Hostname" value="hostname" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Port" value="port" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Username" value="username" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="SSL" value="ssl" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Scope" value="shared" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Usage" value="usage" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-divider style="margin-top:15px;"></v-divider>
+                  <div style="margin-top:20px;">
+                    <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="error" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  </div>
+                </v-form>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!-------------------->
     <!-- CONFIRM DIALOG -->
     <!-------------------->
     <v-dialog v-model="confirm_dialog" persistent max-width="640px">
@@ -199,6 +244,7 @@ export default {
       { text: 'Hostname', align: 'left', value: 'hostname'},
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
+      { text: 'SSL', align: 'left', value: 'ssl'},
       { text: 'Scope', align: 'left', value: 'shared' },
       { text: 'Usage', align: 'left', value: 'usage' },
     ],
@@ -222,6 +268,10 @@ export default {
     dialog_valid: false,
     // Regions
     regions: [],
+    // Filter Columns Dialog
+    columnsDialog: false,
+    columns: ['name','region','version','hostname','port','username','shared','usage'],
+    columnsRaw: [],
     // Dialog: Confirm
     confirm_dialog: false,
     // Snackbar
@@ -244,7 +294,8 @@ export default {
       if (this.item.ssl_client_certificate != null) elements.push('Client Certificate')
       if (this.item.ssl_ca_certificate != null) elements.push('CA Certificate')
       return elements.join(' + ')
-    }
+    },
+    computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
   },
   created() {
     this.buildUsage()
@@ -482,6 +533,20 @@ export default {
       this.item.ssl_ca_certificate = null
       this.item.ssl_client_key = null
       this.item.ssl_client_certificate = null
+    },
+    openColumnsDialog() {
+      this.columnsRaw = [...this.columns]
+      this.columnsDialog = true
+    },
+    selectAllColumns() {
+      this.columnsRaw = ['name','region','version','hostname','port','username','ssl','shared','usage']
+    },
+    deselectAllColumns() {
+      this.columnsRaw = []
+    },
+    filterColumns() {
+      this.columns = [...this.columnsRaw]
+      this.columnsDialog = false
     },
     notification(message, color, persistent=false) {
       this.snackbar = false

@@ -13,6 +13,9 @@
         <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
         {{ !item.shared ? 'Personal' : 'Shared' }}
       </template>
+      <template v-slot:[`item.ssl`]="{ item }">
+        <v-icon small :title="item.ssl ? 'SSL Enabled' : 'SSL Disabled'" :color="item.ssl ? '#00b16a' : 'error'" style="margin-left:2px">fas fa-circle</v-icon>
+      </template>
     </v-data-table>
 
     <v-dialog v-model="dialog" persistent max-width="768px">
@@ -165,6 +168,7 @@
                   <v-checkbox v-model="columnsRaw" label="Hostname" value="hostname" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Port" value="port" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Username" value="username" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="SSL" value="ssl" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Scope" value="shared" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Group" value="group" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Owner" value="owner" hide-details style="margin-top:5px"></v-checkbox>
@@ -200,6 +204,7 @@ export default {
       { text: 'Hostname', align: 'left', value: 'hostname'},
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
+      { text: 'SSL', align: 'left', value: 'ssl'},
       { text: 'Scope', align: 'left', value: 'shared' },
       { text: 'Group', align: 'left', value: 'group' },
       { text: 'Owner', align: 'left', value: 'owner' },
@@ -485,7 +490,7 @@ export default {
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['name','region','version','hostname','port','username','shared','group','owner','created_by','created_at','updated_by','updated_at']
+      this.columnsRaw = ['name','region','version','hostname','port','username','ssl','shared','group','owner','created_by','created_at','updated_by','updated_at']
     },
     deselectAllColumns() {
       this.columnsRaw = []

@@ -8,8 +8,7 @@ class Users:
         if username is None:
             query = """
                 SELECT
-                    u.*,
-                    g.name AS `group`,
+                    u.id, u.username, g.name AS `group`, u.email, u.ip, u.user_agent, u2.username AS 'created_by', u.created_at, u3.username AS 'updated_by', u.updated_at, u.last_login, u.coins, u.last_ping,
                     CASE
                         WHEN mfa.2fa_hash IS NOT NULL THEN '2fa'
                         WHEN mfa.webauthn_ukey IS NOT NULL THEN 'webauthn'
@@ -18,6 +17,8 @@ class Users:
                 FROM users u
                 LEFT JOIN user_mfa mfa ON mfa.user_id = u.id
                 JOIN groups g ON g.id = u.group_id
+                LEFT JOIN users u2 ON u2.id = u.created_by
+                LEFT JOIN users u3 ON u3.id = u.updated_by
                 ORDER BY u.last_login DESC, u.username ASC
             """
             return self._sql.execute(query)

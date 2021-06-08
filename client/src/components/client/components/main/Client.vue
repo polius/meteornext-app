@@ -257,7 +257,7 @@ export default {
           let reverse = (this.clientCursor.row == this.clientRange.start.row && this.clientCursor.column == this.clientRange.start.column)
           this.editor.selection.setSelectionRange(this.clientRange, reverse)
         }
-        this.editor.focus()
+        if (this.database != null && this.database.length > 0) this.editor.focus()
       }
       else if (oldValue == 'client') {
         this.clientQueries = this.editor.getValue()
