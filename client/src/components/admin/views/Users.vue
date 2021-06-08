@@ -64,7 +64,7 @@
                   <v-alert v-if="mode == 'edit' && selected.length == 1 && item.group != selected[0]['group']" type="warning" dense dismissible icon="mdi-alert">This user will lose access to the shared inventory from the previous group.</v-alert>
                   <v-text-field ref="field" v-model="item.username" :rules="[v => !!v || '']" label="Username" autocomplete="email" required ></v-text-field>
                   <v-text-field v-model="item.email" :rules="[v => !!v || '', v => /.+@.+\..+/.test(v) || '']" label="Email" type="email" required autocomplete="username" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="item.password" :rules="[v => !!v || '']" label="Password" type="password" required autocomplete="new-password" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="item.password" :rules="[v => !!v || '']" :label="mode == 'new' ? 'Password' : 'New Password'" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" required autocomplete="new-password" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" label="Coins" required style="padding-top:0px;"></v-text-field>
                   <v-autocomplete v-model="item.group" :items="groups" :rules="[v => !!v || '']" label="Group" required hide-details style="padding-top:0px; margin-bottom:20px;"></v-autocomplete>
                   <v-checkbox v-model="item.admin" label="Administrator" color="info" style="margin-top:10px;" hide-details></v-checkbox>
@@ -182,6 +182,7 @@ export default {
     dialog_title: '',
     dialog_valid: false,
     now: moment.utc(),
+    showPassword: false,
     // User Groups
     groups: [],
     // Dialogs
