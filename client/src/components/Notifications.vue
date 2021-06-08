@@ -30,7 +30,7 @@
             </v-row>
           </template>
           <template v-slot:[`item.category`]="{ item }">
-            <div v-if="item.category == 'deployment'"><v-icon small color="#e74c3c" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-right:10px;">fas fa-meteor</v-icon>Deployments</div>
+            <div v-if="item.category == 'deployment'"><v-icon small color="#EF5354" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-right:10px;">fas fa-meteor</v-icon>Deployments</div>
             <div v-else-if="item.category == 'monitoring'"><v-icon small color="#fa8231" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-right:10px;">fas fa-desktop</v-icon>Monitoring</div>
           </template>
           <template v-slot:[`item.date`]="{ item }">
@@ -58,7 +58,7 @@
                     <v-divider></v-divider>
                     <div style="margin-top:20px;">
                       <v-btn :loading="loading" color="#00b16a" @click="deleteNotificationSubmit()">CONFIRM</v-btn>
-                      <v-btn :disabled="loading" color="error" @click="deleteDialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                      <v-btn :disabled="loading" color="#EF5354" @click="deleteDialog=false" style="margin-left:5px;">CANCEL</v-btn>
                     </div>
                   </v-form>
                 </v-flex>
@@ -182,7 +182,7 @@ export default {
     getNotificationColor(status) {
       if (status == 'SUCCESS') return '#4caf50'
       else if (status == 'WARNING') return '#ff9800'
-      else if (status == 'ERROR') return '#e74c3c'
+      else if (status == 'ERROR') return '#EF5354'
       else if (status == 'INFO') return '#3e9cef'
       else return ''
     },

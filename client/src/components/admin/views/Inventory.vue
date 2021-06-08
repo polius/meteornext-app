@@ -69,7 +69,7 @@
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn :loading="loading" color="#00b16a" @click="filterInventory()">Confirm</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="dialog = false" style="margin-left:5px;">Cancel</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px;">Cancel</v-btn>
                     <v-btn v-if="filterApplied" :disabled="loading" color="info" @click="clearFilter()" style="float:right;">Remove Filter</v-btn>
                   </div>
                 </v-form>

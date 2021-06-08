@@ -7,7 +7,7 @@
       <v-divider class="mx-3" inset vertical></v-divider>
       <!-- DEPLOYMENTS -->
       <router-link v-if="deployments_enabled" class="nav-link" to="/deployments" style="margin-right:10px;">
-        <v-btn color="#e74c3c"><v-icon small style="margin-right:10px">fas fa-meteor</v-icon>Deployments</v-btn>
+        <v-btn color="#EF5354"><v-icon small style="margin-right:10px">fas fa-meteor</v-icon>Deployments</v-btn>
       </router-link>
       <!-- MONITORING -->
       <router-link v-if="monitoring_enabled" class="nav-link" to="/monitoring" style="margin-right:10px;">
@@ -326,7 +326,7 @@ export default {
     getStatusColor(status) {
       if (status == 'SUCCESS') return '#4caf50'
       else if (status == 'WARNING') return '#ff9800'
-      else if (status == 'ERROR') return '#e74c3c'
+      else if (status == 'ERROR') return '#EF5354'
       else if (status == 'INFO') return '#3e9cef'
       return ''
     },

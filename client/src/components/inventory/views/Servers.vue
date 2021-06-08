@@ -37,13 +37,13 @@
           {{ !item.shared ? 'Personal' : 'Shared' }}
         </template>
         <template v-slot:[`item.usage`]="{ item }">
-          <v-icon v-if="item.usage.includes('D')" title="Deployments" small color="#e74c3c" style="margin-right:5px">fas fa-circle</v-icon>
+          <v-icon v-if="item.usage.includes('D')" title="Deployments" small color="#EF5354" style="margin-right:5px">fas fa-circle</v-icon>
           <v-icon v-if="item.usage.includes('M')" title="Monitoring" small color="#fa8231" style="margin-right:5px">fas fa-circle</v-icon>
           <v-icon v-if="item.usage.includes('U')" title="Utils" small color="#00b16a" style="margin-right:5px">fas fa-circle</v-icon>
           <v-icon v-if="item.usage.includes('C')" title="Client" small color="#8e44ad">fas fa-circle</v-icon>
         </template>
         <template v-slot:[`item.ssl`]="{ item }">
-          <v-icon small :title="item.ssl ? 'SSL Enabled' : 'SSL Disabled'" :color="item.ssl ? '#00b16a' : 'error'" style="margin-left:2px">fas fa-circle</v-icon>
+          <v-icon small :title="item.ssl ? 'SSL Enabled' : 'SSL Disabled'" :color="item.ssl ? '#00b16a' : '#EF5354'" style="margin-left:2px">fas fa-circle</v-icon>
         </template>
       </v-data-table>
     </v-card>
@@ -58,7 +58,7 @@
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 20px 20px;">
+        <v-card-text style="padding: 0px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
@@ -139,7 +139,7 @@
                     </div>
                     <div v-else>
                       <v-btn :loading="loading" color="#00b16a" @click="submitServer()">CONFIRM</v-btn>
-                      <v-btn :disabled="loading" color="error" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
+                      <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
                     </div>
                   </v-col>
                   <v-col cols="auto">
@@ -183,7 +183,7 @@
                   <v-divider style="margin-top:15px;"></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
                   </div>
                 </v-form>
               </v-flex>
@@ -206,12 +206,12 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-alert dense type="error" style="margin-top:15px">This server is being used in some sections.</v-alert>
+                <v-alert dense type="#EF5354" style="margin-top:15px">This server is being used in some sections.</v-alert>
                 <div class="subtitle-1" style="margin-top:10px; margin-bottom:10px;">This server won't be usable in the selected sections. Do you want to proceed?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitServer(false)">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="confirm_dialog = false" style="margin-left:5px">CANCEL</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="confirm_dialog = false" style="margin-left:5px">CANCEL</v-btn>
                 </div>
               </v-flex>
             </v-layout>

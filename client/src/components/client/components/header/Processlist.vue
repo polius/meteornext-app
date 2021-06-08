@@ -64,7 +64,7 @@
                       <v-btn :loading="loading" :disabled="loading" @click="settingsProcesslistSubmit" color="#00b16a">Confirm</v-btn>
                     </v-col>
                     <v-col>
-                      <v-btn :disabled="loading" @click="settingsDialog = false" color="error">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="settingsDialog = false" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -95,7 +95,7 @@
                       <v-btn :loading="loading" @click="killQuerySubmit" color="#00b16a">Kill</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="killDialog = false" color="error">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="killDialog = false" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>

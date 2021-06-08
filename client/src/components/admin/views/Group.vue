@@ -170,7 +170,7 @@
             <div style="margin-top:20px;">
               <v-btn color="#00b16a" @click="submitGroup()">Confirm</v-btn>
               <router-link class="nav-link" to="/admin/groups">
-                <v-btn color="error" @click="dialog=false" style="margin-left:5px">Cancel</v-btn>
+                <v-btn color="#EF5354" @click="dialog=false" style="margin-left:5px">Cancel</v-btn>
               </router-link>
             </div>
           </v-form>
@@ -226,7 +226,7 @@
                       <v-btn :disabled="ownersDialogOptions.mode == 'new' && this.ownersDialogSelected.length == 0" :loading="loading" @click="ownersDialogSubmit" color="#00b16a">{{ ownersDialogOptions.button1 }}</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="ownersDialog = false" color="error">{{ ownersDialogOptions.button2 }}</v-btn>
+                      <v-btn :disabled="loading" @click="ownersDialog = false" color="#EF5354">{{ ownersDialogOptions.button2 }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>

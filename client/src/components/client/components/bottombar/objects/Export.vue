@@ -71,7 +71,7 @@
                       <v-btn :loading="loading" @click="exportObjectsSubmit" color="#00b16a">Export</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" color="error">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="dialog = false" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -116,7 +116,7 @@
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:15px;">
                   <v-col v-if="progressStep == 'export'" cols="auto" style="margin-right:5px; margin-bottom:10px;">
-                    <v-btn @click="cancelExport" color="error">Cancel</v-btn>
+                    <v-btn @click="cancelExport" color="#EF5354">Cancel</v-btn>
                   </v-col>
                   <v-col v-else style="margin-bottom:10px;">
                     <v-btn :disabled="loading" @click="dialogProgress = false" cols="auto" color="primary">Close</v-btn>

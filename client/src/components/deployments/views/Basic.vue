@@ -59,7 +59,7 @@
                   <br>
                   <b class="orange--text">TEST</b> A simulation is performed (only SELECTs are executed)
                   <br>
-                  <b class="red--text">DEPLOY</b> Executes ALL queries
+                  <b style="color:#EF5354">DEPLOY</b> Executes ALL queries
                 </span>
               </v-tooltip>
             </div>
@@ -75,9 +75,9 @@
                   <div class="orange--text">TEST</div>
                 </template>
               </v-radio>
-              <v-radio value="deploy" color="red">
+              <v-radio value="deploy" color="#EF5354">
                 <template v-slot:label>
-                  <div class="red--text">DEPLOY</div>
+                  <div style="color:#EF5354">DEPLOY</div>
                 </template>
               </v-radio>
             </v-radio-group>
@@ -90,7 +90,7 @@
 
             <div style="margin-top:20px;">
               <v-btn :loading="loading" color="#00b16a" @click="submitDeploy()">CREATE DEPLOY</v-btn>
-              <router-link to="/deployments"><v-btn :disabled="loading" color="error" style="margin-left:5px">CANCEL</v-btn></router-link>
+              <router-link to="/deployments"><v-btn :disabled="loading" color="#EF5354" style="margin-left:5px">CANCEL</v-btn></router-link>
             </div>
           </v-form>
         </v-flex>
@@ -100,13 +100,13 @@
     <v-dialog v-model="scheduleDialog" persistent width="290px">
       <v-date-picker v-if="schedule_mode=='date'" v-model="schedule_date" color="info" scrollable>
         <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
-        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="#EF5354" @click="schedule_close()">Cancel</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="info" @click="schedule_now()">Now</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="schedule_mode=='time'" v-model="schedule_time" color="info" format="24hr" scrollable>
         <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
-        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="#EF5354" @click="schedule_close()">Cancel</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="info" @click="schedule_now()">Now</v-btn>
       </v-time-picker>
@@ -117,18 +117,18 @@
         <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:1px">{{query_mode == 'new' ? 'fas fa-plus' : query_mode == 'edit' ? 'fas fa-feather-alt' : 'fas fa-minus'}}</v-icon>{{ queryDialogTitle }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
-        <v-card-text style="padding: 0px 20px 20px;">
+        <v-card-text style="padding: 0px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="query_form" v-if="query_mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
-                  <v-textarea ref="field" rows="1" filled auto-grow hide-details v-model="query_item" label="Query" :rules="[v => !!v || '']" required></v-textarea>
+                  <v-textarea ref="field" rows="1" filled auto-grow hide-details v-model="query_item" label="Queries" :rules="[v => !!v || '']" required></v-textarea>
                 </v-form>
-                <div style="padding-top:10px; padding-bottom:10px" v-if="query_mode=='delete'" class="subtitle-1">{{ queryDialogText }}</div>
-                <v-divider v-if="query_mode=='delete'"></v-divider>
+                <div style="margin-top:10px; margin-bottom:10px" v-if="query_mode=='delete'" class="subtitle-1">{{ queryDialogText }}</div>
+                <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn color="#00b16a" @click="actionConfirm()">Confirm</v-btn>
-                  <v-btn color="error" @click="queryDialog=false" style="margin-left:5px">Cancel</v-btn>
+                  <v-btn color="#EF5354" @click="queryDialog=false" style="margin-left:5px">Cancel</v-btn>
                 </div>
               </v-flex>
             </v-layout>

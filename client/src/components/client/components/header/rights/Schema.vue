@@ -94,7 +94,7 @@
                       <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" color="error">{{ dialogOptions.cancel }}</v-btn>
+                      <v-btn :disabled="loading" @click="dialog = false" color="#EF5354">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>

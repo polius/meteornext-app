@@ -112,7 +112,7 @@
                     </div>
                     <div v-else>
                       <v-btn :loading="loading" color="#00b16a" @click="submitAuxiliary()">CONFIRM</v-btn>
-                      <v-btn :disabled="loading" color="error" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
+                      <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
                     </div>
                   </v-col>
                   <v-col cols="auto">
@@ -155,7 +155,7 @@
                   <v-divider style="margin-top:15px;"></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
                   </div>
                 </v-form>
               </v-flex>
@@ -191,7 +191,7 @@
                 </v-form>
                 <v-divider style="margin-top:20px; margin-bottom:20px"></v-divider>
                 <v-btn :loading="testLoading" color="#00b16a" @click="testConnection()">TEST CONNECTION</v-btn>
-                <v-btn :disabled="testLoading" color="error" @click="testDialog = false" style="margin-left:5px">CANCEL</v-btn>
+                <v-btn :disabled="testLoading" color="#EF5354" @click="testDialog = false" style="margin-left:5px">CANCEL</v-btn>
               </v-flex>
             </v-layout>
           </v-container>

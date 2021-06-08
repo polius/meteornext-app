@@ -47,8 +47,8 @@
                   <v-row no-gutters>
                     <v-col style="margin-right:5px">
                       <v-btn :loading="loading" @click="importSubmit" color="#00b16a" style="margin-right:5px">Import</v-btn>
-                      <v-btn v-if="['upload','processing','stopping'].includes(step)" :loading="step == 'stopping'" @click="cancelImport" color="error">Cancel</v-btn>
-                      <v-btn v-else :disabled="loading" @click="dialog = false" color="error">Cancel</v-btn>
+                      <v-btn v-if="['upload','processing','stopping'].includes(step)" :loading="step == 'stopping'" @click="cancelImport" color="#EF5354">Cancel</v-btn>
+                      <v-btn v-else :disabled="loading" @click="dialog = false" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>

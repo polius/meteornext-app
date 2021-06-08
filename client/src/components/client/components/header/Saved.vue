@@ -71,7 +71,7 @@
                       <v-btn :loading="loading" @click="deleteSaved" color="#00b16a">Confirm</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="confirmDialog = false" color="error">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="confirmDialog = false" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>

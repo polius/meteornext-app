@@ -39,7 +39,7 @@
           <v-chip outlined :color="getModeColor(item.mode)">{{ item.mode }}</v-chip>
         </template>
         <template v-slot:[`item.method`]="{ item }">
-          <span :style="'color: ' + getMethodColor(item.method)" style="font-weight:500">{{ item.method }}</span>
+          <span :style="'color: ' + getMethodColor(item.method)">{{ item.method }}</span>
         </template>
         <template v-slot:[`item.status`]="{ item }">
           <v-icon v-if="item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
@@ -49,9 +49,9 @@
           <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
           <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
           <v-icon v-else-if="item.status == 'WARNING'" title="Some queries failed" small style="color: #ff9800; margin-left:9px;">fas fa-check</v-icon>
-          <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #e74c3c; margin-left:11px;">fas fa-times</v-icon>
+          <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #EF5354; margin-left:11px;">fas fa-times</v-icon>
           <v-icon v-else-if="item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
-          <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #e74c3c; margin-left:8px;">fas fa-ban</v-icon>
+          <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #EF5354; margin-left:8px;">fas fa-ban</v-icon>
         </template>
       </v-data-table>
     </v-card>
@@ -124,7 +124,7 @@
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitFilter">Confirm</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="filterDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="filterDialog = false" style="margin-left:5px;">Cancel</v-btn>
                   <v-btn v-if="filterApplied" :disabled="loading" color="info" @click="clearFilter" style="float:right;">Remove Filter</v-btn>
                 </div>
               </v-flex>
@@ -137,13 +137,13 @@
     <v-dialog v-model="dateTimeDialog" persistent width="290px">
       <v-date-picker v-if="dateTimeMode == 'date'" v-model="dateTimeValue.date" color="info" scrollable>
         <v-btn text color="#00b16a" @click="dateTimeSubmit">Confirm</v-btn>
-        <v-btn text color="error" @click="dateTimeDialog = false">Cancel</v-btn>
+        <v-btn text color="#EF5354" @click="dateTimeDialog = false">Cancel</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="info" @click="dateTimeNow">Now</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="dateTimeMode == 'time'" v-model="dateTimeValue.time" color="info" format="24hr" scrollable>
         <v-btn text color="#00b16a" @click="dateTimeSubmit">Confirm</v-btn>
-        <v-btn text color="error" @click="dateTimeDialog = false">Cancel</v-btn>
+        <v-btn text color="#EF5354" @click="dateTimeDialog = false">Cancel</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="info" @click="dateTimeNow">Now</v-btn>
       </v-time-picker>
@@ -401,7 +401,7 @@ export default {
       else if (mode == 'PRO') return 'rgb(235, 95, 93)'
     },
     getMethodColor (method) {
-      if (method == 'DEPLOY') return '#e74c3c'
+      if (method == 'DEPLOY') return '#EF5354'
       else if (method == 'TEST') return '#ff9800'
       else if (method == 'VALIDATE') return '#4caf50'
     },

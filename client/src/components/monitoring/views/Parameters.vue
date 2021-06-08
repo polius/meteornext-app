@@ -25,7 +25,7 @@
           <v-spacer></v-spacer>
           <v-btn icon @click="servers_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 20px 20px;">
+        <v-card-text style="padding: 0px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
@@ -50,7 +50,7 @@
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitServers()">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="servers_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="servers_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -76,7 +76,7 @@
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitFilter()">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="filter_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="filter_dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                 </div>
               </v-flex>
             </v-layout>

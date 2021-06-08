@@ -65,7 +65,7 @@
                       <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
                     <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
-                      <v-btn :loading="loading2" @click="dialogCancel" color="error">{{ dialogOptions.cancel }}</v-btn>
+                      <v-btn :loading="loading2" @click="dialogCancel" color="#EF5354">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                     <v-col v-if="loading" cols="auto" class="flex-grow-0 flex-shrink-0">
                       <v-progress-circular indeterminate color="white" size="15" width="1.5" style="height:100%"></v-progress-circular>

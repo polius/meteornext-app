@@ -130,7 +130,7 @@
                       <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
                     <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialog = false" color="error">{{ dialogOptions.cancel }}</v-btn>
+                      <v-btn :disabled="loading" @click="dialog = false" color="#EF5354">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -146,13 +146,13 @@
     <v-dialog v-model="scheduleDialog" persistent width="290px">
       <v-date-picker v-if="scheduleMode == 'date'" v-model="scheduleDate" color="info" scrollable>
         <v-btn text color="#00b16a" @click="scheduleSubmit()">Confirm</v-btn>
-        <v-btn text color="error" @click="scheduleClose()">Cancel</v-btn>
+        <v-btn text color="#EF5354" @click="scheduleClose()">Cancel</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="info" @click="scheduleNow()">Now</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="scheduleMode == 'time'" v-model="scheduleTime" color="info" format="24hr" use-seconds scrollable>
         <v-btn text color="#00b16a" @click="scheduleSubmit()">Confirm</v-btn>
-        <v-btn text color="error" @click="scheduleClose()">Cancel</v-btn>
+        <v-btn text color="#EF5354" @click="scheduleClose()">Cancel</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="info" @click="scheduleNow()">Now</v-btn>
       </v-time-picker>

@@ -23,7 +23,7 @@
         <template v-slot:[`item.active`]="{ item }">
           <v-btn icon small @click="changeActive(item)">
             <v-icon v-if="item.active" title="Active" color="#00b16a" small>fas fa-circle</v-icon>
-            <v-icon v-else title="Inactive" color="error" small>fas fa-circle</v-icon>
+            <v-icon v-else title="Inactive" color="#EF5354" small>fas fa-circle</v-icon>
           </v-btn>
         </template>
       </v-data-table>
@@ -45,7 +45,7 @@
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn :loading="loading" color="#00b16a" @click="submitRelease()">CONFIRM</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px;">CANCEL</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="dialog=false" style="margin-left:5px;">CANCEL</v-btn>
                   </div>
                 </v-form>
               </v-flex>

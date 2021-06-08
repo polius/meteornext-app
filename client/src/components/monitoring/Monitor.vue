@@ -51,11 +51,11 @@
           <v-data-table :headers="logs_headers" :items="logs_items" hide-default-footer class="elevation-1">
             <template v-slot:[`item.general_log`]="{ item }">
               <span v-if="item.general_log == 'ON'"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>On</span>
-              <span v-else><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Off</span>
+              <span v-else><v-icon small color="#EF5354" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Off</span>
             </template>
             <template v-slot:[`item.slow_log`]="{ item }">
               <span v-if="item.slow_log == 'ON'"><v-icon small color="#00b16a" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>On</span>
-              <span v-else><v-icon small color="error" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Off</span>
+              <span v-else><v-icon small color="#EF5354" style="margin-right:10px; margin-bottom:2px;">fas fa-circle</v-icon>Off</span>
             </template>
           </v-data-table>
         </v-card>

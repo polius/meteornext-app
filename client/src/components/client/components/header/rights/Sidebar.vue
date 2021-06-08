@@ -44,7 +44,7 @@
                       <v-btn @click="removeRightSubmit" color="#00b16a">Delete</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn @click="sidebarDialog = false" color="error">Cancel</v-btn>
+                      <v-btn @click="sidebarDialog = false" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>

@@ -73,7 +73,7 @@
                       <v-btn :loading="loading" @click="dialogSubmit" :color="dialogSubmitText == 'Close' ? 'primary' : '#00b16a'">{{ dialogSubmitText }}</v-btn>
                     </v-col>
                     <v-col v-if="dialogCancelText.length > 0" style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="dialogCancel" color="error">{{ dialogCancelText }}</v-btn>
+                      <v-btn :disabled="loading" @click="dialogCancel" color="#EF5354">{{ dialogCancelText }}</v-btn>
                     </v-col>
                   </v-row>
                 </div>
@@ -115,7 +115,7 @@
                       <v-btn @click="editDialogSubmit" color="#00b16a">Save</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn @click="editDialogCancel" color="error">Cancel</v-btn>
+                      <v-btn @click="editDialogCancel" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>
