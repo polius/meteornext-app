@@ -56,7 +56,7 @@
                       <v-btn :loading="loading" @click="exportRowsSubmit" color="#00b16a">Export</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="exportDialog = false" color="error">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="exportDialog = false" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>

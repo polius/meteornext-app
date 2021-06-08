@@ -22,8 +22,8 @@
 
         <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="rgb(0, 177, 106)" style="margin-left:5px; margin-right:5px;" title="The execution finished successfully">SUCCESS</v-chip>
         <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="rgb(250, 130, 49)" style="margin-left:5px; margin-right:5px;" title="Some queries failed">WARNING</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="#e74c3c" style="margin-left:5px; margin-right:5px;" title="An error has occurred during the execution">FAILED</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'STOPPED'" label color="#e74c3c" style="margin-left:5px; margin-right:5px;" title="The execution has been interrupted">STOPPED</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="#EF5354" style="margin-left:5px; margin-right:5px;" title="An error has occurred during the execution">FAILED</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'STOPPED'" label color="#EF5354" style="margin-left:5px; margin-right:5px;" title="The execution has been interrupted">STOPPED</v-chip>
         <v-divider v-if="['SUCCESS','WARNING','FAILED','STOPPED'].includes(deployment['status'])" class="mx-3" inset vertical></v-divider>
 
         <v-toolbar-items class="hidden-sm-and-down">
@@ -64,9 +64,9 @@
               <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
               <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
               <v-icon v-else-if="item.status == 'WARNING'" title="Some queries failed" small style="color: #ff9800; margin-left:9px;">fas fa-check</v-icon>
-              <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #e74c3c; margin-left:11px;">fas fa-times</v-icon>
+              <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #EF5354; margin-left:11px;">fas fa-times</v-icon>
               <v-icon v-else-if="item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
-              <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #e74c3c; margin-left:8px;">fas fa-ban</v-icon>
+              <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #EF5354; margin-left:8px;">fas fa-ban</v-icon>
             </template>
             <template v-slot:[`item.created`]="{ item }">
               <span>{{ dateFormat(item.created) }}</span>
@@ -113,7 +113,7 @@
                 <td v-for="item in Object.keys(validation_data[0])" :key="item">
                   <span v-if="validation_data[0][item] == 'VALIDATING'" class="warning--text"><v-icon small color="warning" style="margin-right:10px;">fas fa-spinner</v-icon><b>{{ validation_data[0][item] }}</b></span>
                   <span v-else-if="validation_data[0][item] == 'SUCCEEDED'" style="color:#00b16a;"><v-icon small color="#00b16a" style="margin-right:10px;">fas fa-check</v-icon><b>{{ validation_data[0][item] }}</b></span>
-                  <span v-else-if="validation_data[0][item] == 'FAILED'" class="error--text"><v-icon small color="error" style="margin-right:10px;">fas fa-times</v-icon><b>{{ validation_data[0][item] }}</b></span>
+                  <span v-else-if="validation_data[0][item] == 'FAILED'" class="error--text"><v-icon small color="#EF5354" style="margin-right:10px;">fas fa-times</v-icon><b>{{ validation_data[0][item] }}</b></span>
                 </td>
               </tr>
             </template>
@@ -244,7 +244,7 @@
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" icon @click="information_dialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 20px 20px;">
+        <v-card-text style="padding: 0px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
@@ -309,7 +309,7 @@
                         <br>
                         <b class="orange--text">TEST</b> A simulation is performed (only SELECTs are executed)
                         <br>
-                        <b class="red--text">DEPLOY</b> Executes ALL queries
+                        <b style="color:#EF5354">DEPLOY</b> Executes ALL queries
                       </span>
                     </v-tooltip>
                   </div>
@@ -324,9 +324,9 @@
                         <div class="orange--text">TEST</div>
                       </template>
                     </v-radio>
-                    <v-radio value="deploy" color="red">
+                    <v-radio value="deploy" color="EF5354">
                       <template v-slot:label>
-                        <div class="red--text">DEPLOY</div>
+                        <div style="color:#EF5354">DEPLOY</div>
                       </template>
                     </v-radio>
                   </v-radio-group>
@@ -336,7 +336,7 @@
                   <v-divider v-if="information_dialog_mode != 'parameters'" style="margin-top:15px;"></v-divider>
                   <div v-if="information_dialog_mode != 'parameters'" style="margin-top:20px;">
                     <v-btn :loading="loading" color="#00b16a" @click="editSubmit()">{{ information_dialog_mode == 'edit' ? 'CONFIRM' : 'RE-DEPLOY' }}</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="information_dialog = false" style="margin-left:5px">CANCEL</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="information_dialog = false" style="margin-left:5px">CANCEL</v-btn>
                   </div>
                 </v-form>
               </v-flex>
@@ -349,13 +349,13 @@
     <v-dialog v-model="scheduleDialog" persistent width="290px">
       <v-date-picker v-if="schedule_mode=='date'" v-model="schedule_date" color="info" scrollable>
         <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
-        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="#EF5354" @click="schedule_close()">Cancel</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="info" @click="schedule_now()">Now</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="schedule_mode=='time'" v-model="schedule_time" color="info" format="24hr" scrollable>
         <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
-        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="#EF5354" @click="schedule_close()">Cancel</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="info" @click="schedule_now()">Now</v-btn>
       </v-time-picker>
@@ -366,7 +366,7 @@
         <v-toolbar-title class="white--text subtitle-1">{{ query_dialog_title }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
-        <v-card-text style="padding: 0px 20px 20px;">
+        <v-card-text style="padding: 0px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
@@ -374,10 +374,10 @@
                   <v-textarea ref="field" rows="1" filled auto-grow hide-details v-model="query_dialog_item" label="Query" :rules="[v => !!v || '']" required></v-textarea>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="query_dialog_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected queries?</div>
-                <v-divider v-if="query_dialog_mode=='delete'"></v-divider>
+                <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn color="#00b16a" @click="queryActionConfirm()">Confirm</v-btn>
-                  <v-btn color="error" @click="query_dialog=false" style="margin-left:5px">Cancel</v-btn>
+                  <v-btn color="#EF5354" @click="query_dialog=false" style="margin-left:5px">Cancel</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -454,13 +454,13 @@
                   <div class="subtitle-1 font-weight-medium">METHOD</div>
                   <v-radio-group v-model="stop_execution_mode" hide-details style="margin-top:10px; margin-bottom:20px;">
                     <v-radio :disabled="deployment['stopped'] != null" label="Graceful - Wait current databases to finish." value="graceful" color="warning"></v-radio>
-                    <v-radio label="Forceful - Do not wait current databases to finish and stop ongoing queries." value="forceful" color="error"></v-radio>
+                    <v-radio label="Forceful - Do not wait current databases to finish and stop ongoing queries." value="forceful" color="#EF5354"></v-radio>
                   </v-radio-group>
                 </div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn color="#00b16a" @click="actionSubmit()">Confirm</v-btn>
-                  <v-btn color="error" @click="action_dialog=false" style="margin-left:5px;">Cancel</v-btn>
+                  <v-btn color="#EF5354" @click="action_dialog=false" style="margin-left:5px;">Cancel</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -1334,7 +1334,7 @@
         else return '#424242'
       },
       getMethodColor (method) {
-        if (method == 'DEPLOY') return '#e74c3c'
+        if (method == 'DEPLOY') return '#EF5354'
         else if (method == 'TEST') return '#ff9800'
         else if (method == 'VALIDATE') return '#4caf50'
       },

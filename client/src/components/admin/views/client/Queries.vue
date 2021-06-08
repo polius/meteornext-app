@@ -116,7 +116,7 @@
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitFilter">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="filterDialog = false" style="margin-left:5px;">CANCEL</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="filterDialog = false" style="margin-left:5px;">CANCEL</v-btn>
                   <v-btn v-show="filterApplied" :disabled="loading" color="info" @click="clearFilter" style="float:right;">Remove Filter</v-btn>
                 </div>
               </v-flex>
@@ -129,13 +129,13 @@
     <v-dialog v-model="dateTimeDialog" persistent width="290px">
       <v-date-picker v-if="dateTimeMode == 'date'" v-model="dateTimeValue.date" color="info" scrollable>
         <v-btn text color="#00b16a" @click="dateTimeSubmit">Confirm</v-btn>
-        <v-btn text color="error" @click="dateTimeDialog = false">Cancel</v-btn>
+        <v-btn text color="#EF5354" @click="dateTimeDialog = false">Cancel</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="info" @click="dateTimeNow">Now</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="dateTimeMode == 'time'" v-model="dateTimeValue.time" color="info" format="24hr" use-seconds scrollable>
         <v-btn text color="#00b16a" @click="dateTimeSubmit">Confirm</v-btn>
-        <v-btn text color="error" @click="dateTimeDialog = false">Cancel</v-btn>
+        <v-btn text color="#EF5354" @click="dateTimeDialog = false">Cancel</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="info" @click="dateTimeNow">Now</v-btn>
       </v-time-picker>

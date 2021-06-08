@@ -40,7 +40,7 @@
                       <v-btn :loading="loading" @click="confirmDialogSubmit" color="#00b16a">Confirm</v-btn>
                     </v-col>
                     <v-col style="margin-bottom:10px;">
-                      <v-btn :disabled="loading" @click="confirmDialogCancel" color="error">Cancel</v-btn>
+                      <v-btn :disabled="loading" @click="confirmDialogCancel" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
                 </div>                

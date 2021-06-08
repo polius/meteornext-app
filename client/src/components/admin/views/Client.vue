@@ -31,7 +31,7 @@
           <v-btn @click="serverDialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-progress-linear v-show="loading" indeterminate></v-progress-linear>
-        <v-card-text style="padding: 0px 20px 20px;">
+        <v-card-text style="padding: 0px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>

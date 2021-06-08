@@ -49,7 +49,7 @@
                   <br>
                   <b class="orange--text">TEST</b> A simulation is performed (only SELECTs are executed)
                   <br>
-                  <b class="red--text">DEPLOY</b> Executes ALL queries
+                  <b style="color:#EF5354">DEPLOY</b> Executes ALL queries
                 </span>
               </v-tooltip>
             </div>
@@ -65,9 +65,9 @@
                   <div class="orange--text">TEST</div>
                 </template>
               </v-radio>
-              <v-radio value="deploy" color="red">
+              <v-radio value="deploy" color="#EF5354">
                 <template v-slot:label>
-                  <div class="red--text">DEPLOY</div>
+                  <div style="color:#EF5354">DEPLOY</div>
                 </template>
               </v-radio>
             </v-radio-group>
@@ -80,7 +80,7 @@
 
             <div style="margin-top:20px;">
               <v-btn :loading="loading_env || loading_code" color="#00b16a" @click="submitDeploy()">CREATE DEPLOY</v-btn>
-              <router-link to="/deployments"><v-btn :disabled="loading_env || loading_code" color="error" style="margin-left:5px">CANCEL</v-btn></router-link>
+              <router-link to="/deployments"><v-btn :disabled="loading_env || loading_code" color="#EF5354" style="margin-left:5px">CANCEL</v-btn></router-link>
             </div>
           </v-form>
         </v-flex>
@@ -90,13 +90,13 @@
     <v-dialog v-model="scheduleDialog" persistent width="290px">
       <v-date-picker v-if="schedule_mode=='date'" v-model="schedule_date" color="info" scrollable>
         <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
-        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="#EF5354" @click="schedule_close()">Cancel</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="info" @click="schedule_now()">Now</v-btn>
       </v-date-picker>
       <v-time-picker v-else-if="schedule_mode=='time'" v-model="schedule_time" color="info" format="24hr" scrollable>
         <v-btn text color="#00b16a" @click="schedule_submit()">Confirm</v-btn>
-        <v-btn text color="error" @click="schedule_close()">Cancel</v-btn>
+        <v-btn text color="#EF5354" @click="schedule_close()">Cancel</v-btn>
         <v-spacer></v-spacer>
         <v-btn text color="info" @click="schedule_now()">Now</v-btn>
       </v-time-picker>

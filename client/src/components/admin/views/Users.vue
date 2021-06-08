@@ -30,11 +30,11 @@
         </template>
         <template v-slot:[`item.mfa`]="{ item }">
           <v-icon v-if="item.mfa" :title="`MFA Enabled (${item.mfa == '2fa' ? 'Virtual 2FA Device' : 'Security Key'})`" small color="#00b16a" style="margin-left:4px;">fas fa-lock</v-icon>
-          <v-icon v-else small title="MFA Disabled" color="error" style="margin-left:4px;">fas fa-unlock</v-icon>
+          <v-icon v-else small title="MFA Disabled" color="#EF5354" style="margin-left:4px;">fas fa-unlock</v-icon>
         </template>
         <template v-slot:[`item.admin`]="{ item }">
           <v-icon v-if="item.admin" title="Admin User" small color="#00b16a" style="margin-left:8px; font-size:16px">fas fa-user-shield</v-icon>
-          <v-icon v-else small title="Regular User" color="error" style="margin-left:9px; font-size:17px">fas fa-user</v-icon>
+          <v-icon v-else small title="Regular User" color="#EF5354" style="margin-left:9px; font-size:17px">fas fa-user</v-icon>
         </template>
         <template v-slot:[`item.created_at`]="{ item }">
           <span>{{ item.created_at }}</span>
@@ -44,7 +44,7 @@
         </template>
         <template v-slot:[`item.last_ping`]="{ item }">
           <v-icon v-if="isOnline(item.last_ping)" :title="lastOnline(item)" small color="#00b16a" style="margin-left:8px;">fas fa-circle</v-icon>
-          <v-icon v-else :title="lastOnline(item)" small color="error" style="margin-left:8px;">fas fa-circle</v-icon>
+          <v-icon v-else :title="lastOnline(item)" small color="#EF5354" style="margin-left:8px;">fas fa-circle</v-icon>
         </template>
       </v-data-table>
     </v-card>
@@ -56,7 +56,7 @@
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 20px 20px;">
+        <v-card-text style="padding: 0px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
@@ -68,15 +68,15 @@
                   <v-text-field v-model="item.coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" label="Coins" required style="padding-top:0px;"></v-text-field>
                   <v-autocomplete v-model="item.group" :items="groups" :rules="[v => !!v || '']" label="Group" required hide-details style="padding-top:0px; margin-bottom:20px;"></v-autocomplete>
                   <v-checkbox v-model="item.admin" label="Administrator" color="info" style="margin-top:10px;" hide-details></v-checkbox>
-                  <v-checkbox v-model="item.disabled" label="Disable Account" color="error" style="margin-top:10px;" hide-details></v-checkbox>
+                  <v-checkbox v-model="item.disabled" label="Disable Account" color="#EF5354" style="margin-top:10px;" hide-details></v-checkbox>
                 </v-form>
-                <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
-                <v-alert v-if="mode=='delete'" type="error" dense>All selected users related data (deployments, client, inventory) will be deleted.</v-alert>
+                <v-alert v-if="mode=='delete'" type="#EF5354" dense style="margin-top:15px"><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>All selected users related data (deployments, client, inventory) will be deleted</v-alert>
+                <div style="margin-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:20px;">
                   <v-col cols="auto" class="mr-auto">
                     <v-btn :loading="loading" color="#00b16a" @click="submitUser()">Confirm</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="dialog=false" style="margin-left:5px">Cancel</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="dialog=false" style="margin-left:5px">Cancel</v-btn>
                   </v-col>
                   <v-col cols="auto">
                     <v-btn v-if="mode == 'edit'" :disabled="loading" @click="mfaDialog = true" color="info">Manage MFA</v-btn>
@@ -127,7 +127,7 @@
                   <v-divider style="margin-top:15px;"></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
                   </div>
                 </v-form>
               </v-flex>

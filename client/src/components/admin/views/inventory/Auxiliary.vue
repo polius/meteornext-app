@@ -28,7 +28,7 @@
           <v-spacer></v-spacer>
           <v-btn @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 20px 20px;">
+        <v-card-text style="padding: 0px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
@@ -96,7 +96,7 @@
                 <v-row no-gutters style="margin-top:20px;">
                   <v-col cols="auto" class="mr-auto">
                     <v-btn :loading="loading" color="#00b16a" @click="submitAuxiliary()">CONFIRM</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="dialog = false" style="margin-left:5px">CANCEL</v-btn>
                   </v-col>
                   <v-col cols="auto">
                     <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="openTest()">Test Connection</v-btn>
@@ -137,7 +137,7 @@
                 </v-form>
                 <v-divider style="margin-top:20px; margin-bottom:20px"></v-divider>
                 <v-btn :loading="testLoading" color="#00b16a" @click="testConnection()">TEST CONNECTION</v-btn>
-                <v-btn :disabled="testLoading" color="error" @click="testDialog = false" style="margin-left:5px">CANCEL</v-btn>
+                <v-btn :disabled="testLoading" color="#EF5354" @click="testDialog = false" style="margin-left:5px">CANCEL</v-btn>
               </v-flex>
             </v-layout>
           </v-container>
@@ -179,7 +179,7 @@
                   <v-divider style="margin-top:15px;"></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
-                    <v-btn :disabled="loading" color="error" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
                   </div>
                 </v-form>
               </v-flex>

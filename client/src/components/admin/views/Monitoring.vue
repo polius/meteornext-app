@@ -48,7 +48,7 @@
           <v-btn @click="serverDialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-progress-linear v-show="loading" indeterminate></v-progress-linear>
-        <v-card-text style="padding: 0px 20px 20px;">
+        <v-card-text style="padding: 0px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
@@ -149,7 +149,7 @@
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="submitFilter">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="filterDialog = false" style="margin-left:5px;">CANCEL</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="filterDialog = false" style="margin-left:5px;">CANCEL</v-btn>
                   <v-btn v-show="filterApplied" :disabled="loading" color="info" @click="clearFilter" style="float:right;">Remove Filter</v-btn>
                 </div>
               </v-flex>
@@ -176,7 +176,7 @@
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
                   <v-btn :loading="loading" color="#00b16a" @click="confirmDialogSubmit">CONFIRM</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="confirmDialog = false" style="margin-left:5px;">CANCEL</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="confirmDialog = false" style="margin-left:5px;">CANCEL</v-btn>
                 </div>
               </v-flex>
             </v-layout>

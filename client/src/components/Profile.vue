@@ -39,7 +39,7 @@
                     <v-divider></v-divider>
                     <v-row no-gutters style="margin-top:20px;">
                       <v-btn :loading="loadingDialog" color="#00b16a" @click="submitPassword">CONFIRM</v-btn>
-                      <v-btn :disabled="loadingDialog" color="error" @click="passwordDialog = false" style="margin-left:5px">CANCEL</v-btn>
+                      <v-btn :disabled="loadingDialog" color="#EF5354" @click="passwordDialog = false" style="margin-left:5px">CANCEL</v-btn>
                     </v-row>
                   </v-flex>
                 </v-layout>

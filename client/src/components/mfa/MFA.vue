@@ -48,7 +48,7 @@
                       </v-radio-group>
                     </div>
                     <div v-else>
-                      <v-alert dense v-if="mfaMode == 'webauthn' && webauthn.status == 'ko'" type="error">{{ webauthn.error }}</v-alert>
+                      <v-alert dense v-if="mfaMode == 'webauthn' && webauthn.status == 'ko'" type="#EF5354">{{ webauthn.error }}</v-alert>
                       <v-card v-if="mfaMode == '2fa'">
                         <v-card-text>
                           <v-row no-gutters>
@@ -96,7 +96,7 @@
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:20px;">
                   <v-btn :disabled="mfa.mode == null && mfaDialogStep == 2 && mfaMode == 'webauthn' && webauthn.status != 'ok'" :loading="loading" color="#00b16a" @click="submitMFA">{{ mfa.mode ? 'DISABLE MFA' : 'CONFIRM' }}</v-btn>
-                  <v-btn :disabled="loading" color="error" @click="cancelMFA" style="margin-left:5px">CANCEL</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="cancelMFA" style="margin-left:5px">CANCEL</v-btn>
                 </v-row>
               </v-flex>
             </v-layout>
