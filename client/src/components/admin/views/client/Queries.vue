@@ -19,8 +19,8 @@
         <span style="display:block; min-width:70px">{{ item.database }}</span>
       </template>
       <template v-slot:[`item.status`]="{ item }">
-        <span :style="`display:block; min-width:78px; color:${item.status ? '#00b16a' : '#e74d3c'};`">
-          <v-icon small :title="item.status ? 'Success' : 'Failed'" :style="`color:${item.status ? '#00b16a' : '#e74d3c'}; margin-right:5px; margin-bottom:2px`">{{ item.status ? 'fas fa-check-circle' : 'fas fa-times-circle' }}</v-icon>
+        <span :style="`display:block; min-width:78px; color:${item.status ? '#00b16a' : '#EF5354'};`">
+          <v-icon small :title="item.status ? 'Success' : 'Failed'" :style="`color:${item.status ? '#00b16a' : '#EF5354'}; margin-right:5px; margin-bottom:2px`">{{ item.status ? 'fas fa-check-circle' : 'fas fa-times-circle' }}</v-icon>
           {{ item.status ? 'Success' : 'Failed' }}
         </span>
       </template>

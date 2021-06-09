@@ -388,7 +388,7 @@ class Monitoring:
                             "short": False
                         }
                     ],
-                    "color": 'good' if event in ['available','connections_stable'] else 'warning' if event in ['restarted','connections_warning'] else '#3e9cef' if event == 'parameters' else 'danger',
+                    "color": 'good' if event in ['available','connections_stable'] else 'warning' if event in ['restarted','connections_warning'] else '#EF5354' if event == 'parameters' else 'danger',
                     "ts": calendar.timegm(time.gmtime())
                 }
             ]

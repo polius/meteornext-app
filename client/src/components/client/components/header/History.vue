@@ -55,7 +55,7 @@ export default {
         { headerName: 'Status', colId: 'status', field: 'status', sortable: true, filter: true, resizable: true, editable: false,
           cellRenderer: function(params) {
             if (params.value) return '<i class="fas fa-check-circle" title="Success" style="color:#00b16a; margin-right:8px;"></i>Success'
-            else return '<i class="fas fa-times-circle" title="Failed" style="color:#e74d3c; margin-right:8px;"></i>Failed'
+            else return '<i class="fas fa-times-circle" title="Failed" style="color:#EF5354; margin-right:8px;"></i>Failed'
           }
         },
         { headerName: 'Records', colId: 'records', field: 'records', sortable: true, filter: true, resizable: true, editable: false },

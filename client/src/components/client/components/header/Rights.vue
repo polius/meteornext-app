@@ -196,7 +196,7 @@ export default {
         { headerName: 'Action', colId: 'action', field: 'action', sortable: false, filter: false, resizable: true, editable: false, 
           cellStyle: function(params) {
             if (['Grant','Create'].includes(params.value)) return { color: '#00b16a' }
-            else if (params.value == 'Revoke') return { color: '#e74d3c' }
+            else if (params.value == 'Revoke') return { color: '#EF5354' }
             else return { color: '#fa8131' }
           }
         },
