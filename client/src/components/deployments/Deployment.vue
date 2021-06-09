@@ -51,7 +51,7 @@
               {{ item.environment.name }}
             </template>
             <template v-slot:[`item.mode`]="{ item }">
-              <v-chip outlined :color="getModeColor(item.mode)">{{ item.mode }}</v-chip>
+              <v-icon small :title="item.mode" :color="getModeColor(item.mode)" :style="`text-transform:capitalize; margin-left:${item.mode == 'BASIC' ? '8px' : '6px'}`">{{ item.mode == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon>
             </template>
             <template v-slot:[`item.method`]="{ item }">
               <span :style="'color: ' + getMethodColor(item.method.toUpperCase())">{{ item.method.toUpperCase() }}</span>
@@ -221,7 +221,7 @@
                   <span class="font-weight-medium" style="color: rgb(0, 177, 106)">{{ item.succeeded }}</span>
                 </template>
                 <template v-slot:[`item.failed`]="{ item }">
-                  <span class="font-weight-medium" style="color: rgb(231, 76, 60)">{{ item.failed }}</span>
+                  <span class="font-weight-medium" style="color: #EF5354">{{ item.failed }}</span>
                 </template>
                 <template v-slot:[`item.rollback`]="{ item }">
                   <span class="font-weight-medium" style="color: rgb(250, 130, 49)">{{ item.rollback }}</span>
@@ -324,7 +324,7 @@
                         <div class="orange--text">TEST</div>
                       </template>
                     </v-radio>
-                    <v-radio value="deploy" color="EF5354">
+                    <v-radio value="deploy" color="#EF5354">
                       <template v-slot:label>
                         <div style="color:#EF5354">DEPLOY</div>
                       </template>

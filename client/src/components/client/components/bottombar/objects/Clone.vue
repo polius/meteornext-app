@@ -98,7 +98,7 @@
                   </v-progress-linear>
                   <div class="body-1" style="margin-top:10px">
                     <v-icon v-if="progressStep == 'success'" title="Finished successfully" small style="color:rgb(0, 177, 106); padding-bottom:2px;">fas fa-check-circle</v-icon>
-                    <v-icon v-else-if="progressStep == 'fail'" title="Finished with errors" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
+                    <v-icon v-else-if="progressStep == 'fail'" title="Finished with errors" small style="color:#EF5354; padding-bottom:2px;">fas fa-times-circle</v-icon>
                     <v-icon v-else-if="progressStep == 'stop'" title="Stopped" small style="color:#fa8231; padding-bottom:2px;">fas fa-exclamation-circle</v-icon>
                     <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
                     <span style="margin-left:8px">{{ progressText }}</span>  

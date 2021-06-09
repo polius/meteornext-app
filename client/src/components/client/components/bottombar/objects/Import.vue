@@ -23,7 +23,7 @@
                       <v-row no-gutters>
                         <v-col cols="auto">
                           <v-icon v-if="step == 'success'" title="Success" small style="color:rgb(0, 177, 106); padding-bottom:2px;">fas fa-check-circle</v-icon>
-                          <v-icon v-else-if="step == 'fail'" title="Failed" small style="color:rgb(231, 76, 60); padding-bottom:2px;">fas fa-times-circle</v-icon>
+                          <v-icon v-else-if="step == 'fail'" title="Failed" small style="color:#EF5354; padding-bottom:2px;">fas fa-times-circle</v-icon>
                           <v-icon v-else-if="step == 'stop'" title="Stopped" small style="color:#fa8231; padding-bottom:2px;">fas fa-exclamation-circle</v-icon>
                           <v-progress-circular v-else indeterminate size="16" width="2" color="primary" style="margin-top:-2px"></v-progress-circular>
                         </v-col>
