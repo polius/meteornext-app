@@ -246,11 +246,7 @@ export default {
       this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
     },
     showTopNavbar() {
-      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/viewer')) return true
-      return false
-    },
-    showBottomNavbar() {
-      if (window.location.pathname != '/login' && !window.location.pathname.startsWith('/viewer') && window.location.pathname != '/deployments/information') return true
+      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/viewer') && !window.location.pathname.startsWith('/install')) return true
       return false
     },
     openNotifications() {

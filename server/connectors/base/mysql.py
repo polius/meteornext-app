@@ -27,7 +27,7 @@ class MySQL:
                 sshtunnel.SSH_TIMEOUT = 5.0
                 password = None if self._server['ssh']['password'] is None or len(self._server['ssh']['password'].strip()) == 0 else self._server['ssh']['password']
                 pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=password)
-                self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], self._server['sql']['port']), mute_exceptions=True, logger=self.__logger())
+                self._tunnel = sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), mute_exceptions=True, logger=self.__logger())
                 self._tunnel.start()
                 if not self._tunnel.is_active:
                     raise Exception("Can't connect to the SSH Server")
@@ -36,7 +36,7 @@ class MySQL:
             port = self._tunnel.local_bind_port if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['port']
             database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
             ssl = self.__ssl()
-            self._sql = pymysql.connect(host=hostname, port=port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
+            self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
         except Exception:
             self.stop()
             raise
@@ -50,6 +50,9 @@ class MySQL:
             self._tunnel.stop(force=True)
         except Exception as e:
             pass
+
+    def use(self, database):
+        self._sql.select_db(database)
 
     def execute(self, query, args=None, database=None, retry=True):
         try:

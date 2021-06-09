@@ -1,4 +1,3 @@
-import json
 import pyotp
 import bcrypt
 from flask import request, jsonify, Blueprint

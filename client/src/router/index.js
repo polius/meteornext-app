@@ -15,10 +15,10 @@ let router = new VueRouter({
       meta: { requiresAuth: true }  
     },
     {
-      path: '/setup',
-      name: 'setup',
+      path: '/install',
+      name: 'install',
       props: true,
-      component: () => import('../components/Setup')
+      component: () => import('../components/Install')
     },
     {
       path: '/login',

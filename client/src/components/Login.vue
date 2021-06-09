@@ -11,20 +11,20 @@
                   <div class="display-2" style="margin-top:10px;"><b>Meteor</b> Next</div>
                   <div class="headline" style="margin-top:10px; margin-bottom:20px;">LOGIN</div>
                   <v-divider></v-divider>
-                  <v-alert v-if="show_alert" prominent dense type="warning">
+                  <v-alert v-if="showInstall" dense color="#fb8c00">
                     <v-row align="center">
-                      <v-col align="left">A setup is required before login</v-col>
+                      <v-col align="left"><v-icon small style="margin-bottom:2px; margin-right:12px">fas fa-exclamation-triangle</v-icon>A setup is required before login</v-col>
                       <v-col class="shrink">
-                        <v-btn @click="setup()">SETUP</v-btn>
+                        <v-btn @click="install">INSTALL</v-btn>
                       </v-col>
                     </v-row>
                   </v-alert>
                   <v-form ref="form" @submit.prevent style="margin-top:20px">
                     <div v-if="mfa == null">
-                      <v-text-field ref="username" filled v-model="username" name="username" label="Username" :rules="[v => !!v || '']" required v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details>
+                      <v-text-field :disabled="showInstall" ref="username" filled v-model="username" name="username" label="Username" :rules="[v => !!v || '']" required v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details>
                         <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-user</v-icon></template>
                       </v-text-field>
-                      <v-text-field ref="password" filled v-model="password" name="password" label="Password" :rules="[v => !!v || '']" required type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details>
+                      <v-text-field :disabled="showInstall" ref="password" filled v-model="password" name="password" label="Password" :rules="[v => !!v || '']" required type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details>
                         <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-lock</v-icon></template>
                       </v-text-field>
                     </div>
@@ -44,8 +44,8 @@
                       </v-card>
                     </div>
                   </v-form>
-                  <v-btn v-if="!(mfa == 'webauthn')" x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()">LOGIN</v-btn>
-                  <v-checkbox v-if="mfa == null" v-model="remember" label="Remember username" hide-details style="margin-bottom:2px"></v-checkbox>
+                  <v-btn v-if="!(mfa == 'webauthn')" :disabled="showInstall" x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()">LOGIN</v-btn>
+                  <v-checkbox :disabled="showInstall" v-if="mfa == null" v-model="remember" label="Remember username" hide-details style="margin-bottom:2px"></v-checkbox>
                 </v-card-text>
               </v-card>
             </v-slide-y-transition>
@@ -77,7 +77,7 @@ export default {
     mfa: null,
     remember: false,
     loading: false,
-    show_alert: false,
+    showInstall: false,
 
     // MFA
     mfaDialog: false,
@@ -106,6 +106,9 @@ export default {
       vm.prevRoute = from['path']
       vm.from = from
     })
+  },
+  created() {
+    this.checkInstall()
   },
   mounted() {
     if (this.rememberVuex) {
@@ -174,29 +177,25 @@ export default {
         this.loading = false
         if (error.response === undefined) this.notification("No internet connection", '#EF5354')
         else if (error.response.status == 401) this.notification(error.response.data.message, '#EF5354')
-        else if (this.mfa == null) this.checkSetup()
+        else if (this.mfa == null) this.notification("Can't establish a connection to the server", '#EF5354')
       }
     },
-    checkSetup() {
-      this.loading = true
+    checkInstall() {
       axios.get('/setup')
         .then((response) => {
-          if (response.data.setup) this.show_alert = true
-          else this.login_success()
+          this.showInstall = response.data.available
         })
-        .catch((error) => {
-          if (error.response.status != 400) this.notification("Can't establish a connection to the server", '#EF5354')
-          else this.notification(error.response.data.message, '#EF5354')
+        .catch(() => {
+          this.notification("Can't establish a connection to the server", '#EF5354')
         })
-        .finally(() => this.loading = false)
+    },
+    install() {
+      this.$router.push('/install')
     },
     login_success() {
       if (this.$route.query.url !== undefined) this.$router.push({ path: this.$route.query.url })
-      else if (['', '/setup'].includes(this.prevRoute)) this.$router.push('/')
+      else if (['', '/install'].includes(this.prevRoute)) this.$router.push('/')
       else this.$router.push(this.prevRoute)
-    },
-    setup() {
-      this.$router.push('/setup')
     },
     notification(message, color) {
       this.snackbarText = message

@@ -9,15 +9,20 @@ class OrderedDictCursor(DictCursorMixin, Cursor):
 class MySQL:
     def __init__(self, config):
         SQL_CONFIG = {
-            "host": config['sql']['hostname'],
-            "port": int(config['sql']['port']),
-            "db": config['sql']['database'],
-            "password": config['sql']['password'],
-            "user": config['sql']['username'],
+            "host": config['hostname'],
+            "port": int(config['port']),
+            "db": config['database'],
+            "password": config['password'],
+            "user": config['username'],
             "charset": "utf8mb4",
             "use_unicode": True,
             "cursorclass": OrderedDictCursor,
             "autocommit": False,
+            "ssl_ca": config['ssl_ca_certificate'],
+            "ssl_cert": config['ssl_client_certificate'],
+            "ssl_key": config['ssl_client_key'],
+            "ssl_verify_cert": config['ssl_verify_ca'],
+            "ssl_verify_identity": config['ssl_verify_ca']
         }
         POOL_CONFIG = {
             "creator": pymysql,
