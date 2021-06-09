@@ -280,7 +280,8 @@ let router = new VueRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.path == '/login' && store.getters['app/isLoggedIn']) next('/')
+  if (to.path == '/logout') store.dispatch('app/logout').then(() => next({ path: '/login' }))
+  else if (to.path == '/login' && store.getters['app/isLoggedIn']) next('/')
   else if (to.matched.some(record => record.meta.requiresAdmin)) {
     if (store.getters['app/isLoggedIn'] && store.getters['app/admin']) next()
     else next({ path: '/' })
