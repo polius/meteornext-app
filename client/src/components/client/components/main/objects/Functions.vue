@@ -69,6 +69,18 @@
   </div>
 </template>
 
+<style scoped>
+  ::v-deep .v-list-item__title {
+  font-size: 0.9rem;
+}
+::v-deep .v-list-item__content {
+  padding:0px;
+}
+::v-deep .v-list-item {
+  min-height:40px;
+}
+</style>
+
 <script>
 import {AgGridVue} from "ag-grid-vue";
 import EventBus from '../../../js/event-bus'

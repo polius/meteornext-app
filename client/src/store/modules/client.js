@@ -54,6 +54,7 @@ const connection = () => {
     contentColumnsName: [],
     contentColumnsDefault: [],
     contentColumnsType: {},
+    contentColumnsExtra: [],
     contentPks: [],
     contentSearchColumn: '',
     contentSearchFilterItems: ['=', '!=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN', 'IS NULL', 'IS NOT NULL'],
