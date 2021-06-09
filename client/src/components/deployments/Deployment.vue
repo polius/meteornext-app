@@ -51,7 +51,7 @@
               {{ item.environment.name }}
             </template>
             <template v-slot:[`item.mode`]="{ item }">
-              <v-icon small :title="item.mode" :color="getModeColor(item.mode)" :style="`text-transform:capitalize; margin-left:${item.mode == 'BASIC' ? '8px' : '6px'}`">{{ item.mode == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon>
+              <v-icon small :title="item.mode.charAt(0).toUpperCase() + item.mode.slice(1).toLowerCase()" :color="getModeColor(item.mode)" :style="`text-transform:capitalize; margin-left:${item.mode == 'BASIC' ? '8px' : '6px'}`">{{ item.mode == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon>
             </template>
             <template v-slot:[`item.method`]="{ item }">
               <span :style="'color: ' + getMethodColor(item.method.toUpperCase())">{{ item.method.toUpperCase() }}</span>
