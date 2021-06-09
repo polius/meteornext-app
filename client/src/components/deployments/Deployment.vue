@@ -54,7 +54,7 @@
               <v-chip outlined :color="getModeColor(item.mode)">{{ item.mode }}</v-chip>
             </template>
             <template v-slot:[`item.method`]="{ item }">
-              <span :style="'color: ' + getMethodColor(item.method.toUpperCase())" style="font-weight:500">{{ item.method.toUpperCase() }}</span>
+              <span :style="'color: ' + getMethodColor(item.method.toUpperCase())">{{ item.method.toUpperCase() }}</span>
             </template>
             <template v-slot:[`item.status`]="{ item }">
               <v-icon v-if="item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
@@ -406,7 +406,7 @@
                     <template v-slot:item="props">
                       <tr :style="`background-color:` + selectRow(props.item.id)">
                         <td>{{ props.item.environment }}</td>
-                        <td><span :style="'color: ' + getMethodColor(props.item.method.toUpperCase())" style="font-weight:500">{{ props.item.method.toUpperCase() }}</span></td>
+                        <td><span :style="'color: ' + getMethodColor(props.item.method.toUpperCase())">{{ props.item.method.toUpperCase() }}</span></td>
                         <td>
                           <v-icon v-if="props.item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
                           <v-icon v-else-if="props.item.status == 'SCHEDULED'" title="Scheduled" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
