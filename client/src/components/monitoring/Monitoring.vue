@@ -392,7 +392,7 @@
             let pending = (servers[i]['updated'] == null || (servers[i]['summary'] == null && servers[i]['available']))
             if (pending == 1) pending_servers = true
             // Get Status Color
-            let color = (pending == 1) ? 'orange' : (servers[i]['available']) ? 'teal' : 'red'
+            let color = (pending == 1) ? 'orange' : (servers[i]['available']) ? 'teal' : '#EF5354'
             // Build Item
             let item = {id: servers[i]['server_id'], name: servers[i]['server_name'], region: servers[i]['region_name'], hostname: servers[i]['hostname'], available: servers[i]['available'], error: servers[i]['error'], connections: conn, color: color}
             this.servers_origin.push(item)
@@ -512,7 +512,7 @@
         for (let i = 0; i < this.servers_origin.length; ++i) {
           if (this.filter == 'All') servers.push(this.servers_origin[i])
           else if (this.filter == 'Available' && this.servers_origin[i]['color'] == 'teal') servers.push(this.servers_origin[i])
-          else if (this.filter == 'Unavailable' && this.servers_origin[i]['color'] == 'red') servers.push(this.servers_origin[i])
+          else if (this.filter == 'Unavailable' && this.servers_origin[i]['color'] == '#EF5354') servers.push(this.servers_origin[i])
           else if (this.filter == 'Loading' && this.servers_origin[i]['color'] == 'orange') servers.push(this.servers_origin[i])
         }
         // Apply Search

@@ -34,7 +34,7 @@
           <!-- eslint-disable-next-line -->
           <template v-slot:activator="{ on }">
             <v-btn icon @click.stop="openNotifications()" title="Notifications">
-              <v-badge v-if="notifications.length > 0" color="red" overlap>
+              <v-badge v-if="notifications.length > 0" color="#EF5354" overlap>
                 <span slot="badge">{{ notifications.length }}</span>
                 <v-icon>fas fa-bell</v-icon>
               </v-badge>
