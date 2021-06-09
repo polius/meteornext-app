@@ -358,7 +358,7 @@ CREATE TABLE `monitoring_servers` (
   `error` TEXT NULL,
   `updated` DATETIME NULL,
   PRIMARY KEY (`server_id`),
-  FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`),
+  FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `monitoring_queries` (

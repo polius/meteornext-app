@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import copy
 import uuid
 import bcrypt
 import hashlib
@@ -50,35 +51,44 @@ class Setup:
         self._app = app
         self._url_prefix = url_prefix
         self._setup_file = "{}/server.conf".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
+        self._keys_path = "{}/".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/".format(os.path.dirname(sys.executable))
         self._schema_file = "{}/models/schema.sql".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/models/schema.sql".format(sys._MEIPASS)
         self._logs_folder = "{}/logs".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/logs".format(os.path.dirname(sys.executable))
         self._blueprints = []
+        self._conf = {}
         self._license = None
         
         # Start Setup
         try:
             with open(self._setup_file) as file_open:
                 self._conf = json.load(file_open)
-            # Set unique hardware id
-            self._conf['license']['uuid'] = str(uuid.getnode())
-            # Test sql connection
-            sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': self._conf['sql']})
-            sql.test_sql()
-            # Init sql pool
-            sql = connectors.pool.Pool(self._conf)
-            # Init license
-            self._license = License(self._conf['license'])
-            self._license.validate()
-            # Register blueprints
-            self.__register_blueprints(sql)
-            # Start monitoring
-            monitoring = apps.monitoring.monitoring.Monitoring(sql)
-            monitoring.start()
-            # Init cron
-            Cron(self._app, self._license, self._blueprints, sql)
+        except Exception:
+            print("- Meteor initiated. No configuration detected. Install is required.")
+
+        try:
+            if self._conf:
+                # Set unique hardware id
+                self._conf['license']['uuid'] = str(uuid.getnode())
+                # Test sql connection
+                # sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': self._conf['sql']})
+                # sql.test_sql()
+                # Init sql pool
+                sql = connectors.pool.Pool(self._conf['sql'])
+                # Init license
+                self._license = License(self._conf['license'])
+                self._license.validate()
+                # Register blueprints
+                self.__register_blueprints(sql)
+                # Start monitoring
+                monitoring = apps.monitoring.monitoring.Monitoring(sql)
+                monitoring.start()
+                # Init cron
+                Cron(self._app, self._license, self._blueprints, sql)
+                # Show success message
+                print("- Meteor initiated from existing configuration.")
         except Exception as e:
-            traceback.print_exc()
-            self._conf = {}
+            print("- An error occurred initiating the server.")
+            print(str(e))
 
     def blueprint(self):
         # Init blueprint
@@ -86,11 +96,7 @@ class Setup:
 
         @setup_blueprint.route('/setup', methods=['GET'])
         def setup():
-            available =  self.__setup_available()
-            if available:
-                return jsonify({}), 200
-            else:
-                return jsonify({}), 401
+            return jsonify({'available': self.__setup_available()}), 200
 
         @setup_blueprint.route('/setup/license', methods=['POST'])
         def setup_license():
@@ -126,15 +132,15 @@ class Setup:
 
             # Part 2: Check SQL Credentials
             try:
-                sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': {'engine': setup_json['engine'], 'hostname': setup_json['hostname'], 'username': setup_json['username'], 'password': setup_json['password'], 'port': setup_json['port']}})
+                sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': setup_json})
                 sql.test_sql()
             except Exception as e:
-                return jsonify({'message': "Connection Failed"}), 400
+                return jsonify({'message': str(e)}), 400
 
             # Check Database Access
             try:
                 exists = sql.check_db_exists(setup_json['database'])
-                sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': {'engine': setup_json['engine'], 'hostname': setup_json['hostname'], 'username': setup_json['username'], 'password': setup_json['password'], 'port': setup_json['port']}})
+                sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': setup_json})
                 sql.test_sql()
                 return jsonify({'message': 'Connection Successful', 'exists': exists}), 200
             except Exception as e:
@@ -157,26 +163,29 @@ class Setup:
             try:
                 # Part 3: Build Meteor & Create User Admin Account
                 if setup_json['sql']['recreate']:
-                    # Init sql pool
-                    sql = connectors.pool.Pool(setup_json)
-                    # Import SQL Schema
-                    sql.execute('DROP DATABASE IF EXISTS {}'.format(setup_json['sql']['database']))
-                    sql.execute('CREATE DATABASE {}'.format(setup_json['sql']['database']))
+                    # Init sql connection
+                    sql_conf = copy.deepcopy(setup_json['sql'])
+                    sql_conf['database'] = None
+                    sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': sql_conf})
 
+                    # Import SQL Schema
+                    sql.execute('DROP DATABASE IF EXISTS `{}`'.format(setup_json['sql']['database']))
+                    sql.execute('CREATE DATABASE `{}`'.format(setup_json['sql']['database']))
+                    sql.use(setup_json['sql']['database'])
                     with open(self._schema_file) as file_open:
                         queries = file_open.read().split(';')
                         for q in queries:
-                            if q != '':
+                            if q.strip() != '':
                                 sql.execute(q)
 
                     # Create group
                     groups = models.admin.groups.Groups(sql)
-                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enabled": 1, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_execution_threads": 10, "deployments_execution_limit": None, "deployments_execution_concurrent": None, "monitoring_enabled": 1, "utils_enabled": 1, "client_enabled": 1}
+                    group = {"name": 'Administrator', "description": 'The Admin', "coins_day": 25, "coins_max": 100, "coins_execution": 10, "inventory_enabled": 1, "inventory_secured": 0, "deployments_enabled": 1, "deployments_basic": 1, "deployments_pro": 1, "deployments_execution_threads": 10, "deployments_execution_timeout": None, "deployments_execution_limit": None, "deployments_execution_concurrent": None, "deployments_slack_enabled": 0, "deployments_slack_name": None, "deployments_slack_url": None, "monitoring_enabled": 1, "utils_enabled": 1, "client_enabled": 1, "client_tracking": 0, "client_tracking_retention": 1, "client_tracking_mode": 1}
                     groups.post(1, group)
 
                     # Create user
                     users = models.admin.users.Users(sql)
-                    user = {"username": setup_json['account']['username'], "password": setup_json['account']['password'], "email": "admin@admin.com", "coins": 100, "group": 'Administrator', "admin": 1}
+                    user = {"username": setup_json['account']['username'], "password": setup_json['account']['password'], "email": "admin@admin.com", "coins": 100, "group": 'Administrator', "admin": 1, "disabled": 0}
                     user['password'] = bcrypt.hashpw(user['password'].encode('utf8'), bcrypt.gensalt())
                     users.post(1, user)
 
@@ -184,11 +193,9 @@ class Setup:
                     settings = models.admin.settings.Settings(sql)
                     setting = {"name": "LOGS", "value": '{{"amazon_s3":{{"enabled":false}},"local":{{"path":"{}"}}}}'.format(self._logs_folder)}
                     settings.post(1, setting)
-                else:
-                    # Init sql pool
-                    sql = connectors.pool.Pool(setup_json)
 
             except Exception as e:
+                traceback.print_exc()
                 return jsonify({'message': str(e)}), 500
 
             # Write setup to the setup file
@@ -205,11 +212,30 @@ class Setup:
                     "port": int(setup_json['sql']['port']),
                     "username": setup_json['sql']['username'],
                     "password": setup_json['sql']['password'],
-                    "database": setup_json['sql']['database']
+                    "database": setup_json['sql']['database'],
+                    "ssl_client_key": None,
+                    "ssl_client_certificate": None,
+                    "ssl_ca_certificate": None,
+                    "ssl_verify_ca": setup_json['sql']['ssl_verify_ca']
                 }
             }
+            if setup_json['sql']['ssl_client_key']:
+                with open(self._keys_path + 'ssl_key.pem', 'w') as outfile:
+                    outfile.write(setup_json['sql']['ssl_client_key'])
+                self._conf['sql']['ssl_client_key'] = 'ssl_key.pem'
+            if setup_json['sql']['ssl_client_certificate']:
+                with open(self._keys_path + 'ssl_cert.pem', 'w') as outfile:
+                    outfile.write(setup_json['sql']['ssl_client_certificate'])
+                self._conf['sql']['ssl_client_certificate'] = 'ssl_cert.pem'
+            if setup_json['sql']['ssl_ca_certificate']:
+                with open(self._keys_path + 'ssl_ca.pem', 'w') as outfile:
+                    outfile.write(setup_json['sql']['ssl_ca_certificate'])
+                self._conf['sql']['ssl_ca_certificate'] = 'ssl_ca.pem'
             with open(self._setup_file, 'w') as outfile:
                 json.dump(self._conf, outfile)
+
+            # Init sql pool
+            sql = connectors.pool.Pool(self._conf['sql'])
 
             # Init blueprints
             self.__register_blueprints(sql)

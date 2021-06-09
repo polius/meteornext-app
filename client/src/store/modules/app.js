@@ -109,6 +109,7 @@ const actions = {
           localStorage.removeItem('client_enabled')
           localStorage.removeItem('coins_execution')
           localStorage.removeItem('coins_day')
+          Cookies.remove('csrf_access_token')
           reject(error)
         })
     })
@@ -140,6 +141,7 @@ const actions = {
         localStorage.removeItem('client_enabled')
         localStorage.removeItem('coins_execution')
         localStorage.removeItem('coins_day')
+        Cookies.remove('csrf_access_token')
 
         // Remove token from axios header
         delete axios.defaults.headers.common['X-CSRF-TOKEN']

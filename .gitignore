@@ -11,3 +11,4 @@ server.conf
 .cache/
 /server/apps/meteor.tar.gz
 /meteor/version.txt
+/license/dist/

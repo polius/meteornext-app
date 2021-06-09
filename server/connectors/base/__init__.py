@@ -17,6 +17,9 @@ class Base:
     def test_ssh(self):
         self._sql.test_ssh()
 
+    def use(self, database):
+        self._sql.use(database)
+
     def execute(self, query, args=None, database=None):
         return self._sql.execute(query, args, database)
 
