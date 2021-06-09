@@ -38,8 +38,8 @@
           <v-list style="padding:0px;">
             <v-list-item-group v-model="contextMenuModel">
               <div v-for="[index, item] of contextMenuItems.entries()" :key="index">
-                <v-list-item v-if="item != '|'" @click="contextMenuClicked(item)">
-                  <v-list-item-title>{{item}}</v-list-item-title>
+                <v-list-item v-if="item.name != '|'" :disabled="!item.enabled" @click="contextMenuClicked(item.name)">
+                  <v-list-item-title>{{ item.name }}</v-list-item-title>
                 </v-list-item>
                 <v-divider v-else></v-divider>
               </div>
@@ -157,6 +157,18 @@
   </div>
 </template>
 
+<style scoped>
+::v-deep .v-list-item__title {
+  font-size: 0.9rem;
+}
+::v-deep .v-list-item__content {
+  padding:0px;
+}
+::v-deep .v-list-item {
+  min-height:40px;
+}
+</style>
+
 <script>
 import axios from 'axios'
 
@@ -195,7 +207,7 @@ export default {
       // Context Menu
       contextMenu: false,
       contextMenuModel: null,
-      contextMenuItems: ['Copy SQL','Copy CSV','Copy JSON','|','Select All','Deselect All'],
+      contextMenuItems: [],
       contextMenuItem: {},
       contextMenuX: 0,
       contextMenuY: 0,
@@ -222,6 +234,10 @@ export default {
       'contentSearchFilterItems',
       'contentSearchColumn',
       'contentColumnsName',
+      'contentColumnsDefault',
+      'contentColumnsType',
+      'contentColumnsExtra',
+      'contentPks',
       'contentConnection',
       'contentSortState',
       'bottomBar'
@@ -321,12 +337,26 @@ export default {
       this.contextMenuModel = null
       this.contextMenuX = e.event.clientX
       this.contextMenuY = e.event.clientY
+      let selectedRows = this.gridApi.content.getSelectedRows().length
+      this.contextMenuItems = [
+        { name: 'Copy SQL', enabled: true },
+        { name: 'Copy CSV', enabled: true },
+        { name: 'Copy JSON', enabled: true },
+        { name: '|', enabled: true },
+        { name: 'Duplicate Row', enabled: selectedRows == 1 },
+        { name: selectedRows > 1 ? 'Remove Rows' : 'Remove Row', enabled: true },
+        { name: '|', enabled: true },
+        { name: 'Select All', enabled: true },
+        { name: 'Deselect All', enabled: true },
+      ]
       this.contextMenu = true
     },
     contextMenuClicked(item) {
       if (item == 'Copy SQL') this.copySQL()
       else if (item == 'Copy CSV') this.copyCSV()
       else if (item == 'Copy JSON') this.copyJSON()
+      else if (item == 'Duplicate Row') this.duplicateRow()
+      else if (item.startsWith('Remove Row')) this.removeRow()
       else if (item == 'Select All') this.gridApi.content.selectAll()
       else if (item == 'Deselect All') this.gridApi.content.deselectAll()
     },
@@ -393,6 +423,7 @@ export default {
         this.contentColumnsName = data[0]['columns']['name']
         this.contentColumnsDefault = data[0]['columns']['default']
         this.contentColumnsType = data[0]['columns']['type']
+        this.contentColumnsExtra = data[0]['columns']['extra']
         this.contentPks = data[0]['pks']
         if (this.contentSearchColumn.length == 0) this.contentSearchColumn = this.contentColumnsName[0].trim()
         for (let i = 0; i < this.contentColumnsName.length; ++i) {
@@ -449,6 +480,30 @@ export default {
       var rowCount = this.gridApi.content.getDisplayedRowCount()
       var nodes = this.gridApi.content.getSelectedNodes()
       for (let i = 0; i < nodes.length; ++i) nodes[i].setSelected(false)
+
+      this.gridApi.content.applyTransaction({ add: [newData] })
+      this.gridApi.content.setFocusedCell(rowCount, this.contentColumnsName[0])
+      var node = this.gridApi.content.getDisplayedRowAtIndex(rowCount)
+      node.setSelected(true)
+      this.gridApi.content.startEditingCell({
+        rowIndex: rowCount,
+        colKey: this.contentColumnsName[0]
+      });
+    },
+    duplicateRow() {
+      // Clean vars
+      this.currentCellEditValues = {}
+      this.currentCellEditNode = {}
+      this.currentCellEditMode = 'new'
+
+      var rowCount = this.gridApi.content.getDisplayedRowCount()
+      var nodes = this.gridApi.content.getSelectedNodes()
+      for (let i = 0; i < nodes.length; ++i) nodes[i].setSelected(false)
+
+      var newData = {}
+      for (let i = 0; i < this.contentColumnsName.length; ++i) {
+        newData[this.contentColumnsName[i]] = (this.contentColumnsExtra[i] == 'auto_increment') ? null : nodes[0]['data'][this.contentColumnsName[i]]
+      }
 
       this.gridApi.content.applyTransaction({ add: [newData] })
       this.gridApi.content.setFocusedCell(rowCount, this.contentColumnsName[0])

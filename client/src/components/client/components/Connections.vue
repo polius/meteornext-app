@@ -76,6 +76,16 @@
 <style scoped>
 .v-tabs-active { background-color: #353535; }
 .v-list { padding:0px!important; }
+
+::v-deep .v-list-item__title {
+  font-size: 0.9rem;
+}
+::v-deep .v-list-item__content {
+  padding:0px;
+}
+::v-deep .v-list-item {
+  min-height:40px;
+}
 </style>
 
 <script>
