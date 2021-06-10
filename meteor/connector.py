@@ -16,6 +16,9 @@ class connector:
     def execute(self, query, args=None, database=None, retry=True):
         return self._sql.execute(query, args, database, retry)
 
+    def mogrify(self, query, args=None):
+        return self._sql.mogrify(query, args)
+
     def begin(self):
         self._sql.begin()
 

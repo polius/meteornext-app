@@ -103,6 +103,10 @@ class MySQL:
         query_data = {"query_result": query_result, "query_time": "{0:.3f}".format(time.time() - start_time), "query_rows_affected": cursor.rowcount}
         return query_data
 
+    def mogrify(self, query, args=None):
+        with self._sql.cursor(OrderedDictCursor) as cursor:
+            return cursor.mogrify(query, args)
+
     def begin(self):
         self._sql.begin()
 

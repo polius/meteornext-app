@@ -55,30 +55,26 @@ class deploy_queries:
         for conn in self._aux.values():
             conn.stop()
 
-    def execute(self, query=None, args=None, database=None, auxiliary=None, alias=None):
+    def execute(self, query, args=None, database=None, auxiliary=None, alias=None):
         # Core Variables
-        database_name = auxiliary['database'] if auxiliary is not None else database if database is not None else ''
-        query_parsed = query.strip() if auxiliary is None else auxiliary['query'].strip()
-        server_sql = self._server['name'] if auxiliary is None else auxiliary['auxiliary_connection']
+        query_parsed = query.strip()
+        server_sql = self._server['name'] if auxiliary is None else auxiliary
         region = self._region['name']
 
         # Get Query Syntax
-        query_syntax = self.__get_query_type(query_parsed, show_output=False)
+        query_syntax = self.__get_query_type(query_parsed)
+
+        # Get SQL Connection
+        conn = self._sql if auxiliary is None else self.__get_auxiliary(auxiliary)
 
         # Query Alias
-        query_alias = query_parsed if args is None else query_parsed % args
+        query_alias = conn.mogrify(query_parsed, args)
         if alias:
             query_alias = '[{}] {}'.format(alias, query_alias)
 
-        # Get SQL Connection
-        if auxiliary is None:
-            conn = self._sql
-        else:
-            conn = self.__get_auxiliary(auxiliary)
-
         # Init a new Row
         date_time = datetime.fromtimestamp(time()).strftime('%Y-%m-%d %H:%M:%S.%f UTC')
-        execution_row = {"meteor_timestamp": date_time, "meteor_environment": self._imports.config['params']['environment'], "meteor_region": region, "meteor_server": server_sql, "meteor_database": database_name, "meteor_query": query_alias, "meteor_status": "1", "meteor_response": "", "meteor_execution_time": "", "meteor_execution_rows": "0"}
+        execution_row = {"meteor_timestamp": date_time, "meteor_environment": self._imports.config['params']['environment'], "meteor_region": region, "meteor_server": server_sql, "meteor_database": database, "meteor_query": query_alias, "meteor_status": "1", "meteor_response": "", "meteor_execution_time": "", "meteor_execution_rows": "0"}
 
         # Set query transaction
         if self._transaction:
@@ -88,7 +84,7 @@ class deploy_queries:
         if not self._args.deploy:
             # Execution Checks
             try:
-                self._query_template.validate_execution(query_parsed, args, conn, database_name)
+                self._query_template.validate_execution(query_parsed, args, conn, database)
                 # Write Exception to the Log
                 if query_syntax != 'Select':
                     self._execution_log['output'].append(execution_row)
@@ -106,7 +102,7 @@ class deploy_queries:
             try:
                 # Execute query
                 query_prefix = '/*B' + str(self._imports.config['params']['id']) + '*/' if self._imports.config['params']['mode'] == 'basic' else '/*P' + str(self._imports.config['params']['id']) + '*/'
-                query_info = conn.execute(query=query_prefix + query_parsed, args=args, database=database_name)
+                query_info = conn.execute(query=query_prefix + query_parsed, args=args, database=database)
 
                 # If the query is executed successfully, then write the query result to the Log
                 execution_row['meteor_output'] = query_info['query_result'] if str(query_info['query_result']) != '()' else '[]'
@@ -196,23 +192,23 @@ class deploy_queries:
         return self._query_error
 
     def __get_auxiliary(self, auxiliary):
-        if auxiliary['auxiliary_connection'] not in self._aux:
+        if auxiliary not in self._aux:
             # Check if the auxiliary connection exists
-            if auxiliary['auxiliary_connection'] not in self._imports.config['auxiliary_connections']:
-                raise Exception("The auxiliary connection '{}' does not exist".format(auxiliary['auxiliary_connection']))
+            if auxiliary not in self._imports.config['auxiliary_connections']:
+                raise Exception("The auxiliary connection '{}' does not exist".format(auxiliary))
             # Start connecting to the auxiliary connection
             try:
-                aux = self._imports.config['auxiliary_connections'][auxiliary['auxiliary_connection']]
+                aux = self._imports.config['auxiliary_connections'][auxiliary]
                 aux['sql']['timeout'] = self._imports.config['params']['timeout']
                 conn = connector(aux)
                 conn.start()
             except Exception as e:
-                raise Exception("Auxiliary Connection [{}]: {}".format(auxiliary['auxiliary_connection'], str(e)))
+                raise Exception("Auxiliary Connection [{}]: {}".format(auxiliary, str(e)))
             else:
-                self._aux[auxiliary['auxiliary_connection']] = conn
-        return self._aux[auxiliary['auxiliary_connection']]
+                self._aux[auxiliary] = conn
+        return self._aux[auxiliary]
 
-    def __get_query_type(self, query, show_output=True):
+    def __get_query_type(self, query):
         for t in self._query_template.query_template:
             if query.strip().lower().startswith(t["startswith"].lower()) and t["contains"].lower() in query.strip().lower():
                 return t['type']
