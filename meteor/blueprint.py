@@ -3,9 +3,9 @@ from collections import OrderedDict
 
 class blueprint:
     def __init__(self):
-        ############################################################################################################
-        # Usage: meteor.execute(query=self.queries['1'], args=None, database=database, auxiliary=None, alias=None) #
-        ############################################################################################################
+        ########################################################################################################
+        # Usage: meteor.execute(query=self.queries['1'], args=None, database=None, auxiliary=None, alias=None) #
+        ########################################################################################################
         self.queries = {
             # '1': "<query>"
         }
