@@ -3,18 +3,11 @@ from collections import OrderedDict
 
 class blueprint:
     def __init__(self):
-        #####################################################################
-        # Usage: meteor.execute(query=self.queries['1'], database=database) #
-        #####################################################################
+        ############################################################################################################
+        # Usage: meteor.execute(query=self.queries['1'], args=None, database=database, auxiliary=None, alias=None) #
+        ############################################################################################################
         self.queries = {
             # '1': "<query>"
-        }
-
-        ################################################################
-        # Usage: meteor.execute(auxiliary=self.auxiliary_queries['1']) #
-        ################################################################
-        self.auxiliary_queries = {
-            # '1': {"auxiliary_connection": "<auxiliary_connection_name>", "database": "<database>", "query": "<query>"}
         }
 
     #######################################################
