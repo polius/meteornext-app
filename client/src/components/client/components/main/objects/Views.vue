@@ -196,6 +196,7 @@ export default {
       }
     },
     onContextMenu(e) {
+      if (!this.gridApi.objects.views.getSelectedNodes().some(x => x.id == e.node.id)) this.gridApi.objects.views.deselectAll()
       e.node.setSelected(true)
       this.contextMenuModel = null
       this.contextMenuX = e.event.clientX

@@ -797,7 +797,7 @@ class Client:
                             data = ''
                             for row in rows:
                                 keys = [f'`{k}`' for k in row.keys()]
-                                vals = list(row.values())
+                                vals = [i.decode('utf8', 'surrogateescape') if type(i) is bytes else i for i in row.values()]
                                 if first:
                                     data += 'INSERT INTO `{}` ({})\nVALUES\n'.format(table, ','.join(keys))
                                     data += '({})'.format(conn.mogrify(','.join(repeat('%s', len(vals))), vals))

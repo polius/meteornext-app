@@ -307,7 +307,7 @@ export default {
       }
     },
     onContextMenu(e) {
-      if (!this.gridApi.getSelectedRows().map(x => x.Id).includes(e.data.Id)) this.gridApi.deselectAll()
+      if (!this.gridApi.getSelectedNodes().some(x => x.id == e.node.id)) this.gridApi.deselectAll()
       e.node.setSelected(true)
       this.selected = this.gridApi.getSelectedRows()
       this.contextMenuModel = null
