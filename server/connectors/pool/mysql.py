@@ -18,11 +18,11 @@ class MySQL:
             "use_unicode": True,
             "cursorclass": OrderedDictCursor,
             "autocommit": False,
-            "ssl_ca": config['ssl_ca_certificate'],
-            "ssl_cert": config['ssl_client_certificate'],
-            "ssl_key": config['ssl_client_key'],
-            "ssl_verify_cert": config['ssl_verify_ca'],
-            "ssl_verify_identity": config['ssl_verify_ca']
+            "ssl_ca": config.get('ssl_ca_certificate'),
+            "ssl_cert": config.get('ssl_client_certificate'),
+            "ssl_key": config.get('ssl_client_key'),
+            "ssl_verify_cert": config.get('ssl_verify_ca'),
+            "ssl_verify_identity": config.get('ssl_verify_ca')
         }
         POOL_CONFIG = {
             "creator": pymysql,

@@ -93,7 +93,10 @@
             <v-layout wrap>
               <v-row no-gutters>
                 <v-col class="flex-grow-1 flex-shrink-1">
-                  <div class="white--text text-h6" style="font-weight:400; margin-top:2px; margin-left:1px;">{{ editDialogTitle }}</div>
+                  <div class="text-h6 white--text" style="font-weight:400; font-size:1.1rem!important; margin-top:3px; margin-left:1px;">{{ editDialogTitle }}</div>
+                </v-col>
+                <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="margin-right:25px">
+                  <v-checkbox @change="editDialogWrapChange" v-model="editDialogWrap" label="Wrap text" hide-details style="margin-top:5px"></v-checkbox>
                 </v-col>
                 <v-col v-if="editDialogFormat == 'JSON'" cols="auto" class="flex-grow-0 flex-shrink-0" style="margin-right:15px">
                   <v-btn @click="editDialogValidate" hide-details style="margin-top:2px">Validate</v-btn>
@@ -177,6 +180,7 @@ export default {
       editDialogTitle: '',
       editDialogFormat: 'Text',
       editDialogFormatItems: ['Text','JSON','Python'],
+      editDialogWrap: false,
       editDialogValue: '',
       editDialogEditor: null,
       // Context Menu
@@ -468,6 +472,7 @@ export default {
             fontSize: 14,
             showPrintMargin: false,
             wrap: false,
+            indentedSoftWrap: false,
             showLineNumbers: true
           })
           this.editDialogEditor.container.addEventListener("keydown", (e) => {
@@ -491,6 +496,9 @@ export default {
         this.editDialogEditor.setValue(text, 1)
         this.editDialogDetectFormat()
       })
+    },
+    editDialogWrapChange(val) {
+      this.editDialogEditor.getSession().setUseWrapMode(val)
     },
     editDialogDetectFormat() {
       // Detect JSON and parse it
@@ -601,6 +609,7 @@ export default {
       this.cellEditingSubmit(this.currentCellEditNode, this.currentCellEditValues)
     },
     onContextMenu(e) {
+      if (!this.gridApi.client.getSelectedNodes().some(x => x.id == e.node.id)) this.gridApi.client.deselectAll()
       e.node.setSelected(true)
       this.contextMenuModel = null
       this.contextMenuX = e.event.clientX
