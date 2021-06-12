@@ -97,30 +97,18 @@ class Meteor:
             for server in servers:
                 if server['region_id'] == region['id']:
                     # Init Server Conf
-                    s = {
+                    region_data['sql'].append({
                         "name": server['name'],
                         "engine": server['engine'],
                         "hostname": server['hostname'],
                         "username": server['username'],
                         "password": server['password'],
                         "port": int(server['port']),
-                        "ssl_ca_certificate": None,
-                        "ssl_client_certificate": None,
-                        "ssl_client_key": None,
-                        "ssl_verify_ca": server['ssl_verify_ca']
-                    }
-                    # Parse Keys
-                    if server['ssl_ca_certificate']:
-                        keys.append({"path": f"{keys_path}/s{server['id']}.ssl_ca_certificate", "data": server['ssl_ca_certificate']})
-                        s['ssl_ca_certificate'] = f"{keys_path}/s{server['id']}.ssl_ca_certificate"
-                    if server['ssl_client_certificate']:
-                        keys.append({"path": f"{keys_path}/s{server['id']}.ssl_client_certificate", "data": server['ssl_client_certificate']})
-                        s['ssl_client_certificate'] = f"{keys_path}/s{server['id']}.ssl_client_certificate"
-                    if server['ssl_client_key']:
-                        keys.append({"path": f"{keys_path}/s{server['id']}.ssl_client_key", "data": server['ssl_client_key']})
-                        s['ssl_client_key'] = f"{keys_path}/s{server['id']}.ssl_client_key"
-                    # Add Server
-                    region_data['sql'].append(s)
+                        "ssl_ca_certificate": server['ssl_ca_certificate'],
+                        "ssl_client_certificate": server['ssl_client_certificate'],
+                        "ssl_client_key": server['ssl_client_key'],
+                        "ssl_verify_ca": server['ssl_verify_ca'] == 1
+                    })
 
             # Add region data to the credentials
             self._config['regions'].append(region_data)
@@ -129,7 +117,7 @@ class Meteor:
         self._config['auxiliary_connections'] = {}
         for aux in auxiliary:
             # Init Auxiliary Conf
-            a = {
+            self._config['auxiliary_connections'][aux['name']] = {
                 "ssh": { "enabled": False },
                 "sql": {
                     "engine": aux['engine'],
@@ -137,26 +125,14 @@ class Meteor:
                     "username": aux['username'],
                     "password": aux['password'],
                     "port": int(aux['port']),
-                    "ssl_ca_certificate": None,
-                    "ssl_client_certificate": None,
-                    "ssl_client_key": None,
+                    "ssl_ca_certificate": aux['ssl_ca_certificate'],
+                    "ssl_client_certificate": aux['ssl_client_certificate'],
+                    "ssl_client_key": aux['ssl_client_key'],
                     "ssl_verify_ca": aux['ssl_verify_ca']
                 }
             }
-            # Parse Keys
-            if aux['ssl_ca_certificate']:
-                keys.append({"path": f"{keys_path}/a{aux['id']}.ssl_ca_certificate", "data": aux['ssl_ca_certificate']})
-                a['sql']['ssl_ca_certificate'] = f"{keys_path}/a{aux['id']}.ssl_ca_certificate"
-            if aux['ssl_client_certificate']:
-                keys.append({"path": f"{keys_path}/a{aux['id']}.ssl_client_certificate", "data": aux['ssl_client_certificate']})
-                a['sql']['ssl_client_certificate'] = f"{keys_path}/a{aux['id']}.ssl_client_certificate"
-            if aux['ssl_client_key']:
-                keys.append({"path": f"{keys_path}/a{aux['id']}.ssl_client_key", "data": aux['ssl_client_key']})
-                a['sql']['ssl_client_key'] = f"{keys_path}/a{aux['id']}.ssl_client_key"
-            # Add Auxiliary
-            self._config['auxiliary_connections'][aux['name']] = a
 
-        # Generate key files (ssh, ssl)
+        # Generate key files
         for key in keys:
             with open(key['path'], 'w') as outfile:
                 outfile.write(key['data'])
@@ -268,5 +244,5 @@ class blueprint:
         command = '{} --path "{}" --{}'.format(meteor_path, execution_path, execution_method)
 
         # Execute Meteor
-        # p = subprocess.Popen(command, shell=True)
+        # p = subprocess.Popen(command, shell=True)
         p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)

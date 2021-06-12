@@ -1,6 +1,7 @@
 import sys
 import time
 import pymysql
+import tempfile
 import paramiko
 import sshtunnel
 import threading
@@ -95,15 +96,17 @@ class validate_regions:
 
         for i in range(attempts):
             try:
+                # Get SSL
+                ssl = self.__get_ssl(server)
                 if self._region['ssh']['enabled']:
                     ssh_pkey = paramiko.RSAKey.from_private_key_file(self._region['ssh']['key'], password=self._region['ssh']['password'])
                     sshtunnel.SSH_TIMEOUT = 10.0
                     sshtunnel.TUNNEL_TIMEOUT = 10.0
                     with sshtunnel.SSHTunnelForwarder((self._region['ssh']['hostname'], int(self._region['ssh']['port'])), ssh_username=self._region['ssh']['username'], ssh_password=self._region['ssh']['password'], ssh_pkey=ssh_pkey, remote_bind_address=(server['hostname'], int(server['port']))) as tunnel:
-                        conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'], ssl_ca=server['ssl_ca_certificate'], ssl_cert=server['ssl_client_certificate'], ssl_key=server['ssl_client_key'], ssl_verify_cert=server['ssl_verify_ca'] == 1, ssl_verify_identity=server['ssl_verify_ca'] == 1)
+                        conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=server['username'], passwd=server['password'], ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
                         conn.close()
                 else:
-                    conn = pymysql.connect(host=server['hostname'], port=int(server['port']), user=server['username'], passwd=server['password'], ssl_ca=server['ssl_ca_certificate'], ssl_cert=server['ssl_client_certificate'], ssl_key=server['ssl_client_key'], ssl_verify_cert=server['ssl_verify_ca'] == 1, ssl_verify_identity=server['ssl_verify_ca'] == 1)
+                    conn = pymysql.connect(host=server['hostname'], port=int(server['port']), user=server['username'], passwd=server['password'], ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
                     conn.close()
                 current_thread.progress = {"region": self._region['name'], "sql": server['name'], "success": True}
                 break
@@ -111,9 +114,48 @@ class validate_regions:
             except Exception as e:
                 error = e
                 time.sleep(1)
+            finally:
+                # Close SSL
+                self.__close_ssl(ssl)
 
         # Show Errors Output Again
         sys.stderr = sys_stderr
 
         if error is not None:
             current_thread.progress = {"region": self._region['name'], "sql": server['name'], "success": False, "error": str(error).replace('\n','')}
+
+    def __get_ssl(self, server):
+        ssl = {'ssl_ca': None, 'ssl_cert': None, 'ssl_key': None, 'ssl_verify_cert': None, 'ssl_verify_identity': None}
+        if 'ssl' not in server or not server['ssl']:
+            return ssl
+        # Generate CA Certificate
+        if server['ssl_ca_certificate']:
+            ssl['ssl_ca_file'] = tempfile.NamedTemporaryFile()
+            ssl['ssl_ca_file'].write(server['ssl_ca_certificate'].encode())
+            ssl['ssl_ca_file'].flush()
+            ssl['ssl_ca'] = ssl['ssl_ca_file'].name
+        # Generate Client Certificate
+        if server['ssl_client_certificate']:
+            ssl['ssl_cert_file'] = tempfile.NamedTemporaryFile()
+            ssl['ssl_cert_file'].write(server['ssl_client_certificate'].encode())
+            ssl['ssl_cert_file'].flush()
+            ssl['ssl_cert'] = ssl['ssl_cert_file'].name
+        # Generate Client Key
+        if server['ssl_client_key']:
+            ssl['ssl_key_file'] = tempfile.NamedTemporaryFile()
+            ssl['ssl_key_file'].write(server['ssl_client_key'].encode())
+            ssl['ssl_key_file'].flush()
+            ssl['ssl_key'] = ssl['ssl_key_file'].name
+        # Add optional parameters
+        ssl['ssl_verify_cert'] = server['ssl_verify_ca'] == 1
+        ssl['ssl_verify_identity'] = server['ssl_verify_ca'] == 1
+        # Return SSL Data
+        return ssl
+
+    def __close_ssl(self, ssl):
+        if 'ssl_ca_file' in ssl:
+            ssl['ssl_ca_file'].close()
+        if 'ssl_cert_file' in ssl:
+            ssl['ssl_cert_file'].close()
+        if 'ssl_key_file' in ssl:
+            ssl['ssl_key_file'].close()
