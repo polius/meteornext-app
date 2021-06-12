@@ -56,6 +56,7 @@ class MySQL:
         self.close()
 
         try:
+            ssl = self.__get_ssl()
             # Start SSH Tunnel
             if self._server['ssh']['enabled']:
                 sshtunnel.SSH_TIMEOUT = 5.0
@@ -68,13 +69,15 @@ class MySQL:
             hostname = '127.0.0.1' if self._server['ssh']['enabled'] else self._server['sql']['hostname']
             port = self._tunnel.local_bind_port if self._server['ssh']['enabled'] else self._server['sql']['port']
             database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-            ssl = self.__ssl()
             self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=False, client_flag=CLIENT.MULTI_STATEMENTS, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
             self._connection_id = self.execute('SELECT CONNECTION_ID()')['data'][0]['CONNECTION_ID()']
 
         except Exception:
             self.close()
             raise
+
+        finally:
+            self.__close_ssl(ssl)
 
     def close(self):
         try:
@@ -179,7 +182,7 @@ class MySQL:
             log.addHandler(sh)
         return log
 
-    def __ssl(self):
+    def __get_ssl(self):
         ssl = {'ssl_ca': None, 'ssl_cert': None, 'ssl_key': None, 'ssl_verify_cert': None, 'ssl_verify_identity': None}
         if 'ssl' not in self._server['sql'] or not self._server['sql']['ssl']:
             return ssl
@@ -206,6 +209,14 @@ class MySQL:
         ssl['ssl_verify_identity'] = self._server['sql']['ssl_verify_ca'] == 1
         # Return SSL Data
         return ssl
+
+    def __close_ssl(self, ssl):
+        if 'ssl_ca_file' in ssl:
+            ssl['ssl_ca_file'].close()
+        if 'ssl_cert_file' in ssl:
+            ssl['ssl_cert_file'].close()
+        if 'ssl_key_file' in ssl:
+            ssl['ssl_key_file'].close()
 
     ####################
     # INTERNAL QUERIES #

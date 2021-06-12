@@ -22,6 +22,8 @@ class MySQL:
         self.stop()
 
         try:
+            # Get SSL
+            ssl = self.__get_ssl()
             # Start SSH Tunnel
             if 'ssh' in self._server and self._server['ssh']['enabled']:
                 sshtunnel.SSH_TIMEOUT = 5.0
@@ -35,11 +37,13 @@ class MySQL:
             hostname = '127.0.0.1' if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['hostname']
             port = self._tunnel.local_bind_port if 'ssh' in self._server and self._server['ssh']['enabled'] else self._server['sql']['port']
             database = self._server['sql']['database'] if 'database' in self._server['sql'] else None
-            ssl = self.__ssl()
             self._sql = pymysql.connect(host=hostname, port=int(port), user=self._server['sql']['username'], passwd=self._server['sql']['password'], database=database, charset='utf8mb4', use_unicode=True, autocommit=True, ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
         except Exception:
             self.stop()
             raise
+        finally:
+            # Close SSL
+            self.__close_ssl(ssl)
 
     def stop(self):
         try:
@@ -99,17 +103,20 @@ class MySQL:
         client.close()
 
     def test_sql(self):
-        if self._server['ssh']['enabled']:
-            password = None if self._server['ssh']['password'] is None or len(self._server['ssh']['password'].strip()) == 0 else self._server['ssh']['password']
-            pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=password)
-            sshtunnel.SSH_TIMEOUT = 5.0
-            with sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), mute_exceptions=True, logger=self.__logger()) as tunnel:
-                conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=self._server['sql']['username'], passwd=self._server['sql']['password'])
+        try:
+            ssl = self.__get_ssl()
+            if self._server['ssh']['enabled']:
+                password = None if self._server['ssh']['password'] is None or len(self._server['ssh']['password'].strip()) == 0 else self._server['ssh']['password']
+                pkey = None if self._server['ssh']['key'] is None or len(self._server['ssh']['key'].strip()) == 0 else paramiko.RSAKey.from_private_key(StringIO(self._server['ssh']['key']), password=password)
+                sshtunnel.SSH_TIMEOUT = 5.0
+                with sshtunnel.SSHTunnelForwarder((self._server['ssh']['hostname'], int(self._server['ssh']['port'])), ssh_username=self._server['ssh']['username'], ssh_password=self._server['ssh']['password'], ssh_pkey=pkey, remote_bind_address=(self._server['sql']['hostname'], int(self._server['sql']['port'])), mute_exceptions=True, logger=self.__logger()) as tunnel:
+                    conn = pymysql.connect(host='127.0.0.1', port=tunnel.local_bind_port, user=self._server['sql']['username'], passwd=self._server['sql']['password'], ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
+                    conn.close()
+            else:
+                conn = pymysql.connect(host=self._server['sql']['hostname'], port=int(self._server['sql']['port']), user=self._server['sql']['username'], passwd=self._server['sql']['password'], ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
                 conn.close()
-        else:
-            ssl = self.__ssl()
-            conn = pymysql.connect(host=self._server['sql']['hostname'], port=int(self._server['sql']['port']), user=self._server['sql']['username'], passwd=self._server['sql']['password'], ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
-            conn.close()
+        finally:
+            self.__close_ssl(ssl)
 
     def __logger(self):
         # Create a Logger to suppress sshtunnel warnings
@@ -121,7 +128,7 @@ class MySQL:
             log.addHandler(sh)
         return log
 
-    def __ssl(self):
+    def __get_ssl(self):
         ssl = {'ssl_ca': None, 'ssl_cert': None, 'ssl_key': None, 'ssl_verify_cert': None, 'ssl_verify_identity': None}
         if 'ssl' not in self._server['sql'] or not self._server['sql']['ssl']:
             return ssl
@@ -148,6 +155,14 @@ class MySQL:
         ssl['ssl_verify_identity'] = self._server['sql']['ssl_verify_ca'] == 1
         # Return SSL Data
         return ssl
+
+    def __close_ssl(self, ssl):
+        if 'ssl_ca_file' in ssl:
+            ssl['ssl_ca_file'].close()
+        if 'ssl_cert_file' in ssl:
+            ssl['ssl_cert_file'].close()
+        if 'ssl_key_file' in ssl:
+            ssl['ssl_key_file'].close()
 
     ####################
     # INTERNAL METHODS #
