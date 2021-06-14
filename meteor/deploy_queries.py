@@ -55,7 +55,21 @@ class deploy_queries:
         for conn in self._aux.values():
             conn.stop()
 
-    def execute(self, query, args=None, database=None, auxiliary=None, alias=None):
+    def execute(self, query=None, args=None, database=None, auxiliary=None, alias=None):
+        # Check Arguments
+        if self._server is None and auxiliary is None:
+            raise Exception('Before & After methods only supports auxiliary connections.')
+        if query is None:
+            raise Exception('The query argument is mandatory')
+        if type(query) is not str:
+            raise Exception('The query argument is not an string')
+        if database is not None and type(database) is not str:
+            raise Exception('The database argument is not an string')
+        if auxiliary is not None and type(auxiliary) is not str:
+            raise Exception('The auxiliary argument is not an string')
+        if alias is not None and type(alias) is not str:
+            raise Exception('The alias argument is not an string')
+
         # Core Variables
         query_parsed = query.strip()
         server_sql = self._server['name'] if auxiliary is None else auxiliary
