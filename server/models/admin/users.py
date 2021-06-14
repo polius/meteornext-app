@@ -8,7 +8,7 @@ class Users:
         if username is None:
             query = """
                 SELECT
-                    u.id, u.username, g.name AS `group`, u.email, u.ip, u.user_agent, u2.username AS 'created_by', u.created_at, u3.username AS 'updated_by', u.updated_at, u.last_login, u.coins, u.last_ping,
+                    u.id, u.username, g.name AS `group`, u.email, u.ip, u.user_agent, u2.username AS 'created_by', u.created_at, u3.username AS 'updated_by', u.updated_at, u.last_login, u.coins, u.admin, u.last_ping,
                     CASE
                         WHEN mfa.2fa_hash IS NOT NULL THEN '2fa'
                         WHEN mfa.webauthn_ukey IS NOT NULL THEN 'webauthn'
