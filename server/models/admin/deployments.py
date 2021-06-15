@@ -5,7 +5,7 @@ class Deployments:
     def get(self, dfilter=None, dsort=None):
         user = name = release = mode = status = date_from = date_to = ''
         args = {}
-        sort_column = 'd.id'
+        sort_column = 'd.created'
         sort_order = 'DESC'
         if dfilter is not None:
             matching = {
