@@ -64,14 +64,13 @@ class query_template:
     def query_template(self):
         return self._query_template
 
-    def validate_execution(self, query_raw, args, connection, database_name=None):
-        query_string = query_raw.replace('`','') % args if args else query_raw.replace('`','')
+    def validate_execution(self, query_raw, args, connection, database_name):
+        query_string = connection.mogrify(query=query_raw.replace('`',''), args=args)
         query_lower = query_string.lower()
 
         for t in self._query_template:
             if query_lower.startswith(t["startswith"].lower()) and t["contains"].lower() in query_lower:
                 if t["type"] == 'Select':
-                    # connection.execute('EXPLAIN ' + query_raw, database_name)
                     break
                 elif t["type"].startswith("Row_Level"):
                     if t["type"] == "Row_Level.Insert":
