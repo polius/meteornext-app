@@ -64,13 +64,13 @@
                   <v-alert v-if="mode == 'edit' && selected.length == 1 && item.group != selected[0]['group']" type="warning" dense dismissible icon="mdi-alert">This user will lose access to the shared inventory from the previous group.</v-alert>
                   <v-text-field ref="field" v-model="item.username" :rules="[v => !!v || '']" label="Username" autocomplete="email" required></v-text-field>
                   <v-text-field v-model="item.email" :rules="[v => !!v || '', v => /.+@.+\..+/.test(v) || '']" label="Email" type="email" required autocomplete="username" style="padding-top:0px;"></v-text-field>
-                  <v-text-field v-model="item.password" :rules="[v => !!v || '']" :label="mode == 'new' ? 'Password' : 'New Password'" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" required autocomplete="new-password" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="item.password" :rules="[v => !!v || mode == 'edit' || '']" :label="mode == 'new' ? 'Password' : 'New Password'" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" autocomplete="new-password" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.coins" :rules="[v => v == parseInt(v) && v >= 0 || '']" label="Coins" required style="padding-top:0px;"></v-text-field>
                   <v-autocomplete v-model="item.group" :items="groups" :rules="[v => !!v || '']" label="Group" required hide-details style="padding-top:0px; margin-bottom:20px;"></v-autocomplete>
                   <v-checkbox v-model="item.admin" label="Administrator" color="info" style="margin-top:10px;" hide-details></v-checkbox>
                   <v-checkbox v-model="item.disabled" label="Disable Account" color="#EF5354" style="margin-top:10px;" hide-details></v-checkbox>
                 </v-form>
-                <v-alert v-if="mode=='delete'" type="#EF5354" dense style="margin-top:15px"><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>All selected users related data (deployments, client, inventory) will be deleted</v-alert>
+                <v-alert v-if="mode=='delete'" color="#EF5354" dense style="margin-top:15px"><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>All selected users related data (deployments, client, inventory) will be deleted</v-alert>
                 <div style="margin-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:20px;">
@@ -79,7 +79,7 @@
                     <v-btn :disabled="loading" color="#EF5354" @click="dialog=false" style="margin-left:5px">Cancel</v-btn>
                   </v-col>
                   <v-col cols="auto">
-                    <v-btn v-if="mode == 'edit'" :disabled="loading" @click="mfaDialog = true" color="info">Manage MFA</v-btn>
+                    <v-btn v-if="mode == 'edit'" :disabled="(selected.length == 1 && selected[0]['disabled'] == 1) || loading" @click="mfaDialog = true" color="info">Manage MFA</v-btn>
                   </v-col>
                 </v-row>
               </v-flex>

@@ -689,6 +689,7 @@
       },
       // Loading
       loading: false,
+      timer: null,
 
       // Snackbar
       snackbar: false,
@@ -739,7 +740,10 @@
             this.environments = response.data.environments
             this.parseRequest(data)
             if (this.$router.currentRoute.name == 'deployment') {
-              if (data['status'] == 'QUEUED' || data['status'] == 'STARTING' || data['status'] == 'STOPPING' || data['status'] == 'IN PROGRESS') setTimeout(this.getDeployment, 1000)
+              if (data['status'] == 'QUEUED' || data['status'] == 'STARTING' || data['status'] == 'STOPPING' || data['status'] == 'IN PROGRESS') {
+                clearTimeout(this.timer)
+                this.timer = setTimeout(this.getDeployment, 1000)
+              }
               else this.start_execution = false
             }
           })

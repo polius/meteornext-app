@@ -1,7 +1,7 @@
 #!/bin/bash
 cd /root
 
-# Add environment variables
+# Generate 'server.conf' file
 if [[ -n $LIC_EMAIL && -n $LIC_KEY && -n $SQL_ENGINE && -n $SQL_HOST && -n $SQL_USER && -n $SQL_PASS && -n $SQL_PORT && -n $SQL_DB ]]; then
     cat >./server.conf <<EOF
 {
@@ -21,8 +21,25 @@ if [[ -n $LIC_EMAIL && -n $LIC_KEY && -n $SQL_ENGINE && -n $SQL_HOST && -n $SQL_
 EOF
 fi
 
-# Init 'SECURE' env variable
-if [[ -n $SECURE && $SECURE = "True" ]]; then
+# Check optional SSL variables
+if [[ -n $SQL_SSL_KEY ]]; then
+    jq '.sql += {"ssl_client_key": "ssl_key.pem"}' < server.conf > server.tmp && mv server.tmp server.conf
+    echo $SQL_SSL_KEY > ./ssl_key.pem
+fi
+if [[ -n $SQL_SSL_CERT ]]; then
+    jq '.sql += {"ssl_client_certificate": "ssl_cert.pem"}' < server.conf > server.tmp && mv server.tmp server.conf
+    echo $SQL_SSL_CERT > ./ssl_cert.pem
+fi
+if [[ -n $SQL_SSL_CA ]]; then
+    jq '.sql += {"ssl_ca_certificate": "ssl_ca.pem"}' < server.conf > server.tmp && mv server.tmp server.conf
+    echo $SQL_SSL_CA > ./ssl_ca.pem
+fi
+if [[ -n $SQL_SSL_VERIFY_CA && $SQL_SSL_VERIFY_CA == 1 ]]; then
+    jq '.sql += {"ssl_verify_ca": 1}' < server.conf > server.tmp && mv server.tmp server.conf
+fi
+
+# Check optional 'SECURE' variable
+if [[ -n $SECURE && $SECURE = "1" ]]; then
     export STS='add_header Strict-Transport-Security "max-age=63072000; includeSubdomains; preload;" always;'
 else
     export STS=''
@@ -30,7 +47,7 @@ fi
 envsubst '${STS}' < /etc/nginx/nginx.conf > /etc/nginx/nginx2.conf
 mv /etc/nginx/nginx2.conf /etc/nginx/nginx.conf
 
-# Init app
+# Start Meteor Next
 ./server &
 nginx
 /bin/bash

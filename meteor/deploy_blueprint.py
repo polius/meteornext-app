@@ -1,12 +1,11 @@
 import os
 import re
-import imp
-import sys
 import json
 import time
 import shutil
-import threading
 import inspect
+import threading
+import importlib.util
 
 from connector import connector
 from deploy_queries import deploy_queries
@@ -15,9 +14,8 @@ class deploy_blueprint:
     def __init__(self, args, imports, region, blueprint=None):
         self._args = args
         self._imports = imports
-        self._blueprint = imp.load_source('blueprint', "{}/blueprint.py".format(self._args.path)).blueprint() if blueprint is None else blueprint
         self._region = region
-
+        self._blueprint = importlib.util.spec_from_file_location("blueprint", "{}/blueprint.py".format(self._args.path)).loader.load_module().blueprint() if blueprint is None else blueprint
         # Store Threading Shared Vars 
         self._databases = []
         self._progress = []

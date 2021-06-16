@@ -77,6 +77,7 @@ class Meteor:
         for region in regions:
             # Compile SSH
             region_data = {
+                "id": region['id'],
                 "name": region['name'],
                 "ssh": {
                     "enabled": True if region['ssh_tunnel'] else False,
@@ -244,5 +245,5 @@ class blueprint:
         command = '{} --path "{}" --{}'.format(meteor_path, execution_path, execution_method)
 
         # Execute Meteor
-        # p = subprocess.Popen(command, shell=True)
+        # p = subprocess.Popen(command, shell=True)
         p = subprocess.Popen(command, stdout=open('/dev/null', 'w'), shell=True)

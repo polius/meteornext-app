@@ -48,7 +48,7 @@
                       </v-radio-group>
                     </div>
                     <div v-else>
-                      <v-alert dense v-if="mfaMode == 'webauthn' && webauthn.status == 'ko'" type="#EF5354">{{ webauthn.error }}</v-alert>
+                      <v-alert dense v-if="mfaMode == 'webauthn' && webauthn.status == 'ko'" color="#EF5354">{{ webauthn.error }}</v-alert>
                       <v-card v-if="mfaMode == '2fa'">
                         <v-card-text>
                           <v-row no-gutters>

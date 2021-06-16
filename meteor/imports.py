@@ -1,8 +1,8 @@
 import os
-import imp
 import sys
 import json
 import traceback
+import importlib.util
 from collections import OrderedDict
 
 class imports:
@@ -38,7 +38,7 @@ class imports:
     def __load_blueprint(self):
         try:
             file_path = "{}/blueprint.py".format(self._args.path)
-            blueprint = imp.load_source('blueprint', file_path).blueprint()
+            blueprint = importlib.util.spec_from_file_location("blueprint", file_path).loader.load_module().blueprint()
             return blueprint
         except Exception:
             print("The 'blueprint.py' has syntax errors.\n\n{}".format(traceback.format_exc()))

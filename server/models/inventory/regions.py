@@ -29,7 +29,7 @@ class Regions:
             INSERT INTO regions (name, group_id, ssh_tunnel, hostname, port, username, password, `key`, shared, owner_id, created_by, created_at)
             SELECT %s, %s, %s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s
         """
-        self._sql.execute(query, (region['name'], group_id, region['ssh_tunnel'], region['hostname'], region['port'], region['username'], region['password'], region['key'], region['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        self._sql.execute(query, (region['name'], group_id, region['ssh_tunnel'], region['hostname'], region['port'], region['username'], region['password'], region['key'], region['shared'], region['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user_id, group_id, region):
         query = """
