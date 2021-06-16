@@ -93,9 +93,9 @@
                 <v-col>
                   <div class="text-h6" style="font-weight:400;">Export Progress</div>
                 </v-col>
-                <v-col v-if="progressTimeValue != null" class="flex-grow-0 flex-shrink-0">
+                <!-- <v-col v-if="progressTimeValue != null" class="flex-grow-0 flex-shrink-0">
                   <div class="body-1">{{ progressTimeValue.format('HH:mm:ss') }}</div>
-                </v-col>
+                </v-col> -->
               </v-row>
               <v-flex xs12>
                 <div style="margin-top:10px; margin-bottom:10px;">
@@ -119,7 +119,7 @@
                     <v-btn @click="cancelExport" color="#EF5354">Cancel</v-btn>
                   </v-col>
                   <v-col v-else style="margin-bottom:10px;">
-                    <v-btn :disabled="loading" @click="dialogProgress = false" cols="auto" color="primary">Close</v-btn>
+                    <v-btn :disabled="loading" @click="closeExport" cols="auto" color="primary">Close</v-btn>
                   </v-col>
                 </v-row>
               </v-flex>
@@ -500,6 +500,10 @@ export default {
     },
     cancelExport() {
       this.cancelToken.cancel()
+    },
+    closeExport() {
+      this.dialogProgress = false
+      this.dialog = false
     },
     parseBytes(value) {
       if (value/1024 < 1) return value + ' B'

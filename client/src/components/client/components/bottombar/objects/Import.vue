@@ -12,9 +12,9 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form @submit.prevent ref="dialogForm" style="margin-top:0px; margin-bottom:15px;">
-                  <v-file-input v-model="file" dense outlined show-size accept=".sql" label="Click to select a .sql file" truncate-length="100" hide-details style="padding:0px"></v-file-input>
+                  <v-file-input :disabled="step == 'success'" v-model="file" dense outlined show-size accept=".sql" label="Click to select a .sql file" truncate-length="100" hide-details style="padding:0px"></v-file-input>
                   <div v-if="start" style="margin-top:15px">
-                    <v-progress-linear :value="progress" rounded color="primary" height="25">
+                    <v-progress-linear v-if="!(['success','fail','stop'].includes(step))" :value="progress" rounded color="primary" height="25">
                       <template v-slot="{ value }">
                         {{ (progress == 100) ? 'Importing... Please wait, It might take several minutes to finish.' : 'Uploading: ' + Math.ceil(value) + '%' }}
                       </template>
@@ -45,7 +45,10 @@
                 <v-divider></v-divider>
                 <div style="margin-top:15px; margin-bottom:10px;">
                   <v-row no-gutters>
-                    <v-col style="margin-right:5px">
+                    <v-col v-show="step == 'success'" style="margin-right:5px">
+                      <v-btn :disabled="loading" @click="dialog = false" color="primary">Close</v-btn>
+                    </v-col>
+                    <v-col v-show="step != 'success'" style="margin-right:5px">
                       <v-btn :loading="loading" @click="importSubmit" color="#00b16a" style="margin-right:5px">Import</v-btn>
                       <v-btn v-if="['upload','processing','stopping'].includes(step)" :loading="step == 'stopping'" @click="cancelImport" color="#EF5354">Cancel</v-btn>
                       <v-btn v-else :disabled="loading" @click="dialog = false" color="#EF5354">Cancel</v-btn>
@@ -126,7 +129,7 @@ export default {
       // Init vars
       this.loading = true
       this.progress = 0
-      this.text = 'Uploading file...' 
+      this.text = '[1/2] Uploading file...'
       this.error = ''
       this.step = 'upload'
       // Build import
@@ -144,7 +147,7 @@ export default {
           this.progress = percentCompleted
           if (this.progress == 100) {
             this.step = 'processing'
-            this.text = 'Processing file... Please wait.'
+            this.text = '[2/2] Importing file...'
           }
         },
         cancelToken: this.cancelToken.token
@@ -161,7 +164,7 @@ export default {
           }).then(() => {
             // Show success
             this.step = 'success'
-            this.text = 'File successfully imported.'
+            this.text = 'Import finished successfully.'
             // Disable loading
             this.loading = false
           }).catch(() => {})

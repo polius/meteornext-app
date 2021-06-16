@@ -69,9 +69,6 @@ class Setup:
             if self._conf:
                 # Set unique hardware id
                 self._conf['license']['uuid'] = str(uuid.getnode())
-                # Test sql connection
-                # sql = connectors.base.Base({'ssh': {'enabled': False}, 'sql': self._conf['sql']})
-                # sql.test_sql()
                 # Init sql pool
                 sql = connectors.pool.Pool(self._conf['sql'])
                 # Init license

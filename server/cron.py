@@ -19,6 +19,8 @@ class Cron:
 
         @app.before_first_request
         def start():
+            # One-Time Tasks
+            self.__one_time()
             # Schedule Tasks
             schedule.every(10).seconds.do(self.__run_threaded, self.__executions)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
@@ -29,6 +31,10 @@ class Cron:
             # Start Cron Listener
             t = threading.Thread(target=self.__run_schedule)
             t.start()
+
+    def __one_time(self):
+        # Clean "regions_update" table
+        self._sql.execute("TRUNCATE TABLE regions_update")
 
     def __run_threaded(self, job_func):
         job_thread = threading.Thread(target=job_func)

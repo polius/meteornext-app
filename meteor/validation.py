@@ -53,7 +53,7 @@ class validation:
             # Start validation
             threads = []
             for region in self._config['regions']:
-                validate_region = validate_regions(self._args, region)
+                validate_region = validate_regions(self._args, region, self._progress)
                 t = threading.Thread(target=validate_region.validate)
                 t.progress = {}
                 threads.append(t)

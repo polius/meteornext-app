@@ -247,7 +247,7 @@ export default {
         let reverse = (this.clientCursor.row == this.clientRange.start.row && this.clientCursor.column == this.clientRange.start.column)
         this.editor.selection.setSelectionRange(this.clientRange, reverse)
       }
-      if (this.headerTabSelected == 'client') this.editor.focus()
+      if (this.headerTabSelected == 'client' && this.sidebarMode == 'objects') this.editor.focus()
     },
     dialog: function(val) {
       this.dialogOpened = val
@@ -438,7 +438,7 @@ export default {
                 let dialogOptions = {
                   'mode': 'cellEditingError',
                   'title': 'Unable to write row',
-                  'text': data[0]['error'],
+                  'text': data.find(x => 'error' in x).error,
                   'button1': 'Edit row',
                   'button2': 'Discard changes'
                 }

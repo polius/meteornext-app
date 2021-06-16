@@ -4,6 +4,7 @@ RUN yum update -y && \
     yum upgrade -y && \
     yum install python36-devel -y && \
     yum install gcc -y && \
+    yum install jq -y && \
     # wget https://www.python.org/ftp/python/3.8.6/Python-3.8.6.tgz && \
     # tar xzf Python-3.8.6.tgz && \
     # cd Python-3.8.6 && \

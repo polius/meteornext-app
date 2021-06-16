@@ -587,7 +587,7 @@ export default {
             let dialogOptions = {
               'mode': 'info',
               'title': 'Unable to delete row(s)',
-              'text': data[0]['error'],
+              'text': data.find(x => 'error' in x).error,
               'button1': 'Close',
               'button2': ''
             }
@@ -701,7 +701,7 @@ export default {
               let dialogOptions = {
                 'mode': 'cellEditingError',
                 'title': 'Unable to write row',
-                'text': data[0]['error'],
+                'text': data.find(x => 'error' in x).error,
                 'button1': 'Edit row',
                 'button2': 'Discard changes'
               }

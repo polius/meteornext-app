@@ -43,7 +43,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-alert type="#EF5354" dense style="margin-top:15px"><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>The inventory related to the selected groups will be deleted as well</v-alert>
+                <v-alert color="#EF5354" dense style="margin-top:15px"><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>The inventory related to the selected groups will be deleted as well</v-alert>
                 <div style="margin-bottom:10px" class="subtitle-1">Are you sure you want to delete the selected groups?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">

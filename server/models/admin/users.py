@@ -8,7 +8,7 @@ class Users:
         if username is None:
             query = """
                 SELECT
-                    u.id, u.username, g.name AS `group`, u.email, u.ip, u.user_agent, u2.username AS 'created_by', u.created_at, u3.username AS 'updated_by', u.updated_at, u.last_login, u.coins, u.admin, u.last_ping,
+                    u.id, u.username, g.name AS `group`, u.email, u.ip, u.user_agent, u2.username AS 'created_by', u.created_at, u3.username AS 'updated_by', u.updated_at, u.last_login, u.coins, u.admin, u.disabled, u.last_ping,
                     CASE
                         WHEN mfa.2fa_hash IS NOT NULL THEN '2fa'
                         WHEN mfa.webauthn_ukey IS NOT NULL THEN 'webauthn'
@@ -46,7 +46,7 @@ class Users:
         self._sql.execute("INSERT INTO users (username, password, email, coins, group_id, admin, disabled, created_by, created_at) SELECT %s, %s, %s, %s, id, %s, %s, %s, %s FROM groups WHERE name = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['disabled'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['group']))
 
     def put(self, user_id, user):
-        self._sql.execute("UPDATE users SET username = %s, password = %s, email = %s, coins = %s, admin = %s, disabled = %s, group_id = (SELECT id FROM groups WHERE `name` = %s), updated_by = %s, updated_at = %s WHERE username = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['disabled'], user['group'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['current_username']))
+        self._sql.execute("UPDATE users SET username = %s, password = COALESCE(%s, password), email = %s, coins = %s, admin = %s, disabled = %s, group_id = (SELECT id FROM groups WHERE `name` = %s), updated_by = %s, updated_at = %s WHERE username = %s", (user['username'], user['password'], user['email'], user['coins'], user['admin'], user['disabled'], user['group'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['current_username']))
 
     def change_password(self, user):
         self._sql.execute("UPDATE users SET password = %s WHERE username = %s", (user['password'], user['username']))

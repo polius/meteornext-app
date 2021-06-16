@@ -223,6 +223,7 @@ export default {
     currentConn() {
       while (this.editor.completers.length > 1) this.editor.completers.pop()
       for (const [k,v] of Object.entries(this.clientCompleters)) this.editorAddCompleter(k, v)
+      setTimeout(() => { if (this.$refs.server !== undefined) this.$refs.server.focus()},100)
     },
   },
   methods: {
@@ -617,8 +618,7 @@ export default {
       // Assign filtered data
       this.sidebarItems = items
       // Show matching objects
-      if (search.length == 0) this.sidebarOpened = []
-      else this.sidebarOpened = items.map(item => ({id: item.id}))
+      if (search.length != 0) this.sidebarOpened = items.map(item => ({id: item.id}))
     },
     refreshObjects(resolve, reject) {
       new Promise((res, rej) => this.getDatabases(this.server, res, rej))
@@ -754,7 +754,7 @@ export default {
             this.$store.dispatch('client/addHistory', history)
             // Show error
             this.dialogTitle = 'Unable to apply changes'
-            this.dialogText = data[0]['error']
+            this.dialogText = data.find(x => 'error' in x).error
             this.dialog = true
             // Reject promise
             reject()

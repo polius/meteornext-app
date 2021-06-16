@@ -76,10 +76,12 @@ class Users:
         # Check unique user
         if len(user) == 0:
             return jsonify({'message': 'This user does not exist'}), 400
+        if data['current_username'] != data['username'] and self._users.exist(data['username']):
+            return jsonify({'message': 'This user currently exists'}), 400
 
         # Check password
-        elif data['current_username'] != data['username'] and self._users.exist(data['username']):
-            return jsonify({'message': 'This user currently exists'}), 400
+        if 'password' not in data or data['password'] is None or len(data['password'].strip()) == 0:
+            data['password'] = None
         elif data['password'] != user[0]['password']:
             data['password'] = bcrypt.hashpw(data['password'].encode('utf8'), bcrypt.gensalt())
 

@@ -9,9 +9,10 @@ import threading
 from region import Region
 
 class validate_regions:
-    def __init__(self, args, region):
+    def __init__(self, args, region, progress):
         self._args = args
         self._region = region
+        self._progress = progress
         self._Region = Region(args, region)
 
     def validate(self):
@@ -81,9 +82,19 @@ class validate_regions:
 
         # Validate SSH Meteor Version
         if self._region['ssh']['enabled']:
-            check = self._Region.check_version()
-            if not check:
-                self._Region.upload_binary()
+            updated = self._Region.check_version()
+            if not updated:
+                proceed = self._progress.start_region_update(self._region['id'])
+                if proceed:
+                    try:
+                        self._Region.upload_binary()
+                    finally:
+                        self._progress.finish_region_update(self._region['id'])
+                else:
+                   finished = self._progress.check_region_update(self._region['id'])
+                   while not finished:
+                       time.sleep(1)
+                       finished = self._progress.check_region_update(self._region['id'])
 
     def __validate_sql(self, server):
         # Supress Errors Output

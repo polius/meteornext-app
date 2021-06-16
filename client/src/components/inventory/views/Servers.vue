@@ -206,7 +206,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-alert dense type="#EF5354" style="margin-top:15px">This server is being used in some sections.</v-alert>
+                <v-alert dense color="#EF5354" style="margin-top:15px">This server is being used in some sections.</v-alert>
                 <div class="subtitle-1" style="margin-top:10px; margin-bottom:10px;">This server won't be usable in the selected sections. Do you want to proceed?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">

@@ -128,6 +128,15 @@ CREATE TABLE `regions` (
   FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE `regions_update` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `execution_id` INT UNSIGNED NOT NULL COMMENT 'References [deployments_basic, deployments_pro].id',
+  `execution_mode` VARCHAR(191) NOT NULL COMMENT '[basic, pro]',
+  `region_id` INT UNSIGNED NOT NULL COMMENT 'References regions.id',
+  PRIMARY KEY (`id`),
+  UNIQUE `region_id` (`region_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE `servers` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
