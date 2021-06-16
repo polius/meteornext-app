@@ -31,6 +31,16 @@
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.username" label="Username" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.password" label="Password" style="margin-left:10px; padding-top:0px;" @click:append="show_password = !show_password" :append-icon="show_password ? 'visibility' : 'visibility_off'" :type="show_password ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.database" label="Database" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
+            <v-card v-if="sql.ssl_client_key != null || sql.ssl_client_certificate != null || sql.ssl_ca_certificate != null" style="height:52px; margin-left:10px">
+              <v-row no-gutters>
+                <v-col cols="auto" style="display:flex; margin:15px">
+                  <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
+                </v-col>
+                <v-col>
+                  <div class="text-body-1" style="color:#00b16a; margin-top:15px">{{ 'Using a SSL connection (' + ssl_active + ')' }}</div>
+                </v-col>
+              </v-row>
+            </v-card>
           </v-flex>
           <!-- LOGS -->
           <v-flex v-else-if="setting_mode == 'logs'" xs12 style="margin-top:5px; margin-bottom:5px;">
@@ -130,6 +140,15 @@ export default {
   }),
   created() {
     this.getSettings()
+  },
+  computed: {
+    ssl_active: function() {
+      let elements = []
+      if (this.sql.ssl_client_key != null) elements.push('Client Key')
+      if (this.sql.ssl_client_certificate != null) elements.push('Client Certificate')
+      if (this.sql.ssl_ca_certificate != null) elements.push('CA Certificate')
+      return elements.join(' + ')
+    }
   },
   methods: {
     getSettings() {
