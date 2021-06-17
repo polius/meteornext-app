@@ -5,7 +5,14 @@ class Regions:
         self._sql = sql
 
     def get(self, group_id=None, owner_id=None, region_id=None, user_id=None):
-        if user_id is not None:
+        if region_id is not None:
+            query = """
+                SELECT *
+                FROM regions
+                WHERE id = %s
+            """
+            return self._sql.execute(query, (region_id))
+        elif user_id is not None:
             query = """
                 SELECT r.id, r.name, r.group_id, g.name AS 'group', r.ssh_tunnel, r.hostname, r.port, r.username, r.password, `key`, r.shared, r.owner_id, u.username AS 'owner', u2.username AS 'created_by', r.created_at, u3.username AS 'updated_by', r.updated_at
                 FROM regions r
@@ -32,13 +39,6 @@ class Regions:
             owner_sql = '%s' if owner_id is None else ' AND (r.shared = 1 OR r.owner_id = %s)'
             owner_id = '' if owner_id is None else owner_id
             return self._sql.execute(query.format(owner_sql), (group_id, owner_id))
-        elif region_id is not None:
-            query = """
-                SELECT *
-                FROM regions
-                WHERE id = %s
-            """
-            return self._sql.execute(query, (region_id))
         else:
             query = """
                 SELECT r.id, r.name, r.group_id, g.name AS 'group', r.ssh_tunnel, r.hostname, r.port, r.username, r.password, r.key, r.shared, r.owner_id, u.username AS 'owner', u2.username AS 'created_by', r.created_at, u3.username AS 'updated_by', r.updated_at

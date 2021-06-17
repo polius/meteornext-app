@@ -26,7 +26,7 @@ class logs:
             self.__compress()
             
         except Exception as e:
-            raise Exception('[USER] Error Compiling Meteor Data. ' + str(e))
+            raise Exception('An error occurred compiling logs. ' + str(e))
 
     def __compress(self):
         # Delete temp file

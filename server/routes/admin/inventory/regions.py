@@ -116,7 +116,7 @@ class Regions:
             return jsonify({'message': 'This region name currently exists'}), 400
         # Parse private key
         if region['ssh_tunnel'] and region['key'] == '<ssh_key>':
-            origin = self._regions.get(user['id'], user['group_id'], region['id'])[0]
+            origin = self._regions.get(region_id=region['id'])[0]
             region['key'] = origin['key'] if region['key'] == '<ssh_key>' else region['key']
         # Add region
         self._regions.post(user, region)
