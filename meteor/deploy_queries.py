@@ -100,7 +100,7 @@ class deploy_queries:
             try:
                 self._query_template.validate_execution(query_parsed, args, conn, database)
                 # Write Exception to the Log
-                if query_syntax != 'Select':
+                if query_syntax not in ['Select','Server_Level.Show']:
                     self._execution_log['output'].append(execution_row)
 
             except Exception as e:
@@ -111,8 +111,8 @@ class deploy_queries:
                 self._execution_log['output'].append(execution_row)
                 return
 
-        # Execute Query (if --deploy or --test with SELECT queries)
-        if self._args.deploy or query_syntax == 'Select':
+        # Execute Query (if --deploy or --test with SELECT/SHOW queries)
+        if self._args.deploy or query_syntax in ['Select','Server_Level.Show']:
             try:
                 # Execute query
                 query_prefix = '/*B' + str(self._imports.config['params']['id']) + '*/' if self._imports.config['params']['mode'] == 'basic' else '/*P' + str(self._imports.config['params']['id']) + '*/'

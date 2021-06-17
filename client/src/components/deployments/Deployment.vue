@@ -307,7 +307,7 @@
                       <span>
                         <b style="color:#00b16a">VALIDATE</b> Tests all server connections
                         <br>
-                        <b class="orange--text">TEST</b> A simulation is performed (only SELECTs are executed)
+                        <b class="orange--text">TEST</b> A simulation is performed (only SELECTs & SHOWs are executed)
                         <br>
                         <b style="color:#EF5354">DEPLOY</b> Executes ALL queries
                       </span>
