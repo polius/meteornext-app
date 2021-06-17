@@ -1,7 +1,7 @@
 <template>
   <div style="margin-left:auto; margin-right:auto; height:100%; width:100%">
     <div style="height:calc(100% - 36px)">
-      <v-autocomplete v-if="sidebarMode == 'servers'" ref="server" v-model="serverSearch" :loading="sidebarLoading || sidebarLoadingServer" :disabled="sidebarLoadingServer" @change="serverChanged" solo :items="serversList" item-text="name" label="Search" auto-select-first hide-details return-object background-color="#303030" height="48px" :menu-props="{maxHeight: 'calc(100% - 215px)'}" style="padding:10px;">
+      <v-autocomplete v-if="sidebarMode == 'servers'" ref="server" v-model="serverSearch" :loading="sidebarLoading || sidebarLoadingServer" :disabled="sidebarLoadingServer" @change="serverChanged" @blur="onBlur" solo :items="serversList" item-text="name" label="Search" auto-select-first hide-details return-object background-color="#303030" height="48px" :menu-props="{maxHeight: 'calc(100% - 215px)'}" style="padding:10px;">
         <template v-slot:[`selection`]="{ item }">
           <div class="body-2">
             <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">fas fa-server</v-icon>
@@ -223,10 +223,20 @@ export default {
     currentConn() {
       while (this.editor.completers.length > 1) this.editor.completers.pop()
       for (const [k,v] of Object.entries(this.clientCompleters)) this.editorAddCompleter(k, v)
-      setTimeout(() => { if (this.$refs.server !== undefined) this.$refs.server.focus()},100)
+      this.$nextTick(() => {
+        const element = this.$refs.server
+        if (element !== undefined) element.focus()
+      })
     },
   },
   methods: {
+    onBlur() {
+      if (this.sidebarMode == 'servers') {
+        this.$nextTick(() => {
+          if (this.$refs.server !== undefined) this.$refs.server.focus()
+        })
+      }
+    },
     serverChanged(val) {
       if (val === undefined || val == null || val.length == 0) return
       const server = this.findServer(val.id)
