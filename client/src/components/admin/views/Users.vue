@@ -181,7 +181,6 @@ export default {
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
-    now: moment.utc(),
     showPassword: false,
     // User Groups
     groups: [],
@@ -354,7 +353,7 @@ export default {
     },
     isOnline(last_ping) {
       if (last_ping == null) return false
-      return moment(last_ping).add(70,'seconds') >= this.now
+      return moment(last_ping).add(70,'seconds') >= moment.utc()
     },
     lastOnline(item) {
       if (item['last_login'] == null) return 'not logged in'
