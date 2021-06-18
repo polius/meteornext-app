@@ -35,7 +35,7 @@ class Deployments:
                 WHERE r.active = 1 OR r.active IS NULL
                 ORDER BY id DESC
             """
-            results = self._sql.execute(query, {'user_id': user_id, 'deployment_id': deployment_id})    
+            return self._sql.execute(query, {'user_id': user_id, 'deployment_id': deployment_id})
         else:
             query = """
                 SELECT d.id, d.execution_id, d.name, e.name AS 'environment', r.name AS 'release', d.mode, d.method, d.status, d.queue, d.created, d.scheduled, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
@@ -59,8 +59,6 @@ class Deployments:
                             FROM deployments_basic db2
                             WHERE db2.deployment_id = db.deployment_id
                         )
-                        ORDER BY db.created DESC
-                        LIMIT 1000
                     )
                     UNION ALL
                     (
@@ -81,19 +79,14 @@ class Deployments:
                             FROM deployments_pro dp2
                             WHERE dp2.deployment_id = dp.deployment_id
                         )
-                        ORDER BY dp.created DESC
-                        LIMIT 1000
                     )
                 ) d
                 LEFT JOIN environments e ON e.id = d.environment_id
                 LEFT JOIN releases r ON r.id = d.release_id
                 WHERE r.active = 1 OR r.active IS NULL
-                ORDER BY created DESC
-                LIMIT 1000
+                ORDER BY created DESC, id DESC
             """
-            results = self._sql.execute(query, {"user_id": user_id})
-
-        return results
+            return self._sql.execute(query, {"user_id": user_id})
 
     def post(self, user_id, deployment):
         query = """

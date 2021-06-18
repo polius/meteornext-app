@@ -7,6 +7,8 @@
         <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
           <v-btn text @click="filterDialog = true" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-search</v-icon>FILTER</v-btn>
           <v-btn text v-if="selected.length == 1" @click="infoDeployment()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="getDeployments" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field @input="onSearch" v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -164,7 +166,7 @@ import moment from 'moment';
 
 export default {
   data: () => ({
-    loading: true,
+    loading: false,
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Release', align: 'left', value: 'release' },
