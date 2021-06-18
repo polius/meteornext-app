@@ -32,7 +32,7 @@ class Deployments_Queued:
 
     def getNext(self):
         query = """
-            SELECT q.execution_mode AS 'mode', q.execution_id AS 'id', q.status, g.id AS 'group', g.deployments_execution_concurrent AS 'concurrent'
+            SELECT q.execution_mode AS 'mode', q.execution_id AS 'id', q.status, g.id AS 'group', COALESCE(g.deployments_execution_concurrent,100) AS 'concurrent'
             FROM (
                 SELECT q.id, q.execution_mode, q.execution_id, b.status, b.deployment_id FROM deployments_queued q JOIN deployments_basic b ON b.id = q.execution_id AND q.execution_mode = 'basic' AND b.status IN('QUEUED','STARTING','IN PROGRESS','STOPPING')
                 UNION ALL
