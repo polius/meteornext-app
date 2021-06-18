@@ -107,9 +107,9 @@ class Login:
         def login_check():
             return jsonify({'message': 'OK'}), 200
 
-        @login_blueprint.route('/logout', methods=['GET'])
+        @login_blueprint.route('/logout', methods=['POST'])
         def logout_check():
-            resp = jsonify({'message': 'OK'})
+            resp = jsonify({'message': 'Bye'})
             unset_access_cookies(resp)
             return resp
 
