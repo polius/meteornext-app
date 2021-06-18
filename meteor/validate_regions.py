@@ -5,6 +5,7 @@ import tempfile
 import paramiko
 import sshtunnel
 import threading
+import traceback
 
 from region import Region
 
@@ -17,7 +18,7 @@ class validate_regions:
 
     def validate(self):
         region_type = '[SSH]  ' if self._region['ssh']['enabled'] else '[LOCAL]'
-        print("--> {} Region '{}' Started...".format(region_type, self._region['name']))
+        # print("--> {} Region '{}' Started...".format(region_type, self._region['name']))
 
         # Get current thread 
         current_thread = threading.current_thread()
@@ -28,8 +29,9 @@ class validate_regions:
                 self.__validate_ssh()
             except Exception as e:
                 current_thread.progress = {'region': self._region['name'], 'success': False, 'error': str(e)}
-                print("--> {} Region '{}' Failed.".format(region_type, self._region['name']))
-                print(str(e))
+                traceback.print_exc()
+                # print("--> {} Region '{}' Failed.".format(region_type, self._region['name']))
+                # print(str(e))
                 return
 
         # SQL Validation
@@ -50,7 +52,7 @@ class validate_regions:
         for t in threads:
             connection_succeeded &= t.progress['success']
             if t.progress['success'] == False:
-                print("    [{}/SQL] {} {}".format(self._region['name'], t.progress['sql'], t.progress['error']))
+                # print("    [{}/SQL] {} {}".format(self._region['name'], t.progress['sql'], t.progress['error']))
                 progress['errors'].append({'server': t.progress['sql'], 'error': t.progress['error'].replace('"', '\\"')})
 
         # In case of no errors, remove the 'errors' key
@@ -58,27 +60,41 @@ class validate_regions:
             del progress['errors']
 
         # Print status
-        if connection_succeeded:
-            print("--> {} Region '{}' Finished.".format(region_type, self._region['name']))
-        else:
-            print("--> {} Region '{}' Failed.".format(region_type, self._region['name']))
+        # if connection_succeeded:
+        #     print("--> {} Region '{}' Finished.".format(region_type, self._region['name']))
+        # else:
+        #     print("--> {} Region '{}' Failed.".format(region_type, self._region['name']))
 
         # Return validation status
         progress['success'] = connection_succeeded
         current_thread.progress = progress
 
     def __validate_ssh(self):
-        # Validate SSH Connection
+        # Supress Errors Output
         sys_stderr = sys.stderr
         sys.stderr = open('/dev/null', 'w')
-        try:
-            client = paramiko.SSHClient()
-            client.load_system_host_keys()
-            client.set_missing_host_key_policy(paramiko.WarningPolicy())
-            client.connect(hostname=self._region['ssh']['hostname'], port=int(self._region['ssh']['port']), username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'], timeout=10)
-            client.close()
-        finally:
-            sys.stderr = sys_stderr
+
+        # Validate SSH Connection
+        error = None
+        for _ in range(10):
+            try:
+                client = paramiko.SSHClient()
+                client.load_system_host_keys()
+                client.set_missing_host_key_policy(paramiko.WarningPolicy())
+                client.connect(hostname=self._region['ssh']['hostname'], port=int(self._region['ssh']['port']), username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'], timeout=10)
+                client.close()
+                error = None
+                break
+            except Exception as e:
+                error = e
+                time.sleep(3)
+
+        # Show Errors Output Again
+        sys.stderr = sys_stderr
+
+        # Raise Exception if validation failed
+        if error:
+            raise error
 
         # Validate SSH Meteor Version
         if self._region['ssh']['enabled']:
@@ -103,9 +119,9 @@ class validate_regions:
 
         current_thread = threading.current_thread()
         error = None
-        attempts = 3
+        attempts = 5
 
-        for i in range(attempts):
+        for _ in range(attempts):
             try:
                 # Get SSL
                 ssl = self.__get_ssl(server)
@@ -120,11 +136,11 @@ class validate_regions:
                     conn = pymysql.connect(host=server['hostname'], port=int(server['port']), user=server['username'], passwd=server['password'], ssl_ca=ssl['ssl_ca'], ssl_cert=ssl['ssl_cert'], ssl_key=ssl['ssl_key'], ssl_verify_cert=ssl['ssl_verify_cert'], ssl_verify_identity=ssl['ssl_verify_identity'])
                     conn.close()
                 current_thread.progress = {"region": self._region['name'], "sql": server['name'], "success": True}
+                error = None
                 break
-
             except Exception as e:
                 error = e
-                time.sleep(1)
+                time.sleep(2)
             finally:
                 # Close SSL
                 self.__close_ssl(ssl)
@@ -132,7 +148,7 @@ class validate_regions:
         # Show Errors Output Again
         sys.stderr = sys_stderr
 
-        if error is not None:
+        if error:
             current_thread.progress = {"region": self._region['name'], "sql": server['name'], "success": False, "error": str(error).replace('\n','')}
 
     def __get_ssl(self, server):

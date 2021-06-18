@@ -20,9 +20,9 @@ class validation:
         return self._time
 
     def start(self):
-        print("+==================================================================+")
-        print("|  VALIDATION                                                      |")
-        print("+==================================================================+")
+        # print("+==================================================================+")
+        # print("|  VALIDATION                                                      |")
+        # print("+==================================================================+")
         try:
             self._start_time = time.time()
             self.__validate_regions()
@@ -71,10 +71,10 @@ class validation:
                 self._progress.error(error_msg[2:])
                 raise Exception(error_msg)
             
-            print("- Regions Validation Passed!")
+            # print("- Regions Validation Passed!")
 
         except KeyboardInterrupt:
-            print("\n--> Ctrl+C received. Stopping the execution...")
+            # print("\n--> Ctrl+C received. Stopping the execution...")
             for t in threads:
                 t.join()
             raise
