@@ -220,6 +220,7 @@ export default {
   components: { AgGridVue },
   computed: {
     ...mapFields([
+      'currentConn',
       'dialogOpened',
       'connections',
     ], { path: 'client/client' }),
@@ -255,6 +256,12 @@ export default {
     EventBus.$on('get-content', this.getContent);
   },
   watch: {
+    currentConn() {
+      // Reload Table Headers
+      const headers = this.contentHeaders
+      this.gridApi.content.setColumnDefs([])
+      this.contentHeaders = headers
+    },
     sidebarSelected: {
       handler: function () {
         if (this.headerTabSelected == 'content') this.cellEditingDiscard()
