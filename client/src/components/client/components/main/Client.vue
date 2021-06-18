@@ -240,6 +240,11 @@ export default {
       if (val == 'objects') this.editor.setValue(this.clientQueries, 1)
     },
     currentConn() {
+      // Reload Table Headers
+      const headers = this.clientHeaders
+      this.gridApi.client.setColumnDefs([])
+      this.clientHeaders = headers
+      // Load Current Connnection Editor
       this.cellEditingDiscard()
       this.editor.setValue(this.clientQueries, 1)
       if (this.clientCursor != null && this.clientRange != null) {
@@ -1046,6 +1051,7 @@ export default {
         }
       }
       // Load Table Header
+      gridApi.setColumnDefs([])
       current.clientHeaders = headers
       // Load Table Items
       let itemsToLoad = []
