@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-import traceback
 import importlib.util
 from collections import OrderedDict
 
@@ -25,14 +24,11 @@ class imports:
     def __load_config(self):
         try:
             file_path = '{}/config.json'.format(self._args.path)
-            if not os.path.isfile(file_path):
-                print("The 'config.json' file has not been found in '{}'".format(file_path))
-                sys.exit()
             with open(file_path) as data_file:
                 data = json.load(data_file, object_pairs_hook=OrderedDict)
                 return data
-        except Exception:
-            print("The 'config.json' file has syntax errors. Please check if it's a valid JSON.")
+        except Exception as e:
+            print(str(e))
             sys.exit()
 
     def __load_blueprint(self):
@@ -40,6 +36,6 @@ class imports:
             file_path = "{}/blueprint.py".format(self._args.path)
             blueprint = importlib.util.spec_from_file_location("blueprint", file_path).loader.load_module().blueprint()
             return blueprint
-        except Exception:
-            print("The 'blueprint.py' has syntax errors.\n\n{}".format(traceback.format_exc()))
+        except Exception as e:
+            print(str(e))
             sys.exit()

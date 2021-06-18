@@ -27,36 +27,29 @@ class Meteor:
         self._auxiliary = models.inventory.auxiliary.Auxiliary(sql)
         self._groups = models.admin.groups.Groups(sql)
 
-        # Init Meteor Config
-        self._blueprint = ''
-        self._config = {}
-
         # Retrieve Meteor Logs Path
         self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
         self._base_path = os.path.dirname(sys.executable) if self._bin else app.root_path
 
-        # Logs Settings
-        self._logs = {}
-
     def execute(self, deployment):
         # Generate Deployment Unique Identifier
-        self._uuid = str(uuid.uuid4())
+        uri = str(uuid.uuid4())
 
         # Init Logs Settings
-        self._logs = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])
+        logs = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])
 
         # Create Deployment Folder to store Meteor files
-        if not os.path.isdir('{}/{}/keys'.format(self._logs['local']['path'], self._uuid)):
-            os.makedirs('{}/{}/keys'.format(self._logs['local']['path'], self._uuid))
+        if not os.path.isdir('{}/{}/keys'.format(logs['local']['path'], uri)):
+            os.makedirs('{}/{}/keys'.format(logs['local']['path'], uri))
 
         # Compile Meteor Files
-        self.__compile_config(deployment)
-        self.__compile_blueprint(deployment)
+        self.__compile_config(deployment, logs, uri)
+        self.__compile_blueprint(deployment, logs, uri)
 
         # Execute Meteor
-        self.__execute(deployment)
+        self.__execute(deployment, logs, uri)
 
-    def __compile_config(self, deployment):
+    def __compile_config(self, deployment, logs, uri):
         # Get Data
         environment = self._environments.get(deployment['user_id'], deployment['group_id'], deployment['environment_id'])
         regions = self._regions.get_by_environment(deployment['user_id'], deployment['group_id'], deployment['environment_id'])
@@ -68,11 +61,11 @@ class Meteor:
             return
     
         # Compile Regions
-        self._config['regions'] = []
+        config = {'regions': []}
 
         # Generate Keys Base Path
         keys = []
-        keys_path = "{}/{}/keys".format(self._logs['local']['path'], self._uuid)
+        keys_path = "{}/{}/keys".format(logs['local']['path'], uri)
 
         for region in regions:
             # Compile SSH
@@ -112,13 +105,13 @@ class Meteor:
                     })
 
             # Add region data to the credentials
-            self._config['regions'].append(region_data)
+            config['regions'].append(region_data)
 
         # Compile Auxiliary Connections
-        self._config['auxiliary_connections'] = {}
+        config['auxiliary_connections'] = {}
         for aux in auxiliary:
             # Init Auxiliary Conf
-            self._config['auxiliary_connections'][aux['name']] = {
+            config['auxiliary_connections'][aux['name']] = {
                 "ssh": { "enabled": False },
                 "sql": {
                     "engine": aux['engine'],
@@ -140,7 +133,7 @@ class Meteor:
             os.chmod(key['path'], 0o600)
 
         # Compile Logs
-        self._config['amazon_s3'] = {
+        config['amazon_s3'] = {
             "enabled": False,
             "aws_access_key_id": "",
             "aws_secret_access_key": "",
@@ -148,23 +141,23 @@ class Meteor:
             "bucket_name": ""
         }
 
-        if 'amazon_s3' in self._logs and self._logs['amazon_s3']['enabled']:
-            self._config['amazon_s3'] = {
+        if 'amazon_s3' in logs and logs['amazon_s3']['enabled']:
+            config['amazon_s3'] = {
                 "enabled": True,
-                "aws_access_key_id": self._logs['amazon_s3']['aws_access_key'],
-                "aws_secret_access_key": self._logs['amazon_s3']['aws_secret_access_key'],
-                "region_name": self._logs['amazon_s3']['region_name'],
-                "bucket_name": self._logs['amazon_s3']['bucket_name']
+                "aws_access_key_id": logs['amazon_s3']['aws_access_key'],
+                "aws_secret_access_key": logs['amazon_s3']['aws_secret_access_key'],
+                "region_name": logs['amazon_s3']['region_name'],
+                "bucket_name": logs['amazon_s3']['bucket_name']
             }
 
         # Compile Slack
-        self._config['slack'] = {
+        config['slack'] = {
             "enabled": False,
             "channel_name": "",
             "webhook_url": ""
         }
         if slack['enabled']:
-            self._config['slack'] = {
+            config['slack'] = {
                 "enabled":  True if slack['enabled'] else False,
                 "channel_name": slack['channel_name'],
                 "webhook_url": slack['webhook_url']
@@ -175,7 +168,7 @@ class Meteor:
             next_credentials = json.load(outfile)['sql']
 
         # Compile Meteor Next Credentials
-        self._config['meteor_next'] = {
+        config['meteor_next'] = {
             "enabled": True,
             "hostname": next_credentials['hostname'],
             "port": int(next_credentials['port']),
@@ -189,7 +182,7 @@ class Meteor:
         }
 
         # Compile Meteor Next Params
-        self._config['params'] = {
+        config['params'] = {
             "id": deployment['execution_id'],
             "mode": deployment['mode'].lower(),
             "user": deployment['username'],
@@ -200,26 +193,25 @@ class Meteor:
         }
 
         # Store Config
-        with open("{}/{}/config.json".format(self._logs['local']['path'], self._uuid), 'w') as outfile:
-            json.dump(self._config, outfile)
+        with open("{}/{}/config.json".format(logs['local']['path'], uri), 'w') as outfile:
+            json.dump(config, outfile)
 
-    def __compile_blueprint(self, deployment):
+    def __compile_blueprint(self, deployment, logs, uri):
         if deployment['mode'] == 'BASIC':
-            self.__compile_blueprint_basic(deployment)
+            blueprint = self.__compile_blueprint_basic(deployment)
         elif deployment['mode'] == 'PRO':
-            self._blueprint = deployment['code']
+            blueprint = deployment['code']
 
         # Store Query Execution
-        with open("{}/{}/blueprint.py".format(self._logs['local']['path'], self._uuid), 'w', encoding="utf-8") as outfile:
-            outfile.write(self._blueprint.encode('utf-8','ignore').decode('utf-8'))
+        with open("{}/{}/blueprint.py".format(logs['local']['path'], uri), 'w', encoding="utf-8") as outfile:
+            outfile.write(blueprint.encode('utf-8','ignore').decode('utf-8'))
 
     def __compile_blueprint_basic(self, deployment):
         queries = {}
         for i, q in enumerate(json.loads(deployment['queries'])):
             queries[str(i+1)] = q['query']
         databases = [i.strip().replace('%','*').replace('_','?').replace('\\?','_') for i in  deployment['databases'].split(',')]
-
-        self._blueprint = """import fnmatch
+        return """import fnmatch
 class blueprint:
     def __init__(self):
         self.queries = {0}
@@ -234,11 +226,11 @@ class blueprint:
     def after(self, meteor, environment, region):
         pass""".format(json.dumps(queries), databases)
 
-    def __execute(self, deployment):
+    def __execute(self, deployment, logs, uri):
         # Build Meteor Parameters
         meteor_base_path = sys._MEIPASS if self._bin else self._app.root_path
         meteor_path = "{}/apps/meteor/init".format(meteor_base_path) if self._bin else "python3 {}/../meteor/meteor.py".format(meteor_base_path)
-        execution_path = "{}/{}".format(self._logs['local']['path'], self._uuid)
+        execution_path = "{}/{}".format(logs['local']['path'], uri)
         execution_method = deployment['method'].lower()
 
         # Build Meteor Command

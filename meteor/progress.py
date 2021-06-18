@@ -21,6 +21,7 @@ class progress:
             "username": self._config['meteor_next']['username'],
             "password": self._config['meteor_next']['password'],
             "database": self._config['meteor_next']['database'],
+            "autocommit": True,
             "ssl_ca_certificate": self._config['meteor_next']['ssl_ca_certificate'],
             "ssl_client_certificate": self._config['meteor_next']['ssl_client_certificate'],
             "ssl_client_key": self._config['meteor_next']['ssl_client_key'],
@@ -36,13 +37,11 @@ class progress:
         uri = self._args.path[self._args.path.rfind('/')+1:]
         query = "UPDATE deployments_{} SET status = 'IN PROGRESS', uri = '{}', engine = '{}', started = '{}', pid = '{}' WHERE id = {}".format(self._config['params']['mode'], uri, engine, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), pid, self._config['params']['id'])
         self._sql.execute(query=query, database=self._config['meteor_next']['database'])
-        self._sql.commit()
 
     def end(self, execution_status):
         status = 'SUCCESS' if execution_status == 0 else 'WARNING' if execution_status == 1 else 'STOPPED'
         query = "UPDATE deployments_{} SET status = '{}', ended = '{}', error = 0 WHERE id = {}".format(self._config['params']['mode'], status, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._config['params']['id'])
         self._sql.execute(query=query, database=self._config['meteor_next']['database'])
-        self._sql.commit()
         self._sql.stop()
 
     def error(self, error_msg):
@@ -50,7 +49,6 @@ class progress:
         progress = json.dumps(self._progress).replace("'", "\\'")
         query = "UPDATE deployments_{} SET status = 'FAILED', progress = '{}', ended = '{}', error = 1 WHERE id = {}".format(self._config['params']['mode'], progress, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), self._config['params']['id'])
         self._sql.execute(query=query, database=self._config['meteor_next']['database'])
-        self._sql.commit()
         self._sql.stop()
 
     def track_syntax(self, value):
@@ -102,7 +100,6 @@ class progress:
         """
         args = {'execution_id': self._config['params']['id'], 'execution_mode': self._config['params']['mode'], 'region_id': region_id}
         result = self._sql.execute(query=query, args=args, database=self._config['meteor_next']['database'])
-        self._sql.commit()
         return result['query_result'] > 0
 
     def finish_region_update(self, region_id):
@@ -111,7 +108,6 @@ class progress:
             WHERE region_id = %s
         """
         self._sql.execute(query=query, args=(region_id), database=self._config['meteor_next']['database'])
-        self._sql.commit()
 
     def check_region_update(self, region_id):
         query = """
@@ -126,4 +122,3 @@ class progress:
         progress = json.dumps(self._progress).replace("'", "\\\'")
         query = "UPDATE deployments_{} SET progress = '{}' WHERE id = {}".format(self._config['params']['mode'], progress, self._config['params']['id'])
         self._sql.execute(query=query, database=self._config['meteor_next']['database'])
-        self._sql.commit()
