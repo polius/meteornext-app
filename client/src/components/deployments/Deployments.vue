@@ -7,6 +7,8 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text @click="newDeploy()"><v-icon small style="padding-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn v-show="selected.length == 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-info</v-icon>INFORMATION</v-btn>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="getDeployments" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -89,7 +91,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    loading: true,
+    loading: false,
 
     // Inline Editing
     releases_items: [],
@@ -107,13 +109,14 @@ export default {
   },
   methods: {
     getDeployments() {
+      this.loading = true
       axios.get('/deployments')
         .then((response) => {
           // Deployments
           this.items = response.data.deployments.map(x => ({...x, created: this.dateFormat(x.created), scheduled: this.dateFormat(x.scheduled), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           this.parseScheduled()
           // Releases
-          for (var i = 0; i < response.data.releases.length; ++i) this.releases_items.push(response.data.releases[i]['name'])
+          this.releases_items = response.data.releases.map(x => x.name)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
