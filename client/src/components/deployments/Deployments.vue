@@ -208,8 +208,7 @@ export default {
       this.$router.push({ name:'deployments.new' })
     },
     infoDeploy() {
-      const id = this.selected[0]['mode'].substring(0, 1) + this.selected[0]['execution_id']
-      this.$router.push({ name:'deployment', params: { id: id }})
+      this.$router.push({ name:'deployment', params: { id: this.selected[0]['execution_id'] }})
     },
     notification(message, color) {
       this.snackbarText = message

@@ -57,7 +57,6 @@ const connection = () => {
     contentColumnsExtra: [],
     contentPks: [],
     contentSearchColumn: '',
-    contentSearchFilterItems: ['=', '!=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN', 'IS NULL', 'IS NOT NULL'],
     contentSearchFilter: '=',
     contentSearchFilterText: '',
     contentSearchFilterText2: '',

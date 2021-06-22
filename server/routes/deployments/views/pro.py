@@ -84,31 +84,6 @@ class Pro:
             with open('{}/../blueprint.py'.format(code_path)) as file_open:
                 return jsonify({'data': file_open.read()}), 200
 
-        @deployments_pro_blueprint.route('/deployments/pro/executions', methods=['GET'])
-        @jwt_required()
-        def deployments_pro_executions():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Get user data
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if user['disabled'] or not user['deployments_pro']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Check user authority
-            authority = self._deployments_pro.getUser(request.args['execution_id'])
-            if len(authority) == 0:
-                return jsonify({'message': 'This deployment does not exist'}), 400
-            elif authority[0]['id'] != user['id'] and not user['admin']:
-                return jsonify({'message': 'Insufficient Privileges'}), 400
-
-            # Get deployment executions
-            executions = self._deployments_pro.getExecutions(request.args['execution_id'])
-            return jsonify({'data': executions }), 200
-
         @deployments_pro_blueprint.route('/deployments/pro/start', methods=['POST'])
         @jwt_required()
         def deployments_pro_start():
@@ -198,46 +173,6 @@ class Pro:
 
         return deployments_pro_blueprint
 
-    ###################
-    # Recurring Tasks #
-    ###################
-    def check_finished(self):
-        # Get all pro finished executions
-        finished = self._deployments_finished.getPro()
-
-        for f in finished:
-            # Create notifications
-            notification = {'category': 'deployment'}
-            notification['name'] = '{} has finished'.format(f['name'])
-            notification['status'] = 'ERROR' if f['status'] == 'FAILED' else f['status']
-            notification['data'] = '{{"id": "{}"}}'.format(f['id'])
-            self._notifications.post(f['user_id'], notification)
-
-            # Clean finished deployments
-            finished_deployment = {'mode': 'PRO', 'id': f['id']}
-            self._deployments_finished.delete(finished_deployment)
-
-    def check_scheduled(self):
-        # Get all pro scheduled executions
-        scheduled = self._deployments_pro.getScheduled()
-
-        # Check logs path permissions
-        if not self.__check_logs_path():
-            for s in scheduled:
-                self._deployments_pro.setError(s['execution_id'], 'The local logs path has no write permissions')
-        else:
-            for s in scheduled:
-                # Update Execution Status
-                status = 'QUEUED' if s['concurrent_executions'] else 'STARTING'
-                self._deployments_pro.updateStatus(s['execution_id'], status)
-
-                # Start Meteor Execution
-                if s['concurrent_executions'] is None:
-                    self._meteor.execute(s)
-                    # Add Deployment to be Tracked
-                    deployment = {"mode": s['mode'], "id": s['execution_id']}
-                    self._deployments_finished.post(deployment)
-
     ####################
     # Internal Methods #
     ####################
@@ -322,7 +257,7 @@ class Pro:
 
     def __put(self, user, data):
         # Check deployment authority
-        authority = self._deployments_pro.getUser(data['execution_id'])
+        authority = self._deployments.getUser(data['id'])
         if len(authority) == 0:
             return jsonify({'message': 'This deployment does not exist'}), 400
         elif authority[0]['id'] != user['id'] and not user['admin']:

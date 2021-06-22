@@ -130,11 +130,13 @@ CREATE TABLE `regions` (
 
 CREATE TABLE `regions_update` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `execution_id` INT UNSIGNED NOT NULL COMMENT 'References [deployments_basic, deployments_pro].id',
-  `execution_mode` VARCHAR(191) NOT NULL COMMENT '[basic, pro]',
+  `execution_id` INT UNSIGNED NOT NULL,
   `region_id` INT UNSIGNED NOT NULL COMMENT 'References regions.id',
   PRIMARY KEY (`id`),
-  UNIQUE `region_id` (`region_id`)
+  UNIQUE `region_id` (`region_id`),
+  UNIQUE `execution_id` (`execution_id`)
+  /* FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`)
+  FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`) */
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `servers` (
@@ -231,12 +233,14 @@ CREATE TABLE `deployments` (
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=INNODB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE `deployments_basic` (
+CREATE TABLE `executions` (
  `id` INT UNSIGNED AUTO_INCREMENT,
  `deployment_id` INT UNSIGNED NOT NULL,
  `environment_id` INT(10) UNSIGNED NULL,
- `databases` TEXT NOT NULL,
- `queries` TEXT NOT NULL,
+ `mode` ENUM('BASIC','PRO') NOT NULL,
+ `databases` TEXT NULL,
+ `queries` TEXT NULL,
+ `code` MEDIUMTEXT NULL,
  `method` ENUM('VALIDATE','TEST','DEPLOY') NOT NULL,
  `status` ENUM('CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED') NOT NULL DEFAULT 'CREATED',
  `stopped` ENUM('graceful','forceful') NULL,
@@ -255,6 +259,8 @@ CREATE TABLE `deployments_basic` (
  `user_id` INT UNSIGNED NULL,
   PRIMARY KEY (`id`),
   KEY `deployment_id` (`deployment_id`),
+  KEY `environment_id` (`environment_id`),
+  KEY `mode` (`mode`),
   KEY `status` (`status`),
   KEY `scheduled` (`scheduled`),
   KEY `uri` (`uri`),
@@ -266,52 +272,28 @@ CREATE TABLE `deployments_basic` (
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-CREATE TABLE `deployments_pro` (
- `id` INT UNSIGNED AUTO_INCREMENT,
- `deployment_id` INT UNSIGNED NOT NULL,
- `environment_id` INT(10) UNSIGNED NULL,
- `code` MEDIUMTEXT NOT NULL,
- `method` ENUM('VALIDATE','TEST','DEPLOY') NOT NULL,
- `status` ENUM('CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED') NOT NULL DEFAULT 'CREATED',
- `stopped` ENUM('graceful','forceful') NULL,
- `created` DATETIME NOT NULL,
- `scheduled` DATETIME NULL,
- `started` DATETIME NULL,
- `ended` DATETIME NULL,
- `pid` INT UNSIGNED NULL,
- `progress` TEXT NULL,
- `error` TINYINT(1) NULL,
- `url` VARCHAR(191) NULL,
- `uri` VARCHAR(191) NULL,
- `engine` VARCHAR(191) NULL,
- `public` TINYINT(1) NOT NULL DEFAULT 0,
- `expired` TINYINT(1) NOT NULL DEFAULT 0,
- `user_id` INT UNSIGNED NULL,
-  PRIMARY KEY(id),
-  KEY `deployment_id` (`deployment_id`),
-  KEY `status` (`status`),
-  KEY `scheduled` (`scheduled`),
-  KEY `uri` (`uri`),
-  KEY `created` (`created`),
-  KEY `expired` (`expired`),
-  KEY `user_id` (`user_id`),
-  FOREIGN KEY (`deployment_id`) REFERENCES `deployments` (`id`),
-  FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`),
-  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+/*
+INSERT INTO executions (deployment_id, environment_id, `mode`, `databases`, `queries`, `code`, method, `status`, stopped, created, scheduled, started, ended, pid, progress, error, url, uri, `engine`, public, expired, user_id)
+SELECT deployment_id, environment_id, 'BASIC' AS 'mode', `databases`, `queries`, NULL AS 'code', method, `status`, stopped, created, scheduled, started, ended, pid, progress, error, url, uri, `engine`, public, expired, user_id
+FROM deployments_basic
+UNION ALL
+SELECT deployment_id, environment_id, 'PRO' AS 'mode', NULL AS 'databases', NULL AS 'queries', `code`, method, `status`, stopped, created, scheduled, started, ended, pid, progress, error, url, uri, `engine`, public, expired, user_id
+FROM deployments_pro
+ORDER BY created;
+*/
 
 CREATE TABLE `deployments_queued` (
   `id` BIGINT UNSIGNED AUTO_INCREMENT,
-  `execution_mode` VARCHAR(191) NOT NULL COMMENT 'References [deployments_basic, deployments_pro].mode',
-  `execution_id` INT UNSIGNED NOT NULL COMMENT 'References [deployments_basic, deployments_pro].id',
+  `execution_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE uniq (`execution_mode`, `execution_id`)
+  UNIQUE `execution_id` (`execution_id`),
+  FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `deployments_finished` (
-  `deployment_mode` VARCHAR(191) NOT NULL COMMENT 'References [deployments_basic, deployments_pro].mode',
-  `deployment_id` INT UNSIGNED NOT NULL COMMENT 'References [deployments_basic, deployments_pro].id',
-  PRIMARY KEY (`deployment_mode`, `deployment_id`)
+  `execution_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`execution_id`),
+  FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `notifications` (

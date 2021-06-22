@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import time
+import signal
 import threading
 import hashlib
 
@@ -56,11 +57,13 @@ class validation:
                 validate_region = validate_regions(self._args, region, self._progress)
                 t = threading.Thread(target=validate_region.validate)
                 t.progress = {}
+                t.daemon = True
+                t.alive = True
                 threads.append(t)
                 t.start()
 
             # Track Progress
-            while any(t.is_alive() for t in threads):    
+            while any(t.is_alive() for t in threads):
                 error = self.__track_regions(threads, progress)
                 time.sleep(1)
             error = self.__track_regions(threads, progress)
@@ -68,15 +71,19 @@ class validation:
             # Check validation errors
             if error:
                 error_msg = "- Regions Not Passed the Environment Validation"
-                self._progress.error(error_msg[2:])
                 raise Exception(error_msg)
             
             # print("- Regions Validation Passed!")
 
         except KeyboardInterrupt:
-            # print("\n--> Ctrl+C received. Stopping the execution...")
+            signal.signal(signal.SIGINT,signal.SIG_IGN)
+            signal.signal(signal.SIGTERM,signal.SIG_IGN)
+            # print("\n--> Ctrl+C received. Stopping the execution...")
+            for t in threads:
+                t.alive = False
             for t in threads:
                 t.join()
+            error = self.__track_regions(threads, progress)
             raise
 
     def __track_regions(self, threads, progress):

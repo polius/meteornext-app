@@ -203,6 +203,12 @@
           <v-flex v-if="logs_data.length > 0" xs4 style="padding-right:5px;">
             <v-card>
               <v-data-table :headers="logs_headers" :items="logs_data" hide-default-footer>
+                <template v-slot:[`item.message`]="{ item }">
+                  <v-icon v-if="item.status == 'progress'" title="In Progress" small style="color: #ff9800; margin-right:10px;">fas fa-spinner</v-icon>
+                  <v-icon v-else-if="item.status == 'success'" title="Success" small style="color: #4caf50; margin-right:10px;">fas fa-check</v-icon>
+                  <v-icon v-else-if="item.status == 'failed'" title="Failed" small style="color: #EF5354; margin-right:10px;">fas fa-times</v-icon>
+                  {{ item.message }}
+                </template>
               </v-data-table>
             </v-card>
           </v-flex>
@@ -210,6 +216,12 @@
           <v-flex v-if="tasks_data.length > 0" xs4 style="padding-left:5px; padding-right:5px;">
             <v-card>
               <v-data-table :headers="tasks_headers" :items="tasks_data" hide-default-footer>
+                <template v-slot:[`item.message`]="{ item }">
+                  <v-icon v-if="item.status == 'progress'" title="In Progress" small style="color: #ff9800; margin-right:10px;">fas fa-spinner</v-icon>
+                  <v-icon v-else-if="item.status == 'success'" title="Success" small style="color: #4caf50; margin-right:10px;">fas fa-check</v-icon>
+                  <v-icon v-else-if="item.status == 'failed'" title="Failed" small style="color: #EF5354; margin-right:10px;">fas fa-times</v-icon>
+                  {{ item.message }}
+                </template>
               </v-data-table>
             </v-card>
           </v-flex>
@@ -240,17 +252,17 @@
           <v-toolbar-title v-show="information_dialog_mode == 'edit'" class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-meteor</v-icon>EDIT</v-toolbar-title>
           <v-toolbar-title v-show="information_dialog_mode == 're-deploy'" class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-meteor</v-icon>RE-DEPLOY</v-toolbar-title>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn readonly color="primary"><v-icon small style="margin-right:10px; margin-bottom:1px">{{ deployment['mode'] == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen'}}</v-icon>{{ deployment['mode'] }}</v-btn>
+          <v-btn @click="basicClick" :readonly="information_dialog_mode == 'parameters'" :color="information_dialog_execution_mode == 'BASIC' ? 'primary' : '#779ecb'"><v-icon small style="margin-right:10px; margin-bottom:1px">fas fa-chess-knight</v-icon>BASIC</v-btn>
+          <v-btn @click="proClick" :readonly="information_dialog_mode == 'parameters'" :color="information_dialog_execution_mode == 'PRO' ? 'primary' : '#779ecb'" style="margin-left:10px"><v-icon small style="margin-right:10px; margin-bottom:1px">fas fa-chess-queen</v-icon>PRO</v-btn>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" icon @click="information_dialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding: 15px 15px 15px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form">
-                  <v-text-field readonly v-model="information_dialog_data.name" label="Name" :rules="[v => !!v || '']" style="margin-top:15px;"></v-text-field>
-                  <v-autocomplete :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '']" style="padding-top:0px;">
+                  <v-autocomplete :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.environment" :items="environments" item-value="id" return-object item-text="name" label="Environment" :rules="[v => !!v || '']">
                     <template v-slot:item="{ item }" >
                       <v-row align="center" no-gutters>
                         <v-col class="flex-grow-1 flex-shrink-1">
@@ -262,8 +274,8 @@
                       </v-row>
                     </template>
                   </v-autocomplete>
-                  <v-text-field v-if="deployment['mode'] == 'BASIC'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
-                  <v-card v-if="deployment['mode'] == 'BASIC'" style="margin-bottom:20px;">
+                  <v-text-field v-show="information_dialog_execution_mode == 'BASIC'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
+                  <v-card v-show="information_dialog_execution_mode == 'BASIC'" style="margin-bottom:20px;">
                     <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
                       <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
                       <v-divider v-if="information_dialog_mode != 'parameters'" class="mx-3" inset vertical></v-divider>
@@ -284,7 +296,7 @@
                       </template>
                     </v-data-table>
                   </v-card>
-                  <div v-if="deployment['mode'] == 'PRO'" style="margin-top:-5px; margin-bottom:10px;">
+                  <div v-show="information_dialog_execution_mode == 'PRO'" style="margin-top:-5px; margin-bottom:10px;">
                     <v-tooltip right>
                       <template v-slot:activator="{ on }">
                         <span v-on="on" class="subtitle-1 font-weight-regular white--text">
@@ -295,7 +307,7 @@
                       <span>Press <span class="font-weight-medium" style="color:rgb(250, 130, 49)">ESC</span> when cursor is in the editor to toggle full screen editing</span>
                     </v-tooltip>
                   </div>
-                  <codemirror v-if="deployment['mode'] == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
+                  <codemirror ref="myCm" v-show="information_dialog_execution_mode == 'PRO'" v-model="information_dialog_data.code" :options="cmOptions" style="margin-bottom:15px;"></codemirror>
                   <div style="margin-top:20px">
                     <v-tooltip right>
                       <template v-slot:activator="{ on }">
@@ -406,6 +418,7 @@
                     <template v-slot:item="props">
                       <tr :style="`background-color:` + selectRow(props.item.id)">
                         <td>{{ props.item.environment }}</td>
+                        <td><v-icon small :title="props.item.mode.charAt(0).toUpperCase() + props.item.mode.slice(1).toLowerCase()" :color="getModeColor(props.item.mode)" :style="`text-transform:capitalize; margin-left:${props.item.mode == 'BASIC' ? '8px' : '6px'}`">{{ props.item.mode == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon></td>
                         <td><span :style="'color: ' + getMethodColor(props.item.method.toUpperCase())">{{ props.item.method.toUpperCase() }}</span></td>
                         <td>
                           <v-icon v-if="props.item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
@@ -447,15 +460,17 @@
             <v-layout wrap>
               <v-flex xs12>
                 <div v-if="action_dialog_text.length > 0" class="subtitle-1" style="margin-bottom:10px">{{ action_dialog_text }}</div>
-                <div v-if="action_dialog_mode == 'stop' && deployment['status'] == 'QUEUED'">
-                  <div class="subtitle-1" style="margin-bottom:10px">Want to remove the execution from the queue?</div>
-                </div>
-                <div v-else-if="action_dialog_mode == 'stop' && deployment['status'] != 'QUEUED'">
-                  <div class="subtitle-1 font-weight-medium">METHOD</div>
-                  <v-radio-group v-model="stop_execution_mode" hide-details style="margin-top:10px; margin-bottom:20px;">
-                    <v-radio :disabled="deployment['stopped'] != null" label="Graceful - Wait current databases to finish." value="graceful" color="warning"></v-radio>
-                    <v-radio label="Forceful - Do not wait current databases to finish and stop ongoing queries." value="forceful" color="#EF5354"></v-radio>
-                  </v-radio-group>
+                <div v-if="action_dialog_mode == 'stop'">
+                  <div v-if="deployment['status'] == 'QUEUED' || execution_headers.length == 0 || logs_data.length > 0">
+                    <div class="subtitle-1" style="margin-top:5px; margin-bottom:10px">Want to stop the execution?</div>
+                  </div>
+                  <div v-else>
+                    <div class="subtitle-1 font-weight-medium">METHOD</div>
+                    <v-radio-group v-model="stop_execution_mode" hide-details style="margin-top:10px; margin-bottom:20px;">
+                      <v-radio :disabled="deployment['stopped'] != null" label="Graceful - Wait current databases to finish." value="graceful" color="warning"></v-radio>
+                      <v-radio label="Forceful - Do not wait current databases to finish and stop ongoing queries." value="forceful" color="#EF5354"></v-radio>
+                    </v-radio-group>
+                  </div>
                 </div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
@@ -513,6 +528,13 @@
 .CodeMirror-scrollbar-filler {
   background-color: rgb(55, 53, 64);
 }
+</style>
+
+<style scoped>
+/* .v-data-table
+  ::v-deep tr:hover:not(.v-data-table__selected) {
+  background: transparent !important;
+} */
 </style>
 
 <script>
@@ -589,9 +611,9 @@
       execution_progress: [],
 
       // Post Execution
-      logs_headers: [{ text: 'LOGS', align:'left', value: 'status', sortable: false }],
+      logs_headers: [{ text: 'LOGS', align:'left', value: 'message', sortable: false }],
       logs_data: [],
-      tasks_headers: [{ text: 'REMAINING TASKS', align:'left', value: 'status', sortable: false }],
+      tasks_headers: [{ text: 'REMAINING TASKS', align:'left', value: 'message', sortable: false }],
       tasks_data: [],
       queries_headers: [
         { text: 'TOTAL', align:'left', value: 'total', sortable: false },
@@ -605,8 +627,10 @@
       // - Information -
       information_dialog: false,
       information_dialog_mode: '',
+      information_dialog_execution_mode: '',
       information_dialog_data: {},
       information_dialog_query_selected: [],
+      code: '',
       // - Query -
       query_dialog: false,
       query_dialog_mode: '',
@@ -643,6 +667,7 @@
       // Init Code Parameters
       cmOptions: {
         readOnly: true,
+        autoRefresh: true,
         autoCloseBrackets: true,
         styleActiveLine: true,
         lineNumbers: true,
@@ -716,27 +741,31 @@
       // BASE METHODS
       // -------------
       init() {
-        const id = this.$route.params.id
-        if (id === undefined || id.length < 2) this.notification('Invalid Deployment Identifier', '#EF5354')
+        if (this.$route.params.id === undefined) this.notification('Invalid Deployment Identifier', '#EF5354')
         else {
-          // Init parameters and get deployment
-          this.deployment['execution_id'] = id.substring(1, id.length)
-          var code = id.substring(0, 1)
-          if (code == 'b' || code == 'B') this.deployment['mode'] = 'basic'
-          else if (code == 'p' || code == 'P') this.deployment['mode'] = 'pro'
           this.getDeployment()
+          this.getCode()
         }
       },
       goBack() {
         if (this.show_results) this.show_results = false
         else this.$router.push('/deployments')
       },
+      getCode() {
+        axios.get('/deployments/blueprint')
+          .then((response) => {
+            this.code = response.data.data
+          })
+          .catch((error) => {
+            if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+            else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+          })
+      },
       getDeployment() {
         // Get Deployment Data
-        const path = '/deployments/' + this.deployment['mode'].toLowerCase()
-        axios.get(path, { params: { execution_id: this.deployment['execution_id'] } })
+        axios.get('/deployments', { params: { id: this.$route.params.id } })
           .then((response) => {
-            const data = response.data.deployment[0]
+            const data = response.data.deployment
             this.environments = response.data.environments
             this.parseRequest(data)
             if (this.$router.currentRoute.name == 'deployment') {
@@ -748,6 +777,7 @@
             }
           })
           .catch((error) => {
+            console.log(error)
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
           })
@@ -783,19 +813,14 @@
         this.deployment['id'] = data['id']
         this.deployment['deployment_id'] = data['deployment_id']
         this.deployment['mode'] = data['mode']
+        this.information_dialog_execution_mode = data['mode']
         this.deployment['name'] = data['name']
         this.deployment['release'] = data['release']
         this.deployment['environment'] = { id: data['environment_id'], name: data['environment_name'] }
-        if (this.deployment['mode'] == 'BASIC') {
-          this.deployment['databases'] = data['databases']
-          this.deployment['queries'] = []
-          var queries = JSON.parse(data['queries'])
-          for (var i in queries) this.deployment['queries'].push(queries[i])
-          this.deployment['query_headers'] = [{text: 'Query', value: 'query'}]
-        }
-        else if (this.deployment['mode'] == 'PRO') {
-          this.deployment['code'] = data['code']
-        }
+        this.deployment['query_headers'] = [{text: 'Query', value: 'query'}]
+        this.deployment['queries'] = this.deployment['mode'] == 'BASIC' ? JSON.parse(data['queries']) : []
+        this.deployment['databases'] = this.deployment['mode'] == 'BASIC' ? data['databases'] : ''
+        this.deployment['code'] = this.deployment['mode'] == 'PRO' ? data['code'] : ''
         this.deployment['method'] = data['method'].toLowerCase()
         if (this.deployment['status'] != data['status']) this.getExecutions()
         this.deployment['status'] = data['status']
@@ -950,22 +975,24 @@
       parseLogs() {
         if (!('logs' in this.deployment['progress'])) return
         // Init variables
-        this.logs_data = []
+        //this.logs_data = []
 
         // Fill variables
-        for (var i in this.deployment['progress']['logs']) {
-          this.logs_data.push({status: this.deployment['progress']['logs'][i]})
-        }
+        // for (var i in this.deployment['progress']['logs']) {
+        //   this.logs_data.push({status: this.deployment['progress']['logs'][i]})
+        // }
+        this.logs_data = this.deployment['progress']['logs']
       },
       parseTasks() {
         if (!('tasks' in this.deployment['progress'])) return
         // Init variables
-        this.tasks_data = []
+        // this.tasks_data = []
 
         // Fill variables
-        for (var i in this.deployment['progress']['tasks']) {
-          this.tasks_data.push({status: this.deployment['progress']['tasks'][i]})
-        }
+        // for (var i in this.deployment['progress']['tasks']) {
+        //   this.tasks_data.push({status: this.deployment['progress']['tasks'][i]})
+        // }
+        this.tasks_data = this.deployment['progress']['tasks']
       },
       parseQueries() {
         if (!('queries' in this.deployment['progress'])) return
@@ -986,12 +1013,12 @@
       },
       getExecutions() {
         // Get Deployment Executions
-        const path = '/deployments/' + this.deployment['mode'].toLowerCase() + '/executions'
-        axios.get(path, { params: { execution_id: this.deployment['execution_id'] } })
+        axios.get('/deployments/executions', { params: { id: this.$route.params.id } })
           .then((response) => {
             this.executions['items'] = response.data.data
             this.executions['headers'] = [
               { text: 'Environment', value: 'environment' },
+              { text: 'Mode', value: 'mode' },
               { text: 'Method', value: 'method' },
               { text: 'Status', value: 'status' },
               { text: 'Created', value: 'created' },
@@ -1011,6 +1038,7 @@
       // ------------------
       parameters() {
         this.information_dialog_mode = 'parameters'
+        this.information_dialog_execution_mode = this.deployment['mode']
         this.cmOptions.readOnly = true
         this.information_dialog_data = JSON.parse(JSON.stringify(this.deployment))
         this.schedule_enabled = this.deployment['scheduled'] !== null
@@ -1018,6 +1046,7 @@
       },
       edit() {
         this.information_dialog_mode = (this.deployment['status'] == 'CREATED' || this.deployment['status'] == 'SCHEDULED') ? 'edit' : 're-deploy'
+        this.information_dialog_execution_mode = this.deployment['mode']
         this.cmOptions.readOnly = false
         this.information_dialog_data = JSON.parse(JSON.stringify(this.deployment))
         this.schedule_enabled = this.deployment['scheduled'] !== null
@@ -1050,12 +1079,11 @@
         this.action_dialog = false
         
         // Build parameters
-        const path = '/deployments/' + this.deployment['mode'].toLowerCase() +  '/start'
         const payload = {
-          execution_id: this.deployment['execution_id'],
+          id: this.$route.params.id,
           url: window.location.protocol + '//' + window.location.host
         }
-        axios.post(path, payload)
+        axios.post('/deployments/start', payload)
         .then((response) => {
           if (response.data.message != '') this.notification(response.data.message, '#00b16a')
           this.getDeployment()
@@ -1066,18 +1094,17 @@
         })
       },
       actionSubmitStop() {
-        if (!(['QUEUED','IN PROGRESS','STOPPING'].includes(this.deployment['status']))) this.notification('The execution has already finished.', 'primary')
+        if (!(['QUEUED','IN PROGRESS','STOPPING'].includes(this.deployment['status']))) this.notification('The execution has already finished.', 'warning')
         else {
           this.notification('Stopping the execution. Please wait...', 'primary')
           this.stop_execution = true
 
           // Build parameters
-          const path = '/deployments/' + this.deployment['mode'].toLowerCase() + '/stop'
           const payload = {
-            execution_id: this.deployment['execution_id'],
+            id: this.$route.params.id,
             mode: this.stop_execution_mode
           }
-          axios.post(path, payload)
+          axios.post('/deployments/stop', payload)
           .catch((error) => {
             if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
             else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
@@ -1122,10 +1149,9 @@
       // ------------------------
       // SELECT EXECUTION DIALOG
       // ------------------------
-      selectExecution(execution_id) {
+      selectExecution(id) {
         this.select_dialog = false
-        if (this.deployment['execution_id'] != execution_id) {
-          const id = this.deployment['mode'].substring(0, 1) + execution_id
+        if (this.deployment['id'] != id) {
           this.$router.push({ name:'deployment', params: { id: id }})
           this.show_results = false
           this.clear()
@@ -1136,6 +1162,12 @@
       // -------------------------------------
       // EDIT
       // -------------------------------------
+      basicClick() {
+        if (this.information_dialog_mode != 'parameters') this.information_dialog_execution_mode = 'BASIC'
+      },
+      proClick() {
+        if (this.information_dialog_mode != 'parameters') this.information_dialog_execution_mode = 'PRO'
+      },
       editSubmit() {
         if (!this.$refs.form.validate()) {
           this.notification('Please fill the required fields', '#EF5354')
@@ -1144,33 +1176,27 @@
         // Hide Results View
         this.show_results = false
         // Build parameters
-        const path = '/deployments/' + this.deployment['mode'].toLowerCase()
-        let start_execution = (this.information_dialog_data.start_execution === undefined) ? false : this.information_dialog_data.start_execution
         var payload = {
-          id: this.deployment.id,
-          execution_id: this.deployment.execution_id,
-          name: this.deployment.name,
+          id: this.$route.params.id,
+          mode: this.information_dialog_execution_mode,
           environment: this.information_dialog_data.environment.id,
-          mode: this.deployment['mode'].toUpperCase(),
           method: this.information_dialog_data.method.toUpperCase(),
-          scheduled: null,
-          start_execution: this.information_dialog_mode == 'edit' ? false : start_execution,
+          scheduled: this.schedule_enabled ? moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm") + ':00' : null,
+          start_execution: this.information_dialog_data.start_execution === undefined ? false : this.information_dialog_data.start_execution,
           url: window.location.protocol + '//' + window.location.host
         }
-        if (this.schedule_enabled) payload['scheduled'] = moment(this.schedule_datetime).utc().format("YYYY-MM-DD HH:mm") + ':00'
-
         // Build different modes
-        if (this.deployment['mode'] == 'BASIC') {
+        if (this.information_dialog_execution_mode == 'BASIC') {
           payload['databases'] = this.information_dialog_data.databases
           payload['queries'] = JSON.stringify(this.information_dialog_data.queries)
         }
-        else if (this.deployment['mode'] == 'PRO') {
+        else if (this.information_dialog_execution_mode == 'PRO') {
           payload['code'] = this.information_dialog_data.code
         }
 
         // Add deployment to the DB
         this.loading = true
-        axios.put(path, payload)
+        axios.put('/deployments', payload)
         .then((response) => {
           const data = response.data.data
           this.notification(response.data.message, '#00b16a')
@@ -1179,20 +1205,15 @@
           // Clear current deployment
           this.clear()
           // Get new deployment
-          if (this.information_dialog_mode == 're-deploy') {
-            const id = payload['mode'].substring(0, 1) + data['execution_id']
-            this.$router.push({ name:'deployment', params: { id: id }})
+          if (this.information_dialog_mode == 're-deploy' || payload['start_execution']) {
+            this.$router.push({ name: 'deployment', params: { id: data['id'] }})
           }
-          if (this.deployment['status'] == 'CREATED' && start_execution) this.actionSubmitStart()
-          else {
-            // Refresh the deployment
-            this.deployment['execution_id'] = data['execution_id']
-            this.getDeployment()
-          }
+          else this.getDeployment()
           // Hide the Information dialog
           this.information_dialog = false
         })
         .catch((error) => {
+          console.log(error)
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
@@ -1309,12 +1330,11 @@
       },
       resultsShare() {
         // Build parameters
-        const path = '/deployments/' + this.deployment['mode'].toLowerCase() +  '/public'
         const payload = {
-          execution_id: this.deployment['execution_id'],
+          id: this.$route.params.id,
           public: !this.deployment['public']
         }
-        axios.post(path, payload)
+        axios.post('/deployments/public', payload)
         .then(() => {
           // Update new public value
           this.deployment['public'] = !this.deployment['public']
@@ -1334,7 +1354,7 @@
       // AUXILIARY METHODS
       // -------------------------------------
       selectRow(id) {
-        if (id == this.deployment['execution_id']) return '#616161'
+        if (id == this.deployment['id']) return '#616161'
         else return '#424242'
       },
       getMethodColor (method) {
@@ -1387,7 +1407,24 @@
       },
       '$route' () {
         this.init()
-      }
+      },
+      information_dialog(val) {
+        if (!val) this.information_dialog_data.code = ''
+      },
+      information_dialog_execution_mode (val) {
+        if (val == 'PRO') {
+          this.$nextTick(() => {
+            if (this.$refs.myCm === undefined) return
+            const codemirror = this.$refs.myCm.codemirror
+            if (this.information_dialog_data.code.length == 0) {
+              this.information_dialog_data.code = this.code
+              codemirror.setValue(this.information_dialog_data.code)
+            }
+            this.information_dialog_data.code = this.information_dialog_data.code.length == 0 ? this.code : this.information_dialog_data.code
+            codemirror.refresh()
+          })
+        }
+      },
     }
   }
 </script>

@@ -14,7 +14,7 @@
               <v-select v-model="contentSearchColumn" :items="contentColumnsName" dense solo hide-details height="35px" style="padding-top:5px;"></v-select>
             </v-col>
             <v-col cols="2">
-              <v-select v-model="contentSearchFilter" :items="contentSearchFilterItems" dense solo hide-details height="35px" style="padding-top:5px; padding-left:5px;"></v-select>
+              <v-select v-model="contentSearchFilter" :items="filterItems" dense solo hide-details height="35px" style="padding-top:5px; padding-left:5px;"></v-select>
             </v-col>
             <v-col v-if="!['BETWEEN','NOT BETWEEN'].includes(contentSearchFilter)">
               <v-text-field @keyup.enter="filterClick" :disabled="['IS NULL','IS NOT NULL'].includes(contentSearchFilter)" v-model="contentSearchFilterText" solo dense hide-details prepend-inner-icon="search" height="35px" style="padding-top:5px; padding-left:5px;"></v-text-field>
@@ -193,6 +193,8 @@ export default {
       currentCellEditValues: {},
       // Pagination
       page: 1,
+      // Filter
+      filterItems: ['=', '!=', '>', '<', '>=', '<=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'BETWEEN', 'NOT BETWEEN', 'IS NULL', 'IS NOT NULL'],
       // Dialog - Content Edit
       editDialog: false,
       editDialogTitle: '',
@@ -236,7 +238,6 @@ export default {
       'contentSearchFilter',
       'contentSearchFilterText',
       'contentSearchFilterText2',
-      'contentSearchFilterItems',
       'contentSearchColumn',
       'contentColumnsName',
       'contentColumnsDefault',

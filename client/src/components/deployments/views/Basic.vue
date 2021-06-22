@@ -372,6 +372,7 @@ export default {
       this.loading = true
       // Build parameters
       var payload = {
+        mode: 'BASIC',
         name: this.name,
         release: this.release,
         environment: this.environment,
@@ -386,13 +387,13 @@ export default {
       else payload['start_execution'] = this.start_execution
 
       // Add deployment to the DB
-      axios.post('/deployments/basic', payload)
+      axios.post('/deployments', payload)
         .then((response) => {
           const data = response.data.data
           // Refresh user coins
           this.$store.dispatch('app/coins', data['coins'])
           // Redirect page
-          this.$router.push({ name:'deployment', params: { id: 'B' + data['execution_id'], admin: false, msg: response.data.message, color: '#00b16a' }})
+          this.$router.push({ name:'deployment', params: { id: data['id'], admin: false, msg: response.data.message, color: '#00b16a' }})
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

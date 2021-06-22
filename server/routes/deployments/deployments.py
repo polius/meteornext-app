@@ -4,17 +4,23 @@ import botocore
 import boto3
 import tarfile
 import shutil
+import sys
+import datetime
+import unicodedata
+import multiprocessing
+import signal
 from flask import Blueprint, jsonify, request, send_from_directory
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.users
+import models.admin.groups
 import models.deployments.releases
 import models.deployments.deployments
-import models.deployments.deployments_basic
-import models.deployments.deployments_pro
+import models.deployments.executions
 import models.deployments.deployments_queued
 import models.deployments.deployments_finished
 import models.admin.settings
+import models.inventory.environments
 import routes.deployments.meteor
 
 class Deployments:
@@ -22,13 +28,14 @@ class Deployments:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
+        self._groups = models.admin.groups.Groups(sql)
         self._releases = models.deployments.releases.Releases(sql)
         self._deployments = models.deployments.deployments.Deployments(sql)
-        self._deployments_basic = models.deployments.deployments_basic.Deployments_Basic(sql)
-        self._deployments_pro = models.deployments.deployments_pro.Deployments_Pro(sql)
+        self._executions = models.deployments.executions.Executions(sql)
         self._deployments_queued = models.deployments.deployments_queued.Deployments_Queued(sql)
         self._deployments_finished = models.deployments.deployments_finished.Deployments_Finished(sql)
         self._settings = models.admin.settings.Settings(sql)
+        self._environments = models.inventory.environments.Environments(sql)
 
         # Init meteor
         self._meteor = routes.deployments.meteor.Meteor(app, sql)
@@ -37,7 +44,7 @@ class Deployments:
         # Init blueprint
         deployments_blueprint = Blueprint('deployments', __name__, template_folder='deployments')
 
-        @deployments_blueprint.route('/deployments', methods=['GET','PUT'])
+        @deployments_blueprint.route('/deployments', methods=['GET','POST','PUT'])
         @jwt_required()
         def deployments_method():
             # Check license
@@ -55,9 +62,62 @@ class Deployments:
             deployment_json = request.get_json()
 
             if request.method == 'GET':
-                return self.__get(user['id'])
+                return self.__get(user, request.args)
+            elif request.method == 'POST':
+                return self.__post(user, deployment_json)
             elif request.method == 'PUT':
-                return self.__put(user['id'], deployment_json)
+                return self.__put(user, deployment_json)
+
+        @deployments_blueprint.route('/deployments/blueprint', methods=['GET'])
+        @jwt_required()
+        def deployments_code():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Retrieve blueprint
+            code_path = os.path.dirname(os.path.realpath(__file__))
+            with open('{}/blueprint.py'.format(code_path)) as file_open:
+                return jsonify({'data': file_open.read()}), 200
+
+        @deployments_blueprint.route('/deployments/start', methods=['POST'])
+        @jwt_required()
+        def deployments_start():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Get Request Json
+            deployment_json = request.get_json()
+
+            # Start Deployment
+            return self.__start(user, deployment_json)
+
+        @deployments_blueprint.route('/deployments/stop', methods=['POST'])
+        @jwt_required()
+        def deployments_stop():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Get Request Json
+            deployment_json = request.get_json()
+
+            # Stop Deployment
+            return self.__stop(user, deployment_json)
 
         @deployments_blueprint.route('/deployments/results', methods=['GET'])
         @jwt_required()
@@ -124,6 +184,38 @@ class Deployments:
                 except Exception:
                     return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the provided Amazon S3 credentials' }), 400
 
+        @deployments_blueprint.route('/deployments/executions', methods=['GET'])
+        @jwt_required()
+        def deployments_executions():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Get args
+            data = request.args
+
+            # Get executions
+            return self.__get_executions(user, data)
+
+        @deployments_blueprint.route('/deployments/public', methods=['POST'])
+        @jwt_required()
+        def deployments_public():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Get Request Json
+            deployment_json = request.get_json()
+
+            # Set Deployment Public
+            return self.__public(user, deployment_json)
+
         return deployments_blueprint
 
     ###################
@@ -134,7 +226,7 @@ class Deployments:
         finished = self._deployments_queued.getFinished()
         for i in finished:
             if i['scheduled']:
-                self._deployments_finished.post({"mode": i['execution_mode'], "id": i['execution_id']})
+                self._deployments_finished.post({"id": i['execution_id']})
         if len(finished) > 0:
             ids = ','.join([str(i['id']) for i in finished])
             self._deployments_queued.delete(ids)
@@ -145,47 +237,521 @@ class Deployments:
         # Build dictionary of executions
         executions_raw = self._deployments_queued.getNext()
         groups = {}
-        executions_ids = {'basic':[],'pro':[]}
-        executions = {'basic':[],'pro':[]}
+        executions_ids = []
+        executions = []
         for i in executions_raw:
             concurrent = groups.get(i['group'], 0)
             if concurrent < i['concurrent']:
                 groups[i['group']] = concurrent + 1
                 if i['status'] == 'QUEUED':
-                    executions_ids[i['mode']].append(i['id'])
+                    executions_ids.append(i['id'])
 
-        if len(executions_ids['basic']) > 0:
-            basic = self._deployments_basic.getExecutionsN(','.join(str(i) for i in executions_ids['basic']))
-            for b in basic:
-                for e in executions_ids['basic']:
-                    if b['execution_id'] == e:
-                        executions['basic'].append(b)
-                        break
-        if len(executions_ids['pro']) > 0:
-            pro = self._deployments_pro.getExecutionsN(','.join(str(i) for i in executions_ids['pro']))
-            for p in pro:
-                for e in executions_ids['pro']:
-                    if p['execution_id'] == e:
-                        executions['pro'].append(p)
+        if len(executions_ids) > 0:
+            execution = self._executions.getExecutionsN(','.join(str(i) for i in executions_ids))
+            for e in execution:
+                for item in executions_ids:
+                    if e['id'] == item:
+                        executions.append(e)
                         break
 
         # Start Queued Executions
-        for basic in executions['basic']:
-            self._deployments_basic.updateStatus(basic['execution_id'], 'STARTING', True)
-            self._meteor.execute(basic)
-        for pro in executions['pro']:
-            self._deployments_pro.updateStatus(pro['execution_id'], 'STARTING', True)
-            self._meteor.execute(pro)
+        for execution in executions:
+            self._executions.updateStatus(execution['id'], 'STARTING', True)
+            self._meteor.execute(execution)
+
+    def check_finished(self):
+        # Get all basic finished executions
+        finished = self._deployments_finished.get()
+
+        for f in finished:
+            # Create notifications
+            notification = {'category': 'deployment'}
+            notification['name'] = '{} has finished'.format(f['name'])
+            notification['status'] = 'ERROR' if f['status'] == 'FAILED' else f['status']
+            notification['data'] = '{{"id": "{}"}}'.format(f['id'])
+            self._notifications.post(f['user_id'], notification)
+
+            # Clean finished deployments
+            finished_deployment = {'id': f['id']}
+            self._deployments_finished.delete(finished_deployment)
+
+    def check_scheduled(self):
+        # Get all basic scheduled executions
+        scheduled = self._executions.getScheduled()
+
+        # Check logs path permissions
+        if not self.__check_logs_path():
+            for s in scheduled:
+                self._executions.setError(s['execution_id'], 'The local logs path has no write permissions')
+        else:
+            for s in scheduled:
+                # Update Execution Status
+                status = 'QUEUED' if s['concurrent_executions'] else 'STARTING'
+                self._executions.updateStatus(s['execution_id'], status)
+                # Start Meteor Execution
+                if s['concurrent_executions'] is None:
+                    self._meteor.execute(s)
+                    # Add Deployment to be Tracked
+                    deployment = {"id": s['execution_id']}
+                    self._deployments_finished.post(deployment)
+
+    #################
+    # Class Methods #
+    #################
+    def __get(self, user, data):
+        # Get all user deployments
+        if 'id' not in data:
+            return jsonify({'deployments': self._deployments.get(user['id']), 'releases': self._releases.get(user['id'])}), 200
+
+        # Get current execution
+        execution = self._executions.get(data['id'])
+
+        # Check if deployment exists
+        if len(execution) == 0:
+            return jsonify({'message': 'This deployment does not exist'}), 400
+        else:
+            execution = execution[0]
+
+        # Check deployment authority
+        authority = self._deployments.getUser(execution['deployment_id'])
+        if len(authority) == 0:
+            return jsonify({'message': 'This deployment does not exist'}), 400
+        authority = authority[0]
+        if authority['id'] != user['id'] and not user['admin']:
+            return jsonify({'message': 'Insufficient Privileges'}), 400
+
+        # Get environments
+        environments = [{"id": i['id'], "name": i['name'], "shared": i['shared']} for i in self._environments.get(authority['id'], authority['group_id'])]
+
+        # Return data
+        return jsonify({'deployment': execution, 'environments': environments}), 200
+
+    def __get_executions(self, user, data):
+        # Get current execution
+        execution = self._executions.get(data['id'])
+
+        # Check if deployment exists
+        if len(execution) == 0:
+            return jsonify({'message': 'This deployment does not exist'}), 400
+        else:
+            execution = execution[0]
+
+        # Check user privileges
+        if user['disabled'] or (execution['mode'] == 'BASIC' and not user['deployments_basic']) or (execution['mode'] == 'PRO' and not user['deployments_pro']):
+            return jsonify({'message': 'Insufficient Privileges'}), 401
+
+        # Check deployment authority
+        authority = self._deployments.getUser(execution['deployment_id'])
+        if len(authority) == 0:
+            return jsonify({'message': 'This deployment does not exist'}), 400
+        elif authority[0]['id'] != user['id'] and not user['admin']:
+            return jsonify({'message': 'Insufficient Privileges'}), 400
+
+        # Get deployment executions
+        executions = self._deployments.getExecutions(execution['deployment_id'])
+        return jsonify({'data': executions }), 200
+
+    def __post(self, user, data):
+        # Init Data
+        deployment = {
+            'name': data['name'],
+            'release_id': data['release'],
+        }
+        execution = {
+            'environment_id': data['environment'],
+            'mode': data['mode'],
+            'databases': data.get('databases'),
+            'queries': data.get('queries'),
+            'code': data.get('code'),
+            'method': data['method'],
+            'scheduled': data['scheduled'],
+            'url': data['url'],
+            'start_execution': data['start_execution'],
+        }
+
+        # Check Coins
+        group = self._groups.get(group_id=user['group_id'])[0]
+        if (user['coins'] - group['coins_execution']) < 0:
+            return jsonify({'message': 'Insufficient Coins'}), 400
+
+        # Check environment authority
+        environment = self._environments.get(user_id=user['id'], group_id=user['group_id'], environment_id=execution['environment_id'])
+        if len(environment) == 0:
+            return jsonify({'message': 'The environment does not exist'}), 400
+        environment = environment[0]
+
+        # Check logs path permissions
+        if not self.__check_logs_path():
+            return jsonify({'message': 'The local logs path has no write permissions'}), 400
+
+        # Check Code Syntax Errors
+        if execution['mode'] == 'PRO':
+            try:
+                execution['code'] = unicodedata.normalize("NFKD", execution['code'])
+                self.__secure_code(execution['code'])
+            except Exception as e:
+                return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400
+
+        # Set Deployment Status
+        if execution['scheduled'] is not None:
+            execution['status'] = 'SCHEDULED'
+            execution['start_execution'] = False
+            if datetime.datetime.strptime(execution['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
+                return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
+        elif execution['start_execution']:
+            execution['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
+        else:
+            execution['status'] = 'CREATED'
+
+        # Create deployment to the DB
+        execution['deployment_id'] = self._deployments.post(user['id'], deployment)
+        execution_id = self._executions.post(user['id'], execution)
+
+        # Consume Coins
+        self._users.consume_coins(user, group['coins_execution'])
+
+        # Build Response Data
+        response = {'id': execution_id, 'coins': user['coins'] - group['coins_execution'] }
+
+        if execution['start_execution'] and not group['deployments_execution_concurrent']:
+            # Build Meteor Execution
+            meteor = {
+                'id': execution_id,
+                'user_id': user['id'],
+                'username': user['username'],
+                'group_id': group['id'],
+                'environment_id': environment['id'],
+                'environment_name': environment['name'],
+                'mode': execution['mode'],
+                'method': execution['method'],
+                'queries': execution['queries'],
+                'databases': execution['databases'],
+                'code': execution['code'],
+                'url': execution['url'],
+                'execution_threads': group['deployments_execution_threads'],
+                'execution_timeout': group['deployments_execution_timeout']
+            }
+
+            # Start Meteor Execution
+            self._meteor.execute(meteor)
+            return jsonify({'message': 'Deployment Launched', 'data': response}), 200
+
+        return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
+
+    def __put(self, user, data):
+        # Edit Metadata
+        if 'name' in data.keys():
+            self._deployments.putName(user, data)
+            return jsonify({'message': 'Deployment edited successfully'}), 200
+        elif 'release' in data.keys():
+            self._deployments.putRelease(user, data)
+            return jsonify({'message': 'Deployment edited successfully'}), 200
+
+        # Get Data
+        execution = {
+            'id': data['id'],
+            'environment_id': data['environment'],
+            'mode': data['mode'],
+            'databases': data.get('databases'),
+            'queries': data.get('queries'),
+            'code': data.get('code'),
+            'method': data['method'],
+            'scheduled': data['scheduled'],
+            'url': data['url'],
+            'start_execution': data['start_execution'],
+        }
+
+        # Get Current Deployment
+        current_execution = self._executions.get(execution['id'])
+
+        # Check if deployment exists
+        if len(current_execution) == 0:
+            return jsonify({'message': 'This deployment does not exist.'}), 400
+        current_execution = current_execution[0]
+
+        # Check deployment authority
+        authority = self._deployments.getUser(current_execution['deployment_id'])
+        if len(authority) == 0:
+            return jsonify({'message': 'This deployment does not exist'}), 400
+        authority = authority[0]
+        if authority['id'] != user['id'] and not user['admin']:
+            return jsonify({'message': 'Insufficient Privileges'}), 400
+
+        # Check environment authority
+        environment = self._environments.get(user_id=authority['id'], group_id=authority['group_id'], environment_id=data['environment'])
+        if len(environment) == 0:
+            return jsonify({'message': 'The environment does not exist'}), 400
+        environment = environment[0]
+
+        # Check Code Syntax Errors
+        if execution['mode'] == 'PRO':
+            try:
+                execution['code'] = unicodedata.normalize("NFKD", execution['code'])
+                self.__secure_code(execution['code'])
+            except Exception as e:
+                return jsonify({'message': 'Errors in code: {}'.format(str(e).capitalize())}), 400
+
+        # Check scheduled date
+        if execution['scheduled'] is not None:
+            execution['start_execution'] = False
+            if datetime.datetime.strptime(execution['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
+                return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
+
+        # Proceed editing the deployment
+        if current_execution['status'] in ['CREATED','SCHEDULED'] and not execution['start_execution']:
+            self._executions.put(user['id'], execution)
+            return jsonify({'message': 'Deployment edited successfully', 'data': {'id': execution['id']}}), 200
+        else:
+            # Check Coins
+            group = self._groups.get(group_id=authority['group_id'])[0]
+            if not (authority['id'] != user['id'] and user['admin']) and (user['coins'] - group['coins_execution']) < 0:
+                return jsonify({'message': 'Insufficient Coins'}), 400
+
+            # Check logs path permissions
+            if not self.__check_logs_path():
+                return jsonify({'message': 'The local logs path has no write permissions'}), 400
+
+            # Set Deployment Status
+            if execution['scheduled'] is not None:
+                execution['status'] = 'SCHEDULED'
+            elif execution['start_execution']:
+                execution['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
+            else:
+                execution['status'] = 'CREATED'
+
+            # Create a new Deployment
+            execution['deployment_id'] = current_execution['deployment_id']
+            execution_id = self._executions.post(user['id'], execution)
+
+            # Consume Coins
+            if authority['id'] != user['id'] and user['admin']:
+                coins = user['coins']
+            else:
+                self._users.consume_coins(user, group['coins_execution'])
+                coins = user['coins'] - group['coins_execution']
+
+            # Build Response Data
+            response = { 'id': execution_id, 'coins': coins }
+
+            if execution['start_execution'] and not group['deployments_execution_concurrent']:
+                # Build Meteor Execution
+                meteor = {
+                    'id': execution_id,
+                    'user_id': authority['id'],
+                    'username': user['username'],
+                    'group_id': authority['group_id'],
+                    'environment_id': environment['id'],
+                    'environment_name': environment['name'],
+                    'mode': execution['mode'],
+                    'method': execution['method'],
+                    'queries': execution['queries'],
+                    'databases': execution['databases'],
+                    'code': execution['code'],
+                    'url': execution['url'],
+                    'execution_threads': group['deployments_execution_threads'],
+                    'execution_timeout': group['deployments_execution_timeout']
+                }
+
+                # Start Meteor Execution
+                self._meteor.execute(meteor)
+                return jsonify({'message': 'Deployment Launched', 'data': response}), 200
+
+            return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
+
+    def __start(self, user, data):
+        # Check logs path permissions
+        if not self.__check_logs_path():
+            return jsonify({'message': 'The local logs path has no write permissions'}), 400
+
+        # Get current deployment
+        execution = self._executions.get(data['id'])
+
+        # Check if deployment exists
+        if len(execution) == 0:
+            return jsonify({'message': 'This deployment does not exist.'}), 400
+        execution = execution[0]
+
+        # Check user privileges
+        if user['disabled'] or (execution['mode'] == 'BASIC' and not user['deployments_basic']) or (execution['mode'] == 'PRO' and not user['deployments_pro']):
+            return jsonify({'message': 'Insufficient Privileges'}), 401
+
+        # Check deployment authority
+        authority = self._deployments.getUser(execution['deployment_id'])
+        if len(authority) == 0:
+            return jsonify({'message': 'This deployment does not exist'}), 400
+        authority = authority[0]
+        if authority['id'] != user['id'] and not user['admin']:
+            return jsonify({'message': 'Insufficient Privileges'}), 400
+
+        # Check if Deploy can be started
+        if execution['status'] not in ['CREATED','SCHEDULED']:
+            return jsonify({'message': 'This deployment cannot be started.'}), 400
+
+        # Get Group Authority
+        group = self._groups.get(group_id=authority['group_id'])[0]
+
+        # Build Meteor Execution
+        meteor = {
+            'id': execution['id'],
+            'user_id': authority['id'],
+            'username': user['username'],
+            'group_id': authority['group_id'],
+            'environment_id': execution['environment_id'],
+            'environment_name': execution['environment_name'],
+            'mode': execution['mode'],
+            'method': execution['method'],
+            'queries': execution['queries'],
+            'databases': execution['databases'],
+            'code': execution['code'],
+            'url': execution['url'],
+            'execution_threads': group['deployments_execution_threads'],
+            'execution_timeout': group['deployments_execution_timeout']
+        }
+
+        # Update Execution Status
+        status = 'STARTING' if not group['deployments_execution_concurrent'] else 'QUEUED'
+        self._executions.updateStatus(execution['id'], status)
+
+        # Start Meteor Execution
+        if not group['deployments_execution_concurrent']:
+            self._meteor.execute(meteor)
+
+        # Build Response Data
+        response = {'id': execution['id']}
+
+        # Return Successful Message
+        return jsonify({'data': response, 'message': 'Deployment Launched'}), 200
+
+    def __stop(self, user, data):
+        # Check params
+        if 'id' not in data:
+            return jsonify({'message': 'Id parameter is required'}), 400
+        if 'mode' not in data or data['mode'] not in ['graceful','forceful']:
+            return jsonify({'message': 'Mode parameter is required'}), 400
+
+        # Get current deployment
+        execution = self._executions.get(data['id'])
+
+        # Check if deployment exists
+        if len(execution) == 0:
+            return jsonify({'message': 'This deployment does not exist.'}), 400
+        execution = execution[0]
+
+        # Check user privileges
+        if user['disabled'] or (execution['mode'] == 'BASIC' and not user['deployments_basic']) or (execution['mode'] == 'PRO' and not user['deployments_pro']):
+            return jsonify({'message': 'Insufficient Privileges'}), 401
+
+        # Check deployment authority
+        authority = self._deployments.getUser(execution['deployment_id'])
+        if len(authority) == 0:
+            return jsonify({'message': 'This deployment does not exist'}), 400
+        authority = authority[0]
+        if authority['id'] != user['id'] and not user['admin']:
+            return jsonify({'message': 'Insufficient Privileges'}), 400
+
+        # Remove the deployment from the queue & Get PID
+        self._executions.updateStatus(execution['id'], 'STOPPED', True)
+
+        # Stop the execution if the deployment has already started
+        if execution['pid'] is not None:
+            self._executions.updateStatus(execution['id'], 'STOPPING', data['mode'])
+            try:
+                if data['mode'] == 'graceful':
+                    os.kill(execution['pid'], signal.SIGINT)
+                elif data['mode'] == 'forceful':
+                    os.kill(execution['pid'], signal.SIGTERM)
+            except OSError:
+                pass
+            return jsonify({'message': 'Stopping the execution...'}), 200
+        return jsonify({'message': 'Execution removed from the queue'}), 200
+
+    def __public(self, user, data):
+        # Get current deployment
+        execution = self._executions.get(data['id'])
+
+        # Check if deployment exists
+        if len(execution) == 0:
+            return jsonify({'message': 'This deployment does not exist.'}), 400
+        execution = execution[0]
+
+        # Check user privileges
+        if user['disabled'] or (execution['mode'] == 'BASIC' and not user['deployments_basic']) or (execution['mode'] == 'PRO' and not user['deployments_pro']):
+            return jsonify({'message': 'Insufficient Privileges'}), 401
+
+        # Check deployment authority
+        authority = self._deployments.getUser(execution['deployment_id'])
+        if len(authority) == 0:
+            return jsonify({'message': 'This deployment does not exist'}), 400
+        authority = authority[0]
+        if authority['id'] != user['id'] and not user['admin']:
+            return jsonify({'message': 'Insufficient Privileges'}), 400
+
+        # Change deployment public value
+        self._executions.setPublic(execution['id'], data['public'])
+        return jsonify({'message': 'Success'}), 200
 
     ####################
     # Internal Methods #
     ####################
-    def __get(self, user_id):
-        return jsonify({'deployments': self._deployments.get(user_id), 'releases': self._releases.get(user_id)}), 200
+    def __check_logs_path(self):
+        logs_path = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])['local']['path']
+        return self.__check_local_path(logs_path)
 
-    def __put(self, user_id, data):
-        if data['put'] == 'name':
-            self._deployments.putName(user_id, data)
-        elif data['put'] == 'release':
-            self._deployments.putRelease(user_id, data)
-        return jsonify({'message': 'Deployment edited successfully'}), 200
+    def __check_local_path(self, path):
+        while not os.path.exists(path) and path != '/':
+            path = os.path.normpath(os.path.join(path, os.pardir))
+        if os.access(path, os.X_OK | os.W_OK):
+            return True
+        return False
+
+    def __secure_code(self, code):
+        q = multiprocessing.Queue()
+        p = multiprocessing.Process(target=self.__secure_code2, args=(code,q))
+        p.daemon = True
+        p.start()
+        p.join(3)
+        if p.is_alive():
+            p.terminate()
+            raise Exception('Timeout exceeded.')
+        result = q.get_nowait()
+        if result != 'OK':
+            raise Exception(result)
+
+    def __secure_code2(self, code, queue):
+        sys.stdout = open(os.devnull, 'w')
+        sys.stderr = open(os.devnull, 'w')
+        secure_code = f"""import builtins
+import importlib
+
+def import2(name, globals=None, locals=None, fromlist=(), level=0):
+    global importlib
+    whitelist = ['string','re','unicodedata','datetime','zoneinfo','calendar','collections','copy','numbers','math','cmath','decimal','fractions','random','statistics','fnmatch','secrets','csv','time','json','json.decoder','uuid','locale']
+    frommodule = globals['__name__'] if globals else None
+    if frommodule is None or frommodule == '__main__':
+        if name not in whitelist:
+            raise Exception(f"Module '{{name}}' is restricted.")
+    else:
+        split = frommodule.split('.')
+        if len(split) > 1:
+            if split[0] not in whitelist:
+                raise Exception(f"Module '{{split[0]}}' is restricted.")
+        elif frommodule not in whitelist:
+            raise Exception(f"Module '{{frommodule}}' is restricted.")
+    return importlib.__import__(name, globals, locals, fromlist, level)
+
+def exec2(*args, **kwargs):
+    raise Exception("Method exec() is restricted.")
+
+def open2(*args, **kwargs):
+    raise Exception("Method open() is restricted.")
+
+builtins.__import__ = import2
+builtins.exec = exec2
+builtins.open = open2\n\n{code}\nblueprint()"""
+        try:
+            exec(secure_code, {'__name__':'__main__'}, {})
+            queue.put('OK')
+        except SyntaxError as e:
+            queue.put(e.args[0] + ' (line ' + str(e.lineno-29) + ')')
+        except Exception as e:
+            queue.put(str(e))

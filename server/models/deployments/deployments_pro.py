@@ -57,16 +57,6 @@ class Deployments_Pro:
             query = "UPDATE deployments_pro SET `status` = 'STOPPED' WHERE id = %s AND status = 'QUEUED'"
             self._sql.execute(query, (deployment_id))
 
-    def getExecutions(self, execution_id):
-        query = """
-            SELECT p.id, e.name AS 'environment', p.method, p.created, p.status, p.started, p.ended, CONCAT(TIMEDIFF(p.ended, p.started)) AS 'overall'
-            FROM deployments_pro p
-            JOIN deployments_pro p2 ON p2.deployment_id = p.deployment_id AND p2.id = %s
-            LEFT JOIN environments e ON e.id = p.environment_id
-            ORDER BY p.created DESC;
-        """
-        return self._sql.execute(query, (execution_id))
-
     def setPublic(self, execution_id, public):
         query = """
             UPDATE deployments_pro
