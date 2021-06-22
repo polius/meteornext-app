@@ -1,6 +1,9 @@
 # Create the container from the nginx image
 FROM nginx:latest
 
+# Install jq to parse 'server.conf'
+RUN apt install jq -y
+
 # Copy the web client application into nginx
 COPY dist/client.tar.gz /usr/share/nginx/html/
 

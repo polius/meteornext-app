@@ -79,7 +79,12 @@ class Region:
         current_thread.progress = json.loads(progress) if len(progress) > 0 else {}
 
     def clean(self):
-        self.__ssh("rm -rf {}/logs/{}".format(self._remote_path, self._uuid))
+        current_thread = threading.current_thread()
+        try:
+            self.__ssh("rm -rf {}/logs/{}".format(self._remote_path, self._uuid), retry=False)
+            current_thread.progress = {'region': self._region['name'], 'success': True}
+        except Exception as e:
+            current_thread.progress = {'region': self._region['name'], 'success': False, 'error': str(e)}
 
     def check_processes(self):
         # Check Processes Currently Executing
@@ -145,8 +150,9 @@ class Region:
         # Return Execution Output
         return stdout[0] if len(stdout) > 0 else ''
 
-    def __ssh(self, command, path=None):
-        for _ in range(60):
+    def __ssh(self, command, path=None, retry=True):
+        retries = 6 if retry else 1
+        for i in range(retries):
             try:
                 # Supress Errors Output
                 sys_stderr = sys.stderr
@@ -156,7 +162,7 @@ class Region:
                 client = paramiko.SSHClient()
                 client.load_system_host_keys()
                 client.set_missing_host_key_policy(paramiko.WarningPolicy())
-                client.connect(self._region['ssh']['hostname'], port=self._region['ssh']['port'], username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'])
+                client.connect(self._region['ssh']['hostname'], port=self._region['ssh']['port'], username=self._region['ssh']['username'], password=self._region['ssh']['password'], key_filename=self._region['ssh']['key'], timeout=10)
                 transport = client.get_transport()
                 transport.set_keepalive(30)
 
@@ -182,7 +188,8 @@ class Region:
                 return _stdout[0].strip() if len(_stdout) > 0 else ''
 
             except Exception:
-                time.sleep(5)
+                if i == retries - 1:
+                    raise
 
             finally:
                 try:

@@ -7,8 +7,6 @@ import threading
 import traceback
 
 import routes.deployments.deployments
-import routes.deployments.views.basic
-import routes.deployments.views.pro
 import apps.monitoring.monitoring
 
 class Cron:
@@ -47,18 +45,9 @@ class Cron:
 
     def __executions(self):
         try:
-            # Basic Deployments
-            basic = routes.deployments.views.basic.Basic(self._app, self._sql, self._license)
-            basic.check_finished()
-            basic.check_scheduled()
-
-            # Pro Deployments
-            pro = routes.deployments.views.pro.Pro(self._app, self._sql, self._license)
-            pro.check_finished()
-            pro.check_scheduled()
-
-            # Deployments
             deployments = routes.deployments.deployments.Deployments(self._app, self._sql, self._license)
+            deployments.check_finished()
+            deployments.check_scheduled()
             deployments.check_queued()
         except Exception:
             traceback.print_exc()

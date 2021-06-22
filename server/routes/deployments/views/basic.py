@@ -61,31 +61,6 @@ class Basic:
             elif request.method == 'PUT':
                 return self.__put(user, deployment_json)
 
-        @deployments_basic_blueprint.route('/deployments/basic/executions', methods=['GET'])
-        @jwt_required()
-        def deployments_basic_executions():
-            # Check license
-            if not self._license.validated:
-                return jsonify({"message": self._license.status['response']}), 401
-
-            # Get user data
-            user = self._users.get(get_jwt_identity())[0]
-
-            # Check user privileges
-            if user['disabled'] or not user['deployments_basic']:
-                return jsonify({'message': 'Insufficient Privileges'}), 401
-
-            # Check user authority
-            authority = self._deployments_basic.getUser(request.args['execution_id'])
-            if len(authority) == 0:
-                return jsonify({'message': 'This deployment does not exist'}), 400
-            elif authority[0]['id'] != user['id'] and not user['admin']:
-                return jsonify({'message': 'Insufficient Privileges'}), 400
-
-            # Get deployment executions
-            executions = self._deployments_basic.getExecutions(request.args['execution_id'])
-            return jsonify({'data': executions }), 200
-
         @deployments_basic_blueprint.route('/deployments/basic/start', methods=['POST'])
         @jwt_required()
         def deployments_basic_start():
@@ -175,46 +150,6 @@ class Basic:
 
         return deployments_basic_blueprint
 
-    ###################
-    # Recurring Tasks #
-    ###################
-    def check_finished(self):
-        # Get all basic finished executions
-        finished = self._deployments_finished.getBasic()
-
-        for f in finished:
-            # Create notifications
-            notification = {'category': 'deployment'}
-            notification['name'] = '{} has finished'.format(f['name'])
-            notification['status'] = 'ERROR' if f['status'] == 'FAILED' else f['status']
-            notification['data'] = '{{"id": "{}"}}'.format(f['id'])
-            self._notifications.post(f['user_id'], notification)
-
-            # Clean finished deployments
-            finished_deployment = {'mode': 'BASIC', 'id': f['id']}
-            self._deployments_finished.delete(finished_deployment)
-
-    def check_scheduled(self):
-        # Get all basic scheduled executions
-        scheduled = self._deployments_basic.getScheduled()
-
-        # Check logs path permissions
-        if not self.__check_logs_path():
-            for s in scheduled:
-                self._deployments_basic.setError(s['execution_id'], 'The local logs path has no write permissions')
-        else:
-            for s in scheduled:
-                # Update Execution Status
-                status = 'QUEUED' if s['concurrent_executions'] else 'STARTING'
-                self._deployments_basic.updateStatus(s['execution_id'], status)
-
-                # Start Meteor Execution
-                if s['concurrent_executions'] is None:
-                    self._meteor.execute(s)
-                    # Add Deployment to be Tracked
-                    deployment = {"mode": s['mode'], "id": s['execution_id']}
-                    self._deployments_finished.post(deployment)
-
     ####################
     # Internal Methods #
     ####################
@@ -290,8 +225,11 @@ class Basic:
         return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
 
     def __put(self, user, data):
+        # Get current deployment
+        deployment = self._deployments_basic.get(data['execution_id'])[0]
+
         # Check deployment authority
-        authority = self._deployments_basic.getUser(data['execution_id'])
+        authority = self._deployments.getUser(data['id'])
         if len(authority) == 0:
             return jsonify({'message': 'This deployment does not exist'}), 400
         elif authority[0]['id'] != user['id'] and not user['admin']:
@@ -307,9 +245,6 @@ class Basic:
             data['start_execution'] = False
             if datetime.datetime.strptime(data['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
-
-        # Get current deployment
-        deployment = self._deployments_basic.get(data['execution_id'])[0]
 
         # Proceed editing the deployment
         if deployment['status'] in ['CREATED','SCHEDULED'] and not data['start_execution']:

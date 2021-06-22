@@ -4,14 +4,13 @@ RUN yum update -y && \
     yum upgrade -y && \
     yum install python36-devel -y && \
     yum install gcc -y && \
-    yum install jq -y && \
     # wget https://www.python.org/ftp/python/3.8.6/Python-3.8.6.tgz && \
     # tar xzf Python-3.8.6.tgz && \
     # cd Python-3.8.6 && \
     # ./configure --enable-optimizations --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib" && \ 
     # make install && \
     yum install xz -y && \
-    python3 -m pip install --no-cache-dir --upgrade pip==21.0.1 setuptools wheel && \
+    python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
     python3 -m pip install --no-cache-dir boto3 && \
     python3 -m pip install --no-cache-dir requests && \
     python3 -m pip install --no-cache-dir simplejson && \

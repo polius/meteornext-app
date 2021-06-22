@@ -80,6 +80,7 @@ class core:
 
             if self._args.validate:
                 signal.signal(signal.SIGINT,signal.SIG_IGN)
+                signal.signal(signal.SIGTERM,signal.SIG_IGN)
                 self.clean()
                 self.show_execution_time(only_validate=True)
                 self._progress.end(execution_status=0)
@@ -87,6 +88,7 @@ class core:
 
         except (Exception, KeyboardInterrupt) as e:
             signal.signal(signal.SIGINT,signal.SIG_IGN)
+            signal.signal(signal.SIGTERM,signal.SIG_IGN)
             self.clean()
             if self._args.deploy or self._args.test:
                 self.slack(status=2, summary=None, error=str(e))
@@ -109,6 +111,7 @@ class core:
     def __post_execution(self, status, error=None):
         # Supress CTRL+C events
         signal.signal(signal.SIGINT,signal.SIG_IGN)
+        signal.signal(signal.SIGTERM,signal.SIG_IGN)
 
         try:
             # Display error
@@ -199,9 +202,9 @@ class core:
         # Download Logs
         ssh_regions = [i for i in self._imports.config['regions'] if i['ssh']['enabled']]
         if len(ssh_regions) > 0:
-            status_msg = "- Downloading Logs from SSH hosts..."
+            status_msg = "- Downloading Logs from Regions..."
             # print(status_msg)
-            self._progress.track_logs(value=status_msg[2:])
+            self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
             threads = []
             for region in ssh_regions:
                 r = Region(self._args, region)
@@ -210,6 +213,8 @@ class core:
                 t.start()
             for t in threads:
                 t.join()
+
+            self._progress.track_logs(value={'status': 'success'})
 
         # If current environment has no regions / servers
         try:
@@ -222,9 +227,9 @@ class core:
         try:
             for region_item in region_items:
                 if os.path.isdir("{}/{}".format(execution_logs_path, region_item)):
-                    status_msg = "- Merging '{}'...".format(region_item)
+                    status_msg = f"- Merging '{region_item}'..."
                     # print(status_msg)
-                    self._progress.track_logs(value=status_msg[2:])
+                    self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
 
                     server_items = os.listdir("{}/{}".format(execution_logs_path, region_item))
 
@@ -259,12 +264,13 @@ class core:
                     # Write Region Logs
                     with open("{}/{}.json".format(execution_logs_path, region_item), 'w') as f:
                         json.dump({"output": region_logs}, f, separators=(',', ':'))
+                    self._progress.track_logs(value={'status': 'success'})
 
             # Merging Environment Logs
             environment_logs = []
             status_msg = "- Generating a Single Log File..."
             # print(status_msg)
-            self._progress.track_logs(value=status_msg[2:])
+            self._progress.track_logs(value={'status': 'progress', 'message': status_msg[2:]})
 
             region_items = os.listdir(execution_logs_path)
             for region_item in region_items:
@@ -280,6 +286,7 @@ class core:
             # Compress Execution Logs and Delete Uncompressed Folder
             shutil.make_archive("{}/execution".format(self._args.path), 'gztar', "{}/execution".format(self._args.path))
             shutil.rmtree("{}/execution".format(self._args.path))
+            self._progress.track_logs(value={'status': 'success'})
 
             # Return All Logs
             return environment_logs
@@ -343,21 +350,32 @@ class core:
         # print("+==================================================================+")
         # print("|  CLEAN                                                           |")
         # print("+==================================================================+")
-        status_msg = "- Cleaning Regions..."
+        status_msg = "- Cleaning Regions Logs..."
         # print(status_msg)
-        self._progress.track_tasks(value=status_msg[2:])
+        self._progress.track_tasks(value={'status': 'progress', 'message': status_msg[2:]})
 
         # Delete SSH Deployment Logs
         ssh_regions = [i for i in self._imports.config['regions'] if i['ssh']['enabled']]
+        threads = []
         if len(ssh_regions) > 0:           
-            threads = []
             for region in ssh_regions:
                 r = Region(self._args, region)
                 t = threading.Thread(target=r.clean)
+                t.progress = {}
                 threads.append(t)
                 t.start()
             for t in threads:
                 t.join()
+
+        error = None
+        for t in threads:
+            if not t.progress['success']:
+                error = t.progress
+                break
+        if error:
+            self._progress.track_tasks(value={'status': 'failed'})
+        else:
+            self._progress.track_tasks(value={'status': 'success'})
 
         # Delete Uncompressed Deployment Folder
         if os.path.exists(self._args.path):
@@ -374,7 +392,7 @@ class core:
         # print("+==================================================================+")
         status_msg = "- Sending Slack to '#{}'...".format(self._imports.config['slack']['channel_name'])
         # print(status_msg)
-        self._progress.track_tasks(value=status_msg[2:])
+        self._progress.track_tasks(value={'status': 'progress', 'message': status_msg[2:]})
 
         # Get Webhook Data
         webhook_url = self._imports.config['slack']['webhook_url']
@@ -479,11 +497,12 @@ class core:
             response = requests.post(webhook_url, data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
             if response.status_code != 200:
                 raise Exception()
+            self._progress.track_tasks(value={'status': 'success'})
             
         except Exception as e:
             response = "Slack message could not be sent. Invalid Webhook URL."
-            self._progress.track_tasks(value=response)
             # print(response)
+            self._progress.track_tasks(value={'status': 'failed'})
 
     def show_execution_time(self, only_validate=False):
         # print("+==================================================================+")

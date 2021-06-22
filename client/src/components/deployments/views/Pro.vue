@@ -278,7 +278,7 @@ export default {
     },
     getCode() {
       this.loading_code = true
-      axios.get('/deployments/pro/code')
+      axios.get('/deployments/blueprint')
         .then((response) => {
           this.code = response.data.data
           this.cmOptions.readOnly = false
@@ -329,6 +329,7 @@ export default {
       this.loading_code = true
       // Build parameters
       const payload = {
+        mode: 'PRO',
         name: this.name,
         release: this.release,
         environment: this.environment,
@@ -342,14 +343,14 @@ export default {
       else payload['start_execution'] = this.start_execution
 
       // Add deployment to the DB
-      axios.post('/deployments/pro', payload)
+      axios.post('/deployments', payload)
         .then((response) => {
           const data = response.data.data
           this.notification(response.data.message, '#00b16a')
           // Refresh user coins
           this.$store.dispatch('app/coins', data['coins'])
           // Redirect page
-          this.$router.push({ name:'deployment', params: { id: 'P' + data['execution_id'], admin: false, msg: response.data.message, color: '#00b16a' }})
+          this.$router.push({ name:'deployment', params: { id: data['id'], admin: false, msg: response.data.message, color: '#00b16a' }})
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

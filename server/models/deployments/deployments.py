@@ -5,85 +5,44 @@ class Deployments:
     def get(self, user_id=None, deployment_id=None):
         if deployment_id is not None:
             query = """
-                SELECT d.id, d.execution_id, d.name, e.name AS 'environment', r.name AS 'release', d.mode, d.method, d.status, d.created, d.scheduled, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
-                FROM
-                (
-                    SELECT d.id, db.id AS 'execution_id', d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.scheduled, db.started, db.ended
-                    FROM deployments_basic db
-                    JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %(user_id)s AND d.id = %(deployment_id)s
-                    JOIN users u ON u.id = d.user_id
-                    JOIN groups g ON g.id = u.group_id AND g.deployments_basic = 1  
-                    WHERE db.id IN (
-                        SELECT MAX(id)
-                        FROM deployments_basic db2
-                        WHERE db2.deployment_id = db.deployment_id
-                    )
-                    UNION ALL
-                    SELECT d.id, dp.id AS 'execution_id', d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.scheduled, dp.started, dp.ended
-                    FROM deployments_pro dp
-                    JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %(user_id)s AND d.id = %(deployment_id)s
-                    JOIN users u ON u.id = d.user_id
-                    JOIN groups g ON g.id = u.group_id AND g.deployments_pro = 1  
-                    WHERE dp.id IN (
-                        SELECT MAX(id)
-                        FROM deployments_pro dp2
-                        WHERE dp2.deployment_id = dp.deployment_id
-                    )
-                ) d
-                LEFT JOIN environments e ON e.id = d.environment_id
-                LEFT JOIN releases r ON r.id = d.release_id
-                WHERE r.active = 1 OR r.active IS NULL
+                SELECT d.id, e.id AS 'execution_id', d.name, env.name AS 'environment', r.name AS 'release', e.mode, e.method, e.status, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
+                FROM executions e
+                JOIN deployments d ON d.id = e.deployment_id AND d.user_id = %(user_id)s AND d.id = %(deployment_id)s
+                JOIN users u ON u.id = d.user_id
+                JOIN groups g ON g.id = u.group_id
+                LEFT JOIN environments env ON env.id = e.environment_id
+                LEFT JOIN releases r ON r.id = d.release_id 
+                WHERE e.id IN (
+                    SELECT MAX(id)
+                    FROM executions e2
+                    WHERE e2.deployment_id = e.deployment_id
+                )
+                AND r.active = 1 OR r.active IS NULL
                 ORDER BY id DESC
             """
             return self._sql.execute(query, {'user_id': user_id, 'deployment_id': deployment_id})
         else:
             query = """
-                SELECT d.id, d.execution_id, d.name, e.name AS 'environment', r.name AS 'release', d.mode, d.method, d.status, d.queue, d.created, d.scheduled, d.started, d.ended, CONCAT(TIMEDIFF(d.ended, d.started)) AS 'overall'
-                FROM
-                (
-                    (
-                        SELECT d.id, db.id AS 'execution_id', d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, q.queue, db.created, db.scheduled, db.started, db.ended
-                        FROM deployments_basic db
-                        JOIN deployments d ON d.id = db.deployment_id AND d.user_id = %(user_id)s
-                        JOIN users u ON u.id = d.user_id
-                        JOIN groups g ON g.id = u.group_id AND g.deployments_basic = 1 
-                        LEFT JOIN
-                        (
-                            SELECT (@cnt := @cnt + 1) AS queue, deployment_id
-                            FROM deployments_basic
-                            JOIN (SELECT @cnt := 0) t
-                            WHERE status = 'QUEUED'
-                        ) q ON q.deployment_id = d.id
-                        WHERE db.id IN (
-                            SELECT MAX(id)
-                            FROM deployments_basic db2
-                            WHERE db2.deployment_id = db.deployment_id
-                        )
-                    )
-                    UNION ALL
-                    (
-                        SELECT d.id, dp.id AS 'execution_id', d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, q.queue, dp.created, dp.scheduled, dp.started, dp.ended
-                        FROM deployments_pro dp
-                        JOIN deployments d ON d.id = dp.deployment_id AND d.user_id = %(user_id)s
-                        JOIN users u ON u.id = d.user_id
-                        JOIN groups g ON g.id = u.group_id AND g.deployments_pro = 1  
-                        LEFT JOIN
-                        (
-                            SELECT (@cnt := @cnt + 1) AS queue, deployment_id
-                            FROM deployments_pro
-                            JOIN (SELECT @cnt := 0) t
-                            WHERE status = 'QUEUED'
-                        ) q ON q.deployment_id = d.id
-                        WHERE dp.id IN (
-                            SELECT MAX(id)
-                            FROM deployments_pro dp2
-                            WHERE dp2.deployment_id = dp.deployment_id
-                        )
-                    )
-                ) d
-                LEFT JOIN environments e ON e.id = d.environment_id
+                SELECT d.id, e.id AS 'execution_id', d.name, env.name AS 'environment', r.name AS 'release', e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
+                FROM executions e
+                JOIN deployments d ON d.id = e.deployment_id AND d.user_id = %(user_id)s
+                JOIN users u ON u.id = d.user_id
+                JOIN groups g ON g.id = u.group_id
+                LEFT JOIN environments env ON env.id = e.environment_id
                 LEFT JOIN releases r ON r.id = d.release_id
-                WHERE r.active = 1 OR r.active IS NULL
+                LEFT JOIN
+                (
+                    SELECT (@cnt := @cnt + 1) AS queue, deployment_id
+                    FROM executions
+                    JOIN (SELECT @cnt := 0) t
+                    WHERE status = 'QUEUED'
+                ) q ON q.deployment_id = d.id
+                WHERE e.id IN (
+                    SELECT MAX(id)
+                    FROM executions e2
+                    WHERE e2.deployment_id = e.deployment_id
+                )
+                AND r.active = 1 OR r.active IS NULL
                 ORDER BY created DESC, id DESC
             """
             return self._sql.execute(query, {"user_id": user_id})
@@ -91,23 +50,23 @@ class Deployments:
     def post(self, user_id, deployment):
         query = """
             INSERT INTO deployments (name, release_id, user_id)
-            SELECT %(deployment_name)s, id, %(user_id)s
+            SELECT %(name)s, id, %(user_id)s
             FROM releases
-            WHERE name = %(deployment_release)s
+            WHERE name = %(release_id)s
             AND user_id = %(user_id)s
         """
-        return self._sql.execute(query, {'deployment_name': deployment['name'], 'user_id': user_id, 'deployment_release': deployment['release']})
+        return self._sql.execute(query, {'name': deployment['name'], 'user_id': user_id, 'release_id': deployment['release_id']})
 
-    def putName(self, user_id, deployment):
+    def putName(self, user, deployment):
         query = """
             UPDATE deployments
             SET name = %s
             WHERE id = %s
             AND user_id = %s
         """
-        self._sql.execute(query, (deployment['name'], deployment['id'], user_id))
+        self._sql.execute(query, (deployment['name'], deployment['id'], user['id']))
 
-    def putRelease(self, user_id, deployment):
+    def putRelease(self, user, deployment):
         query = """
             UPDATE deployments, releases
             SET deployments.release_id = releases.id
@@ -116,24 +75,35 @@ class Deployments:
             AND releases.name = %s
             AND releases.user_id = %s
         """
-        self._sql.execute(query, (deployment['id'], user_id, deployment['release'], user_id))
+        self._sql.execute(query, (deployment['id'], user['id'], deployment['release'], user['id']))
 
     def getResults(self, uri):
         query = """
-            SELECT d.user_id, r.*
-            FROM
-            (
-                SELECT deployment_id, id AS 'execution_id', 'basic' AS 'mode', engine, public
-                FROM deployments_basic
-                WHERE uri = %(uri)s
-                UNION
-                SELECT deployment_id, id AS 'execution_id', 'pro' AS 'mode', engine, public
-                FROM deployments_pro
-                WHERE uri = %(uri)s
-            ) r
-            JOIN deployments d ON d.id = r.deployment_id
+            SELECT d.user_id, e.deployment_id, e.id AS 'execution_id', e.mode, engine, public
+            FROM executions e
+            JOIN deployments d ON d.id = e.deployment_id
+            WHERE e.uri = %(uri)s
         """
         return self._sql.execute(query, {'uri': uri})
+
+    def getUser(self, deployment_id):
+        query = """
+            SELECT u.id, u.group_id
+            FROM deployments d
+            JOIN users u ON u.id = d.user_id
+            WHERE d.id = %s
+        """
+        return self._sql.execute(query, (deployment_id))
+
+    def getExecutions(self, deployment_id):
+        query = """
+            SELECT e.id, env.name AS 'environment', e.mode, e.method, e.status, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
+            FROM executions e
+            LEFT JOIN environments env ON env.id = e.environment_id
+            WHERE e.deployment_id = %(deployment_id)s
+            ORDER BY e.created DESC
+        """
+        return self._sql.execute(query, {'deployment_id': deployment_id})
 
     def removeRelease(self, release_id):
         query = """

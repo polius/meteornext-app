@@ -5,7 +5,6 @@ import tempfile
 import paramiko
 import sshtunnel
 import threading
-import traceback
 
 from region import Region
 
@@ -28,11 +27,13 @@ class validate_regions:
             try:
                 self.__validate_ssh()
             except Exception as e:
-                current_thread.progress = {'region': self._region['name'], 'success': False, 'error': str(e)}
-                traceback.print_exc()
+                current_thread.progress = {'region': self._region['name'], 'success': False, 'error': str(e).capitalize()}
                 # print("--> {} Region '{}' Failed.".format(region_type, self._region['name']))
-                # print(str(e))
+                # print(str(e))
                 return
+
+        if not current_thread.alive:
+            return
 
         # SQL Validation
         progress = {'region': self._region['name'], 'errors': []}
@@ -41,6 +42,7 @@ class validate_regions:
             t = threading.Thread(target=self.__validate_sql, args=(server,))
             threads.append(t)
             t.progress = {}
+            t.alive = current_thread.alive
             t.start()
 
         # Wait threads
@@ -70,14 +72,19 @@ class validate_regions:
         current_thread.progress = progress
 
     def __validate_ssh(self):
+        # Get current thread 
+        current_thread = threading.current_thread()
+
         # Supress Errors Output
         sys_stderr = sys.stderr
         sys.stderr = open('/dev/null', 'w')
 
         # Validate SSH Connection
         error = None
-        for _ in range(10):
+        for _ in range(3):
             try:
+                if not current_thread.alive:
+                    break
                 client = paramiko.SSHClient()
                 client.load_system_host_keys()
                 client.set_missing_host_key_policy(paramiko.WarningPolicy())
@@ -87,7 +94,6 @@ class validate_regions:
                 break
             except Exception as e:
                 error = e
-                time.sleep(3)
 
         # Show Errors Output Again
         sys.stderr = sys_stderr
