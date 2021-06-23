@@ -1,14 +1,14 @@
 import os
-import json
-import botocore
-import boto3
-import tarfile
-import shutil
 import sys
+import json
+import boto3
+import shutil
+import signal
+import tarfile
+import botocore
 import datetime
 import unicodedata
 import multiprocessing
-import signal
 from flask import Blueprint, jsonify, request, send_from_directory
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
@@ -21,6 +21,7 @@ import models.deployments.deployments_queued
 import models.deployments.deployments_finished
 import models.admin.settings
 import models.inventory.environments
+import models.notifications
 import routes.deployments.meteor
 
 class Deployments:
@@ -36,6 +37,7 @@ class Deployments:
         self._deployments_finished = models.deployments.deployments_finished.Deployments_Finished(sql)
         self._settings = models.admin.settings.Settings(sql)
         self._environments = models.inventory.environments.Environments(sql)
+        self._notifications = models.notifications.Notifications(sql)
 
         # Init meteor
         self._meteor = routes.deployments.meteor.Meteor(app, sql)
@@ -226,7 +228,7 @@ class Deployments:
         finished = self._deployments_queued.getFinished()
         for i in finished:
             if i['scheduled']:
-                self._deployments_finished.post({"id": i['execution_id']})
+                self._deployments_finished.post(i['execution_id'])
         if len(finished) > 0:
             ids = ','.join([str(i['id']) for i in finished])
             self._deployments_queued.delete(ids)
@@ -272,8 +274,7 @@ class Deployments:
             self._notifications.post(f['user_id'], notification)
 
             # Clean finished deployments
-            finished_deployment = {'id': f['id']}
-            self._deployments_finished.delete(finished_deployment)
+            self._deployments_finished.delete(f['id'])
 
     def check_scheduled(self):
         # Get all basic scheduled executions
@@ -282,18 +283,17 @@ class Deployments:
         # Check logs path permissions
         if not self.__check_logs_path():
             for s in scheduled:
-                self._executions.setError(s['execution_id'], 'The local logs path has no write permissions')
+                self._executions.setError(s['id'], 'The local logs path has no write permissions')
         else:
             for s in scheduled:
                 # Update Execution Status
                 status = 'QUEUED' if s['concurrent_executions'] else 'STARTING'
-                self._executions.updateStatus(s['execution_id'], status)
+                self._executions.updateStatus(s['id'], status)
                 # Start Meteor Execution
                 if s['concurrent_executions'] is None:
                     self._meteor.execute(s)
                     # Add Deployment to be Tracked
-                    deployment = {"id": s['execution_id']}
-                    self._deployments_finished.post(deployment)
+                    self._deployments_finished.post(s['id'])
 
     #################
     # Class Methods #

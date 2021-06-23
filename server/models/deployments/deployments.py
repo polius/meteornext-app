@@ -17,7 +17,7 @@ class Deployments:
                     FROM executions e2
                     WHERE e2.deployment_id = e.deployment_id
                 )
-                AND r.active = 1 OR r.active IS NULL
+                AND (r.active = 1 OR r.active IS NULL)
                 ORDER BY id DESC
             """
             return self._sql.execute(query, {'user_id': user_id, 'deployment_id': deployment_id})
@@ -42,7 +42,7 @@ class Deployments:
                     FROM executions e2
                     WHERE e2.deployment_id = e.deployment_id
                 )
-                AND r.active = 1 OR r.active IS NULL
+                AND (r.active = 1 OR r.active IS NULL)
                 ORDER BY created DESC, id DESC
             """
             return self._sql.execute(query, {"user_id": user_id})

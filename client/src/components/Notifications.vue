@@ -122,12 +122,11 @@ export default {
         .finally(() => this.loading = false)
     },
     infoNotification() {
+      const id = this.selected[0].data.id
       if (this.selected[0].category == 'deployment') {
-        const id = this.selected[0].data.mode.substring(0, 1) + this.selected[0].data.id
         this.$router.push({ name:'deployment', params: { id: id }})
       }
       else if (this.selected[0].category == 'monitoring') {
-        const id = this.selected[0].data.id
         this.$router.push({ name:'monitor', params: { id: id }})
       }
     },

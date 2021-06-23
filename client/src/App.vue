@@ -266,7 +266,7 @@ export default {
           // Go to the selected resource
           const data = JSON.parse(notification.data)
           if (notification.category == 'deployment') {
-            this.$router.push({ name: 'deployment', params: { id: data.mode.substring(0, 1) + data.id }})
+            this.$router.push({ name: 'deployment', params: { id: data.id }})
           }
           else if (notification.category == 'monitoring') {
             this.$router.push({ name: 'monitor', params: { id:  data.id }})

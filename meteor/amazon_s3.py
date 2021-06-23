@@ -22,7 +22,7 @@ class amazon_s3:
             # print("+==================================================================+")
             try:
                 # Upload Logs to S3
-                status_msg = "- Uploading Logs to S3 Bucket '{}'".format(self._config['amazon_s3']['bucket_name'])
+                status_msg = "- Uploading Logs to S3 Bucket '{}'...".format(self._config['amazon_s3']['bucket_name'])
                 # print(status_msg)
                 self._progress.track_tasks(value={'status': 'progress', 'message': "Uploading Logs to Amazon S3..."})
                 execution_name = self._args.path[self._args.path.rfind('/')+1:]

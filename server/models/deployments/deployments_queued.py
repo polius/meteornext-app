@@ -14,17 +14,18 @@ class Deployments_Queued:
 
     def getFinished(self):
         query = """
-            SELECT q.id, e.mode, e.id AS 'execution_id', e.scheduled IS NOT NULL AS 'scheduled'
+            SELECT q.id, e.id AS 'execution_id', e.scheduled IS NOT NULL AS 'scheduled'
             FROM executions e
             JOIN deployments_queued q ON q.execution_id = e.id
-            WHERE e.status IN ('SUCCESS','WARNING','FAILED','STOPPED')
+            WHERE e.status IN('SUCCESS','WARNING','FAILED','STOPPED')
         """
         return self._sql.execute(query)
 
     def getNext(self):
         query = """
-            SELECT e.mode, e.id, e.status, g.id AS 'group', COALESCE(g.deployments_execution_concurrent,100) AS 'concurrent'
+            SELECT e.id, e.status, g.id AS 'group', COALESCE(g.deployments_execution_concurrent,100) AS 'concurrent'
             FROM executions e
+            JOIN deployments_queued q ON q.execution_id = e.id
             JOIN deployments d ON d.id = e.deployment_id
             JOIN users u ON u.id = d.user_id
             JOIN groups g ON g.id = u.group_id

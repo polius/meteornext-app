@@ -5,8 +5,8 @@ class Deployments:
     def get(self, dfilter=None, dsort=None):
         user = name = release = mode = status = date_from = date_to = ''
         args = {}
-        sort_column = 'd.created DESC, d.id DESC'
-        sort_order = ''
+        sort_column = 'e.id'
+        sort_order = 'DESC'
         if dfilter is not None:
             matching = {
                 'equal':        { 'operator': '=', 'args': '{}' },
@@ -26,16 +26,16 @@ class Deployments:
                 release = f"AND r.name {matching[dfilter['releaseFilter']]['operator']} %(release)s"
                 args['release'] = matching[dfilter['releaseFilter']]['args'].format(dfilter['release'])
             if 'mode' in dfilter and dfilter['mode'] is not None:
-                mode = 'AND d.mode = %(mode)s'
+                mode = 'AND e.mode = %(mode)s'
                 args['mode'] = dfilter['mode']
             if 'status' in dfilter and dfilter['status'] is not None:
-                status = 'AND d.status = %(status)s'
+                status = 'AND e.status = %(status)s'
                 args['status'] = dfilter['status']
             if 'dateFrom' in dfilter and len(dfilter['dateFrom']) > 0:
-                date_from = 'AND d.created >= %(date_from)s'
+                date_from = 'AND e.created >= %(date_from)s'
                 args['date_from'] = dfilter['dateFrom']
             if 'dateTo' in dfilter and len(dfilter['dateTo']) > 0:
-                date_to = 'AND d.created <= %(date_to)s'
+                date_to = 'AND e.created <= %(date_to)s'
                 args['date_to'] = dfilter['dateTo']
 
         if dsort is not None:
@@ -43,43 +43,28 @@ class Deployments:
             sort_order = 'DESC' if dsort['desc'] else 'ASC'
 
         query = """
-            SELECT *, e.name AS 'environment', r.name AS 'release'
-            FROM
-            (
+                SELECT d.id, e.id AS 'execution_id', d.name, env.name AS 'environment', r.name AS 'release', u.username, e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'
+                FROM executions e
+                JOIN deployments d ON d.id = e.deployment_id
+                JOIN users u ON u.id = d.user_id {0}
+                JOIN groups g ON g.id = u.group_id
+                LEFT JOIN environments env ON env.id = e.environment_id
+                LEFT JOIN releases r ON r.id = d.release_id
+                LEFT JOIN
                 (
-                    SELECT d.id, db.id AS 'execution_id', u.username, d.name, d.release_id, db.environment_id, 'BASIC' AS 'mode', db.method, db.status, db.created, db.scheduled, db.started, db.ended, CONCAT(TIMEDIFF(db.ended, db.started)) AS 'overall'
-                    FROM deployments_basic db
-                    JOIN deployments d ON d.id = db.deployment_id
-                    JOIN users u ON u.id = d.user_id {0}
-                    WHERE db.id IN (
-                        SELECT MAX(id)
-                        FROM deployments_basic db2
-                        WHERE db2.deployment_id = db.deployment_id
-                    )
-                    ORDER BY db.created DESC
-                    LIMIT 1000
+                    SELECT (@cnt := @cnt + 1) AS queue, deployment_id
+                    FROM executions
+                    JOIN (SELECT @cnt := 0) t
+                    WHERE status = 'QUEUED'
+                ) q ON q.deployment_id = d.id
+                WHERE e.id IN (
+                    SELECT MAX(id)
+                    FROM executions e2
+                    WHERE e2.deployment_id = e.deployment_id
                 )
-                UNION ALL
-                (
-                    SELECT d.id, dp.id AS 'execution_id', u.username, d.name, d.release_id, dp.environment_id, 'PRO' AS 'mode', dp.method, dp.status, dp.created, dp.scheduled, dp.started, dp.ended, CONCAT(TIMEDIFF(dp.ended, dp.started)) AS 'overall'
-                    FROM deployments_pro dp
-                    JOIN deployments d ON d.id = dp.deployment_id
-                    JOIN users u ON u.id = d.user_id {0}
-                    WHERE dp.id IN (
-                        SELECT MAX(id)
-                        FROM deployments_pro dp2
-                        WHERE dp2.deployment_id = dp.deployment_id
-                    )
-                    ORDER BY dp.created DESC
-                    LIMIT 1000
-                )
-            ) d
-            LEFT JOIN environments e ON e.id = d.environment_id
-            LEFT JOIN releases r ON r.id = d.release_id
-            WHERE 1=1
-            {1} {2} {3} {4} {5} {6}
-            ORDER BY {7} {8}
-            LIMIT 1000
+                {1} {2} {3} {4} {5} {6}
+                ORDER BY {7} {8}
+                LIMIT 1000
         """.format(user, name, release, mode, status, date_from, date_to, sort_column, sort_order)
         return self._sql.execute(query, args)
 
