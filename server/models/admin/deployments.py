@@ -25,12 +25,14 @@ class Deployments:
             if 'release' in dfilter and len(dfilter['release']) > 0 and 'releaseFilter' in dfilter and dfilter['releaseFilter'] in matching:
                 release = f"AND r.name {matching[dfilter['releaseFilter']]['operator']} %(release)s"
                 args['release'] = matching[dfilter['releaseFilter']]['args'].format(dfilter['release'])
-            if 'mode' in dfilter and dfilter['mode'] is not None:
-                mode = 'AND e.mode = %(mode)s'
-                args['mode'] = dfilter['mode']
-            if 'status' in dfilter and dfilter['status'] is not None:
-                status = 'AND e.status = %(status)s'
-                args['status'] = dfilter['status']
+            if 'mode' in dfilter and dfilter['mode'] is not None and len(dfilter['mode']) > 0:
+                mode = 'AND e.mode IN (%s)' % ','.join([f"%(mode{i})s" for i in range(len(dfilter['mode']))])
+                for i,v in enumerate(dfilter['mode']):
+                    args[f'mode{i}'] = v
+            if 'status' in dfilter and dfilter['status'] is not None and len(dfilter['status']) > 0:
+                status = 'AND e.status IN (%s)' % ','.join([f"%(status{i})s" for i in range(len(dfilter['status']))])
+                for i,v in enumerate(dfilter['status']):
+                    args[f'status{i}'] = v
             if 'dateFrom' in dfilter and len(dfilter['dateFrom']) > 0:
                 date_from = 'AND e.created >= %(date_from)s'
                 args['date_from'] = dfilter['dateFrom']
