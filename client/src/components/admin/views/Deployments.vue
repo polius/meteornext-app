@@ -204,7 +204,7 @@ export default {
     filter: {},
     filterApplied: false,
     filterUsers: [],
-    deploymentMode: ['Basic','Pro'],
+    deploymentMode: ['BASIC','PRO'],
     deploymentStatus: ['CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED'],
 
     // Date / Time Picker
