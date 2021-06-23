@@ -96,7 +96,7 @@ class Executions:
             SELECT e.id, e.mode, u.id AS 'user_id', u2.username AS 'username', g.id AS 'group_id', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, g.deployments_execution_threads AS 'execution_threads', g.deployments_execution_timeout AS 'execution_timeout', e.url
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id
-            JOIN environments e ON env.id = e.environment_id
+            JOIN environments env ON env.id = e.environment_id
             JOIN users u ON u.id = d.user_id
             LEFT JOIN users u2 ON u2.id = e.user_id
             JOIN groups g ON g.id = u.group_id

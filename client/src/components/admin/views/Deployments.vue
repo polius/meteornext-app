@@ -45,7 +45,7 @@
         <template v-slot:[`item.status`]="{ item }">
           <v-icon v-if="item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
           <v-icon v-else-if="item.status == 'SCHEDULED'" title="Scheduled" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
-          <v-icon v-else-if="item.status == 'QUEUED'" title="Queued" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
+          <v-icon v-else-if="item.status == 'QUEUED'" :title="`${'Queued: ' + item.queue}`" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
           <v-icon v-else-if="item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
           <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
           <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
@@ -297,8 +297,7 @@ export default {
       this.getDeployments()
     },
     infoDeployment() {
-      const id = this.selected[0]['mode'].substring(0, 1) + this.selected[0]['execution_id']
-      this.$router.push({ name:'deployment', params: { id: id }})
+      this.$router.push({ name:'deployment', params: { id: this.selected[0]['execution_id'] }})
     },
     dateTimeDialogOpen(field) {
       this.dateTimeField = field

@@ -274,8 +274,8 @@
                       </v-row>
                     </template>
                   </v-autocomplete>
-                  <v-text-field v-show="information_dialog_execution_mode == 'BASIC'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
-                  <v-card v-show="information_dialog_execution_mode == 'BASIC'" style="margin-bottom:20px;">
+                  <v-text-field v-if="information_dialog_execution_mode == 'BASIC'" :readonly="information_dialog_mode == 'parameters'" v-model="information_dialog_data.databases" label="Databases" hint="Separated by commas. Wildcards allowed: % _" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
+                  <v-card v-if="information_dialog_execution_mode == 'BASIC'" style="margin-bottom:20px;">
                     <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
                       <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
                       <v-divider v-if="information_dialog_mode != 'parameters'" class="mx-3" inset vertical></v-divider>
@@ -296,7 +296,7 @@
                       </template>
                     </v-data-table>
                   </v-card>
-                  <div v-show="information_dialog_execution_mode == 'PRO'" style="margin-top:-5px; margin-bottom:10px;">
+                  <div v-if="information_dialog_execution_mode == 'PRO'" style="margin-top:-5px; margin-bottom:10px;">
                     <v-tooltip right>
                       <template v-slot:activator="{ on }">
                         <span v-on="on" class="subtitle-1 font-weight-regular white--text">
@@ -749,7 +749,7 @@
       },
       goBack() {
         if (this.show_results) this.show_results = false
-        else this.$router.push('/deployments')
+        else this.$router.back()
       },
       getCode() {
         axios.get('/deployments/blueprint')

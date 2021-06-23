@@ -131,7 +131,7 @@ CREATE TABLE `regions` (
 CREATE TABLE `regions_update` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `execution_id` INT UNSIGNED NOT NULL,
-  `region_id` INT UNSIGNED NOT NULL COMMENT 'References regions.id',
+  `region_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE `region_id` (`region_id`),
   UNIQUE `execution_id` (`execution_id`)
