@@ -974,24 +974,10 @@
       },
       parseLogs() {
         if (!('logs' in this.deployment['progress'])) return
-        // Init variables
-        //this.logs_data = []
-
-        // Fill variables
-        // for (var i in this.deployment['progress']['logs']) {
-        //   this.logs_data.push({status: this.deployment['progress']['logs'][i]})
-        // }
         this.logs_data = this.deployment['progress']['logs']
       },
       parseTasks() {
         if (!('tasks' in this.deployment['progress'])) return
-        // Init variables
-        // this.tasks_data = []
-
-        // Fill variables
-        // for (var i in this.deployment['progress']['tasks']) {
-        //   this.tasks_data.push({status: this.deployment['progress']['tasks'][i]})
-        // }
         this.tasks_data = this.deployment['progress']['tasks']
       },
       parseQueries() {
@@ -1209,6 +1195,8 @@
             this.$router.push({ name: 'deployment', params: { id: data['id'] }})
           }
           else this.getDeployment()
+          // Get executions list
+          this.getExecutions()
           // Hide the Information dialog
           this.information_dialog = false
         })
