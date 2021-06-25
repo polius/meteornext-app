@@ -2,14 +2,14 @@
   <div>
     <v-card>
       <v-toolbar flat dense color="primary">
-        <v-toolbar-title class="white--text subtitle-1">{{ toolbar_title }}</v-toolbar-title>
+        <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">{{ getIcon(mode) }}</v-icon>{{ toolbar_title }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon @click="goBack()"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
       <v-card-text>
         <v-flex>
           <v-form ref="form" v-model="form_valid">
-            <v-alert v-if="mode == 'clone'" type="warning" dense dismissible icon="mdi-alert">The shared inventory (Environments, Regions, Servers, Auxiliary connections) related to this group will be cloned as well.</v-alert>
+            <v-alert v-if="mode == 'clone'" dense color="#fb8c00"><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>The shared inventory (Servers, Regions, Environments, Auxiliary connections) related to this group will be cloned as well.</v-alert>
             <!-- INFO -->
             <v-text-field :disabled="loading" ref="focus" v-model="group.name" :rules="[v => !!v || '']" label="Name" required style="margin-top:0px;"></v-text-field>
             <v-text-field :disabled="loading" v-model="group.description" :rules="[v => !!v || '']" label="Description" required style="padding-top:0px; margin-top:0px;"></v-text-field>
@@ -184,7 +184,7 @@
     <v-dialog v-model="ownersDialog" max-width="50%">
       <v-card>
         <v-toolbar dense v-if="ownersDialogOptions.mode != 'delete'" flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">{{ ownersDialogOptions.title }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-plus</v-icon>{{ ownersDialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="ownersDialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -477,7 +477,12 @@ export default {
     goBack() {
       this.$router.push('/admin/groups')
     },
-    // SNACKBAR
+    getIcon(mode) {
+      if (mode == 'new') return 'fas fa-plus'
+      if (mode == 'edit') return 'fas fa-feather-alt'
+      if (mode == 'delete') return 'fas fa-minus'
+      if (mode == 'clone') return 'fas fa-clone'
+    },
     notification(message, color) {
       this.snackbarText = message
       this.snackbarColor = color 
