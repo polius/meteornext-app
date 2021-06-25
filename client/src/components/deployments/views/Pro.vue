@@ -3,8 +3,8 @@
     <v-container fluid grid-list-lg>
       <v-layout row wrap>
         <v-flex xs12>
-          <v-form ref="form" style="padding:10px;">
-            <v-text-field ref="name" v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:5px;"></v-text-field>
+          <v-form ref="form" style="padding:5px">
+            <v-text-field ref="name" v-model="name" label="Name" :rules="[v => !!v || '']" required style="padding-top:10px;"></v-text-field>
             <v-select :loading="loading_rel" v-model="release" :items="release_items" label="Release" :rules="[v => !!v || '']" required style="padding-top:0px;"></v-select>
             <v-autocomplete :loading="loading_env" v-model="environment" :items="environment_items" item-value="id" item-text="name" label="Environment" :rules="[v => !!v || '']" required style="padding-top:0px;" hide-details>
               <template v-slot:item="{ item }" >
