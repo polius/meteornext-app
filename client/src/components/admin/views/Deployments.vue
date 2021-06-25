@@ -15,7 +15,7 @@
         <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :options.sync="options" :server-items-length="total" :hide-default-footer="total < 11" :loading="loading" item-key="execution_id" show-select single-select class="elevation-1" style="padding-top:5px;">
-        <template v-slot:[`item.name`]="{ item }">
+        <!-- <template v-slot:[`item.name`]="{ item }">
           <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)"> 
             {{ item.name }}
             <template v-slot:input>
@@ -30,7 +30,7 @@
               <v-autocomplete v-model="inlineEditingRelease" :items="releasesItems" :loading="loadingReleases" label="Releases" hide-details style="margin-top:15px; margin-bottom:5px;"></v-autocomplete>
             </template>
           </v-edit-dialog>
-        </template>
+        </template> -->
         <template v-slot:[`item.mode`]="{ item }">
           <v-icon small :title="item.mode.charAt(0).toUpperCase() + item.mode.slice(1).toLowerCase()" :color="getModeColor(item.mode)" :style="`text-transform:capitalize; margin-left:${item.mode == 'BASIC' ? '8px' : '6px'}`">{{ item.mode == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon>
         </template>
@@ -195,9 +195,9 @@
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
                   <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
+                  <v-checkbox v-model="columnsRaw" label="User" value="username" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Name" value="name" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Release" value="release" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Username" value="username" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Environment" value="environment" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Mode" value="mode" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Method" value="method" hide-details style="margin-top:5px"></v-checkbox>
@@ -237,9 +237,9 @@ export default {
   data: () => ({
     loading: false,
     headers: [
+      { text: 'User', align: 'left', value: 'username' },
       { text: 'Name', align: 'left', value: 'name' },
       { text: 'Release', align: 'left', value: 'release' },
-      { text: 'Username', align: 'left', value: 'username' },
       { text: 'Environment', align: 'left', value: 'environment' },
       { text: 'Mode', align: 'left', value: 'mode' },
       { text: 'Method', align: 'left', value: 'method' },

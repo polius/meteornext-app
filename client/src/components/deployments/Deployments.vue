@@ -77,16 +77,13 @@
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:10px; margin-bottom:20px;">
                   <v-row>
-                    <v-col cols="8" style="padding-right:5px;">
-                      <v-text-field v-model="filter.name" label="Name" style="padding-top:0px" hide-details></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-left:5px;">
-                      <v-select text v-model="filter.nameFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.name === undefined || filter.name.length == 0) || (filter.name.length > 0 && !!v)) || '']" clearable style="padding-top:0px" hide-details></v-select>
+                    <v-col>
+                      <v-autocomplete v-model="filter.name" :items="nameItems" multiple label="Name" style="padding-top:0px;" hide-details></v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-select v-model="filter.release" :items="releaseItems" multiple label="Release" style="padding-top:0px;" hide-details></v-select>
+                      <v-autocomplete v-model="filter.release" :items="releaseItems" multiple label="Release" style="padding-top:0px;" hide-details></v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
@@ -263,6 +260,7 @@ export default {
     ],
     filter: {},
     filterApplied: false,
+    nameItems: [],
     releaseItems: [],
     deploymentMode: ['BASIC','PRO'],
     deploymentMethod: ['VALIDATE','TEST','DEPLOY'],
