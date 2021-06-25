@@ -11,15 +11,10 @@
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field @input="onSearch" v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+        <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
+        <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :options.sync="options" :server-items-length="total" :hide-default-footer="total < 11" :loading="loading" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
-        <template v-ripple v-slot:[`header.data-table-select`]="{}">
-          <v-simple-checkbox
-            :value="items.length == 0 ? false : selected.length == items.length"
-            :indeterminate="selected.length > 0 && selected.length != items.length"
-            @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
-          </v-simple-checkbox>
-        </template>
+      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :options.sync="options" :server-items-length="total" :hide-default-footer="total < 11" :loading="loading" item-key="execution_id" show-select single-select class="elevation-1" style="padding-top:5px;">
         <template v-slot:[`item.name`]="{ item }">
           <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)"> 
             {{ item.name }}
@@ -57,7 +52,7 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="filterDialog" persistent max-width="768px">
+    <v-dialog v-model="filterDialog" max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text text-subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:1px">fas fa-sliders-h</v-icon>FILTER DEPLOYMENTS</v-toolbar-title>
@@ -102,22 +97,53 @@
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
-                    <v-col style="padding-right:10px">
+                    <v-col>
                       <v-select v-model="filter.mode" :items="deploymentMode" multiple label="Mode" style="padding-top:0px;" hide-details></v-select>
                     </v-col>
-                    <v-col style="padding-left:10px">
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col>
+                      <v-select v-model="filter.method" :items="deploymentMethod" multiple label="Method" style="padding-top:0px;" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col>
                       <v-select v-model="filter.status" :items="deploymentStatus" multiple label="Status" style="padding-top:0px;" hide-details></v-select>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col cols="6" style="padding-right:8px;">
-                      <v-text-field v-model="filter.dateFrom" label="Created (From)" style="padding-top:0px" hide-details>
-                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      <v-text-field v-model="filter.createdFrom" label="Created - From" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('created_from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
                     </v-col>
                     <v-col cols="6" style="padding-left:8px;">
-                      <v-text-field v-model="filter.dateTo" label="Created (To)" style="padding-top:0px" hide-details>
-                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      <v-text-field v-model="filter.createdTo" label="Created - To" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('created_to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="6" style="padding-right:8px;">
+                      <v-text-field v-model="filter.startdFrom" label="Started - From" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('started_from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                    <v-col cols="6" style="padding-left:8px;">
+                      <v-text-field v-model="filter.startedTo" label="Started - To" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('started_to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="6" style="padding-right:8px;">
+                      <v-text-field v-model="filter.endedFrom" label="Ended - From" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('ended_from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                    <v-col cols="6" style="padding-left:8px;">
+                      <v-text-field v-model="filter.endedTo" label="Ended - To" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('ended_to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
                     </v-col>
                   </v-row>
@@ -150,6 +176,50 @@
       </v-time-picker>
     </v-dialog>
 
+    <!-------------------->
+    <!-- COLUMNS DIALOG -->
+    <!-------------------->
+    <v-dialog v-model="columnsDialog" max-width="600px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="text-subtitle-1 white--text">FILTER COLUMNS</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="selectAllColumns" text title="Select all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
+          <v-btn @click="deselectAllColumns" text title="Deselect all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="columnsDialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 0px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
+                  <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
+                  <v-checkbox v-model="columnsRaw" label="Name" value="name" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Release" value="release" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Username" value="username" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Environment" value="environment" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Mode" value="mode" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Method" value="method" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Status" value="status" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Created" value="created" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Scheduled" value="scheduled" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Started" value="started" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Ended" value="ended" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Overall" value="overall" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-divider style="margin-top:15px;"></v-divider>
+                  <div style="margin-top:20px;">
+                    <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  </div>
+                </v-form>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -175,8 +245,10 @@ export default {
       { text: 'Method', align: 'left', value: 'method' },
       { text: 'Status', align:'left', value: 'status' },
       { text: 'Created', align: 'left', value: 'created' },
+      { text: 'Scheduled', align: 'left', value: 'scheduled' },
       { text: 'Started', align: 'left', value: 'started' },
-      { text: 'Ended', align: 'left', value: 'ended' }
+      { text: 'Ended', align: 'left', value: 'ended' },
+      { text: 'Overall', align: 'left', value: 'overall' }
     ],
     origin: [],
     items: [],
@@ -205,6 +277,7 @@ export default {
     filterApplied: false,
     filterUsers: [],
     deploymentMode: ['BASIC','PRO'],
+    deploymentMethod: ['VALIDATE','TEST','DEPLOY'],
     deploymentStatus: ['CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED'],
 
     // Date / Time Picker
@@ -212,6 +285,11 @@ export default {
     dateTimeField: '',
     dateTimeMode: 'date',
     dateTimeValue: { date: null, time: null },
+
+    // Filter Columns Dialog
+    columnsDialog: false,
+    columns: ['name','release','username','environment','mode','method','status','created','started','ended','overall'],
+    columnsRaw: [],
 
     // Snackbar
     snackbar: false,
@@ -230,6 +308,9 @@ export default {
       deep: true,
     },
   },
+  computed: {
+    computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
+  },
   methods: {
     getDeployments() {
       this.loading = true
@@ -245,7 +326,7 @@ export default {
       // Get Deployments
       axios.get('/admin/deployments', { params: payload })
         .then((res) => {
-          this.origin = res.data.deployments.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
+          this.origin = res.data.deployments.map(x => ({...x, created: this.dateFormat(x.created), scheduled: this.dateFormat(x.scheduled), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           this.total = this.origin.length
           this.filterUsers = res.data.users_list
           this.onSearch()
@@ -268,6 +349,7 @@ export default {
           (x.username != null && x.username.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.environment != null && x.environment.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.mode != null && x.mode.toLowerCase().includes(this.search.toLowerCase())) ||
+          (x.method != null && x.method.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.method != null && x.method.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.status != null && x.status.toLowerCase().includes(this.search.toLowerCase())) ||
           (x.created != null && x.created.toLowerCase().includes(this.search.toLowerCase())) ||
@@ -408,6 +490,20 @@ export default {
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
+    },
+    openColumnsDialog() {
+      this.columnsRaw = [...this.columns]
+      this.columnsDialog = true
+    },
+    selectAllColumns() {
+      this.columnsRaw = ['name','release','username','environment','mode','method','status','created','scheduled','started','ended','overall']
+    },
+    deselectAllColumns() {
+      this.columnsRaw = []
+    },
+    filterColumns() {
+      this.columns = [...this.columnsRaw]
+      this.columnsDialog = false
     },
     notification(message, color) {
       this.snackbarText = message
