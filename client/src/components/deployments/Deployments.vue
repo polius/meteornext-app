@@ -8,12 +8,15 @@
           <v-btn text @click="newDeploy()"><v-icon small style="padding-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn v-show="selected.length == 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-info</v-icon>INFORMATION</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn text @click="filterDialog = true" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn @click="getDeployments" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+        <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
+        <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
+      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
         <template v-ripple v-slot:[`header.data-table-select`]="{}">
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
@@ -61,6 +64,155 @@
       </v-data-table>
     </v-card>
 
+    <v-dialog v-model="filterDialog" max-width="768px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text text-subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:1px">fas fa-sliders-h</v-icon>FILTER DEPLOYMENTS</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="filterDialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:15px">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:10px; margin-bottom:20px;">
+                  <v-row>
+                    <v-col cols="8" style="padding-right:5px;">
+                      <v-text-field v-model="filter.name" label="Name" style="padding-top:0px" hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:5px;">
+                      <v-select text v-model="filter.nameFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.name === undefined || filter.name.length == 0) || (filter.name.length > 0 && !!v)) || '']" clearable style="padding-top:0px" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col>
+                      <v-select v-model="filter.release" :items="releaseItems" multiple label="Release" style="padding-top:0px;" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col>
+                      <v-select v-model="filter.mode" :items="deploymentMode" multiple label="Mode" style="padding-top:0px;" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col>
+                      <v-select v-model="filter.method" :items="deploymentMethod" multiple label="Method" style="padding-top:0px;" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col>
+                      <v-select v-model="filter.status" :items="deploymentStatus" multiple label="Status" style="padding-top:0px;" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="6" style="padding-right:8px;">
+                      <v-text-field v-model="filter.createdFrom" label="Created - From" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('created_from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                    <v-col cols="6" style="padding-left:8px;">
+                      <v-text-field v-model="filter.createdTo" label="Created - To" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('created_to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="6" style="padding-right:8px;">
+                      <v-text-field v-model="filter.startdFrom" label="Started - From" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('started_from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                    <v-col cols="6" style="padding-left:8px;">
+                      <v-text-field v-model="filter.startedTo" label="Started - To" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('started_to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="6" style="padding-right:8px;">
+                      <v-text-field v-model="filter.endedFrom" label="Ended - From" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('ended_from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                    <v-col cols="6" style="padding-left:8px;">
+                      <v-text-field v-model="filter.endedTo" label="Ended - To" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('ended_to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                  </v-row>
+                </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn :loading="loading" color="#00b16a" @click="submitFilter">Confirm</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="filterDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  <v-btn v-if="filterApplied" :disabled="loading" color="info" @click="clearFilter" style="float:right;">Remove Filter</v-btn>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="dateTimeDialog" persistent width="290px">
+      <v-date-picker v-if="dateTimeMode == 'date'" v-model="dateTimeValue.date" color="info" scrollable>
+        <v-btn text color="#00b16a" @click="dateTimeSubmit">Confirm</v-btn>
+        <v-btn text color="#EF5354" @click="dateTimeDialog = false">Cancel</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn text color="info" @click="dateTimeNow">Now</v-btn>
+      </v-date-picker>
+      <v-time-picker v-else-if="dateTimeMode == 'time'" v-model="dateTimeValue.time" color="info" format="24hr" scrollable>
+        <v-btn text color="#00b16a" @click="dateTimeSubmit">Confirm</v-btn>
+        <v-btn text color="#EF5354" @click="dateTimeDialog = false">Cancel</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn text color="info" @click="dateTimeNow">Now</v-btn>
+      </v-time-picker>
+    </v-dialog>
+
+    <!-------------------->
+    <!-- COLUMNS DIALOG -->
+    <!-------------------->
+    <v-dialog v-model="columnsDialog" max-width="600px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="text-subtitle-1 white--text">FILTER COLUMNS</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="selectAllColumns" text title="Select all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
+          <v-btn @click="deselectAllColumns" text title="Deselect all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="columnsDialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 0px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
+                  <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
+                  <v-checkbox v-model="columnsRaw" label="Name" value="name" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Release" value="release" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Username" value="username" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Environment" value="environment" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Mode" value="mode" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Method" value="method" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Status" value="status" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Created" value="created" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Scheduled" value="scheduled" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Started" value="started" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Ended" value="ended" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Overall" value="overall" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-divider style="margin-top:15px;"></v-divider>
+                  <div style="margin-top:20px;">
+                    <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  </div>
+                </v-form>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -84,6 +236,7 @@ export default {
       { text: 'Method', align: 'left', value: 'method' },
       { text: 'Status', align:'left', value: 'status' },
       { text: 'Created', align: 'left', value: 'created' },
+      { text: 'Scheduled', align: 'left', value: 'scheduled' },
       { text: 'Started', align: 'left', value: 'started' },
       { text: 'Ended', align: 'left', value: 'ended' },
       { text: 'Overall', align: 'left', value: 'overall' }
@@ -98,6 +251,34 @@ export default {
     inline_editing_name: '',
     inline_editing_release: '',
 
+    // Filter Dialog
+    filterDialog: false,
+    filters: [
+      {id: 'equal', name: 'Equal'},
+      {id: 'not_equal', name: 'Not equal'},
+      {id: 'starts', name: 'Starts'},
+      {id: 'not_starts', name: 'Not starts'},
+      {id: 'contains', name: 'Contains'},
+      {id: 'not_contains', name: 'Not contains'}
+    ],
+    filter: {},
+    filterApplied: false,
+    releaseItems: [],
+    deploymentMode: ['BASIC','PRO'],
+    deploymentMethod: ['VALIDATE','TEST','DEPLOY'],
+    deploymentStatus: ['CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED'],
+
+    // Date / Time Picker
+    dateTimeDialog: false,
+    dateTimeField: '',
+    dateTimeMode: 'date',
+    dateTimeValue: { date: null, time: null },
+
+    // Filter Columns Dialog
+    columnsDialog: false,
+    columns: ['name','release','username','environment','mode','method','status','created','started','ended','overall'],
+    columnsRaw: [],
+
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -107,6 +288,9 @@ export default {
   created() {
     this.getDeployments()
   },
+  computed: {
+    computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
+  },
   methods: {
     getDeployments() {
       this.loading = true
@@ -114,7 +298,6 @@ export default {
         .then((response) => {
           // Deployments
           this.items = response.data.deployments.map(x => ({...x, created: this.dateFormat(x.created), scheduled: this.dateFormat(x.scheduled), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
-          this.parseScheduled()
           // Releases
           this.releases_items = response.data.releases.map(x => x.name)
         })
@@ -123,21 +306,6 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
-    },
-    parseScheduled() {
-      // Check if 'Scheduled' column exists in headers
-      var column_found = false
-      for (var h = 0; h < this.headers.length; ++h) {
-        if (this.headers[h]['text'] == 'Scheduled') { column_found = true; break; }
-      }
-      // Check if exists a scheduled deployment
-      var scheduled_found = false
-      for (var i = 0; i < this.items.length; ++i) {
-        if (this.items[i]['scheduled']) { scheduled_found = true; break; }
-      }
-      // Add or remove the 'Scheduled' column in headers
-      if (scheduled_found && !column_found) this.headers.splice(7, 0, { text: 'Scheduled', value: 'scheduled', sortable: false })
-      else if (!scheduled_found && column_found) this.headers.splice(7, 1)
     },
     openName(item) {
       this.inline_editing_name = item.name
@@ -209,6 +377,74 @@ export default {
     },
     infoDeploy() {
       this.$router.push({ name:'deployment', params: { id: this.selected[0]['execution_id'] }})
+    },
+    dateTimeDialogOpen(field) {
+      this.dateTimeField = field
+      this.dateTimeMode = 'date'
+      this.dateTimeValue = { date: moment().format("YYYY-MM-DD"), time: moment().format("HH:mm") }
+      if (this.dateTimeField == 'from' && this.filter.dateFrom !== undefined && this.filter.dateFrom.length > 0) {
+        let isValid = moment(this.filter.dateFrom, 'YYYY-MM-DD HH:mm', true).isValid()
+        if (!isValid) {
+          this.notification("Enter a valid date in 'Date From'", '#EF5354')
+          return
+        }
+        this.dateTimeValue = { date: moment(this.filter.dateFrom).format("YYYY-MM-DD"), time: moment(this.filter.dateFrom).format("HH:mm") }
+      }
+      else if (this.dateTimeField == 'to' && this.filter.dateTo !== undefined && this.filter.dateTo.length > 0) {
+        let isValid = moment(this.filter.dateTo, 'YYYY-MM-DD HH:mm', true).isValid()
+        if (!isValid) {
+          this.notification("Enter a valid date in 'Date To'", '#EF5354')
+          return
+        }
+        this.dateTimeValue = { date: moment(this.filter.dateTo).format("YYYY-MM-DD"), time: moment(this.filter.dateTo).format("HH:mm") }
+      }
+      this.dateTimeDialog = true
+    },
+    dateTimeSubmit() {
+      if (this.dateTimeMode == 'date') this.dateTimeMode = 'time'
+      else {
+        if (this.dateTimeField == 'from') this.filter.dateFrom = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
+        else if (this.dateTimeField == 'to') this.filter.dateTo = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
+        this.dateTimeDialog = false
+      }
+    },
+    dateTimeNow() {
+      this.dateTimeValue = { date: moment().format("YYYY-MM-DD"), time: moment().format("HH:mm") }
+    },
+    submitFilter() {
+      // Check if all necessary fields are filled
+      if (!this.$refs.form.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
+        return
+      }
+      // Check if some filter was applied
+      if (!Object.keys(this.filter).some(x => this.filter[x] != null && this.filter[x].length != 0)) {
+        this.notification('Enter at least one filter.', '#EF5354')
+        return
+      }
+      this.filterDialog = false
+      this.filterApplied = true
+      this.getDeployments()
+    },
+    clearFilter() {
+      this.filterDialog = false
+      this.filter = {}
+      this.filterApplied = false
+      this.getDeployments()
+    },
+    openColumnsDialog() {
+      this.columnsRaw = [...this.columns]
+      this.columnsDialog = true
+    },
+    selectAllColumns() {
+      this.columnsRaw = ['name','release','username','environment','mode','method','status','created','scheduled','started','ended','overall']
+    },
+    deselectAllColumns() {
+      this.columnsRaw = []
+    },
+    filterColumns() {
+      this.columns = [...this.columnsRaw]
+      this.columnsDialog = false
     },
     notification(message, color) {
       this.snackbarText = message
