@@ -5,7 +5,7 @@
         <v-toolbar-title class="white--text subtitle-1">RELEASES</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn v-if="selected.length == 0" text @click="newRelease()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn text @click="newRelease()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn v-if="selected.length == 1" text @click="editRelease()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
           <v-btn v-if="selected.length > 0" text @click="deleteRelease()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
         </v-toolbar-items>

@@ -12,7 +12,7 @@
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="filterClick" text class="body-2" :style="{ backgroundColor : filterActive ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn @click="refreshClick" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
-          <v-btn v-show="tabs == 1 && attached != null" @click="attachClick" text class="body-2"><v-icon small style="padding-right:10px">{{ attached ? 'fas fa-minus' : 'fas fa-plus' }}</v-icon>{{ attached ? 'DETACH' : 'ATTACH' }}</v-btn>
+          <v-btn v-show="tabs == 1 && attached != null" @click="attachClick" text class="body-2"><v-icon small style="padding-right:10px">{{ attached ? 'fas fa-unlink' : 'fas fa-link' }}</v-icon>{{ attached ? 'DETACH' : 'ATTACH' }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>

@@ -80,7 +80,7 @@
     <v-dialog v-model="confirmDialog" max-width="50%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">{{ confirmDialogMode == 'attach' ? 'fas fa-plus' : 'fas fa-minus' }}</v-icon>{{ confirmDialogMode.toUpperCase() }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:3px">{{ confirmDialogMode == 'attach' ? 'fas fa-link' : 'fas fa-unlink' }}</v-icon>{{ confirmDialogMode.toUpperCase() }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="confirmDialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>

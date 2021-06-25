@@ -31,7 +31,7 @@
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">{{ dialog_title }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">{{ getIcon(mode) }}</v-icon>{{ dialog_title }}</v-toolbar-title>
           <v-divider v-if="mode != 'delete'" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="mode != 'delete'" title="Create the server only for a user" :color="!item.shared ? 'primary' : '#779ecb'" @click="personalClick" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
           <v-btn v-if="mode != 'delete'" title="Create the server for all users in a group" :color="item.shared ? 'primary' : '#779ecb'" @click="sharedClick"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
@@ -592,6 +592,12 @@ export default {
       this.item.ssl_ca_certificate = null
       this.item.ssl_client_key = null
       this.item.ssl_client_certificate = null
+    },
+    getIcon(mode) {
+      if (mode == 'new') return 'fas fa-plus'
+      if (mode == 'edit') return 'fas fa-feather-alt'
+      if (mode == 'delete') return 'fas fa-minus'
+      if (mode == 'clone') return 'fas fa-clone'
     },
     notification(message, color, persistent=false) {
       EventBus.$emit('notification', message, color, persistent)

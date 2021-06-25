@@ -33,8 +33,7 @@
           <v-icon v-else small title="MFA Disabled" color="#EF5354" style="margin-left:4px;">fas fa-unlock</v-icon>
         </template>
         <template v-slot:[`item.admin`]="{ item }">
-          <v-icon v-if="item.admin" title="Admin User" small color="#00b16a" style="margin-left:8px; font-size:16px">fas fa-user-shield</v-icon>
-          <v-icon v-else small title="Regular User" color="#EF5354" style="margin-left:9px; font-size:17px">fas fa-user</v-icon>
+          <v-icon small :title="item.admin ? 'Admin User' : 'Regular User'" :color="item.admin ? '#00b16a' : '#EF5354'" style="margin-left:8px; font-size:17px">fas fa-shield-alt</v-icon>
         </template>
         <template v-slot:[`item.created_at`]="{ item }">
           <span>{{ item.created_at }}</span>
@@ -52,7 +51,7 @@
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">{{ dialog_title }}</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">{{ getIcon(mode) }}</v-icon>{{ dialog_title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
@@ -61,7 +60,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
-                  <v-alert v-if="mode == 'edit' && selected.length == 1 && item.group != selected[0]['group']" type="warning" dense dismissible icon="mdi-alert">This user will lose access to the shared inventory from the previous group.</v-alert>
+                  <v-alert v-if="mode == 'edit' && selected.length == 1 && item.group != selected[0]['group']" color="#fb8c00" dense><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This user will lose access to the shared inventory from the previous group.</v-alert>
                   <v-text-field ref="field" v-model="item.username" :rules="[v => !!v || '']" label="Username" autocomplete="email" required></v-text-field>
                   <v-text-field v-model="item.email" :rules="[v => !!v || '', v => /.+@.+\..+/.test(v) || '']" label="Email" type="email" required autocomplete="username" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="item.password" :rules="[v => !!v || mode == 'edit' || '']" :label="mode == 'new' ? 'Password' : 'New Password'" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" autocomplete="new-password" style="padding-top:0px;"></v-text-field>
@@ -70,7 +69,7 @@
                   <v-checkbox v-model="item.admin" label="Administrator" color="info" style="margin-top:10px;" hide-details></v-checkbox>
                   <v-checkbox v-model="item.disabled" label="Disable Account" color="#EF5354" style="margin-top:10px;" hide-details></v-checkbox>
                 </v-form>
-                <v-alert v-if="mode=='delete'" color="#EF5354" dense style="margin-top:15px"><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>All selected users related data (deployments, client, inventory) will be deleted</v-alert>
+                <v-alert v-if="mode=='delete'" color="#EF5354" dense style="margin-top:15px"><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>All selected users related data (Deployments, Monitoring, Client, Inventory) will be deleted.</v-alert>
                 <div style="margin-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:20px;">
@@ -379,6 +378,12 @@ export default {
     filterColumns() {
       this.columns = [...this.columnsRaw]
       this.columnsDialog = false
+    },
+    getIcon(mode) {
+      if (mode == 'new') return 'fas fa-plus'
+      if (mode == 'edit') return 'fas fa-feather-alt'
+      if (mode == 'delete') return 'fas fa-minus'
+      if (mode == 'clone') return 'fas fa-clone'
     },
     notification(message, color) {
       this.snackbarText = message
