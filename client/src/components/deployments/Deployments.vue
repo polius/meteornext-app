@@ -88,17 +88,48 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-select v-model="filter.mode" :items="deploymentMode" multiple label="Mode" style="padding-top:0px;" hide-details></v-select>
+                      <v-select v-model="filter.mode" :items="deploymentMode" multiple label="Mode" style="padding-top:0px;" hide-details>
+                        <template v-slot:item="{ item }">
+                          <v-icon small :color="getModeColor(item)" :style="`text-transform:capitalize; margin-left:5px; margin-right:${item == 'BASIC' ? '17px' : '15px'}`">{{ item == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon>
+                          <span :style="`color:${getModeColor(item)};`">{{ item }}</span>
+                        </template>
+                        <template v-slot:selection="{ item }">
+                          <v-chip label>
+                            <v-icon small :color="getModeColor(item)" style="text-transform:capitalize; margin-right:10px">{{ item == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon>
+                            <span :style="`color:${getModeColor(item)};`">{{ item }}</span>
+                          </v-chip>
+                        </template>
+                      </v-select>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-select v-model="filter.method" :items="deploymentMethod" multiple label="Method" style="padding-top:0px;" hide-details></v-select>
+                      <v-select v-model="filter.method" :items="deploymentMethod" multiple label="Method" style="padding-top:0px;" hide-details>
+                        <template v-slot:item="{ item }">
+                          <span :style="`color:${ item == 'VALIDATE' ? '#00b16a' : item == 'TEST' ? '#ff9800' : '#EF5354'}`">{{ item }}</span>
+                        </template>
+                        <template v-slot:selection="{ item }">
+                          <v-chip label>
+                            <span :style="`color:${ item == 'VALIDATE' ? '#00b16a' : item == 'TEST' ? '#ff9800' : '#EF5354'}`">{{ item }}</span>
+                          </v-chip>
+                        </template>
+                      </v-select>
                     </v-col>
                   </v-row>
                   <v-row>
                     <v-col>
-                      <v-select v-model="filter.status" :items="deploymentStatus" multiple label="Status" style="padding-top:0px;" hide-details></v-select>
+                      <v-select v-model="filter.status" :items="deploymentStatus" multiple label="Status" style="padding-top:0px;" hide-details>
+                        <template v-slot:item="{ item }">
+                          <v-icon small :style="`color:${getStatusColor(item)}; margin-left:${getStatusIcon(item).margin}; margin-right:${getStatusIcon(item).margin}`">{{ getStatusIcon(item).name }}</v-icon>
+                          <span :style="`margin-left:10px; color:${getStatusColor(item)}`">{{ item }}</span>
+                        </template>
+                        <template v-slot:selection="{ item }">
+                          <v-chip label>
+                            <v-icon small :style="`color:${getStatusColor(item)}`">{{ getStatusIcon(item).name }}</v-icon>
+                            <span :style="`margin-left:10px; color:${getStatusColor(item)}`">{{ item }}</span>
+                          </v-chip>
+                        </template>
+                      </v-select>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
@@ -264,7 +295,7 @@ export default {
     releaseItems: [],
     deploymentMode: ['BASIC','PRO'],
     deploymentMethod: ['VALIDATE','TEST','DEPLOY'],
-    deploymentStatus: ['CREATED','SCHEDULED','QUEUED','STARTING','IN PROGRESS','SUCCESS','WARNING','FAILED','STOPPING','STOPPED'],
+    deploymentStatus: ['CREATED','QUEUED','STARTING','SCHEDULED','IN PROGRESS','WARNING','STOPPING','FAILED','STOPPED','SUCCESS'],
 
     // Date / Time Picker
     dateTimeDialog: false,
@@ -365,6 +396,19 @@ export default {
       if (method == 'DEPLOY') return '#EF5354'
       else if (method == 'TEST') return '#ff9800'
       else if (method == 'VALIDATE') return '#4caf50'
+    },
+    getStatusColor (status) {
+      if (['CREATED','QUEUED','STARTING'].includes(status)) return '#3498db'
+      if (['SCHEDULED','IN PROGRESS','WARNING','STOPPING'].includes(status)) return '#ff9800'
+      if (['SUCCESS'].includes(status)) return '#4caf50'
+      if (['FAILED','STOPPED'].includes(status)) return '#EF5354'
+    },
+    getStatusIcon (status) {
+      if (['CREATED','SUCCESS','WARNING'].includes(status)) return { name: 'fas fa-check', margin: '0px' }
+      if (['SCHEDULED','QUEUED'].includes(status)) return { name: 'fas fa-clock', margin: '0px' }
+      if (['STARTING','IN PROGRESS'].includes(status)) return { name: 'fas fa-spinner', margin: '0x' }
+      if (['FAILED'].includes(status)) return { name: 'fas fa-times', margin: '4px' }
+      if (['STOPPING','STOPPED'].includes(status)) return { name: 'fas fa-ban', margin: '0px' }
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")

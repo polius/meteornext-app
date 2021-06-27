@@ -106,8 +106,7 @@ class Groups:
         self._sql.execute(query, (group['name'], group['description'], group['coins_day'], group['coins_max'], group['coins_execution'], group['inventory_enabled'], group['inventory_secured'], group['deployments_enabled'], group['deployments_basic'], group['deployments_pro'], group['deployments_execution_threads'], group['deployments_execution_timeout'], group['deployments_execution_concurrent'], group['deployments_slack_enabled'], group['deployments_slack_name'], group['deployments_slack_url'], group['monitoring_enabled'], group['utils_enabled'], group['client_enabled'], group['client_tracking'], group['client_tracking_retention'], group['client_tracking_mode'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), group['id']))
 
     def delete(self, group):
-        self._sql.execute("UPDATE deployments_basic JOIN environments e ON e.id = deployments_basic.environment_id AND e.group_id = %s SET deployments_basic.environment_id = NULL", (group))
-        self._sql.execute("UPDATE deployments_pro JOIN environments e ON e.id = deployments_pro.environment_id AND e.group_id = %s SET deployments_pro.environment_id = NULL", (group))
+        self._sql.execute("UPDATE executions JOIN environments e ON e.id = executions.environment_id AND e.group_id = %s SET executions.environment_id = NULL", (group))
         self._sql.execute("DELETE m FROM monitoring m JOIN servers s ON s.id = m.server_id AND s.group_id = %s", (group))
         self._sql.execute("DELETE ms FROM monitoring_servers ms JOIN servers s ON s.id = ms.server_id AND s.group_id = %s", (group))
         self._sql.execute("DELETE mq FROM monitoring_queries mq JOIN servers s ON s.id = mq.server_id AND s.group_id = %s", (group))
