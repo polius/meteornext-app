@@ -245,7 +245,7 @@
       </v-card-text>
     </v-card>
 
-    <v-dialog v-model="information_dialog" persistent no-click-animation max-width="70%">
+    <v-dialog v-model="information_dialog" persistent no-click-animation max-width="80%">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title v-show="information_dialog_mode == 'parameters'" class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-cog</v-icon>PARAMETERS</v-toolbar-title>
@@ -281,14 +281,14 @@
                       <v-divider v-if="information_dialog_mode != 'parameters'" class="mx-3" inset vertical></v-divider>
                       <v-toolbar-items v-if="information_dialog_mode != 'parameters'" class="hidden-sm-and-down" style="padding-left:0px;">
                         <v-btn text @click='newQuery()'><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                        <v-btn :disabled="query_selected.length != 1" text @click="editQuery()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-                        <v-btn :disabled="query_selected.length != 1" text @click="cloneQuery()"><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
-                        <v-btn :disabled="query_selected.length == 0" text @click='deleteQuery()'><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                        <v-btn :disabled="information_dialog_query_selected.length != 1" text @click="editQuery()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                        <v-btn :disabled="information_dialog_query_selected.length != 1" text @click="cloneQuery()"><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
+                        <v-btn :disabled="information_dialog_query_selected.length == 0" text @click='deleteQuery()'><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                         <v-divider class="mx-3" inset vertical></v-divider>
-                        <v-btn :disabled="query_selected.length != 1" text title="Move query to the top" @click="moveTopQuery()"><v-icon small style="margin-right:10px">fas fa-level-up-alt</v-icon>TOP</v-btn>
-                        <v-btn :disabled="query_selected.length != 1" text title="Move query up" @click="moveUpQuery()"><v-icon small style="margin-right:10px">fas fa-arrow-up</v-icon>UP</v-btn>
-                        <v-btn :disabled="query_selected.length != 1" text title="Move query down" @click="moveDownQuery()"><v-icon small style="margin-right:10px">fas fa-arrow-down</v-icon>DOWN</v-btn>
-                        <v-btn :disabled="query_selected.length != 1" text title="Move query to the bottom" @click="moveBottomQuery()"><v-icon small style="margin-right:10px">fas fa-level-down-alt</v-icon>BOTTOM</v-btn>
+                        <v-btn :disabled="information_dialog_query_selected.length != 1" text title="Move query to the top" @click="moveTopQuery()"><v-icon small style="margin-right:10px">fas fa-level-up-alt</v-icon>TOP</v-btn>
+                        <v-btn :disabled="information_dialog_query_selected.length != 1" text title="Move query up" @click="moveUpQuery()"><v-icon small style="margin-right:10px">fas fa-arrow-up</v-icon>UP</v-btn>
+                        <v-btn :disabled="information_dialog_query_selected.length != 1" text title="Move query down" @click="moveDownQuery()"><v-icon small style="margin-right:10px">fas fa-arrow-down</v-icon>DOWN</v-btn>
+                        <v-btn :disabled="information_dialog_query_selected.length != 1" text title="Move query to the bottom" @click="moveBottomQuery()"><v-icon small style="margin-right:10px">fas fa-level-down-alt</v-icon>BOTTOM</v-btn>
                       </v-toolbar-items>
                     </v-toolbar>
                     <v-divider></v-divider>
@@ -1232,24 +1232,24 @@
         this.query_dialog = true
       },
       cloneQuery() {
-        let item = {id: this.query_items.reduce((acc, val) => val.id > acc ? val.id : acc, 0)+1, query: this.query_selected[0].query}
+        let item = {id: this.query_items.reduce((acc, val) => val.id > acc ? val.id : acc, 0)+1, query: this.information_dialog_query_selected[0].query}
         this.query_items.push(item)
-        this.query_selected = []
+        this.information_dialog_query_selected = []
       },
       moveTopQuery() {
-        let currentPos = this.query_items.findIndex(x => x.id == this.query_selected[0].id)
+        let currentPos = this.query_items.findIndex(x => x.id == this.information_dialog_query_selected[0].id)
         this.arraymove(this.query_items, currentPos, 0)
       },
       moveUpQuery() {
-        let currentPos = this.query_items.findIndex(x => x.id == this.query_selected[0].id)
+        let currentPos = this.query_items.findIndex(x => x.id == this.information_dialog_query_selected[0].id)
         if (currentPos > 0) this.arraymove(this.query_items, currentPos, currentPos-1)
       },
       moveDownQuery() {
-        let currentPos = this.query_items.findIndex(x => x.id == this.query_selected[0].id)
+        let currentPos = this.query_items.findIndex(x => x.id == this.information_dialog_query_selected[0].id)
         if (currentPos < this.query_items.length-1) this.arraymove(this.query_items, currentPos, currentPos+1)
       },
       moveBottomQuery() {
-        let currentPos = this.query_items.findIndex(x => x.id == this.query_selected[0].id)
+        let currentPos = this.query_items.findIndex(x => x.id == this.information_dialog_query_selected[0].id)
         this.arraymove(this.query_items, currentPos, this.query_items.length-1)
       },
       arraymove(arr, fromIndex, toIndex) {
