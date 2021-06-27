@@ -98,7 +98,7 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-select v-model="filter.mode" :items="deploymentMode" multiple label="Mode" style="padding-top:0px;" hide-details>
+                      <v-autocomplete v-model="filter.mode" :items="deploymentMode" multiple label="Mode" style="padding-top:0px;" hide-details>
                         <template v-slot:item="{ item }">
                           <v-icon small :color="getModeColor(item)" :style="`text-transform:capitalize; margin-left:5px; margin-right:${item == 'BASIC' ? '17px' : '15px'}`">{{ item == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon>
                           <span :style="`color:${getModeColor(item)};`">{{ item }}</span>
@@ -109,12 +109,12 @@
                             <span :style="`color:${getModeColor(item)};`">{{ item }}</span>
                           </v-chip>
                         </template>
-                      </v-select>
+                      </v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-select v-model="filter.method" :items="deploymentMethod" multiple label="Method" style="padding-top:0px;" hide-details>
+                      <v-autocomplete v-model="filter.method" :items="deploymentMethod" multiple label="Method" style="padding-top:0px;" hide-details>
                         <template v-slot:item="{ item }">
                           <span :style="`color:${ item == 'VALIDATE' ? '#00b16a' : item == 'TEST' ? '#ff9800' : '#EF5354'}`">{{ item }}</span>
                         </template>
@@ -123,12 +123,12 @@
                             <span :style="`color:${ item == 'VALIDATE' ? '#00b16a' : item == 'TEST' ? '#ff9800' : '#EF5354'}`">{{ item }}</span>
                           </v-chip>
                         </template>
-                      </v-select>
+                      </v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row>
                     <v-col>
-                      <v-select v-model="filter.status" :items="deploymentStatus" multiple label="Status" style="padding-top:0px;" hide-details>
+                      <v-autocomplete v-model="filter.status" :items="deploymentStatus" multiple label="Status" style="padding-top:0px;" hide-details>
                         <template v-slot:item="{ item }">
                           <v-icon small :style="`color:${getStatusColor(item)}; margin-left:${getStatusIcon(item).margin}; margin-right:${getStatusIcon(item).margin}`">{{ getStatusIcon(item).name }}</v-icon>
                           <span :style="`margin-left:10px; color:${getStatusColor(item)}`">{{ item }}</span>
@@ -139,7 +139,7 @@
                             <span :style="`margin-left:10px; color:${getStatusColor(item)}`">{{ item }}</span>
                           </v-chip>
                         </template>
-                      </v-select>
+                      </v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
@@ -156,7 +156,7 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col cols="6" style="padding-right:8px;">
-                      <v-text-field v-model="filter.startdFrom" label="Started - From" style="padding-top:0px" hide-details>
+                      <v-text-field v-model="filter.startedFrom" label="Started - From" style="padding-top:0px" hide-details>
                         <template v-slot:append><v-icon @click="dateTimeDialogOpen('started_from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
                     </v-col>
@@ -348,8 +348,11 @@ export default {
       var payload = {}
       // Build Filter
       let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
-      if (this.filterApplied && 'dateFrom' in filter) filter.dateFrom = moment(this.filter.dateFrom).utc().format("YYYY-MM-DD HH:mm:ss")
-      if (this.filterApplied && 'dateTo' in filter) filter.dateTo = moment(this.filter.dateTo).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (this.filterApplied) {
+        for (let i in ['createdFrom','createdTo','startedFrom','startedTo','endedFrom','endedTo']) {
+          if (i in filter) filter[i] = moment(this.filter[i]).utc().format("YYYY-MM-DD HH:mm:ss")
+        }
+      }
       if (filter != null) payload['filter'] = filter
       // Build Sort
       const { sortBy, sortDesc } = this.options
