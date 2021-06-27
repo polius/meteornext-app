@@ -29,6 +29,7 @@
                 <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
                   <v-btn text @click='newQuery()'><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
                   <v-btn :disabled="query_selected.length != 1" text @click="editQuery()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                  <v-btn :disabled="query_selected.length != 1" text @click="cloneQuery()"><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
                   <v-btn :disabled="query_selected.length == 0" text @click='deleteQuery()'><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                   <v-divider class="mx-3" inset vertical></v-divider>
                   <v-btn :disabled="query_selected.length != 1" text title="Move query to the top" @click="moveTopQuery()"><v-icon small style="margin-right:10px">fas fa-level-up-alt</v-icon>TOP</v-btn>
@@ -342,7 +343,6 @@ export default {
     parseQueries() {
       // Build multi-queries
       var id = (this.query_items.length == 0) ? 1: this.query_items.reduce((acc, val) => val.id > acc ? val.id : acc, 0)+1
-      console.log(id)
       var queries = []
       var start = 0;
       var chars = []
@@ -406,6 +406,11 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
+    },
+    cloneQuery() {
+      let item = {id: this.query_items.reduce((acc, val) => val.id > acc ? val.id : acc, 0)+1, query: this.query_selected[0].query}
+      this.query_items.push(item)
+      this.query_selected = []
     },
     moveTopQuery() {
       let currentPos = this.query_items.findIndex(x => x.id == this.query_selected[0].id)
