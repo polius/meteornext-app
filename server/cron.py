@@ -77,14 +77,9 @@ class Cron:
                 setting = json.loads(setting[0]['value'])
                 if 'expire' in setting['local'] and setting['local']['expire'] is not None:
                     query = """
-                        SELECT id, uri, 'basic' AS 'mode'
-                        FROM deployments_basic
-                        WHERE DATE_ADD(DATE(created), INTERVAL {0} DAY) <= CURRENT_DATE
-                        AND expired = 0
-                        UNION ALL
-                        SELECT id, uri, 'pro' AS 'mode'
-                        FROM deployments_pro
-                        WHERE DATE_ADD(DATE(created), INTERVAL {0} DAY) <= CURRENT_DATE
+                        SELECT id, uri, mode
+                        FROM executions
+                        WHERE DATE_ADD(DATE(created), INTERVAL {} DAY) <= CURRENT_DATE
                         AND expired = 0
                     """.format(setting['local']['expire'])
                     expired = self._sql.execute(query)

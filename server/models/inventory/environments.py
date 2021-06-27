@@ -66,8 +66,7 @@ class Environments:
             self._sql.execute("INSERT INTO environment_servers (environment_id, server_id) VALUES {}".format(values[:-1]))
 
     def delete(self, environment):
-        self._sql.execute("UPDATE deployments_basic SET environment_id = NULL WHERE environment_id = %s", (environment))
-        self._sql.execute("UPDATE deployments_pro SET environment_id = NULL WHERE environment_id = %s", (environment))
+        self._sql.execute("UPDATE executions SET environment_id = NULL WHERE environment_id = %s", (environment))
         self._sql.execute("DELETE es FROM environment_servers es JOIN environments e ON e.id = es.environment_id AND e.id = %s", (environment))
         self._sql.execute("DELETE FROM environments WHERE id = %s", (environment))
 
