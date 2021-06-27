@@ -36,7 +36,7 @@
           <v-edit-dialog :return-value.sync="item.release" large @open="openRelease(item)" @save="saveRelease(item)"> 
             {{ item.release }}
             <template v-slot:input>
-              <v-autocomplete v-model="inline_editing_release" :items="releases_items" label="Releases" hide-details style="margin-top:15px; margin-bottom:5px;"></v-autocomplete>
+              <v-autocomplete v-model="inline_editing_release" :items="releaseItems" label="Releases" hide-details style="margin-top:15px; margin-bottom:5px;"></v-autocomplete>
             </template>
           </v-edit-dialog>
         </template>
@@ -64,7 +64,7 @@
       </v-data-table>
     </v-card>
 
-    <v-dialog v-model="filterDialog" max-width="768px">
+    <v-dialog v-model="filterDialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text text-subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:1px">fas fa-sliders-h</v-icon>FILTER DEPLOYMENTS</v-toolbar-title>
@@ -78,17 +78,17 @@
                 <v-form ref="form" style="margin-top:10px; margin-bottom:20px;">
                   <v-row>
                     <v-col>
-                      <v-autocomplete v-model="filter.name" :items="nameItems" multiple label="Name" style="padding-top:0px;" hide-details></v-autocomplete>
+                      <v-autocomplete v-model="filter.name" :items="deploymentsItems" label="Name" style="padding-top:0px;" hide-details></v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-autocomplete v-model="filter.release" :items="releaseItems" multiple label="Release" style="padding-top:0px;" hide-details></v-autocomplete>
+                      <v-autocomplete v-model="filter.release" :items="releaseItems" label="Release" style="padding-top:0px;" hide-details></v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-select v-model="filter.mode" :items="deploymentMode" multiple label="Mode" style="padding-top:0px;" hide-details>
+                      <v-autocomplete v-model="filter.mode" :items="deploymentMode" multiple label="Mode" style="padding-top:0px;" hide-details>
                         <template v-slot:item="{ item }">
                           <v-icon small :color="getModeColor(item)" :style="`text-transform:capitalize; margin-left:5px; margin-right:${item == 'BASIC' ? '17px' : '15px'}`">{{ item == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon>
                           <span :style="`color:${getModeColor(item)};`">{{ item }}</span>
@@ -99,12 +99,12 @@
                             <span :style="`color:${getModeColor(item)};`">{{ item }}</span>
                           </v-chip>
                         </template>
-                      </v-select>
+                      </v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-select v-model="filter.method" :items="deploymentMethod" multiple label="Method" style="padding-top:0px;" hide-details>
+                      <v-autocomplete v-model="filter.method" :items="deploymentMethod" multiple label="Method" style="padding-top:0px;" hide-details>
                         <template v-slot:item="{ item }">
                           <span :style="`color:${ item == 'VALIDATE' ? '#00b16a' : item == 'TEST' ? '#ff9800' : '#EF5354'}`">{{ item }}</span>
                         </template>
@@ -113,12 +113,12 @@
                             <span :style="`color:${ item == 'VALIDATE' ? '#00b16a' : item == 'TEST' ? '#ff9800' : '#EF5354'}`">{{ item }}</span>
                           </v-chip>
                         </template>
-                      </v-select>
+                      </v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row>
                     <v-col>
-                      <v-select v-model="filter.status" :items="deploymentStatus" multiple label="Status" style="padding-top:0px;" hide-details>
+                      <v-autocomplete v-model="filter.status" :items="deploymentStatus" multiple label="Status" style="padding-top:0px;" hide-details>
                         <template v-slot:item="{ item }">
                           <v-icon small :style="`color:${getStatusColor(item)}; margin-left:${getStatusIcon(item).margin}; margin-right:${getStatusIcon(item).margin}`">{{ getStatusIcon(item).name }}</v-icon>
                           <span :style="`margin-left:10px; color:${getStatusColor(item)}`">{{ item }}</span>
@@ -129,7 +129,7 @@
                             <span :style="`margin-left:10px; color:${getStatusColor(item)}`">{{ item }}</span>
                           </v-chip>
                         </template>
-                      </v-select>
+                      </v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
@@ -146,7 +146,7 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col cols="6" style="padding-right:8px;">
-                      <v-text-field v-model="filter.startdFrom" label="Started - From" style="padding-top:0px" hide-details>
+                      <v-text-field v-model="filter.startedFrom" label="Started - From" style="padding-top:0px" hide-details>
                         <template v-slot:append><v-icon @click="dateTimeDialogOpen('started_from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
                     </v-col>
@@ -275,7 +275,6 @@ export default {
     loading: false,
 
     // Inline Editing
-    releases_items: [],
     inline_editing_name: '',
     inline_editing_release: '',
 
@@ -293,6 +292,7 @@ export default {
     filterApplied: false,
     nameItems: [],
     releaseItems: [],
+    deploymentsItems: [],
     deploymentMode: ['BASIC','PRO'],
     deploymentMethod: ['VALIDATE','TEST','DEPLOY'],
     deploymentStatus: ['CREATED','QUEUED','STARTING','SCHEDULED','IN PROGRESS','WARNING','STOPPING','FAILED','STOPPED','SUCCESS'],
@@ -323,12 +323,21 @@ export default {
   methods: {
     getDeployments() {
       this.loading = true
-      axios.get('/deployments')
+      var payload = {}
+      // Build Filter
+      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
+      if (this.filterApplied) {
+        for (let i in ['createdFrom','createdTo','startedFrom','startedTo','endedFrom','endedTo']) {
+          if (i in filter) filter[i] = moment(this.filter[i]).utc().format("YYYY-MM-DD HH:mm:ss")
+        }
+      }
+      if (filter != null) payload['filter'] = filter
+      // Get Deployments
+      axios.get('/deployments', { params: payload })
         .then((response) => {
-          // Deployments
           this.items = response.data.deployments.map(x => ({...x, created: this.dateFormat(x.created), scheduled: this.dateFormat(x.scheduled), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
-          // Releases
-          this.releases_items = response.data.releases.map(x => x.name)
+          this.releaseItems = response.data.releases.map(x => x.name)
+          this.deploymentsItems = response.data.deployments_list.map(x => x.name)
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

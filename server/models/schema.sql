@@ -227,6 +227,7 @@ CREATE TABLE `deployments` (
   `release_id` INT UNSIGNED NULL,
   `user_id` INT(10) UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
+  KEY `name` (`name`),
   KEY `release_id` (`release_id`),
   KEY `user_id` (`user_id`),
   FOREIGN KEY (`release_id`) REFERENCES `releases` (`id`),

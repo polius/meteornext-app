@@ -64,7 +64,7 @@ class Deployments:
             deployment_json = request.get_json()
 
             if request.method == 'GET':
-                return self.__get(user, request.args)
+                return self.__get(user)
             elif request.method == 'POST':
                 return self.__post(user, deployment_json)
             elif request.method == 'PUT':
@@ -298,13 +298,18 @@ class Deployments:
     #################
     # Class Methods #
     #################
-    def __get(self, user, data):
+    def __get(self, user):
         # Get all user deployments
-        if 'id' not in data:
-            return jsonify({'deployments': self._deployments.get(user['id']), 'releases': self._releases.get(user['id'])}), 200
+        if 'id' not in request.args:
+            dfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
+            dsort = json.loads(request.args['sort']) if 'sort' in request.args else None
+            deployments = self._deployments.get(user_id=user['id'], dfilter=dfilter, dsort=dsort)
+            releases = self._releases.get(user['id'])
+            deployments_list = self._deployments.getDeploymentsName(user['id'])
+            return jsonify({'deployments': deployments, 'releases': releases, 'deployments_list': deployments_list}), 200
 
         # Get current execution
-        execution = self._executions.get(data['id'])
+        execution = self._executions.get(request.args['id'])
 
         # Check if deployment exists
         if len(execution) == 0:
