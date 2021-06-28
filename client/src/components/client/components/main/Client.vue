@@ -35,7 +35,9 @@
         <v-col cols="auto">
           <v-btn :disabled="clientItems.length == 0" @click="exportRows" text small title="Export rows" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-arrow-down</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
-          <v-btn :disabled="clientItems.length == 0" @click="resizeTable" text small title="Compress columns" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-compress</v-icon></v-btn>
+          <v-btn :disabled="clientItems.length == 0" @click="compressColumns" text small title="Compress columns" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-compress</v-icon></v-btn>
+          <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
+          <v-btn :disabled="clientItems.length == 0" @click="expandColumns" text small title="Expand columns" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:13px;">fas fa-expand</v-icon></v-btn>
           <span style="background-color:#424242; padding-left:1px;margin-left:1px; margin-right:1px;"></span>
         </v-col>
         <v-col cols="auto" class="flex-grow-1 flex-shrink-1" style="min-width: 100px; max-width: 100%; margin-top:7px; padding-left:10px; padding-right:10px;">
@@ -1159,6 +1161,12 @@ export default {
         this.download('export.sql', exportData)
       }
       this.loading = false
+    },
+    compressColumns() {
+      this.gridApi.client.sizeColumnsToFit()
+    },
+    expandColumns() {
+      this.resizeTable()
     },
     download(filename, text) {
       var element = document.createElement('a')

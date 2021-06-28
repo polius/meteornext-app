@@ -6,7 +6,7 @@ class Executions:
 
     def get(self, execution_id):
         query = """
-            SELECT e.id, e.deployment_id AS 'deployment_id', e.mode, d.name, r.name AS 'release', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, e.status, e.stopped, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall', e.error, e.progress, e.url, e.uri, e.engine, e.public, e.pid
+            SELECT e.id, e.deployment_id AS 'deployment_id', e.mode, d.name, r.name AS 'release', env.id AS 'environment_id', env.name AS 'environment_name', e.databases, e.queries, e.code, e.method, e.status, e.stopped, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall', e.error, e.progress, e.url, e.uri, e.logs, e.public, e.pid
             FROM executions e
             JOIN deployments d ON d.id = e.deployment_id
             LEFT JOIN releases r ON r.id = d.release_id

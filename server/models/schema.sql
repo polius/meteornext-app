@@ -254,7 +254,7 @@ CREATE TABLE `executions` (
  `error` TINYINT(1) NULL,
  `url` VARCHAR(191) NULL,
  `uri` VARCHAR(191) NULL,
- `engine` VARCHAR(191) NULL,
+ `logs` VARCHAR(191) NULL,
  `public` TINYINT(1) NOT NULL DEFAULT 0,
  `expired` TINYINT(1) NOT NULL DEFAULT 0,
  `user_id` INT UNSIGNED NULL,
@@ -283,6 +283,8 @@ UNION ALL
 SELECT deployment_id, environment_id, 'PRO' AS 'mode', NULL AS 'databases', NULL AS 'queries', `code`, method, `status`, stopped, created, scheduled, started, ended, pid, progress, error, url, uri, `engine`, public, expired, user_id
 FROM deployments_pro
 ORDER BY created;
+
+ALTER TABLE executions CHANGE `engine` `logs` VARCHAR(191) NULL;
 */
 
 CREATE TABLE `deployments_queued` (
