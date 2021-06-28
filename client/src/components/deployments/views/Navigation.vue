@@ -11,8 +11,8 @@
         <v-spacer></v-spacer>
         <router-link class="nav-link" to="/deployments"><v-btn icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn></router-link>
       </v-toolbar>
-      <Basic v-if="mode=='basic'"/>
-      <Pro v-else-if="mode=='pro'"/>
+      <Basic v-if="mode == 'basic'"/>
+      <Pro v-else-if="mode == 'pro'"/>
     </v-card>
   </div>
 </template>
