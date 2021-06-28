@@ -98,7 +98,7 @@ class Regions:
             regions_secured = []
             for r in regions:
                 if r['shared']:
-                    regions_secured.append({"id": r['id'], "name": r['name'], "ssh_tunnel": r['ssh_tunnel'], "shared": r['shared']})
+                    regions_secured.append({"id": r['id'], "name": r['name'], "ssh_tunnel": r['ssh_tunnel'], "key": r['key'], "shared": r['shared']})
                 else:
                     regions_secured.append(r)
             return jsonify({'data': regions_secured}), 200

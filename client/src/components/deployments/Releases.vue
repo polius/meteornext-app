@@ -39,8 +39,11 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
+                  <v-alert colored-border elevation="2">
+                    <v-icon color="primary" style="margin-right:10px; font-size:20px"> fas fa-info-circle</v-icon>
+                    Deployments associated with active Releases will be visible in the Deployments section.</v-alert>
                   <v-text-field v-if="mode!='delete'" ref="field" @keypress.enter.native.prevent="submitRelease()" v-model="name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <v-switch v-if="mode!='delete'" v-model="active" :label="`${active ? 'Active' : 'Inactive'}`" hide-details color="info" style="margin-top:0px; margin-bottom:20px;"></v-switch>
+                  <v-checkbox v-if="mode!='delete'" v-model="active" label="Active" hide-details color="primary" style="margin-top:0px; margin-bottom:20px;"></v-checkbox>
                   <div style="padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected releases?</div>
                   <v-divider></v-divider>
                   <div style="margin-top:20px;">

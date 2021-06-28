@@ -12,6 +12,10 @@
         <v-icon v-if="item.ssh_tunnel" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
         <v-icon v-else small color="#EF5354" style="margin-left:20px">fas fa-circle</v-icon>
       </template>
+      <template v-slot:[`item.key`]="{ item }">
+        <v-icon v-if="item.key" small color="#00b16a" style="margin-left:20px">fas fa-circle</v-icon>
+        <v-icon v-else small color="#EF5354" style="margin-left:20px">fas fa-circle</v-icon>
+      </template>
       <template v-slot:[`item.shared`]="{ item }">
         <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px;">fas fa-user</v-icon>
         <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px;">fas fa-users</v-icon>
@@ -112,6 +116,7 @@
                   <v-checkbox v-model="columnsRaw" label="Hostname" value="hostname" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Port" value="port" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Username" value="username" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Private Key" value="key" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Scope" value="shared" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Group" value="group" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Owner" value="owner" hide-details style="margin-top:5px"></v-checkbox>
@@ -119,6 +124,7 @@
                   <v-checkbox v-model="columnsRaw" label="Created At" value="created_at" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Updated By" value="updated_by" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Updated At" value="updated_at" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Servers Attached" value="servers" hide-details style="margin-top:5px"></v-checkbox>
                   <v-divider style="margin-top:15px;"></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
@@ -148,6 +154,7 @@ export default {
       { text: 'Hostname', align: 'left', value: 'hostname'},
       { text: 'Port', align: 'left', value: 'port'},
       { text: 'Username', align: 'left', value: 'username'},
+      { text: 'Key', align: 'left', value: 'key'},
       { text: 'Scope', align: 'left', value: 'shared' },
       { text: 'Group', align: 'left', value: 'group' },
       { text: 'Owner', align: 'left', value: 'owner' },
@@ -155,6 +162,7 @@ export default {
       { text: 'Created At', align: 'left', value: 'created_at' },
       { text: 'Updated By', align: 'left', value: 'updated_by' },
       { text: 'Updated At', align: 'left', value: 'updated_at' },
+      { text: 'Servers Attached', align: 'left', value: 'servers' },
     ],
     regions: [],
     items: [],
@@ -356,7 +364,7 @@ export default {
       this.columnsDialog = true
     },
     selectAllColumns() {
-      this.columnsRaw = ['name','ssh_tunnel','hostname','port','username','shared','group','owner','created_by','created_at','updated_by','updated_at']
+      this.columnsRaw = ['name','ssh_tunnel','hostname','port','username','key','shared','group','owner','created_by','created_at','updated_by','updated_at','servers']
     },
     deselectAllColumns() {
       this.columnsRaw = []
