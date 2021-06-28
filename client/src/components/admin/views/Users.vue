@@ -9,6 +9,7 @@
           <v-btn :disabled="selected.length != 1" text @click="editUser()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
           <v-btn :disabled="selected.length == 0" text @click="deleteUser()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn text @click="filterDialog = true" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn @click="getUsers" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
@@ -187,6 +188,19 @@ export default {
     mfaDialog: false,
     passwordDialog: false,
     mfaUsername: '',
+    // Filter Dialog
+    filterDialog: false,
+    filters: [
+      {id: 'equal', name: 'Equal'},
+      {id: 'not_equal', name: 'Not equal'},
+      {id: 'starts', name: 'Starts'},
+      {id: 'not_starts', name: 'Not starts'},
+      {id: 'contains', name: 'Contains'},
+      {id: 'not_contains', name: 'Not contains'}
+    ],
+    filterItem: {},
+    filterApplied: false,
+    filterUsers: [],
     // Filter Columns Dialog
     columnsDialog: false,
     columns: ['username','group','email','created_at','last_login','coins','mfa','admin','last_ping'],

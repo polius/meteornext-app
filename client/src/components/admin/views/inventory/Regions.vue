@@ -124,7 +124,7 @@
                   <v-checkbox v-model="columnsRaw" label="Created At" value="created_at" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Updated By" value="updated_by" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Updated At" value="updated_at" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Servers Attached" value="servers" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Servers" value="servers" hide-details style="margin-top:5px"></v-checkbox>
                   <v-divider style="margin-top:15px;"></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
@@ -162,7 +162,7 @@ export default {
       { text: 'Created At', align: 'left', value: 'created_at' },
       { text: 'Updated By', align: 'left', value: 'updated_by' },
       { text: 'Updated At', align: 'left', value: 'updated_at' },
-      { text: 'Servers Attached', align: 'left', value: 'servers' },
+      { text: 'Servers', align: 'left', value: 'servers' },
     ],
     regions: [],
     items: [],

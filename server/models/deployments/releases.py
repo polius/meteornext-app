@@ -5,7 +5,15 @@ class Releases:
         self._sql = sql
 
     def get(self, user_id):
-        return self._sql.execute("SELECT * FROM releases WHERE user_id = %s ORDER BY id DESC", (user_id))
+        query = """
+            SELECT r.*, COUNT(d.id) AS 'deployments'
+            FROM releases r
+            JOIN deployments d ON d.release_id = r.id
+            WHERE r.user_id = %s
+            GROUP BY r.id
+            ORDER BY r.id DESC
+        """
+        return self._sql.execute(query, (user_id))
 
     def post(self, user_id, release):
         self._sql.execute("INSERT INTO releases (name, active, user_id, created_at) VALUES (%s, %s, %s, %s)", (release['name'], release['active'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
