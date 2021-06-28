@@ -77,7 +77,7 @@ class Cron:
                 setting = json.loads(setting[0]['value'])
                 if 'expire' in setting['local'] and setting['local']['expire'] is not None:
                     query = """
-                        SELECT id, uri, mode
+                        SELECT id, uri
                         FROM executions
                         WHERE DATE_ADD(DATE(created), INTERVAL {} DAY) <= CURRENT_DATE
                         AND expired = 0
@@ -93,7 +93,7 @@ class Cron:
                         if os.path.isfile(execution_path + '.js'):
                             os.remove(execution_path + '.js')
                         # SQL
-                        self._sql.execute("UPDATE deployments_{} SET expired = 1 WHERE id = {}".format(i['mode'], i['id']))
+                        self._sql.execute(query="UPDATE executions SET expired = 1 WHERE id = %s", args=(i['id']))
         except Exception:
             traceback.print_exc()
 
