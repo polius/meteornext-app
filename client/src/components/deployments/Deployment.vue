@@ -389,7 +389,7 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="query_form" v-if="query_dialog_mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
-                  <v-textarea ref="field" rows="1" filled auto-grow hide-details v-model="query_dialog_item" label="Query" :rules="[v => !!v || '']" required></v-textarea>
+                  <v-textarea ref="field" rows="1" filled auto-grow hide-details v-model="query_dialog_item" label="Queries" :rules="[v => !!v || '']" required></v-textarea>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="query_dialog_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected queries?</div>
                 <v-divider></v-divider>
@@ -1232,25 +1232,25 @@
         this.query_dialog = true
       },
       cloneQuery() {
-        let item = {id: this.query_items.reduce((acc, val) => val.id > acc ? val.id : acc, 0)+1, query: this.information_dialog_query_selected[0].query}
-        this.query_items.push(item)
+        let item = {id: this.information_dialog_data.queries.reduce((acc, val) => val.id > acc ? val.id : acc, 0)+1, query: this.information_dialog_query_selected[0].query}
+        this.information_dialog_data.queries.push(item)
         this.information_dialog_query_selected = []
       },
       moveTopQuery() {
-        let currentPos = this.query_items.findIndex(x => x.id == this.information_dialog_query_selected[0].id)
-        this.arraymove(this.query_items, currentPos, 0)
+        let currentPos = this.information_dialog_data.queries.findIndex(x => x.id == this.information_dialog_query_selected[0].id)
+        this.arraymove(this.information_dialog_data.queries, currentPos, 0)
       },
       moveUpQuery() {
-        let currentPos = this.query_items.findIndex(x => x.id == this.information_dialog_query_selected[0].id)
-        if (currentPos > 0) this.arraymove(this.query_items, currentPos, currentPos-1)
+        let currentPos = this.information_dialog_data.queries.findIndex(x => x.id == this.information_dialog_query_selected[0].id)
+        if (currentPos > 0) this.arraymove(this.information_dialog_data.queries, currentPos, currentPos-1)
       },
       moveDownQuery() {
-        let currentPos = this.query_items.findIndex(x => x.id == this.information_dialog_query_selected[0].id)
-        if (currentPos < this.query_items.length-1) this.arraymove(this.query_items, currentPos, currentPos+1)
+        let currentPos = this.information_dialog_data.queries.findIndex(x => x.id == this.information_dialog_query_selected[0].id)
+        if (currentPos < this.information_dialog_data.queries.length-1) this.arraymove(this.information_dialog_data.queries, currentPos, currentPos+1)
       },
       moveBottomQuery() {
-        let currentPos = this.query_items.findIndex(x => x.id == this.information_dialog_query_selected[0].id)
-        this.arraymove(this.query_items, currentPos, this.query_items.length-1)
+        let currentPos = this.information_dialog_data.queries.findIndex(x => x.id == this.information_dialog_query_selected[0].id)
+        this.arraymove(this.information_dialog_data.queries, currentPos, this.information_dialog_data.queries.length-1)
       },
       arraymove(arr, fromIndex, toIndex) {
         let element = arr[fromIndex]
