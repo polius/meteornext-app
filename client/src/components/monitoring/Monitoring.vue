@@ -3,11 +3,11 @@
     <v-card style="margin-bottom:7px;">
       <v-toolbar dense flat color="primary">
         <v-toolbar-items class="hidden-sm-and-down" style="margin-left:-16px">
-          <v-btn :disabled="loading" text title="Define monitoring rules and settings" @click="openSettings()" class="body-2"><v-icon small style="margin-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
-          <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()" class="body-2"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
-          <v-btn :disabled="loading" text title="Filter servers" @click="openFilter()" class="body-2"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
-          <v-btn :disabled="loading" text title="Sort servers by number of connections" @click="sortClick()" class="body-2" :style="{ backgroundColor : sort_active ? '#4ba2f1' : '' }"><v-icon small style="margin-right:10px">fas fa-sort-amount-down</v-icon>SORT</v-btn>
-          <v-btn :disabled="loading" text title="What's going on in all servers" @click="events_dialog=true" class="body-2"><v-icon small style="margin-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
+          <v-btn :disabled="loading" text title="Define monitoring rules and settings" @click="openSettings()"><v-icon small style="margin-right:10px">fas fa-cog</v-icon>SETTINGS</v-btn>
+          <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn :disabled="loading" text title="Filter servers" @click="openFilter()"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn :disabled="loading" text title="Sort servers by number of connections" @click="sortClick()" :style="{ backgroundColor : sort_active ? '#4ba2f1' : '' }"><v-icon small style="margin-right:10px">fas fa-sort-amount-down</v-icon>SORT</v-btn>
+          <v-btn :disabled="loading" text title="What's going on in all servers" @click="events_dialog=true"><v-icon small style="margin-right:10px">fas fa-rss</v-icon>EVENTS</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field @change="applyFilter" v-model="search" append-icon="search" label="Search" color="white" style="margin-left:5px;" single-line hide-details></v-text-field>

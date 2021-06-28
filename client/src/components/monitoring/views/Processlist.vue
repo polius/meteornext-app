@@ -5,8 +5,8 @@
         <v-toolbar-title class="white--text subtitle-1">PROCESSLIST</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()" class="body-2"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
-          <v-btn :disabled="loading" text title="Filter processes" @click="openFilter()" class="body-2"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
+          <v-btn :disabled="loading" text title="Filter processes" @click="openFilter()"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-divider v-if="!loading && last_updated != null" class="mx-3" inset vertical></v-divider>
           <v-btn v-if="!loading && last_updated != null" :disabled="loading" text :title="stopped ? 'Start processlist retrieval' : 'Stop processlist retrieval'" @click="submitStop()" class="body-2"><v-icon small style="margin-right:10px">{{ stopped ? 'fas fa-play' : 'fas fa-stop'}}</v-icon>{{ stopped ? 'START' : 'STOP' }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>

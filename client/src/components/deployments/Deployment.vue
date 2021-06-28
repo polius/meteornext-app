@@ -20,10 +20,10 @@
         <div v-else-if="start_execution || deployment['status'] == 'STARTING'" class="subtitle-1" style="margin-left:5px;">Starting the execution...</div>
         <v-progress-circular v-if="start_execution || (stop_execution && deployment['status'] != 'STOPPED') || deployment['status'] == 'QUEUED' || deployment['status'] == 'STARTING' || deployment['status'] == 'STOPPING' ||  deployment['status'] == 'IN PROGRESS'" :size="22" indeterminate color="white" width="2" style="margin-left:20px; margin-right:10px;"></v-progress-circular>
 
-        <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="rgb(0, 177, 106)" style="margin-left:5px; margin-right:5px;" title="The execution finished successfully">SUCCESS</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="rgb(250, 130, 49)" style="margin-left:5px; margin-right:5px;" title="Some queries failed">WARNING</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="#EF5354" style="margin-left:5px; margin-right:5px;" title="An error has occurred during the execution">FAILED</v-chip>
-        <v-chip v-else-if="deployment['status'] == 'STOPPED'" label color="#EF5354" style="margin-left:5px; margin-right:5px;" title="The execution has been interrupted">STOPPED</v-chip>
+        <v-chip v-if="deployment['status'] == 'SUCCESS'" label color="#00b16a" style="font-weight:500; margin-left:5px; margin-right:5px;" title="The execution finished successfully">SUCCESS</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'WARNING'" label color="#ff9800" style="font-weight:500; margin-left:5px; margin-right:5px;" title="Some queries failed">WARNING</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'FAILED'" label color="#EF5354" style="font-weight:500; margin-left:5px; margin-right:5px;" title="An error has occurred during the execution">FAILED</v-chip>
+        <v-chip v-else-if="deployment['status'] == 'STOPPED'" label color="#EF5354" style="font-weight:500; margin-left:5px; margin-right:5px;" title="The execution has been interrupted">STOPPED</v-chip>
         <v-divider v-if="['SUCCESS','WARNING','FAILED','STOPPED'].includes(deployment['status'])" class="mx-3" inset vertical></v-divider>
 
         <v-toolbar-items class="hidden-sm-and-down">
@@ -281,8 +281,8 @@
                       <v-divider v-if="information_dialog_mode != 'parameters'" class="mx-3" inset vertical></v-divider>
                       <v-toolbar-items v-if="information_dialog_mode != 'parameters'" class="hidden-sm-and-down" style="padding-left:0px;">
                         <v-btn text @click='newQuery()'><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                        <v-btn :disabled="information_dialog_query_selected.length != 1" text @click="editQuery()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
                         <v-btn :disabled="information_dialog_query_selected.length != 1" text @click="cloneQuery()"><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
+                        <v-btn :disabled="information_dialog_query_selected.length != 1" text @click="editQuery()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
                         <v-btn :disabled="information_dialog_query_selected.length == 0" text @click='deleteQuery()'><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                         <v-divider class="mx-3" inset vertical></v-divider>
                         <v-btn :disabled="information_dialog_query_selected.length != 1" text title="Move query to the top" @click="moveTopQuery()"><v-icon small style="margin-right:10px">fas fa-level-up-alt</v-icon>TOP</v-btn>
