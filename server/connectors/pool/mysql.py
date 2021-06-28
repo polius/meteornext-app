@@ -29,54 +29,30 @@ class MySQL:
             "maxconnections": None,
             "mincached": 1,
             "maxcached": 10,
-            "maxshared": None,
+            "maxshared": 0,
             "blocking": True,
-            "maxusage": None,
+            "maxusage": 0,
             "setsession": [],
             "ping": 1,
         }
         self._pool = dbutils.pooled_db.PooledDB(**POOL_CONFIG, **SQL_CONFIG)
 
-    def execute(self, query, args=None, database=None, conn=None):
-        try:
-            connection = None
-            connection = self._pool.connection() if conn is None else conn
-            connection.ping(reconnect=True)
-            if database:
-                connection.select_db(database)
-            with connection.cursor(OrderedDictCursor) as cursor:
-                cursor.execute(query, args)
-                result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
-            if conn is None:
-                connection.commit()
-            return result
-        finally:
-            if conn is None and connection:
-                connection.close()
+    def execute(self, query, args=None, database=None):
+        connection = self._pool.dedicated_connection()
+        if database:
+            connection.select_db(database)
+        cursor = connection.cursor(OrderedDictCursor)
+        cursor.execute(query, args)
+        result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
+        cursor.close()
+        connection.commit()
+        connection.close()
+        return result
 
     def mogrify(self, query, args=None):
-        try:
-            connection = self._pool.connection()
-            with connection.cursor(OrderedDictCursor) as cursor:
-                return cursor.mogrify(query, args)
-        finally:
-            connection.close()
-
-    def transaction(self):
-        connection = self._pool.connection()
-        connection.ping(reconnect=True)
-        with connection.cursor(OrderedDictCursor) as cursor:
-            cursor.execute("BEGIN")
-        return connection
-
-    def commit(self, conn):
-        try:
-            conn.commit()
-        finally:
-            conn.close()
-
-    def rollback(self, conn):
-        try:
-            conn.rollback()
-        finally:
-            conn.close()
+        connection = self._pool.dedicated_connection()
+        cursor = connection.cursor(OrderedDictCursor)
+        result = cursor.mogrify(query, args)
+        cursor.close()
+        connection.close()
+        return result
