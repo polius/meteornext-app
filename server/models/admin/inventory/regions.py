@@ -41,12 +41,14 @@ class Regions:
             return self._sql.execute(query.format(owner_sql), (group_id, owner_id))
         else:
             query = """
-                SELECT r.id, r.name, r.group_id, g.name AS 'group', r.ssh_tunnel, r.hostname, r.port, r.username, r.password, r.key, r.shared, r.owner_id, u.username AS 'owner', u2.username AS 'created_by', r.created_at, u3.username AS 'updated_by', r.updated_at
+                SELECT r.id, r.name, r.group_id, g.name AS 'group', r.ssh_tunnel, r.hostname, r.port, r.username, r.password, r.key, r.shared, r.owner_id, u.username AS 'owner', u2.username AS 'created_by', r.created_at, u3.username AS 'updated_by', r.updated_at, COUNT(s.id) AS 'servers'
                 FROM regions r
+                LEFT JOIN servers s ON s.region_id = r.id
                 LEFT JOIN users u ON u.id = r.owner_id
                 LEFT JOIN users u2 ON u2.id = r.created_by
                 LEFT JOIN users u3 ON u3.id = r.updated_by
                 LEFT JOIN groups g ON g.id = r.group_id
+                GROUP BY r.id
                 ORDER BY r.id DESC
             """
             return self._sql.execute(query, (group_id))
