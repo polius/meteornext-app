@@ -285,10 +285,10 @@
                         <v-btn :disabled="information_dialog_query_selected.length != 1" text @click="editQuery()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
                         <v-btn :disabled="information_dialog_query_selected.length == 0" text @click='deleteQuery()'><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                         <v-divider class="mx-3" inset vertical></v-divider>
-                        <v-btn :disabled="information_dialog_query_selected.length != 1" text title="Move query to the top" @click="moveTopQuery()"><v-icon small style="margin-right:10px">fas fa-level-up-alt</v-icon>TOP</v-btn>
-                        <v-btn :disabled="information_dialog_query_selected.length != 1" text title="Move query up" @click="moveUpQuery()"><v-icon small style="margin-right:10px">fas fa-arrow-up</v-icon>UP</v-btn>
-                        <v-btn :disabled="information_dialog_query_selected.length != 1" text title="Move query down" @click="moveDownQuery()"><v-icon small style="margin-right:10px">fas fa-arrow-down</v-icon>DOWN</v-btn>
-                        <v-btn :disabled="information_dialog_query_selected.length != 1" text title="Move query to the bottom" @click="moveBottomQuery()"><v-icon small style="margin-right:10px">fas fa-level-down-alt</v-icon>BOTTOM</v-btn>
+                        <v-btn :disabled="information_dialog_data.queries.length < 2 || information_dialog_query_selected.length != 1" text title="Move query to the top" @click="moveTopQuery()"><v-icon small style="margin-right:10px">fas fa-level-up-alt</v-icon>TOP</v-btn>
+                        <v-btn :disabled="information_dialog_data.queries.length < 2 || information_dialog_query_selected.length != 1" text title="Move query up" @click="moveUpQuery()"><v-icon small style="margin-right:10px">fas fa-arrow-up</v-icon>UP</v-btn>
+                        <v-btn :disabled="information_dialog_data.queries.length < 2 || information_dialog_query_selected.length != 1" text title="Move query down" @click="moveDownQuery()"><v-icon small style="margin-right:10px">fas fa-arrow-down</v-icon>DOWN</v-btn>
+                        <v-btn :disabled="information_dialog_data.queries.length < 2 || information_dialog_query_selected.length != 1" text title="Move query to the bottom" @click="moveBottomQuery()"><v-icon small style="margin-right:10px">fas fa-level-down-alt</v-icon>BOTTOM</v-btn>
                       </v-toolbar-items>
                     </v-toolbar>
                     <v-divider></v-divider>
@@ -634,7 +634,7 @@
       information_dialog: false,
       information_dialog_mode: '',
       information_dialog_execution_mode: '',
-      information_dialog_data: {},
+      information_dialog_data: { queries: [] },
       information_dialog_query_selected: [],
       code: '',
       // - Query -
@@ -1038,6 +1038,7 @@
       edit() {
         this.information_dialog_mode = (this.deployment['status'] == 'CREATED' || this.deployment['status'] == 'SCHEDULED') ? 'edit' : 're-deploy'
         this.information_dialog_execution_mode = this.deployment['mode']
+        this.information_dialog_query_selected = []
         this.cmOptions.readOnly = false
         this.information_dialog_data = JSON.parse(JSON.stringify(this.deployment))
         this.schedule_enabled = this.deployment['scheduled'] !== null
