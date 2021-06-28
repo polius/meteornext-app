@@ -153,7 +153,7 @@ class Deployments:
             logs = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])
             
             # Get Execution Results File
-            if results['engine'] == 'local':
+            if results['logs'] == 'local':
                 execution_results = '{}/{}'.format(logs['local']['path'], uri)
                 # Check if exists
                 if not os.path.exists(execution_results + '.js') and not os.path.exists(execution_results + '.tar.gz'):
@@ -166,7 +166,7 @@ class Deployments:
 
                 return send_from_directory(logs['local']['path'], uri + '.js')
 
-            elif results['engine'] == 'amazon_s3':
+            elif results['logs'] == 'amazon_s3':
                 # Check Amazon S3 credentials are setup
                 if 'aws_access_key' not in logs['amazon_s3']:
                     return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the provided Amazon S3 credentials' }), 400
