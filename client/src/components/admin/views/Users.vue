@@ -6,10 +6,10 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text @click="newUser()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1" text @click="editUser()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn v-if="selected.length > 0" text @click="deleteUser()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn :disabled="selected.length != 1" text @click="editUser()"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn :disabled="selected.length == 0" text @click="deleteUser()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn @click="getUsers" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
+          <v-btn @click="getUsers" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
           <v-btn text class="body-2" @click="filterBy('enabled')" :style="filter == 'enabled' ? 'font-weight:600' : 'font-weight:400'">ENABLED</v-btn>

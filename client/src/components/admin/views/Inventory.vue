@@ -5,7 +5,7 @@
         <v-toolbar-title class="body-2 white--text font-weight-medium" style="min-width:104px"><v-icon small style="margin-right:10px">fas fa-layer-group</v-icon>INVENTORY</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn @click="filterClick" text class="body-2" :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn @click="filterClick" text :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-tabs v-model="tab" background-color="transparent" color="white" slider-color="white" slot="extension">
             <v-tab>SERVERS</v-tab>
@@ -14,10 +14,10 @@
             <v-tab>AUXILIARY</v-tab>
           </v-tabs>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn @click="newClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-          <v-btn v-if="selected.length == 1" @click="cloneClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
-          <v-btn v-if="selected.length == 1" @click="editClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
-          <v-btn v-if="selected.length > 0" @click="deleteClick" text class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+          <v-btn @click="newClick" text><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn :disabled="selected.length != 1" @click="cloneClick" text><v-icon small style="padding-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
+          <v-btn :disabled="selected.length != 1" @click="editClick" text><v-icon small style="padding-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+          <v-btn :disabled="selected.length == 0" @click="deleteClick" text><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-text-field v-model="filter.search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>

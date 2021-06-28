@@ -5,9 +5,9 @@
         <v-toolbar-title class="body-2 white--text font-weight-medium"><v-icon small style="margin-right:10px">fas fa-desktop</v-icon>MONITORING</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn @click="filterDialog = true" text class="body-2" :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
-          <v-btn @click="getMonitoringServers" text class="body-2"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
-          <v-btn v-show="attached != null" @click="confirmDialog = true" text class="body-2"><v-icon small style="padding-right:10px">{{ attached ? 'fas fa-minus' : 'fas fa-plus' }}</v-icon>{{ attached ? 'DETACH' : 'ATTACH' }}</v-btn>
+          <v-btn @click="filterDialog = true" text :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn @click="getMonitoringServers" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
+          <v-btn v-show="attached != null" @click="confirmDialog = true" text><v-icon small style="padding-right:10px">{{ attached ? 'fas fa-minus' : 'fas fa-plus' }}</v-icon>{{ attached ? 'DETACH' : 'ATTACH' }}</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
