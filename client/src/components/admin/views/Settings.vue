@@ -15,23 +15,23 @@
       <v-container fluid grid-list-lg>
         <v-layout row wrap>
           <!-- LICENSE -->
-          <v-flex v-if="setting_mode == 'license'" xs12 style="margin-top:5px; margin-bottom:5px;">
-            <div class="text-h6 font-weight-regular" style="margin-left:10px;">LICENSE</div>
-            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">This copy of Meteor Next is <span class="body-1 font-weight-medium" style="color:#00b16a;">LICENSED</span>.</div>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.email" label="Email" style="margin-left:10px; padding-top:25px;" required :rules="[v => !!v || '']"></v-text-field>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.key" label="Key" style="margin-left:10px; padding-top:0px;" @click:append="show_key = !show_key" :append-icon="show_key ? 'visibility' : 'visibility_off'" :type="show_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.expiration" label="Expiration" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
+          <v-flex v-if="setting_mode == 'license'" xs12 style="margin:5px">
+            <div class="text-h6 font-weight-regular">LICENSE</div>
+            <div class="body-1 font-weight-regular" style="margin-top:10px">This copy of Meteor Next is <span class="body-1 font-weight-medium" style="color:#00b16a;">LICENSED</span>.</div>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.email" label="Email" style="margin-top:15px" required :rules="[v => !!v || '']"></v-text-field>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.key" label="Key" style="padding-top:0px;" @click:append="show_key = !show_key" :append-icon="show_key ? 'visibility' : 'visibility_off'" :type="show_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.expiration" label="Expiration" style="padding-top:0px; margin-bottom:5px" required :rules="[v => !!v || '']" hide-details></v-text-field>
           </v-flex>
           <!-- SQL -->
-          <v-flex v-else-if="setting_mode == 'sql'" xs12 style="margin-top:5px; margin-bottom:5px;">
-            <div class="text-h6 font-weight-regular" style="margin-left:10px;">SQL</div>
-            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">The SQL credentials where Meteor Next is stored.</div>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.hostname" label="Hostname" style="margin-left:10px; padding-top:25px;" required :rules="[v => !!v || '']"></v-text-field>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.port" label="Port" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.username" label="Username" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.password" label="Password" style="margin-left:10px; padding-top:0px;" @click:append="show_password = !show_password" :append-icon="show_password ? 'visibility' : 'visibility_off'" :type="show_password ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
-            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.database" label="Database" style="margin-left:10px; padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
-            <v-card v-if="sql.ssl_client_key != null || sql.ssl_client_certificate != null || sql.ssl_ca_certificate != null" style="height:52px; margin-left:10px">
+          <v-flex v-else-if="setting_mode == 'sql'" xs12 style="margin:5px">
+            <div class="text-h6 font-weight-regular">SQL</div>
+            <div class="body-1 font-weight-regular" style="margin-top:10px">The SQL credentials where Meteor Next is stored.</div>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.hostname" label="Hostname" style="margin-top:15px;" required :rules="[v => !!v || '']"></v-text-field>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.port" label="Port" style="padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.username" label="Username" style="padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.password" label="Password" style="padding-top:0px;" @click:append="show_password = !show_password" :append-icon="show_password ? 'visibility' : 'visibility_off'" :type="show_password ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
+            <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.database" label="Database" style="padding-top:0px; margin-bottom:5px" required :rules="[v => !!v || '']" hide-details></v-text-field>
+            <v-card v-if="sql.ssl_client_key != null || sql.ssl_client_certificate != null || sql.ssl_ca_certificate != null" style="height:52px; margin-top:15px">
               <v-row no-gutters>
                 <v-col cols="auto" style="display:flex; margin:15px">
                   <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
@@ -43,17 +43,17 @@
             </v-card>
           </v-flex>
           <!-- LOGS -->
-          <v-flex v-else-if="setting_mode == 'logs'" xs12 style="margin-top:5px; margin-bottom:5px;">
-            <div class="text-h6 font-weight-regular" style="margin-left:10px; margin-bottom:10px;">LOGS</div>
-            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px; margin-bottom:15px;">The path where the <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49);">Deployments</span> logs are stored.</div>
-            <v-btn :loading="loading" color="secondary" style="margin-left:10px;" @click="logs_mode = 'local'">LOCAL</v-btn>
+          <v-flex v-else-if="setting_mode == 'logs'" xs12 style="margin:5px">
+            <div class="text-h6 font-weight-regular" style="margin-bottom:10px;">LOGS</div>
+            <div class="body-1 font-weight-regular" style="margin-top:10px; margin-bottom:15px">The path where all the Deployments are stored.</div>
+            <v-btn :loading="loading" color="secondary" @click="logs_mode = 'local'">LOCAL</v-btn>
             <v-btn :loading="loading" color="secondary" style="margin-left:10px;" @click="logs_mode = 'amazon_s3'">AMAZON S3</v-btn>
-            <v-card v-if="logs_mode == 'local'" style="margin-left:10px; margin-right:10px; margin-top:15px;">
-              <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
+            <v-card v-if="logs_mode == 'local'" style="margin-top:15px">
+              <v-toolbar flat dense color="#2e3131" style="margin-top:10px">
                 <v-toolbar-title class="white--text subtitle-1">LOCAL</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
                 <v-toolbar-items class="hidden-sm-and-down">
-                <v-btn text :disabled="loading" @click="saveLogs()" style="margin-left:0px;">SAVE</v-btn>
+                <v-btn text :disabled="loading" @click="saveLogs()">SAVE</v-btn>
                 </v-toolbar-items>
               </v-toolbar>
               <v-divider></v-divider>
@@ -64,7 +64,7 @@
                 </v-form>
               </v-card-text>
             </v-card>
-            <v-card v-else-if="logs_mode == 'amazon_s3'" style="margin-left:10px; margin-right:10px; margin-top:15px;">
+            <v-card v-else-if="logs_mode == 'amazon_s3'" style="margin-top:15px">
               <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
                 <v-toolbar-title class="white--text subtitle-1">AMAZON S3</v-toolbar-title>
                 <v-divider class="mx-3" inset vertical></v-divider>
@@ -85,13 +85,50 @@
             </v-card>
           </v-flex>
           <!-- SECURITY -->
-          <v-flex v-else-if="setting_mode == 'security'" xs12 style="margin-top:5px; margin-bottom:5px;">
-            <div class="text-h6 font-weight-regular" style="margin-left:10px;">SECURITY</div>
-            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:10px;">Restrict access to the <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49)">Administration</span> panel only to a specific IP address or domain.</div>
-            <v-text-field :loading="loading" :disabled="loading" v-model="security.url" label="Administration URL" :placeholder="security.current" style="margin-left:10px; margin-top:10px;" required :rules="[v => v ? this.validURL(v) : true || '' ]" hide-details></v-text-field>
-            <div class="body-1 font-weight-regular" style="margin-left:10px; margin-top:20px;">Force all users to have the <span class="body-1 font-weight-medium" style="color:rgb(250, 130, 49)">MFA</span> enabled.</div>
-            <v-switch :loading="loading" :disabled="loading" v-model="security.mfa" label="Force Multi-Factor Authentication (MFA)" color="info" style="margin-left:10px; margin-top:10px;"></v-switch>
-            <v-btn :loading="loading" color="#00b16a" style="margin-left:10px;" @click="saveSecurity()">SAVE</v-btn>
+          <v-flex v-else-if="setting_mode == 'security'" xs12 style="margin:5px">
+            <div class="text-h6 font-weight-regular">SECURITY</div>
+            <div class="subtitle-1" style="margin-top:10px; color:#fa8131">Password Policy</div>
+            <v-select :loading="loading" :disabled="loading" v-model="security.password_age" :items="[{id: 0, text: 'Never'}, {id: 90, text: '3 Months'}, {id: 180, text: '6 Months'}, {id: 365, text: '1 Year'}]" item-value="id" item-text="text" label="Maximum Password Age" style="margin-top:10px" hide-details></v-select>
+            <v-select :loading="loading" :disabled="loading" v-model="security.password_min" :items="password_min" label="Minimum Password Length" style="margin-top:15px" hide-details></v-select>
+            <v-checkbox v-model="security.password_lowercase" hide-details>
+              <template v-slot:label>
+                <div style="margin-left:5px">
+                  <div class="body-1">Require lowercase character</div>
+                  <div class="font-weight-regular caption" style="font-size:0.85rem !important">Password must contain at least one lowercase character.</div>
+                </div>
+              </template>
+            </v-checkbox>
+            <v-checkbox v-model="security.password_uppercase" hide-details>
+              <template v-slot:label>
+                <div style="margin-left:5px">
+                  <div class="body-1">Require uppercase character</div>
+                  <div class="font-weight-regular caption" style="font-size:0.85rem !important">Password must contain at least one uppercase character.</div>
+                </div>
+              </template>
+            </v-checkbox>
+            <v-checkbox v-model="security.password_number" hide-details>
+              <template v-slot:label>
+                <div style="margin-left:5px">
+                  <div class="body-1">Require number</div>
+                  <div class="font-weight-regular caption" style="font-size:0.85rem !important">Password must contain at least one number.</div>
+                </div>
+              </template>
+            </v-checkbox>
+            <v-checkbox v-model="security.password_special" hide-details>
+              <template v-slot:label>
+                <div style="margin-left:5px">
+                  <div class="body-1">Require special character</div>
+                  <div class="font-weight-regular caption" style="font-size:0.85rem !important">Password must contain at least one special character.</div>
+                </div>
+              </template>
+            </v-checkbox>
+            <div class="subtitle-1" style="margin-top:20px; color:#fa8131">Force MFA</div>
+            <div class="body-1 font-weight-regular" style="margin-top:10px;">Force all users to have the MFA enabled.</div>
+            <v-switch :loading="loading" :disabled="loading" v-model="security.mfa" label="Force Multi-Factor Authentication (MFA)" color="info" style="margin-top:10px" hide-details></v-switch>
+            <div class="subtitle-1" style="margin-top:20px; color:#fa8131">Secure Access</div>
+            <div class="body-1 font-weight-regular" style="margin-top:10px;">Restrict access to the Administration panel only to a specific IP address or domain.</div>
+            <v-text-field :loading="loading" :disabled="loading" v-model="security.url" label="Administration URL" :placeholder="security.current" style="margin-top:10px" required :rules="[v => v ? this.validURL(v) : true || '' ]" hide-details></v-text-field>
+            <v-btn :loading="loading" color="#00b16a" style="margin-top:25px" @click="saveSecurity()">SAVE</v-btn>
           </v-flex>
         </v-layout>
       </v-container>
@@ -128,6 +165,7 @@ export default {
 
     // Security
     security: {},
+    password_min: [],
 
     // Loading
     loading: true,
@@ -139,6 +177,7 @@ export default {
     snackbarText: ''
   }),
   created() {
+    this.password_min = [...Array(60).keys()].map(i => i + 5)
     this.getSettings()
   },
   computed: {
