@@ -139,7 +139,10 @@ export default {
   },
   props: ['active','search'],
   mounted() {
-    EventBus.$on('filter-client-servers', () => { this.filterDialog = true })
+    EventBus.$on('filter-client-servers', () => {
+      if (!this.filterApplied) this.filter = {}
+      this.filterDialog = true
+    })
     EventBus.$on('refresh-client-servers', this.getServers)
     EventBus.$on('attach-client-servers', this.attachServers)
     EventBus.$on('detach-client-servers', this.detachServers)

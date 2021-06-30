@@ -7,7 +7,7 @@
         <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
           <v-btn text :disabled="selected.length != 1" @click="infoDeployment()"><v-icon small style="padding-right:10px">fas fa-info</v-icon>INFORMATION</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn text @click="filterDialog = true" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn text @click="openFilter" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn @click="getDeployments" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
@@ -16,7 +16,7 @@
         <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
       <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :options.sync="options" :server-items-length="total" :hide-default-footer="total < 11" :loading="loading" item-key="execution_id" show-select single-select class="elevation-1" style="padding-top:5px;">
-        <!-- <template v-slot:[`item.name`]="{ item }">
+        <template v-slot:[`item.name`]="{ item }">
           <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)"> 
             {{ item.name }}
             <template v-slot:input>
@@ -31,7 +31,7 @@
               <v-autocomplete v-model="inlineEditingRelease" :items="releasesItems" :loading="loadingReleases" label="Releases" hide-details style="margin-top:15px; margin-bottom:5px;"></v-autocomplete>
             </template>
           </v-edit-dialog>
-        </template> -->
+        </template>
         <template v-slot:[`item.mode`]="{ item }">
           <v-icon small :title="item.mode.charAt(0).toUpperCase() + item.mode.slice(1).toLowerCase()" :color="getModeColor(item.mode)" :style="`text-transform:capitalize; margin-left:${item.mode == 'BASIC' ? '8px' : '6px'}`">{{ item.mode == 'BASIC' ? 'fas fa-chess-knight' : 'fas fa-chess-queen' }}</v-icon>
         </template>
@@ -177,6 +177,11 @@
                       <v-text-field v-model="filter.endedTo" label="Ended - To" style="padding-top:0px" hide-details>
                         <template v-slot:append><v-icon @click="dateTimeDialogOpen('ended_to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col>
+                      <v-checkbox v-model="filter.lastExecution" label="Filter the last deployment execution" style="margin-top:0px" hide-details></v-checkbox>
                     </v-col>
                   </v-row>
                 </v-form>
@@ -391,6 +396,10 @@ export default {
           (x.ended != null && x.ended.toLowerCase().includes(this.search.toLowerCase()))
         ).slice(itemStart, itemEnd)
       }
+    },
+    openFilter() {
+      if (!this.filterApplied) this.filter = {}
+      this.filterDialog = true
     },
     submitFilter() {
       // Check if all necessary fields are filled
