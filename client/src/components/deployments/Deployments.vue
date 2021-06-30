@@ -473,11 +473,16 @@ export default {
     },
     submitFilter() {
       // Check if all necessary fields are filled
+
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
       // Check if some filter was applied
+      if (Object.keys(this.filter).length == 1 && 'lastExecution' in this.filter) {
+        this.notification('Enter at least one filter.', '#EF5354')
+        return
+      }
       if (!Object.keys(this.filter).some(x => this.filter[x] != null && this.filter[x].length != 0)) {
         this.notification('Enter at least one filter.', '#EF5354')
         return

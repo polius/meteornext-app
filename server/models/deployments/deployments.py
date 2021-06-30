@@ -22,7 +22,8 @@ class Deployments:
             """
             return self._sql.execute(query, {'user_id': user_id, 'deployment_id': deployment_id})
         else:
-            name = release = mode = method = status = created_from = created_to = started_from = started_to = ended_from = ended_to = last_execution = ''
+            name = release = mode = method = status = created_from = created_to = started_from = started_to = ended_from = ended_to = ''
+            last_execution = 'AND e.id IN (SELECT MAX(id) FROM executions e2 WHERE e2.deployment_id = e.deployment_id)'
             args = { 'user_id': user_id }
             if dfilter is not None:
                 if 'name' in dfilter and len(dfilter['name']) > 0:
@@ -61,8 +62,8 @@ class Deployments:
                 if 'endedTo' in dfilter and len(dfilter['endedTo']) > 0:
                     ended_to = 'AND e.ended <= %(ended_to)s'
                     args['ended_to'] = dfilter['endedTo']
-                if 'lastExecution' in dfilter and dfilter['lastExecution'] is True:
-                    last_execution = 'AND e.id IN (SELECT MAX(id) FROM executions e2 WHERE e2.deployment_id = e.deployment_id)'
+                if 'lastExecution' in dfilter and dfilter['lastExecution'] is False:
+                    last_execution = ''
 
             query = """
                 SELECT d.id, e.id AS 'execution_id', d.name, env.name AS 'environment', r.name AS 'release', e.mode, e.method, e.status, q.queue, e.created, e.scheduled, e.started, e.ended, CONCAT(TIMEDIFF(e.ended, e.started)) AS 'overall'

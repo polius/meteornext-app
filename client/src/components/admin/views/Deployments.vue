@@ -408,6 +408,10 @@ export default {
         return
       }
       // Check if some filter was applied
+      if (Object.keys(this.filter).length == 1 && 'lastExecution' in this.filter && this.filter['lastExecution'] == false) {
+        this.notification('Enter at least one filter.', '#EF5354')
+        return
+      }
       if (!Object.keys(this.filter).some(x => this.filter[x] != null && this.filter[x].length != 0)) {
         this.notification('Enter at least one filter.', '#EF5354')
         return
