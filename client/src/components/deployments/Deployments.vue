@@ -8,7 +8,7 @@
           <v-btn text @click="newDeploy()"><v-icon small style="padding-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn :disabled="selected.length != 1" text @click="infoDeploy()"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-info</v-icon>INFORMATION</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn text @click="filterDialog = true" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn text @click="openFilter" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn @click="getDeployments" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
@@ -16,7 +16,7 @@
         <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
         <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
+      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="execution_id" show-select class="elevation-1" style="padding-top:5px;">
         <template v-ripple v-slot:[`header.data-table-select`]="{}">
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
@@ -166,6 +166,11 @@
                       <v-text-field v-model="filter.endedTo" label="Ended - To" style="padding-top:0px" hide-details>
                         <template v-slot:append><v-icon @click="dateTimeDialogOpen('ended_to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col>
+                      <v-checkbox v-model="filter.lastExecution" label="Filter the last deployment execution" style="margin-top:0px" hide-details></v-checkbox>
                     </v-col>
                   </v-row>
                 </v-form>
@@ -461,6 +466,10 @@ export default {
     },
     dateTimeNow() {
       this.dateTimeValue = { date: moment().format("YYYY-MM-DD"), time: moment().format("HH:mm") }
+    },
+    openFilter() {
+      if (!this.filterApplied) this.filter = {}
+      this.filterDialog = true
     },
     submitFilter() {
       // Check if all necessary fields are filled

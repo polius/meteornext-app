@@ -39,14 +39,17 @@
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding: 0px 20px 0px;">
+        <v-card-text style="padding: 0px 15px 0px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" @submit.prevent style="margin-top:20px; margin-bottom:20px;">
-                  <v-radio-group v-model="filter.by" label="Filter by:" dense row hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
+                <v-form ref="form" @submit.prevent style="margin-top:15px; margin-bottom:15px;">
+                  <v-radio-group v-model="filter.by" row dense hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
                     <v-radio label="Group" value="group"></v-radio>
                     <v-radio label="User" value="user"></v-radio>
+                    <template v-slot:label>
+                      <div class="subtitle-1 font-weight-regular">Filter by:</div>
+                    </template>
                   </v-radio-group>
                   <v-autocomplete v-show="filter.by == 'group'" ref="filter_group" v-model="filter.group" v-on:keyup.enter="filterInventory()" filled :items="groups" item-value="id" item-text="name" label="Group" hide-details style="padding-top:0px; margin-bottom:20px"></v-autocomplete>
                   <v-autocomplete v-show="filter.by == 'user'" ref="filter_user" v-model="filter.user" v-on:keyup.enter="filterInventory()" filled :items="users" item-value="id" item-text="username" label="User" hide-details style="padding-top:0px; margin-bottom:20px">
@@ -61,7 +64,8 @@
                       </v-row>
                     </template>
                   </v-autocomplete>
-                  <v-radio-group v-model="filter.scope" label="Scope:" dense row hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
+                  <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px">SCOPE</div>
+                  <v-radio-group v-model="filter.scope" hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
                     <v-radio label="All" value="all"></v-radio>
                     <v-radio label="Personal" value="personal" color="#fb8c00"></v-radio>
                     <v-radio label="Shared" value="shared" color="#eb5f5d"></v-radio>
