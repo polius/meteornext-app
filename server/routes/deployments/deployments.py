@@ -173,7 +173,7 @@ class Deployments:
                 session = boto3.Session(
                     aws_access_key_id=logs['amazon_s3']['aws_access_key'],
                     aws_secret_access_key=logs['amazon_s3']['aws_secret_access_key'],
-                    region_name=logs['amazon_s3']['region_name']
+                    region_name=logs['amazon_s3']['region']
                 )
                 try:
                     s3 = session.resource('s3')

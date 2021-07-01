@@ -1,11 +1,11 @@
 import os
 import re
-import sys
 import json
+import boto3
+import tempfile
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
-import utils
 import models.admin.users
 import models.admin.settings
 
@@ -23,7 +23,7 @@ class Settings:
         # Init blueprint
         settings_blueprint = Blueprint('settings', __name__, template_folder='settings')
 
-        @settings_blueprint.route('/admin/settings', methods=['GET','PUT'])
+        @settings_blueprint.route('/admin/settings', methods=['GET'])
         @jwt_required()
         def settings_method():
             # Check license
@@ -48,6 +48,78 @@ class Settings:
                 return self.get()
             elif request.method == 'PUT':
                 return self.put(user['id'], settings_json)
+
+        @settings_blueprint.route('/admin/settings/logs', methods=['POST'])
+        @jwt_required()
+        def settings_logs_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Check Security (Administration URL)
+            if not self.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            settings_json = request.get_json()
+
+            # Store Settings Logs
+            return self.post_logs(user['id'], settings_json)
+
+        @settings_blueprint.route('/admin/settings/logs/test', methods=['POST'])
+        @jwt_required()
+        def settings_logs_test_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Check Security (Administration URL)
+            if not self.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            settings_json = request.get_json()
+
+            # Test Amazon S3 Credentials
+            return self.test_logs_credentials(settings_json)
+
+        @settings_blueprint.route('/admin/settings/security', methods=['POST'])
+        @jwt_required()
+        def settings_security_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Check Security (Administration URL)
+            if not self.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            settings_json = request.get_json()
+
+            # Store Settings Logs
+            return self.post_security(user['id'], settings_json)
 
         return settings_blueprint
 
@@ -80,27 +152,34 @@ class Settings:
         settings['security']['current'] = ip
 
         # Return Settings
-        return jsonify({'data': settings}), 200
+        return jsonify({'settings': settings}), 200
 
-    def put(self, user_id, data):
+    def post_logs(self, user_id, data):
         # Check logs path permissions
-        if data['name'] == 'logs':
-            u = utils.Utils()
-            if not u.check_local_path(json.loads(data['value'])['local']['path']):
-                return jsonify({'message': 'The local logs path has no write permissions'}), 400
-        
-        # Convert Setting name to uppercase
-        data['name'] = data['name'].upper()
+        if not self.check_local_path(data['local']['path']):
+            return jsonify({'message': 'The local logs path has no write permissions'}), 400
+        # Store Settings Logs
+        settings = {
+            'name': 'LOGS',
+            'value': json.dumps(data)
+        }
+        self._settings.post(user_id, settings)
+        return jsonify({'message': 'Changes saved successfully'}), 200
 
-        # Edit logs settings
-        self._settings.post(user_id, data)
+    def post_security(self, user_id, data):
+        # Store Settings Logs
+        settings = {
+            'name': 'SECURITY',
+            'value': json.dumps(data)
+        }
+        self._settings.post(user_id, settings)
         return jsonify({'message': 'Changes saved successfully'}), 200
 
     def check_url(self, security=None):
         if security is None:
             security = self._settings.get(setting_name='security')
         data = json.loads(security[0]['value'])
-        if 'url' in data and len(data['url']) > 0:
+        if 'restrict_url' in data and len(data['restrict_url']) > 0:
             regex = '(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*'
             # Current URL
             r = re.search(regex, request.url_root)
@@ -117,6 +196,35 @@ class Settings:
         if security is None:
             security = self._settings.get(setting_name='security')
         data = json.loads(security[0]['value'])
-        if 'mfa' in data and data['mfa'] is True:
+        if 'force_mfa' in data and data['force_mfa'] is True:
             return True
         return False
+
+    def check_local_path(self, path):
+        while not os.path.exists(path) and path != '/':
+            path = os.path.normpath(os.path.join(path, os.pardir))
+        if os.access(path, os.X_OK | os.W_OK):
+            return True
+        return False
+
+    def test_logs_credentials(self, data):
+        # Generate Temp File
+        file = tempfile.NamedTemporaryFile()
+        file.write('This file has been created by Meteor Next to validate the credentials (Administration --> Settings --> Logs).\nIt is safe to delete it.'.encode())
+        file.flush()
+        # Init the boto3 client with the provided credentials
+        client = boto3.client(
+            service_name='s3', 
+            region_name=data['region'],
+            aws_access_key_id=data['aws_access_key'],
+            aws_secret_access_key=data['aws_secret_access_key']
+        )
+        try:
+            client.upload_file(file.name, data['bucket'], 'test.txt')
+            client.get_object(Bucket=data['bucket'], Key='test.txt')
+            return jsonify({'message': 'Credentials validated'}), 200
+        except Exception as e:
+            return jsonify({'message': str(e)}), 400
+        finally:
+            # Close the Temp File
+            file.close()

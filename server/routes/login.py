@@ -1,5 +1,6 @@
 import pyotp
 import bcrypt
+from datetime import datetime
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import (create_access_token, jwt_required, set_access_cookies, unset_access_cookies)
 
@@ -52,6 +53,10 @@ class Login:
             # Check disabled
             if user[0]['disabled']:
                 return jsonify({"message": "Account disabled"}), 401
+
+            # Check Password Expiration
+            # if user[0]['change_password'] or user[0]['password_age'] <= datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            #     return jsonify({"code": "password_setup", "message": "The password has expired"}), 202
 
             # Check MFA
             if user[0]['mfa'] is None:

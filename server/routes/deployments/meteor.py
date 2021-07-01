@@ -146,8 +146,8 @@ class Meteor:
                 "enabled": True,
                 "aws_access_key_id": logs['amazon_s3']['aws_access_key'],
                 "aws_secret_access_key": logs['amazon_s3']['aws_secret_access_key'],
-                "region_name": logs['amazon_s3']['region_name'],
-                "bucket_name": logs['amazon_s3']['bucket_name']
+                "region_name": logs['amazon_s3']['region'],
+                "bucket_name": logs['amazon_s3']['bucket']
             }
 
         # Compile Slack

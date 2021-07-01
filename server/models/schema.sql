@@ -8,7 +8,9 @@ CREATE TABLE `settings` (
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-INSERT INTO settings (`id`, `name`, `value`) VALUES (1, 'LOGS', '{"local":{},"amazon_s3":{}}'), (2, 'SECURITY', '{}');
+INSERT INTO settings (`id`, `name`, `value`) VALUES 
+(1, 'LOGS', '{"local":{"path":"","expire":"7"},"amazon_s3":{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}}'),
+(2, 'SECURITY', '{"password_age":0,"password_min":8,"password_lowercase":false,"password_uppercase":false,"password_number":false,"password_special":false,"force_mfa":false,"restrict_url":""}');
 
 CREATE TABLE `groups` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -51,6 +53,7 @@ CREATE TABLE `users` (
   `group_id` int(10) unsigned NOT NULL,
   `admin` tinyint(1) NOT NULL DEFAULT '0',
   `disabled` TINYINT(1) NOT NULL DEFAULT '0',
+  `change_password` TINYINT(1) NOT NULL '0',
   `last_login` DATETIME NULL,
   `last_ping` DATETIME NULL,
   `ip` VARCHAR(191) NULL,
@@ -59,11 +62,19 @@ CREATE TABLE `users` (
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
+  `password_age` DATETIME NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   KEY `group_id` (`group_id`),
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+/*
+ALTER TABLE users ADD `change_password` TINYINT(1) NOT NULL DEFAULT '0' AFTER `disabled`;
+ALTER TABLE users ADD `password_age` DATETIME NULL;
+UPDATE users SET password_age = created_at;
+ALTER TABLE users MODIFY `password_age` DATETIME NOT NULL;
+*/
 
 CREATE TABLE `user_mfa` (
   `user_id` INT UNSIGNED NOT NULL,
