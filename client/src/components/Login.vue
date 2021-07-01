@@ -53,6 +53,33 @@
         </v-layout>
       </v-container>
     </v-main>
+    <v-dialog v-model="passwordDialog" max-width="512px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">CHANGE PASSWORD</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn @click="passwordDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:20px">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="passwordForm" @submit.prevent>
+                  <v-text-field ref="passwordCurrent" v-model="passwordItem.current" :readonly="loadingDialog" label="Current password" type="password" :rules="[v => !!v || '']" required style="padding-top:5px" autocomplete="new-password"></v-text-field>
+                  <v-text-field v-model="passwordItem.new" :readonly="loadingDialog" label="New password" type="password" :rules="[v => !!v || '']" required style="padding-top:0px" autocomplete="new-password"></v-text-field>
+                  <v-text-field v-model="passwordItem.repeat" :readonly="loadingDialog" label="Repeat new password" type="password" :rules="[v => !!v || '']" required style="padding-top:0px" autocomplete="new-password" v-on:keyup.enter="submitPassword"></v-text-field>
+                </v-form>
+                <v-divider></v-divider>
+                <v-row no-gutters style="margin-top:20px;">
+                  <v-btn :loading="loadingDialog" color="#00b16a" @click="submitPassword">CONFIRM</v-btn>
+                  <v-btn :disabled="loadingDialog" color="#EF5354" @click="passwordDialog = false" style="margin-left:5px">CANCEL</v-btn>
+                </v-row>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <MFA :enabled="mfaDialog" @update="mfaDialog = $event" mode="login" :user="{'username': username, 'password': password}"/>
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
@@ -79,7 +106,11 @@ export default {
     loading: false,
     showInstall: false,
 
-    // MFA
+    // Password Dialog
+    passwordDialog: false,
+    passwordItem: { current: '', new: '', repeat: ''},
+
+    // MFA Dialog
     mfaDialog: false,
     twoFactor: {
       hash: null,
@@ -123,6 +154,15 @@ export default {
     usernameVuex: function() { return this.$store.getters['app/username'] },
   },
   watch: {
+    passwordDialog: function(val) {
+      if (val) {
+        this.passwordItem = { current: '', new: '', repeat: ''}
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.passwordForm !== 'undefined') this.$refs.passwordForm.resetValidation()
+          if (typeof this.$refs.passwordCurrent !== 'undefined') this.$refs.passwordCurrent.focus()
+        })
+      }
+    },
     mfa: function (val) {
       if (val == '2fa') {
         this.$nextTick(() => { 
@@ -152,7 +192,8 @@ export default {
         this.loading = false
         if (response.status == 200) this.login_success()
         else if (response.status == 202) {
-          if (response.data.code == 'mfa_setup') this.mfaDialog = true
+          if (response.data.code == 'password_setup') this.passwordDialog = true
+          else if (response.data.code == 'mfa_setup') this.mfaDialog = true
           else {
             this.mfa = response.data.code
             if (this.mfa == 'webauthn') {

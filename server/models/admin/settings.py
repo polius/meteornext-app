@@ -13,9 +13,13 @@ class Settings:
             return self._sql.execute(query)
 
     def post(self, user_id, settings):
+        now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         query = """
-            INSERT INTO settings (name, value, updated_by, updated_at)             
+            INSERT INTO settings (name, value, updated_by, updated_at)
             VALUES (%s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE value = VALUES(value)
+            ON DUPLICATE KEY UPDATE
+                value = VALUES(value),
+                updated_by = %s,
+                updated_at = %s
         """
-        self._sql.execute(query, (settings['name'], settings['value'], user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        self._sql.execute(query, (settings['name'], settings['value'], user_id, now, user_id, now))

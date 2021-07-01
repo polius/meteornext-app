@@ -1,0 +1,102 @@
+<template>
+  <v-flex xs12 style="margin:5px">
+    <div class="text-h6 font-weight-regular" style="margin-bottom:10px;"><v-icon small style="margin-right:10px; margin-bottom:3px; color:#fa8131">fas fa-folder-open</v-icon>LOGS</div>
+    <div class="body-1 font-weight-regular" style="margin-top:10px; margin-bottom:15px">The path where the Deployments are stored.</div>
+    <v-form ref="logs_form">
+      <v-text-field :disabled="loading" v-model="logs.local.path" label="Absolute Path" required :rules="[v => (v === undefined || v.startsWith('/'))]" hide-details></v-text-field>
+      <v-text-field :disabled="loading" v-model="logs.local.expire" label="Log Retention Days" :rules="[v => (v === undefined || (v == parseInt(v) && v > 0))]" style="margin-top:15px" hide-details></v-text-field>
+      <v-switch :disabled="loading" v-model="logs.amazon_s3.enabled" label="Store Logs in Amazon S3" style="margin-top:20px" hide-details></v-switch>
+      <div v-if="logs.amazon_s3.enabled" style="margin-top:20px">
+        <v-text-field :disabled="loading" v-model="logs.amazon_s3.aws_access_key" label="AWS Access Key" :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
+        <v-text-field :disabled="loading" v-model="logs.amazon_s3.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
+        <v-text-field :disabled="loading" v-model="logs.amazon_s3.region" label="Region Name" placeholder="us-east-1, eu-west-1, ..." style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
+        <v-text-field :disabled="loading" v-model="logs.amazon_s3.bucket" label="Bucket Name" style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']" hide-details></v-text-field>
+      </div>
+    </v-form>
+    <div style="margin-top:20px">
+      <v-btn :disabled="loading" color="#00b16a" @click="saveLogs()">SAVE</v-btn>
+      <v-btn v-if="logs.amazon_s3.enabled" :loading="loading" color="primary" style="margin-left:10px" @click="testCredentials()">TEST CREDENTIALS</v-btn>
+    </div>
+    <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
+      {{ snackbarText }}
+      <template v-slot:action="{ attrs }">
+        <v-btn color="white" text v-bind="attrs" @click="snackbar = false">Close</v-btn>
+      </template>
+    </v-snackbar>
+  </v-flex>
+</template>
+
+<script>
+import axios from 'axios'
+
+export default {
+  data: () => ({
+    logs: { local: {}, amazon_s3: {} },
+    loading: false,
+    // Snackbar
+    snackbar: false,
+    snackbarTimeout: Number(3000),
+    snackbarColor: '',
+    snackbarText: ''
+  }),
+  props: ['info','init'],
+  mounted() {
+    if (Object.keys(this.info).length > 0) this.logs = JSON.parse(JSON.stringify(this.info))
+  },
+  watch: {
+    info: function(val) {
+      this.logs = JSON.parse(JSON.stringify(val))
+    },
+    init: function(val) {
+      this.loading = val
+    }
+  },
+  methods: {
+    saveLogs() {
+      // Check if all fields are filled
+      if (!this.$refs.logs_form.validate()) {
+        this.notification('Please fill the required fields', '#EF5354')
+        return
+      }
+      // Disable the fields while updating fields to the DB
+      this.loading = true
+      // Parse local absolute path
+      this.logs.local.path = (this.logs.local.path.endsWith('/')) ? this.logs.local.path.slice(0, -1) : this.logs.local.path
+      // Parse local expiration
+      if (!this.logs.local.expire) this.logs.local.expire = null
+      // Parse amazon_s3 enable
+      this.logs.amazon_s3.enabled = ('enabled' in this.logs.amazon_s3) ? this.logs.amazon_s3.enabled : false
+      // Construct path & payload
+      const payload = this.logs
+      // Update Logs values to the DB
+      axios.post('/admin/settings/logs', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
+    },
+    testCredentials() {
+      this.loading = true
+      const payload = this.logs['amazon_s3']
+      axios.post('/admin/settings/logs/test', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
+    },
+    notification(message, color) {
+      this.snackbarText = message
+      this.snackbarColor = color 
+      this.snackbar = true
+    },
+  }
+}
+</script>
