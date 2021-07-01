@@ -6,7 +6,7 @@
       <v-text-field :disabled="loading" v-model="logs.local.path" label="Absolute Path" required :rules="[v => (v === undefined || v.startsWith('/'))]" hide-details></v-text-field>
       <v-text-field :disabled="loading" v-model="logs.local.expire" label="Log Retention Days" :rules="[v => (v === undefined || (v == parseInt(v) && v > 0))]" style="margin-top:15px" hide-details></v-text-field>
       <v-switch :disabled="loading" v-model="logs.amazon_s3.enabled" label="Store Logs in Amazon S3" style="margin-top:20px" hide-details></v-switch>
-      <div v-if="logs.amazon_s3.enabled" style="margin-top:20px">
+      <div v-if="logs.amazon_s3.enabled" style="margin-top:20px; margin-bottom:25px">
         <v-text-field :disabled="loading" v-model="logs.amazon_s3.aws_access_key" label="AWS Access Key" :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
         <v-text-field :disabled="loading" v-model="logs.amazon_s3.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
         <v-text-field :disabled="loading" v-model="logs.amazon_s3.region" label="Region Name" placeholder="us-east-1, eu-west-1, ..." style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
