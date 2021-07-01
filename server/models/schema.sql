@@ -10,7 +10,7 @@ CREATE TABLE `settings` (
 
 INSERT INTO settings (`id`, `name`, `value`) VALUES 
 (1, 'LOGS', '{"local":{"path":"","expire":"7"},"amazon_s3":{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}}'),
-(2, 'SECURITY', '{"password_age":0,"password_min":8,"password_lowercase":false,"password_uppercase":false,"password_number":false,"password_special":false,"force_mfa":false,"restrict_url":""}');
+(2, 'SECURITY', '{"password_age":"0","password_min":"8","password_lowercase":false,"password_uppercase":false,"password_number":false,"password_special":false,"force_mfa":false,"restrict_url":""}');
 
 CREATE TABLE `groups` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,

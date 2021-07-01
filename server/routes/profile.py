@@ -74,10 +74,6 @@ class Profile:
         if not bcrypt.checkpw(current.encode('utf-8'), user['password'].encode('utf-8')):
             raise Exception("The current password is not valid.")
 
-        # Check if password is the same
-        if current == new:
-            raise Exception("The new password cannot be the same as the previous password.")
-
         # Check repeat password
         if new != repeat:
             raise Exception("The new password does not match")
@@ -85,7 +81,7 @@ class Profile:
         # Check Password Policy
         security = json.loads(self._settings.get(setting_name='SECURITY'))
         special_characters = set(string.punctuation)
-        if len(new) < security['password_min']:
+        if len(new) < int(security['password_min']):
             raise Exception(f"The password must be at least {security['password_min']} characters long.")
         if security['password_lowercase'] and not any(c.islower() for c in new):
             raise Exception('The password must contain a lowercase letter.')
