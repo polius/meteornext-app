@@ -115,7 +115,7 @@ class Users:
     def check_password_policy(self, password):
         security = json.loads(self._settings.get(setting_name='SECURITY'))
         special_characters = set(string.punctuation)
-        if len(password) < security['password_min']:
+        if len(password) < int(security['password_min']):
             raise Exception(f"The password must be at least {security['password_min']} characters long.")
         if security['password_lowercase'] and not any(c.islower() for c in password):
             raise Exception('The password must contain a lowercase letter.')

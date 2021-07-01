@@ -211,11 +211,15 @@ export default {
           if (response.data.code == 'password_setup') this.passwordDialog = true
           else {
             this.password = this.passwordItem.new.length > 0 ? this.passwordItem.new : this.password
+            payload['password'] = this.password
             this.passwordDialog = false
           }
           // MFA Required
           if (response.data.code == 'mfa_setup') this.mfaDialog = true
           else if (['2fa','webauthn'].includes(response.data.code)) {
+            delete payload['currentPassword']
+            delete payload['newPassword']
+            delete payload['repeatPassword']
             this.mfa = response.data.code
             if (this.mfa == 'webauthn') {
               try {

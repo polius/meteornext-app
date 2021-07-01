@@ -95,3 +95,4 @@ class Profile:
         # Change password
         encrypted_passw = bcrypt.hashpw(new.encode('utf8'), bcrypt.gensalt())
         self._users.change_password({'username': user['username'], 'password': encrypted_passw})
+        return encrypted_passw
