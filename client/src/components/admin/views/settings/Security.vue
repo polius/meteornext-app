@@ -90,10 +90,9 @@ export default {
       if (this.security.restrict_url.length > 0 && this.security.restrict_url.endsWith('/')) {
         this.security.restrict_url = this.restrict_url.url.slice(0, -1)
       }
-      // Build payload
-      this.loading = true
-      const payload = this.security
       // Update Security values to the DB
+      this.loading = true
+      const payload = this.settings
       axios.post('/admin/settings/security', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')

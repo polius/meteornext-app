@@ -62,6 +62,9 @@ class Login:
             # Change password
             if 'currentPassword' in login_json and 'newPassword' in login_json and 'repeatPassword' in login_json:
                 try:
+                    # Check if password is the same
+                    if login_json['currentPassword'] == login_json['newPassword']:
+                        raise Exception("The new password cannot be the same as the previous password.")
                     self._profile_route.change_password(user, login_json['currentPassword'], login_json['newPassword'], login_json['repeatPassword'])
                 except Exception as e:
                     return jsonify({"message": str(e)}), 400
@@ -71,7 +74,7 @@ class Login:
                 security = json.loads(security)
                 if user['change_password']:
                     return jsonify({"code": "password_setup", "message": "The password has expired"}), 202
-                if security['password_age'] > 0 and user['password_at'] + relativedelta(months=security['password_age']) <= datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"):
+                if int(security['password_age']) > 0 and user['password_at'] + relativedelta(months=int(security['password_age'])) <= datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"):
                     return jsonify({"code": "password_setup", "message": "The password has expired"}), 202
 
             # Check MFA
