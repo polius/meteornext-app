@@ -65,7 +65,7 @@ class Login:
                     # Check if password is the same
                     if login_json['currentPassword'] == login_json['newPassword']:
                         raise Exception("The new password cannot be the same as the previous password.")
-                    self._profile_route.change_password(user, login_json['currentPassword'], login_json['newPassword'], login_json['repeatPassword'])
+                    user['password'] = self._profile_route.change_password(user, login_json['currentPassword'], login_json['newPassword'], login_json['repeatPassword'])
                 except Exception as e:
                     return jsonify({"message": str(e)}), 400
 
