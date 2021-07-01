@@ -3,7 +3,8 @@ class Deployments:
         self._sql = sql
 
     def get(self, dfilter=None, dsort=None):
-        user = name = release = mode = method = status = created_from = created_to = started_from = started_to = ended_from = ended_to = last_execution = ''
+        user = name = release = mode = method = status = created_from = created_to = started_from = started_to = ended_from = ended_to = ''
+        all_executions = 'AND e.id IN (SELECT MAX(id) FROM executions e2 WHERE e2.deployment_id = e.deployment_id)'
         args = {}
         sort_column = 'e.id'
         sort_order = 'DESC'
@@ -55,8 +56,8 @@ class Deployments:
             if 'endedTo' in dfilter and len(dfilter['endedTo']) > 0:
                 ended_to = 'AND e.ended <= %(ended_to)s'
                 args['ended_to'] = dfilter['endedTo']
-            if 'lastExecution' in dfilter and dfilter['lastExecution'] is True:
-                last_execution = 'AND e.id IN (SELECT MAX(id) FROM executions e2 WHERE e2.deployment_id = e.deployment_id)'
+            if 'allExecutions' in dfilter and dfilter['allExecutions']:
+                all_executions = ''
 
         if dsort is not None:
             sort_column = dsort['column']
@@ -82,7 +83,7 @@ class Deployments:
                 {12}
                 ORDER BY {13} {14}
                 LIMIT 1000
-        """.format(user, name, release, mode, method, status, created_from, created_to, started_from, started_to, ended_from, ended_to, last_execution, sort_column, sort_order)
+        """.format(user, name, release, mode, method, status, created_from, created_to, started_from, started_to, ended_from, ended_to, all_executions, sort_column, sort_order)
         return self._sql.execute(query, args)
 
     def get_users_list(self):

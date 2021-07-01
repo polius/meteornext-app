@@ -170,7 +170,7 @@
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col>
-                      <v-checkbox v-model="filter.lastExecution" label="Filter the last deployment execution" style="margin-top:0px" hide-details></v-checkbox>
+                      <v-checkbox v-model="filter.allExecutions" label="Filter all deployment executions" style="margin-top:0px" hide-details></v-checkbox>
                     </v-col>
                   </v-row>
                 </v-form>
@@ -293,6 +293,7 @@ export default {
       {id: 'contains', name: 'Contains'},
       {id: 'not_contains', name: 'Not contains'}
     ],
+    filterOrigin: {},
     filter: {},
     filterApplied: false,
     nameItems: [],
@@ -332,6 +333,7 @@ export default {
       // Build Filter
       let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
       if (this.filterApplied) {
+        this.filterOrigin = JSON.parse(JSON.stringify(this.filter))
         for (let i in ['createdFrom','createdTo','startedFrom','startedTo','endedFrom','endedTo']) {
           if (i in filter) filter[i] = moment(this.filter[i]).utc().format("YYYY-MM-DD HH:mm:ss")
         }
@@ -468,7 +470,7 @@ export default {
       this.dateTimeValue = { date: moment().format("YYYY-MM-DD"), time: moment().format("HH:mm") }
     },
     openFilter() {
-      if (!this.filterApplied) this.filter = {}
+      this.filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filterOrigin)) : {}
       this.filterDialog = true
     },
     submitFilter() {
@@ -479,7 +481,7 @@ export default {
         return
       }
       // Check if some filter was applied
-      if (Object.keys(this.filter).length == 1 && 'lastExecution' in this.filter) {
+      if (Object.keys(this.filter).length == 1 && 'allExecutions' in this.filter && !this.filter['allExecutions']) {
         this.notification('Enter at least one filter.', '#EF5354')
         return
       }
