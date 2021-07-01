@@ -5,18 +5,18 @@
         <v-toolbar-title class="white--text subtitle-1">SETTINGS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-          <v-btn text @click="setSetting('license')"><v-icon small style="padding-right:10px">fas fa-certificate</v-icon>LICENSE</v-btn>
-          <v-btn text @click="setSetting('sql')"><v-icon small style="padding-right:10px">fas fa-database</v-icon>SQL</v-btn>
+          <v-btn text @click="setSetting('license')"><v-icon small style="margin-right:10px">fas fa-certificate</v-icon>LICENSE</v-btn>
+          <v-btn text @click="setSetting('sql')"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SQL</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn text @click="setSetting('logs')"><v-icon small style="padding-right:10px">fas fa-folder-open</v-icon>LOGS</v-btn>
-          <v-btn text @click="setSetting('security')"><v-icon small style="padding-right:10px">fas fa-shield-alt</v-icon>SECURITY</v-btn>
+          <v-btn text @click="setSetting('logs')"><v-icon small style="margin-right:10px">fas fa-folder-open</v-icon>LOGS</v-btn>
+          <v-btn text @click="setSetting('security')"><v-icon small style="margin-right:10px">fas fa-shield-alt</v-icon>SECURITY</v-btn>
         </v-toolbar-items>
       </v-toolbar>
       <v-container fluid grid-list-lg>
         <v-layout row wrap>
           <!-- LICENSE -->
           <v-flex v-if="setting_mode == 'license'" xs12 style="margin:5px">
-            <div class="text-h6 font-weight-regular">LICENSE</div>
+            <div class="text-h6 font-weight-regular"><v-icon small style="margin-right:10px; margin-bottom:3px; color:#fa8131">fas fa-certificate</v-icon>LICENSE</div>
             <div class="body-1 font-weight-regular" style="margin-top:10px">This copy of Meteor Next is <span class="body-1 font-weight-medium" style="color:#00b16a;">LICENSED</span>.</div>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.email" label="Email" style="margin-top:15px" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="license.key" label="Key" style="padding-top:0px;" @click:append="show_key = !show_key" :append-icon="show_key ? 'visibility' : 'visibility_off'" :type="show_key ? 'text' : 'password'" required :rules="[v => !!v || '']"></v-text-field>
@@ -24,7 +24,7 @@
           </v-flex>
           <!-- SQL -->
           <v-flex v-else-if="setting_mode == 'sql'" xs12 style="margin:5px">
-            <div class="text-h6 font-weight-regular">SQL</div>
+            <div class="text-h6 font-weight-regular"><v-icon small style="margin-right:10px; margin-bottom:3px; color:#fa8131">fas fa-database</v-icon>SQL</div>
             <div class="body-1 font-weight-regular" style="margin-top:10px">The SQL credentials where Meteor Next is stored.</div>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.hostname" label="Hostname" style="margin-top:15px;" required :rules="[v => !!v || '']"></v-text-field>
             <v-text-field readonly :loading="loading" :disabled="loading" v-model="sql.port" label="Port" style="padding-top:0px;" required :rules="[v => !!v || '']"></v-text-field>
@@ -44,51 +44,31 @@
           </v-flex>
           <!-- LOGS -->
           <v-flex v-else-if="setting_mode == 'logs'" xs12 style="margin:5px">
-            <div class="text-h6 font-weight-regular" style="margin-bottom:10px;">LOGS</div>
-            <div class="body-1 font-weight-regular" style="margin-top:10px; margin-bottom:15px">The path where all the Deployments are stored.</div>
-            <v-btn :loading="loading" color="secondary" @click="logs_mode = 'local'">LOCAL</v-btn>
-            <v-btn :loading="loading" color="secondary" style="margin-left:10px;" @click="logs_mode = 'amazon_s3'">AMAZON S3</v-btn>
-            <v-card v-if="logs_mode == 'local'" style="margin-top:15px">
-              <v-toolbar flat dense color="#2e3131" style="margin-top:10px">
-                <v-toolbar-title class="white--text subtitle-1">LOCAL</v-toolbar-title>
-                <v-divider class="mx-3" inset vertical></v-divider>
-                <v-toolbar-items class="hidden-sm-and-down">
-                <v-btn text :disabled="loading" @click="saveLogs()">SAVE</v-btn>
-                </v-toolbar-items>
-              </v-toolbar>
-              <v-divider></v-divider>
-              <v-card-text style="padding-top:5px; padding-bottom:0px;">
-                <v-form ref="logs_form" style="padding:5px 5px 0px 5px;">
-                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.local.path" label="Absolute Path" required :rules="[v => !!v || '', v => v.startsWith('/') || '']" hide-details></v-text-field>
-                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.local.expire" label="Log Retention Days" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:15px;"></v-text-field>
-                </v-form>
-              </v-card-text>
-            </v-card>
-            <v-card v-else-if="logs_mode == 'amazon_s3'" style="margin-top:15px">
-              <v-toolbar flat dense color="#2e3131" style="margin-top:10px;">
-                <v-toolbar-title class="white--text subtitle-1">AMAZON S3</v-toolbar-title>
-                <v-divider class="mx-3" inset vertical></v-divider>
-                <v-toolbar-items class="hidden-sm-and-down">
-                 <v-btn text :disabled="loading" @click="saveLogs()" style="margin-left:0px;">SAVE</v-btn>
-                </v-toolbar-items>
-              </v-toolbar>
-              <v-divider></v-divider>
-              <v-card-text style="padding-top: 5px; padding-bottom:0px;">
-                <v-form ref="logs_form" style="padding:5px 5px 0px 5px;">
-                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.aws_access_key" label="AWS Access Key" :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
-                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
-                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.region_name" label="Region Name" style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
-                  <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.bucket_name" label="Bucket Name" style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
-                  <v-switch :loading="loading" :disabled="loading" v-model="logs.amazon_s3.enabled" label="Upload Logs to Amazon S3" color="info" style="margin-top:0px;"></v-switch>
-                </v-form>
-              </v-card-text>
-            </v-card>
+            <div class="text-h6 font-weight-regular" style="margin-bottom:10px;"><v-icon small style="margin-right:10px; margin-bottom:3px; color:#fa8131">fas fa-folder-open</v-icon>LOGS</div>
+            <div class="body-1 font-weight-regular" style="margin-top:10px; margin-bottom:15px">The path where the Deployments are stored.</div>
+
+            <v-form ref="logs_form">
+              <v-text-field :loading="loading" :disabled="loading" v-model="logs.local.path" label="Absolute Path" required :rules="[v => !!v || '', v => v.startsWith('/') || '']" hide-details></v-text-field>
+              <v-text-field :loading="loading" :disabled="loading" v-model="logs.local.expire" label="Log Retention Days" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" style="margin-top:15px" hide-details></v-text-field>
+              <v-switch v-model="logs.amazon_s3.enabled" label="Store Logs in Amazon S3" style="margin-top:20px" hide-details></v-switch>
+
+              <div v-if="logs.amazon_s3.enabled" style="margin-top:20px">
+                <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.aws_access_key" label="AWS Access Key" :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.region_name" label="Region Name" placeholder="us-east-1, eu-west-1, ..." style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']"></v-text-field>
+                <v-text-field :loading="loading" :disabled="loading" v-model="logs.amazon_s3.bucket_name" label="Bucket Name" style="padding-top:0px;" required :rules="[v => (!!v || !logs.amazon_s3.enabled) || '']" hide-details></v-text-field>
+              </div>
+            </v-form>
+            <div style="margin-top:20px">
+              <v-btn :loading="loading" color="#00b16a" @click="saveLogs()">SAVE</v-btn>
+              <v-btn v-if="logs.amazon_s3.enabled" :loading="loading" color="primary" style="margin-left:10px" @click="testCredentials()">TEST CREDENTIALS</v-btn>
+            </div>
           </v-flex>
           <!-- SECURITY -->
           <v-flex v-else-if="setting_mode == 'security'" xs12 style="margin:5px">
-            <div class="text-h6 font-weight-regular">SECURITY</div>
-            <div class="subtitle-1" style="margin-top:10px; color:#fa8131">Password Policy</div>
-            <v-select :loading="loading" :disabled="loading" v-model="security.password_age" :items="[{id: 0, text: 'Never'}, {id: 90, text: '3 Months'}, {id: 180, text: '6 Months'}, {id: 365, text: '1 Year'}]" item-value="id" item-text="text" label="Maximum Password Age" style="margin-top:10px" hide-details></v-select>
+            <div class="text-h6 font-weight-regular"><v-icon small style="margin-right:10px; margin-bottom:3px; color:#fa8131">fas fa-shield-alt</v-icon>SECURITY</div>
+            <div class="subtitle-1" style="margin-top:10px; color:#fa8131">PASSWORD POLICY</div>
+            <v-select :loading="loading" :disabled="loading" v-model="security.password_age" :items="[{id: 0, text: 'Never'}, {id: 90, text: '3 Months'}, {id: 180, text: '6 Months'}, {id: 365, text: '1 Year'}]" item-value="id" item-text="text" label="Maximum Password Age" style="margin-top:15px" hide-details></v-select>
             <v-select :loading="loading" :disabled="loading" v-model="security.password_min" :items="password_min" label="Minimum Password Length" style="margin-top:15px" hide-details></v-select>
             <v-checkbox v-model="security.password_lowercase" hide-details>
               <template v-slot:label>
@@ -122,10 +102,10 @@
                 </div>
               </template>
             </v-checkbox>
-            <div class="subtitle-1" style="margin-top:20px; color:#fa8131">Force MFA</div>
+            <div class="subtitle-1" style="margin-top:20px; color:#fa8131">FORCE MFA</div>
             <div class="body-1 font-weight-regular" style="margin-top:10px;">Force all users to have the MFA enabled.</div>
             <v-switch :loading="loading" :disabled="loading" v-model="security.mfa" label="Force Multi-Factor Authentication (MFA)" color="info" style="margin-top:10px" hide-details></v-switch>
-            <div class="subtitle-1" style="margin-top:20px; color:#fa8131">Secure Access</div>
+            <div class="subtitle-1" style="margin-top:20px; color:#fa8131">SECURE ADMIN</div>
             <div class="body-1 font-weight-regular" style="margin-top:10px;">Restrict access to the Administration panel only to a specific IP address or domain.</div>
             <v-text-field :loading="loading" :disabled="loading" v-model="security.url" label="Administration URL" :placeholder="security.current" style="margin-top:10px" required :rules="[v => v ? this.validURL(v) : true || '' ]" hide-details></v-text-field>
             <v-btn :loading="loading" color="#00b16a" style="margin-top:25px" @click="saveSecurity()">SAVE</v-btn>
@@ -161,7 +141,7 @@ export default {
 
     // Logs
     logs: { local: {}, amazon_s3: {} },
-    logs_mode: 'local',
+    logs_amazon_s3: false,
 
     // Security
     security: {},
