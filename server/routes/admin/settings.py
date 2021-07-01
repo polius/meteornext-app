@@ -178,14 +178,14 @@ class Settings:
     def check_url(self, security=None):
         if security is None:
             security = self._settings.get(setting_name='security')
-        data = json.loads(security[0]['value'])
+        data = json.loads(security)
         if 'restrict_url' in data and len(data['restrict_url']) > 0:
             regex = '(?:http.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*'
             # Current URL
             r = re.search(regex, request.url_root)
             current_url = r['host'] + ':' + r['port'] if len(r['port']) > 0 else r['host']
             # Administration URL
-            r = re.search(regex, json.loads(security[0]['value'])['url'])
+            r = re.search(regex, data['restrict_url'])
             admin_url = r['host'] + ':' + r['port'] if len(r['port']) > 0 else r['host']
             # Check URLs
             if current_url != admin_url:
@@ -195,7 +195,7 @@ class Settings:
     def check_mfa(self, security=None):
         if security is None:
             security = self._settings.get(setting_name='security')
-        data = json.loads(security[0]['value'])
+        data = json.loads(security)
         if 'force_mfa' in data and data['force_mfa'] is True:
             return True
         return False

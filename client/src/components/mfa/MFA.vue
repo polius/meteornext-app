@@ -10,7 +10,7 @@
           <v-spacer></v-spacer>
           <v-btn @click="mfaDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding:20px">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
@@ -301,7 +301,7 @@ export default {
       axios.post('/mfa/2fa', payload)
         .then((response) => {
           this.mfaDialog = false
-          this.getMFA()
+          if (this.mode != 'login') this.getMFA()
           this.notification(response.data.message, '#00b16a')
         })
         .catch((error) => {
@@ -315,7 +315,7 @@ export default {
       webauthnRegisterFinish(this.webauthn.credentials, this.user)
       .then((response) => {
         this.mfaDialog = false
-        this.getMFA()
+        if (this.mode != 'login') this.getMFA()
         this.notification(response.data.message, '#00b16a')
       })
       .catch((error) => {

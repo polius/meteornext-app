@@ -36,7 +36,7 @@ class Meteor:
         uri = str(uuid.uuid4())
 
         # Init Logs Settings
-        logs = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])
+        logs = json.loads(self._settings.get(setting_name='LOGS'))
 
         # Create Deployment Folder to store Meteor files
         if not os.path.isdir('{}/{}/keys'.format(logs['local']['path'], uri)):

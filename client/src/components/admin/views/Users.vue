@@ -68,7 +68,7 @@
                   <v-autocomplete v-model="item.group" :items="groups" :rules="[v => !!v || '']" label="Group" required hide-details style="padding-top:0px; margin-bottom:20px;"></v-autocomplete>
                   <v-checkbox v-model="item.admin" label="Administrator" color="info" style="margin-top:10px;" hide-details></v-checkbox>
                   <v-checkbox v-model="item.disabled" label="Disable Account" color="#EF5354" style="margin-top:10px;" hide-details></v-checkbox>
-                  <v-switch v-model="item.force" label="Force user to change password at next login" color="#fa8231" style="margin-top:10px" hide-details></v-switch>
+                  <v-switch v-model="item.change_password" label="Force user to change password at next login" color="#fa8231" style="margin-top:10px" hide-details></v-switch>
                 </v-form>
                 <v-alert v-if="mode=='delete'" color="#EF5354" dense style="margin-top:15px"><v-icon style="font-size:16px; margin-bottom:2px; margin-right:10px">fas fa-exclamation-triangle</v-icon>All selected users related data (Deployments, Monitoring, Client, Inventory) will be deleted.</v-alert>
                 <div style="margin-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected users?</div>
@@ -186,7 +186,6 @@ export default {
     groups: [],
     // Dialogs
     mfaDialog: false,
-    passwordDialog: false,
     mfaUsername: '',
     // Filter Columns Dialog
     columnsDialog: false,
@@ -303,7 +302,8 @@ export default {
         coins: this.item.coins,
         group: this.item.group,
         admin: this.item.admin,
-        disabled: this.item.disabled
+        disabled: this.item.disabled,
+        change_password: this.item.change_password
       }
       axios.put('/admin/users', payload)
         .then((response) => {

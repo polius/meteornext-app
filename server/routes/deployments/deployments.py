@@ -150,7 +150,7 @@ class Deployments:
                 return jsonify({'title': 'Authorized Access Only', 'description': 'The URL provided is private' }), 400
 
             # Get Logs Settings
-            logs = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])
+            logs = json.loads(self._settings.get(setting_name='LOGS'))
             
             # Get Execution Results File
             if results['logs'] == 'local':
@@ -699,7 +699,7 @@ class Deployments:
     # Internal Methods #
     ####################
     def __check_logs_path(self):
-        logs_path = json.loads(self._settings.get(setting_name='LOGS')[0]['value'])['local']['path']
+        logs_path = json.loads(self._settings.get(setting_name='LOGS'))['local']['path']
         return self.__check_local_path(logs_path)
 
     def __check_local_path(self, path):

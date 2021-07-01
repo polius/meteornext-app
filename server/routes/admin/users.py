@@ -1,10 +1,12 @@
 import json
+import string
 import bcrypt
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
 import models.admin.groups
 import models.admin.users
+import models.admin.settings
 import routes.admin.settings
 
 class Users:
@@ -13,8 +15,9 @@ class Users:
         # Init models
         self._groups = models.admin.groups.Groups(sql)
         self._users = models.admin.users.Users(sql)
+        self._settings = models.admin.settings.Settings(sql)
         # Init routes
-        self._settings = routes.admin.settings.Settings(app, sql, license)
+        self._settings_route = routes.admin.settings.Settings(app, sql, license)
 
     def blueprint(self):
         # Init blueprint
@@ -28,7 +31,7 @@ class Users:
                 return jsonify({"message": self._license.status['response']}), 401
 
             # Check Settings - Security (Administration URL)
-            if not self._settings.check_url():
+            if not self._settings_route.check_url():
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get user data
@@ -63,6 +66,12 @@ class Users:
         # Check unique user
         if len(user) > 0:
             return jsonify({'message': 'This user currently exists'}), 400
+
+        # Check Password Policy
+        try:
+            self.check_password_policy(data['password'])
+        except Exception as e:
+            return jsonify({'message': str(e)}), 400
         
         # Hash password
         data['password'] = bcrypt.hashpw(data['password'].encode('utf8'), bcrypt.gensalt())
@@ -73,17 +82,22 @@ class Users:
 
     def put(self, user_id, data):
         user = self._users.get(data['current_username'])
+
         # Check unique user
         if len(user) == 0:
             return jsonify({'message': 'This user does not exist'}), 400
         if data['current_username'] != data['username'] and self._users.exist(data['username']):
             return jsonify({'message': 'This user currently exists'}), 400
 
-        # Check password
+        # Check Password
         if 'password' not in data or data['password'] is None or len(data['password'].strip()) == 0:
             data['password'] = None
         elif data['password'] != user[0]['password']:
-            data['password'] = bcrypt.hashpw(data['password'].encode('utf8'), bcrypt.gensalt())
+            try:
+                self.check_password_policy(data['password'])
+                data['password'] = bcrypt.hashpw(data['password'].encode('utf8'), bcrypt.gensalt())
+            except Exception as e:
+                return jsonify({'message': str(e)}), 400
 
         # Clean Shared Inventory References if the group has changed
         if user[0]['group'] != data['group']:
@@ -97,3 +111,17 @@ class Users:
         users = json.loads(request.args['users'])
         self._users.delete(users)
         return jsonify({'message': 'Selected users deleted successfully'}), 200
+
+    def check_password_policy(self, password):
+        security = json.loads(self._settings.get(setting_name='SECURITY'))
+        special_characters = set(string.punctuation)
+        if len(password) < security['password_min']:
+            raise Exception(f"The password must be at least {security['password_min']} characters long.")
+        if security['password_lowercase'] and not any(c.islower() for c in password):
+            raise Exception('The password must contain a lowercase letter.')
+        if security['password_uppercase'] and not any(c.isupper() for c in password):
+            raise Exception('The password must contain a uppercase letter.')
+        if security['password_number'] and not any(c.isnumeric() for c in password):
+            raise Exception('The password must contain a number.')
+        if security['password_special'] and not any(c in special_characters for c in password):
+            raise Exception('The password must contain a special character.')
