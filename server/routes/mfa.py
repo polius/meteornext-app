@@ -187,14 +187,14 @@ class MFA:
         challenge = self.__generate_challenge(32)
         session['challenge'] = challenge.rstrip('=')
         webauthn_user = webauthn.WebAuthnUser(
-            user_mfa[0]['webauthn_ukey'], 
-            user[0]['username'], 
-            user[0]['username'], 
+            user_mfa['webauthn_ukey'],
+            user['username'],
+            user['username'],
             'https://www.w3.org',
-            user_mfa[0]['webauthn_credential_id'], 
-            user_mfa[0]['webauthn_pub_key'], 
-            user_mfa[0]['webauthn_sign_count'],
-            user_mfa[0]['webauthn_rp_id']
+            user_mfa['webauthn_credential_id'],
+            user_mfa['webauthn_pub_key'],
+            user_mfa['webauthn_sign_count'],
+            user_mfa['webauthn_rp_id']
         )
         webauthn_assertion_options = webauthn.WebAuthnAssertionOptions(webauthn_user, challenge)
         return webauthn_assertion_options.assertion_dict
@@ -202,19 +202,19 @@ class MFA:
     def post_webauthn_login(self, user, user_mfa):
         # Get request data
         data = request.get_json()
-
+        # Parse data
         origin = 'https://' + request.host
         challenge = session.get('challenge')
         assertion_response = data['mfa']
         webauthn_user = webauthn.WebAuthnUser(
-            user_mfa[0]['webauthn_ukey'], 
-            user[0]['username'], 
-            user[0]['username'],
+            user_mfa['webauthn_ukey'],
+            user['username'],
+            user['username'],
             'https://www.w3.org',
-            user_mfa[0]['webauthn_credential_id'], 
-            user_mfa[0]['webauthn_pub_key'], 
-            user_mfa[0]['webauthn_sign_count'], 
-            user_mfa[0]['webauthn_rp_id']
+            user_mfa['webauthn_credential_id'],
+            user_mfa['webauthn_pub_key'],
+            user_mfa['webauthn_sign_count'],
+            user_mfa['webauthn_rp_id']
         )
         webauthn_assertion_response = webauthn.WebAuthnAssertionResponse(
             webauthn_user,
@@ -227,7 +227,7 @@ class MFA:
         sign_count = webauthn_assertion_response.verify()
 
         # Update sign_count
-        self._user_mfa.put_webauthn_sign_count({'webauthn_sign_count': sign_count, 'user_id': user[0]['id']})
+        self._user_mfa.put_webauthn_sign_count({'webauthn_sign_count': sign_count, 'user_id': user['id']})
 
     def __generate_challenge(self, challenge_len=32):
         return secrets.token_urlsafe(challenge_len)

@@ -2,7 +2,7 @@
   <v-flex xs12 style="margin:5px">
     <div class="text-h6 font-weight-regular"><v-icon small style="margin-right:10px; margin-bottom:3px; color:#fa8131">fas fa-shield-alt</v-icon>SECURITY</div>
     <div class="subtitle-1" style="margin-top:10px; color:#fa8131">PASSWORD POLICY</div>
-    <v-select :loading="loading" :disabled="loading" v-model="security.password_age" :items="[{id: 0, text: 'Never'}, {id: 90, text: '3 Months'}, {id: 180, text: '6 Months'}, {id: 365, text: '1 Year'}]" item-value="id" item-text="text" label="Maximum Password Age" style="margin-top:15px" hide-details></v-select>
+    <v-select :loading="loading" :disabled="loading" v-model="security.password_age" :items="[{id: 0, text: 'Never'}, {id: 3, text: '3 Months'}, {id: 6, text: '6 Months'}, {id: 12, text: '1 Year'}]" item-value="id" item-text="text" label="Maximum Password Age" style="margin-top:15px" hide-details></v-select>
     <v-text-field :loading="loading" :disabled="loading" v-model="security.password_min" label="Minimum Password Length" :rules="[v => v == parseInt(v) && v > 4 || '']" style="margin-top:15px" hide-details></v-text-field>
     <v-checkbox v-model="security.password_lowercase" hide-details>
       <template v-slot:label>

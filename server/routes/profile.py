@@ -1,14 +1,18 @@
+import json
 import bcrypt
-import models.admin.users
+import string
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 
+import models.admin.users
+import models.admin.settings
 
 class Profile:
     def __init__(self, app, sql, license):
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
+        self._settings = models.admin.settings.Settings(sql)
 
     def blueprint(self):
         # Init blueprint
@@ -53,19 +57,45 @@ class Profile:
             if 'current' not in data or 'new' not in data or 'repeat' not in data:
                 return jsonify({'message': 'Insufficient parameters'}), 400
 
-            # Check password
-            if not bcrypt.checkpw(data['current'].encode('utf-8'), user['password'].encode('utf-8')):
-                return jsonify({"message": "The current password is invalid"}), 400
-
-            if len(data['new']) < 8:
-                return jsonify({'message': 'The new password must have at least 8 characters'}), 400
-
-            if data['new'] != data['repeat']:
-                return jsonify({"message": "The new password does not match"}), 400
-
             # Change password
-            encrypted_passw = bcrypt.hashpw(data['new'].encode('utf8'), bcrypt.gensalt())
-            self._users.change_password({'username': get_jwt_identity(), 'password': encrypted_passw})
-            return jsonify({'message': 'Password successfully changed'}), 200
+            try:
+                self.change_password(user, data['current'], data['new'], data['repeat'])
+                return jsonify({'message': 'Password successfully changed'}), 200
+            except Exception as e:
+                return jsonify({'message': str(e)}), 400
 
         return profile_blueprint
+
+    ####################
+    # Internal Methods #
+    ####################
+    def change_password(self, user, current, new, repeat):
+        # Check current password
+        if not bcrypt.checkpw(current.encode('utf-8'), user['password'].encode('utf-8')):
+            raise Exception("The current password is not valid.")
+
+        # Check if password is the same
+        if current == new:
+            raise Exception("The new password cannot be the same as the previous password.")
+
+        # Check repeat password
+        if new != repeat:
+            raise Exception("The new password does not match")
+
+        # Check Password Policy
+        security = json.loads(self._settings.get(setting_name='SECURITY'))
+        special_characters = set(string.punctuation)
+        if len(new) < security['password_min']:
+            raise Exception(f"The password must be at least {security['password_min']} characters long.")
+        if security['password_lowercase'] and not any(c.islower() for c in new):
+            raise Exception('The password must contain a lowercase letter.')
+        if security['password_uppercase'] and not any(c.isupper() for c in new):
+            raise Exception('The password must contain a uppercase letter.')
+        if security['password_number'] and not any(c.isnumeric() for c in new):
+            raise Exception('The password must contain a number.')
+        if security['password_special'] and not any(c in special_characters for c in new):
+            raise Exception('The password must contain a special character.')
+
+        # Change password
+        encrypted_passw = bcrypt.hashpw(new.encode('utf8'), bcrypt.gensalt())
+        self._users.change_password({'username': user['username'], 'password': encrypted_passw})

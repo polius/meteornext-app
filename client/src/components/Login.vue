@@ -20,15 +20,7 @@
                     </v-row>
                   </v-alert>
                   <v-form ref="form" @submit.prevent style="margin-top:20px">
-                    <div v-if="mfa == null">
-                      <v-text-field :disabled="showInstall" ref="username" filled v-model="username" name="username" label="Username" :rules="[v => !!v || '']" required v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details>
-                        <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-user</v-icon></template>
-                      </v-text-field>
-                      <v-text-field :disabled="showInstall" ref="password" filled v-model="password" name="password" label="Password" :rules="[v => !!v || '']" required type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details>
-                        <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-lock</v-icon></template>
-                      </v-text-field>
-                    </div>
-                    <div v-else-if="mfa == '2fa'">
+                    <div v-if="mfa == '2fa'">
                       <v-text-field ref="2fa" filled v-model="twoFactor['value']" label="2FA Code" maxlength="6" :rules="[v => !!v || '']" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details>
                         <template v-slot:append><v-icon small style="margin-top:3px; margin-right:4px">fas fa-key</v-icon></template>
                       </v-text-field>
@@ -43,6 +35,14 @@
                         </v-card-text>
                       </v-card>
                     </div>
+                    <div v-else>
+                      <v-text-field :disabled="showInstall" ref="username" filled v-model="username" name="username" label="Username" :rules="[v => !!v || '']" required v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details>
+                        <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-user</v-icon></template>
+                      </v-text-field>
+                      <v-text-field :disabled="showInstall" ref="password" filled v-model="password" name="password" label="Password" :rules="[v => !!v || '']" required type="password" v-on:keyup.enter="login()" style="margin-bottom:20px;" hide-details>
+                        <template v-slot:append><v-icon small style="margin-top:4px; margin-right:4px">fas fa-lock</v-icon></template>
+                      </v-text-field>
+                    </div>
                   </v-form>
                   <v-btn v-if="!(mfa == 'webauthn')" :disabled="showInstall" x-large type="submit" color="info" :loading="loading" block style="margin-top:0px;" @click="login()">LOGIN</v-btn>
                   <v-checkbox :disabled="showInstall" v-if="mfa == null" v-model="remember" label="Remember username" hide-details style="margin-bottom:2px"></v-checkbox>
@@ -53,26 +53,36 @@
         </v-layout>
       </v-container>
     </v-main>
-    <v-dialog v-model="passwordDialog" max-width="512px">
+    <v-dialog v-model="passwordDialog" persistent max-width="640px">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1">CHANGE PASSWORD</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn @click="passwordDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding:20px">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="passwordForm" @submit.prevent>
-                  <v-text-field ref="passwordCurrent" v-model="passwordItem.current" :readonly="loadingDialog" label="Current password" type="password" :rules="[v => !!v || '']" required style="padding-top:5px" autocomplete="new-password"></v-text-field>
-                  <v-text-field v-model="passwordItem.new" :readonly="loadingDialog" label="New password" type="password" :rules="[v => !!v || '']" required style="padding-top:0px" autocomplete="new-password"></v-text-field>
-                  <v-text-field v-model="passwordItem.repeat" :readonly="loadingDialog" label="Repeat new password" type="password" :rules="[v => !!v || '']" required style="padding-top:0px" autocomplete="new-password" v-on:keyup.enter="submitPassword"></v-text-field>
+                  <v-card>
+                    <v-row no-gutters align="center" justify="center">
+                      <v-col cols="auto" style="display:flex; margin:15px">
+                        <v-icon color="#fa8231">fas fa-exclamation-triangle</v-icon>
+                      </v-col>
+                      <v-col>
+                        <div class="text-body-1">The password has expired. Please change it.</div>
+                      </v-col>
+                    </v-row>
+                  </v-card>
+                  <v-text-field ref="passwordCurrent" v-model="passwordItem.current" :readonly="loading" label="Current password" type="password" :rules="[v => !!v || '']" required style="margin-top:20px" autocomplete="new-password" v-on:keyup.enter="login"></v-text-field>
+                  <v-text-field v-model="passwordItem.new" :readonly="loading" label="New password" type="password" :rules="[v => !!v || '']" required style="padding-top:0px" autocomplete="new-password" v-on:keyup.enter="login"></v-text-field>
+                  <v-text-field v-model="passwordItem.repeat" :readonly="loading" label="Repeat new password" type="password" :rules="[v => !!v || '']" required style="padding-top:0px" autocomplete="new-password" v-on:keyup.enter="login"></v-text-field>
                 </v-form>
                 <v-divider></v-divider>
                 <v-row no-gutters style="margin-top:20px;">
-                  <v-btn :loading="loadingDialog" color="#00b16a" @click="submitPassword">CONFIRM</v-btn>
-                  <v-btn :disabled="loadingDialog" color="#EF5354" @click="passwordDialog = false" style="margin-left:5px">CANCEL</v-btn>
+                  <v-btn :loading="loading" color="#00b16a" @click="login">CONFIRM</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="passwordDialog = false" style="margin-left:5px">CANCEL</v-btn>
                 </v-row>
               </v-flex>
             </v-layout>
@@ -175,7 +185,11 @@ export default {
   methods: {
     async login() {
       if (!this.$refs.form.validate()) {
-        this.notification('Please make sure all required fields are filled out correctly', 'warning')
+        this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
+        return
+      }
+      if (this.passwordDialog && !this.$refs.passwordForm.validate()) {
+        this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
       this.loading = true
@@ -187,14 +201,21 @@ export default {
       }
       if (this.twoFactor['value'].length > 0) payload['mfa'] = this.twoFactor['value']
       if (this.twoFactor['hash'] != null) payload['2fa_hash'] = this.twoFactor['hash']
+      if (this.passwordDialog) payload = {...payload, currentPassword: this.passwordItem.current, newPassword: this.passwordItem.new, repeatPassword: this.passwordItem.repeat}
       try {
         let response = await this.$store.dispatch('app/login', payload)
         this.loading = false
         if (response.status == 200) this.login_success()
         else if (response.status == 202) {
+          // Password Required
           if (response.data.code == 'password_setup') this.passwordDialog = true
-          else if (response.data.code == 'mfa_setup') this.mfaDialog = true
           else {
+            this.password = this.passwordItem.new.length > 0 ? this.passwordItem.new : this.password
+            this.passwordDialog = false
+          }
+          // MFA Required
+          if (response.data.code == 'mfa_setup') this.mfaDialog = true
+          else if (['2fa','webauthn'].includes(response.data.code)) {
             this.mfa = response.data.code
             if (this.mfa == 'webauthn') {
               try {
@@ -216,9 +237,8 @@ export default {
       }
       catch (error) {
         this.loading = false
-        if (error.response === undefined) this.notification("No internet connection", '#EF5354')
-        else if (error.response.status == 401) this.notification(error.response.data.message, '#EF5354')
-        else if (this.mfa == null) this.notification("Can't establish a connection to the server", '#EF5354')
+        if (error.response === undefined) this.notification("Can't establish a connection to the server", '#EF5354')
+        else this.notification(error.response.data.message, '#EF5354')
       }
     },
     checkInstall() {
@@ -234,6 +254,7 @@ export default {
       this.$router.push('/install')
     },
     login_success() {
+      this.passwordDialog = false
       if (this.$route.query.url !== undefined) this.$router.push({ path: this.$route.query.url })
       else if (['', '/install'].includes(this.prevRoute)) this.$router.push('/')
       else this.$router.push(this.prevRoute)

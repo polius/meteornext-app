@@ -6,8 +6,8 @@ class Settings:
 
     def get(self, setting_name=None):
         if setting_name:
-            query = "SELECT name, value FROM settings WHERE name = %s"
-            return self._sql.execute(query, (setting_name.upper()))
+            query = "SELECT value FROM settings WHERE name = %s"
+            return self._sql.execute(query, (setting_name.upper()))[0]['value']
         else:
             query = "SELECT name, value FROM settings"
             return self._sql.execute(query)

@@ -62,7 +62,7 @@ CREATE TABLE `users` (
   `created_at` DATETIME NOT NULL,
   `updated_by` INT UNSIGNED NULL,
   `updated_at` DATETIME NULL,
-  `password_age` DATETIME NOT NULL,
+  `password_at` DATETIME NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   KEY `group_id` (`group_id`),
@@ -71,9 +71,9 @@ CREATE TABLE `users` (
 
 /*
 ALTER TABLE users ADD `change_password` TINYINT(1) NOT NULL DEFAULT '0' AFTER `disabled`;
-ALTER TABLE users ADD `password_age` DATETIME NULL;
-UPDATE users SET password_age = created_at;
-ALTER TABLE users MODIFY `password_age` DATETIME NOT NULL;
+ALTER TABLE users ADD `password_at` DATETIME NULL;
+UPDATE users SET password_at = created_at;
+ALTER TABLE users MODIFY `password_at` DATETIME NOT NULL;
 */
 
 CREATE TABLE `user_mfa` (

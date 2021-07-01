@@ -20,14 +20,14 @@
             </v-container>
           </v-card-text>
         </v-card>
-        <v-dialog v-model="passwordDialog" max-width="512px">
+        <v-dialog v-model="passwordDialog" max-width="640px">
           <v-card>
             <v-toolbar dense flat color="primary">
               <v-toolbar-title class="white--text subtitle-1">CHANGE PASSWORD</v-toolbar-title>
               <v-spacer></v-spacer>
               <v-btn @click="passwordDialog = false" icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
             </v-toolbar>
-            <v-card-text style="padding:20px">
+            <v-card-text style="padding:15px">
               <v-container style="padding:0px">
                 <v-layout wrap>
                   <v-flex xs12>
