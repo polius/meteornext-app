@@ -63,8 +63,8 @@
                 </div>
                 <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
                   <v-toolbar-items style="margin-left:-16px">
-                    <v-btn :disabled="loading || mode == 'clone'" text @click="newOwners()" class="body-2"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
-                    <v-btn :disabled="loading" v-if="ownersSelected.length > 0" text @click="removeOwners()" class="body-2"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                    <v-btn :disabled="loading || mode == 'clone'" text @click="newOwners()"><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                    <v-btn :disabled="loading || ownersSelected.length == 0" text @click="removeOwners()"><v-icon small style="padding-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                   </v-toolbar-items>
                   <v-divider class="mx-3" inset vertical></v-divider>
                   <v-text-field :disabled="mode == 'clone'" v-model="ownersSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>

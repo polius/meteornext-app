@@ -7,7 +7,7 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn text @click="newEnvironment()"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn :disabled="selected.length != 1 || (inventory_secured && selected[0].shared == 1 && !owner)" @click="cloneEnvironment()" text><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
-          <v-btn :disabled="selected.length != 1" text @click="editEnvironment()"><v-icon small style="margin-right:10px">{{ !owner && selected[0].shared ? 'fas fa-info' : 'fas fa-feather-alt' }}</v-icon>{{ !owner && selected[0].shared ? 'INFO' : 'EDIT' }}</v-btn>
+          <v-btn :disabled="selected.length != 1" text @click="editEnvironment()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
           <v-btn :disabled="selected.length == 0 || (!owner && selected.some(x => x.shared))" text @click="deleteEnvironment()"><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text class="body-2" @click="filterBy('all')" :style="filter == 'all' ? 'font-weight:600' : 'font-weight:400'">ALL</v-btn>
@@ -52,6 +52,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
+                <v-alert v-if="!this.owner && this.item.shared" color="warning" dense style="margin-top:15px; margin-bottom:15px"><v-icon style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This shared resource is secured and therefore cannot be edited.</v-alert>
                 <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
                   <v-text-field v-if="mode!='delete'" :readonly="readOnly" ref="field" @keypress.enter.native.prevent="submitEnvironment()" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-card v-if="mode!='delete'">
@@ -292,7 +293,7 @@ export default {
     editEnvironment() {
       this.mode = 'edit'
       this.item = JSON.parse(JSON.stringify(this.selected[0]))
-      this.dialog_title = (!this.owner && this.item.shared) ? 'INFO' : 'EDIT ENVIRONMENT'
+      this.dialog_title = 'EDIT ENVIRONMENT'
       this.dialog = true
       setTimeout(this.updateSelected, 1)
     },
