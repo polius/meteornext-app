@@ -1163,10 +1163,10 @@ export default {
       this.loading = false
     },
     compressColumns() {
-      this.gridApi.client.sizeColumnsToFit()
+      this.resizeTable()
     },
     expandColumns() {
-      this.resizeTable()
+      this.gridApi.client.sizeColumnsToFit()
     },
     download(filename, text) {
       var element = document.createElement('a')
