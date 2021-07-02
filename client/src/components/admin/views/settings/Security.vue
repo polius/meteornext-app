@@ -7,7 +7,7 @@
     <v-checkbox v-model="security.password_lowercase" hide-details>
       <template v-slot:label>
         <div style="margin-left:5px">
-          <div class="body-1">Require lowercase character</div>
+          <div class="body-1 white--text">Require lowercase character</div>
           <div class="font-weight-regular caption" style="font-size:0.85rem !important">Password must contain at least one lowercase character.</div>
         </div>
       </template>
@@ -15,7 +15,7 @@
     <v-checkbox v-model="security.password_uppercase" hide-details>
       <template v-slot:label>
         <div style="margin-left:5px">
-          <div class="body-1">Require uppercase character</div>
+          <div class="body-1 white--text">Require uppercase character</div>
           <div class="font-weight-regular caption" style="font-size:0.85rem !important">Password must contain at least one uppercase character.</div>
         </div>
       </template>
@@ -23,7 +23,7 @@
     <v-checkbox v-model="security.password_number" hide-details>
       <template v-slot:label>
         <div style="margin-left:5px">
-          <div class="body-1">Require number</div>
+          <div class="body-1 white--text">Require number</div>
           <div class="font-weight-regular caption" style="font-size:0.85rem !important">Password must contain at least one number.</div>
         </div>
       </template>
@@ -31,7 +31,7 @@
     <v-checkbox v-model="security.password_special" hide-details>
       <template v-slot:label>
         <div style="margin-left:5px">
-          <div class="body-1">Require special character</div>
+          <div class="body-1 white--text">Require special character</div>
           <div class="font-weight-regular caption" style="font-size:0.85rem !important">Password must contain at least one special character.</div>
         </div>
       </template>
