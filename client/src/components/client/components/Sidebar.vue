@@ -442,13 +442,10 @@ export default {
 
       // Init sidebar
       current.sidebarMode = 'objects'
-      current.sidebarSearch = ''
 
       new Promise(() => {
         // Build Databases
         current.databaseItems = data.databases
-        // const arr = Array.from({length: 10000}, () => Math.floor(Math.random() * 10000))
-        // this.databaseItems = arr
 
         // Add database names to the editor autocompleter
         let completer = data.databases.reduce((acc, val) => {
