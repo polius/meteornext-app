@@ -62,7 +62,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-alert v-if="!this.owner && this.item.shared" color="warning" dense style="margin-top:15px; margin-bottom:25px"><v-icon style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This shared resource is secured and therefore cannot be edited.</v-alert>
+                <v-alert v-if="!this.owner && this.item.shared" color="warning" dense style="margin-top:15px; margin-bottom:25px"><v-icon style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This shared resource cannot be edited. You are not a group owner.</v-alert>
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:20px;">
                   <v-row no-gutters style="margin-top:15px">
                     <v-col cols="8" style="padding-right:10px">
@@ -127,7 +127,7 @@
                         </v-col>
                       </v-row>
                     </v-card>
-                    <v-checkbox v-if="item.ssl" v-model="item.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox>
+                    <v-checkbox v-if="item.ssl" :readonly="readOnly" v-model="item.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox>
                     <v-select outlined v-model="item.usage" :items="usage" :readonly="readOnly" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
