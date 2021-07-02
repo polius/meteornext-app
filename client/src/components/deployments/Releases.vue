@@ -34,13 +34,13 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">{{mode == 'new' ? 'fas fa-plus' : mode == 'edit' ? 'fas fa-feather-alt' : 'fas fa-minus'}}</v-icon>{{ dialogTitle }}</v-toolbar-title>
         </v-toolbar>
-        <v-card-text style="padding: 0px 20px 0px;">
+        <v-card-text style="padding: 0px 15px 0px;">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
-                  <v-alert colored-border elevation="2">
-                    <v-icon color="primary" style="margin-right:10px; font-size:20px"> fas fa-info-circle</v-icon>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
+                  <v-alert v-if="mode != 'delete'" colored-border elevation="2">
+                    <v-icon color="primary" style="margin-right:10px; font-size:20px">fas fa-info-circle</v-icon>
                     Deployments associated with active Releases will be visible in the Deployments section.</v-alert>
                   <v-text-field v-if="mode!='delete'" ref="field" @keypress.enter.native.prevent="submitRelease()" v-model="name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
                   <v-checkbox v-if="mode!='delete'" v-model="active" label="Active" hide-details color="primary" style="margin-top:0px; margin-bottom:20px;"></v-checkbox>

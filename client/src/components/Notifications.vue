@@ -46,14 +46,14 @@
 
       <v-dialog v-model="deleteDialog" persistent max-width="768px">
         <v-card>
-          <v-toolbar flat color="primary">
-            <v-toolbar-title class="white--text">Delete Notifications</v-toolbar-title>
+          <v-toolbar dense flat color="primary">
+            <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-minus</v-icon>DELETE NOTIFICATIONS</v-toolbar-title>
           </v-toolbar>
-          <v-card-text style="padding: 0px 20px 0px;">
+          <v-card-text style="padding: 0px 15px 0px;">
             <v-container style="padding:0px">
               <v-layout wrap>
                 <v-flex xs12>
-                  <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
+                  <v-form ref="form" style="margin-top:15px; margin-bottom:15px;">
                     <div style="padding-bottom:10px" class="subtitle-1">Are you sure you want to delete the selected notifications?</div>
                     <v-divider></v-divider>
                     <div style="margin-top:20px;">
