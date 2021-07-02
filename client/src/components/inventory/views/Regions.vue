@@ -57,7 +57,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-alert v-if="!this.owner && this.item.shared" color="warning" dense style="margin-top:15px; margin-bottom:15px"><v-icon style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This shared resource is secured and therefore cannot be edited.</v-alert>
+                <v-alert v-if="!this.owner && this.item.shared" color="warning" dense style="margin-top:15px; margin-bottom:15px"><v-icon style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This shared resource cannot be edited. You are not a group owner.</v-alert>
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px; margin-bottom:15px;">
                   <v-text-field ref="field" v-model="item.name" :rules="[v => !!v || '']" :readonly="readOnly" label="Name" required hide-details></v-text-field>
                   <v-switch v-model="item.ssh_tunnel" :readonly="readOnly" label="SSH Tunnel" color="info" hide-details style="margin-top:15px;"></v-switch>
@@ -82,7 +82,7 @@
                           <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a Private Key</div>
                         </v-col>
                         <v-col cols="auto" class="text-right">
-                          <v-btn @click="item.key = null" icon title="Remove Private Key" style="margin:8px"><v-icon style="font-size:18px">fas fa-times</v-icon></v-btn>
+                          <v-btn v-if="!readOnly" @click="item.key = null" icon title="Remove Private Key" style="margin:8px"><v-icon style="font-size:18px">fas fa-times</v-icon></v-btn>
                         </v-col>
                       </v-row>
                     </v-card>
