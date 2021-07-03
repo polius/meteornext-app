@@ -69,13 +69,6 @@ CREATE TABLE `users` (
   FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
-/*
-ALTER TABLE users ADD `change_password` TINYINT(1) NOT NULL DEFAULT '0' AFTER `disabled`;
-ALTER TABLE users ADD `password_at` DATETIME NULL;
-UPDATE users SET password_at = created_at;
-ALTER TABLE users MODIFY `password_at` DATETIME NOT NULL;
-*/
-
 CREATE TABLE `user_mfa` (
   `user_id` INT UNSIGNED NOT NULL,
   `2fa_hash` VARCHAR(191) NULL,
@@ -285,18 +278,6 @@ CREATE TABLE `executions` (
   FOREIGN KEY (`environment_id`) REFERENCES `environments` (`id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
-
-/*
-INSERT INTO executions (deployment_id, environment_id, `mode`, `databases`, `queries`, `code`, method, `status`, stopped, created, scheduled, started, ended, pid, progress, error, url, uri, `engine`, public, expired, user_id)
-SELECT deployment_id, environment_id, 'BASIC' AS 'mode', `databases`, `queries`, NULL AS 'code', method, `status`, stopped, created, scheduled, started, ended, pid, progress, error, url, uri, `engine`, public, expired, user_id
-FROM deployments_basic
-UNION ALL
-SELECT deployment_id, environment_id, 'PRO' AS 'mode', NULL AS 'databases', NULL AS 'queries', `code`, method, `status`, stopped, created, scheduled, started, ended, pid, progress, error, url, uri, `engine`, public, expired, user_id
-FROM deployments_pro
-ORDER BY created;
-
-ALTER TABLE executions CHANGE `engine` `logs` VARCHAR(191) NULL;
-*/
 
 CREATE TABLE `deployments_queued` (
   `id` BIGINT UNSIGNED AUTO_INCREMENT,

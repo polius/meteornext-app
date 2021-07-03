@@ -177,7 +177,7 @@ class Deployments:
                 )
                 try:
                     s3 = session.resource('s3')
-                    obj = s3.meta.client.get_object(Bucket=logs['amazon_s3']['bucket_name'], Key='results/{}.js'.format(uri))
+                    obj = s3.meta.client.get_object(Bucket=logs['amazon_s3']['bucket'], Key='results/{}.js'.format(uri))
                     return jsonify(obj['Body'].read().decode('utf-8')), 200
                 except botocore.exceptions.ClientError as e:
                     if e.response['Error']['Code'] == 'NoSuchKey':
