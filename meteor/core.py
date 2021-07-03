@@ -404,7 +404,7 @@ class core:
         status_color = 'good' if status == 0 else 'warning' if status == 1 else 'danger'
 
         # Logs
-        logs_information = "{}/deployment/{}{}".format(self._imports.config['params']['url'], self._imports.config['params']['mode'][0].upper(), self._imports.config['params']['id'])
+        logs_information = "{}/deployment/{}".format(self._imports.config['params']['url'], self._imports.config['params']['id'])
         logs_results = "{}/viewer/{}".format(self._imports.config['params']['url'], self._args.path[self._args.path.rfind('/')+1:])
 
         # Current Time
