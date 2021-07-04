@@ -5,11 +5,10 @@
         <v-toolbar-title class="white--text subtitle-1">SETTINGS</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
-          <v-btn text @click="mode = 'license'"><v-icon small style="margin-right:10px">fas fa-certificate</v-icon>LICENSE</v-btn>
-          <v-btn text @click="mode = 'sql'"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SQL</v-btn>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn text @click="mode = 'logs'"><v-icon small style="margin-right:10px">fas fa-folder-open</v-icon>LOGS</v-btn>
-          <v-btn text @click="mode = 'security'"><v-icon small style="margin-right:10px">fas fa-shield-alt</v-icon>SECURITY</v-btn>
+          <v-btn text @click="mode = 'license'" :style="{ backgroundColor : mode == 'license' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-certificate</v-icon>LICENSE</v-btn>
+          <v-btn text @click="mode = 'sql'" :style="{ backgroundColor : mode == 'sql' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SQL</v-btn>
+          <v-btn text @click="mode = 'logs'" :style="{ backgroundColor : mode == 'logs' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-folder-open</v-icon>LOGS</v-btn>
+          <v-btn text @click="mode = 'security'" :style="{ backgroundColor : mode == 'security' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-shield-alt</v-icon>SECURITY</v-btn>
         </v-toolbar-items>
       </v-toolbar>
       <v-container fluid grid-list-lg>
