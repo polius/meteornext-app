@@ -97,8 +97,11 @@
                 <v-col class="flex-grow-1 flex-shrink-1">
                   <div class="text-h6 white--text" style="font-weight:400; font-size:1.1rem!important; margin-top:3px; margin-left:1px;">{{ editDialogTitle }}</div>
                 </v-col>
-                <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="margin-right:25px">
+                <v-col cols="auto" class="flex-grow-0 flex-shrink-0" style="margin-right:20px">
                   <v-checkbox @change="editDialogWrapChange" v-model="editDialogWrap" label="Wrap text" hide-details style="margin-top:5px"></v-checkbox>
+                </v-col>
+                <v-col v-if="editDialogFormat == 'JSON'" cols="auto" class="flex-grow-0 flex-shrink-0" style="margin-right:10px">
+                  <v-btn @click="editDialogParse" hide-details style="margin-top:2px">Parse</v-btn>
                 </v-col>
                 <v-col v-if="editDialogFormat == 'JSON'" cols="auto" class="flex-grow-0 flex-shrink-0" style="margin-right:15px">
                   <v-btn @click="editDialogValidate" hide-details style="margin-top:2px">Validate</v-btn>
@@ -553,6 +556,21 @@ export default {
         }
         this.showDialog(dialogOptions)
         return false
+      }
+    },
+    editDialogParse() {
+      try {
+        let parsed = JSON.parse(this.editDialogEditor.getValue())
+        this.editDialogEditor.setValue(JSON.stringify(parsed, null, '\t'), 1)
+      } catch (error) {
+        var dialogOptions = {
+          'mode': 'info',
+          'title': 'JSON is not valid',
+          'text': error.toString(),
+          'button1': 'Close',
+          'button2': ''
+        }
+        this.showDialog(dialogOptions)
       }
     },
     editDialogSubmit() {
