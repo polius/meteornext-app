@@ -28,8 +28,8 @@ class validate_regions:
                 self.__validate_ssh()
             except Exception as e:
                 current_thread.progress = {'region': self._region['name'], 'success': False, 'error': str(e).capitalize()}
-                # print("--> {} Region '{}' Failed.".format(region_type, self._region['name']))
-                # print(str(e))
+                print("--> {} Region '{}' Failed.".format(region_type, self._region['name']))
+                print(str(e))
                 return
 
         if not current_thread.alive:

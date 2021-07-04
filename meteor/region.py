@@ -43,10 +43,10 @@ class Region:
         else:
             # Compress Meteor files
             shutil.make_archive(self._local_path, 'gztar', self._local_path)
-            shutil.move("{}.tar.gz".format(self._local_path), "{}/../server/apps/meteor.tar.gz".format(self._local_path))
+            shutil.move(f"{self._local_path}.tar.gz", f"{self._local_path}/../server/apps/meteor.tar.gz")
             # Upload Meteor
-            self.__ssh("rm -rf {0}/bin && mkdir -p {0}/bin".format(self._remote_path))
-            self.__put("{}/../server/apps/meteor.tar.gz".format(self._local_path), "{}/.meteor/bin/meteor.tar.gz".format(home))
+            self.__ssh(f"rm -rf {self._remote_path}/bin && mkdir -p {self._remote_path}/bin")
+            self.__put(f"{self._local_path}/../server/apps/meteor.tar.gz", f"{home}/.meteor/bin/meteor.tar.gz")
             self.__ssh("tar -xvzf {0}/bin/meteor.tar.gz -C {0}/bin && rm -rf {0}/bin/meteor.tar.gz".format(self._remote_path))
 
     def get_logs(self):
@@ -228,7 +228,8 @@ class Region:
             sftp.close()
 
     def __put(self, local_path, remote_path):
-        for _ in range(60):
+        exception = None
+        for _ in range(10):
             try:
                 # Init Paramiko Connection
                 client = paramiko.SSHClient()
@@ -243,8 +244,9 @@ class Region:
                 sftp.put(localpath=local_path, remotepath=remote_path, confirm=True)
                 break
 
-            except Exception:
-                time.sleep(5)
+            except Exception as e:
+                exception = e
+                time.sleep(2)
 
             finally:
                 try:
@@ -252,3 +254,5 @@ class Region:
                     client.close()
                 except Exception:
                     pass
+        if exception:
+            raise exception

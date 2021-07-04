@@ -137,10 +137,12 @@ CREATE TABLE `regions_update` (
   `execution_id` INT UNSIGNED NOT NULL,
   `region_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE `region_id` (`region_id`),
-  UNIQUE `execution_id` (`execution_id`)
-  /* FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`)
-  FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`) */
+  UNIQUE `region_id` (`region_id`)
+  /*
+  INDEX `execution_id` (`execution_id`)
+  FOREIGN KEY (`execution_id`) REFERENCES `executions` (`id`)
+  FOREIGN KEY (`region_id`) REFERENCES `regions` (`id`)
+  */
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE `servers` (
