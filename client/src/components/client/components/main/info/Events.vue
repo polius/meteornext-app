@@ -3,11 +3,11 @@
     <!------------>
     <!-- EVENTS -->
     <!------------>
-    <div style="height:calc(100% - 36px)">
+    <div style="height:calc(100% - 46px)">
       <div style="width:100%; height:100%">
         <v-data-table :headers="infoHeaders.events" :items="infoItems.events" disable-sort hide-default-footer class="elevation-1" style="margin:10px; background-color:rgb(48,48,48);"></v-data-table>
         <div class="subtitle-2" style="padding:5px 15px 10px 15px; color:rgb(222,222,222);">EVENT DEFINITION</div>
-        <div style="height:calc(100% - 118px);">
+        <div style="height:calc(100% - 143px)">
           <div id="infoEventsEditor" style="float:left"></div>
         </div>
       </div>
@@ -16,6 +16,8 @@
     <!-- BOTTOM BAR -->
     <!---------------->
     <div style="height:35px; background-color:#303030; border-top:2px solid #2c2c2c;">
+      <v-btn @click="refresh" text small title="Refresh" style="height:30px; min-width:36px; margin-top:1px; margin-left:2px; margin-right:2px;"><v-icon small style="font-size:12px;">fas fa-redo-alt</v-icon></v-btn>
+      <span style="background-color:#424242; padding-left:1px; margin-left:1px; margin-right:1px;"></span>
     </div>
   </div>
 </template>
@@ -82,8 +84,8 @@ export default {
     }, false);
   },
   methods: {
-    getInfo() {
-      if (this.infoConnection == this.sidebarSelected[0]['id']) return
+    getInfo(refresh) {
+      if (!refresh && this.infoConnection == this.sidebarSelected[0]['id']) return
       const payload = {
         connection: this.id + '-shared',
         server: this.server.id,
@@ -146,6 +148,9 @@ export default {
       this.editor.focus()
       // Store the current connection
       this.infoConnection = this.sidebarSelected[0]['id']
+    },
+    refresh() {
+      this.getInfo(true)
     },
   },
 }
