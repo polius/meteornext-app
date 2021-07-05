@@ -461,7 +461,7 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1">{{ action_dialog_title }}</v-toolbar-title>
         </v-toolbar>
-        <v-card-text style="padding: 10px 20px 20px 20px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
