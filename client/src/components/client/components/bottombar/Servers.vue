@@ -42,7 +42,6 @@ export default {
   components: { New, Remove, Move, NewFolder, RemoveFolder, RenameFolder },
   computed: {
     ...mapFields([
-      'database',
       'sidebarLoading',
       'sidebarSelected',
     ], { path: 'client/connection' }),
