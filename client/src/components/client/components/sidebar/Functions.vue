@@ -5,20 +5,19 @@
     <!--------------->
     <v-dialog v-model="dialog" max-width="60%">
       <v-card>
-        <v-toolbar v-if="dialogOptions.text.length == 0" dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-code-branch</v-icon>{{ dialogOptions.title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:3px">{{ dialogOptions.icon }}</v-icon>{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding:15px 15px 5px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <div v-if="dialogOptions.text.length > 0" class="text-h6" style="font-weight:400;"> {{ dialogOptions.title }}</div>
               <v-flex xs12>
-                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:10px;">
-                  <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
+                <v-form ref="dialogForm" style="margin-bottom:10px">
+                  <div v-if="dialogOptions.text.length > 0" class="body-1">{{ dialogOptions.text }}</div>
                   <div v-if="dialogOptions.mode == 'createFunction'">
-                    <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus :rules="[v => !!v || '']" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus :rules="[v => !!v || '']" required style="padding-top:8px"></v-text-field>
                     <v-text-field v-model="dialogOptions.item.params" label="Parameters" placeholder="credit DECIMAL(10,2)" style="padding-top:0px;"></v-text-field>
                     <v-text-field v-model="dialogOptions.item.returns" label="Returns" placeholder="VARCHAR(20)" style="padding-top:0px;"></v-text-field>
                     <div style="margin-left:auto; margin-right:auto; height:35vh; width:100%">
@@ -27,18 +26,18 @@
                     <v-checkbox v-model="dialogOptions.item.deterministic" label="Deterministic" hide-details class="body-1" style="padding:0px; padding-bottom:5px"></v-checkbox>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'renameFunction'">
-                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px"></v-text-field>
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px"></v-text-field>
+                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current Name" required></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New Name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px"></v-text-field>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'duplicateFunction'">
-                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px"></v-text-field>
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px"></v-text-field>
+                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current Name" required></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New Name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px"></v-text-field>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'deleteFunction'">
                     <v-list style="padding-bottom:0px;">
-                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:10px;">
+                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:0px;">
                         <v-list-item-content style="padding:0px">
-                          <v-list-item-title style="font-weight:300;"><span style="margin-right:10px;">-</span>{{ item.name }}</v-list-item-title>
+                          <v-list-item-title>{{ item.name }}</v-list-item-title>
                         </v-list-item-content>
                       </v-list-item>
                     </v-list>
@@ -47,10 +46,10 @@
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
-                    <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                    <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px">
                       <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
-                    <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
+                    <v-col v-if="dialogOptions.cancel.length > 0">
                       <v-btn :disabled="loading" @click="dialog = false" color="#EF5354">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                   </v-row>
@@ -175,6 +174,7 @@ RETURN (customerLevel);
     createFunction() {
       let dialogOptions = { 
         mode: 'createFunction', 
+        icon: 'fas fa-plus',
         title: 'CREATE FUNCTION', 
         text: '', 
         item: { name: '', params: '' }, 
@@ -188,6 +188,7 @@ RETURN (customerLevel);
     renameFunction() {
       let dialogOptions = { 
         mode: 'renameFunction', 
+        icon: 'fas fa-feather-alt',
         title: 'RENAME FUNCTION', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
@@ -200,6 +201,7 @@ RETURN (customerLevel);
     duplicateFunction() {
       let dialogOptions = { 
         mode: 'duplicateFunction', 
+        icon: 'fas fa-clone',
         title: 'DUPLICATE FUNCTION', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
@@ -212,6 +214,7 @@ RETURN (customerLevel);
     deleteFunction() {
       let dialogOptions = { 
         mode: 'deleteFunction', 
+        icon: 'fas fa-minus',
         title: 'DELETE FUNCTION', 
         text: "Are you sure you want to delete the following functions? This operation cannot be undone.",
         item: {}, 
