@@ -5,18 +5,17 @@
     <!------------>
     <v-dialog v-model="dialog" max-width="60%">
       <v-card>
-        <v-toolbar v-if="dialogOptions.text.length == 0" dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-th</v-icon>{{ dialogOptions.title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:3px">{{ dialogOptions.icon }}</v-icon>{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding:15px 15px 5px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <div v-if="dialogOptions.text.length > 0" class="text-h6" style="font-weight:400;"> {{ dialogOptions.title }}</div>
               <v-flex xs12>
-                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
-                  <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
+                <v-form ref="dialogForm" style="margin-bottom:15px">
+                  <div v-if="dialogOptions.text.length > 0" class="body-1">{{ dialogOptions.text }}</div>
                   <div v-if="dialogOptions.mode == 'createTable'">
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Table Name" autofocus required style="padding-top:0px;"></v-text-field>
                     <v-autocomplete @change="getCollations" v-model="dialogOptions.item.encoding" :items="encodings" :rules="[v => !!v || '']" label="Table Encoding" auto-select-first required style="padding-top:0px;"></v-autocomplete>
@@ -24,42 +23,42 @@
                     <v-select v-model="dialogOptions.item.engine" :items="engines" :rules="[v => !!v || '']" label="Table Engine" hide-details required style="padding-top:0px;"></v-select>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'renameTable'">
-                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
+                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current Name" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New Name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'duplicateTable'">
-                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
-                    <v-checkbox v-model="dialogOptions.item.duplicateContent" label="Duplicate table content" hide-details class="body-1" style="padding:0px; font-weight:300;"></v-checkbox>
+                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current Name" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New Name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
+                    <v-checkbox v-model="dialogOptions.item.duplicateContent" label="Duplicate table content" hide-details class="body-1"></v-checkbox>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'truncateTable'">
                     <v-list style="margin-top:2px">
-                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:10px;">
+                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:0px">
                         <v-list-item-content style="padding:0px">
-                          <v-list-item-title style="font-weight:300;"><span style="margin-right:10px;">-</span>{{ item.name }}</v-list-item-title>
+                          <v-list-item-title>{{ item.name }}</v-list-item-title>
                         </v-list-item-content>
                       </v-list-item>
                     </v-list>
-                    <v-checkbox v-model="dialogOptions.item.force" label="Force truncate (disable integrity checks)" hide-details class="body-1" style="padding:0px; margin-top:5px; font-weight:300;"></v-checkbox>
+                    <v-checkbox v-model="dialogOptions.item.force" label="Force Truncate (disable integrity checks)" hide-details class="body-1" style="margin:0px"></v-checkbox>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'deleteTable'">
                     <v-list style="margin-top:2px">
-                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:10px;">
+                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:0px">
                         <v-list-item-content style="padding:0px">
-                          <v-list-item-title style="font-weight:300;"><span style="margin-right:10px;">-</span>{{ item.name }}</v-list-item-title>
+                          <v-list-item-title>{{ item.name }}</v-list-item-title>
                         </v-list-item-content>
                       </v-list-item>
                     </v-list>
-                    <v-checkbox v-model="dialogOptions.item.force" label="Force delete (disable integrity checks)" hide-details class="body-1" style="padding:0px; margin-top:5px; font-weight:300;"></v-checkbox>
+                    <v-checkbox v-model="dialogOptions.item.force" label="Force Delete (disable integrity checks)" hide-details class="body-1" style="margin:0"></v-checkbox>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
-                <div style="margin-top:15px;">
+                <div style="margin-top:15px">
                   <v-row no-gutters>
-                    <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                    <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px">
                       <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
-                    <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
+                    <v-col v-if="dialogOptions.cancel.length > 0">
                       <v-btn :disabled="loading" @click="dialog = false" color="#EF5354">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                   </v-row>
@@ -85,7 +84,7 @@ export default {
       loading: false,
       // Dialog
       dialog: false,
-      dialogOptions: { mode: '', title: '', text: '', item: {}, submit: '', cancel: '' },
+      dialogOptions: { mode: '', icon: '', title: '', text: '', item: {}, submit: '', cancel: '' },
       // Database
       encodings: [],
       collations: [],
@@ -182,6 +181,7 @@ export default {
       this.buildSelectors()
       let dialogOptions = { 
         mode: 'createTable', 
+        icon: 'fas fa-plus',
         title: 'CREATE TABLE', 
         text: '', 
         item: { name: '', encoding: this.encodings[0].value, collation: '', engine: this.engines[0].value }, 
@@ -194,6 +194,7 @@ export default {
     renameTable() {
       let dialogOptions = { 
         mode: 'renameTable', 
+        icon: 'fas fa-feather-alt',
         title: 'RENAME TABLE', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
@@ -206,6 +207,7 @@ export default {
     duplicateTable() {
       let dialogOptions = { 
         mode: 'duplicateTable', 
+        icon: 'fas fa-clone',
         title: 'DUPLICATE TABLE', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '', duplicateContent: false }, 
@@ -218,7 +220,8 @@ export default {
     truncateTable() {
       let dialogOptions = { 
         mode: 'truncateTable', 
-        title: 'TRUNCATE TABLES', 
+        icon: 'fas fa-broom',
+        title: 'TRUNCATE TABLE', 
         text: "Are you sure you want to delete ALL records in the following tables? This operation cannot be undone.", 
         item: { force: false }, 
         submit: 'Confirm',
@@ -230,7 +233,8 @@ export default {
     deleteTable() {
       let dialogOptions = { 
         mode: 'deleteTable', 
-        title: 'DELETE TABLES', 
+        icon: 'fas fa-minus',
+        title: 'DELETE TABLE', 
         text: "Are you sure you want to delete the following tables? This operation cannot be undone.",
         item: { force: false }, 
         submit: 'Confirm',

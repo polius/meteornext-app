@@ -5,20 +5,19 @@
     <!------------>
     <v-dialog v-model="dialog" max-width="60%">
       <v-card>
-        <v-toolbar v-if="dialogOptions.text.length == 0" dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">far fa-clock</v-icon>{{ dialogOptions.title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:3px">{{ dialogOptions.icon }}</v-icon>{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding:15px 15px 5px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <div v-if="dialogOptions.text.length > 0" class="text-h6" style="font-weight:400;"> {{ dialogOptions.title }}</div>
               <v-flex xs12>
-                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:10px;">
-                  <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
+                <v-form ref="dialogForm" style="margin-bottom:10px">
+                  <div class="body-1">{{ dialogOptions.text }}</div>
                   <div v-if="dialogOptions.mode == 'createEvent'">
-                    <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus :rules="[v => !!v || '']" required hide-details style="padding-top:0px;"></v-text-field>
+                    <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus :rules="[v => !!v || '']" required hide-details style="padding-top:8px"></v-text-field>
                     <v-radio-group v-model="dialogOptions.item.timing" hide-details style="margin-top:20px;">
                       <v-row no-gutters>
                         <v-col cols="auto">
@@ -106,18 +105,18 @@
                     <v-select v-model="dialogOptions.item.onCompletion" label="On Completion" :items="['PRESERVE','NOT PRESERVE']" :rules="[v => !!v || '']" required hide-details style="margin-top:15px; padding-bottom:5px"></v-select>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'renameEvent'">
-                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px"></v-text-field>
+                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current Name" required></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New Name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px"></v-text-field>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'duplicateEvent'">
-                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px"></v-text-field>
+                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current Name" required></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New Name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px"></v-text-field>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'deleteEvent'">
                     <v-list style="padding-bottom:0px;">
-                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:10px;">
+                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:0px">
                         <v-list-item-content style="padding:0px">
-                          <v-list-item-title style="font-weight:300;"><span style="margin-right:10px;">-</span>{{ item.name }}</v-list-item-title>
+                          <v-list-item-title>{{ item.name }}</v-list-item-title>
                         </v-list-item-content>
                       </v-list-item>
                     </v-list>
@@ -126,10 +125,10 @@
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
-                    <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                    <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px">
                       <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
-                    <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
+                    <v-col v-if="dialogOptions.cancel.length > 0">
                       <v-btn :disabled="loading" @click="dialog = false" color="#EF5354">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                   </v-row>
@@ -263,7 +262,8 @@ export default {
     },
     createEvent() {
       let dialogOptions = { 
-        mode: 'createEvent', 
+        mode: 'createEvent',
+        icon: 'fas fa-plus', 
         title: 'CREATE EVENT', 
         text: '', 
         item: { 
@@ -285,6 +285,7 @@ export default {
     renameEvent() {
       let dialogOptions = { 
         mode: 'renameEvent', 
+        icon: 'fas fa-feather-alt',
         title: 'RENAME EVENT', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
@@ -296,7 +297,8 @@ export default {
     },
     duplicateEvent() {
       let dialogOptions = { 
-        mode: 'duplicateEvent', 
+        mode: 'duplicateEvent',
+        icon: 'fas fa-clone', 
         title: 'DUPLICATE EVENT', 
         text: '', 
         item: { currentName: this.contextMenuItem.name, newName: '' }, 
@@ -308,7 +310,8 @@ export default {
     },
     deleteEvent() {
       let dialogOptions = { 
-        mode: 'deleteEvent', 
+        mode: 'deleteEvent',
+        icon: 'fas fa-minus', 
         title: 'DELETE EVENT', 
         text: "Are you sure you want to delete the following events? This operation cannot be undone.",
         item: {}, 

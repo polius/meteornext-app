@@ -6,25 +6,25 @@
     <v-dialog v-model="dialog" max-width="60%">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">RENAME FOLDER</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:2px">fas fa-feather-alt</v-icon>RENAME FOLDER</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding:15px 15px 5px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
+                <v-form ref="form" style="margin-top:15px; margin-bottom:15px">
                   <v-text-field readonly v-model="currentName" :rules="[v => !!v || '']" label="Current name" required style="padding-top:0px;"></v-text-field>
                   <v-text-field @keyup.enter="renameFolderSubmit" v-model="newName" :rules="[v => !!v || '']" label="New name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
-                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                    <v-col cols="auto" style="margin-right:5px">
                       <v-btn :loading="loading" @click="renameFolderSubmit" color="#00b16a">Confirm</v-btn>
                     </v-col>
-                    <v-col style="margin-bottom:10px;">
+                    <v-col>
                       <v-btn :disabled="loading" @click="dialog = false" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
