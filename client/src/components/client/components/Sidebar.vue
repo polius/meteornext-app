@@ -231,7 +231,7 @@ export default {
   },
   methods: {
     onBlur() {
-      if (this.sidebarMode == 'servers') {
+      if (this.sidebarMode == 'servers' && !this.dialogOpened) {
         this.$nextTick(() => {
           if (this.$refs.server !== undefined) this.$refs.server.focus()
         })
