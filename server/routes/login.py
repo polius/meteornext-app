@@ -74,7 +74,7 @@ class Login:
                 security = json.loads(security)
                 if user['change_password']:
                     return jsonify({"code": "password_setup", "message": "The password has expired"}), 202
-                if int(security['password_age']) > 0 and user['password_at'] + relativedelta(months=int(security['password_age'])) <= datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"):
+                if int(security['password_age']) > 0 and user['password_at'] + relativedelta(months=int(security['password_age'])) <= datetime.utcnow():
                     return jsonify({"code": "password_setup", "message": "The password has expired"}), 202
 
             # Check MFA

@@ -68,10 +68,10 @@
                   <v-card>
                     <v-row no-gutters align="center" justify="center">
                       <v-col cols="auto" style="display:flex; margin:15px">
-                        <v-icon color="#fa8231">fas fa-exclamation-triangle</v-icon>
+                        <v-icon color="#fa8231">fas fa-shield-alt</v-icon>
                       </v-col>
                       <v-col>
-                        <div class="text-body-1">The password has expired. Please change it.</div>
+                        <div class="text-body-1">Your password has expired and must be changed.</div>
                       </v-col>
                     </v-row>
                   </v-card>
@@ -242,7 +242,7 @@ export default {
       catch (error) {
         this.loading = false
         if (error.response === undefined) this.notification("Can't establish a connection to the server", '#EF5354')
-        else this.notification(error.response.data.message, '#EF5354')
+        else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
       }
     },
     checkInstall() {
