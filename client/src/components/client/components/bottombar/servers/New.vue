@@ -137,7 +137,7 @@
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
                     <v-col cols="auto" style="margin-right:5px">
-                      <v-btn :disabled="selected.length == 0 || loading" :loading="loading" @click="newServerSubmit" color="#00b16a" style="margin-right:10px;">Confirm</v-btn>
+                      <v-btn :disabled="selected.length == 0 || loading" :loading="loading" @click="newServerSubmit" color="#00b16a">Confirm</v-btn>
                     </v-col>
                     <v-col>
                       <v-btn :disabled="loading" @click="dialog = false" color="#EF5354">Cancel</v-btn>
