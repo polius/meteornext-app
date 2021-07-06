@@ -59,22 +59,26 @@
     <!------------>
     <v-dialog v-model="dialog" max-width="50%">
       <v-card>
-        <v-card-text style="padding:15px 15px 5px;">
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:3px">{{ dialogIcon }}</v-icon>{{ dialogTitle }}</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn v-if="dialogMode != 'error'" :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
-              <div class="text-h6" style="font-weight:400;">{{ dialogTitle }}</div>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
-                  <div v-if="dialogText.length>0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogText }}</div>
+                <v-form ref="form">
+                  <div v-if="dialogText.length>0" class="body-1">{{ dialogText }}</div>
                   <v-select v-if="dialogMode=='export'" filled v-model="dialogSelect" :items="['SQL','CSV','JSON','Meteor']" label="Format" hide-details></v-select>
                 </v-form>
-                <v-divider></v-divider>
-                <div style="margin-top:15px;">
-                  <v-row no-gutters>
-                    <v-col v-if="dialogSubmitText.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                <div v-if="dialogSubmitText.length > 0 || dialogCancelText.length > 0">
+                  <v-divider style="margin-top:15px"></v-divider>
+                  <v-row no-gutters style="margin-top:15px">
+                    <v-col v-if="dialogSubmitText.length > 0" cols="auto" style="margin-right:5px">
                       <v-btn :loading="loading" @click="dialogSubmit" :color="dialogSubmitText == 'Close' ? 'primary' : '#00b16a'">{{ dialogSubmitText }}</v-btn>
                     </v-col>
-                    <v-col v-if="dialogCancelText.length > 0" style="margin-bottom:10px;">
+                    <v-col v-if="dialogCancelText.length > 0">
                       <v-btn :disabled="loading" @click="dialogCancel" color="#EF5354">{{ dialogCancelText }}</v-btn>
                     </v-col>
                   </v-row>
@@ -90,7 +94,7 @@
     <!-------------------------->
     <v-dialog v-model="editDialog" persistent max-width="80%">
       <v-card>
-        <v-card-text style="padding:15px 15px 5px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-row no-gutters>
@@ -111,18 +115,18 @@
                 </v-col>
               </v-row>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:10px; margin-bottom:15px;">
+                <v-form ref="form" style="margin-top:10px; margin-bottom:15px">
                   <div style="margin-left:auto; margin-right:auto; height:70vh; width:100%">
                     <div id="editDialogEditor" style="height:100%;"></div>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
-                <div style="margin-top:15px;">
+                <div style="margin-top:15px">
                   <v-row no-gutters>
-                    <v-col cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                    <v-col cols="auto" style="margin-right:5px">
                       <v-btn @click="editDialogSubmit" color="#00b16a">Save</v-btn>
                     </v-col>
-                    <v-col style="margin-bottom:10px;">
+                    <v-col>
                       <v-btn @click="editDialogCancel" color="#EF5354">Cancel</v-btn>
                     </v-col>
                   </v-row>
@@ -176,6 +180,7 @@ export default {
       // Dialog
       dialog: false,
       dialogMode: '',
+      dialogIcon: '',
       dialogTitle: '',
       dialogText: '',
       dialogSubmitText: '',
@@ -401,7 +406,8 @@ export default {
           if (pks.length == 0 || !pks.every(x => x in values)) {
             let dialogOptions = {
               'mode': 'cellEditingError',
-              'title': 'Unable to write row',
+              'icon': 'fas fa-exclamation-triangle',
+              'title': 'ERROR',
               'text': pks.length == 0 ? "The table '" + this.currentQueryMetadata.table + "' does not contain a primary key constraint." : "The result set does not contain the primary keys. Please include the PK columns: " + pks.join(','),
               'button1': 'Edit row',
               'button2': 'Discard changes'
@@ -447,7 +453,8 @@ export default {
                 let data = JSON.parse(error.response.data.data)
                 let dialogOptions = {
                   'mode': 'cellEditingError',
-                  'title': 'Unable to write row',
+                  'icon': 'fas fa-exclamation-triangle',
+                  'title': 'ERROR',
                   'text': data.find(x => 'error' in x).error,
                   'button1': 'Edit row',
                   'button2': 'Discard changes'
@@ -544,12 +551,13 @@ export default {
     editDialogValidate() {
       try {
         JSON.parse(this.editDialogEditor.getValue())
-        EventBus.$emit('send-notification', 'JSON is valid', '#00b16a', 1)
+        EventBus.$emit('send-notification', 'JSON Validated!', '#00b16a', 2)
         return true
       } catch (error) {
         var dialogOptions = {
           'mode': 'info',
-          'title': 'JSON is not valid',
+          'icon': 'fas fa-exclamation-triangle',
+          'title': 'JSON NOT VALIDATED',
           'text': error.toString(),
           'button1': 'Close',
           'button2': ''
@@ -565,7 +573,8 @@ export default {
       } catch (error) {
         var dialogOptions = {
           'mode': 'info',
-          'title': 'JSON is not valid',
+          'icon': 'fas fa-exclamation-triangle',
+          'title': 'JSON NOT VALIDATED',
           'text': error.toString(),
           'button1': 'Close',
           'button2': ''
@@ -887,8 +896,11 @@ export default {
         database: this.database,
         queries: this.parseQueries()
       }
-      this.initExecution(payload)
-      this.executeQuery(payload)
+      if (payload.queries.length > 0) {
+        this.initExecution(payload)
+        this.executeQuery(payload)
+      }
+      else this.clientExecuting = null
     },
     explainQuery() {
       this.clientExecuting = 'explain'
@@ -898,8 +910,11 @@ export default {
         database: this.database,
         queries: this.parseQueries().reduce((acc, val) => { acc.push('EXPLAIN ' + val); return acc }, [])
       }
-      this.initExecution(payload)
-      this.executeQuery(payload)
+      if (payload.queries.length > 0) {
+        this.initExecution(payload)
+        this.executeQuery(payload)
+      }
+      else this.clientExecuting = null
     },
     beautifyQuery() {
       let query = ''
@@ -1007,9 +1022,10 @@ export default {
             // Show confirmation dialog
             var dialogOptions = {
               'mode': 'error',
-              'title': 'Error Message',
+              'icon': 'fas fa-exclamation-triangle',
+              'title': 'ERROR',
               'text': data[data.length-1]['error'],
-              'button1': 'Close',
+              'button1': '',
               'button2': ''
             }
             if (this.index == index) this.showDialog(dialogOptions)
@@ -1118,6 +1134,7 @@ export default {
     },
     showDialog(options) {
       this.dialogMode = options.mode
+      this.dialogIcon = options.icon
       this.dialogTitle = options.title
       this.dialogText = options.text
       this.dialogSubmitText = options.button1
@@ -1139,7 +1156,8 @@ export default {
       this.dialogSelect = 'SQL'
       var dialogOptions = {
         'mode': 'export',
-        'title': 'Export Rows',
+        'icon': 'fas fa-arrow-down',
+        'title': 'EXPORT ROWs',
         'text': '',
         'button1': 'Export',
         'button2': 'Cancel'
