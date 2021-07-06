@@ -645,17 +645,13 @@ class MySQL:
 
     def get_columns_definition(self, db, table):
         query = """
-            SELECT CONCAT(column_name, ' ', column_type) AS 'column'
+            SELECT column_name, column_type
             FROM information_schema.columns
             WHERE table_schema = %s
-            AND table_name = %s;
+            AND table_name = %s
         """
         result = self.execute(query, args=(db, table))['data']
-
-        columns = []
-        for c in result:
-            columns.append(c['column'])
-        return columns
+        return result
 
     def get_all_rights(self):
         query = "SELECT `user`, `host` FROM mysql.`user` ORDER BY `user`, `host`"

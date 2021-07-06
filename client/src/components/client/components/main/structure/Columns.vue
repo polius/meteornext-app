@@ -36,18 +36,17 @@
     <!------------------------------->
     <v-dialog v-model="dialog" max-width="60%">
       <v-card>
-        <v-toolbar v-if="dialogOptions.mode != 'delete'" dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">{{ dialogOptions.title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:3px">{{ dialogOptions.icon }}</v-icon>{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding:15px 15px 5px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <div v-if="dialogOptions.mode == 'delete'" class="text-h6" style="font-weight:400;">{{ dialogOptions.title }}</div>
               <v-flex xs12>
-                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
-                  <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
+                <div v-if="dialogOptions.text.length > 0" class="body-1">{{ dialogOptions.text }}</div>
+                <v-form ref="dialogForm" style="margin-top:15px; margin-bottom:15px;">
                   <div v-if="Object.keys(dialogOptions.item).length > 0">
                     <v-text-field v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
                     <v-autocomplete v-model="dialogOptions.item.type" :items="server.columnTypes" :rules="[v => !!v || '']" label="Type" auto-select-first required style="padding-top:0px;"></v-autocomplete>
@@ -62,7 +61,7 @@
                   </div>
                 </v-form>
                 <v-divider></v-divider>
-                <div style="margin-top:15px; margin-bottom:10px">
+                <div style="margin-top:15px">
                   <v-row no-gutters>
                     <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px;">
                       <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
@@ -221,6 +220,7 @@ export default {
     addColumn() {
       this.dialogOptions = {
         mode: 'new',
+        icon: 'fas fa-plus',
         title: 'NEW COLUMN',
         text: '',
         item: { name: '', type: '', length: '', collation: '', default: '', comment: '', null: false, unsigned: false, current_timestamp: false, auto_increment: false },
@@ -232,6 +232,7 @@ export default {
     editColumn(data) {
       this.dialogOptions = {
         mode: 'edit',
+        icon: 'fas fa-feather-alt',
         title: 'EDIT COLUMN',
         text: '',
         item: {
@@ -254,7 +255,8 @@ export default {
     removeColumn() {
       this.dialogOptions = {
         mode: 'delete',
-        title: 'Delete Column',
+        icon: 'fas fa-minus',
+        title: 'DELETE COLUMN',
         text: "Are you sure you want to delete the column '" + this.gridApi.structure.columns.getSelectedRows()[0].Name + "' from this table? This action cannot be undone.",
         item: {},
         submit: 'Confirm',
