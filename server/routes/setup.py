@@ -186,7 +186,7 @@ class Setup:
 
                     # Init Logs Local Path
                     settings = models.admin.settings.Settings(sql)
-                    setting = {"name": "LOGS", "value": '{{"amazon_s3":{{"enabled":false}},"local":{{"path":"{}"}}}}'.format(self._logs_folder)}
+                    setting = {"name": "LOGS", "value": f'{{"local":{{"path":"{self._logs_folder}","expire":"0"}},"amazon_s3":{{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}}}}'}
                     settings.post(1, setting)
 
             except Exception as e:
