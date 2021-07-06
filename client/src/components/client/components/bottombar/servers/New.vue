@@ -72,7 +72,7 @@
                                       <v-col cols="4" style="padding-left:10px">
                                         <v-row no-gutters>
                                           <v-col cols="auto" style="margin-right:8px">
-                                            <v-icon small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:23px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                                            <v-icon small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:20px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
                                           </v-col>
                                           <v-col>
                                             <v-text-field v-model="item.region" readonly label="Region" required style="padding-top:8px"></v-text-field>
