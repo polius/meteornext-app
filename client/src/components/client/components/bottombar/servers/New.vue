@@ -7,16 +7,16 @@
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="padding-right:10px; padding-bottom:3px">fas fa-plus</v-icon>NEW SERVER</v-toolbar-title>
-          <v-divider class="mx-3" inset vertical></v-divider>
-          <v-btn :disabled="selected.length == 0 || loading" :loading="loading" @click="newServerSubmit" color="primary" style="margin-right:10px;">Save</v-btn>
+          <!-- <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn :disabled="selected.length == 0 || loading" :loading="loading" @click="newServerSubmit" color="primary" style="margin-right:10px;">Save</v-btn> -->
           <v-spacer></v-spacer>
           <v-btn icon @click="dialog = false"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding:10px 15px 5px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:5px; margin-bottom:10px;">
+                <v-form ref="form" style="margin-bottom:15px">
                   <v-card>
                     <v-toolbar flat dense color="#2e3131">
                       <v-toolbar-title class="white--text subtitle-1">SERVERS</v-toolbar-title>
@@ -24,7 +24,7 @@
                       <v-text-field v-model="search" @input="onServerSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding:0px;">
-                      <Splitpanes style="height:70vh">
+                      <Splitpanes style="height:65vh">
                         <Pane size="30" min-size="0" style="align-items:inherit">
                           <v-container fluid style="padding:0px;">
                             <v-row no-gutters style="height:calc(100% - 36px); overflow:auto;">
@@ -55,7 +55,7 @@
                             </v-row>
                           </v-container>
                         </Pane>
-                        <Pane size="70" min-size="0" style="align-items:inherit; background-color:#484848; padding:0px 2% 2% 2%; overflow-y:auto;">
+                        <Pane size="70" min-size="0" style="align-items:inherit; background-color:#484848; padding:1% 2% 1% 2%; overflow-y:auto;">
                           <v-container :style="`height:max(${height},100%); display:flex; align-items:center; justify-content:center;`">
                             <v-layout wrap>
                               <v-flex v-show="Object.keys(item).length == 0" xs12>
@@ -64,45 +64,45 @@
                               <v-flex ref="item" v-show="Object.keys(item).length != 0">
                                 <div class="body-2" style="margin-left:10px; margin-bottom:5px;">Server details</div>
                                 <v-card>
-                                  <v-card-text style="padding:25px 20px 5px 20px; margin-bottom:20px;">
+                                  <v-card-text style="padding:15px">
                                     <v-row no-gutters>
                                       <v-col cols="8" style="padding-right:10px">
-                                        <v-text-field v-model="item.name" readonly label="Name" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                                        <v-text-field v-model="item.name" readonly label="Name" required style="padding-top:8px"></v-text-field>
                                       </v-col>
                                       <v-col cols="4" style="padding-left:10px">
                                         <v-row no-gutters>
                                           <v-col cols="auto" style="margin-right:8px">
-                                            <v-icon small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:13px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                                            <v-icon small :title="item.region_shared ? 'Shared' : 'Personal'" :color="item.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:23px">{{ item.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
                                           </v-col>
                                           <v-col>
-                                            <v-text-field v-model="item.region" readonly label="Region" r equired style="padding-top:0px; font-size:1rem;"></v-text-field>
+                                            <v-text-field v-model="item.region" readonly label="Region" required style="padding-top:8px"></v-text-field>
                                           </v-col>
                                         </v-row>
                                       </v-col>
                                     </v-row>
                                     <!-- SQL -->
-                                    <v-row no-gutters>
+                                    <v-row no-gutters style="margin-bottom:5px">
                                       <v-col cols="8" style="padding-right:10px">
-                                        <v-text-field v-model="item.engine" readonly label="Engine" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                                        <v-text-field v-model="item.engine" readonly label="Engine" required style="padding-top:0px" hide-details></v-text-field>
                                       </v-col>
                                       <v-col cols="4" style="padding-left:10px">
-                                        <v-text-field v-model="item.version" readonly label="Version" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                                        <v-text-field v-model="item.version" readonly label="Version" required style="padding-top:0px" hide-details></v-text-field>
                                       </v-col>
                                     </v-row>
-                                    <div v-if="!(inventory_secured && !owner && item.shared)">
-                                      <v-row no-gutters style="margin-top:10px;">
+                                    <div v-if="!(inventory_secured && !owner && item.shared)" style="margin-top:25px; margin-bottom:10px">
+                                      <v-row no-gutters>
                                         <v-col cols="8" style="padding-right:10px">
-                                          <v-text-field v-model="item.hostname" readonly label="Hostname" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                                          <v-text-field v-model="item.hostname" readonly label="Hostname" required style="padding-top:0px"></v-text-field>
                                         </v-col>
                                         <v-col cols="4" style="padding-left:10px">
-                                          <v-text-field v-model="item.port" readonly label="Port" required style="padding-top:0px; font-size:1rem;"></v-text-field>
+                                          <v-text-field v-model="item.port" readonly label="Port" required style="padding-top:0px"></v-text-field>
                                         </v-col>
                                       </v-row>
-                                      <v-text-field v-model="item.username" readonly label="Username" required style="padding-top:0px; font-size:1rem;"></v-text-field>
-                                      <v-text-field v-model="item.password" readonly label="Password" :append-icon="sqlPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="sqlPassword ? 'text' : 'password'" @click:append="sqlPassword = !sqlPassword" style="padding-top:0px; font-size:1rem;"></v-text-field>
+                                      <v-text-field v-model="item.username" readonly label="Username" required style="padding-top:0px"></v-text-field>
+                                      <v-text-field v-model="item.password" readonly label="Password" :append-icon="sqlPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="sqlPassword ? 'text' : 'password'" @click:append="sqlPassword = !sqlPassword" style="padding-top:0px" hide-details></v-text-field>
                                     </div>
                                     <!-- SSL -->
-                                    <v-card v-if="item.ssl" style="height:52px; margin-bottom:15px">
+                                    <v-card v-if="item.ssl" style="height:52px; margin-top:15px">
                                       <v-row no-gutters>
                                         <v-col cols="auto" style="display:flex; margin:15px">
                                           <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
@@ -113,7 +113,7 @@
                                       </v-row>
                                     </v-card>
                                     <!-- SSH -->
-                                    <v-card v-if="item.ssh" style="height:52px; margin-bottom:15px">
+                                    <v-card v-if="item.ssh" style="height:52px; margin-top:15px">
                                       <v-row no-gutters>
                                         <v-col cols="auto" style="display:flex; margin:15px">
                                           <v-icon color="#2196f3" style="font-size:20px">fas fa-terminal</v-icon>
@@ -133,6 +133,17 @@
                     </v-card-text>
                   </v-card>
                 </v-form>
+                <v-divider></v-divider>
+                <div style="margin-top:15px;">
+                  <v-row no-gutters>
+                    <v-col cols="auto" style="margin-right:5px">
+                      <v-btn :disabled="selected.length == 0 || loading" :loading="loading" @click="newServerSubmit" color="#00b16a" style="margin-right:10px;">Confirm</v-btn>
+                    </v-col>
+                    <v-col>
+                      <v-btn :disabled="loading" @click="dialog = false" color="#EF5354">Cancel</v-btn>
+                    </v-col>
+                  </v-row>
+                </div>
               </v-flex>
             </v-layout>
           </v-container>

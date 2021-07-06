@@ -36,24 +36,37 @@
     <!------------>
     <v-dialog v-model="dialog" max-width="60%">
       <v-card>
-        <v-toolbar v-if="dialogOptions.mode != 'delete'" dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1">{{ dialogOptions.title }}</v-toolbar-title>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:3px">{{ dialogOptions.icon }}</v-icon>{{ dialogOptions.title }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
-        <v-card-text style="padding:15px 15px 5px;">
+        <v-card-text style="padding:15px">
           <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
-              <div v-if="dialogOptions.mode == 'delete'" class="text-h6" style="font-weight:400;">{{ dialogOptions.title }}</div>
               <v-flex xs12>
-                <v-form ref="dialogForm" style="margin-top:10px; margin-bottom:15px;">
-                  <div v-if="dialogOptions.text.length > 0" class="body-1" style="font-weight:300; font-size:1.05rem!important;">{{ dialogOptions.text }}</div>
+                <div v-if="dialogOptions.text.length > 0" class="body-1">{{ dialogOptions.text }}</div>
+                <v-form ref="dialogForm" style="margin-top:15px; margin-bottom:15px">
                   <div v-if="Object.keys(dialogOptions.item).length > 0">
                     <v-text-field v-model="dialogOptions.item.name" label="Name" autofocus required style="padding-top:0px;"></v-text-field>
                     <v-text-field readonly v-model="dialogOptions.item.table" label="Table" required style="padding-top:0px;"></v-text-field>
-                    <v-select v-model="dialogOptions.item.column" :items="dialogOptions.item.column_items" :rules="[v => !!v || '']" label="Column" required style="padding-top:0px;"></v-select>
+                    <v-select v-model="dialogOptions.item.column" :items="dialogOptions.item.column_items" :rules="[v => !!v || '']" item-value="column_name" label="Column" return-object required style="padding-top:0px;">
+                      <template v-slot:[`selection`]="{ item }">
+                        {{ item.column_name + ' ' + item.column_type }}
+                      </template>
+                      <template v-slot:[`item`]="{ item }">
+                        {{ item.column_name + ' ' + item.column_type }}
+                      </template>
+                    </v-select>
                     <v-select @change="getColumns(dialogOptions.item.fk_table, true)" v-model="dialogOptions.item.fk_table" :items="tableItems" :rules="[v => !!v || '']" label="Target table" required style="padding-top:0px;"></v-select>
-                    <v-select v-model="dialogOptions.item.fk_column" :items="dialogOptions.item.fk_column_items" :rules="[v => !!v || '']" label="Target column" required style="padding-top:0px;"></v-select>
+                    <v-select v-model="dialogOptions.item.fk_column" :items="dialogOptions.item.fk_column_items" item-value="column_name" :rules="[v => !!v || '']" label="Target column" return-object required style="padding-top:0px;">
+                      <template v-slot:[`selection`]="{ item }">
+                        {{ item.column_name + ' ' + item.column_type }}
+                      </template>
+                      <template v-slot:[`item`]="{ item }">
+                        {{ item.column_name + ' ' + item.column_type }}
+                      </template>
+                    </v-select>
                     <v-select v-model="dialogOptions.item.on_delete" :items="server.fkRules" label="ON DELETE" style="padding-top:0px;"></v-select>
                     <v-select v-model="dialogOptions.item.on_update" :items="server.fkRules" label="ON UPDATE" hide-details style="padding-top:0px;"></v-select>
                   </div>
@@ -61,10 +74,10 @@
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
                   <v-row no-gutters>
-                    <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px; margin-bottom:10px;">
+                    <v-col v-if="dialogOptions.submit.length > 0" cols="auto" style="margin-right:5px">
                       <v-btn :loading="loading" @click="dialogSubmit" color="#00b16a">{{ dialogOptions.submit }}</v-btn>
                     </v-col>
-                    <v-col v-if="dialogOptions.cancel.length > 0" style="margin-bottom:10px;">
+                    <v-col v-if="dialogOptions.cancel.length > 0">
                       <v-btn :loading="loading2" @click="dialogCancel" color="#EF5354">{{ dialogOptions.cancel }}</v-btn>
                     </v-col>
                     <v-col v-if="loading" cols="auto" class="flex-grow-0 flex-shrink-0">
@@ -216,6 +229,7 @@ export default {
     addFK() {
       this.dialogOptions = {
         mode: 'new',
+        icon: 'fas fa-plus',
         title: 'NEW FOREIGN KEY',
         text: '',
         item: { name: '', table: this.sidebarSelected[0]['name'], column_items: [], column: '', fk_table: '', fk_column_items: [], fk_column: '', on_update: '', on_delete: '' },
@@ -227,7 +241,8 @@ export default {
     removeFK() {
       this.dialogOptions = {
         mode: 'delete',
-        title: 'Delete Foreign Key',
+        icon: 'fas fa-minus',
+        title: 'DELETE FOREIGN KEY',
         text: "Are you sure you want to delete the foreign key '" + this.gridApi.structure.fks.getSelectedRows()[0].Name + "' from this table? This action cannot be undone.",
         item: {},
         submit: 'Confirm',
@@ -250,8 +265,8 @@ export default {
           return
         }
         // Build query
-        let constraintName = (this.dialogOptions.item.name.length > 0) ? 'CONSTRAINT ' + this.dialogOptions.item.name : ''
-        query = "ALTER TABLE `" + this.sidebarSelected[0]['name'] + "` ADD `" + constraintName + "` FOREIGN KEY(" + this.dialogOptions.item.column + ") REFERENCES " + this.dialogOptions.item.fk_table + "(" + this.dialogOptions.item.fk_column + ")"
+        let constraintName = (this.dialogOptions.item.name.length > 0) ? 'CONSTRAINT `' + this.dialogOptions.item.name + '`' : ''
+        query = "ALTER TABLE `" + this.sidebarSelected[0]['name'] + "` ADD " + constraintName + " FOREIGN KEY (" + this.dialogOptions.item.column.column_name + ") REFERENCES " + this.dialogOptions.item.fk_table + "(" + this.dialogOptions.item.fk_column.column_name + ")"
         if (this.dialogOptions.item.on_delete.length > 0) query += " ON DELETE " + this.dialogOptions.item.on_delete
         if (this.dialogOptions.item.on_update.length > 0) query += " ON UPDATE " + this.dialogOptions.item.on_update
         query += ';'
