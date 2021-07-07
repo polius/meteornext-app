@@ -57,7 +57,7 @@
     <!------------>
     <!-- DIALOG -->
     <!------------>
-    <v-dialog v-model="dialog" max-width="50%">
+    <v-dialog v-model="dialog" :persistent="dialogMode == 'cellEditingError'" max-width="50%">
       <v-card>
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:3px">{{ dialogIcon }}</v-icon>{{ dialogTitle }}</v-toolbar-title>
