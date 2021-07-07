@@ -62,7 +62,7 @@
         <v-toolbar dense flat color="primary">
           <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; padding-bottom:3px">{{ dialogIcon }}</v-icon>{{ dialogTitle }}</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn v-if="dialogMode != 'error'" :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+          <v-btn v-if="!(['error','cellEditingError'].includes(dialogMode))" :disabled="loading" @click="dialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px">
           <v-container style="padding:0px">
@@ -1053,7 +1053,14 @@ export default {
       for (let line of beautified.split('\n')) {
         if (line.startsWith('FROM')) {
           // Extract DB & Table
-          const raw = line.slice(5).replace(',','').replace(';','').split('.')
+          let raw = line.slice(5).replace(',','').replace(';','').split('`')
+          if (raw[0].slice(-1) == '.') raw[0] = raw[0].slice(0, -1)
+          let transform = raw.reduce((acc, val) => {
+            if (!(['','.'].includes(val))) acc.push(val)
+            return acc
+          },[])
+          if (raw.count == 1 && transform.length == 1) raw = transform[0].split('.')
+          else raw = transform
           if (raw.length == 1) this.currentQueryMetadata = { database: this.database, table: raw[0].trim()}
           else this.currentQueryMetadata = { database: raw[0].trim(), table: raw[1].trim()}
           found = true
