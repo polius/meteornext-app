@@ -9,6 +9,7 @@
           <v-btn :disabled="loading" text title="Select servers to monitor" @click="openServers()"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SERVERS</v-btn>
           <v-btn :disabled="loading" text title="Filter queries" @click="filter_dialog = true" :style="{ backgroundColor : filter_applied ? '#4ba2f1' : '' }"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn :disabled="loading" text title="Refresh query list" @click="getQueries()"><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
+          <v-btn :disabled="loading" text title="Export queries" @click="exportQueries()"><v-icon small style="margin-right:10px">fas fa-arrow-down</v-icon>EXPORT</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-toolbar-items>
         <v-text-field v-model="queries_search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -680,6 +681,26 @@ export default {
         }
         this.queries_items = items
       }
+    },
+    exportQueries() {
+      let replacer = (key, value) => value === null ? undefined : value
+      let header = this.computedHeaders.map(x => x.value)
+      let exportData = this.queries_items.map(row => header.map(fieldName => {
+        if (['first_seen','last_seen'].includes(fieldName)) return moment(row[fieldName]).format("YYYY-MM-DD HH:mm:ss") + ' UTC'
+        else return JSON.stringify(row[fieldName], replacer)
+      }).join(','))
+      exportData.unshift(this.computedHeaders.map(row => row['text']).join(','))
+      exportData = exportData.join('\r\n')
+      this.download('queries.csv', exportData)
+    },
+    download(filename, text) {
+      var element = document.createElement('a')
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text))
+      element.setAttribute('download', filename)
+      element.style.display = 'none'
+      document.body.appendChild(element)
+      element.click()
+      document.body.removeChild(element)
     },
     dateTimeDialogOpen(field) {
       this.dateTimeField = field
