@@ -382,6 +382,8 @@
     <v-dialog v-model="query_dialog" eager persistent max-width="896px">
       <v-toolbar flat dense color="primary">
         <v-toolbar-title class="white--text subtitle-1">{{ query_dialog_title }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn icon @click="query_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
       <v-card>
         <v-card-text style="padding:0px">
