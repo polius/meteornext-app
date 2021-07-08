@@ -15,12 +15,49 @@
         <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
         <v-btn @click="filterColumnsClick" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table :headers="computedHeaders" :items="queries_items" :options.sync="queries_options" :server-items-length="queries_total" :hide-default-footer="queries_total < 11" multi-sort :loading="loading" class="elevation-1" style="padding-top:5px;">
+      <v-data-table :headers="computedHeaders" :items="queries_items" :options.sync="queries_options" :server-items-length="queries_total" :expanded.sync="expanded" single-expand item-key="id" show-expand :hide-default-footer="queries_total < 11" :loading="loading" class="elevation-1" style="padding-top:5px;">
         <template v-slot:[`item.first_seen`]="{ item }">
-          {{ dateFormat(item.first_seen) }}
+          <span style="display:block; min-width:130px">{{ dateFormat(item.first_seen) }}</span>
         </template>
         <template v-slot:[`item.last_seen`]="{ item }">
-          {{ dateFormat(item.last_seen) }}
+          <span style="display:block; min-width:130px">{{ dateFormat(item.last_seen) }}</span>
+        </template>
+        <template v-slot:[`item.user`]="{ item }">
+          <span style="display:block; min-width:44px">{{ item.user }}</span>
+        </template>
+        <template v-slot:[`item.server`]="{ item }">
+          <v-btn @click="getServer(item.server_id)" text class="body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
+            <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
+              {{ item.shared ? 'fas fa-users' : 'fas fa-user' }}
+            </v-icon>
+            {{ item.server }}
+          </v-btn>
+        </template>
+        <template v-slot:[`item.host`]="{ item }">
+          <span style="display:block; min-width:45px">{{ item.host }}</span>
+        </template>
+        <template v-slot:[`item.db`]="{ item }">
+          <span style="display:block; min-width:70px">{{ item.db }}</span>
+        </template>
+        <template v-slot:[`item.last_execution_time`]="{ item }">
+          <span style="display:block; min-width:62px">{{ item.last_execution_time }}</span>
+        </template>
+        <template v-slot:[`item.max_execution_time`]="{ item }">
+          <span style="display:block; min-width:128px">{{ item.max_execution_time }}</span>
+        </template>
+        <template v-slot:[`item.avg_execution_time`]="{ item }">
+          <span style="display:block; min-width:125px">{{ item.avg_execution_time }}</span>
+        </template>
+        <template v-slot:[`item.count`]="{ item }">
+          <span style="display:block; min-width:52px">{{ item.count }}</span>
+        </template>
+        <template v-slot:[`item.query_text`]="{ item }">
+          <span style="white-space:nowrap">{{ item.query_text }}</span>
+        </template>
+        <template v-slot:expanded-item="{ headers }">
+          <td :colspan="headers.length">
+            <div id="editor" style="width:calc(100vw - 70px); margin-top:15px; margin-bottom:15px"></div>
+          </td>
         </template>
       </v-data-table>
     </v-card>
@@ -106,35 +143,17 @@
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:10px; margin-bottom:20px;">
                   <v-row>
-                    <v-col cols="8" style="padding-right:5px;">
-                      <v-text-field text v-model="filter.query_text" label="Query" required style="padding-top:0px;" hide-details></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-left:5px;">
-                      <v-select text v-model="filter.query_text_options" label="Filter" :items="filter_options" :rules="[v => ((filter.query_text === undefined || filter.query_text.length == 0) || (filter.query_text.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
-                    </v-col>
-                  </v-row>
-                  <v-row style="margin-top:10px">
-                    <v-col cols="8" style="padding-right:5px;">
-                      <v-text-field text v-model="filter.db" label="Database" required style="padding-top:0px;" hide-details></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-left:5px;">
-                      <v-select text v-model="filter.db_options" label="Filter" :items="filter_options" :rules="[v => ((filter.db === undefined || filter.db.length == 0) || (filter.db.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
-                    </v-col>
-                  </v-row>
-                  <v-row style="margin-top:10px">
-                    <v-col cols="8" style="padding-right:5px;">
-                      <v-text-field text v-model="filter.server" label="Server" required style="padding-top:0px;" hide-details></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-left:5px;">
-                      <v-select text v-model="filter.server_options" label="Filter" :items="filter_options" :rules="[v => ((filter.server === undefined || filter.server.length == 0) || (filter.server.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
-                    </v-col>
-                  </v-row>
-                  <v-row style="margin-top:10px">
-                    <v-col cols="8" style="padding-right:5px;">
-                      <v-text-field text v-model="filter.user" label="User" required style="padding-top:0px;" hide-details></v-text-field>
-                    </v-col>
-                    <v-col cols="4" style="padding-left:5px;">
-                      <v-select text v-model="filter.user_options" label="Filter" :items="filter_options" :rules="[v => ((filter.user === undefined || filter.user.length == 0) || (filter.user.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
+                    <v-col>
+                      <v-autocomplete v-model="filter.server" item-value="id" item-text="name" :items="filterServers" label="Server" style="padding-top:0px;" hide-details>
+                        <template v-slot:[`selection`]="{ item }">
+                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
+                        <template v-slot:[`item`]="{ item }">
+                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" :style="item.shared ? 'margin-right:10px' : 'margin-right:13px; margin-left:3px'">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
+                      </v-autocomplete>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
@@ -142,7 +161,55 @@
                       <v-text-field text v-model="filter.host" label="Host" required style="padding-top:0px;" hide-details></v-text-field>
                     </v-col>
                     <v-col cols="4" style="padding-left:5px;">
-                      <v-select text v-model="filter.host_options" label="Filter" :items="filter_options" :rules="[v => ((filter.host === undefined || filter.host.length == 0) || (filter.host.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
+                      <v-select text v-model="filter.hostFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.host === undefined || filter.host.length == 0) || (filter.host.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="8" style="padding-right:5px;">
+                      <v-text-field text v-model="filter.user" label="User" required style="padding-top:0px;" hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:5px;">
+                      <v-select text v-model="filter.userFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.user === undefined || filter.user.length == 0) || (filter.user.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="8" style="padding-right:5px;">
+                      <v-text-field text v-model="filter.database" label="Database" required style="padding-top:0px;" hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:5px;">
+                      <v-select text v-model="filter.databaseFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.database === undefined || filter.database.length == 0) || (filter.database.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="8" style="padding-right:5px;">
+                      <v-text-field text v-model="filter.query" label="Query" required style="padding-top:0px;" hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:5px;">
+                      <v-select text v-model="filter.queryFilter" label="Filter" :items="filters" item-value="id" item-text="name" :rules="[v => ((filter.query === undefined || filter.query.length == 0) || (filter.query.length > 0 && !!v)) || '']" style="padding-top:0px;" hide-details></v-select>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="6" style="padding-right:8px;">
+                      <v-text-field v-model="filter.firstSeenFrom" label="First Seen - From" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('firstSeenFrom')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                    <v-col cols="6" style="padding-left:8px;">
+                      <v-text-field v-model="filter.firstSeenTo" label="First Seen - To" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('firstSeenTo')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row style="margin-top:10px">
+                    <v-col cols="6" style="padding-right:8px;">
+                      <v-text-field v-model="filter.lastSeenFrom" label="Last Seen - From" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('lastSeenFrom')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
+                    </v-col>
+                    <v-col cols="6" style="padding-left:8px;">
+                      <v-text-field v-model="filter.lastSeenTo" label="Last Seen - To" style="padding-top:0px" hide-details>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('lastSeenTo')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                      </v-text-field>
                     </v-col>
                   </v-row>
                 </v-form>
@@ -177,17 +244,17 @@
               <v-flex xs12>
                 <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
                   <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
-                  <v-checkbox v-model="columnsRaw" label="Query" value="query_text" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Database" value="db" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Server" value="server" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="User" value="user" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Host" value="host" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="First Seen" value="first_seen" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Last Seen" value="last_seen" hide-details style="margin-top:5px"></v-checkbox>
-                  <v-checkbox v-model="columnsRaw" label="Last Execution Time" value="last_execution_time" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Server" value="server" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Host" value="host" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="User" value="user" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Database" value="db" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Elapsed" value="last_execution_time" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Max Execution Time" value="max_execution_time" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Avg Execution Time" value="avg_execution_time" hide-details style="margin-top:5px"></v-checkbox>
                   <v-checkbox v-model="columnsRaw" label="Count" value="count" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Query" value="query_text" hide-details style="margin-top:5px"></v-checkbox>
                   <v-divider style="margin-top:15px;"></v-divider>
                   <div style="margin-top:20px;">
                     <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
@@ -201,6 +268,98 @@
       </v-card>
     </v-dialog>
 
+    <!-- Preload -->
+    <div v-show="false" id="editor" style="height:50vh; width:100%"></div>
+
+    <!------------------->
+    <!-- SERVER DIALOG -->
+    <!------------------->
+    <v-dialog v-model="serverDialog" max-width="768px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">SERVER</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn readonly title="Create the server only for a user" :color="!server.shared ? 'primary' : '#779ecb'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn readonly title="Create the server for all users in a group" :color="server.shared ? 'primary' : '#779ecb'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="serverDialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-progress-linear v-show="serverLoading" indeterminate></v-progress-linear>
+        <v-card-text style="padding: 0px 15px 15px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:20px;">
+                  <v-row no-gutters style="margin-bottom:15px">
+                    <v-col>
+                      <v-text-field readonly v-model="server.group" label="Group" hide-details style="padding-top:0px"></v-text-field>
+                    </v-col>
+                    <v-col v-if="!server.shared" style="margin-left:20px">
+                      <v-text-field readonly v-model="server.owner" label="Owner" hide-details style="padding-top:0px"></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row no-gutters>
+                    <v-col cols="8" style="padding-right:10px">
+                      <v-text-field readonly v-model="server.name" label="Name"></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:10px">
+                      <v-text-field readonly v-model="server.region" label="Region">
+                        <template v-slot:prepend-inner>
+                          <v-icon small :color="server.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:4px; margin-right:5px">{{ server.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                        </template>
+                      </v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row no-gutters>
+                    <v-col cols="8" style="padding-right:10px">
+                      <v-text-field readonly v-model="server.engine" label="Engine" style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:10px">
+                      <v-text-field readonly v-model="server.version" label="Version" style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <div style="margin-bottom:20px">
+                    <v-row no-gutters>
+                      <v-col cols="8" style="padding-right:10px">
+                        <v-text-field readonly v-model="server.hostname" label="Hostname" style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                      <v-col cols="4" style="padding-left:10px">
+                        <v-text-field readonly v-model="server.port" label="Port" style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                    </v-row>
+                    <v-text-field readonly v-model="server.username" label="Username" style="padding-top:0px;"></v-text-field>
+                    <v-text-field readonly v-model="server.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" hide-details></v-text-field>
+                    <v-text-field readonly outlined v-model="server.usage" label="Usage" hide-details style="margin-top:20px"></v-text-field>
+                  </div>
+                </v-form>
+                <v-divider></v-divider>
+                <v-row no-gutters style="margin-top:20px;">
+                  <v-col>
+                    <v-btn :loading="serverLoading" color="info" @click="testConnection()">Test Connection</v-btn>
+                  </v-col>
+                </v-row>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="dateTimeDialog" persistent width="290px">
+      <v-date-picker v-if="dateTimeMode == 'date'" v-model="dateTimeValue.date" color="info" scrollable>
+        <v-btn text color="#00b16a" @click="dateTimeSubmit">Confirm</v-btn>
+        <v-btn text color="#EF5354" @click="dateTimeDialog = false">Cancel</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn text color="info" @click="dateTimeNow">Now</v-btn>
+      </v-date-picker>
+      <v-time-picker v-else-if="dateTimeMode == 'time'" v-model="dateTimeValue.time" color="info" format="24hr" use-seconds scrollable>
+        <v-btn text color="#00b16a" @click="dateTimeSubmit">Confirm</v-btn>
+        <v-btn text color="#EF5354" @click="dateTimeDialog = false">Cancel</v-btn>
+        <v-spacer></v-spacer>
+        <v-btn text color="info" @click="dateTimeNow">Now</v-btn>
+      </v-time-picker>
+    </v-dialog>
+
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -210,13 +369,25 @@
   </div>
 </template>
 
-<style>
-
+<style scoped>
+.ace-monokai {
+  background-color: #303030;
+}
+::deep .ace_scroller {
+  padding: 13px!important;
+}
+::deep .ace_scrollbar.ace_scrollbar-v {
+  display: none;
+}
 </style>
 
 <script>
 import axios from 'axios'
 import moment from 'moment'
+import ace from 'ace-builds'
+import 'ace-builds/webpack-resolver'
+import 'ace-builds/src-noconflict/ext-language_tools'
+import sqlFormatter from '@sqltools/formatter'
 
 export default {
   data: () => ({
@@ -224,23 +395,25 @@ export default {
 
     // Queries
     queries_headers: [
+      { text: 'First Seen', align: 'left', value: 'first_seen' },
+      { text: 'Last Seen', align: 'left', value: 'last_seen' },
+      { text: 'Server', align: 'left', value: 'server' },
+      { text: 'Host', align: 'left', value: 'host' },
+      { text: 'User', align: 'left', value: 'user' },
+      { text: 'Database', align: 'left', value: 'db' },
+      { text: 'Elapsed', align: 'left', value: 'last_execution_time' },
+      { text: 'Max Execution Time', align: 'left', value: 'max_execution_time' },
+      { text: 'Avg Execution Time', align: 'left', value: 'avg_execution_time' },
+      { text: 'Count', align: 'left', value: 'count' },
       { text: 'Query', align: 'left', value: 'query_text', sortable: false },
-      { text: 'Database', align: 'left', value: 'db', width: '1%' },
-      { text: 'Server', align: 'left', value: 'server', width: '1%' },
-      { text: 'User', align: 'left', value: 'user', width: '1%' },
-      { text: 'Host', align: 'left', value: 'host', width: '1%' },
-      { text: 'First Seen', align: 'left', value: 'first_seen', width: '1%' },
-      { text: 'Last Seen', align: 'left', value: 'last_seen', width: '1%' },
-      { text: 'Last Execution Time', align: 'left', value: 'last_execution_time', width: '1%' },
-      { text: 'Max Execution Time', align: 'left', value: 'max_execution_time', width: '1%' },
-      { text: 'Avg Execution Time', align: 'left', value: 'avg_execution_time', width: '1%' },
-      { text: 'Count', align: 'left', value: 'count', width: '1%' }
     ],
     queries_origin: [],
     queries_items: [],
     queries_search: '',
     queries_total: 0,
     queries_options: {},
+    editor: null,
+    expanded: [],
 
     // Settings Dialog
     settings_dialog: false,        
@@ -261,13 +434,33 @@ export default {
     // Filter Dialog
     filter_dialog: false,
     filter: {},
-    filter_options: ['Equal', 'Not equal', 'Starts', 'Not starts'],
+    filters: [
+      {id: 'equal', name: 'Equal'},
+      {id: 'not_equal', name: 'Not equal'},
+      {id: 'starts', name: 'Starts'},
+      {id: 'not_starts', name: 'Not starts'},
+      {id: 'contains', name: 'Contains'},
+      {id: 'not_contains', name: 'Not contains'}
+    ],
+    filterServers: [],
     filter_applied: false,
+
+    // DateTime Dialog
+    dateTimeDialog: false,
+    dateTimeMode: 'date',
+    dateTimeField: '',
+    dateTimeValue: { date: null, time: null },
 
     // Filter Columns Dialog
     columnsDialog: false,
-    columns: ['query_text','db','server','user','last_seen','last_execution_time','count'],
+    columns: ['query_text','db','server','last_seen','last_execution_time','count'],
     columnsRaw: [],
+
+    // Server Dialog
+    serverLoading: false,
+    serverDialog: false,
+    server: {},
+    showPassword: false,
 
     // Snackbar
     snackbar: false,
@@ -278,27 +471,34 @@ export default {
   computed: {
     computedHeaders() { return this.queries_headers.filter(x => this.columns.includes(x.value)) }
   },
+  mounted() {
+    this.editor = ace.edit("editor", {
+      mode: "ace/mode/mysql",
+      theme: "ace/theme/monokai",
+    })
+  },
   methods: {
     getQueries() {
-      // Init vars
       this.loading = true
-
-      // Build query options
       const { sortBy, sortDesc, page, itemsPerPage } = this.queries_options
-
-      // Build filter    
-      const filter = this.filter
-
+      var payload = {}
+      // Build Filter
+      let filter = this.filter_applied ? JSON.parse(JSON.stringify(this.filter)) : null
+      if (this.filter_applied && 'firstSeenFrom' in filter) filter.firstSeenFrom = moment(this.filter.firstSeenFrom).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (this.filter_applied && 'firstSeenTo' in filter) filter.firstSeenTo = moment(this.filter.firstSeenTo).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (this.filter_applied && 'lastSeenFrom' in filter) filter.lastSeenFrom = moment(this.filter.lastSeenFrom).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (this.filter_applied && 'lastSeenTo' in filter) filter.lastSeenTo = moment(this.filter.lastSeenTo).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (filter != null) payload['filter'] = filter
       // Build sort
-      const sort = (sortBy.length > 0) ? [sortBy, sortDesc] : []
-
+      if (sortBy.length > 0) payload['sort'] = { column: sortBy[0], desc: sortDesc[0] }
       // Get queries
-      axios.get('/monitoring/queries', { params: { filter: JSON.stringify(filter), sort: JSON.stringify(sort) }})
+      axios.get('/monitoring/queries', { params: payload})
         .then((response) => {
           // First time
           if (this.submit_servers) {
             this.parseSettings(response.data.settings)
             this.parseTreeView(response.data.servers)
+            this.parseServers(response.data.servers)
             this.submit_servers = false
           }
           let items = response.data.queries
@@ -308,12 +508,12 @@ export default {
           this.queries_items = items
           // Apply search
           this.applySearch(this.queries_search)
-          this.loading = false
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
+        .finally(() => this.loading = false)
     },
     parseSettings(settings) {
       if (settings.length > 0) {
@@ -350,6 +550,10 @@ export default {
         this.treeviewOpened = opened
       }
     },
+    parseServers(servers) {
+      const serversList = servers.map(x => ({id: x.server_id, name: x.server_name, shared: x.server_shared}))
+      this.filterServers = serversList.sort((a,b) => (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : ((b.name.toLowerCase() > a.name.toLowerCase()) ? -1 : 0))
+    },
     openSettings() {
       this.settings = { query_execution_time: this.execution_time, query_data_retention: this.data_retention },
       this.settings_dialog = true
@@ -362,6 +566,7 @@ export default {
       }
       // Update settings        
       this.loading = true
+      this.settings.monitor_base_url = window.location.origin
       const payload = this.settings
       axios.put('/monitoring/settings', payload)
         .then((response) => {
@@ -402,20 +607,50 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
     },
+    getServer(server_id) {
+      // Get Server
+      this.serverLoading = true
+      this.showPassword = false
+      this.serverDialog = true
+      const payload = { server_id: server_id }
+      axios.get('/admin/inventory/servers', { params: payload })
+        .then((response) => {
+          // Build usage
+          let usage = []
+          if (response.data.servers[0].usage.includes('D')) usage.push('Deployments')
+          if (response.data.servers[0].usage.includes('M')) usage.push('Monitoring')
+          if (response.data.servers[0].usage.includes('U')) usage.push('Utils')
+          if (response.data.servers[0].usage.includes('C')) usage.push('Client')
+          // Add server
+          this.server = {...response.data.servers[0], usage: usage.join(', ')}
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.serverLoading = false)
+    },
+    testConnection() {
+      // Test Connection
+      this.notification('Testing Server...', 'info')
+      this.serverLoading = true
+      const payload = {
+        region_id: this.server.region_id,
+        server: { engine: this.server.engine, hostname: this.server.hostname, port: this.server.port, username: this.server.username, password: this.server.password }
+      }
+      axios.post('/admin/inventory/servers/test', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.serverLoading = false)
+    },
     submitFilter() {
       this.loading = true
       // Check if all fields are filled
-      if (
-        (this.filter.query_text === undefined || this.filter.query_text.length == 0) &&
-        (this.filter.db === undefined || this.filter.db.length == 0) &&
-        (this.filter.server === undefined || this.filter.server.length == 0) &&
-        (this.filter.user === undefined || this.filter.user.length == 0) &&
-        (this.filter.host === undefined || this.filter.host.length == 0)
-      ) {
-        this.notification('Please enter at least one filter', '#EF5354')
-        this.loading = false
-        return
-      }
       if (!this.$refs.form.validate()) {
         this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
         this.loading = false
@@ -445,6 +680,30 @@ export default {
         }
         this.queries_items = items
       }
+    },
+    dateTimeDialogOpen(field) {
+      this.dateTimeField = field
+      this.dateTimeMode = 'date'
+      this.dateTimeValue = { date: moment().format("YYYY-MM-DD"), time: moment().format("HH:mm") }
+      if (this.filter[field] !== undefined && this.filter[field].length > 0) {
+        let isValid = moment(this.filter[field], 'YYYY-MM-DD HH:mm', true).isValid()
+        if (!isValid) {
+          this.notification("Enter a valid date", '#EF5354')
+          return
+        }
+        this.dateTimeValue = { date: moment(this.filter[field]).format("YYYY-MM-DD"), time: moment(this.filter[field]).format("HH:mm") }
+      }
+      this.dateTimeDialog = true
+    },
+    dateTimeSubmit() {
+      if (this.dateTimeMode == 'date') this.dateTimeMode = 'time'
+      else {
+        this.filter[this.dateTimeField] = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
+        this.dateTimeDialog = false
+      }
+    },
+    dateTimeNow() {
+      this.dateTimeValue = { date: moment().format("YYYY-MM-DD"), time: moment().format("HH:mm") }
     },
     filterColumnsClick() {
       this.columnsRaw = [...this.columns]
@@ -478,6 +737,39 @@ export default {
     // eslint-disable-next-line
     queries_search: function (newValue, oldValue) {
       this.applySearch(newValue)
+    },
+    expanded: function(val) {
+      if (val.length == 0) return
+      this.$nextTick(() => {
+        // Init ACE Editor
+        this.editor = ace.edit("editor", {
+          mode: "ace/mode/mysql",
+          theme: "ace/theme/monokai",
+          maxLines: 20,
+          fontSize: 14,
+          showPrintMargin: false,
+          // wrap: false,
+          readOnly: true,
+          showGutter: false,
+        })
+        this.editor.commands.removeCommand('showSettingsMenu')
+        this.editor.container.addEventListener("keydown", (e) => {
+          // - Increase Font Size -
+          if (e.key.toLowerCase() == "+" && (e.ctrlKey || e.metaKey)) {
+            let size = parseInt(this.editor.getFontSize(), 10) || 12
+            this.editor.setFontSize(size + 1)
+            e.preventDefault()
+          }
+          // - Decrease Font Size -
+          else if (e.key.toLowerCase() == "-" && (e.ctrlKey || e.metaKey)) {
+            let size = parseInt(this.editor.getFontSize(), 10) || 12
+            this.editor.setFontSize(Math.max(size - 1 || 1))
+            e.preventDefault()
+          }
+        }, false)
+        let sqlFormatted = sqlFormatter.format(this.expanded[0].query_text, { reservedWordCase: 'upper', linesBetweenQueries: 2 })
+        this.editor.setValue(sqlFormatted, -1)
+      })
     }
   }
 }

@@ -41,7 +41,7 @@
             Error:
             <span style="margin-left:5px">{{ item.error }}</span>
           </div>
-          <div id="editor" style="width:calc(100vw - 51px); margin-top:10px; margin-bottom:15px"></div>
+          <div id="editor" style="width:calc(100vw - 70px); margin-top:10px; margin-bottom:15px"></div>
         </td>
       </template>
     </v-data-table>
@@ -316,7 +316,7 @@ export default {
       if (this.dateTimeField == 'from' && this.filter.dateFrom !== undefined && this.filter.dateFrom.length > 0) {
         let isValid = moment(this.filter.dateFrom, 'YYYY-MM-DD HH:mm', true).isValid()
         if (!isValid) {
-          this.notification("Enter a valid date in 'Date From'", '#EF5354')
+          this.notification("Enter a valid date", '#EF5354')
           return
         }
         this.dateTimeValue = { date: moment(this.filter.dateFrom).format("YYYY-MM-DD"), time: moment(this.filter.dateFrom).format("HH:mm") }
@@ -324,7 +324,7 @@ export default {
       else if (this.dateTimeField == 'to' && this.filter.dateTo !== undefined && this.filter.dateTo.length > 0) {
         let isValid = moment(this.filter.dateTo, 'YYYY-MM-DD HH:mm', true).isValid()
         if (!isValid) {
-          this.notification("Enter a valid date in 'Date To'", '#EF5354')
+          this.notification("Enter a valid date", '#EF5354')
           return
         }
         this.dateTimeValue = { date: moment(this.filter.dateTo).format("YYYY-MM-DD"), time: moment(this.filter.dateTo).format("HH:mm") }

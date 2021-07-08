@@ -135,36 +135,36 @@
                   <v-row style="margin-top:10px">
                     <v-col cols="6" style="padding-right:8px;">
                       <v-text-field v-model="filter.createdFrom" label="Created - From" style="padding-top:0px" hide-details>
-                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('created_from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('createdFrom')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
                     </v-col>
                     <v-col cols="6" style="padding-left:8px;">
                       <v-text-field v-model="filter.createdTo" label="Created - To" style="padding-top:0px" hide-details>
-                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('created_to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('createdTo')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col cols="6" style="padding-right:8px;">
                       <v-text-field v-model="filter.startedFrom" label="Started - From" style="padding-top:0px" hide-details>
-                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('started_from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('startedFrom')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
                     </v-col>
                     <v-col cols="6" style="padding-left:8px;">
                       <v-text-field v-model="filter.startedTo" label="Started - To" style="padding-top:0px" hide-details>
-                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('started_to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('startedTo')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
                     </v-col>
                   </v-row>
                   <v-row style="margin-top:10px">
                     <v-col cols="6" style="padding-right:8px;">
                       <v-text-field v-model="filter.endedFrom" label="Ended - From" style="padding-top:0px" hide-details>
-                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('ended_from')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('endedFrom')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
                     </v-col>
                     <v-col cols="6" style="padding-left:8px;">
                       <v-text-field v-model="filter.endedTo" label="Ended - To" style="padding-top:0px" hide-details>
-                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('ended_to')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
+                        <template v-slot:append><v-icon @click="dateTimeDialogOpen('endedTo')" small style="margin-top:4px; margin-right:4px">fas fa-calendar-alt</v-icon></template>
                       </v-text-field>
                     </v-col>
                   </v-row>
@@ -440,29 +440,20 @@ export default {
       this.dateTimeField = field
       this.dateTimeMode = 'date'
       this.dateTimeValue = { date: moment().format("YYYY-MM-DD"), time: moment().format("HH:mm") }
-      if (this.dateTimeField == 'from' && this.filter.dateFrom !== undefined && this.filter.dateFrom.length > 0) {
-        let isValid = moment(this.filter.dateFrom, 'YYYY-MM-DD HH:mm', true).isValid()
+      if (this.filter[field] !== undefined && this.filter[field].length > 0) {
+        let isValid = moment(this.filter[field], 'YYYY-MM-DD HH:mm', true).isValid()
         if (!isValid) {
-          this.notification("Enter a valid date in 'Date From'", '#EF5354')
+          this.notification("Enter a valid date", '#EF5354')
           return
         }
-        this.dateTimeValue = { date: moment(this.filter.dateFrom).format("YYYY-MM-DD"), time: moment(this.filter.dateFrom).format("HH:mm") }
-      }
-      else if (this.dateTimeField == 'to' && this.filter.dateTo !== undefined && this.filter.dateTo.length > 0) {
-        let isValid = moment(this.filter.dateTo, 'YYYY-MM-DD HH:mm', true).isValid()
-        if (!isValid) {
-          this.notification("Enter a valid date in 'Date To'", '#EF5354')
-          return
-        }
-        this.dateTimeValue = { date: moment(this.filter.dateTo).format("YYYY-MM-DD"), time: moment(this.filter.dateTo).format("HH:mm") }
+        this.dateTimeValue = { date: moment(this.filter[field]).format("YYYY-MM-DD"), time: moment(this.filter[field]).format("HH:mm") }
       }
       this.dateTimeDialog = true
     },
     dateTimeSubmit() {
       if (this.dateTimeMode == 'date') this.dateTimeMode = 'time'
       else {
-        if (this.dateTimeField == 'from') this.filter.dateFrom = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
-        else if (this.dateTimeField == 'to') this.filter.dateTo = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
+        this.filter[this.dateTimeField] = this.dateTimeValue.date + ' ' + this.dateTimeValue.time
         this.dateTimeDialog = false
       }
     },

@@ -49,13 +49,13 @@ class Queries:
     # Internal Methods #
     ####################
     def get(self, user):
-        # Apply filter & sort
-        if request.args['filter'] and request.args['sort']:
-            filters = json.loads(request.args['filter'])
-            sort = json.loads(request.args['sort'])
-            if len(filters.keys()) > 0 or len(sort) > 0:
-                queries = self._monitoring_queries.get(user, filters, sort)
-                return jsonify({'queries': queries}), 200
+        # Get Queries
+        mfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
+        msort = json.loads(request.args['sort']) if 'sort' in request.args else None
+
+        if mfilter is not None or msort is not None:
+            queries = self._monitoring_queries.get(user, mfilter, msort)
+            return jsonify({'queries': queries}), 200
 
         # Do not apply filter & sort
         settings = self._monitoring_settings.get(user)
