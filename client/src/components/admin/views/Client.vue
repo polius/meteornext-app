@@ -130,9 +130,9 @@ export default {
   methods: {
     getServer(server_id) {
       // Get Server
+      this.loading = true
       this.showPassword = false
       this.serverDialog = true
-      this.loading = true
       const payload = { server_id: server_id }
       axios.get('/admin/inventory/servers', { params: payload })
         .then((response) => {
