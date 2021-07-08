@@ -60,8 +60,8 @@ class Monitoring:
                 JOIN monitoring m ON m.user_id = s.user_id
                 GROUP BY m.server_id
             ) t ON t.server_id = q.server_id
-            WHERE (t.server_id IS NULL AND DATE_ADD(q.first_seen, INTERVAL t.data_retention HOUR) <= %s)
-            OR (t.server_id IS NOT NULL AND DATE_ADD(q.first_seen, INTERVAL 24 HOUR) <= %s);
+            WHERE t.server_id IS NULL
+            OR DATE_ADD(q.first_seen, INTERVAL t.data_retention HOUR) <= %s)
         """
         self._sql.execute(query=query, args=(utcnow, utcnow))
 
