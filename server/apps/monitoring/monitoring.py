@@ -63,7 +63,7 @@ class Monitoring:
             WHERE t.server_id IS NULL
             OR DATE_ADD(q.first_seen, INTERVAL t.data_retention HOUR) <= %s)
         """
-        self._sql.execute(query=query, args=(utcnow, utcnow))
+        self._sql.execute(query=query, args=(utcnow))
 
     ####################
     # Internal Methods #
