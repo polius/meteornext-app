@@ -379,21 +379,21 @@
       </v-time-picker>
     </v-dialog>
 
-    <v-dialog v-model="query_dialog" persistent max-width="896px">
+    <v-dialog v-model="query_dialog" eager persistent max-width="896px">
       <v-toolbar flat dense color="primary">
         <v-toolbar-title class="white--text subtitle-1">{{ query_dialog_title }}</v-toolbar-title>
       </v-toolbar>
       <v-card>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding:0px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="query_form" v-if="query_dialog_mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
-                  <v-textarea ref="field" rows="1" filled auto-grow hide-details v-model="query_dialog_item" label="Queries" :rules="[v => !!v || '']" required></v-textarea>
-                </v-form>
-                <div style="padding-top:10px; padding-bottom:10px" v-if="query_dialog_mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected queries?</div>
-                <v-divider></v-divider>
-                <div style="margin-top:20px;">
+                <div v-if="query_dialog_mode == 'delete'" class="subtitle-1" style="margin:15px">Are you sure you want to delete the selected queries?</div>
+                <div v-else>
+                  <codemirror id="codemirrorQuery" ref="codemirror" v-model="query_dialog_code" :options="cmOptions2"></codemirror>
+                </div>
+                <v-divider style="margin:15px"></v-divider>
+                <div style="padding:0px 15px 15px 15px">
                   <v-btn color="#00b16a" @click="queryActionConfirm()">Confirm</v-btn>
                   <v-btn color="#EF5354" @click="query_dialog=false" style="margin-left:5px">Cancel</v-btn>
                 </div>
@@ -534,6 +534,9 @@
 .CodeMirror-scrollbar-filler {
   background-color: rgb(55, 53, 64);
 }
+#codemirrorQuery .CodeMirror {
+  min-height: 60vh;
+}
 </style>
 
 <style scoped>
@@ -553,6 +556,7 @@
 
   // language
   import 'codemirror/mode/python/python.js'
+  import 'codemirror/mode/sql/sql.js'
   // theme css
   import 'codemirror/theme/one-dark.css' // monokai.css
 
@@ -641,7 +645,7 @@
       query_dialog: false,
       query_dialog_mode: '',
       query_dialog_title: '',
-      query_dialog_item: '',
+      query_dialog_code: '',
       // - Select -
       select_dialog: false,
       // - Action -
@@ -718,6 +722,52 @@
           }
         }
       },
+      cmOptions2: {
+        readOnly: false,
+        autoCloseBrackets: true,
+        styleActiveLine: true,
+        lineNumbers: true,
+        tabSize: 4,
+        indentUnit: 4,
+        line: true,
+        foldGutter: true,
+        matchBrackets: true,
+        showCursorWhenSelecting: true,
+        mode: 'sql',
+        theme: 'one-dark',
+        keyMap: 'sublime',
+        extraKeys: {
+          Tab: function(cm) {
+            if (cm.somethingSelected()) cm.indentSelection("add")
+            else cm.replaceSelection("    " , "end")
+          },
+          "Esc": function(cm) {
+            cm.setOption("fullScreen", !cm.getOption("fullScreen"))
+          },
+          "Ctrl-S": function(cm) {
+            var textFileAsBlob = new Blob([cm.getValue()], { type: "text/plain;charset=utf-8" })
+            var downloadLink = document.createElement("a")
+            downloadLink.download = "meteor.py"
+            downloadLink.style.display = "none"
+            if (window.webkitURL != null) downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob)
+            else downloadLink.href = window.URL.createObjectURL(textFileAsBlob)
+            document.body.appendChild(downloadLink)
+            downloadLink.click()
+            document.body.removeChild(downloadLink)
+          },
+          "Cmd-S": function(cm) {
+            var textFileAsBlob = new Blob([cm.getValue()], { type: "text/plain;charset=utf-8" })
+            var downloadLink = document.createElement("a")
+            downloadLink.download = "meteor.py"
+            downloadLink.style.display = "none"
+            if (window.webkitURL != null) downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob)
+            else downloadLink.href = window.URL.createObjectURL(textFileAsBlob)
+            document.body.appendChild(downloadLink)
+            downloadLink.click()
+            document.body.removeChild(downloadLink)
+          }
+        }
+      },
       // Loading
       loading: false,
       timer: null,
@@ -731,10 +781,7 @@
       // Execution URL
       url: window.location.protocol + '//' + window.location.host,
     }),
-    components: { 
-      codemirror,
-      Viewer
-    },
+    components: { codemirror, Viewer },
     created() {
       this.init()
     },
@@ -1217,13 +1264,13 @@
       // -------------------------------------
       newQuery() {
         this.query_dialog_mode = 'new'
-        this.query_dialog_item = ''
-        this.query_dialog_title = 'NEW QUERY'
+        this.query_dialog_code = ''
+        this.query_dialog_title = 'NEW QUERIES'
         this.query_dialog = true
       },
       editQuery () {
         this.query_dialog_mode = 'edit'
-        this.query_dialog_item = this.information_dialog_query_selected[0]['query']
+        this.query_dialog_code = this.information_dialog_query_selected[0]['query']
         this.query_dialog_title = 'EDIT QUERY'
         this.query_dialog = true
       },
@@ -1265,8 +1312,8 @@
       },
       newQueryConfirm() {
         // Check if all fields are filled
-        if (!this.$refs.query_form.validate()) {
-          this.notification('Please fill the required fields', '#EF5354')
+        if (this.query_dialog_code.trim().length == 0) {
+          this.notification('Please enter a query', '#EF5354')
           return
         }
 
@@ -1281,7 +1328,7 @@
         // Post-tasks
         this.information_dialog_query_selected = []
         this.query_dialog = false
-        this.notification('Query added successfully', '#00b16a')
+        this.notification('Queries added successfully', '#00b16a')
       },
       editQueryConfirm() {
         // Parse Queries
@@ -1296,7 +1343,7 @@
         }
 
         // Edit item in the data table
-        this.information_dialog_data.queries.splice(i, 1, {"id": this.query_dialog_item[i]['id'], "query": this.query_dialog_item})
+        this.information_dialog_data.queries.splice(i, 1, {"id": this.query_dialog_code[i]['id'], "query": this.query_dialog_code})
         this.information_dialog_query_selected = []
         this.query_dialog = false
         this.notification('Query edited successfully', '#00b16a')
@@ -1321,22 +1368,22 @@
         var queries = []
         var start = 0;
         var chars = []
-        for (var i = 0; i < this.query_dialog_item.length; ++i) {
-          if (this.query_dialog_item[i] == ';' && chars.length == 0) {
-            queries.push({"id": id, "query": this.query_dialog_item.substring(start, i+1).trim()})
+        for (var i = 0; i < this.query_dialog_code.length; ++i) {
+          if (this.query_dialog_code[i] == ';' && chars.length == 0) {
+            queries.push({"id": id, "query": this.query_dialog_code.substring(start, i+1).trim()})
             id += 1
             start = i+1
           }
-          else if (this.query_dialog_item[i] == "\"") {
+          else if (this.query_dialog_code[i] == "\"") {
             if (chars[chars.length-1] == '"') chars.pop()
             else chars.push("\"")
           }
-          else if (this.query_dialog_item[i] == "'") {
+          else if (this.query_dialog_code[i] == "'") {
             if (chars[chars.length-1] == "'") chars.pop()
             else chars.push("'")
           }
         }
-        if (start < i) queries.push({"id": id, "query": this.query_dialog_item.substring(start, i).trim()})
+        if (start < i) queries.push({"id": id, "query": this.query_dialog_code.substring(start, i).trim()})
         // Return parsed queries
         return queries
       },
@@ -1419,9 +1466,11 @@
     watch: {
       query_dialog (val) {
         if (!val) return
-        requestAnimationFrame(() => {
-          if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
-          if (typeof this.$refs.query_form !== 'undefined') this.$refs.query_form.resetValidation()
+        this.cmOptions2.readOnly = true
+        this.$nextTick(() => {
+          if (this.$refs.codemirror === undefined) return
+          const codemirror = this.$refs.codemirror.codemirror
+          setTimeout(() => { codemirror.refresh(); codemirror.focus(); this.cmOptions2.readOnly = false }, 200)
         })
       },
       '$route' () {
