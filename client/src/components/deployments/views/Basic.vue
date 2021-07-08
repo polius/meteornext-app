@@ -117,21 +117,23 @@
       </v-time-picker>
     </v-dialog>
 
-    <v-dialog v-model="queryDialog" persistent max-width="896px">
+    <v-dialog v-model="queryDialog" eager persistent max-width="896px">
       <v-toolbar flat dense color="primary">
         <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:1px">{{query_mode == 'new' ? 'fas fa-plus' : query_mode == 'edit' ? 'fas fa-feather-alt' : 'fas fa-minus'}}</v-icon>{{ queryDialogTitle }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn icon @click="queryDialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
       <v-card>
-        <v-card-text style="padding: 0px 15px 15px;">
+        <v-card-text style="padding: 0px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="query_form" v-if="query_mode!='delete'" style="margin-top:15px; margin-bottom:20px;">
-                  <v-textarea ref="field" rows="1" filled auto-grow hide-details v-model="query_item" label="Queries" :rules="[v => !!v || '']" required></v-textarea>
-                </v-form>
-                <div style="margin-top:10px; margin-bottom:10px" v-if="query_mode=='delete'" class="subtitle-1">{{ queryDialogText }}</div>
-                <v-divider></v-divider>
-                <div style="margin-top:20px;">
+                <div v-if="query_mode == 'delete'" class="subtitle-1" style="margin:15px">{{ queryDialogText }}</div>
+                <div v-else>
+                  <codemirror ref="codemirror" v-model="code" :options="cmOptions"></codemirror>
+                </div>
+                <v-divider style="margin:15px"></v-divider>
+                <div style="padding:0px 15px 15px 15px">
                   <v-btn color="#00b16a" @click="actionConfirm()">Confirm</v-btn>
                   <v-btn color="#EF5354" @click="queryDialog=false" style="margin-left:5px">Cancel</v-btn>
                 </div>
@@ -151,9 +153,43 @@
   </div>
 </template>
 
+<style scoped>
+::v-deep .CodeMirror {
+  min-height: 60vh;
+  font-size: 14px;
+}
+</style>
+
 <script>
 import axios from 'axios'
 import moment from 'moment'
+
+// CODE-MIRROR
+import { codemirror } from 'vue-codemirror'
+import 'codemirror/lib/codemirror.css'
+
+// language
+import 'codemirror/mode/sql/sql.js'
+// theme css
+import 'codemirror/theme/one-dark.css' // monokai.css
+
+// require active-line.js
+import 'codemirror/addon/selection/active-line.js'
+// closebrackets
+import 'codemirror/addon/edit/closebrackets.js'
+// keyMap
+import 'codemirror/mode/clike/clike.js'
+import 'codemirror/addon/edit/matchbrackets.js'
+import 'codemirror/addon/comment/comment.js'
+import 'codemirror/addon/dialog/dialog.js'
+import 'codemirror/addon/dialog/dialog.css'
+import 'codemirror/addon/selection/mark-selection.js'
+import 'codemirror/addon/search/searchcursor.js'
+import 'codemirror/addon/search/search.js'
+import 'codemirror/keymap/sublime.js'
+import 'codemirror/addon/selection/active-line.js'
+import 'codemirror/addon/display/fullscreen.js'
+import 'codemirror/addon/display/fullscreen.css'
 
 export default {
   data() {
@@ -164,7 +200,6 @@ export default {
       // Query
       query_headers: [{ text: 'Query', value: 'query' }],
       query_items: [],
-      query_item: '',
       query_selected: [],
       query_mode: '', // new, edit, delete
 
@@ -187,6 +222,53 @@ export default {
       // Query Dialog
       queryDialog: false,
       queryDialogTitle: '',
+      code: '',
+      cmOptions: {
+        readOnly: false,
+        autoCloseBrackets: true,
+        styleActiveLine: true,
+        lineNumbers: true,
+        tabSize: 4,
+        indentUnit: 4,
+        line: true,
+        foldGutter: true,
+        matchBrackets: true,
+        showCursorWhenSelecting: true,
+        mode: 'sql',
+        theme: 'one-dark',
+        keyMap: 'sublime',
+        extraKeys: {
+          Tab: function(cm) {
+            if (cm.somethingSelected()) cm.indentSelection("add")
+            else cm.replaceSelection("    " , "end")
+          },
+          "Esc": function(cm) {
+            cm.setOption("fullScreen", !cm.getOption("fullScreen"))
+          },
+          "Ctrl-S": function(cm) {
+            var textFileAsBlob = new Blob([cm.getValue()], { type: "text/plain;charset=utf-8" })
+            var downloadLink = document.createElement("a")
+            downloadLink.download = "meteor.py"
+            downloadLink.style.display = "none"
+            if (window.webkitURL != null) downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob)
+            else downloadLink.href = window.URL.createObjectURL(textFileAsBlob)
+            document.body.appendChild(downloadLink)
+            downloadLink.click()
+            document.body.removeChild(downloadLink)
+          },
+          "Cmd-S": function(cm) {
+            var textFileAsBlob = new Blob([cm.getValue()], { type: "text/plain;charset=utf-8" })
+            var downloadLink = document.createElement("a")
+            downloadLink.download = "meteor.py"
+            downloadLink.style.display = "none"
+            if (window.webkitURL != null) downloadLink.href = window.webkitURL.createObjectURL(textFileAsBlob)
+            else downloadLink.href = window.URL.createObjectURL(textFileAsBlob)
+            document.body.appendChild(downloadLink)
+            downloadLink.click()
+            document.body.removeChild(downloadLink)
+          },
+        }
+      },
 
       // Loading Fields
       loading: true,
@@ -198,6 +280,7 @@ export default {
       snackbarText: ''
     }
   },
+  components: { codemirror },
   created() {
     this.getReleases()
     this.getEnvironments()
@@ -261,13 +344,13 @@ export default {
     },
     newQuery() {
       this.query_mode = 'new'
-      this.query_item = ''
-      this.queryDialogTitle = 'NEW QUERY'
+      this.code = ''
+      this.queryDialogTitle = 'NEW QUERIES'
       this.queryDialog = true
     },
     editQuery () {
       this.query_mode = 'edit'
-      this.query_item = this.query_selected[0]['query']
+      this.code = this.query_selected[0]['query']
       this.queryDialogTitle = 'EDIT QUERY'
       this.queryDialog = true
     },
@@ -284,8 +367,8 @@ export default {
     },
     newQueryConfirm() {
       // Check if all fields are filled
-      if (!this.$refs.query_form.validate()) {
-        this.notification('Please fill the required fields', '#EF5354')
+      if (this.code.trim().length == 0) {
+        this.notification('Please enter a query', '#EF5354')
         return
       }
 
@@ -300,12 +383,12 @@ export default {
       // Post-tasks
       this.query_selected = []
       this.queryDialog = false
-      this.notification('Query added successfully', '#00b16a')
+      this.notification('Queries added successfully', '#00b16a')
     },
     editQueryConfirm() {
       // Check if all fields are filled
-      if (!this.$refs.query_form.validate()) {
-        this.notification('Please fill the required fields', '#EF5354')
+      if (this.code.trim().length == 0) {
+        this.notification('Please enter a query', '#EF5354')
         return
       }
 
@@ -321,7 +404,7 @@ export default {
       }
 
       // Edit item in the data table
-      this.query_items.splice(i, 1, {"id": this.query_items[i]['id'], "query": this.query_item})
+      this.query_items.splice(i, 1, {"id": this.query_items[i]['id'], "query": this.code})
       this.query_selected = []
       this.queryDialog = false
       this.notification('Query edited successfully', '#00b16a')
@@ -346,22 +429,22 @@ export default {
       var queries = []
       var start = 0;
       var chars = []
-      for (var i = 0; i < this.query_item.length; ++i) {
-        if (this.query_item[i] == ';' && chars.length == 0) {
-          queries.push({"id": id, "query": this.query_item.substring(start, i+1).trim()})
+      for (var i = 0; i < this.code.length; ++i) {
+        if (this.code[i] == ';' && chars.length == 0) {
+          queries.push({"id": id, "query": this.code.substring(start, i+1).trim()})
           id += 1
           start = i+1
         }
-        else if (this.query_item[i] == '"' && (i == 0 || this.query_item[i-1] != '\\')) {
+        else if (this.code[i] == '"' && (i == 0 || this.code[i-1] != '\\')) {
           if (chars.length == 0) chars.push('"')
           else if (chars[chars.length-1] == '"') chars.pop()
         }
-        else if (this.query_item[i] == "'" && (i == 0 || this.query_item[i-1] != '\\')) {
+        else if (this.code[i] == "'" && (i == 0 || this.code[i-1] != '\\')) {
           if (chars.length == 0) chars.push("'")
           else if (chars[chars.length-1] == "'") chars.pop()
         }
       }
-      if (start < i) queries.push({"id": id, "query": this.query_item.substring(start, i).trim()})
+      if (start < i) queries.push({"id": id, "query": this.code.substring(start, i).trim()})
       // Return parsed queries
       return queries
     },
@@ -442,11 +525,13 @@ export default {
   watch: {
     queryDialog (val) {
       if (!val) return
-      requestAnimationFrame(() => {
-        if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
-        if (typeof this.$refs.query_form !== 'undefined') this.$refs.query_form.resetValidation()
+      this.cmOptions.readOnly = true
+      this.$nextTick(() => {
+        if (this.$refs.codemirror === undefined) return
+        const codemirror = this.$refs.codemirror.codemirror
+        setTimeout(() => { codemirror.refresh(); codemirror.focus(); this.cmOptions.readOnly = false }, 200)
       })
-    }
+    },
   }
 }
 </script>
