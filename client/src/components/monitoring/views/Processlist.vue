@@ -289,7 +289,7 @@ export default {
         this.processlist_items[i] = []
         for (let j = 0; j < threads[i].length; ++j) {
           if (this.filter == 'All') this.processlist_items[i].push(threads[i][j])
-          else if (this.filter == 'Query' && threads[i][j]['COMMAND'].include('Query', 'Execute')) this.processlist_items[i].push(threads[i][j])
+          else if (this.filter == 'Query' && ['Query', 'Execute'].includes(threads[i][j]['COMMAND'])) this.processlist_items[i].push(threads[i][j])
           else if (this.filter == 'Sleep' && threads[i][j]['COMMAND'] == 'Sleep') this.processlist_items[i].push(threads[i][j])
         }
       }
