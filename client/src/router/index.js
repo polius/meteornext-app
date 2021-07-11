@@ -178,7 +178,7 @@ let router = new VueRouter({
           path: '',
           name: 'utils',
           meta: { requiresUtils: true },
-          redirect: { name: 'utils.compare' }
+          redirect: { name: 'utils.restore' }
         },
         {
           path: 'compare',

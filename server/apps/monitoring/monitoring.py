@@ -61,7 +61,7 @@ class Monitoring:
                 GROUP BY m.server_id
             ) t ON t.server_id = q.server_id
             WHERE t.server_id IS NULL
-            OR DATE_ADD(q.first_seen, INTERVAL t.data_retention HOUR) <= %s)
+            OR DATE_ADD(q.first_seen, INTERVAL t.data_retention DAY) <= %s
         """
         self._sql.execute(query=query, args=(utcnow))
 
