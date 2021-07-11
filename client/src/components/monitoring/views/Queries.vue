@@ -76,7 +76,7 @@
               <v-flex xs12>
                 <v-form ref="form" style="margin-bottom:15px;">
                   <v-text-field filled v-model="settings.query_execution_time" label="Minimum Execution Time (seconds)" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-bottom:10px;" hide-details></v-text-field>
-                  <v-text-field filled v-model="settings.query_data_retention" label="Data Retention Timeframe (hours)" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
+                  <v-text-field filled v-model="settings.query_data_retention" label="Data Retention (days)" required :rules="[v => v == parseInt(v) && v > 0 || '']" style="margin-top:15px; margin-bottom:10px;" hide-details></v-text-field>
                 </v-form>
                 <v-divider></v-divider>
                 <div style="margin-top:15px;">
