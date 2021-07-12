@@ -517,8 +517,6 @@ class Deployments:
         else:
             execution['status'] = 'CREATED'
 
-        print(current_execution['status'])
-        print(execution['status'])
         # Edit the execution
         if current_execution['status'] in ['CREATED','SCHEDULED']:
             self._executions.put(user['id'], execution)
