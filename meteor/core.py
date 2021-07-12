@@ -183,7 +183,7 @@ class core:
         conn = connector(connection)
         conn.start()
         try:
-            code = '/*B' + str(self._imports.config['params']['id']) + '*/' if self._imports.config['params']['mode'] == 'basic' else '/*P' + str(self._imports.config['params']['id']) + '*/'
+            code = '/*' + str(self._imports.config['params']['id']) + '*/'
             results = conn.execute(query=f"SELECT id FROM processlist WHERE info LIKE '{code}%'", database='information_schema')
             if connection['sql']['engine'] == 'MySQL':
                 for result in results['query_result']:

@@ -17,19 +17,19 @@
                 <v-form ref="dialogForm" style="margin-bottom:15px">
                   <div v-if="dialogOptions.text.length > 0" class="body-1">{{ dialogOptions.text }}</div>
                   <div v-if="dialogOptions.mode == 'createTable'">
-                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Table Name" autofocus required style="padding-top:0px;"></v-text-field>
+                    <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.name" :rules="[v => !!v || '']" label="Table Name" autofocus required style="padding-top:8px"></v-text-field>
                     <v-autocomplete @change="getCollations" v-model="dialogOptions.item.encoding" :items="encodings" :rules="[v => !!v || '']" label="Table Encoding" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                     <v-autocomplete :disabled="loading" :loading="loading" v-model="dialogOptions.item.collation" :items="collations" :rules="[v => !!v || '']" label="Table Collation" auto-select-first required style="padding-top:0px;"></v-autocomplete>
                     <v-select v-model="dialogOptions.item.engine" :items="engines" :rules="[v => !!v || '']" label="Table Engine" hide-details required style="padding-top:0px;"></v-select>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'renameTable'">
-                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current Name" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current Name" required></v-text-field>
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New Name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'duplicateTable'">
-                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current Name" required style="padding-top:0px;"></v-text-field>
+                    <v-text-field readonly v-model="dialogOptions.item.currentName" :rules="[v => !!v || '']" label="Current Name" required></v-text-field>
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New Name" autofocus required hide-details style="padding-top:0px;"></v-text-field>
-                    <v-checkbox v-model="dialogOptions.item.duplicateContent" label="Duplicate table content" hide-details class="body-1"></v-checkbox>
+                    <v-checkbox v-model="dialogOptions.item.duplicateContent" label="Duplicate Content" hide-details class="body-1"></v-checkbox>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'truncateTable'">
                     <v-list style="margin-top:2px">
@@ -39,7 +39,7 @@
                         </v-list-item-content>
                       </v-list-item>
                     </v-list>
-                    <v-checkbox v-model="dialogOptions.item.force" label="Force Truncate (disable integrity checks)" hide-details class="body-1" style="margin:0px"></v-checkbox>
+                    <v-checkbox v-model="dialogOptions.item.force" label="Force Truncate (Disable Integrity Checks)" hide-details class="body-1" style="margin:0px"></v-checkbox>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'deleteTable'">
                     <v-list style="margin-top:2px">
@@ -49,7 +49,7 @@
                         </v-list-item-content>
                       </v-list-item>
                     </v-list>
-                    <v-checkbox v-model="dialogOptions.item.force" label="Force Delete (disable integrity checks)" hide-details class="body-1" style="margin:0"></v-checkbox>
+                    <v-checkbox v-model="dialogOptions.item.force" label="Force Delete (Disable Integrity Checks)" hide-details class="body-1" style="margin:0"></v-checkbox>
                   </div>
                 </v-form>
                 <v-divider></v-divider>

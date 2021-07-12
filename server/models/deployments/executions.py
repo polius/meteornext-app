@@ -43,8 +43,7 @@ class Executions:
                 `user_id` = %s
             WHERE id = %s
         """
-        status = 'CREATED' if execution['scheduled'] is None else 'SCHEDULED'
-        self._sql.execute(query, (execution['environment_id'], execution['mode'], execution['databases'], execution['queries'], execution['code'], execution['method'], status, execution['scheduled'], user_id, execution['id']))
+        self._sql.execute(query, (execution['environment_id'], execution['mode'], execution['databases'], execution['queries'], execution['code'], execution['method'], execution['status'], execution['scheduled'], user_id, execution['id']))
 
     def updateStatus(self, execution_id, status, extra=None):
         if extra is None:

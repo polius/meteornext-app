@@ -1234,7 +1234,6 @@
         else if (this.information_dialog_execution_mode == 'PRO') {
           payload['code'] = this.information_dialog_data.code
         }
-
         // Add deployment to the DB
         this.loading = true
         axios.put('/deployments', payload)
@@ -1246,7 +1245,7 @@
           // Clear current deployment
           this.clear()
           // Get new deployment
-          if (this.information_dialog_mode == 're-deploy' || payload['start_execution']) {
+          if (this.information_dialog_mode == 're-deploy') {
             this.$router.push({ name: 'deployment', params: { id: data['id'] }})
           }
           else this.getDeployment()
