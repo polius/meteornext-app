@@ -482,6 +482,9 @@ class Deployments:
         if authority['id'] != user['id'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
 
+        # Get deployment authority group
+        group = self._groups.get(group_id=authority['group_id'])[0]
+
         # Check environment authority
         environment = self._environments.get(user_id=authority['id'], group_id=authority['group_id'], environment_id=data['environment'])
         if len(environment) == 0:
@@ -502,27 +505,33 @@ class Deployments:
             if datetime.datetime.strptime(execution['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
 
-        # Proceed editing the deployment
-        if current_execution['status'] in ['CREATED','SCHEDULED'] and not execution['start_execution']:
+        # Check logs path permissions
+        if not self.__check_logs_path():
+            return jsonify({'message': 'The local logs path has no write permissions'}), 400
+
+        # Set Execution Status
+        if execution['scheduled'] is not None:
+            execution['status'] = 'SCHEDULED'
+        elif execution['start_execution']:
+            execution['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
+        else:
+            execution['status'] = 'CREATED'
+
+        print(current_execution['status'])
+        print(execution['status'])
+        # Edit the execution
+        if current_execution['status'] in ['CREATED','SCHEDULED']:
             self._executions.put(user['id'], execution)
-            return jsonify({'message': 'Deployment edited successfully', 'data': {'id': execution['id']}}), 200
+            execution_id = execution['id']
+            coins = user['coins']
+            if not execution['start_execution']:
+                return jsonify({'message': 'Deployment edited successfully', 'data': {'id': execution_id}}), 200
+
+        # Create a new execution
         else:
             # Check Coins
-            group = self._groups.get(group_id=authority['group_id'])[0]
             if not (authority['id'] != user['id'] and user['admin']) and (user['coins'] - group['coins_execution']) < 0:
                 return jsonify({'message': 'Insufficient Coins'}), 400
-
-            # Check logs path permissions
-            if not self.__check_logs_path():
-                return jsonify({'message': 'The local logs path has no write permissions'}), 400
-
-            # Set Deployment Status
-            if execution['scheduled'] is not None:
-                execution['status'] = 'SCHEDULED'
-            elif execution['start_execution']:
-                execution['status'] = 'QUEUED' if group['deployments_execution_concurrent'] else 'STARTING'
-            else:
-                execution['status'] = 'CREATED'
 
             # Create a new Deployment
             execution['deployment_id'] = current_execution['deployment_id']
@@ -535,33 +544,33 @@ class Deployments:
                 self._users.consume_coins(user, group['coins_execution'])
                 coins = user['coins'] - group['coins_execution']
 
-            # Build Response Data
-            response = { 'id': execution_id, 'coins': coins }
+        # Build Response Data
+        response = { 'id': execution_id, 'coins': coins }
 
-            if execution['start_execution'] and not group['deployments_execution_concurrent']:
-                # Build Meteor Execution
-                meteor = {
-                    'id': execution_id,
-                    'user_id': authority['id'],
-                    'username': user['username'],
-                    'group_id': authority['group_id'],
-                    'environment_id': environment['id'],
-                    'environment_name': environment['name'],
-                    'mode': execution['mode'],
-                    'method': execution['method'],
-                    'queries': execution['queries'],
-                    'databases': execution['databases'],
-                    'code': execution['code'],
-                    'url': execution['url'],
-                    'execution_threads': group['deployments_execution_threads'],
-                    'execution_timeout': group['deployments_execution_timeout']
-                }
+        if execution['start_execution'] and not group['deployments_execution_concurrent']:
+            # Build Meteor Execution
+            meteor = {
+                'id': execution_id,
+                'user_id': authority['id'],
+                'username': user['username'],
+                'group_id': authority['group_id'],
+                'environment_id': environment['id'],
+                'environment_name': environment['name'],
+                'mode': execution['mode'],
+                'method': execution['method'],
+                'queries': execution['queries'],
+                'databases': execution['databases'],
+                'code': execution['code'],
+                'url': execution['url'],
+                'execution_threads': group['deployments_execution_threads'],
+                'execution_timeout': group['deployments_execution_timeout']
+            }
 
-                # Start Meteor Execution
-                self._meteor.execute(meteor)
-                return jsonify({'message': 'Deployment Launched', 'data': response}), 200
+            # Start Meteor Execution
+            self._meteor.execute(meteor)
+            return jsonify({'message': 'Deployment Launched', 'data': response}), 200
 
-            return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
+        return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
 
     def __start(self, user, data):
         # Check logs path permissions
