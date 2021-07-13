@@ -181,15 +181,9 @@ let router = new VueRouter({
           redirect: { name: 'utils.restore' }
         },
         {
-          path: 'compare',
-          name: 'utils.compare',
-          component: () => import('../components/utils/views/Compare'),
-          meta: { requiresUtils: true }
-        },
-        {
           path: 'restore',
           name: 'utils.restore',
-          component: () => import('../components/utils/views/Restore'),
+          component: () => import('../components/utils/restore/Restore'),
           meta: { requiresUtils: true }
         }
       ]

@@ -32,23 +32,27 @@
                     <v-checkbox v-model="dialogOptions.item.duplicateContent" label="Duplicate Content" hide-details class="body-1"></v-checkbox>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'truncateTable'">
-                    <v-list style="margin-top:2px">
-                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:0px">
-                        <v-list-item-content style="padding:0px">
-                          <v-list-item-title>{{ item.name }}</v-list-item-title>
-                        </v-list-item-content>
-                      </v-list-item>
-                    </v-list>
+                    <v-card style="margin-top:15px; margin-bottom:15px">
+                      <v-list>
+                        <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px">
+                          <v-list-item-content style="padding:0px">
+                            <v-list-item-title>{{ item.name }}</v-list-item-title>
+                          </v-list-item-content>
+                        </v-list-item>
+                      </v-list>
+                    </v-card>
                     <v-checkbox v-model="dialogOptions.item.force" label="Force Truncate (Disable Integrity Checks)" hide-details class="body-1" style="margin:0px"></v-checkbox>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'deleteTable'">
-                    <v-list style="margin-top:2px">
-                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:0px">
-                        <v-list-item-content style="padding:0px">
-                          <v-list-item-title>{{ item.name }}</v-list-item-title>
-                        </v-list-item-content>
-                      </v-list-item>
-                    </v-list>
+                    <v-card style="margin-top:15px; margin-bottom:15px">
+                      <v-list>
+                        <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px">
+                          <v-list-item-content style="padding:0px">
+                            <v-list-item-title>{{ item.name }}</v-list-item-title>
+                          </v-list-item-content>
+                        </v-list-item>
+                      </v-list>
+                    </v-card>
                     <v-checkbox v-model="dialogOptions.item.force" label="Force Delete (Disable Integrity Checks)" hide-details class="body-1" style="margin:0"></v-checkbox>
                   </div>
                 </v-form>
@@ -222,7 +226,7 @@ export default {
         mode: 'truncateTable', 
         icon: 'fas fa-broom',
         title: 'TRUNCATE TABLE', 
-        text: "Are you sure you want to delete ALL records in the following tables? This operation cannot be undone.", 
+        text: "Are you sure you want to delete ALL records in the selected tables? This operation cannot be undone.", 
         item: { force: false }, 
         submit: 'Confirm',
         cancel: 'Cancel'
@@ -235,7 +239,7 @@ export default {
         mode: 'deleteTable', 
         icon: 'fas fa-minus',
         title: 'DELETE TABLE', 
-        text: "Are you sure you want to delete the following tables? This operation cannot be undone.",
+        text: "Are you sure you want to delete the selected tables? This operation cannot be undone.",
         item: { force: false }, 
         submit: 'Confirm',
         cancel: 'Cancel'
