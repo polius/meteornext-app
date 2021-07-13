@@ -485,10 +485,10 @@ export default {
       var payload = {}
       // Build Filter
       let filter = this.filter_applied ? JSON.parse(JSON.stringify(this.filter)) : null
-      if (this.filter_applied && 'firstSeenFrom' in filter) filter.firstSeenFrom = moment(this.filter.firstSeenFrom).utc().format("YYYY-MM-DD HH:mm:ss")
-      if (this.filter_applied && 'firstSeenTo' in filter) filter.firstSeenTo = moment(this.filter.firstSeenTo).utc().format("YYYY-MM-DD HH:mm:ss")
-      if (this.filter_applied && 'lastSeenFrom' in filter) filter.lastSeenFrom = moment(this.filter.lastSeenFrom).utc().format("YYYY-MM-DD HH:mm:ss")
-      if (this.filter_applied && 'lastSeenTo' in filter) filter.lastSeenTo = moment(this.filter.lastSeenTo).utc().format("YYYY-MM-DD HH:mm:ss")
+      if (this.filter_applied && 'firstSeenFrom' in filter && this.dateValid(this.filter.firstSeenFrom)) filter.firstSeenFrom = this.dateUTC(this.filter.firstSeenFrom)
+      if (this.filter_applied && 'firstSeenTo' in filter && this.dateValid(this.filter.firstSeenTo)) filter.firstSeenTo = this.dateUTC(this.filter.firstSeenTo)
+      if (this.filter_applied && 'lastSeenFrom' in filter && this.dateValid(this.filter.lastSeenFrom)) filter.lastSeenFrom = this.dateUTC(this.filter.lastSeenFrom)
+      if (this.filter_applied && 'lastSeenTo' in filter && this.dateValid(this.filter.lastSeenTo)) filter.lastSeenTo = this.dateUTC(this.filter.lastSeenTo)
       if (filter != null) payload['filter'] = filter
       // Build sort
       if (sortBy.length > 0) payload['sort'] = { column: sortBy[0], desc: sortDesc[0] }
@@ -743,6 +743,12 @@ export default {
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
+    },
+    dateValid(date) {
+      return moment(date, 'YYYY-MM-DD HH:mm', true).isValid()
+    },
+    dateUTC(date) {
+      return moment(date).utc().format("YYYY-MM-DD HH:mm:ss")
     },
     notification(message, color) {
       this.snackbarText = message
