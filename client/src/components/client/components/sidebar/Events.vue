@@ -113,13 +113,15 @@
                     <v-text-field @keyup.enter="dialogSubmit" v-model="dialogOptions.item.newName" :rules="[v => !!v || '']" label="New Name" autofocus required hide-details style="padding-top:0px; padding-bottom:5px"></v-text-field>
                   </div>
                   <div v-else-if="dialogOptions.mode == 'deleteEvent'">
-                    <v-list style="padding-bottom:0px;">
-                      <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px; padding-left:0px">
-                        <v-list-item-content style="padding:0px">
-                          <v-list-item-title>{{ item.name }}</v-list-item-title>
-                        </v-list-item-content>
-                      </v-list-item>
-                    </v-list>
+                    <v-card style="margin-top:15px; margin-bottom:15px">
+                      <v-list>
+                        <v-list-item v-for="item in sidebarSelected" :key="item.key" style="min-height:35px">
+                          <v-list-item-content style="padding:0px">
+                            <v-list-item-title>{{ item.name }}</v-list-item-title>
+                          </v-list-item-content>
+                        </v-list-item>
+                      </v-list>
+                    </v-card>
                   </div>
                 </v-form>
                 <v-divider></v-divider>
@@ -313,7 +315,7 @@ export default {
         mode: 'deleteEvent',
         icon: 'fas fa-minus', 
         title: 'DELETE EVENT', 
-        text: "Are you sure you want to delete the following events? This operation cannot be undone.",
+        text: "Are you sure you want to delete the selected events? This operation cannot be undone.",
         item: {}, 
         submit: 'Confirm',
         cancel: 'Cancel'
