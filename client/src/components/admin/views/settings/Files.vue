@@ -4,8 +4,9 @@
     <div class="body-1 font-weight-regular" style="margin-top:10px; margin-bottom:15px">The path where the application files are stored.</div>
     <v-form ref="files_form">
       <v-text-field :disabled="loading" v-model="files.local.path" label="Absolute Path" required :rules="[v => (v === undefined || v.startsWith('/'))]" hide-details></v-text-field>
-      <v-text-field :disabled="loading" v-model="files.local.expire" label="Retention Days" :rules="[v => (v === undefined || (v == parseInt(v) && v > 0))]" style="margin-top:15px" hide-details></v-text-field>
-      <v-switch :disabled="loading" v-model="files.amazon_s3.enabled" label="Store Deployments in Amazon S3" style="margin-top:20px" hide-details></v-switch>
+      <div class="subtitle-1" style="margin-top:20px; color:#fa8131">DEPLOYMENTS</div>
+      <v-text-field :disabled="loading" v-model="files.local.expire" label="Retention Days" :rules="[v => (v === undefined || (v == parseInt(v) && v > 0))]" style="margin-top:10px" hide-details></v-text-field>
+      <v-switch :disabled="loading" v-model="files.amazon_s3.enabled" label="Store in Amazon S3" style="margin-top:20px" hide-details></v-switch>
       <div v-if="files.amazon_s3.enabled" style="margin-top:20px; margin-bottom:25px">
         <v-text-field :disabled="loading" v-model="files.amazon_s3.aws_access_key" label="AWS Access Key" :rules="[v => (!!v || !files.amazon_s3.enabled) || '']" :append-icon="showAccessKey ? 'mdi-eye' : 'mdi-eye-off'" :type="showAccessKey ? 'text' : 'password'" @click:append="showAccessKey = !showAccessKey"></v-text-field>
         <v-text-field :disabled="loading" v-model="files.amazon_s3.aws_secret_access_key" label="AWS Secret Access Key" style="padding-top:0px;" required :rules="[v => (!!v || !files.amazon_s3.enabled) || '']" :append-icon="showSecretAccessKey ? 'mdi-eye' : 'mdi-eye-off'" :type="showSecretAccessKey ? 'text' : 'password'" @click:append="showSecretAccessKey = !showSecretAccessKey"></v-text-field>
