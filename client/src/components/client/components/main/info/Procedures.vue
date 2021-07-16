@@ -58,7 +58,7 @@ export default {
 
     // Init ACE Editor
     this.editor = ace.edit("infoProceduresEditor", {
-      mode: "ace/mode/mysql",
+      mode: "ace/mode/sql",
       theme: "ace/theme/monokai",
       keyboardHandler: "ace/keyboard/vscode",
       fontSize: parseInt(this.settings['font_size']) || 14,
@@ -129,7 +129,7 @@ export default {
         syntax = 'Insufficient privileges to show the Procedure Definition.\n\nYou must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table'
       }
       else {
-        this.editor.getSession().setMode("ace/mode/mysql")
+        this.editor.getSession().setMode("ace/mode/sql")
         syntax = sqlFormatter.format(syntax + ';', { reservedWordCase: 'upper'})
       }
       this.infoEditor.procedures = syntax

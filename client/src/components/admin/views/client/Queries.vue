@@ -210,7 +210,7 @@ export default {
     EventBus.$on('filter-client-queries', () => { this.filterDialog = true })
     EventBus.$on('refresh-client-queries', this.getQueries)
     this.editor = ace.edit("editor", {
-      mode: "ace/mode/mysql",
+      mode: "ace/mode/sql",
       theme: "ace/theme/monokai",
       keyboardHandler: "ace/keyboard/vscode",
     })
@@ -236,7 +236,7 @@ export default {
       this.$nextTick(() => {
         // Init ACE Editor
         this.editor = ace.edit("editor", {
-          mode: "ace/mode/mysql",
+          mode: "ace/mode/sql",
           theme: "ace/theme/monokai",
           keyboardHandler: "ace/keyboard/vscode",
           maxLines: 20,

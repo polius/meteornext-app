@@ -59,7 +59,7 @@ export default {
 
     // Init ACE Editor
     this.editor = ace.edit("infoEventsEditor", {
-      mode: "ace/mode/mysql",
+      mode: "ace/mode/sql",
       theme: "ace/theme/monokai",
       keyboardHandler: "ace/keyboard/vscode",
       fontSize: parseInt(this.settings['font_size']) || 14,
