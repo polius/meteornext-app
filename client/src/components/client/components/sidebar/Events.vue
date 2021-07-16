@@ -226,6 +226,7 @@ export default {
         this.dialogEditor = ace.edit("dialogEditor", {
           mode: "ace/mode/mysql",
           theme: "ace/theme/monokai",
+          keyboardHandler: "ace/keyboard/vscode",
           fontSize: parseInt(this.settings['font_size']) || 14,
           showPrintMargin: false,
           wrap: true,

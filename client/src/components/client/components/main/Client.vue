@@ -108,7 +108,7 @@
                   <v-btn @click="editDialogParse" hide-details style="margin-top:2px">Parse</v-btn>
                 </v-col>
                 <v-col v-if="editDialogFormat == 'JSON'" cols="auto" class="flex-grow-0 flex-shrink-0" style="margin-right:15px">
-                  <v-btn @click="editDialogValidate" hide-details style="margin-top:2px">Validate</v-btn>
+                  <v-btn @click="editDialogValidate(true)" hide-details style="margin-top:2px">Validate</v-btn>
                 </v-col>
                 <v-col cols="2" class="flex-grow-0 flex-shrink-0">
                   <v-select @change="editDialogApplyFormat" v-model="editDialogFormat" :items="editDialogFormatItems" label="Format" outlined dense hide-details></v-select>
@@ -486,11 +486,13 @@ export default {
           this.editDialogEditor = ace.edit("editDialogEditor", {
             mode: "ace/mode/text",
             theme: "ace/theme/monokai",
+            keyboardHandler: "ace/keyboard/vscode",
             fontSize: 14,
             showPrintMargin: false,
             wrap: false,
             indentedSoftWrap: false,
-            showLineNumbers: true
+            showLineNumbers: true,
+            scrollPastEnd: true
           })
           this.editDialogEditor.container.addEventListener("keydown", (e) => {
             // - Increase Font Size -
@@ -548,10 +550,10 @@ export default {
         } catch { 1==1 }
       }
     },
-    editDialogValidate() {
+    editDialogValidate(notification) {
       try {
         JSON.parse(this.editDialogEditor.getValue())
-        EventBus.$emit('send-notification', 'JSON Validated!', '#00b16a', 2)
+        if (notification) EventBus.$emit('send-notification', 'JSON Validated!', '#00b16a', 2)
         return true
       } catch (error) {
         var dialogOptions = {
@@ -583,7 +585,7 @@ export default {
       }
     },
     editDialogSubmit() {
-      if (this.editDialogFormat == 'JSON' && !this.editDialogValidate()) return
+      if (this.editDialogFormat == 'JSON' && !this.editDialogValidate(false)) return
       let value = this.editDialogEditor.getValue()
       try { value = JSON.stringify(JSON.parse(value)) } catch { 1==1 }
       this.editDialog = false
@@ -691,6 +693,7 @@ export default {
       this.editor = ace.edit("editor", {
         mode: "ace/mode/mysql",
         theme: "ace/theme/monokai",
+        keyboardHandler: "ace/keyboard/vscode",
         fontSize: parseInt(this.settings['font_size']) || 14,
         showPrintMargin: false,
         wrap: false,
@@ -698,7 +701,8 @@ export default {
         enableBasicAutocompletion: true,
         enableLiveAutocompletion: true,
         enableSnippets: false,
-        highlightActiveLine: false
+        highlightActiveLine: false,
+        scrollPastEnd: true
       });
       this.editor.session.setOptions({ tabSize: 4, useSoftTabs: false })
 

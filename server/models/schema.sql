@@ -9,7 +9,7 @@ CREATE TABLE `settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 INSERT INTO settings (`id`, `name`, `value`) VALUES 
-(1, 'LOGS', '{"local":{"path":"","expire":"7"},"amazon_s3":{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}}'),
+(1, 'FILES', '{"local":{"path":"","expire":"7"},"amazon_s3":{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}}'),
 (2, 'SECURITY', '{"password_age":"0","password_min":"8","password_lowercase":false,"password_uppercase":false,"password_number":false,"password_special":false,"force_mfa":false,"restrict_url":""}');
 
 CREATE TABLE `groups` (
@@ -456,4 +456,33 @@ CREATE TABLE `client_queries` (
   INDEX `status` (`status`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `restore` (
+ `id` INT UNSIGNED AUTO_INCREMENT,
+ `name` VARCHAR(191) NOT NULL,
+ `mode` ENUM('FILE','URL','S3') NOT NULL,
+ `source` TEXT NOT NULL,
+ `server_id` INT UNSIGNED NOT NULL,
+ `database` VARCHAR(191) NOT NULL,
+ `status` ENUM('CREATED','IN PROGRESS','SUCCESS','FAILED','STOPPED') NOT NULL DEFAULT 'CREATED',
+ `created` DATETIME NOT NULL,
+ `started` DATETIME NULL,
+ `ended` DATETIME NULL,
+ `pid` INT UNSIGNED NULL,
+ `progress` TEXT NULL,
+ `error` TINYINT(1) NOT NULL DEFAULT '0',
+ `user_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `mode` (`mode`),
+  KEY `server_id` (`server_id`),
+  KEY `database` (`database`),
+  KEY `status` (`status`),
+  KEY `created` (`created`),
+  KEY `started` (`started`),
+  KEY `ended` (`ended`),
+  KEY `error` (`error`),
+  KEY `user_id` (`user_id`),
+  FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

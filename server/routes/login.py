@@ -1,10 +1,10 @@
 import json
 import pyotp
 import bcrypt
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from flask import request, jsonify, Blueprint
-from flask_jwt_extended import (create_access_token, jwt_required, set_access_cookies, unset_access_cookies)
+from flask_jwt_extended import (get_jwt_identity, create_access_token, jwt_required, set_access_cookies, unset_access_cookies)
 
 import models.admin.users
 import models.admin.user_mfa
@@ -97,13 +97,13 @@ class Login:
                     except Exception as e:
                         return jsonify({'message': str(e)}), 400
 
+            # Generate access tokens
+            access_token = create_access_token(identity=user['username'], fresh=timedelta(days=30))
+
             # Update user data
             ip = request.headers.getlist("X-Forwarded-For")[0] if request.headers.getlist("X-Forwarded-For") else request.remote_addr
             user_agent = request.user_agent.string
             self._users.put_last_login({"username": login_json['username'], "ip": ip, "user_agent": user_agent})
-
-            # Generate access tokens
-            access_token = create_access_token(identity=user['username'])
 
             # Build return data
             data = {

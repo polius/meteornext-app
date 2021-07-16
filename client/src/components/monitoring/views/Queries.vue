@@ -476,6 +476,7 @@ export default {
     this.editor = ace.edit("editor", {
       mode: "ace/mode/mysql",
       theme: "ace/theme/monokai",
+      keyboardHandler: "ace/keyboard/vscode",
     })
   },
   methods: {
@@ -772,6 +773,7 @@ export default {
         this.editor = ace.edit("editor", {
           mode: "ace/mode/mysql",
           theme: "ace/theme/monokai",
+          keyboardHandler: "ace/keyboard/vscode",
           maxLines: 20,
           fontSize: 14,
           showPrintMargin: false,

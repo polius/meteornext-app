@@ -49,9 +49,9 @@ class Settings:
             elif request.method == 'PUT':
                 return self.put(user['id'], settings_json)
 
-        @settings_blueprint.route('/admin/settings/logs', methods=['POST'])
+        @settings_blueprint.route('/admin/settings/files', methods=['POST'])
         @jwt_required()
-        def settings_logs_method():
+        def settings_files_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -70,12 +70,12 @@ class Settings:
             # Get Request Json
             settings_json = request.get_json()
 
-            # Store Settings Logs
-            return self.post_logs(user['id'], settings_json)
+            # Store Settings Files
+            return self.post_files(user['id'], settings_json)
 
-        @settings_blueprint.route('/admin/settings/logs/test', methods=['POST'])
+        @settings_blueprint.route('/admin/settings/files/test', methods=['POST'])
         @jwt_required()
-        def settings_logs_test_method():
+        def settings_files_test_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -95,7 +95,7 @@ class Settings:
             settings_json = request.get_json()
 
             # Test Amazon S3 Credentials
-            return self.test_logs_credentials(settings_json)
+            return self.test_files_credentials(settings_json)
 
         @settings_blueprint.route('/admin/settings/security', methods=['POST'])
         @jwt_required()
@@ -118,7 +118,7 @@ class Settings:
             # Get Request Json
             settings_json = request.get_json()
 
-            # Store Settings Logs
+            # Store Settings Security
             return self.post_security(user['id'], settings_json)
 
         return settings_blueprint
@@ -138,11 +138,11 @@ class Settings:
         # Get SQL Settings
         settings['sql'] = self._settings_conf['sql']
 
-        # Get Logs & Security Settings
-        settings['logs'] = {}
+        # Get Files & Security Settings
+        settings['files'] = {}
         settings['security'] = {}
         for i in s:
-            if i['name'] in ['LOGS', 'SECURITY']:
+            if i['name'] in ['FILES', 'SECURITY']:
                 settings[i['name'].lower()] = json.loads(i['value'])
 
         # Get current Domain URL from Security
@@ -154,20 +154,20 @@ class Settings:
         # Return Settings
         return jsonify({'settings': settings}), 200
 
-    def post_logs(self, user_id, data):
-        # Check logs path permissions
-        if not self.check_local_path(data['local']['path']):
-            return jsonify({'message': 'The local logs path has no write permissions'}), 400
-        # Store Settings Logs
+    def post_files(self, user_id, data):
+        # Check files path permissions
+        if not self.check_files_path(data['local']['path']):
+            return jsonify({'message': 'No write permissions in the files folder'}), 400
+        # Store Settings Files
         settings = {
-            'name': 'LOGS',
+            'name': 'FILES',
             'value': json.dumps(data)
         }
         self._settings.post(user_id, settings)
         return jsonify({'message': 'Changes saved successfully'}), 200
 
     def post_security(self, user_id, data):
-        # Store Settings Logs
+        # Store Settings Files
         settings = {
             'name': 'SECURITY',
             'value': json.dumps(data)
@@ -200,7 +200,7 @@ class Settings:
             return True
         return False
 
-    def check_local_path(self, path):
+    def check_files_path(self, path):
         while not os.path.exists(path) and path != '/':
             path = os.path.normpath(os.path.join(path, os.pardir))
         if os.access(path, os.X_OK | os.W_OK):
@@ -210,7 +210,7 @@ class Settings:
     def test_logs_credentials(self, data):
         # Generate Temp File
         file = tempfile.NamedTemporaryFile()
-        file.write('This file has been created by Meteor Next to validate the credentials (Administration --> Settings --> Logs).\nIt is safe to delete it.'.encode())
+        file.write('This file has been created by Meteor Next to validate the credentials (Administration --> Settings --> Files).\nIt is safe to delete it.'.encode())
         file.flush()
         # Init the boto3 client with the provided credentials
         client = boto3.client(

@@ -436,6 +436,7 @@ export default {
       this.explainEditor = ace.edit("explainEditor", {
         mode: "ace/mode/mysql",
         theme: "ace/theme/monokai",
+        keyboardHandler: "ace/keyboard/vscode",
         fontSize: 14,
         showPrintMargin: false,
         wrap: false,
