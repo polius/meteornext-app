@@ -259,7 +259,7 @@ export default {
       this.cellEditingDiscard()
       // Load Current Connnection Editor
       if (this.clientSession == null) {
-        this.clientSession = ace.createEditSession('', 'ace/mode/mysql')
+        this.clientSession = ace.createEditSession('', 'ace/mode/sql')
         this.editor.setSession(this.clientSession)
       }
       else this.editor.setSession(this.clientSession)
@@ -698,7 +698,7 @@ export default {
     initAceClient() {
       // Editor Settings
       this.editor = ace.edit("editor", {
-        mode: "ace/mode/mysql",
+        mode: "ace/mode/sql",
         theme: "ace/theme/monokai",
         keyboardHandler: "ace/keyboard/vscode",
         fontSize: parseInt(this.settings['font_size']) || 14,

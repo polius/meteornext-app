@@ -225,7 +225,7 @@ export default {
     onSplitPaneReady() {
       // Init ACE Editor
       this.editor = ace.edit("savedEditor", {
-        mode: "ace/mode/mysql",
+        mode: "ace/mode/sql",
         theme: "ace/theme/monokai",
         keyboardHandler: "ace/keyboard/vscode",
         fontSize: 14,
