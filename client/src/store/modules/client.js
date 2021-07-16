@@ -43,6 +43,7 @@ const connection = () => {
     clientQueryStopped: false,
     clientExecuting: null, // query, explain, stop
     clientCompleters: { databases: [], objects: [] },
+    clientSession: null,
 
     // Structure
     tabStructureSelected: 'columns',
@@ -165,6 +166,7 @@ const mutations = {
     state.connections[state.currentConn].clientQueries = state.components.editor.getValue()
     state.connections[state.currentConn].clientCursor = state.components.editor.getCursorPosition()
     state.connections[state.currentConn].clientRange = state.components.editor.selection.getRange()
+    state.connections[state.currentConn].clientSession = state.components.editor.session
     // Add new connection
     state.connectionIndex += 1
     let conn = JSON.parse(JSON.stringify(connection()))
@@ -185,6 +187,7 @@ const mutations = {
     state.connections[state.currentConn].clientQueries = state.components.editor.getValue()
     state.connections[state.currentConn].clientCursor = state.components.editor.getCursorPosition()
     state.connections[state.currentConn].clientRange = state.components.editor.selection.getRange()
+    state.connections[state.currentConn].clientSession = state.components.editor.session
     // Change current connection
     state.currentConn = data
   },

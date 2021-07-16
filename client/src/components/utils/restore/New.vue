@@ -11,7 +11,7 @@
           <v-flex xs12>
             <v-form ref="form" style="padding:5px">
               <div class="text-subtitle-1 font-weight-regular white--text">SOURCE</div>
-              <v-radio-group v-model="source" style="margin-top:10px; margin-bottom:15px" hide-details>
+              <v-radio-group v-model="source" style="margin-top:10px; margin-bottom:20px" hide-details>
                 <v-radio value="file">
                   <template v-slot:label>
                     <div>File</div>
@@ -28,8 +28,8 @@
                   </template>
                 </v-radio>
               </v-radio-group>
-              <v-file-input v-show="source == 'file'" v-model="file" show-size accept=".sql" label="Click to import a .sql file" prepend-icon truncate-length="100" hide-details></v-file-input>
-              <v-text-field v-show="source == 'url'" v-model="url" label="URL" :rules="[v => !!v || '']" hide-details></v-text-field>
+              <v-file-input outlined v-show="source == 'file'" v-model="file" show-size accept=".sql" label="Click to import a .sql file" prepend-icon truncate-length="100" hide-details></v-file-input>
+              <v-text-field outlined v-show="source == 'url'" v-model="url" label="URL" :rules="[v => !!v || '']" hide-details></v-text-field>
               <div class="text-subtitle-1 font-weight-regular white--text" style="margin-top:20px">DESTINATION</div>
               <v-autocomplete v-model="server" :items="serverItems" item-value="id" item-text="name" label="Server" :rules="[v => !!v || '']" style="margin-top:10px">
                 <template v-slot:[`selection`]="{ item }">

@@ -229,6 +229,7 @@ export default {
       'database',
       'sidebarMode',
       'clientCompleters',
+      'clientSession',
     ], { path: 'client/connection' }),
     ...mapFields([
       'editor',
@@ -254,8 +255,14 @@ export default {
       const headers = this.clientHeaders
       this.gridApi.client.setColumnDefs([])
       this.clientHeaders = headers
-      // Load Current Connnection Editor
+      // Discard any previous table modifications
       this.cellEditingDiscard()
+      // Load Current Connnection Editor
+      if (this.clientSession == null) {
+        this.clientSession = ace.createEditSession('', 'ace/mode/mysql')
+        this.editor.setSession(this.clientSession)
+      }
+      else this.editor.setSession(this.clientSession)
       this.editor.setValue(this.clientQueries, 1)
       if (this.clientCursor != null && this.clientRange != null) {
         this.editor.moveCursorTo(this.clientCursor.row, this.clientCursor.column)
