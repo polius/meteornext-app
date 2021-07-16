@@ -27,7 +27,7 @@ class Meteor:
         self._auxiliary = models.inventory.auxiliary.Auxiliary(sql)
         self._groups = models.admin.groups.Groups(sql)
 
-        # Retrieve Meteor Logs Path
+        # Retrieve Meteor Files Path
         self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
         self._base_path = os.path.dirname(sys.executable) if self._bin else app.root_path
 
@@ -35,21 +35,21 @@ class Meteor:
         # Generate Deployment Unique Identifier
         uri = str(uuid.uuid4())
 
-        # Init Logs Settings
-        logs = json.loads(self._settings.get(setting_name='LOGS'))
+        # Init Files Settings
+        files = json.loads(self._settings.get(setting_name='FILES'))
 
         # Create Deployment Folder to store Meteor files
-        if not os.path.isdir('{}/{}/keys'.format(logs['local']['path'], uri)):
-            os.makedirs('{}/{}/keys'.format(logs['local']['path'], uri))
+        if not os.path.isdir('{}/deployments/{}/keys'.format(files['local']['path'], uri)):
+            os.makedirs('{}/deployments/{}/keys'.format(files['local']['path'], uri))
 
         # Compile Meteor Files
-        self.__compile_config(deployment, logs, uri)
-        self.__compile_blueprint(deployment, logs, uri)
+        self.__compile_config(deployment, files, uri)
+        self.__compile_blueprint(deployment, files, uri)
 
         # Execute Meteor
-        self.__execute(deployment, logs, uri)
+        self.__execute(deployment, files, uri)
 
-    def __compile_config(self, deployment, logs, uri):
+    def __compile_config(self, deployment, files, uri):
         # Get Data
         environment = self._environments.get(deployment['user_id'], deployment['group_id'], deployment['environment_id'])
         regions = self._regions.get_by_environment(deployment['user_id'], deployment['group_id'], deployment['environment_id'])
@@ -65,7 +65,7 @@ class Meteor:
 
         # Generate Keys Base Path
         keys = []
-        keys_path = "{}/{}/keys".format(logs['local']['path'], uri)
+        keys_path = "{}/deployments/{}/keys".format(files['local']['path'], uri)
 
         for region in regions:
             # Compile SSH
@@ -132,7 +132,7 @@ class Meteor:
                 outfile.write(key['data'])
             os.chmod(key['path'], 0o600)
 
-        # Compile Logs
+        # Compile Amazon S3
         config['amazon_s3'] = {
             "enabled": False,
             "aws_access_key_id": "",
@@ -141,13 +141,13 @@ class Meteor:
             "bucket_name": ""
         }
 
-        if 'amazon_s3' in logs and logs['amazon_s3']['enabled']:
+        if 'amazon_s3' in files and files['amazon_s3']['enabled']:
             config['amazon_s3'] = {
                 "enabled": True,
-                "aws_access_key_id": logs['amazon_s3']['aws_access_key'],
-                "aws_secret_access_key": logs['amazon_s3']['aws_secret_access_key'],
-                "region_name": logs['amazon_s3']['region'],
-                "bucket_name": logs['amazon_s3']['bucket']
+                "aws_access_key_id": files['amazon_s3']['aws_access_key'],
+                "aws_secret_access_key": files['amazon_s3']['aws_secret_access_key'],
+                "region_name": files['amazon_s3']['region'],
+                "bucket_name": files['amazon_s3']['bucket']
             }
 
         # Compile Slack
@@ -193,17 +193,17 @@ class Meteor:
         }
 
         # Store Config
-        with open("{}/{}/config.json".format(logs['local']['path'], uri), 'w') as outfile:
+        with open("{}/deployments/{}/config.json".format(files['local']['path'], uri), 'w') as outfile:
             json.dump(config, outfile)
 
-    def __compile_blueprint(self, deployment, logs, uri):
+    def __compile_blueprint(self, deployment, files, uri):
         if deployment['mode'] == 'BASIC':
             blueprint = self.__compile_blueprint_basic(deployment)
         elif deployment['mode'] == 'PRO':
             blueprint = deployment['code']
 
         # Store Query Execution
-        with open("{}/{}/blueprint.py".format(logs['local']['path'], uri), 'w', encoding="utf-8") as outfile:
+        with open("{}/deployments/{}/blueprint.py".format(files['local']['path'], uri), 'w', encoding="utf-8") as outfile:
             outfile.write(blueprint.encode('utf-8','ignore').decode('utf-8'))
 
     def __compile_blueprint_basic(self, deployment):
@@ -226,11 +226,11 @@ class blueprint:
     def after(self, meteor, environment, region):
         pass""".format(json.dumps(queries), databases)
 
-    def __execute(self, deployment, logs, uri):
+    def __execute(self, deployment, files, uri):
         # Build Meteor Parameters
         meteor_base_path = sys._MEIPASS if self._bin else self._app.root_path
         meteor_path = "{}/apps/meteor/init".format(meteor_base_path) if self._bin else "python3 {}/../meteor/meteor.py".format(meteor_base_path)
-        execution_path = "{}/{}".format(logs['local']['path'], uri)
+        execution_path = "{}/deployments/{}".format(files['local']['path'], uri)
         execution_method = deployment['method'].lower()
 
         # Build Meteor Command

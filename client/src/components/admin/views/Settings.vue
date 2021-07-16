@@ -7,7 +7,7 @@
         <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
           <v-btn text @click="mode = 'license'" :style="{ backgroundColor : mode == 'license' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-certificate</v-icon>LICENSE</v-btn>
           <v-btn text @click="mode = 'sql'" :style="{ backgroundColor : mode == 'sql' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-database</v-icon>SQL</v-btn>
-          <v-btn text @click="mode = 'logs'" :style="{ backgroundColor : mode == 'logs' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-folder-open</v-icon>LOGS</v-btn>
+          <v-btn text @click="mode = 'files'" :style="{ backgroundColor : mode == 'files' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-folder-open</v-icon>FILES</v-btn>
           <v-btn text @click="mode = 'security'" :style="{ backgroundColor : mode == 'security' ? '#489ff0' : '' }"><v-icon small style="margin-right:10px">fas fa-shield-alt</v-icon>SECURITY</v-btn>
         </v-toolbar-items>
       </v-toolbar>
@@ -15,7 +15,7 @@
         <v-layout row wrap>
           <License v-if="mode == 'license'" :info="settings.license" :init="loading"/>
           <SQL v-else-if="mode == 'sql'" :info="settings.sql" :init="loading"/>
-          <Logs v-else-if="mode == 'logs'" :info="settings.logs" :init="loading"/>
+          <Files v-else-if="mode == 'files'" :info="settings.files" :init="loading"/>
           <Security v-else-if="mode == 'security'" :info="settings.security" :init="loading"/>
         </v-layout>
       </v-container>
@@ -33,13 +33,13 @@
 import axios from 'axios'
 import License from './settings/License'
 import SQL from './settings/SQL'
-import Logs from './settings/Logs'
+import Files from './settings/Files'
 import Security from './settings/Security'
 
 export default {
   data: () => ({
     // Settings
-    settings: { license: {}, sql: {}, log: {}, security: {}},
+    settings: { license: {}, sql: {}, files: {}, security: {}},
     mode: 'license',
     loading: true,
 
@@ -49,7 +49,7 @@ export default {
     snackbarColor: '',
     snackbarText: ''
   }),
-  components: { License, SQL, Logs, Security },
+  components: { License, SQL, Files, Security },
   created() {
     this.getSettings()
   },

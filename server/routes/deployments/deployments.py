@@ -149,12 +149,12 @@ class Deployments:
             if not results['public'] and int(results['user_id']) != user['id'] and not user['admin']:
                 return jsonify({'title': 'Authorized Access Only', 'description': 'The URL provided is private' }), 400
 
-            # Get Logs Settings
-            logs = json.loads(self._settings.get(setting_name='LOGS'))
+            # Get Files Settings
+            files = json.loads(self._settings.get(setting_name='FILES'))
             
             # Get Execution Results File
             if results['logs'] == 'local':
-                execution_results = '{}/{}'.format(logs['local']['path'], uri)
+                execution_results = '{}/{}'.format(files['local']['path'], uri)
                 # Check if exists
                 if not os.path.exists(execution_results + '.js') and not os.path.exists(execution_results + '.tar.gz'):
                     return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists' }), 400
@@ -164,20 +164,20 @@ class Deployments:
                     os.rename('{}/meteor.js'.format(execution_results), '{}.js'.format(execution_results))
                     shutil.rmtree(execution_results, ignore_errors=True)
 
-                return send_from_directory(logs['local']['path'], uri + '.js')
+                return send_from_directory(files['local']['path'], uri + '.js')
 
             elif results['logs'] == 'amazon_s3':
                 # Check Amazon S3 credentials are setup
-                if 'aws_access_key' not in logs['amazon_s3']:
+                if 'aws_access_key' not in files['amazon_s3']:
                     return jsonify({'title': 'Can\'t connect to Amazon S3', 'description': 'Check the provided Amazon S3 credentials' }), 400
                 session = boto3.Session(
-                    aws_access_key_id=logs['amazon_s3']['aws_access_key'],
-                    aws_secret_access_key=logs['amazon_s3']['aws_secret_access_key'],
-                    region_name=logs['amazon_s3']['region']
+                    aws_access_key_id=files['amazon_s3']['aws_access_key'],
+                    aws_secret_access_key=files['amazon_s3']['aws_secret_access_key'],
+                    region_name=files['amazon_s3']['region']
                 )
                 try:
                     s3 = session.resource('s3')
-                    obj = s3.meta.client.get_object(Bucket=logs['amazon_s3']['bucket'], Key='results/{}.js'.format(uri))
+                    obj = s3.meta.client.get_object(Bucket=files['amazon_s3']['bucket'], Key='results/{}.js'.format(uri))
                     return jsonify(obj['Body'].read().decode('utf-8')), 200
                 except botocore.exceptions.ClientError as e:
                     if e.response['Error']['Code'] == 'NoSuchKey':
@@ -280,10 +280,10 @@ class Deployments:
         # Get all basic scheduled executions
         scheduled = self._executions.getScheduled()
 
-        # Check logs path permissions
-        if not self.__check_logs_path():
+        # Check files path permissions
+        if not self.__check_files_path():
             for s in scheduled:
-                self._executions.setError(s['id'], 'The local logs path has no write permissions')
+                self._executions.setError(s['id'], 'No write permissions in the files folder')
         else:
             for s in scheduled:
                 # Update Execution Status
@@ -385,9 +385,9 @@ class Deployments:
             return jsonify({'message': 'The environment does not exist'}), 400
         environment = environment[0]
 
-        # Check logs path permissions
-        if not self.__check_logs_path():
-            return jsonify({'message': 'The local logs path has no write permissions'}), 400
+        # Check files path permissions
+        if not self.__check_files_path():
+            return jsonify({'message': 'No write permissions in the files folder'}), 400
 
         # Check Code Syntax Errors
         if execution['mode'] == 'PRO':
@@ -505,9 +505,9 @@ class Deployments:
             if datetime.datetime.strptime(execution['scheduled'], '%Y-%m-%d %H:%M:%S') < datetime.datetime.now():
                 return jsonify({'message': 'The scheduled date cannot be in the past'}), 400
 
-        # Check logs path permissions
-        if not self.__check_logs_path():
-            return jsonify({'message': 'The local logs path has no write permissions'}), 400
+        # Check files path permissions
+        if not self.__check_files_path():
+            return jsonify({'message': 'No write permissions in the files folder'}), 400
 
         # Set Execution Status
         if execution['scheduled'] is not None:
@@ -571,9 +571,9 @@ class Deployments:
         return jsonify({'message': 'Deployment created successfully', 'data': response}), 200
 
     def __start(self, user, data):
-        # Check logs path permissions
-        if not self.__check_logs_path():
-            return jsonify({'message': 'The local logs path has no write permissions'}), 400
+        # Check files path permissions
+        if not self.__check_files_path():
+            return jsonify({'message': 'No write permissions in the files folder'}), 400
 
         # Get current deployment
         execution = self._executions.get(data['id'])
@@ -705,9 +705,9 @@ class Deployments:
     ####################
     # Internal Methods #
     ####################
-    def __check_logs_path(self):
-        logs_path = json.loads(self._settings.get(setting_name='LOGS'))['local']['path']
-        return self.__check_local_path(logs_path)
+    def __check_files_path(self):
+        files_path = json.loads(self._settings.get(setting_name='FILES'))['local']['path']
+        return self.__check_local_path(files_path)
 
     def __check_local_path(self, path):
         while not os.path.exists(path) and path != '/':

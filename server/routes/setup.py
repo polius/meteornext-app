@@ -36,6 +36,7 @@ import routes.monitoring.views.parameters
 import routes.monitoring.views.processlist
 import routes.monitoring.views.queries
 import routes.client.client
+import routes.utils.restore
 import connectors.base
 import connectors.pool
 import models.admin.settings
@@ -51,7 +52,7 @@ class Setup:
         self._setup_file = "{}/server.conf".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/server.conf".format(os.path.dirname(sys.executable))
         self._keys_path = "{}/".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/".format(os.path.dirname(sys.executable))
         self._schema_file = "{}/models/schema.sql".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/models/schema.sql".format(sys._MEIPASS)
-        self._logs_folder = "{}/logs".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/logs".format(os.path.dirname(sys.executable))
+        self._files_folder = "{}/files".format(app.root_path) if sys.argv[0].endswith('.py') else "{}/files".format(os.path.dirname(sys.executable))
         self._blueprints = []
         self._conf = {}
         self._license = None
@@ -184,9 +185,9 @@ class Setup:
                     user['password'] = bcrypt.hashpw(user['password'].encode('utf8'), bcrypt.gensalt())
                     users.post(1, user)
 
-                    # Init Logs Local Path
+                    # Init Files Local Path
                     settings = models.admin.settings.Settings(sql)
-                    setting = {"name": "LOGS", "value": f'{{"local":{{"path":"{self._logs_folder}","expire":"0"}},"amazon_s3":{{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}}}}'}
+                    setting = {"name": "FILES", "value": f'{{"local":{{"path":"{self._files_folder}","expire":"0"}},"amazon_s3":{{"enabled":false,"aws_access_key":"","aws_secret_access_key":"","region":"","bucket":""}}}}'}
                     settings.post(1, setting)
 
             except Exception as e:
@@ -285,8 +286,9 @@ class Setup:
         monitoring_processlist = routes.monitoring.views.processlist.Processlist(self._app, sql, self._license)
         monitoring_queries = routes.monitoring.views.queries.Queries(self._app, sql, self._license)
         client = routes.client.client.Client(self._app, sql, self._license)
+        restore = routes.utils.restore.Restore(self._app, sql, self._license)
 
-        self._blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_client, admin_monitoring, environments, regions, servers, auxiliary, releases, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client]
+        self._blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_client, admin_monitoring, environments, regions, servers, auxiliary, releases, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client, restore]
 
         # Register all blueprints
         for i in self._blueprints:
