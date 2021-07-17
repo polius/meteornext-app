@@ -258,7 +258,7 @@
           <v-btn :disabled="loading" icon @click="information_dialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding: 15px 15px 15px;">
-          <v-container style="padding:0px">
+          <v-container style="padding:0px; max-width:100%;">
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form">
