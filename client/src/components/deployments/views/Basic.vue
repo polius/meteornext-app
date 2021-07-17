@@ -155,7 +155,7 @@
 
 <style scoped>
 ::v-deep .CodeMirror {
-  min-height: 60vh;
+  min-height: min(60vh, 416px);
   font-size: 14px;
 }
 </style>
