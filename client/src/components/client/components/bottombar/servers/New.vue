@@ -24,7 +24,7 @@
                       <v-text-field v-model="search" @input="onServerSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                     </v-toolbar>
                     <v-card-text style="padding:0px;">
-                      <Splitpanes style="height:65vh">
+                      <Splitpanes style="height:62vh">
                         <Pane size="30" min-size="0" style="align-items:inherit">
                           <v-container fluid style="padding:0px;">
                             <v-row no-gutters style="height:calc(100% - 36px); overflow:auto;">
