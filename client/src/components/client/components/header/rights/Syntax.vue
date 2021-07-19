@@ -27,7 +27,7 @@ export default {
     EventBus.$on('reload-rights', this.reloadRights);
     // Init ACE Editor
     this.editor = ace.edit("rightsSyntax", {
-      mode: "ace/mode/sql",
+      mode: "ace/mode/mysql",
       theme: "ace/theme/monokai",
       keyboardHandler: "ace/keyboard/vscode",
       fontSize: parseInt(this.settings['font_size']) || 14,
