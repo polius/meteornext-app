@@ -12,7 +12,8 @@ var SqlHighlightRules = function() {
         "foreign|not|references|default|null|inner|cross|natural|database|drop|grant|" +
         "show|grants|collate|charset|unique|index|constraint|engine|row_format|auto_increment|enum|" +
         "databases|tables|view|views|trigger|triggers|function|functions|procedure|procedures|event|events|" +
-        "call|full|processlist|explain"
+        "call|full|processlist|explain|alter|lock|execute|user|to|identified|reload|process|temporary|routine|" +
+        "with|option|all|privileges|from|revoke|into|add|remove|modify|change"
     );
 
     var builtinConstants = (
