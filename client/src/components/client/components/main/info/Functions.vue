@@ -130,7 +130,7 @@ export default {
         syntax = 'Insufficient privileges to show the Function Definition.\n\nYou must be the user named in the routine DEFINER clause or have SELECT access to the mysql.proc table'
       }
       else {
-        this.editor.getSession().setMode("ace/mode/sql")
+        this.editor.getSession().setMode("ace/mode/mysql")
         syntax = sqlFormatter.format(syntax + ';', { reservedWordCase: 'upper'})
       }
       this.infoEditor.functions = syntax
