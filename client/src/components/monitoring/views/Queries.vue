@@ -771,7 +771,7 @@ export default {
       this.$nextTick(() => {
         // Init ACE Editor
         this.editor = ace.edit("editor", {
-          mode: "ace/mode/sql",
+          mode: "ace/mode/mysql",
           theme: "ace/theme/monokai",
           keyboardHandler: "ace/keyboard/vscode",
           maxLines: 20,
