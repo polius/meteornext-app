@@ -12,7 +12,7 @@ var SqlHighlightRules = function() {
         "foreign|not|references|default|null|inner|cross|natural|database|drop|grant|" +
         "show|grants|collate|charset|unique|index|constraint|engine|row_format|auto_increment|enum|" +
         "databases|tables|view|views|trigger|triggers|function|functions|procedure|procedures|event|events|" +
-        "call"
+        "call|full|processlist"
     );
 
     var builtinConstants = (
@@ -26,7 +26,7 @@ var SqlHighlightRules = function() {
 
     var dataTypes = (
         "int|numeric|decimal|date|varchar|char|bigint|float|double|bit|binary|text|set|timestamp|" +
-        "money|real|number|integer|unsigned|time|datetime|tinyint"
+        "money|real|number|integer|unsigned|time|datetime|tinyint|fulltext"
     );
 
     var keywordMapper = this.createKeywordMapper({
