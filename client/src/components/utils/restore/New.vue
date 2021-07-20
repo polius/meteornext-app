@@ -152,7 +152,7 @@
             <v-layout wrap>
               <v-flex xs12 style="padding:15px">
                 <div class="text-body-1">Uploading file. Please wait...</div>
-                <v-progress-linear rounded color="light-blue" height="10" :value="value" striped style="margin-top:10px"></v-progress-linear>
+                <v-progress-linear color="info" height="5" :value="value" style="margin-top:10px"></v-progress-linear>
                 <v-card style="margin-top:10px">
                   <v-card-text>
                     <div class="text-body-1 white--text">Progress: <span style="color:#fa8131; font-weight:500">{{ `${value} %` }}</span></div>
