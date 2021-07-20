@@ -78,7 +78,6 @@
                 </v-card>
               </v-stepper-content>
               <v-stepper-step step="3">OVERVIEW</v-stepper-step>
-              <!-- <v-stepper-content step="3" style="padding-top:0px; padding-left:10px"> -->
               <v-stepper-content step="3" style="margin:0px; padding:0px 10px 0px 0px">
                 <div style="margin-left:10px">
                   <v-card style="margin:5px">
@@ -134,8 +133,8 @@
                   </v-card>
                 </div>
                 <div style="margin-left:15px; margin-top:20px; margin-bottom:5px">
-                  <v-btn color="#00b16a">RESTORE</v-btn>
-                  <v-btn color="#EF5354" @click="stepper = 2" style="margin-left:5px">CANCEL</v-btn>
+                  <v-btn @click="submitRestore" color="#00b16a">RESTORE</v-btn>
+                  <v-btn @click="stepper = 2" color="#EF5354" style="margin-left:5px">CANCEL</v-btn>
                 </div>
               </v-stepper-content>
             </v-stepper>
@@ -143,6 +142,32 @@
         </v-layout>
       </v-container>
     </v-card>
+    <v-dialog v-model="dialog" persistent max-width="640px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-spinner</v-icon>UPLOADING</v-toolbar-title>
+        </v-toolbar>
+        <v-card-text style="padding:0px">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12 style="padding:15px">
+                <div class="text-body-1">Uploading file. Please wait...</div>
+                <v-progress-linear rounded color="light-blue" height="10" :value="value" striped style="margin-top:10px"></v-progress-linear>
+                <v-card style="margin-top:10px">
+                  <v-card-text>
+                    <div class="text-body-1 white--text">Progress: <span style="color:#fa8131; font-weight:500">{{ `${value} %` }}</span></div>
+                  </v-card-text>
+                </v-card>
+                <v-divider style="margin-top:15px"></v-divider>
+                <div style="margin-top:15px">
+                  <v-btn @click="cancelRestore" color="#EF5354">CANCEL</v-btn>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -167,20 +192,29 @@ export default {
     return {
       loading: false,
       stepper: 1,
-      serverItems: [],
-      server: '',
-      database: '',
+      // Source
       source: 'file',
       file: null,
       url: '',
+      // Destination
+      serverItems: [],
+      server: '',
+      database: '',
+      // Overview
       overview: { file: '', size: null },
-
+      // Dialog
+      dialog: false,
+      interval: {},
+      value: 0,
       // Snackbar
       snackbar: false,
       snackbarTimeout: Number(3000),
       snackbarText: '',
       snackbarColor: '',
     }
+  },
+  beforeDestroy () {
+    clearInterval(this.interval)
   },
   created() {
     this.getServers()
@@ -225,7 +259,18 @@ export default {
       this.stepper = this.stepper + 1
     },
     submitRestore() {
-      this.stepper = 1
+      this.value = 0
+      this.dialog = true
+      this.interval = setInterval(() => {
+        if (this.value === 100) {
+          return (this.value = 0)
+        }
+        this.value += 1
+      }, 1000)
+    },
+    cancelRestore() {
+      clearInterval(this.interval)
+      this.dialog = false
     },
     changeFile(name, size) {
       this.overview = { file: name, size: this.fileFormat(size) }
