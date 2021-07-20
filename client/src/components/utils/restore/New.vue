@@ -10,11 +10,25 @@
         <v-layout row wrap>
           <v-flex xs12 style="padding-bottom:0px">
             <v-stepper v-model="stepper" vertical style="padding-bottom:10px; background-color:#424242">
-              <v-stepper-step :complete="stepper > 1" step="1">SOURCE</v-stepper-step>
+              <v-stepper-step :complete="stepper > 1" step="1">METADATA</v-stepper-step>
               <v-stepper-content step="1" style="padding-top:0px; padding-left:10px">
                 <v-card style="margin:5px">
                   <v-card-text>
-                    <v-form ref="sourceForm" >
+                    <v-form ref="metadataForm" @submit.prevent>
+                      <v-text-field @keyup.enter="nextStep" v-model="name" label="Name" :rules="[v => !!v || '']" style="padding-top:8px" autofocus hide-details></v-text-field>
+                    </v-form>
+                    <div style="margin-top:20px">
+                      <v-btn color="primary" @click="nextStep">CONTINUE</v-btn>
+                      <router-link to="/utils/restore"><v-btn text style="margin-left:5px">CANCEL</v-btn></router-link>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-stepper-content>
+              <v-stepper-step :complete="stepper > 2" step="2">SOURCE</v-stepper-step>
+              <v-stepper-content step="2" style="padding-top:0px; padding-left:10px">
+                <v-card style="margin:5px">
+                  <v-card-text>
+                    <v-form ref="sourceForm" @submit.prevent>
                       <div class="text-body-1">Choose a restoring method:</div>
                       <v-radio-group v-model="source" style="margin-top:10px; margin-bottom:20px" hide-details>
                         <v-radio value="file">
@@ -43,16 +57,16 @@
                     </v-form>
                     <div style="margin-top:20px">
                       <v-btn color="primary" @click="nextStep">CONTINUE</v-btn>
-                      <router-link to="/utils/restore"><v-btn text style="margin-left:5px">CANCEL</v-btn></router-link>
+                      <v-btn @click="stepper = 1" text style="margin-left:5px">CANCEL</v-btn>
                     </div>
                   </v-card-text>
                 </v-card>
               </v-stepper-content>
-              <v-stepper-step :complete="stepper > 2" step="2">DESTINATION</v-stepper-step>
-              <v-stepper-content step="2" style="padding-top:0px; padding-left:10px">
+              <v-stepper-step :complete="stepper > 3" step="3">DESTINATION</v-stepper-step>
+              <v-stepper-content step="3" style="padding-top:0px; padding-left:10px">
                 <v-card style="margin:5px">
                   <v-card-text>
-                    <v-form ref="destinationForm" >
+                    <v-form ref="destinationForm" @submit.prevent>
                       <v-autocomplete ref="server" v-model="server" :items="serverItems" item-value="id" item-text="name" label="Server" :rules="[v => !!v || '']" style="padding-top:8px">
                         <template v-slot:[`selection`]="{ item }">
                           <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
@@ -77,10 +91,18 @@
                   </v-card-text>
                 </v-card>
               </v-stepper-content>
-              <v-stepper-step step="3">OVERVIEW</v-stepper-step>
-              <v-stepper-content step="3" style="margin:0px; padding:0px 10px 0px 0px">
+              <v-stepper-step step="4">OVERVIEW</v-stepper-step>
+              <v-stepper-content step="4" style="margin:0px; padding:0px 10px 0px 0px">
                 <div style="margin-left:10px">
                   <v-card style="margin:5px">
+                    <v-toolbar dense flat color="#2e3131">
+                      <v-toolbar-title class="subtitle-1">METADATA</v-toolbar-title>
+                    </v-toolbar>
+                    <v-card-text>
+                      <v-text-field v-model="name" readonly label="Name" style="padding-top:8px" hide-details></v-text-field>
+                    </v-card-text>
+                  </v-card>
+                  <v-card style="margin:10px 5px 5px 5px">
                     <v-toolbar dense flat color="#2e3131">
                       <v-toolbar-title class="subtitle-1">SOURCE</v-toolbar-title>
                     </v-toolbar>
@@ -134,7 +156,7 @@
                 </div>
                 <div style="margin-left:15px; margin-top:20px; margin-bottom:5px">
                   <v-btn @click="submitRestore" color="#00b16a">RESTORE</v-btn>
-                  <v-btn @click="stepper = 2" color="#EF5354" style="margin-left:5px">CANCEL</v-btn>
+                  <v-btn @click="stepper = 3" color="#EF5354" style="margin-left:5px">CANCEL</v-btn>
                 </div>
               </v-stepper-content>
             </v-stepper>
@@ -192,6 +214,8 @@ export default {
     return {
       loading: false,
       stepper: 1,
+      // Metadata
+      name: '',
       // Source
       source: 'file',
       file: null,
@@ -226,7 +250,7 @@ export default {
       })
     },
     stepper(val) {
-      if (val == 2) {
+      if (val == 3) {
         requestAnimationFrame(() => {
           if (typeof this.$refs.server !== 'undefined') this.$refs.server.focus()
         })
@@ -254,8 +278,9 @@ export default {
         .finally(() => this.loading = false)
     },
     nextStep() {
-      if (this.stepper == 1 && !this.$refs.sourceForm.validate()) return
-      else if (this.stepper == 2 && !this.$refs.destinationForm.validate()) return
+      if (this.stepper == 1 && !this.$refs.metadataForm.validate()) return
+      else if (this.stepper == 2 && !this.$refs.sourceForm.validate()) return
+      else if (this.stepper == 3 && !this.$refs.destinationForm.validate()) return
       this.stepper = this.stepper + 1
     },
     submitRestore() {
