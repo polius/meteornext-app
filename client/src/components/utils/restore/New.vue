@@ -6,64 +6,134 @@
         <v-spacer></v-spacer>
         <router-link class="nav-link" to="/utils/restore"><v-btn icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn></router-link>
       </v-toolbar>
-      <v-container fluid grid-list-lg>
+      <v-container fluid grid-list-lg style="padding:0px; margin-bottom:10px">
         <v-layout row wrap>
-          <v-flex xs12>
-            <v-stepper v-model="stepper" vertical>
+          <v-flex xs12 style="padding-bottom:0px">
+            <v-stepper v-model="stepper" vertical style="padding-bottom:10px; background-color:#424242">
               <v-stepper-step :complete="stepper > 1" step="1">SOURCE</v-stepper-step>
               <v-stepper-content step="1" style="padding-top:0px; padding-left:10px">
-                <v-form ref="sourceForm" style="margin-left:10px">
-                  <div class="text-body-1">Choose a restoring method:</div>
-                  <v-radio-group v-model="source" style="margin-top:10px; margin-bottom:20px" hide-details>
-                    <v-radio value="file">
-                      <template v-slot:label>
-                        <div>File</div>
-                      </template>
-                    </v-radio>
-                    <v-radio value="url">
-                      <template v-slot:label>
-                        <div>URL</div>
-                      </template>
-                    </v-radio>
-                    <v-radio value="s3">
-                      <template v-slot:label>
-                        <div>Amazon S3</div>
-                      </template>
-                    </v-radio>
-                  </v-radio-group>
-                  <v-file-input v-if="source == 'file'" v-model="file" show-size accept=".sql" label="Select an .sql file" :rules="[v => !!v || '']" prepend-icon truncate-length="100" hide-details></v-file-input>
-                  <v-text-field v-else-if="source == 'url'" v-model="url" label="Enter an URL" :rules="[v => !!v || '']" hide-details></v-text-field>
-                </v-form>
-                <div style="margin-left:10px; margin-top:20px">
-                  <v-btn color="primary" @click="nextStep">CONTINUE</v-btn>
-                  <router-link to="/utils/restore"><v-btn text style="margin-left:5px">CANCEL</v-btn></router-link>
-                </div>
+                <v-card style="margin:5px">
+                  <v-card-text>
+                    <v-form ref="sourceForm" >
+                      <div class="text-body-1">Choose a restoring method:</div>
+                      <v-radio-group v-model="source" style="margin-top:10px; margin-bottom:20px" hide-details>
+                        <v-radio value="file">
+                          <template v-slot:label>
+                            <div>File</div>
+                          </template>
+                        </v-radio>
+                        <v-radio disabled value="url">
+                          <template v-slot:label>
+                            <div>URL</div>
+                          </template>
+                        </v-radio>
+                        <v-radio disabled value="s3">
+                          <template v-slot:label>
+                            <div>Amazon S3</div>
+                          </template>
+                        </v-radio>
+                      </v-radio-group>
+                      <div v-if="source == 'file'">
+                        <v-file-input @change="changeFile(file.name, file.size)" v-model="file" accept=".sql" label="SQL File" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" style="padding-top:8px" hide-details></v-file-input>
+                        <div v-if="file != null" class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ fileFormat(file.size) }}</span></div>
+                      </div>
+                      <div v-else-if="source == 'url'">
+                        <v-text-field v-model="url" label="URL" :rules="[v => !!v || '']" hide-details></v-text-field>
+                      </div>
+                    </v-form>
+                    <div style="margin-top:20px">
+                      <v-btn color="primary" @click="nextStep">CONTINUE</v-btn>
+                      <router-link to="/utils/restore"><v-btn text style="margin-left:5px">CANCEL</v-btn></router-link>
+                    </div>
+                  </v-card-text>
+                </v-card>
               </v-stepper-content>
               <v-stepper-step :complete="stepper > 2" step="2">DESTINATION</v-stepper-step>
               <v-stepper-content step="2" style="padding-top:0px; padding-left:10px">
-                <v-form ref="destinationForm" style="margin-left:10px">
-                  <v-autocomplete v-model="server" :items="serverItems" item-value="id" item-text="name" label="Server" :rules="[v => !!v || '']" style="margin-top:10px">
-                    <template v-slot:[`selection`]="{ item }">
-                      <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                      {{ item.name }}
-                    </template>
-                    <template v-slot:[`item`]="{ item }">
-                      <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
-                      {{ item.name }}
-                    </template>
-                  </v-autocomplete>
-                  <v-text-field v-model="database" label="Database" :rules="[v => !!v || '']" style="padding-top:0px" hide-details></v-text-field>
-                </v-form>
-                <div style="margin-left:10px; margin-top:20px">
-                  <v-btn color="primary" @click="nextStep">CONTINUE</v-btn>
-                  <v-btn text @click="stepper = 1" style="margin-left:5px">CANCEL</v-btn>
-                </div>
+                <v-card style="margin:5px">
+                  <v-card-text>
+                    <v-form ref="destinationForm" >
+                      <v-autocomplete ref="server" v-model="server" :items="serverItems" item-value="id" item-text="name" label="Server" :rules="[v => !!v || '']" style="padding-top:8px">
+                        <template v-slot:[`selection`]="{ item }">
+                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
+                        <template v-slot:[`item`]="{ item }">
+                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
+                      </v-autocomplete>
+                      <v-text-field ref="database" @keyup.enter="nextStep" v-model="database" label="Database" :rules="[v => !!v || '']" style="padding-top:6px" hide-details></v-text-field>
+                    </v-form>
+                    <v-row no-gutters style="margin-top:20px;">
+                      <v-col cols="auto" class="mr-auto">
+                        <v-btn color="primary" @click="nextStep">CONTINUE</v-btn>
+                        <v-btn text @click="stepper = 1" style="margin-left:5px">CANCEL</v-btn>
+                      </v-col>
+                      <v-col cols="auto">
+                        <v-btn :disabled="server.length == 0" text>SERVER DETAILS</v-btn>
+                      </v-col>
+                    </v-row>
+                  </v-card-text>
+                </v-card>
               </v-stepper-content>
               <v-stepper-step step="3">OVERVIEW</v-stepper-step>
-              <v-stepper-content step="3" style="padding-top:0px; padding-left:10px">
+              <!-- <v-stepper-content step="3" style="padding-top:0px; padding-left:10px"> -->
+              <v-stepper-content step="3" style="margin:0px; padding:0px 10px 0px 0px">
                 <div style="margin-left:10px">
+                  <v-card style="margin:5px">
+                    <v-toolbar dense flat color="#2e3131">
+                      <v-toolbar-title class="subtitle-1">SOURCE</v-toolbar-title>
+                    </v-toolbar>
+                    <v-card-text>
+                      <div class="subtitle-1 white--text">METHOD</div>
+                      <v-radio-group v-model="source" readonly style="margin-top:10px; margin-bottom:20px" hide-details>
+                        <v-radio value="file">
+                          <template v-slot:label>
+                            <div>File</div>
+                          </template>
+                        </v-radio>
+                        <v-radio value="url">
+                          <template v-slot:label>
+                            <div>URL</div>
+                          </template>
+                        </v-radio>
+                        <v-radio value="s3">
+                          <template v-slot:label>
+                            <div>Amazon S3</div>
+                          </template>
+                        </v-radio>
+                      </v-radio-group>
+                      <div v-if="source == 'file'">
+                        <v-text-field readonly v-model="overview.file" label="SQL File" style="padding-top:8px" hide-details></v-text-field>
+                        <div class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ overview.size }}</span></div>
+                      </div>
+                      <div v-else-if="source == 'url'">
+                        <v-text-field readonly v-model="overview.file" label="URL" style="padding-top:8px" hide-details></v-text-field>
+                      </div>
+                    </v-card-text>
+                  </v-card>
+                  <v-card style="margin:10px 5px 5px 5px">
+                    <v-toolbar dense flat color="#2e3131">
+                      <v-toolbar-title class="subtitle-1">DESTINATION</v-toolbar-title>
+                    </v-toolbar>
+                    <v-card-text>
+                      <v-autocomplete readonly v-model="server" :items="serverItems" item-value="id" item-text="name" label="Server" :rules="[v => !!v || '']" style="padding-top:8px">
+                        <template v-slot:[`selection`]="{ item }">
+                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
+                        <template v-slot:[`item`]="{ item }">
+                          <v-icon small :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:10px">{{ item.shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                          {{ item.name }}
+                        </template>
+                      </v-autocomplete>
+                      <v-text-field readonly v-model="database" label="Database" :rules="[v => !!v || '']" style="padding-top:6px" hide-details></v-text-field>
+                      <v-btn color="primary" style="margin-top:20px">SERVER DETAILS</v-btn>
+                    </v-card-text>
+                  </v-card>
                 </div>
-                <div style="margin-left:10px; margin-top:20px">
+                <div style="margin-left:15px; margin-top:20px; margin-bottom:5px">
                   <v-btn color="#00b16a">RESTORE</v-btn>
                   <v-btn color="#EF5354" @click="stepper = 2" style="margin-left:5px">CANCEL</v-btn>
                 </div>
@@ -90,6 +160,7 @@
 
 <script>
 import axios from 'axios';
+import pretty from 'pretty-bytes';
 
 export default {
   data() {
@@ -102,6 +173,7 @@ export default {
       source: 'file',
       file: null,
       url: '',
+      overview: { file: '', size: null },
 
       // Snackbar
       snackbar: false,
@@ -117,6 +189,20 @@ export default {
     source() {
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
+      })
+    },
+    stepper(val) {
+      if (val == 2) {
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.server !== 'undefined') this.$refs.server.focus()
+        })
+      }
+    },
+    server() {
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.server !== 'undefined') this.$refs.server.blur()
+        if (typeof this.$refs.database !== 'undefined') this.$refs.database.focus()
+        if (typeof this.$refs.destinationForm !== 'undefined') this.$refs.destinationForm.resetValidation()
       })
     }
   },
@@ -134,22 +220,19 @@ export default {
         .finally(() => this.loading = false)
     },
     nextStep() {
-      if (this.stepper == 1) {
-        if (!this.$refs.sourceForm.validate()) {
-          this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
-          return
-        }
-      }
-      else if (this.stepper == 2) {
-        if (!this.$refs.destinationForm.validate()) {
-          this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
-          return
-        }
-      }
+      if (this.stepper == 1 && !this.$refs.sourceForm.validate()) return
+      else if (this.stepper == 2 && !this.$refs.destinationForm.validate()) return
       this.stepper = this.stepper + 1
     },
     submitRestore() {
       this.stepper = 1
+    },
+    changeFile(name, size) {
+      this.overview = { file: name, size: this.fileFormat(size) }
+    },
+    fileFormat(size) {
+      if (size == null) return null
+      return pretty(size, {binary: true}).replace('i','')
     },
     notification(message, color) {
       this.snackbarText = message
