@@ -29,11 +29,6 @@
             </template>
           </v-edit-dialog>
         </template>
-        <template v-slot:[`item.mode`]="{ item }">
-          <v-icon v-if="item.mode == 'file'" :title="`File - ${JSON.parse(item.source).file} (${JSON.parse(item.source).size})`" small style="margin-left:8px; color:#2196f3">fas fa-file</v-icon>
-          <v-icon v-else-if="item.mode == 'url'" title="URL" small style="margin-left:5px; color:#2196f3">fas fa-cloud</v-icon>
-          <v-icon v-else-if="item.mode == 's3'" title="Amazon S3" style="font-size:22; margin-left:1px; color:#2196f3">fab fa-aws</v-icon>
-        </template>
         <template v-slot:[`item.status`]="{ item }">
           <v-icon v-if="item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
           <v-icon v-else-if="item.status == 'SCHEDULED'" :title="`Scheduled: ${item.scheduled.slice(0,-3)}`" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
@@ -69,7 +64,7 @@ export default {
       { text: 'Server', align: 'left', value: 'server' },
       { text: 'Database', align: 'left', value: 'database' },
       { text: 'Status', align:'left', value: 'status' },
-      // { text: 'Created', align: 'left', value: 'created' },
+      { text: 'Created', align: 'left', value: 'created' },
       { text: 'Started', align: 'left', value: 'started' },
       { text: 'Ended', align: 'left', value: 'ended' },
       { text: 'Overall', align: 'left', value: 'overall' }
@@ -138,11 +133,11 @@ export default {
       this.$router.push({ name: 'utils.restore.new' })
     },
     infoRestore() {
-      this.$router.push({ name: 'utils.restore.info', params: { id: this.selected[0]['id'] }})
+      this.$router.push({ name: 'restore', params: { id: this.selected[0]['id'] }})
     },
     notification(message, color) {
       this.snackbarText = message
-      this.snackbarColor = color
+      this.snackbarColor = color 
       this.snackbar = true
     }
   }

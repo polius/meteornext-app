@@ -461,7 +461,7 @@ CREATE TABLE `client_queries` (
 CREATE TABLE `restore` (
  `id` INT UNSIGNED AUTO_INCREMENT,
  `name` VARCHAR(191) NOT NULL,
- `mode` ENUM('file','url','s3') NOT NULL,
+ `mode` ENUM('FILE','URL','S3') NOT NULL,
  `source` TEXT NOT NULL,
  `server_id` INT UNSIGNED NOT NULL,
  `database` VARCHAR(191) NOT NULL,
