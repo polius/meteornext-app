@@ -9,8 +9,8 @@
           <v-divider class="mx-3" inset vertical></v-divider>
         </v-tabs>
     </div>
-    <v-container fluid style="padding:10px!important">
-      <v-main style="padding-top:0px; padding-bottom:0px">
+    <v-container fluid>
+      <v-main style="padding-top:0px; padding-bottom:0px;">
         <v-slide-y-transition mode="out-in">
           <router-view/>
         </v-slide-y-transition>

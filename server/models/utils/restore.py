@@ -10,9 +10,10 @@ class Restore:
                 SELECT r.*, s.name AS 'server'
                 FROM restore r
                 JOIN servers s ON s.id = r.server_id
-                WHERE r.id = %s
+                WHERE r.user_id = %s
+                AND r.id = %s
             """
-            return self._sql.execute(query, (restore_id))
+            return self._sql.execute(query, (user_id, restore_id))
         else:
             query = """
                 SELECT r.*, s.name AS 'server'
@@ -22,12 +23,12 @@ class Restore:
             """
             return self._sql.execute(query, (user_id))
 
-    def post(self, user, data):
+    def post(self, user_id, data):
         query = """
-            INSERT INTO restore (`name`, `mode`, `source`, `server_id`, `database`, `created`, `user_id`)
+            INSERT INTO restore (mode, source, server_id, database, created, pid, user_id)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (data['name'], data['mode'], data['source'], data['server'], data['database'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['id']))
+        return self._sql.execute(query, (data['mode'], data['source'], data['server_id'], data['database'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), data['pid'], user_id))
 
     def put_name(self, user, data):
         query = """
