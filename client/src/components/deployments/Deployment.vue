@@ -140,7 +140,6 @@
               </v-layout>
             </v-container>
           </v-card-text>
-          
         </v-card>
 
         <!-- EXECUTION -->
