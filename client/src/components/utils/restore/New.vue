@@ -30,7 +30,7 @@
                   <v-card-text>
                     <v-form ref="sourceForm" @submit.prevent>
                       <div class="text-body-1">Choose a restoring method:</div>
-                      <v-radio-group v-model="source" style="margin-top:10px; margin-bottom:20px" hide-details>
+                      <v-radio-group v-model="mode" style="margin-top:10px; margin-bottom:20px" hide-details>
                         <v-radio value="file">
                           <template v-slot:label>
                             <div>File</div>
@@ -47,11 +47,11 @@
                           </template>
                         </v-radio>
                       </v-radio-group>
-                      <div v-if="source == 'file'">
-                        <v-file-input @change="changeFile(file.name, file.size)" v-model="file" accept=".sql" label="SQL File" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" style="padding-top:8px" hide-details></v-file-input>
-                        <div v-if="file != null" class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ fileFormat(file.size) }}</span></div>
+                      <div v-if="mode == 'file'">
+                        <v-file-input @change="changeFile(file.name, file.size)" v-model="file" label="File" accept=".sql,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" style="padding-top:8px" hide-details></v-file-input>
+                        <div v-if="file != null" class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(file.size) }}</span></div>
                       </div>
-                      <div v-else-if="source == 'url'">
+                      <div v-else-if="mode == 'url'">
                         <v-text-field v-model="url" label="URL" :rules="[v => !!v || '']" hide-details></v-text-field>
                       </div>
                     </v-form>
@@ -108,7 +108,7 @@
                     </v-toolbar>
                     <v-card-text>
                       <div class="subtitle-1 white--text">METHOD</div>
-                      <v-radio-group v-model="source" readonly style="margin-top:10px; margin-bottom:20px" hide-details>
+                      <v-radio-group v-model="mode" readonly style="margin-top:10px; margin-bottom:20px" hide-details>
                         <v-radio value="file">
                           <template v-slot:label>
                             <div>File</div>
@@ -125,11 +125,11 @@
                           </template>
                         </v-radio>
                       </v-radio-group>
-                      <div v-if="source == 'file'">
-                        <v-text-field readonly v-model="overview.file" label="SQL File" style="padding-top:8px" hide-details></v-text-field>
+                      <div v-if="mode == 'file'">
+                        <v-text-field readonly v-model="overview.file" label="File" style="padding-top:8px" hide-details></v-text-field>
                         <div class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ overview.size }}</span></div>
                       </div>
-                      <div v-else-if="source == 'url'">
+                      <div v-else-if="mode == 'url'">
                         <v-text-field readonly v-model="overview.file" label="URL" style="padding-top:8px" hide-details></v-text-field>
                       </div>
                     </v-card-text>
@@ -173,16 +173,19 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12 style="padding:15px">
-                <div class="text-body-1">Uploading file. Please wait...</div>
-                <v-progress-linear color="info" height="5" :value="value" style="margin-top:10px"></v-progress-linear>
+                <div class="text-body-1">{{ progress != 100 ? 'Uploading file. Please wait...' : 'File successfully uploaded.' }}</div>
+                <v-progress-linear :color="progress != 100 ? 'info' : '#00b16a'" height="5" :value="progress" style="margin-top:10px"></v-progress-linear>
                 <v-card style="margin-top:10px">
                   <v-card-text>
-                    <div class="text-body-1 white--text">Progress: <span style="color:#fa8131; font-weight:500">{{ `${value} %` }}</span></div>
+                    <div class="text-body-1">
+                      <div class="white--text">Progress: <span style="color:#fa8131; font-weight:500">{{ `${progress} % `}}</span></div>
+                      {{ progressText }}
+                    </div>
                   </v-card-text>
                 </v-card>
                 <v-divider style="margin-top:15px"></v-divider>
                 <div style="margin-top:15px">
-                  <v-btn @click="cancelRestore" color="#EF5354">CANCEL</v-btn>
+                  <v-btn :disabled="progress == 100" @click="cancelImport" color="#EF5354">CANCEL</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -217,7 +220,7 @@ export default {
       // Metadata
       name: '',
       // Source
-      source: 'file',
+      mode: 'file',
       file: null,
       url: '',
       // Destination
@@ -228,8 +231,10 @@ export default {
       overview: { file: '', size: null },
       // Dialog
       dialog: false,
-      interval: {},
-      value: 0,
+      progress: 0,
+      progressText: '',
+      // Axios Cancel Token
+      cancelToken: null,
       // Snackbar
       snackbar: false,
       snackbarTimeout: Number(3000),
@@ -237,14 +242,11 @@ export default {
       snackbarColor: '',
     }
   },
-  beforeDestroy () {
-    clearInterval(this.interval)
-  },
   created() {
     this.getServers()
   },
   watch: {
-    source() {
+    mode() {
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
       })
@@ -284,23 +286,54 @@ export default {
       this.stepper = this.stepper + 1
     },
     submitRestore() {
-      this.value = 0
+      this.progress = 0
+      this.progressText = ''
       this.dialog = true
-      this.interval = setInterval(() => {
-        if (this.value === 100) {
-          return (this.value = 0)
+      // Build import
+      const data = new FormData();
+      data.append('name', this.name)
+      data.append('mode', this.mode)
+      data.append('source', JSON.stringify(this.overview))
+      data.append('server', this.server)
+      data.append('database', this.database)
+      data.append('file', this.file)
+      // Build request options
+      const CancelToken = axios.CancelToken;
+      this.cancelToken = CancelToken.source();
+      const options = {
+        onUploadProgress: (progressEvent) => {
+          var percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+          this.progress = percentCompleted
+          this.progressText = '(' + this.formatBytes(progressEvent.loaded) + ' / ' + this.formatBytes(progressEvent.total) + ')'
+        },
+        cancelToken: this.cancelToken.token
+      }
+      // Start import
+      this.start = true
+      axios.post('restore', data, options)
+      .then((response) => {
+        if (this.progress == 100) {
+          this.notification("File successfully uploaded. Starting the import process...", "#00b16a")
+          this.$router.push('/utils/restore/' + response.data.id)
         }
-        this.value += 1
-      }, 1000)
+      }).catch((error) => {
+        console.log(error.response)
+        if (axios.isCancel(error)) this.notification("Upload stopped", "info")
+        else if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+      })
     },
-    cancelRestore() {
-      clearInterval(this.interval)
+    cancelImport() {
+      this.cancelToken.cancel()
       this.dialog = false
     },
-    changeFile(name, size) {
-      this.overview = { file: name, size: this.fileFormat(size) }
+    importFile() {
+
     },
-    fileFormat(size) {
+    changeFile(name, size) {
+      this.overview = { file: name, size: this.formatBytes(size) }
+    },
+    formatBytes(size) {
       if (size == null) return null
       return pretty(size, {binary: true}).replace('i','')
     },
