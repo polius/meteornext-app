@@ -4,8 +4,13 @@
       <v-toolbar dense flat color="primary">
         <v-toolbar-title class="white--text subtitle-1">INFORMATION</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
+        <v-btn v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS'" :disabled="stop" text title="Stop Execution" @click="stopRestore" style="height:100%"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-btn>
+        <v-divider v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS'" class="mx-3" inset vertical></v-divider>
+        <div v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS' && !stop" class="subtitle-1">Execution in progress...</div>
+        <div v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS' && stop" class="subtitle-1">Stopping the execution...</div>
+        <v-progress-circular v-if="information_items.length != 0 && information_items[0]['status'] == 'IN PROGRESS'" :size="22" indeterminate color="white" width="2" style="margin-left:20px"></v-progress-circular>
         <v-spacer></v-spacer>
-        <div class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ /* dateFormat(last_updated) */ }}</b></div>
+        <div v-if="information_items.length != 0" class="subheading font-weight-regular" style="padding-right:10px;">Updated on <b>{{ dateFormat(information_items[0]['updated']) }}</b></div>
         <v-divider class="ml-3 mr-1" inset vertical></v-divider>
         <v-btn icon @click="goBack()"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
@@ -14,12 +19,21 @@
         <v-card>
           <v-data-table :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1">
             <template v-slot:[`item.mode`]="{ item }">
-              <v-icon v-if="item.mode == 'file'" title="File" small style="margin-left:8px; color:#2196f3">fas fa-file</v-icon>
-              <v-icon v-else-if="item.mode == 'url'" title="URL" small style="margin-left:5px; color:#2196f3">fas fa-cloud</v-icon>
-              <v-icon v-else-if="item.mode == 's3'" title="Amazon S3" style="font-size:22; margin-left:1px; color:#2196f3">fab fa-aws</v-icon>
+              <div v-if="item.mode == 'file'">
+                <v-icon :title="`${item.file} (${formatBytes(item.size)})`" small style="margin-right:5px; margin-bottom:3px">fas fa-file</v-icon>
+                File
+              </div>
+              <div v-else-if="item.mode == 'url'">
+                <v-icon :title="`${item.file} (${formatBytes(item.size)})`" small style="margin-right:5px; margin-bottom:2px">fas fa-cloud</v-icon>
+                URL
+              </div>
+              <div v-else-if="item.mode == 's3'">
+                <v-icon :title="`${item.file} (${formatBytes(item.size)})`" style="font-size:22; margin-right:5px; margin-bottom:2px">fab fa-aws</v-icon>
+                Amazon S3
+              </div>
             </template>
             <template v-slot:[`item.server`]="{ item }">
-              <v-btn @click="getServer(item.server_id)" text class="body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
+              <v-btn @click="getServer(item.server_id)" text class="text-body-2" style="text-transform:inherit; padding:0 5px; margin-left:-5px">
                 <v-icon small :title="item.shared ? 'Shared' : 'Personal'" :color="item.shared ? '#EB5F5D' : 'warning'" style="margin-right:6px; margin-bottom:2px;">
                   {{ item.shared ? 'fas fa-users' : 'fas fa-user' }}
                 </v-icon>
@@ -40,29 +54,40 @@
             </template>
           </v-data-table>
         </v-card>
-        <!-- FILE -->
-        <div v-if="file != null" class="title font-weight-regular" style="margin-top:15px; margin-left:1px">FILE</div>
-        <v-card v-if="file != null" style="margin-top:10px; margin-left:1px">
-          <v-card-text style="padding:15px">
-            <div class="body-1 font-weight-regular">{{ `${file.file} (${file.size})` }}</div>
-          </v-card-text>
-        </v-card>
-        <!-- PROGRESS -->
-        <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">PROGRESS</div>
-        <v-card style="margin-top:10px; margin-left:1px">
-          <v-card-text style="padding:15px">
-            <div class="text-body-1 warning--text">Importing file. Please wait...</div>
-            <div class="text-body-1 success--text" style="margin-top:10px">File was successfully imported.</div>
-            <v-progress-linear color="info" height="5" :value="progressValue" style="margin-top:10px"></v-progress-linear>
-          </v-card-text>
-        </v-card>
-        <!-- ERROR -->
-        <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">ERROR</div>
-        <v-card style="margin-top:10px">
-          <v-card-text style="padding:15px">
-            <div class="body-1 error--text">Message</div>
-          </v-card-text>
-        </v-card>
+        <div v-if="information_items.length > 0">
+          <!-- FILE -->
+          <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">FILE</div>
+          <v-card style="margin-top:10px; margin-left:1px">
+            <v-card-text style="padding:15px">
+              <div class="text-body-1 font-weight-regular">{{ `${information_items[0].file} (${formatBytes(information_items[0].size)})` }}</div>
+            </v-card-text>
+          </v-card>
+          <!-- PROGRESS -->
+          <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">PROGRESS</div>
+          <v-card style="margin-top:10px; margin-left:1px">
+            <v-card-text style="padding:15px">
+              <div v-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1">Importing file. Please wait...</div>
+              <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1">File was successfully imported.</div>
+              <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1">An error occurred importing the file.</div>
+              <v-progress-linear :color="getProgressColor(information_items[0].status)" height="5" :value="progress.value" style="margin-top:10px"></v-progress-linear>
+              <div class="text-body-1" style="margin-top:10px">Progress: <span style="font-weight:500; color:#fa8131">{{ `${progress.value} %` }}</span></div>
+              <v-divider style="margin-top:10px"></v-divider>
+              <div class="text-body-1" style="margin-top:10px">Bytes Transferred: <span style="color:#fa8131">{{ progress.transferred }}</span></div>
+              <div class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span style="color:#fa8131">{{ progress.rate }}</span></div>
+              <div class="text-body-1" style="margin-top:10px">Elapsed Time: <span style="color:#fa8131">{{ progress.elapsed }}</span></div>
+              <div v-if="progress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span style="color:#fa8131">{{ progress.eta }}</span></div>
+            </v-card-text>
+          </v-card>
+          <!-- ERROR -->
+          <div v-if="information_items[0].status == 'FAILED'">
+            <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">ERROR</div>
+            <v-card style="margin-top:10px; margin-left:1px">
+              <v-card-text style="padding:15px">
+                <div v-if="information_items[0].error != null" class="text-body-1">{{ information_items[0].error }}</div>
+              </v-card-text>
+            </v-card>
+          </div>
+        </div>
       </v-card-text>
     </v-card>
     <v-dialog v-model="serverDialog" max-width="768px">
@@ -135,6 +160,27 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="stopDialog" persistent max-width="768px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-toolbar-title>
+        </v-toolbar>
+        <v-card-text style="padding:15px">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <div class="subtitle-1" style="margin-bottom:10px">Are you sure you want to stop the restore?</div>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn color="#00b16a" @click="stopSubmit()">Confirm</v-btn>
+                  <v-btn color="#EF5354" @click="stopDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -147,11 +193,13 @@
 <script>
 import moment from 'moment'
 import axios from 'axios'
+import pretty from 'pretty-bytes'
 
 export default {
   data() {
     return {
       loading: false,
+      timer: null,
       // Information
       information_headers: [
         { text: 'Name', value: 'name', sortable: false },
@@ -165,17 +213,17 @@ export default {
       ],
       information_items: [],
 
-      // File
-      file: null,
-
       // Progress
-      progressValue: 0,
-      error: '',
+      progress: {},
+      stop: false,
 
       // Server Dialog
       serverDialog: false,
       server: {},
       showPassword: false,
+
+      // Stop Dialog
+      stopDialog: false,
 
       // Snackbar
       snackbar: false,
@@ -192,13 +240,29 @@ export default {
       axios.get('/restore', { params: { id: this.$route.params.id } })
         .then((response) => {
           this.information_items = [response.data.restore].map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
-          this.file = JSON.parse(this.information_items[0].source)
+          this.parseProgress(this.information_items[0]['progress'])
+          if (this.information_items[0]['status'] == 'IN PROGRESS') {
+            clearTimeout(this.timer)
+            this.timer = setTimeout(this.getRestore, 1000)
+          }
         })
         .catch((error) => {
-          console.log(error)
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
+    },
+    parseProgress(progress) {
+      let data = progress.split(' ')
+      this.progress = {
+        value: data[0].slice(0, -1),
+        transferred: data[1],
+        rate: data[2],
+        elapsed: data[3],
+        eta: data.length == 5 ? data[4] : null
+      }
+      // Calculate Overall
+      let diff = (this.information_items[0]['ended'] == null) ? moment.utc().diff(moment(this.information_items[0]['started'])) : moment(this.information_items[0]['ended']).diff(moment(this.information_items[0]['started']))
+      this.information_items[0]['overall'] = moment.utc(diff).format("HH:mm:ss")
     },
     goBack() {
       this.$router.push('/utils/restore')
@@ -244,9 +308,32 @@ export default {
         })
         .finally(() => this.loading = false)
     },
+    stopRestore() {
+      this.stopDialog = true
+    },
+    stopSubmit() {
+      this.stopDialog = false
+      this.stop = true
+      const payload = { id: this.$route.params.id }
+      axios.post('/restore/stop', payload)
+      .catch((error) => {
+        this.stop = false
+        if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+      })
+    },
+    getProgressColor(status) {
+      if (status == 'IN PROGRESS') return '#ff9800'
+      if (status == 'SUCCESS') return '#4caf50'
+      if (status == 'FAILED') return '#EF5354'
+    },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
+    },
+    formatBytes(size) {
+      if (size == null) return null
+      return pretty(size, {binary: true}).replace('i','')
     },
     notification(message, color) {
       this.snackbarText = message

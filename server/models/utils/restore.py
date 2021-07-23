@@ -19,15 +19,16 @@ class Restore:
                 FROM restore r
                 JOIN servers s ON s.id = r.server_id
                 WHERE r.user_id = %s
+                ORDER BY r.id DESC
             """
             return self._sql.execute(query, (user_id))
 
     def post(self, user, data):
         query = """
-            INSERT INTO restore (`name`, `mode`, `source`, `server_id`, `database`, `created`, `user_id`)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO restore (`name`, `mode`, `file`, `size`, `server_id`, `database`, `created`, `uri`, `user_id`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (data['name'], data['mode'], data['source'], data['server'], data['database'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user['id']))
+        return self._sql.execute(query, (data['name'], data['mode'], data['file'], data['size'], data['server_id'], data['database'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), data['uri'], user['id']))
 
     def put_name(self, user, data):
         query = """

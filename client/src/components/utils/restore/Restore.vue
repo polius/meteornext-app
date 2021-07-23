@@ -13,7 +13,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="execution_id" show-select class="elevation-1" style="padding-top:5px;">
+      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
         <template v-ripple v-slot:[`header.data-table-select`]="{}">
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
@@ -30,9 +30,18 @@
           </v-edit-dialog>
         </template>
         <template v-slot:[`item.mode`]="{ item }">
-          <v-icon v-if="item.mode == 'file'" :title="`File - ${JSON.parse(item.source).file} (${JSON.parse(item.source).size})`" small style="margin-left:8px; color:#2196f3">fas fa-file</v-icon>
-          <v-icon v-else-if="item.mode == 'url'" title="URL" small style="margin-left:5px; color:#2196f3">fas fa-cloud</v-icon>
-          <v-icon v-else-if="item.mode == 's3'" title="Amazon S3" style="font-size:22; margin-left:1px; color:#2196f3">fab fa-aws</v-icon>
+          <div v-if="item.mode == 'file'">
+            <v-icon :title="`${item.file} (${formatBytes(item.size)})`" small style="margin-right:5px; margin-bottom:3px">fas fa-file</v-icon>
+            File
+          </div>
+          <div v-else-if="item.mode == 'url'">
+            <v-icon :title="`${item.file} (${formatBytes(item.size)})`" small style="margin-right:5px; margin-bottom:2px">fas fa-cloud</v-icon>
+            URL
+          </div>
+          <div v-else-if="item.mode == 's3'">
+            <v-icon :title="`${item.file} (${formatBytes(item.size)})`" style="font-size:22; margin-right:5px; margin-bottom:2px">fab fa-aws</v-icon>
+            Amazon S3
+          </div>
         </template>
         <template v-slot:[`item.status`]="{ item }">
           <v-icon v-if="item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
@@ -60,6 +69,7 @@
 <script>
 import axios from 'axios';
 import moment from 'moment';
+import pretty from 'pretty-bytes';
 
 export default {
   data: () => ({
@@ -97,13 +107,18 @@ export default {
       // Get Restores
       axios.get('/restore')
         .then((response) => {
-          this.items = response.data.restore.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
+          this.items = response.data.restore.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended), overall: this.parseOverall(x)}))
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
+    },
+    parseOverall(item) {
+      // Calculate Overall
+      let diff = (item['ended'] == null) ? moment.utc().diff(moment(item['started'])) : moment(item['ended']).diff(moment(item['started']))
+      return moment.utc(diff).format("HH:mm:ss")
     },
     openName(item) {
       this.inline_editing_name = item.name
@@ -133,6 +148,10 @@ export default {
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
       return date
+    },
+    formatBytes(size) {
+      if (size == null) return null
+      return pretty(size, {binary: true}).replace('i','')
     },
     newRestore() {
       this.$router.push({ name: 'utils.restore.new' })

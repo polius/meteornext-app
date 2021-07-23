@@ -150,12 +150,11 @@
                         </template>
                       </v-autocomplete>
                       <v-text-field readonly v-model="database" label="Database" :rules="[v => !!v || '']" style="padding-top:6px" hide-details></v-text-field>
-                      <v-btn color="primary" style="margin-top:20px">SERVER DETAILS</v-btn>
                     </v-card-text>
                   </v-card>
                 </div>
                 <div style="margin-left:15px; margin-top:20px; margin-bottom:5px">
-                  <v-btn @click="submitRestore" color="#00b16a">RESTORE</v-btn>
+                  <v-btn @click="checkRestore" color="#00b16a">RESTORE</v-btn>
                   <v-btn @click="stepper = 3" color="#EF5354" style="margin-left:5px">CANCEL</v-btn>
                 </div>
               </v-stepper-content>
@@ -178,8 +177,7 @@
                 <v-card style="margin-top:10px">
                   <v-card-text>
                     <div class="text-body-1">
-                      <div class="white--text">Progress: <span style="color:#fa8131; font-weight:500">{{ `${progress} % `}}</span></div>
-                      {{ progressText }}
+                      <div><span class="white--text">Progress: <span style="color:#fa8131; font-weight:500">{{ `${progress} % `}}</span></span>{{ progressText }}</div>
                     </div>
                   </v-card-text>
                 </v-card>
@@ -222,6 +220,7 @@ export default {
       // Source
       mode: 'file',
       file: null,
+      size: null,
       url: '',
       // Destination
       serverItems: [],
@@ -257,6 +256,12 @@ export default {
           if (typeof this.$refs.server !== 'undefined') this.$refs.server.focus()
         })
       }
+      if (val == 4) {
+        requestAnimationFrame(() => {
+          if (typeof this.$refs.server !== 'undefined') this.$refs.server.blur()
+          if (typeof this.$refs.server !== 'undefined') this.$refs.database.blur()
+        })
+      }
     },
     server() {
       requestAnimationFrame(() => {
@@ -285,18 +290,32 @@ export default {
       else if (this.stepper == 3 && !this.$refs.destinationForm.validate()) return
       this.stepper = this.stepper + 1
     },
-    submitRestore() {
+    checkRestore() {
       this.progress = 0
       this.progressText = ''
       this.dialog = true
+
+      axios.get('/restore/check', { params: { size: this.size }})
+        .then((response) => {
+          if (!response.data.check) {
+            this.notification('There is not enough space left to proceed with the restore.', '#EF5354')
+            this.dialog = false
+          }
+          else this.submitRestore()
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+    },
+    submitRestore() {
       // Build import
       const data = new FormData();
       data.append('name', this.name)
       data.append('mode', this.mode)
-      data.append('source', JSON.stringify(this.overview))
+      data.append('file', this.file)
       data.append('server', this.server)
       data.append('database', this.database)
-      data.append('file', this.file)
       // Build request options
       const CancelToken = axios.CancelToken;
       this.cancelToken = CancelToken.source();
@@ -314,11 +333,13 @@ export default {
       .then((response) => {
         if (this.progress == 100) {
           this.notification("File successfully uploaded. Starting the import process...", "#00b16a")
-          this.$router.push('/utils/restore/' + response.data.id)
+          setTimeout(() => this.$router.push('/utils/restore/' + response.data.id), 3000)
         }
       }).catch((error) => {
-        console.log(error.response)
-        if (axios.isCancel(error)) this.notification("Upload stopped", "info")
+        if (axios.isCancel(error)) {
+          this.notification("The upload process has been stopped", "info")
+          this.dialog = false
+        }
         else if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
         else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
       })
@@ -327,10 +348,8 @@ export default {
       this.cancelToken.cancel()
       this.dialog = false
     },
-    importFile() {
-
-    },
     changeFile(name, size) {
+      this.size = size
       this.overview = { file: name, size: this.formatBytes(size) }
     },
     formatBytes(size) {
