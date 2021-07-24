@@ -23,7 +23,7 @@
           </v-simple-checkbox>
         </template>
         <template v-slot:[`item.name`]="{ item }">
-          <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)"> 
+          <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)">
             {{ item.name }}
             <template v-slot:input>
               <v-text-field v-model="inline_editing_name" label="Name" single-line hide-details style="margin-bottom:20px;"></v-text-field>
@@ -189,7 +189,8 @@ export default {
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
-        }) 
+        })
+        .finally(() => this.loading = false)
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")
