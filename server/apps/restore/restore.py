@@ -13,12 +13,12 @@ class Restore:
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
 
-    def start(self, item, server, base_path):
+    def start(self, user, item, server, base_path):
         # Start Process in another thread
-        t = threading.Thread(target=self.__start, args=(item, server, base_path,))
+        t = threading.Thread(target=self.__start, args=(user, item, server, base_path,))
         t.start()
 
-    def __start(self, item, server, base_path):
+    def __start(self, user, item, server, base_path):
         # Start Import
         t = threading.Thread(target=self.__import, args=(item, server, base_path,))
         t.start()
@@ -43,11 +43,22 @@ class Restore:
                 `ended` = %s
             WHERE `id` = %s
         """
-        now = self.__now()
+        now = self.__utcnow()
         self._sql.execute(query, args=(status, now, item['id']))
 
         # Remove execution folder from disk
         shutil.rmtree(os.path.join(base_path, item['uri']))
+
+        # Send notification
+        notification = {
+            'name': 'Restore \'{}\' has finished'.format(item['name']),
+            'status': 'ERROR' if status == 'FAILED' else 'SUCCESS',
+            'category': 'utils-restore',
+            'data': '{{"id":"{}"}}'.format(item['id']),
+            'date': self.__utcnow(),
+            'show': 1
+        }
+        self._notifications.post(user_id=user['id'], notification=notification)
 
     def __import(self, item, server, base_path):
         if item['mode'] == 'file':
@@ -78,7 +89,7 @@ class Restore:
                 `updated` = %s
             WHERE `id` = %s
         """
-        now = self.__now()
+        now = self.__utcnow()
         self._sql.execute(query, args=(p.pid, now, now, item['id']))
 
         # Wait import to finish
@@ -109,7 +120,7 @@ class Restore:
                 `updated` = %s
             WHERE `id` = %s
         """
-        now = self.__now()
+        now = self.__utcnow()
         self._sql.execute(query, args=(progress, error, now, item['id']))
 
     def __parse_progress(self, string):
@@ -125,5 +136,5 @@ class Restore:
             return None
         return string.strip()
 
-    def __now(self):
+    def __utcnow(self):
         return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")

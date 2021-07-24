@@ -5,7 +5,8 @@
         <v-toolbar-title class="white--text subtitle-1">RESTORE</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn text @click="newRestore()"><v-icon small style="padding-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn text @click="newRestore()"><v-icon small style="margin-right:10px;">fas fa-plus</v-icon>NEW</v-btn>
+          <v-btn :disabled="selected.length == 0" text @click="deleteRestore()"><v-icon small style="margin-right:10px;">fas fa-minus</v-icon>DELETE</v-btn>
           <v-btn :disabled="selected.length != 1" text @click="infoRestore()"><v-icon small style="padding-right:10px; padding-bottom:2px">fas fa-info</v-icon>INFORMATION</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="getRestore" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
@@ -57,6 +58,29 @@
         </template>
       </v-data-table>
     </v-card>
+    <v-dialog v-model="deleteDialog" persistent max-width="768px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-minus</v-icon>DELETE</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn :disabled="loading" icon @click="deleteDialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding:15px">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <div class="subtitle-1" style="margin-bottom:10px">Are you sure you want to delete the selected restores?</div>
+                <v-divider></v-divider>
+                <div style="margin-top:20px;">
+                  <v-btn :disabled="loading" color="#00b16a" @click="deleteSubmit()">Confirm</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="deleteDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -92,6 +116,9 @@ export default {
     // Inline Editing
     inline_editing_name: '',
 
+    // Delete Dialog
+    deleteDialog: false,
+
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -108,6 +135,25 @@ export default {
       axios.get('/restore')
         .then((response) => {
           this.items = response.data.restore.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended), overall: this.parseOverall(x)}))
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
+    },
+    deleteRestore() {
+      this.deleteDialog = true
+    },
+    deleteSubmit() {
+      // Delete Restores
+      this.loading = true
+      const payload = this.selected.map(x => x.id)
+      axios.delete('/restore', { data: payload })
+        .then(() => {
+          this.selected = []
+          this.deleteDialog = false
+          this.getRestore()
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

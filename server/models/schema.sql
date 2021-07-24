@@ -476,6 +476,7 @@ CREATE TABLE `restore` (
  `progress` TEXT NULL,
  `error` TEXT NULL,
  `user_id` INT UNSIGNED NOT NULL,
+ `deleted` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `mode` (`mode`),
   KEY `file` (`file`(191)),
@@ -489,6 +490,7 @@ CREATE TABLE `restore` (
   KEY `error` (`error`(1)),
   KEY `uri` (`uri`),
   KEY `user_id` (`user_id`),
+  KEY `deleted` (`deleted`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

@@ -68,7 +68,7 @@
             <v-card-text style="padding:15px">
               <div v-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1">Importing file. Please wait...</div>
               <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1">File was successfully imported.</div>
-              <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1">An error occurred importing the file.</div>
+              <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1">An error occurred while importing the file.</div>
               <v-progress-linear :color="getProgressColor(information_items[0].status)" height="5" :value="progress.value" style="margin-top:10px"></v-progress-linear>
               <div class="text-body-1" style="margin-top:10px">Progress: <span style="font-weight:500; color:#fa8131">{{ `${progress.value} %` }}</span></div>
               <v-divider style="margin-top:10px"></v-divider>
@@ -163,7 +163,9 @@
     <v-dialog v-model="stopDialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px">fas fa-ban</v-icon>STOP</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-ban</v-icon>STOP</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn :disabled="loading" icon @click="stopDialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px">
           <v-container style="padding:0px">
@@ -172,8 +174,8 @@
                 <div class="subtitle-1" style="margin-bottom:10px">Are you sure you want to stop the restore?</div>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn color="#00b16a" @click="stopSubmit()">Confirm</v-btn>
-                  <v-btn color="#EF5354" @click="stopDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  <v-btn :disabled="loading" color="#00b16a" @click="stopSubmit()">Confirm</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="stopDialog = false" style="margin-left:5px;">Cancel</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -189,6 +191,13 @@
     </v-snackbar>
   </div>
 </template>
+
+<style scoped>
+.v-data-table
+  ::v-deep tr:hover:not(.v-data-table__selected) {
+  background: transparent !important;
+}
+</style>
 
 <script>
 import moment from 'moment'
@@ -312,15 +321,19 @@ export default {
       this.stopDialog = true
     },
     stopSubmit() {
-      this.stopDialog = false
+      this.loading = true
       this.stop = true
       const payload = { id: this.$route.params.id }
       axios.post('/restore/stop', payload)
+      .then(() => {
+        this.stopDialog = false
+      })
       .catch((error) => {
         this.stop = false
         if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
         else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
       })
+      .finally(() => this.loading = false)
     },
     getProgressColor(status) {
       if (status == 'IN PROGRESS') return '#ff9800'
