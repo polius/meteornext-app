@@ -34,7 +34,7 @@
                         </v-radio>
                       </v-radio-group>
                       <div v-if="mode == 'file'">
-                        <v-file-input @change="changeFile(file.name, file.size)" v-model="file" label="File" accept=".sql,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" style="padding-top:8px" hide-details></v-file-input>
+                        <v-file-input @change="changeFile(file.name, file.size)" v-model="file" label="File" accept=".sql,.tar,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" style="padding-top:8px" hide-details></v-file-input>
                         <div v-if="file != null" class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(file.size) }}</span></div>
                       </div>
                       <div v-else-if="mode == 'url'">
@@ -77,32 +77,10 @@
                   </v-card-text>
                 </v-card>
               </v-stepper-content>
-              <v-stepper-step :complete="stepper > 3" step="3">METADATA</v-stepper-step>
-              <v-stepper-content step="3" style="padding-top:0px; padding-left:10px">
-                <v-card style="margin:5px">
-                  <v-card-text>
-                    <v-form ref="metadataForm" @submit.prevent>
-                      <v-text-field ref="name" @keyup.enter="nextStep" v-model="name" label="Name" style="padding-top:8px" hide-details></v-text-field>
-                    </v-form>
-                    <div style="margin-top:20px">
-                      <v-btn color="primary" @click="nextStep">CONTINUE</v-btn>
-                      <v-btn @click="stepper = 2" text style="margin-left:5px">CANCEL</v-btn>
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </v-stepper-content>
-              <v-stepper-step step="4">OVERVIEW</v-stepper-step>
-              <v-stepper-content step="4" style="margin:0px; padding:0px 10px 0px 0px">
+              <v-stepper-step step="3">OVERVIEW</v-stepper-step>
+              <v-stepper-content step="3" style="margin:0px; padding:0px 10px 0px 0px">
                 <div style="margin-left:10px">
                   <v-card style="margin:5px">
-                    <v-toolbar dense flat color="#2e3131">
-                      <v-toolbar-title class="subtitle-1">METADATA</v-toolbar-title>
-                    </v-toolbar>
-                    <v-card-text>
-                      <v-text-field v-model="name" readonly label="Name" style="padding-top:8px" hide-details></v-text-field>
-                    </v-card-text>
-                  </v-card>
-                  <v-card style="margin:10px 5px 5px 5px">
                     <v-toolbar dense flat color="#2e3131">
                       <v-toolbar-title class="subtitle-1">SOURCE</v-toolbar-title>
                     </v-toolbar>
@@ -155,7 +133,7 @@
                 </div>
                 <div style="margin-left:15px; margin-top:20px; margin-bottom:5px">
                   <v-btn @click="checkRestore" color="#00b16a">RESTORE</v-btn>
-                  <v-btn @click="stepper = 3" color="#EF5354" style="margin-left:5px">CANCEL</v-btn>
+                  <v-btn @click="stepper = 2" color="#EF5354" style="margin-left:5px">CANCEL</v-btn>
                 </div>
               </v-stepper-content>
             </v-stepper>
@@ -215,8 +193,6 @@ export default {
     return {
       loading: false,
       stepper: 1,
-      // Metadata
-      name: '',
       // Source
       mode: 'file',
       file: null,
@@ -258,7 +234,8 @@ export default {
       }
       if (val == 3) {
         requestAnimationFrame(() => {
-          if (typeof this.$refs.server !== 'undefined') this.$refs.name.focus()
+          if (typeof this.$refs.server !== 'undefined') this.$refs.server.blur()
+          if (typeof this.$refs.database !== 'undefined') this.$refs.database.blur()
         })
       }
     },
@@ -284,9 +261,8 @@ export default {
         .finally(() => this.loading = false)
     },
     nextStep() {
-      if (this.stepper == 1 && !this.$refs.metadataForm.validate()) return
-      else if (this.stepper == 2 && !this.$refs.sourceForm.validate()) return
-      else if (this.stepper == 3 && !this.$refs.destinationForm.validate()) return
+      if (this.stepper == 1 && !this.$refs.sourceForm.validate()) return
+      else if (this.stepper == 2 && !this.$refs.destinationForm.validate()) return
       this.stepper = this.stepper + 1
     },
     checkRestore() {
@@ -310,7 +286,6 @@ export default {
     submitRestore() {
       // Build import
       const data = new FormData();
-      data.append('name', this.name)
       data.append('mode', this.mode)
       data.append('file', this.file)
       data.append('server', this.server)

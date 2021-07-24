@@ -51,7 +51,7 @@ class Restore:
 
         # Send notification
         notification = {
-            'name': "Restore '{}' has finished".format(item['name']),
+            'name': "A restore has finished",
             'status': 'ERROR' if status == 'FAILED' else 'SUCCESS',
             'category': 'utils-restore',
             'data': '{{"id":"{}"}}'.format(item['id']),
@@ -75,8 +75,14 @@ class Restore:
 
         # Start restore
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
-            zcat = f'| zcat 2> {error_path}' if not item['file'].endswith('.sql') else ''
-            command = f"export MYSQL_PWD={server['password']}; pv -fF '%p %b %r %t %e' {os.path.join(base_path, item['uri'], item['file'])} 2> {progress_path} {zcat} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
+            gunzip = ''
+            if item['file'].endswith('.tar'):
+                gunzip = f'| tar xO 2> {error_path}'
+            elif item['file'].endswith('.tar.gz'):
+                gunzip = f'| tar zxO 2> {error_path}'
+            elif item['file'].endswith('.gz'):
+                gunzip = f'| gunzip -c 2> {error_path}'
+            command = f"export MYSQL_PWD={server['password']}; pv -fF '%p %b %r %t %e' {os.path.join(base_path, item['uri'], item['file'])} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
         p = subprocess.Popen(command, shell=True)
 
         # Add PID & started to the restore

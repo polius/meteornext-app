@@ -29,7 +29,7 @@ class Restore:
         # Init blueprint
         restore_blueprint = Blueprint('restore', __name__, template_folder='restore')
 
-        @restore_blueprint.route('/restore', methods=['GET','POST','PUT','DELETE'])
+        @restore_blueprint.route('/restore', methods=['GET','POST','DELETE'])
         @jwt_required()
         def restore_method():
             # Check license
@@ -50,8 +50,6 @@ class Restore:
                 return self.get(user)
             elif request.method == 'POST':
                 return self.post(user, data)
-            elif request.method == 'PUT':
-                return self.put(user, data)
             elif request.method == 'DELETE':
                 return self.delete(user, data)
 
@@ -109,6 +107,23 @@ class Restore:
             # Stop restore process
             return self.stop(user, data)
 
+        @restore_blueprint.route('/restore/inspect', methods=['GET'])
+        @jwt_required()
+        def restore_inspect_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['utils_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Return inspected file
+            return self.inspect()
+
         return restore_blueprint
 
     ####################
@@ -157,7 +172,6 @@ class Restore:
 
             # Insert new restore to DB
             item = {
-                'name': request.form['name'],
                 'mode': request.form['mode'],
                 'file': file.filename,
                 'size': size,
@@ -180,12 +194,6 @@ class Restore:
             return jsonify({'id': item['id']}), 200
 
         return jsonify({'message': 'OK'}), 200
-
-    def put(self, user, data):
-        # Edit Metadata
-        if 'name' in data.keys():
-            self._restore.put_name(user, data)
-            return jsonify({'message': 'Restore edited successfully'}), 200
 
     def delete(self, user, data):
         for item in data:
@@ -221,5 +229,11 @@ class Restore:
         except Exception:
             return jsonify({'message': 'The execution has already finished.'}), 400
 
+    def inspect(self):
+        inspect = {}
+        # gunzip -c restore.tar.gz | tar -tv | awk '{ print $9"|"$5}'
+        # curl '' | gunzip -c | tar -tv | awk '{ print $9"|"$5}'
+        return jsonify({'inspect': inspect}), 200
+
     def __allowed_file(self, filename):
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'sql','gz'}
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'sql','tar','gz'}
