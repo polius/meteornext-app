@@ -26,19 +26,10 @@ class Restore:
 
     def post(self, user, data):
         query = """
-            INSERT INTO restore (`name`, `mode`, `file`, `size`, `server_id`, `database`, `created`, `uri`, `user_id`)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO restore (`mode`, `file`, `size`, `server_id`, `database`, `created`, `uri`, `user_id`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (data['name'], data['mode'], data['file'], data['size'], data['server_id'], data['database'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), data['uri'], user['id']))
-
-    def put_name(self, user, data):
-        query = """
-            UPDATE restore
-            SET name = %s
-            WHERE id = %s
-            AND user_id = %s
-        """
-        self._sql.execute(query, (data['name'], data['id'], user['id']))
+        return self._sql.execute(query, (data['mode'], data['file'], data['size'], data['server_id'], data['database'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), data['uri'], user['id']))
 
     def delete(self, user, item):
         query = """

@@ -18,14 +18,6 @@
         <!-- SUMMARY -->
         <v-card>
           <v-data-table :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1">
-            <template v-slot:[`item.name`]="{ item }">
-            <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)">
-              {{ item.name }}
-              <template v-slot:input>
-                <v-text-field v-model="inline_editing_name" label="Name" single-line clearable hide-details style="margin-bottom:20px;"></v-text-field>
-              </template>
-            </v-edit-dialog>
-          </template>
             <template v-slot:[`item.mode`]="{ item }">
               <div v-if="item.mode == 'file'">
                 <v-icon :title="`${item.file} (${formatBytes(item.size)})`" small style="margin-right:5px; margin-bottom:3px">fas fa-file</v-icon>
@@ -219,7 +211,6 @@ export default {
       timer: null,
       // Information
       information_headers: [
-        { text: 'Name', value: 'name', sortable: false },
         { text: 'Mode', value: 'mode', sortable: false },
         { text: 'Server', value: 'server', sortable: false },
         { text: 'Database', value: 'database', sortable: false },
@@ -229,9 +220,6 @@ export default {
         { text: 'Overall', value: 'overall', sortable: false },
       ],
       information_items: [],
-
-      // Inline Editing
-      inline_editing_name: '',
 
       // Progress
       progress: {},
@@ -283,32 +271,6 @@ export default {
       // Calculate Overall
       let diff = (this.information_items[0]['ended'] == null) ? moment.utc().diff(moment(this.information_items[0]['started'])) : moment(this.information_items[0]['ended']).diff(moment(this.information_items[0]['started']))
       this.information_items[0]['overall'] = moment.utc(diff).format("HH:mm:ss")
-    },
-    openName(item) {
-      this.inline_editing_name = item.name
-    },
-    saveName(item) {
-      if (this.inline_editing_name == item.name) {
-        this.notification('Restore edited successfully', '#00b16a')
-        return
-      }
-      this.loading = true
-      // Edit release name in the DB
-      const payload = {
-        put: 'name',
-        id: item.id,
-        name: this.inline_editing_name
-      }
-      axios.put('/restore', payload)
-        .then((response) => {
-          this.notification(response.data.message, '#00b16a')
-          this.information_items[0]['name'] = this.inline_editing_name
-        })
-        .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
-        })
-        .finally(() => this.loading = false)
     },
     goBack() {
       this.$router.push('/utils/restore')
