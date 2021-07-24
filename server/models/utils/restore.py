@@ -19,6 +19,7 @@ class Restore:
                 FROM restore r
                 JOIN servers s ON s.id = r.server_id
                 WHERE r.user_id = %s
+                AND deleted = 0
                 ORDER BY r.id DESC
             """
             return self._sql.execute(query, (user_id))
@@ -39,6 +40,15 @@ class Restore:
         """
         self._sql.execute(query, (data['name'], data['id'], user['id']))
 
+    def delete(self, user, item):
+        query = """
+            UPDATE restore
+            SET deleted = 1
+            WHERE id = %s
+            AND user_id = %s
+        """
+        self._sql.execute(query, (item, user['id']))
+
     def get_servers(self, user):
         query = """
             SELECT s.id, s.name, s.shared
@@ -47,3 +57,12 @@ class Restore:
             AND s.usage LIKE '%%U%%'
         """
         return self._sql.execute(query, (user['id']))
+
+    def update_status(self, user, restore_id, status):
+        query = """
+            UPDATE restore
+            SET status = %s
+            WHERE user_id = %s
+            AND id = %s
+        """
+        return self._sql.execute(query, (status, user['id'], restore_id))

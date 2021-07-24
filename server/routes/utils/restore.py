@@ -29,7 +29,7 @@ class Restore:
         # Init blueprint
         restore_blueprint = Blueprint('restore', __name__, template_folder='restore')
 
-        @restore_blueprint.route('/restore', methods=['GET','POST','PUT'])
+        @restore_blueprint.route('/restore', methods=['GET','POST','PUT','DELETE'])
         @jwt_required()
         def restore_method():
             # Check license
@@ -52,6 +52,8 @@ class Restore:
                 return self.post(user, data)
             elif request.method == 'PUT':
                 return self.put(user, data)
+            elif request.method == 'DELETE':
+                return self.delete(user, data)
 
         @restore_blueprint.route('/restore/check', methods=['GET'])
         @jwt_required()
@@ -172,7 +174,7 @@ class Restore:
             server = server[0]
 
             # Start import process
-            self._core.start(item, server, base_path)
+            self._core.start(user, item, server, base_path)
 
             # Return tracking identifier
             return jsonify({'id': item['id']}), 200
@@ -184,6 +186,11 @@ class Restore:
         if 'name' in data.keys():
             self._restore.put_name(user, data)
             return jsonify({'message': 'Restore edited successfully'}), 200
+
+    def delete(self, user, data):
+        for item in data:
+            self._restore.delete(user, item)
+        return jsonify({'message': 'Selected restores deleted successfully'}), 200
 
     def stop(self, user, data):
         # Check params
@@ -209,7 +216,8 @@ class Restore:
         # Stop the execution
         try:
             os.kill(restore['pid'], signal.SIGINT)
-            return jsonify({'message': 'Stopping the execution...'}), 200
+            self._restore.update_status(user, data['id'], 'STOPPED')
+            return jsonify({'message': 'The execution has successfully stopped.'}), 200
         except Exception:
             return jsonify({'message': 'The execution has already finished.'}), 400
 

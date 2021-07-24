@@ -30,8 +30,9 @@
             </v-row>
           </template>
           <template v-slot:[`item.category`]="{ item }">
-            <div v-if="item.category == 'deployment'"><v-icon small color="#EF5354" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-right:10px;">fas fa-meteor</v-icon>Deployments</div>
-            <div v-else-if="item.category == 'monitoring'"><v-icon small color="#fa8231" :title="item.category.charAt(0).toUpperCase() + item.category.slice(1)" style="margin-right:10px;">fas fa-desktop</v-icon>Monitoring</div>
+            <div v-if="item.category == 'deployment'"><v-icon small color="#EF5354" title="Deployments" style="margin-right:10px">fas fa-meteor</v-icon>Deployments</div>
+            <div v-else-if="item.category == 'monitoring'"><v-icon small color="#fa8231" title="Monitoring" style="margin-right:10px">fas fa-desktop</v-icon>Monitoring</div>
+            <div v-else-if="item.category == 'utils-restore'"><v-icon small color="#00b16a" title="Utils - Restore" style="margin-right:10px">fas fa-database</v-icon>Utils - Restore</div>
           </template>
           <template v-slot:[`item.date`]="{ item }">
             {{ dateFormat(item.date) }}
@@ -128,6 +129,9 @@ export default {
       }
       else if (this.selected[0].category == 'monitoring') {
         this.$router.push({ name:'monitor', params: { id: id }})
+      }
+      else if (this.selected[0].category == 'utils-restore') {
+        this.$router.push({ name:'utils.restore.info', params: { id: id }})
       }
     },
     deleteNotification() {

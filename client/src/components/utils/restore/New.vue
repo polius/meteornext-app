@@ -333,7 +333,7 @@ export default {
       .then((response) => {
         if (this.progress == 100) {
           this.notification("File successfully uploaded. Starting the import process...", "#00b16a")
-          setTimeout(() => this.$router.push('/utils/restore/' + response.data.id), 3000)
+          setTimeout(() => this.$router.push('/utils/restore/' + response.data.id), 2000)
         }
       }).catch((error) => {
         if (axios.isCancel(error)) {
