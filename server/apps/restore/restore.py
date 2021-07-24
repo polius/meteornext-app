@@ -51,7 +51,7 @@ class Restore:
 
         # Send notification
         notification = {
-            'name': 'Restore \'{}\' has finished'.format(item['name']),
+            'name': "Restore '{}' has finished".format(item['name']),
             'status': 'ERROR' if status == 'FAILED' else 'SUCCESS',
             'category': 'utils-restore',
             'data': '{{"id":"{}"}}'.format(item['id']),
