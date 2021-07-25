@@ -67,20 +67,21 @@ class Restore:
         error_path = os.path.join(base_path, item['uri'], 'error.txt')
         progress_path = os.path.join(base_path, item['uri'], 'progress.txt')
         selected = ' '.join([i['file'] for i in json.loads(item['selected'])]) if item['selected'] is not None else ''
+        size = sum(i['size'] for i in json.loads(item['selected'])) if item['selected'] is not None else item['size']
 
         # Start restore
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
             gunzip = ''
-            if item['file'].endswith('.tar'):
+            if item['source'].endswith('.tar'):
                 gunzip = f'| tar xO {selected} 2> {error_path}'
-            elif item['file'].endswith('.tar.gz'):
+            elif item['source'].endswith('.tar.gz'):
                 gunzip = f'| tar zxO {selected} 2> {error_path}'
-            elif item['file'].endswith('.gz'):
+            elif item['source'].endswith('.gz'):
                 gunzip = f'| gunzip -c 2> {error_path}'
             if item['mode'] == 'file':
-                command = f"export MYSQL_PWD={server['password']}; pv -fF '%p %b %r %t %e' {os.path.join(base_path, item['uri'], item['file'])} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
+                command = f"export MYSQL_PWD={server['password']}; pv -f --size {size} -F '%p|%b|%r|%t|%e' {os.path.join(base_path, item['uri'], item['source'])} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
             elif item['mode'] == 'url':
-                command = f"export MYSQL_PWD={server['password']}; curl -sS '{item['file']}' 2> {error_path} | pv -fF '%p %b %r %t %e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
+                command = f"export MYSQL_PWD={server['password']}; curl -sS '{item['source']}' 2> {error_path} {gunzip} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
 
         p = subprocess.Popen(command, shell=True)
 
@@ -134,7 +135,8 @@ class Restore:
         p = re.sub(' +', ' ', string)
         p = p[p.find(']')+1:]
         p = p.replace('\n','').replace('[','').replace(']','').strip()
-        return re.sub(' +', ' ', p)
+        p = ' '.join([i.replace(' ', '') for i in p.split('|')]).strip()
+        return p
 
     def __parse_error(self, string):
         if len(string) == 0:

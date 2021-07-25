@@ -20,15 +20,15 @@
           <v-data-table :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1">
             <template v-slot:[`item.mode`]="{ item }">
               <div v-if="item.mode == 'file'">
-                <v-icon :title="`${item.file} (${formatBytes(item.size)})`" small style="margin-right:5px; margin-bottom:3px">fas fa-file</v-icon>
+                <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small style="margin-right:5px; margin-bottom:3px">fas fa-file</v-icon>
                 File
               </div>
               <div v-else-if="item.mode == 'url'">
-                <v-icon :title="`${item.file} (${formatBytes(item.size)})`" small style="margin-right:5px; margin-bottom:2px">fas fa-cloud</v-icon>
+                <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small style="margin-right:5px; margin-bottom:2px">fas fa-cloud</v-icon>
                 URL
               </div>
               <div v-else-if="item.mode == 's3'">
-                <v-icon :title="`${item.file} (${formatBytes(item.size)})`" style="font-size:22; margin-right:5px; margin-bottom:2px">fab fa-aws</v-icon>
+                <v-icon :title="`${item.source} (${formatBytes(item.size)})`" style="font-size:22; margin-right:5px; margin-bottom:2px">fab fa-aws</v-icon>
                 Amazon S3
               </div>
             </template>
@@ -55,24 +55,24 @@
           </v-data-table>
         </v-card>
         <div v-if="information_items.length > 0">
-          <!-- FILE -->
-          <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">FILE</div>
+          <!-- SOURCE -->
+          <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">SOURCE</div>
           <v-card style="margin-top:10px; margin-left:1px">
             <v-card-text style="padding:15px">
-              <div class="text-body-1 font-weight-regular">{{ `${information_items[0].file} (${formatBytes(information_items[0].size)})` }}</div>
+              <div class="text-body-1 font-weight-regular">{{ `${information_items[0].source} (${formatBytes(information_items[0].size)})` }}</div>
             </v-card-text>
+            <div v-if="information_items[0].selected != null" style="padding:0px 15px 15px 15px">
+              <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
+                <v-text-field v-model="selectedSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+              </v-toolbar>
+              <v-data-table readonly :headers="selectedHeaders" :items="information_items[0].selected" :search="selectedSearch" :hide-default-footer="information_items[0].selected.length < 11" loading-text="Loading... Please wait" item-key="file" class="elevation-1">
+                <template v-slot:[`item.size`]="{ item }">
+                  {{ formatBytes(item.size) }}
+                </template>
+              </v-data-table>
+              <div class="text-body-1" style="margin-top:20px">Total Size: <span style="font-weight:500; color:#fa8131">{{ formatBytes(information_items[0].selected.reduce((a, b) => a + b.size, 0)) }}</span></div>
+            </div>
           </v-card>
-          <div v-if="information_items[0].selected.length > 0" style="margin-top:15px">
-            <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
-              <v-text-field v-model="selectedSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
-            </v-toolbar>
-            <v-data-table readonly :headers="selectedHeaders" :items="information_items[0].selected" :search="selectedSearch" :hide-default-footer="information_items[0].selected.length < 11" loading-text="Loading... Please wait" item-key="file" class="elevation-1">
-              <template v-slot:[`item.size`]="{ item }">
-                {{ formatBytes(item.size) }}
-              </template>
-            </v-data-table>
-            <div class="text-body-1" style="margin-top:20px; color:#fa8131">Selected Size: <span style="font-weight:500">{{ formatBytes(information_items[0].selected.reduce((a, b) => a + b.size, 0)) }}</span></div>
-          </div>
           <!-- PROGRESS -->
           <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">PROGRESS</div>
           <v-card style="margin-top:10px; margin-left:1px">
@@ -265,8 +265,7 @@ export default {
     getRestore() {
       axios.get('/restore', { params: { id: this.$route.params.id } })
         .then((response) => {
-          console.log(response.data.restore)
-          this.information_items = [response.data.restore].map(x => ({...x, selected: JSON.parse(x.selected), created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
+          this.information_items = [response.data.restore].map(x => ({...x, selected: x.selected != null ? JSON.parse(x.selected) : null, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           this.parseProgress(this.information_items[0]['progress'])
           if (this.information_items[0]['status'] == 'IN PROGRESS') {
             clearTimeout(this.timer)
