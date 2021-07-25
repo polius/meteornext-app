@@ -172,28 +172,31 @@ class Restore:
 
         # Method: file
         if data['mode'] == 'file':
-            file = request.files['file']
-            if 'file' not in request.files or file.filename == '':
+            if 'source' not in request.files or request.files['source'].filename == '':
                 return jsonify({"message": 'No file was uploaded'}), 400
+            file = request.files['source']
             if not self.__allowed_file(file.filename):
                 return jsonify({"message": 'The file extension is not valid.'}), 400
 
-            # Store file            
+            # Store file
             file.save(os.path.join(base_path, uri, secure_filename(file.filename)))
-            file = file.filename
 
-            # Get file size
-            size = os.path.getsize(os.path.join(base_path, uri, secure_filename(file)))
+            # Build file metadata
+            source = file.filename
+            size = os.path.getsize(os.path.join(base_path, uri, secure_filename(file.filename)))
             selected = None
         
         elif data['mode'] == 'url':
+            # Inspect URL
             try:
-                inspect = self.inspect(data['url'])
+                inspect = self.inspect(data['source'])
             except Exception as e:
                 return jsonify({'message': str(e)}), 400
-            file = data['url']
-            selected = [i for i in inspect['items'] if i['file'] in data['selected']] if 'selected' in data and len(data['selected']) > 0 else None
+
+            # Build file metadata
+            source = data['source']
             size = inspect['size']
+            selected = [i for i in inspect['items'] if i['file'] in data['selected']] if 'selected' in data and len(data['selected']) > 0 else None
             if len(selected) != len(data['selected']):
                 return jsonify({'message': 'The selected file(s) do not match with the provided url.'}), 400
             selected = json.dumps(selected)
@@ -201,7 +204,7 @@ class Restore:
         # Insert new restore to DB
         item = {
             'mode': data['mode'],
-            'file': file,
+            'source': source,
             'selected': selected,
             'size': size,
             'server_id': data['server'],
@@ -261,8 +264,6 @@ class Restore:
         # If file is a .tar or .tar.gz, get the files
         # https://meteor2.io/restore.tar
         # https://meteor2.io/restore.tar.gz
-        # http://file.fyicenter.com/a/sample.tar
-        # https://dev-files.blender.org/file/download/bwdp5reejwpkuh5i2oak/PHID-FILE-nui3bpuan4wdvd7yzjrs/sample.tar.gz
         p = None
         if url.endswith('.tar.gz'):
             p = subprocess.run(f"curl -sS '{url}' | gunzip -c | tar -tv | awk '{{print $6\"|\"$3}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

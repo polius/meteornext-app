@@ -37,7 +37,7 @@
                         <v-file-input v-model="fileObject" label="File" accept=".sql,.tar,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" style="padding-top:8px" hide-details></v-file-input>
                       </div>
                       <div v-else-if="mode == 'url'">
-                        <v-text-field @keyup.enter="inspectURL" v-model="url" label="URL" :rules="[v => this.validURL(v) || '' ]" style="padding-top:8px" hide-details></v-text-field>
+                        <v-text-field @keyup.enter="inspectURL" v-model="source" label="URL" :rules="[v => this.validURL(v) || '' ]" style="padding-top:8px" hide-details></v-text-field>
                       </div>
                       <div v-if="size != null" class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       <div v-if="inspect.items.length > 0" style="margin-top:15px">
@@ -122,12 +122,7 @@
                           </template>
                         </v-radio>
                       </v-radio-group>
-                      <div v-if="mode == 'file'">
-                        <v-text-field readonly v-model="file" label="File" style="padding-top:8px" hide-details></v-text-field>
-                      </div>
-                      <div v-else-if="mode == 'url'">
-                        <v-text-field readonly v-model="url" label="URL" style="padding-top:8px" hide-details></v-text-field>
-                      </div>
+                      <v-text-field readonly v-model="source" :label="mode == 'file' ? 'File' : mode == 'url' ? 'URL' : 'Amazon S3'" style="padding-top:8px" hide-details></v-text-field>
                       <div class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       <div v-if="inspect.items.length > 0" style="margin-top:15px">
                         <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
@@ -225,10 +220,9 @@ export default {
       stepper: 1,
       // Source
       mode: 'file',
-      file: '',
+      source: '',
       size: null,
       fileObject: null,
-      url: '',
       // Inspect
       inspect: { items: [] },
       inspectHeaders: [
@@ -283,10 +277,11 @@ export default {
         if (typeof this.$refs.destinationForm !== 'undefined') this.$refs.destinationForm.resetValidation()
       })
     },
-    file(val) {
+    fileObject(val) {
+      this.source = val.name
       this.size = val.size 
     },
-    url() {
+    source() {
       if (this.inspect.items.length > 0) {
         this.inspectSearch = ''
         this.inspectSelected = []
@@ -339,7 +334,7 @@ export default {
       // Build import
       const data = new FormData();
       data.append('mode', this.mode)
-      data.append('file', this.fileObject)
+      data.append('source', this.fileObject)
       data.append('server', this.server)
       data.append('database', this.database)
       // Build request options
@@ -364,7 +359,7 @@ export default {
       })
       .catch((error) => {
         if (axios.isCancel(error)) {
-          this.notification("The upload process has been stopped", "info")
+          this.notification("The upload process has been stopped.", "info")
           this.dialog = false
         }
         else if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -375,7 +370,7 @@ export default {
       if (this.inspect.items.length > 0 && this.inspectSelected.length > 0) this.stepper = this.stepper + 1
       else {
         this.loading = true
-        axios.get('restore/inspect', { params: { url: this.url }})
+        axios.get('restore/inspect', { params: { url: this.source }})
         .then((response) => {
           this.inspect = response.data.inspect
           this.size = this.inspect.size
@@ -392,7 +387,7 @@ export default {
       this.loading = true
       const payload = {
         mode: this.mode,
-        url: this.url,
+        source: this.source,
         selected: this.inspectSelected.map(x => x.file),
         server: this.server,
         database: this.database

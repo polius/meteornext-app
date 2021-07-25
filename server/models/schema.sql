@@ -461,7 +461,7 @@ CREATE TABLE `client_queries` (
 CREATE TABLE `restore` (
  `id` INT UNSIGNED AUTO_INCREMENT,
  `mode` ENUM('file','url','s3') NOT NULL,
- `file` TEXT NOT NULL,
+ `source` TEXT NOT NULL,
  `selected` TEXT NULL,
  `size` BIGINT UNSIGNED NOT NULL,
  `server_id` INT UNSIGNED NOT NULL,
@@ -479,7 +479,7 @@ CREATE TABLE `restore` (
  `deleted` TINYINT(1) UNSIGNED NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `mode` (`mode`),
-  KEY `file` (`file`(191)),
+  KEY `source` (`source`(191)),
   KEY `size` (`size`),
   KEY `server_id` (`server_id`),
   KEY `database` (`database`),
