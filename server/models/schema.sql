@@ -462,6 +462,7 @@ CREATE TABLE `restore` (
  `id` INT UNSIGNED AUTO_INCREMENT,
  `mode` ENUM('file','url','s3') NOT NULL,
  `file` TEXT NOT NULL,
+ `selected` TEXT NULL,
  `size` BIGINT UNSIGNED NOT NULL,
  `server_id` INT UNSIGNED NOT NULL,
  `database` VARCHAR(191) NOT NULL,
