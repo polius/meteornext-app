@@ -62,6 +62,17 @@
               <div class="text-body-1 font-weight-regular">{{ `${information_items[0].file} (${formatBytes(information_items[0].size)})` }}</div>
             </v-card-text>
           </v-card>
+          <div v-if="information_items[0].selected.length > 0" style="margin-top:15px">
+            <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
+              <v-text-field v-model="selectedSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+            </v-toolbar>
+            <v-data-table readonly :headers="selectedHeaders" :items="information_items[0].selected" :search="selectedSearch" :hide-default-footer="information_items[0].selected.length < 11" loading-text="Loading... Please wait" item-key="file" class="elevation-1">
+              <template v-slot:[`item.size`]="{ item }">
+                {{ formatBytes(item.size) }}
+              </template>
+            </v-data-table>
+            <div class="text-body-1" style="margin-top:20px; color:#fa8131">Selected Size: <span style="font-weight:500">{{ formatBytes(information_items[0].selected.reduce((a, b) => a + b.size, 0)) }}</span></div>
+          </div>
           <!-- PROGRESS -->
           <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">PROGRESS</div>
           <v-card style="margin-top:10px; margin-left:1px">
@@ -220,6 +231,13 @@ export default {
         { text: 'Overall', value: 'overall', sortable: false },
       ],
       information_items: [],
+      
+      // Selected
+      selectedHeaders: [
+        { text: 'File', value: 'file',  width: '10%' },
+        { text: 'Size', value: 'size' },
+      ],
+      selectedSearch: '',
 
       // Progress
       progress: {},
@@ -247,7 +265,8 @@ export default {
     getRestore() {
       axios.get('/restore', { params: { id: this.$route.params.id } })
         .then((response) => {
-          this.information_items = [response.data.restore].map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
+          console.log(response.data.restore)
+          this.information_items = [response.data.restore].map(x => ({...x, selected: JSON.parse(x.selected), created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           this.parseProgress(this.information_items[0]['progress'])
           if (this.information_items[0]['status'] == 'IN PROGRESS') {
             clearTimeout(this.timer)

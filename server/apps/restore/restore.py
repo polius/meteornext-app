@@ -1,6 +1,7 @@
 import os
 import re
 import time
+import json
 import shutil
 import subprocess
 import threading
@@ -17,6 +18,7 @@ class Restore:
         # Start Process in another thread
         t = threading.Thread(target=self.__start, args=(user, item, server, base_path,))
         t.start()
+        t.join()
 
     def __start(self, user, item, server, base_path):
         # Start Import
@@ -61,28 +63,25 @@ class Restore:
         self._notifications.post(user_id=user['id'], notification=notification)
 
     def __import(self, item, server, base_path):
-        if item['mode'] == 'file':
-            self.__import_file(item, server, base_path)
-        elif item['mode'] == 'url':
-            pass
-        elif item['mode'] == 's3':
-            pass
-
-    def __import_file(self, item, server, base_path):
         # Build 'progress_path' & 'error_path'
         error_path = os.path.join(base_path, item['uri'], 'error.txt')
         progress_path = os.path.join(base_path, item['uri'], 'progress.txt')
+        selected = ' '.join([i['file'] for i in json.loads(item['selected'])]) if item['selected'] is not None else ''
 
         # Start restore
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
             gunzip = ''
             if item['file'].endswith('.tar'):
-                gunzip = f'| tar xO 2> {error_path}'
+                gunzip = f'| tar xO {selected} 2> {error_path}'
             elif item['file'].endswith('.tar.gz'):
-                gunzip = f'| tar zxO 2> {error_path}'
+                gunzip = f'| tar zxO {selected} 2> {error_path}'
             elif item['file'].endswith('.gz'):
                 gunzip = f'| gunzip -c 2> {error_path}'
-            command = f"export MYSQL_PWD={server['password']}; pv -fF '%p %b %r %t %e' {os.path.join(base_path, item['uri'], item['file'])} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
+            if item['mode'] == 'file':
+                command = f"export MYSQL_PWD={server['password']}; pv -fF '%p %b %r %t %e' {os.path.join(base_path, item['uri'], item['file'])} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
+            elif item['mode'] == 'url':
+                command = f"export MYSQL_PWD={server['password']}; curl -sS '{item['file']}' 2> {error_path} | pv -fF '%p %b %r %t %e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
+
         p = subprocess.Popen(command, shell=True)
 
         # Add PID & started to the restore
