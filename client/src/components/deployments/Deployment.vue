@@ -277,7 +277,7 @@
                   <v-card v-if="information_dialog_execution_mode == 'BASIC'" style="margin-bottom:20px;">
                     <v-toolbar flat dense color="#2e3131" style="margin-top:5px;">
                       <v-toolbar-title class="white--text subtitle-1">QUERIES</v-toolbar-title>
-                      <v-divider v-if="information_dialog_mode != 'parameters'" class="mx-3" inset vertical></v-divider>
+                      <v-divider class="mx-3" inset vertical></v-divider>
                       <v-toolbar-items v-if="information_dialog_mode != 'parameters'" class="hidden-sm-and-down" style="padding-left:0px;">
                         <v-btn text @click='newQuery()'><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
                         <v-btn :disabled="information_dialog_query_selected.length != 1" text @click="cloneQuery()"><v-icon small style="margin-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
@@ -289,9 +289,12 @@
                         <v-btn :disabled="information_dialog_data.queries.length < 2 || information_dialog_query_selected.length != 1" text title="Move query down" @click="moveDownQuery()"><v-icon small style="margin-right:10px">fas fa-arrow-down</v-icon>DOWN</v-btn>
                         <v-btn :disabled="information_dialog_data.queries.length < 2 || information_dialog_query_selected.length != 1" text title="Move query to the bottom" @click="moveBottomQuery()"><v-icon small style="margin-right:10px">fas fa-level-down-alt</v-icon>BOTTOM</v-btn>
                       </v-toolbar-items>
+                      <v-toolbar-items v-else class="hidden-sm-and-down" style="padding-left:0px;">
+                        <v-btn :disabled="information_dialog_query_selected.length != 1" text @click='showQuery()'><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-info</v-icon>SHOW</v-btn>
+                      </v-toolbar-items>
                     </v-toolbar>
                     <v-divider></v-divider>
-                    <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="id" :show-select="information_dialog_mode != 'parameters'" :hide-default-header="information_dialog_mode == 'parameters'" :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1">
+                    <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="id" show-select :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1">
                       <template v-ripple v-slot:[`header.data-table-select`]="{}">
                         <v-simple-checkbox
                           :value="information_dialog_data.queries.length == 0 ? false : information_dialog_query_selected.length == information_dialog_data.queries.length"
@@ -380,7 +383,7 @@
 
     <v-dialog v-model="query_dialog" eager persistent max-width="896px">
       <v-toolbar flat dense color="primary">
-        <v-toolbar-title class="white--text subtitle-1">{{ query_dialog_title }}</v-toolbar-title>
+        <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">{{ query_dialog_icon }}</v-icon>{{ query_dialog_title }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn icon @click="query_dialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
@@ -395,8 +398,13 @@
                 </div>
                 <v-divider style="margin:15px"></v-divider>
                 <div style="padding:0px 15px 15px 15px">
-                  <v-btn color="#00b16a" @click="queryActionConfirm()">Confirm</v-btn>
-                  <v-btn color="#EF5354" @click="query_dialog=false" style="margin-left:5px">Cancel</v-btn>
+                  <div v-if="query_dialog_mode == 'info'">
+                    <v-btn color="primary" @click="query_dialog=false">Close</v-btn>
+                  </div>
+                  <div v-else>
+                    <v-btn color="#00b16a" @click="queryActionConfirm()">Confirm</v-btn>
+                    <v-btn color="#EF5354" @click="query_dialog=false" style="margin-left:5px">Cancel</v-btn>
+                  </div>
                 </div>
               </v-flex>
             </v-layout>
@@ -646,6 +654,7 @@
       query_dialog: false,
       query_dialog_mode: '',
       query_dialog_title: '',
+      query_dialog_icon: '',
       query_dialog_code: '',
       // - Select -
       select_dialog: false,
@@ -1078,6 +1087,7 @@
       parameters() {
         this.information_dialog_mode = 'parameters'
         this.information_dialog_execution_mode = this.deployment['mode']
+        this.information_dialog_query_selected = []
         this.cmOptions.readOnly = true
         this.information_dialog_data = JSON.parse(JSON.stringify(this.deployment))
         this.schedule_enabled = this.deployment['scheduled'] !== null
@@ -1266,17 +1276,30 @@
         this.query_dialog_mode = 'new'
         this.query_dialog_code = ''
         this.query_dialog_title = 'NEW QUERIES'
+        this.query_dialog_icon = 'fas fa-plus'
+        this.cmOptions2.readOnly = false
+        this.query_dialog = true
+      },
+      showQuery() {
+        this.query_dialog_mode = 'info'
+        this.query_dialog_code = this.information_dialog_query_selected[0]['query']
+        this.query_dialog_title = 'SHOW QUERY'
+        this.query_dialog_icon = 'fas fa-info'
+        this.cmOptions2.readOnly = true
         this.query_dialog = true
       },
       editQuery () {
         this.query_dialog_mode = 'edit'
         this.query_dialog_code = this.information_dialog_query_selected[0]['query']
         this.query_dialog_title = 'EDIT QUERY'
+        this.query_dialog_icon = 'fas fa-feather-alt'
+        this.cmOptions2.readOnly = false
         this.query_dialog = true
       },
       deleteQuery() {
         this.query_dialog_mode = 'delete'
         this.query_dialog_title = 'DELETE QUERY'
+        this.query_dialog_icon = 'fas fa-minus'
         this.query_dialog = true
       },
       cloneQuery() {
@@ -1466,11 +1489,10 @@
     watch: {
       query_dialog (val) {
         if (!val) return
-        this.cmOptions2.readOnly = true
         this.$nextTick(() => {
           if (this.$refs.codemirror === undefined) return
           const codemirror = this.$refs.codemirror.codemirror
-          setTimeout(() => { codemirror.refresh(); codemirror.focus(); this.cmOptions2.readOnly = false }, 200)
+          setTimeout(() => { codemirror.refresh(); codemirror.focus() }, 200)
         })
       },
       '$route' () {

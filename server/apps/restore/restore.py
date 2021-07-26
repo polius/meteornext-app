@@ -17,6 +17,7 @@ class Restore:
     def start(self, user, item, server, base_path):
         # Start Process in another thread
         t = threading.Thread(target=self.__start, args=(user, item, server, base_path,))
+        t.daemon = True
         t.start()
         t.join()
 

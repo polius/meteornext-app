@@ -38,21 +38,17 @@ class MySQL:
         self._pool = dbutils.pooled_db.PooledDB(**POOL_CONFIG, **SQL_CONFIG)
 
     def execute(self, query, args=None, database=None):
-        connection = self._pool.dedicated_connection()
-        if database:
-            connection.select_db(database)
-        cursor = connection.cursor(OrderedDictCursor)
-        cursor.execute(query, args)
-        result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
-        cursor.close()
-        connection.commit()
-        connection.close()
+        with self._pool.dedicated_connection() as connection:
+            if database:
+                connection.select_db(database)
+            with connection.cursor(OrderedDictCursor) as cursor:
+                cursor.execute(query, args)
+                result = cursor.fetchall() if cursor.lastrowid is None else cursor.lastrowid
+            connection.commit()
         return result
 
     def mogrify(self, query, args=None):
-        connection = self._pool.dedicated_connection()
-        cursor = connection.cursor(OrderedDictCursor)
-        result = cursor.mogrify(query, args)
-        cursor.close()
-        connection.close()
+        with self._pool.dedicated_connection() as connection:
+            with connection.cursor(OrderedDictCursor) as cursor:
+                result = cursor.mogrify(query, args)
         return result
