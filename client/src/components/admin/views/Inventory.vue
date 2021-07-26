@@ -48,14 +48,11 @@
             <v-layout wrap>
               <v-flex xs12>
                 <v-form ref="form" @submit.prevent style="margin-top:15px; margin-bottom:15px;">
-                  <v-radio-group v-model="filter.by" row dense hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
-                    <v-radio label="Group" value="group"></v-radio>
+                  <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px">RESOURCE</div>
+                  <v-radio-group v-model="filter.by" dense row hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
                     <v-radio label="User" value="user"></v-radio>
-                    <template v-slot:label>
-                      <div class="subtitle-1 font-weight-regular">Filter by:</div>
-                    </template>
+                    <v-radio label="Group" value="group"></v-radio>
                   </v-radio-group>
-                  <v-autocomplete v-show="filter.by == 'group'" ref="filter_group" v-model="filter.group" v-on:keyup.enter="filterInventory()" filled :items="groups" item-value="id" item-text="name" label="Group" hide-details style="padding-top:0px; margin-bottom:20px"></v-autocomplete>
                   <v-autocomplete v-show="filter.by == 'user'" ref="filter_user" v-model="filter.user" v-on:keyup.enter="filterInventory()" filled :items="users" item-value="id" item-text="username" label="User" hide-details style="padding-top:0px; margin-bottom:20px">
                     <template v-slot:item="{ item }" >
                       <v-row align="center" no-gutters>
@@ -68,6 +65,7 @@
                       </v-row>
                     </template>
                   </v-autocomplete>
+                  <v-autocomplete v-show="filter.by == 'group'" ref="filter_group" v-model="filter.group" v-on:keyup.enter="filterInventory()" filled :items="groups" item-value="id" item-text="name" label="Group" hide-details style="padding-top:0px; margin-bottom:20px"></v-autocomplete>
                   <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px">SCOPE</div>
                   <v-radio-group v-model="filter.scope" hide-details style="margin-top:0px; margin-bottom:15px; padding-top:2px">
                     <v-radio label="All" value="all"></v-radio>
@@ -117,7 +115,7 @@ export default {
       loading: false,
       groups: [],
       users: [],
-      filter: { by: 'group', search: '', group: null, user: null, scope: 'all'},
+      filter: { by: 'user', search: '', group: null, user: null, scope: 'all'},
       filterApplied: false,
       // Snackbar
       snackbar: false,
@@ -210,7 +208,7 @@ export default {
       this.dialog = false
     },
     clearFilter() {
-      this.filter = { by: 'group', search: '', group: null, user: null, scope: 'all' }
+      this.filter = { by: 'user', search: '', group: null, user: null, scope: 'all' }
       this.$nextTick(() => {
         if (this.tab == 0) EventBus.$emit('filter-servers')
         else if (this.tab == 1) EventBus.$emit('filter-regions')
@@ -233,7 +231,7 @@ export default {
   watch: {
     dialog (val) {
       if (!val) return
-      if (!this.filterApplied) this.filter = { by: 'group', search: '', group: null, scope: 'all' }
+      if (!this.filterApplied) this.filter = { by: 'user', search: '', group: null, scope: 'all' }
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (typeof this.$refs.filter_group !== 'undefined' && this.filter.by == 'group') this.$refs.filter_group.focus()
