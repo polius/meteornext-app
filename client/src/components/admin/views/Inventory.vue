@@ -7,18 +7,19 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-menu offset-y>
             <template v-slot:activator="{ attrs, on }">
-              <v-btn color="primary" v-bind="attrs" v-on="on" class="elevation-0"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>{{ tab == 0 ? 'SERVERS' : tab == 1 ? 'REGIONS' : tab == 2 ? 'ENVIRONMENTS' : tab == 3 ? 'AUXILIARY' : tab == 4 ? 'CLOUD' : ''}}</v-btn>
+              <v-btn color="primary" v-bind="attrs" v-on="on" class="elevation-0"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>{{ tab == 0 ? 'SERVERS' : tab == 1 ? 'REGIONS' : tab == 2 ? 'ENVIRONMENTS' : tab == 3 ? 'AUXILIARY' : tab == 4 ? 'CLOUD' : '' }}</v-btn>
             </template>
             <v-list-item-group v-model="tab">
               <v-list>
-                <v-list-item @click="changeResource(item.id)" v-for="item in [{id:0,name:'SERVERS'},{id:1,name:'REGIONS'},{id:2,name:'ENVIRONMENTS'},{id:3,name:'AUXILIARY'},{id:4,name:'CLOUD'}]" :key="item.id" link>
-                  <v-list-item-title v-text="item.name" class="text-subtitle-2"></v-list-item-title>
+                <v-list-item v-for="item in ['servers','regions','environments','auxiliary','cloud']" :key="item" link>
+                  <v-list-item-title v-text="item.toUpperCase()" class="text-subtitle-2"></v-list-item-title>
                 </v-list-item>
               </v-list>
             </v-list-item-group>
           </v-menu>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="filterClick" text :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-btn @click="refreshClick" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="newClick" text><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn :disabled="selected.length != 1" @click="cloneClick" text><v-icon small style="padding-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
@@ -34,6 +35,7 @@
       <Regions v-show="tab == 1" :tab="tab" :groups="groups" :filter="filter"/>
       <Environments v-show="tab == 2" :tab="tab" :groups="groups" :filter="filter"/>
       <Auxiliary v-show="tab == 3" :tab="tab" :groups="groups" :filter="filter"/>
+      <Cloud v-show="tab == 4" :tab="tab" :groups="groups" :filter="filter"/>
     </v-card>
     <!------------------->
     <!-- FILTER DIALOG -->
@@ -106,6 +108,7 @@ import Environments from './inventory/Environments'
 import Regions from './inventory/Regions'
 import Servers from './inventory/Servers'
 import Auxiliary from './inventory/Auxiliary'
+import Cloud from './inventory/Cloud'
 
 export default {
   data() {
@@ -126,7 +129,7 @@ export default {
       snackbarColor: ''
     }
   },
-  components: { Environments, Regions, Servers, Auxiliary },
+  components: { Environments, Regions, Servers, Auxiliary, Cloud },
   created() {
     this.getGroups()
     this.getUsers()
@@ -139,9 +142,6 @@ export default {
     this.tab = 0
   },
   methods: {
-    changeResource(id) {
-      this.tab = id
-    },
     getGroups() {
       axios.get('/admin/inventory/groups')
         .then((response) => {
@@ -162,35 +162,47 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
     },
+    refreshClick() {
+      if (this.tab == 0) EventBus.$emit('get-servers')
+      else if (this.tab == 1) EventBus.$emit('get-regions')
+      else if (this.tab == 2) EventBus.$emit('get-environments')
+      else if (this.tab == 3) EventBus.$emit('get-auxiliary')
+      else if (this.tab == 4) EventBus.$emit('get-cloud')
+    },
     newClick() {
       if (this.tab == 0) EventBus.$emit('new-server')
       else if (this.tab == 1) EventBus.$emit('new-region')
       else if (this.tab == 2) EventBus.$emit('new-environment')
       else if (this.tab == 3) EventBus.$emit('new-auxiliary')
+      else if (this.tab == 4) EventBus.$emit('new-cloud')
     },
     cloneClick() {
       if (this.tab == 0) EventBus.$emit('clone-server')
       else if (this.tab == 1) EventBus.$emit('clone-region')
       else if (this.tab == 2) EventBus.$emit('clone-environment')
       else if (this.tab == 3) EventBus.$emit('clone-auxiliary')
+      else if (this.tab == 4) EventBus.$emit('clone-cloud')
     },
     editClick() {
       if (this.tab == 0) EventBus.$emit('edit-server')
       else if (this.tab == 1) EventBus.$emit('edit-region')
       else if (this.tab == 2) EventBus.$emit('edit-environment')
       else if (this.tab == 3) EventBus.$emit('edit-auxiliary')
+      else if (this.tab == 4) EventBus.$emit('edit-cloud')
     },
     deleteClick() {
       if (this.tab == 0) EventBus.$emit('delete-server')
       else if (this.tab == 1) EventBus.$emit('delete-region')
       else if (this.tab == 2) EventBus.$emit('delete-environment')
       else if (this.tab == 3) EventBus.$emit('delete-auxiliary')
+      else if (this.tab == 4) EventBus.$emit('delete-cloud')
     },
     filterColumnsClick() {
       if (this.tab == 0) EventBus.$emit('filter-server-columns')
       else if (this.tab == 1) EventBus.$emit('filter-region-columns')
       else if (this.tab == 2) EventBus.$emit('filter-environment-columns')
       else if (this.tab == 3) EventBus.$emit('filter-auxiliary-columns')
+      else if (this.tab == 4) EventBus.$emit('filter-cloud-columns')
     },
     filterClick() {
       this.filter_by = 'group'
@@ -206,6 +218,7 @@ export default {
       else if (this.tab == 1) EventBus.$emit('filter-regions')
       else if (this.tab == 2) EventBus.$emit('filter-environments')
       else if (this.tab == 3) EventBus.$emit('filter-auxiliary')
+      else if (this.tab == 4) EventBus.$emit('filter-cloud')
       this.filterApplied = true
       this.dialog = false
     },
@@ -216,6 +229,7 @@ export default {
         else if (this.tab == 1) EventBus.$emit('filter-regions')
         else if (this.tab == 2) EventBus.$emit('filter-environments')
         else if (this.tab == 3) EventBus.$emit('filter-auxiliary')
+        else if (this.tab == 4) EventBus.$emit('filter-cloud')
       })
       this.filterApplied = false
       this.dialog = false
@@ -236,16 +250,13 @@ export default {
       if (!this.filterApplied) this.filter = { by: 'user', search: '', group: null, scope: 'all' }
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
-        if (typeof this.$refs.filter_group !== 'undefined' && this.filter.by == 'group') this.$refs.filter_group.focus()
+        if (typeof this.$refs.filter_user !== 'undefined' && this.filter.by == 'user') this.$refs.filter_user.focus()
       })
     },
     'filter.by': function(val) {
       if (typeof this.$refs.filter_group !== 'undefined' && val == 'group') this.$refs.filter_group.focus()
         else if (typeof this.$refs.filter_user !== 'undefined' && val == 'user') this.$refs.filter_user.focus()
     },
-    tab (val, val2) {
-      console.log(val2 + ' --> ' + val)
-    }
   },
 }
 </script>

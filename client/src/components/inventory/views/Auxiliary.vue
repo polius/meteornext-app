@@ -300,7 +300,7 @@ export default {
     },
     cloneAuxiliary() {
       this.mode = 'clone'
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
       this.item.shared = (!this.owner) ? false : this.item.shared
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'CLONE AUXILIARY'
@@ -308,7 +308,7 @@ export default {
     },
     editAuxiliary() {
       this.mode = 'edit'
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'EDIT AUXILIARY'
       this.dialog = true

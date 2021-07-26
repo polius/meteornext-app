@@ -241,6 +241,7 @@ export default {
   }),
   props: ['tab','groups','filter'],
   mounted () {
+    EventBus.$on('get-auxiliary', this.getAuxiliary);
     EventBus.$on('filter-auxiliary', this.filterAuxiliary);
     EventBus.$on('filter-auxiliary-columns', this.filterAuxiliaryColumns);
     EventBus.$on('new-auxiliary', this.newAuxiliary);
@@ -313,7 +314,7 @@ export default {
     cloneAuxiliary() {
       this.mode = 'clone'
       this.users = []
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
       this.getUsers()
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'CLONE AUXILIARY'
@@ -321,7 +322,7 @@ export default {
     },
     editAuxiliary() {
       this.mode = 'edit'
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
       this.getUsers()
       this.versions = this.engines[this.item.engine]
       this.dialog_title = 'EDIT AUXILIARY'
