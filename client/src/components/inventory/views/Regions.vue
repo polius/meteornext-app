@@ -225,14 +225,14 @@ export default {
     },
     cloneRegion() {
       this.mode = 'clone'
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
       this.item.shared = (!this.owner) ? false : this.item.shared
       this.dialog_title = 'CLONE REGION'
       this.dialog = true
     },
     editRegion() {
       this.mode = 'edit'
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
       this.dialog_title = 'EDIT REGION'
       this.dialog = true
     },

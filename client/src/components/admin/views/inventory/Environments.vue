@@ -168,6 +168,7 @@ export default {
   }),
   props: ['tab','groups','filter'],
   mounted () {
+    EventBus.$on('get-environments', this.getEnvironments);
     EventBus.$on('filter-environments', this.filterEnvironments);
     EventBus.$on('filter-environment-columns', this.filterEnvironmentColumns);
     EventBus.$on('new-environment', this.newEnvironment);
@@ -330,7 +331,7 @@ export default {
     cloneEnvironment() {
       this.mode = 'clone'
       this.users = []
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
       delete this.item['id']
       this.getUsers()
       this.getServers()
@@ -339,7 +340,7 @@ export default {
     },  
     editEnvironment() {
       this.mode = 'edit'
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
       this.getUsers()
       this.getServers()
       this.dialog_title = 'EDIT ENVIRONMENT'

@@ -264,6 +264,7 @@ export default {
   }),
   props: ['tab','groups','filter'],
   mounted () {
+    EventBus.$on('get-servers', this.getServers);
     EventBus.$on('filter-servers', this.filterServers);
     EventBus.$on('filter-server-columns', this.filterServerColumns);
     EventBus.$on('new-server', this.newServer);
@@ -379,7 +380,7 @@ export default {
     },
     cloneServer() {
       this.mode = 'clone'
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
       this.item.usage = this.parseUsage(this.item.usage)
       this.getUsers()
       this.getRegions()
@@ -390,7 +391,7 @@ export default {
     },
     editServer() {
       this.mode = 'edit'
-      this.item = JSON.parse(JSON.stringify(this.selected[0]))
+      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
       this.item.usage = this.parseUsage(this.item.usage)
       this.getUsers()
       this.getRegions()
