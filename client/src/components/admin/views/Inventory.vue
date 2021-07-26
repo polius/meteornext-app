@@ -9,11 +9,13 @@
             <template v-slot:activator="{ attrs, on }">
               <v-btn color="primary" v-bind="attrs" v-on="on" class="elevation-0"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>{{ tab == 0 ? 'SERVERS' : tab == 1 ? 'REGIONS' : tab == 2 ? 'ENVIRONMENTS' : tab == 3 ? 'AUXILIARY' : tab == 4 ? 'CLOUD' : ''}}</v-btn>
             </template>
-            <v-list>
-              <v-list-item v-for="item in [{id:0,name:'SERVERS'},{id:1,name:'REGIONS'},{id:2,name:'ENVIRONMENTS'},{id:3,name:'AUXILIARY'},{id:4,name:'CLOUD'}]" :key="item.id" link>
-                <v-list-item-title @click="changeResource(item.id)" v-text="item.name" class="text-subtitle-2"></v-list-item-title>
-              </v-list-item>
-            </v-list>
+            <v-list-item-group v-model="tab">
+              <v-list>
+                <v-list-item @click="changeResource(item.id)" v-for="item in [{id:0,name:'SERVERS'},{id:1,name:'REGIONS'},{id:2,name:'ENVIRONMENTS'},{id:3,name:'AUXILIARY'},{id:4,name:'CLOUD'}]" :key="item.id" link>
+                  <v-list-item-title v-text="item.name" class="text-subtitle-2"></v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-list-item-group>
           </v-menu>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="filterClick" text :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
@@ -240,6 +242,9 @@ export default {
     'filter.by': function(val) {
       if (typeof this.$refs.filter_group !== 'undefined' && val == 'group') this.$refs.filter_group.focus()
         else if (typeof this.$refs.filter_user !== 'undefined' && val == 'user') this.$refs.filter_user.focus()
+    },
+    tab (val, val2) {
+      console.log(val2 + ' --> ' + val)
     }
   },
 }
