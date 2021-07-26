@@ -5,14 +5,18 @@
         <v-toolbar-title class="body-2 white--text font-weight-medium" style="min-width:104px"><v-icon small style="margin-right:10px">fas fa-layer-group</v-icon>INVENTORY</v-toolbar-title>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
-          <v-btn @click="filterClick" text :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
+          <v-menu offset-y>
+            <template v-slot:activator="{ attrs, on }">
+              <v-btn color="primary" v-bind="attrs" v-on="on" class="elevation-0"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>{{ tab == 0 ? 'SERVERS' : tab == 1 ? 'REGIONS' : tab == 2 ? 'ENVIRONMENTS' : tab == 3 ? 'AUXILIARY' : tab == 4 ? 'CLOUD' : ''}}</v-btn>
+            </template>
+            <v-list>
+              <v-list-item v-for="item in [{id:0,name:'SERVERS'},{id:1,name:'REGIONS'},{id:2,name:'ENVIRONMENTS'},{id:3,name:'AUXILIARY'},{id:4,name:'CLOUD'}]" :key="item.id" link>
+                <v-list-item-title @click="changeResource(item.id)" v-text="item.name"></v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
           <v-divider class="mx-3" inset vertical></v-divider>
-          <v-tabs v-model="tab" background-color="transparent" color="white" slider-color="white" slot="extension">
-            <v-tab>SERVERS</v-tab>
-            <v-tab>REGIONS</v-tab>
-            <v-tab>ENVIRONMENTS</v-tab>
-            <v-tab>AUXILIARY</v-tab>
-          </v-tabs>
+          <v-btn @click="filterClick" text :style="{ backgroundColor : filterApplied ? '#4ba1f1' : '' }"><v-icon small style="padding-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn @click="newClick" text><v-icon small style="padding-right:10px">fas fa-plus</v-icon>NEW</v-btn>
           <v-btn :disabled="selected.length != 1" @click="cloneClick" text><v-icon small style="padding-right:10px">fas fa-clone</v-icon>CLONE</v-btn>
@@ -106,7 +110,7 @@ import Auxiliary from './inventory/Auxiliary'
 export default {
   data() {
     return {
-      tab: '',
+      tab: null,
       selected: [],
       // Filter Dialog
       dialog: false,
@@ -132,8 +136,12 @@ export default {
     EventBus.$on('notification', this.notification)
     EventBus.$on('change-selected', this.changeSelected)
     EventBus.$on('notification', this.notification)
+    this.tab = 0
   },
   methods: {
+    changeResource(id) {
+      this.tab = id
+    },
     getGroups() {
       axios.get('/admin/inventory/groups')
         .then((response) => {

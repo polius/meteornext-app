@@ -215,6 +215,28 @@ CREATE TABLE `auxiliary` (
   FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE `cloud` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(191) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `group_id` INT UNSIGNED NOT NULL,
+  `type` ENUM('aws','google') NOT NULL,
+  `access_key` VARCHAR(191) NOT NULL,
+  `secret_key` VARCHAR(191) NOT NULL,
+  `shared` TINYINT(1) NOT NULL,
+  `owner_id` INT UNSIGNED NULL,
+  `created_by` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  `updated_by` INT UNSIGNED NULL,
+  `updated_at` DATETIME NULL,
+  PRIMARY KEY (`id`),
+  INDEX `name` (`name`),
+  INDEX `group_id` (`group_id`),
+  INDEX `shared` (`shared`),
+  INDEX `owner_id` (`owner_id`),
+  FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`),
+  FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE `releases` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(191) NOT NULL,

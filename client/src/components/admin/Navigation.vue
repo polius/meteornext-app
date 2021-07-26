@@ -12,7 +12,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-tab to="/admin/deployments" title="Manage all deployments"><span class="pl-2 pr-2">Deployments</span></v-tab>
         <v-tab to="/admin/monitoring" title="Manage all monitored servers"><span class="pl-2 pr-2">Monitoring</span></v-tab>
-        <!-- <v-tab to="/admin/utils" title="Manage all utils"><span class="pl-2 pr-2">Utils</span></v-tab> -->
+        <v-tab to="/admin/utils" title="Manage all utils"><span class="pl-2 pr-2">Utils</span></v-tab>
         <v-tab to="/admin/client" title="Manage all client queries and servers"><span class="pl-2 pr-2">Client</span></v-tab>
         <v-divider class="mx-3" inset vertical></v-divider>
       </v-tabs>

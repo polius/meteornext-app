@@ -72,6 +72,12 @@ let router = new VueRouter({
           name: 'inventory.auxiliary',
           component: () => import('../components/inventory/views/Auxiliary'),
           meta: { requiresInventory: true }
+        },
+        {
+          path: 'cloud',
+          name: 'inventory.cloud',
+          component: () => import('../components/inventory/views/Cloud'),
+          meta: { requiresInventory: true }
         }
       ]
     },
