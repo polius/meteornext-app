@@ -11,7 +11,7 @@
             </template>
             <v-list>
               <v-list-item v-for="item in [{id:0,name:'SERVERS'},{id:1,name:'REGIONS'},{id:2,name:'ENVIRONMENTS'},{id:3,name:'AUXILIARY'},{id:4,name:'CLOUD'}]" :key="item.id" link>
-                <v-list-item-title @click="changeResource(item.id)" v-text="item.name"></v-list-item-title>
+                <v-list-item-title @click="changeResource(item.id)" v-text="item.name" class="text-subtitle-2"></v-list-item-title>
               </v-list-item>
             </v-list>
           </v-menu>
