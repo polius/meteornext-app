@@ -8,7 +8,7 @@ class Releases:
         query = """
             SELECT r.*, COUNT(d.id) AS 'deployments'
             FROM releases r
-            JOIN deployments d ON d.release_id = r.id
+            LEFT JOIN deployments d ON d.release_id = r.id
             WHERE r.user_id = %s
             GROUP BY r.id
             ORDER BY r.id DESC

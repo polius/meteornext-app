@@ -77,9 +77,9 @@
           <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">PROGRESS</div>
           <v-card style="margin-top:10px; margin-left:1px">
             <v-card-text style="padding:15px">
-              <div v-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1">Importing file. Please wait...</div>
-              <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1">File was successfully imported.</div>
-              <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1">An error occurred while importing the file.</div>
+              <div v-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px">fas fa-spinner</v-icon>Importing file. Please wait...</div>
+              <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>File was successfully imported.</div>
+              <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while importing the file.</div>
               <v-progress-linear :color="getProgressColor(information_items[0].status)" height="5" :value="progress.value" style="margin-top:10px"></v-progress-linear>
               <div class="text-body-1" style="margin-top:10px">Progress: <span style="font-weight:500; color:#fa8131">{{ `${progress.value} %` }}</span></div>
               <v-divider style="margin-top:10px"></v-divider>
