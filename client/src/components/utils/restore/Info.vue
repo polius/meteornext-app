@@ -275,14 +275,23 @@ export default {
       let data = progress.split(' ')
       this.progress = {
         value: data[0].slice(0, -1),
-        transferred: data[1],
-        rate: data[2],
+        transferred: this.parseMetric(data[1]),
+        rate: this.parseMetric(data[2]),
         elapsed: data[3],
         eta: data.length == 5 ? data[4] : null
       }
       // Calculate Overall
       let diff = (this.information_items[0]['ended'] == null) ? moment.utc().diff(moment(this.information_items[0]['started'])) : moment(this.information_items[0]['ended']).diff(moment(this.information_items[0]['started']))
       this.information_items[0]['overall'] = moment.utc(diff).format("HH:mm:ss")
+    },
+    parseMetric(val) {
+      console.log(val)
+      for (let i = val.length; i >= 0; --i) {
+        if (Number.isInteger(parseInt(val[i]))) {
+          return val.substring(0, i+1) + ' ' + val.substring(i+1, val.length)
+        }
+      }
+      return val
     },
     goBack() {
       this.$router.back()
