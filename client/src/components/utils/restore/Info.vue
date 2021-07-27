@@ -75,7 +75,7 @@
               <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>File was successfully imported.</div>
               <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while importing the file.</div>
               <v-progress-linear :color="getProgressColor(information_items[0].status)" height="5" :value="progress.value" style="margin-top:10px"></v-progress-linear>
-              <div class="text-body-1" style="margin-top:10px">Progress: <span :style="`font-weight:500; color:${getProgressColor(information_items[0].status)}`">{{ `${progress.value} %` }}</span></div>
+              <div class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${progress.value} %` }}</span></div>
               <v-divider style="margin-top:10px"></v-divider>
               <div class="text-body-1" style="margin-top:10px">Bytes Transferred: <span class="white--text">{{ progress.transferred }}</span></div>
               <div class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ progress.rate }}</span></div>
@@ -285,7 +285,6 @@ export default {
       this.information_items[0]['overall'] = moment.utc(diff).format("HH:mm:ss")
     },
     parseMetric(val) {
-      console.log(val)
       for (let i = val.length; i >= 0; --i) {
         if (Number.isInteger(parseInt(val[i]))) {
           return val.substring(0, i+1) + ' ' + val.substring(i+1, val.length)
