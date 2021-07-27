@@ -20,15 +20,15 @@
           <v-data-table :headers="information_headers" :items="information_items" hide-default-footer class="elevation-1">
             <template v-slot:[`item.mode`]="{ item }">
               <div v-if="item.mode == 'file'">
-                <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small style="margin-right:5px; margin-bottom:3px">fas fa-file</v-icon>
+                <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#23cba7" style="margin-right:5px; margin-bottom:3px">fas fa-file</v-icon>
                 File
               </div>
               <div v-else-if="item.mode == 'url'">
-                <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small style="margin-right:5px; margin-bottom:2px">fas fa-cloud</v-icon>
+                <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#19b5fe" style="margin-right:5px; margin-bottom:2px">fas fa-cloud</v-icon>
                 URL
               </div>
               <div v-else-if="item.mode == 's3'">
-                <v-icon :title="`${item.source} (${formatBytes(item.size)})`" style="font-size:22; margin-right:5px; margin-bottom:2px">fab fa-aws</v-icon>
+                <v-icon :title="`${item.source} (${formatBytes(item.size)})`" color="#e47911" style="font-size:22; margin-right:5px; margin-bottom:2px">fab fa-aws</v-icon>
                 Amazon S3
               </div>
             </template>
@@ -41,15 +41,9 @@
               </v-btn>
             </template>
             <template v-slot:[`item.status`]="{ item }">
-              <v-icon v-if="item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
-              <v-icon v-else-if="item.status == 'SCHEDULED'" title="Scheduled" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
-              <v-icon v-else-if="item.status == 'QUEUED'" :title="`${'Queued: ' + item.queue}`" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
-              <v-icon v-else-if="item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
-              <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
+              <v-icon v-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
               <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
-              <v-icon v-else-if="item.status == 'WARNING'" title="Some queries failed" small style="color: #ff9800; margin-left:9px;">fas fa-check</v-icon>
               <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #EF5354; margin-left:11px;">fas fa-times</v-icon>
-              <v-icon v-else-if="item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
               <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #EF5354; margin-left:8px;">fas fa-ban</v-icon>
             </template>
           </v-data-table>
@@ -60,18 +54,18 @@
           <v-card style="margin-top:10px; margin-left:1px">
             <v-card-text style="padding:15px">
               <div class="text-body-1 font-weight-regular">{{ `${information_items[0].source} (${formatBytes(information_items[0].size)})` }}</div>
+              <div v-if="information_items[0].selected != null" style="margin-top:15px">
+                <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
+                  <v-text-field v-model="selectedSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+                </v-toolbar>
+                <v-data-table readonly :headers="selectedHeaders" :items="information_items[0].selected" :search="selectedSearch" :hide-default-footer="information_items[0].selected.length < 11" loading-text="Loading... Please wait" item-key="file" class="elevation-1">
+                  <template v-slot:[`item.size`]="{ item }">
+                    {{ formatBytes(item.size) }}
+                  </template>
+                </v-data-table>
+                <div class="text-body-1" style="margin-top:20px">Total Size: <span class="white--text" style="font-weight:500">{{ formatBytes(information_items[0].selected.reduce((a, b) => a + b.size, 0)) }}</span></div>
+              </div>
             </v-card-text>
-            <div v-if="information_items[0].selected != null" style="padding:0px 15px 15px 15px">
-              <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
-                <v-text-field v-model="selectedSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
-              </v-toolbar>
-              <v-data-table readonly :headers="selectedHeaders" :items="information_items[0].selected" :search="selectedSearch" :hide-default-footer="information_items[0].selected.length < 11" loading-text="Loading... Please wait" item-key="file" class="elevation-1">
-                <template v-slot:[`item.size`]="{ item }">
-                  {{ formatBytes(item.size) }}
-                </template>
-              </v-data-table>
-              <div class="text-body-1" style="margin-top:20px">Total Size: <span style="font-weight:500; color:#fa8131">{{ formatBytes(information_items[0].selected.reduce((a, b) => a + b.size, 0)) }}</span></div>
-            </div>
           </v-card>
           <!-- PROGRESS -->
           <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">PROGRESS</div>
@@ -81,12 +75,12 @@
               <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>File was successfully imported.</div>
               <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while importing the file.</div>
               <v-progress-linear :color="getProgressColor(information_items[0].status)" height="5" :value="progress.value" style="margin-top:10px"></v-progress-linear>
-              <div class="text-body-1" style="margin-top:10px">Progress: <span style="font-weight:500; color:#fa8131">{{ `${progress.value} %` }}</span></div>
+              <div class="text-body-1" style="margin-top:10px">Progress: <span :style="`font-weight:500; color:${getProgressColor(information_items[0].status)}`">{{ `${progress.value} %` }}</span></div>
               <v-divider style="margin-top:10px"></v-divider>
-              <div class="text-body-1" style="margin-top:10px">Bytes Transferred: <span style="color:#fa8131">{{ progress.transferred }}</span></div>
-              <div class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span style="color:#fa8131">{{ progress.rate }}</span></div>
-              <div class="text-body-1" style="margin-top:10px">Elapsed Time: <span style="color:#fa8131">{{ progress.elapsed }}</span></div>
-              <div v-if="progress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span style="color:#fa8131">{{ progress.eta }}</span></div>
+              <div class="text-body-1" style="margin-top:10px">Bytes Transferred: <span class="white--text">{{ progress.transferred }}</span></div>
+              <div class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ progress.rate }}</span></div>
+              <div class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ progress.elapsed }}</span></div>
+              <div v-if="progress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ progress.eta }}</span></div>
             </v-card-text>
           </v-card>
           <!-- ERROR -->
@@ -263,7 +257,7 @@ export default {
   },
   methods: {
     getRestore() {
-      axios.get('/restore', { params: { id: this.$route.params.id } })
+      axios.get('/utils/restore', { params: { id: this.$route.params.id } })
         .then((response) => {
           this.information_items = [response.data.restore].map(x => ({...x, selected: x.selected != null ? JSON.parse(x.selected) : null, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           this.parseProgress(this.information_items[0]['progress'])
@@ -291,7 +285,7 @@ export default {
       this.information_items[0]['overall'] = moment.utc(diff).format("HH:mm:ss")
     },
     goBack() {
-      this.$router.push('/utils/restore')
+      this.$router.back()
     },
     getServer(server_id) {
       // Get Server
@@ -299,7 +293,7 @@ export default {
       this.showPassword = false
       this.serverDialog = true
       const payload = { server_id: server_id }
-      axios.get('/admin/inventory/servers', { params: payload })
+      axios.get('/inventory/servers', { params: payload })
         .then((response) => {
           // Build usage
           let usage = []
@@ -324,7 +318,7 @@ export default {
         region_id: this.server.region_id,
         server: { engine: this.server.engine, hostname: this.server.hostname, port: this.server.port, username: this.server.username, password: this.server.password }
       }
-      axios.post('/admin/inventory/servers/test', payload)
+      axios.post('/inventory/servers/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
         })
@@ -341,7 +335,7 @@ export default {
       this.loading = true
       this.stop = true
       const payload = { id: this.$route.params.id }
-      axios.post('/restore/stop', payload)
+      axios.post('/utils/restore/stop', payload)
       .then(() => {
         this.stopDialog = false
       })

@@ -24,6 +24,7 @@ import routes.admin.inventory.regions
 import routes.admin.inventory.servers
 import routes.admin.inventory.auxiliary
 import routes.admin.inventory.cloud
+import routes.admin.utils.restore
 import routes.admin.client
 import routes.admin.monitoring
 import routes.inventory.environments
@@ -276,6 +277,7 @@ class Setup:
         admin_inventory_servers = routes.admin.inventory.servers.Servers(self._app, sql, self._license)
         admin_inventory_auxiliary = routes.admin.inventory.auxiliary.Auxiliary(self._app, sql, self._license)
         admin_inventory_cloud = routes.admin.inventory.cloud.Cloud(self._app, sql, self._license)
+        admin_utils_restore = routes.admin.utils.restore.Restore(self._app, sql, self._license)
         admin_client = routes.admin.client.Client(self._app, sql, self._license)
         admin_monitoring = routes.admin.monitoring.Monitoring(self._app, sql, self._license)
         environments = routes.inventory.environments.Environments(self._app, sql, self._license)
@@ -292,7 +294,7 @@ class Setup:
         client = routes.client.client.Client(self._app, sql, self._license)
         restore = routes.utils.restore.Restore(self._app, sql, self._license)
 
-        self._blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_client, admin_monitoring, environments, regions, servers, auxiliary, cloud, releases, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client, restore]
+        self._blueprints = [login, profile, mfa, notifications, settings, groups, users, admin_deployments, admin_inventory, admin_inventory_environments, admin_inventory_regions, admin_inventory_servers, admin_inventory_auxiliary, admin_inventory_cloud, admin_utils_restore, admin_client, admin_monitoring, environments, regions, servers, auxiliary, cloud, releases, deployments, monitoring, monitoring_parameters, monitoring_processlist, monitoring_queries, client, restore]
 
         # Register all blueprints
         for i in self._blueprints:

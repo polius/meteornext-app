@@ -30,7 +30,7 @@ class Restore:
         # Init blueprint
         restore_blueprint = Blueprint('restore', __name__, template_folder='restore')
 
-        @restore_blueprint.route('/restore', methods=['GET','POST','DELETE'])
+        @restore_blueprint.route('/utils/restore', methods=['GET','POST','DELETE'])
         @jwt_required()
         def restore_method():
             # Check license
@@ -54,7 +54,7 @@ class Restore:
             elif request.method == 'DELETE':
                 return self.delete(user, data)
 
-        @restore_blueprint.route('/restore/check', methods=['GET'])
+        @restore_blueprint.route('/utils/restore/check', methods=['GET'])
         @jwt_required()
         def restore_space_method():
             # Check license
@@ -71,7 +71,7 @@ class Restore:
             # Return if there's free space left to upload a file
             return jsonify({'check': shutil.disk_usage("/").free >= int(request.args['size'])}), 200
 
-        @restore_blueprint.route('/restore/servers', methods=['GET'])
+        @restore_blueprint.route('/utils/restore/servers', methods=['GET'])
         @jwt_required()
         def restore_servers_method():
             # Check license
@@ -88,7 +88,7 @@ class Restore:
             # Get Servers List
             return jsonify({'servers': self._restore.get_servers(user)}), 200
 
-        @restore_blueprint.route('/restore/stop', methods=['POST'])
+        @restore_blueprint.route('/utils/restore/stop', methods=['POST'])
         @jwt_required()
         def restore_stop_method():
             # Check license
@@ -108,7 +108,7 @@ class Restore:
             # Stop restore process
             return self.stop(user, data)
 
-        @restore_blueprint.route('/restore/inspect', methods=['GET'])
+        @restore_blueprint.route('/utils/restore/inspect', methods=['GET'])
         @jwt_required()
         def restore_inspect_method():
             # Check license

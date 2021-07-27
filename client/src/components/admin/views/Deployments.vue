@@ -15,7 +15,7 @@
         <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
         <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :options.sync="options" :server-items-length="total" :hide-default-footer="total < 11" :loading="loading" item-key="execution_id" show-select single-select class="elevation-1" style="padding-top:5px;">
+      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :options.sync="options" :server-items-length="total" :loading="loading" item-key="execution_id" show-select single-select class="elevation-1" style="padding-top:5px;">
         <template v-slot:[`item.name`]="{ item }">
           <v-edit-dialog :return-value.sync="item.name" lazy @open="openName(item)" @save="saveName(item)"> 
             {{ item.name }}
@@ -357,7 +357,7 @@ export default {
       let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
       if (this.filterApplied) {
         this.filterOrigin = JSON.parse(JSON.stringify(this.filter))
-        for (let i in ['createdFrom','createdTo','startedFrom','startedTo','endedFrom','endedTo']) {
+        for (let i of ['createdFrom','createdTo','startedFrom','startedTo','endedFrom','endedTo']) {
           if (i in filter) filter[i] = moment(this.filter[i]).utc().format("YYYY-MM-DD HH:mm:ss")
         }
       }
