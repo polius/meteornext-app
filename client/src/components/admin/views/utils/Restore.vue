@@ -6,7 +6,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn :disabled="selected.length != 1" text @click="infoRestore()"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-info</v-icon>INFORMATION</v-btn>
-          <v-btn :disabled="selected.length == 0" text @click="deleteRestore()"><v-icon small style="margin-right:10px;">fas fa-minus</v-icon>DELETE</v-btn>
+          <!-- <v-btn :disabled="selected.length == 0" text @click="deleteRestore()"><v-icon small style="margin-right:10px;">fas fa-minus</v-icon>DELETE</v-btn> -->
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text @click="openFilter" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn @click="getRestore" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
