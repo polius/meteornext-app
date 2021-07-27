@@ -46,7 +46,7 @@ class Restore:
             if 'endedTo' in rfilter and len(rfilter['endedTo']) > 0:
                 ended_to = 'AND r.ended <= %(ended_to)s'
                 args['ended_to'] = rfilter['endedTo']
-            if 'deleted' in rfilter and len(rfilter['deleted']) > 0:
+            if 'deleted' in rfilter and rfilter['deleted']:
                 deleted = ''
                 args['deleted'] = rfilter['deleted']
 
