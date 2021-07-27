@@ -24,28 +24,22 @@
         </template>
         <template v-slot:[`item.mode`]="{ item }">
           <div v-if="item.mode == 'file'">
-            <v-icon :title="`${item.file} (${formatBytes(item.size)})`" small style="margin-right:5px; margin-bottom:3px">fas fa-file</v-icon>
+            <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#23cba7" style="margin-right:5px; margin-bottom:3px">fas fa-file</v-icon>
             File
           </div>
           <div v-else-if="item.mode == 'url'">
-            <v-icon :title="`${item.file} (${formatBytes(item.size)})`" small style="margin-right:5px; margin-bottom:2px">fas fa-cloud</v-icon>
+            <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#19b5fe" style="margin-right:5px; margin-bottom:2px">fas fa-cloud</v-icon>
             URL
           </div>
           <div v-else-if="item.mode == 's3'">
-            <v-icon :title="`${item.file} (${formatBytes(item.size)})`" style="font-size:22; margin-right:5px; margin-bottom:2px">fab fa-aws</v-icon>
+            <v-icon :title="`${item.source} (${formatBytes(item.size)})`" color="#e47911" style="font-size:22; margin-right:5px; margin-bottom:2px">fab fa-aws</v-icon>
             Amazon S3
           </div>
         </template>
         <template v-slot:[`item.status`]="{ item }">
-          <v-icon v-if="item.status == 'CREATED'" title="Created" small style="color: #3498db; margin-left:9px;">fas fa-check</v-icon>
-          <v-icon v-else-if="item.status == 'SCHEDULED'" :title="`Scheduled: ${item.scheduled.slice(0,-3)}`" small style="color: #ff9800; margin-left:8px;">fas fa-clock</v-icon>
-          <v-icon v-else-if="item.status == 'QUEUED'" :title="`Queued: ${item.queue}`" small style="color: #3498db; margin-left:8px;">fas fa-clock</v-icon>
-          <v-icon v-else-if="item.status == 'STARTING'" title="Starting" small style="color: #3498db; margin-left:8px;">fas fa-spinner</v-icon>
-          <v-icon v-else-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
+          <v-icon v-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
           <v-icon v-else-if="item.status == 'SUCCESS'" title="Success" small style="color: #4caf50; margin-left:9px;">fas fa-check</v-icon>
-          <v-icon v-else-if="item.status == 'WARNING'" title="Some queries failed" small style="color: #ff9800; margin-left:9px;">fas fa-check</v-icon>
           <v-icon v-else-if="item.status == 'FAILED'" title="Failed" small style="color: #EF5354; margin-left:11px;">fas fa-times</v-icon>
-          <v-icon v-else-if="item.status == 'STOPPING'" title="Stopping" small style="color: #ff9800; margin-left:8px;">fas fa-ban</v-icon>
           <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #EF5354; margin-left:8px;">fas fa-ban</v-icon>
         </template>
       </v-data-table>
@@ -94,7 +88,6 @@ export default {
       { text: 'Server', align: 'left', value: 'server' },
       { text: 'Database', align: 'left', value: 'database' },
       { text: 'Status', align:'left', value: 'status' },
-      // { text: 'Created', align: 'left', value: 'created' },
       { text: 'Started', align: 'left', value: 'started' },
       { text: 'Ended', align: 'left', value: 'ended' },
       { text: 'Overall', align: 'left', value: 'overall' }
@@ -120,7 +113,7 @@ export default {
     getRestore() {
       this.loading = true
       // Get Restores
-      axios.get('/restore')
+      axios.get('/utils/restore')
         .then((response) => {
           this.items = response.data.restore.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended), overall: this.parseOverall(x)}))
         })
@@ -137,7 +130,7 @@ export default {
       // Delete Restores
       this.loading = true
       const payload = this.selected.map(x => x.id)
-      axios.delete('/restore', { data: payload })
+      axios.delete('/utils/restore', { data: payload })
         .then(() => {
           this.selected = []
           this.deleteDialog = false

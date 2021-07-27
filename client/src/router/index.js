@@ -277,7 +277,7 @@ let router = new VueRouter({
         {
           path: 'utils',
           name: 'admin.utils',
-          component: () => import('../components/admin/views/Utils'),
+          component: () => import('../components/admin/views/utils/Restore'),
           meta: { requiresAdmin: true }
         },
         {

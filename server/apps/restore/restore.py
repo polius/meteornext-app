@@ -136,7 +136,7 @@ class Restore:
         p = re.sub(' +', ' ', string)
         p = p[p.find(']')+1:]
         p = p.replace('\n','').replace('[','').replace(']','').strip()
-        p = ' '.join([i.replace(' ', '') for i in p.split('|')]).strip()
+        p = ' '.join(p.split('|')).strip()
         return p
 
     def __parse_error(self, string):

@@ -293,7 +293,7 @@ export default {
   methods: {
     getServers() {
       this.loading = true
-      axios.get('/restore/servers')
+      axios.get('/utils/restore/servers')
         .then((response) => {
           this.serverItems = response.data.servers
         })
@@ -317,7 +317,7 @@ export default {
       this.progress = 0
       this.progressText = ''
       this.dialog = true
-      axios.get('/restore/check', { params: { size: this.size }})
+      axios.get('/utils/restore/check', { params: { size: this.size }})
         .then((response) => {
           if (!response.data.check) {
             this.notification('There is not enough space left to proceed with the restore.', '#EF5354')
@@ -350,7 +350,7 @@ export default {
       }
       // Start import
       this.start = true
-      axios.post('restore', data, options)
+      axios.post('/utils/restore', data, options)
       .then((response) => {
         if (this.progress == 100) {
           this.notification("File successfully uploaded.", "#00b16a")
@@ -370,7 +370,7 @@ export default {
       if (this.inspect.items.length > 0 && this.inspectSelected.length > 0) this.stepper = this.stepper + 1
       else {
         this.loading = true
-        axios.get('restore/inspect', { params: { url: this.source }})
+        axios.get('/utils/restore/inspect', { params: { url: this.source }})
         .then((response) => {
           this.inspect = response.data.inspect
           this.size = this.inspect.size
@@ -392,7 +392,7 @@ export default {
         server: this.server,
         database: this.database
       }
-      axios.post('restore', payload)
+      axios.post('/utils/restore', payload)
       .then((response) => {
         this.$router.push('/utils/restore/' + response.data.id)
       })
