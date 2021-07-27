@@ -256,7 +256,7 @@ class Restore:
     def inspect(self, url):
         inspect = { "file": url, "size": None, "items": [] }
         # File Size
-        p = subprocess.run(f"curl -sSI '{url}' | grep -i Content-Length | awk '{{print $2}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.run(f"curl -sSLI '{url}' | grep -i Content-Length | awk '{{print $2}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if len(p.stdout) == 0:
             raise Exception("This URL is not valid")
         inspect['size'] = int(p.stdout.strip())
@@ -266,9 +266,9 @@ class Restore:
         # https://meteor2.io/restore.tar.gz
         p = None
         if url.endswith('.tar.gz'):
-            p = subprocess.run(f"curl -sS '{url}' | gunzip -c | tar -tv | awk '{{print $6\"|\"$3}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.run(f"curl -sSL '{url}' | gunzip -c | tar -tv | awk '{{print $6\"|\"$3}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         elif url.endswith('.tar'):
-            p = subprocess.run(f"curl -sS '{url}' | tar -tv | awk '{{print $6\"|\"$3}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.run(f"curl -sSL '{url}' | tar -tv | awk '{{print $6\"|\"$3}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if p:
             if len(p.stderr) > 0:
                 raise Exception(p.stderr.strip())
