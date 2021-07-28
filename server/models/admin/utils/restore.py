@@ -75,10 +75,17 @@ class Restore:
         """
         return self._sql.execute(query)
 
-    def delete(self, item):
+    def put(self, item, value):
         query = """
             UPDATE restore
-            SET deleted = 1
+            SET deleted = %s
+            WHERE id = %s
+        """
+        self._sql.execute(query, (value, item))
+
+    def delete(self, item):
+        query = """
+            DELETE FROM restore
             WHERE id = %s
         """
         self._sql.execute(query, (item))

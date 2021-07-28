@@ -13,8 +13,10 @@
         </v-toolbar-items>
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-text-field v-model="search" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+        <v-divider class="mx-3" inset vertical style="margin-right:4px!important"></v-divider>
+        <v-btn @click="openColumnsDialog" icon title="Show/Hide columns" style="margin-right:-10px; width:40px; height:40px;"><v-icon small>fas fa-cog</v-icon></v-btn>
       </v-toolbar>
-      <v-data-table v-model="selected" :headers="headers" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
+      <v-data-table v-model="selected" :headers="computedHeaders" :items="items" :search="search" :loading="loading" loading-text="Loading... Please wait" item-key="id" show-select class="elevation-1" style="padding-top:5px;">
         <template v-ripple v-slot:[`header.data-table-select`]="{}">
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
@@ -35,6 +37,9 @@
             <v-icon :title="`${item.source} (${formatBytes(item.size)})`" color="#e47911" style="font-size:22; margin-right:5px; margin-bottom:2px">fab fa-aws</v-icon>
             Amazon S3
           </div>
+        </template>
+        <template v-slot:[`item.size`]="{ item }">
+          {{ formatBytes(item.size) }}
         </template>
         <template v-slot:[`item.status`]="{ item }">
           <v-icon v-if="item.status == 'IN PROGRESS'" title="In Progress" small style="color: #ff9800; margin-left:8px;">fas fa-spinner</v-icon>
@@ -67,6 +72,46 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+    <!-------------------->
+    <!-- COLUMNS DIALOG -->
+    <!-------------------->
+    <v-dialog v-model="columnsDialog" max-width="600px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="text-subtitle-1 white--text">FILTER COLUMNS</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn @click="selectAllColumns" text title="Select all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-check-square</v-icon>Select all</v-btn>
+          <v-btn @click="deselectAllColumns" text title="Deselect all columns" style="height:100%"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-square</v-icon>Deselect all</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn icon @click="columnsDialog = false" style="width:40px; height:40px"><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-card-text style="padding: 0px 20px 0px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:15px; margin-bottom:20px;">
+                  <div class="text-body-1" style="margin-bottom:10px">Select the columns to display:</div>
+                  <v-checkbox v-model="columnsRaw" label="Mode" value="mode" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Source" value="source" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Size" value="size" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Server" value="server" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Database" value="database" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Status" value="status" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Started" value="started" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Ended" value="ended" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-checkbox v-model="columnsRaw" label="Overall" value="overall" hide-details style="margin-top:5px"></v-checkbox>
+                  <v-divider style="margin-top:15px;"></v-divider>
+                  <div style="margin-top:20px;">
+                    <v-btn @click="filterColumns" :loading="loading" color="#00b16a">Confirm</v-btn>
+                    <v-btn :disabled="loading" color="#EF5354" @click="columnsDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  </div>
+                </v-form>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <v-snackbar v-model="snackbar" :multi-line="false" :timeout="snackbarTimeout" :color="snackbarColor" top style="padding-top:0px;">
       {{ snackbarText }}
       <template v-slot:action="{ attrs }">
@@ -85,6 +130,8 @@ export default {
   data: () => ({
     headers: [
       { text: 'Mode', align: 'left', value: 'mode' },
+      { text: 'Source', align: 'left', value: 'source' },
+      { text: 'Size', align: 'left', value: 'size' },
       { text: 'Server', align: 'left', value: 'server' },
       { text: 'Database', align: 'left', value: 'database' },
       { text: 'Status', align:'left', value: 'status' },
@@ -100,6 +147,11 @@ export default {
     // Delete Dialog
     deleteDialog: false,
 
+    // Filter Columns Dialog
+    columnsDialog: false,
+    columns: ['mode','server','database','status','started','ended','overall'],
+    columnsRaw: [],
+
     // Snackbar
     snackbar: false,
     snackbarTimeout: Number(3000),
@@ -108,6 +160,9 @@ export default {
   }),
   created() {
     this.getRestore()
+  },
+  computed: {
+    computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
   },
   methods: {
     getRestore() {
@@ -160,6 +215,20 @@ export default {
     },
     infoRestore() {
       this.$router.push({ name: 'utils.restore.info', params: { id: this.selected[0]['id'] }})
+    },
+    openColumnsDialog() {
+      this.columnsRaw = [...this.columns]
+      this.columnsDialog = true
+    },
+    selectAllColumns() {
+      this.columnsRaw = ['mode','source','size','server','database','status','started','ended','overall']
+    },
+    deselectAllColumns() {
+      this.columnsRaw = []
+    },
+    filterColumns() {
+      this.columns = [...this.columnsRaw]
+      this.columnsDialog = false
     },
     notification(message, color) {
       this.snackbarText = message
