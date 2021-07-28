@@ -16,7 +16,7 @@
                   <v-card-text>
                     <v-form ref="sourceForm" @submit.prevent>
                       <div class="text-body-1">Choose a restoring method:</div>
-                      <v-radio-group v-model="mode" style="margin-top:10px; margin-bottom:20px" hide-details>
+                      <v-radio-group v-model="mode" style="margin-top:10px; margin-bottom:15px" hide-details>
                         <v-radio value="file">
                           <template v-slot:label>
                             <div>File</div>
@@ -27,21 +27,56 @@
                             <div>URL</div>
                           </template>
                         </v-radio>
-                        <v-radio disabled value="s3">
+                        <v-radio value="s3">
                           <template v-slot:label>
                             <div>Amazon S3</div>
                           </template>
                         </v-radio>
                       </v-radio-group>
                       <div v-if="mode == 'file'">
-                        <v-file-input v-model="fileObject" label="File" accept=".sql,.tar,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" style="padding-top:8px" hide-details></v-file-input>
+                        <v-file-input v-model="fileObject" label="File" accept=".sql,.tar,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" hide-details></v-file-input>
                       </div>
                       <div v-else-if="mode == 'url'">
-                        <v-text-field @keyup.enter="inspectURL" v-model="source" label="URL" :rules="[v => this.validURL(v) || '' ]" style="padding-top:8px" hide-details></v-text-field>
+                        <v-text-field @keyup.enter="inspectURL" v-model="source" label="URL" :rules="[v => this.validURL(v) || '' ]" hide-details></v-text-field>
+                      </div>
+                      <div v-else-if="mode == 's3'">
+                        <div class="subtitle-1 white--text" style="margin-bottom:15px">CLOUD KEYS</div>
+                        <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
+                          <v-text-field v-model="cloudKeysSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+                        </v-toolbar>
+                        <v-data-table v-model="cloudKeysSelected" :headers="cloudKeysHeaders" :items="cloudKeysItems" :search="cloudKeysSearch" :loading="loading" loading-text="Loading... Please wait" item-key="id" :options="{ itemsPerPage:5 }" show-select single-select class="elevation-1">
+                          <template v-slot:[`item.type`]="{ item }">
+                            <v-icon v-if="item.type == 'aws'" size="22" color="#e47911" title="Amazon Web Services">fab fa-aws</v-icon>
+                            <v-icon v-else-if="item.type == 'google'" size="20" color="#4285F4" title="Google Cloud" style="margin-left:4px">fab fa-google</v-icon>
+                          </template>
+                          <template v-slot:[`item.shared`]="{ item }">
+                            <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px">fas fa-user</v-icon>
+                            <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px">fas fa-users</v-icon>
+                            {{ !item.shared ? 'Personal' : 'Shared' }}
+                          </template>
+                        </v-data-table>
+                        <div v-if="cloudKeysSelected.length == 1" class="subtitle-1 white--text" style="margin-top:15px; margin-bottom:15px">OBJECTS</div>
+                        <v-card v-if="cloudKeysSelected.length == 1">
+                          <v-card-text style="padding:0px">
+                            <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
+                              <v-text-field v-model="cloudObjectsSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+                            </v-toolbar>
+                            <v-treeview v-model="cloudObjectsSelected" :open="cloudObjectsOpened" :items="cloudObjectsItems" :search="cloudObjectsSearch" activatable item-key="name" open-on-click>
+                              <template v-slot:prepend="{ item, open }">
+                                <v-icon v-if="'children' in item">
+                                  {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
+                                </v-icon>
+                                <v-icon v-else>
+                                  mdi-file-document-outline
+                                </v-icon>
+                              </template>
+                            </v-treeview>
+                          </v-card-text>
+                        </v-card>
                       </div>
                       <div v-if="size != null" class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       <div v-if="inspect.items.length > 0" style="margin-top:15px">
-                        <div class="text-body-1">Choose the files to restore:</div>
+                        <div v-if="inspect.items.length > 0" class="text-body-1">Choose the files to restore:</div>
                         <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
                           <v-text-field v-model="inspectSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
                         </v-toolbar>
@@ -231,6 +266,51 @@ export default {
       ],
       inspectSearch: '',
       inspectSelected: [],
+      // Cloud Keys
+      cloudKeysHeaders: [
+        { text: 'Name', align: 'left', value: 'name' },
+        { text: 'Type', align: 'left', value: 'type' },
+        { text: 'Access Key', align: 'left', value: 'access_key'},
+        { text: 'Scope', align: 'left', value: 'shared' },
+      ],
+      cloudKeysItems: [],
+      cloudKeysSelected: [],
+      cloudKeysSearch: '',
+      // Cloud Objects
+      cloudObjectsSelected: [],
+      cloudObjectsOpened: [],
+      cloudObjectsItems: [
+        {
+          name: '.git',
+        },
+        {
+          name: 'node_modules',
+        },
+        {
+          name: 'public',
+          children: [
+            {
+              name: 'static',
+              children: [{
+                name: 'logo.png',
+              }],
+            },
+            {
+              name: 'favicon.ico',
+            },
+            {
+              name: 'index.html',
+            },
+          ],
+        },
+        {
+          name: '.gitignore',
+        },
+        {
+          name: 'babel.config.js',
+        },
+      ],
+      cloudObjectsSearch: '',
       // Destination
       serverItems: [],
       server: '',
@@ -252,7 +332,8 @@ export default {
     this.getServers()
   },
   watch: {
-    mode() {
+    mode(val) {
+      if (val == 's3') this.getCloud()
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
       })
@@ -296,6 +377,18 @@ export default {
       axios.get('/utils/restore/servers')
         .then((response) => {
           this.serverItems = response.data.servers
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
+    },
+    getCloud() {
+      this.loading = true
+      axios.get('/inventory/cloud')
+        .then((response) => {
+          this.cloudKeysItems = response.data.data
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

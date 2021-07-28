@@ -9,7 +9,7 @@
         </v-simple-checkbox>
       </template>
       <template v-slot:[`item.type`]="{ item }">
-          <v-icon v-if="item.type == 'aws'" size="22" color="#e47911" title="AWS">fab fa-aws</v-icon>
+          <v-icon v-if="item.type == 'aws'" size="22" color="#e47911" title="Amazon Web Services">fab fa-aws</v-icon>
           <v-icon v-else-if="item.type == 'google'" size="20" color="#4285F4" title="Google Cloud" style="margin-left:4px">fab fa-google</v-icon>
         </template>
       <template v-slot:[`item.shared`]="{ item }">
@@ -43,16 +43,16 @@
                     </v-col>
                   </v-row>
                   <v-text-field ref="name" v-model="item.name" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <v-select v-model="item.type" :items="[{id: 'aws', name: 'AWS'}, {id: 'google', name: 'Google Cloud'}]" item-value="id" :rules="[v => !!v || '']" label="Type" required style="padding-top:0px;">
+                  <v-select v-model="item.type" :items="[{id: 'aws', name: 'Amazon Web Services'}]" item-value="id" :rules="[v => !!v || '']" label="Type" required style="padding-top:0px;">
                     <template v-slot:[`selection`]="{ item }">
                       <v-icon v-if="item.id == 'aws'" size="22" color="#e47911" style="margin-right:8px">fab fa-aws</v-icon>
                       <v-icon v-else-if="item.id == 'google'" size="20" color="#4285F4" style="margin-right:8px">fab fa-google</v-icon>
-                      {{ item.id == 'aws' ? 'AWS' : 'Google Cloud' }}
+                      {{ item.id == 'aws' ? 'Amazon Web Services' : 'Google Cloud' }}
                     </template>
                     <template v-slot:[`item`]="{ item }">
                       <v-icon v-if="item.id == 'aws'" size="22" color="#e47911" style="margin-right:8px">fab fa-aws</v-icon>
                       <v-icon v-else-if="item.id == 'google'" size="20" color="#4285F4" style="margin-left:4px; margin-right:12px">fab fa-google</v-icon>
-                      {{ item.id == 'aws' ? 'AWS' : 'Google Cloud' }}
+                      {{ item.id == 'aws' ? 'Amazon Web Services' : 'Google Cloud' }}
                     </template>
                   </v-select>
                   <v-text-field v-model="item.access_key" :rules="[v => !!v || '']" label="Access Key" autocomplete="username" style="padding-top:0px;"></v-text-field>
