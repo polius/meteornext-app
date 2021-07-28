@@ -300,24 +300,15 @@ class Restore:
             return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
         cloud = cloud[0]
 
-        # Init API & Check validity
-        sts = boto3.client('sts', aws_access_key_id=cloud['access_key'], aws_secret_access_key=cloud['secret_key'])
-
-        # Test Cloud Key
-        try:
-            sts.get_caller_identity()
-        except Exception:
-            return jsonify({'message': 'Credentials are not valid.'}), 400
-
         # Init S3 Client
         client = boto3.client('s3', aws_access_key_id=cloud['access_key'], aws_secret_access_key=cloud['secret_key'])
 
         if request.args['mode'] == 'buckets':
-            # List all buckets
+            # Get all buckets
             try:
                 response = client.list_buckets()
                 buckets = [{'name': i['Name'], 'date': i['CreationDate']} for i in response['Buckets']]
-                return jsonify({'buckets': buckets}), 200
+                return jsonify({'objects': buckets}), 200
             except Exception as e:
                 return jsonify({'message': str(e)}), 400
         elif request.args['mode'] == 'objects':

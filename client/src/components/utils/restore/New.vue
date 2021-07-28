@@ -55,8 +55,8 @@
                             {{ !item.shared ? 'Personal' : 'Shared' }}
                           </template>
                         </v-data-table>
-                        <div v-if="cloudKeysSelected.length == 1" class="subtitle-1 white--text" style="margin-top:15px; margin-bottom:15px">OBJECTS</div>
-                        <v-card v-if="cloudKeysSelected.length == 1">
+                        <div v-if="cloudObjectsItems.length > 0" class="subtitle-1 white--text" style="margin-top:15px; margin-bottom:15px">OBJECTS</div>
+                        <v-card v-if="cloudObjectsItems.length > 0">
                           <v-card-text style="padding:0px">
                             <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
                               <v-text-field v-model="cloudObjectsSearch" append-icon="search" :label="cloudObjectsSearchLabel" color="white" single-line hide-details></v-text-field>
@@ -372,6 +372,9 @@ export default {
         this.inspect = { items: [] }
         this.size = null
       }
+    },
+    cloudKeysSelected() {
+      if (this.cloudKeysSelected.length > 0) this.getCloudObjects()
     }
   },
   methods: {
@@ -394,6 +397,21 @@ export default {
           this.cloudKeysItems = response.data.data
         })
         .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
+    },
+    getCloudObjects() {
+      // Test Connection
+      this.loading = true
+      const payload = { id: this.cloudKeysSelected[0]['id'], mode: this.cloudObjectsMode }
+      axios.get('/utils/restore/objects', { params: payload })
+        .then((response) => {
+          console.log(response.data.objects)
+        })
+        .catch((error) => {
+          this.cloudKeysSelected = []
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
@@ -501,20 +519,6 @@ export default {
     cancelImport() {
       this.cancelToken.cancel()
       this.dialog = false
-    },
-    testCloud() {
-      // Test Connection
-      this.loading = true
-      const payload = { 'id': this.cloudKeysSelected[0]['id'] }
-      axios.post('/inventory/cloud/test', payload)
-        .then((response) => {
-          this.notification(response.data.message, '#00b16a')
-        })
-        .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
-        })
-        .finally(() => this.loading = false)
     },
     formatBytes(size) {
       if (size == null) return null

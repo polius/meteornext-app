@@ -326,8 +326,8 @@ export default {
       // Test Connection
       this.loading = true
       let payload = {}
-      if ('secret_key' in this.selected[0] && this.selected[0].secret_key != null && typeof this.selected[0].secret_key !== 'object') {
-        payload = { access_key: this.selected[0]['access_key'], secret_key: this.selected[0]['secret_key'] }
+      if ('secret_key' in this.item && this.item.secret_key != null && typeof this.item.secret_key !== 'object') {
+        payload = { access_key: this.item['access_key'], secret_key: this.item['secret_key'] }
       }
       else payload = { id: this.selected[0]['id'] }
       axios.post('/admin/inventory/cloud/test', payload)
