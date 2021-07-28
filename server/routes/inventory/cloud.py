@@ -133,6 +133,6 @@ class Cloud:
         sts = boto3.client('sts', aws_access_key_id=cloud_key['access_key'], aws_secret_access_key=cloud_key['secret_key'])
         try:
             sts.get_caller_identity()
-            return jsonify({'message': 'Credentials are valid.'}), 200
+            return jsonify({'message': 'Credentials are valid'}), 200
         except Exception:
-            return jsonify({'message': 'Credentials are not valid.'}), 400
+            return jsonify({'message': 'Credentials are not valid'}), 400
