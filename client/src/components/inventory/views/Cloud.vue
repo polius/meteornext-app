@@ -309,7 +309,7 @@ export default {
       // Test Connection
       this.loading = true
       let payload = {}
-      if ('access_key' in this.selected[0]) {
+      if ('secret_key' in this.selected[0] && this.selected[0].secret_key != null && typeof this.selected[0].secret_key !== 'object') {
         payload = { access_key: this.selected[0]['access_key'], secret_key: this.selected[0]['secret_key'] }
       }
       else payload = { id: this.selected[0]['id'] }
