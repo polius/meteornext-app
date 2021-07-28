@@ -37,7 +37,7 @@ class Cloud:
             SET name = %s,
                 type = %s,
                 access_key = %s,
-                secret_key = %s,
+                secret_key = IF(%s = '<secret_key>', `secret_key`, %s),
                 shared = %s,
                 owner_id = IF(%s = 1, NULL, %s),
                 updated_by = %s,
@@ -45,7 +45,7 @@ class Cloud:
             WHERE id = %s
             AND group_id = %s
         """
-        self._sql.execute(query, (cloud['name'], cloud['type'], cloud['access_key'], cloud['secret_key'], cloud['shared'], cloud['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), cloud['id'], group_id))
+        self._sql.execute(query, (cloud['name'], cloud['type'], cloud['access_key'], cloud['secret_key'], cloud['secret_key'], cloud['shared'], cloud['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), cloud['id'], group_id))
 
     def delete(self, user_id, group_id, cloud_id):
         query = """

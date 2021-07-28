@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 import json
+import boto3
 
 import models.admin.users
 import models.inventory.cloud
@@ -59,7 +60,9 @@ class Cloud:
 
             # Get Request Json
             data = request.get_json()
-            return jsonify({'message': 'Connection Successful'}), 200
+
+            # Test Cloud Key
+            return self.test(user, data)
 
         return cloud_blueprint
 
@@ -68,12 +71,15 @@ class Cloud:
     ####################
     def get(self, user):
         cloud = self._cloud.get(user['id'], user['group_id'])
+        # Protect Secret Keys
+        for c in cloud:
+            c['secret_key'] = {'secret_key': '<secret_key>'} if c['secret_key'] else None
         # Check Inventory Secured
         if user['inventory_secured'] and not user['owner']:
             cloud_secured = []
             for c in cloud:
                 if c['shared']:
-                    cloud_secured.append({"id": c['id'], "name": c['name'], "shared": c['shared']})
+                    cloud_secured.append({"id": c['id'], "type": c['type'], "shared": c['shared']})
                 else:
                     cloud_secured.append(c)
             return jsonify({'data': cloud_secured}), 200
@@ -112,3 +118,21 @@ class Cloud:
         for cloud in data:
             self._cloud.delete(user['id'], user['group_id'], cloud)
         return jsonify({'message': 'Selected cloud keys deleted successfully'}), 200
+
+    def test(self, user, data):
+        # Get Cloud Key
+        if 'id' in data:
+            cloud = self._cloud.get(group_id=user['group_id'], user_id=user['id'], cloud_id=data['id'])
+            if len(cloud) == 0:
+                return jsonify({'message': "Can't test the cloud key. This key does not exist in your inventory."}), 400
+            cloud_key = { 'access_key': cloud[0]['access_key'], 'secret_key': cloud[0]['secret_key']}
+        else:
+            cloud_key = { 'access_key': data['access_key'], 'secret_key': data['secret_key']}
+
+        # Test Cloud Key
+        sts = boto3.client('sts', aws_access_key_id=cloud_key['access_key'], aws_secret_access_key=cloud_key['secret_key'])
+        try:
+            sts.get_caller_identity()
+            return jsonify({'message': 'Credentials are valid.'}), 200
+        except Exception:
+            return jsonify({'message': 'Credentials are not valid.'}), 400

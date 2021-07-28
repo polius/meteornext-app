@@ -6,12 +6,14 @@ import uuid
 import json
 import shutil
 import signal
+import boto3
 import subprocess
 
 import models.admin.users
 import models.utils.restore
 import models.admin.settings
 import models.inventory.servers
+import models.inventory.cloud
 import apps.restore.restore
 
 class Restore:
@@ -23,6 +25,7 @@ class Restore:
         self._restore = models.utils.restore.Restore(sql)
         self._settings = models.admin.settings.Settings(sql)
         self._servers = models.inventory.servers.Servers(sql)
+        self._cloud = models.inventory.cloud.Cloud(sql)
         # Init core
         self._core = apps.restore.restore.Restore(sql)
 
@@ -56,7 +59,7 @@ class Restore:
 
         @restore_blueprint.route('/utils/restore/check', methods=['GET'])
         @jwt_required()
-        def restore_space_method():
+        def restore_check_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -128,6 +131,23 @@ class Restore:
                 return jsonify({'inspect': inspect}), 200
             except Exception as e:
                 return jsonify({'message': str(e)}), 400
+
+        @restore_blueprint.route('/utils/restore/objects', methods=['GET'])
+        @jwt_required()
+        def restore_objects_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['utils_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Objects
+            return self.objects(user)
 
         return restore_blueprint
 
@@ -262,8 +282,6 @@ class Restore:
         inspect['size'] = int(p.stdout.strip())
 
         # If file is a .tar or .tar.gz, get the files
-        # https://meteor2.io/restore.tar
-        # https://meteor2.io/restore.tar.gz
         p = None
         if url.endswith('.tar.gz'):
             p = subprocess.run(f"curl -sSL '{url}' | gunzip -c | tar -tv | awk '{{print $6\"|\"$3}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -274,6 +292,36 @@ class Restore:
                 raise Exception(p.stderr.strip())
             inspect['items'] = [{'file': i.split('|')[0][i.split('|')[0].find('/')+1:], 'size': int(i.split('|')[1])} for i in p.stdout.strip().split('\n')]
         return inspect
+
+    def objects(self, user):
+        # Get Cloud Key
+        cloud = self._cloud.get(user_id=user['id'], group_id=user['group_id'], cloud_id=request.args['id'])
+        if len(cloud) == 0:
+            return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
+        cloud = cloud[0]
+
+        # Init API & Check validity
+        sts = boto3.client('sts', aws_access_key_id=cloud['access_key'], aws_secret_access_key=cloud['secret_key'])
+
+        # Test Cloud Key
+        try:
+            sts.get_caller_identity()
+        except Exception:
+            return jsonify({'message': 'Credentials are not valid.'}), 400
+
+        # Init S3 Client
+        client = boto3.client('s3', aws_access_key_id=cloud['access_key'], aws_secret_access_key=cloud['secret_key'])
+
+        if request.args['mode'] == 'buckets':
+            # List all buckets
+            try:
+                response = client.list_buckets()
+                buckets = [{'name': i['Name'], 'date': i['CreationDate']} for i in response['Buckets']]
+                return jsonify({'buckets': buckets}), 200
+            except Exception as e:
+                return jsonify({'message': str(e)}), 400
+        elif request.args['mode'] == 'objects':
+            pass
 
     def __allowed_file(self, filename):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'sql','tar','gz'}
