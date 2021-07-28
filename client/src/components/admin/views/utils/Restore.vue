@@ -6,7 +6,7 @@
         <v-divider class="mx-3" inset vertical></v-divider>
         <v-toolbar-items class="hidden-sm-and-down">
           <v-btn :disabled="selected.length != 1" text @click="infoRestore()"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-info</v-icon>INFORMATION</v-btn>
-          <!-- <v-btn :disabled="selected.length == 0" text @click="deleteRestore()"><v-icon small style="margin-right:10px;">fas fa-minus</v-icon>DELETE</v-btn> -->
+          <v-btn :disabled="selected.length == 0" text @click="manageRestore()"><v-icon small style="margin-right:10px;">fas fa-mouse-pointer</v-icon>MANAGE</v-btn>
           <v-divider class="mx-3" inset vertical></v-divider>
           <v-btn text @click="openFilter" :style="{ backgroundColor : filterApplied ? '#4ba2f1' : '' }"><v-icon small style="margin-right:10px">fas fa-sliders-h</v-icon>FILTER</v-btn>
           <v-btn @click="getRestore" text><v-icon small style="margin-right:10px">fas fa-sync-alt</v-icon>REFRESH</v-btn>
@@ -48,27 +48,52 @@
           <v-icon v-else-if="item.status == 'STOPPED'" title="Stopped" small style="color: #EF5354; margin-left:8px;">fas fa-ban</v-icon>
         </template>
         <template v-slot:[`item.deleted`]="{ item }">
-          <v-icon v-if="item.deleted" title="Deleted" small color="#EF5354" style="margin-left:12px">fas fa-circle</v-icon>
-          <v-icon v-else title="Not deleted" small color="#00b16a" style="margin-left:12px">fas fa-circle</v-icon>
+          <div :style="`margin-left:${item.deleted ? '8px' : '10px'}; font-weight:500; color: ${item.deleted ? '#EF5354' : '#00b16a'}`">{{ item.deleted ? 'YES' : 'NO'}}</div>
         </template>
       </v-data-table>
     </v-card>
-    <v-dialog v-model="deleteDialog" persistent max-width="768px">
+    <v-dialog v-model="manageDialog" max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
-          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-minus</v-icon>DELETE</v-toolbar-title>
+          <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:2px">fas fa-mouse-pointer</v-icon>MANAGE</v-toolbar-title>
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading" icon @click="deleteDialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+          <v-btn :disabled="loading" icon @click="manageDialog = false"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
         </v-toolbar>
         <v-card-text style="padding:15px">
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <div class="subtitle-1" style="margin-bottom:10px">Are you sure you want to delete the selected restores?</div>
+                <div class="subtitle-1" style="margin-bottom:10px">Choose the action to perform for the selected restore(s).</div>
+                <v-radio-group v-model="manageOption" hide-details style="margin-top:0px; margin-bottom:20px">
+                  <v-radio value="recover" color="#4caf50">
+                    <template v-slot:label>
+                      <div style="margin-left:5px">
+                        <div class="body-1 white--text">Recover</div>
+                        <div class="font-weight-regular caption" style="font-size:0.85rem !important">Recover the restore making it visible.</div>
+                      </div>
+                    </template>
+                  </v-radio>
+                  <v-radio value="delete" color="#ff9800">
+                    <template v-slot:label>
+                      <div style="margin-left:5px">
+                        <div class="body-1 white--text">Delete</div>
+                        <div class="font-weight-regular caption" style="font-size:0.85rem !important">Delete the restore making it not visible.</div>
+                      </div>
+                    </template>
+                  </v-radio>
+                  <v-radio value="permanently" color="#EF5354">
+                    <template v-slot:label>
+                      <div style="margin-left:5px">
+                        <div class="body-1 white--text">Delete Permanently</div>
+                        <div class="font-weight-regular caption" style="font-size:0.85rem !important">Delete the restore permanently. This action cannot be undone.</div>
+                      </div>
+                    </template>
+                  </v-radio>
+                </v-radio-group>
                 <v-divider></v-divider>
                 <div style="margin-top:20px;">
-                  <v-btn :disabled="loading" color="#00b16a" @click="deleteSubmit()">Confirm</v-btn>
-                  <v-btn :disabled="loading" color="#EF5354" @click="deleteDialog = false" style="margin-left:5px;">Cancel</v-btn>
+                  <v-btn :disabled="loading" color="#00b16a" @click="manageSubmit()">Confirm</v-btn>
+                  <v-btn :disabled="loading" color="#EF5354" @click="manageDialog = false" style="margin-left:5px;">Cancel</v-btn>
                 </div>
               </v-flex>
             </v-layout>
@@ -302,8 +327,9 @@ export default {
     options: null,
     loading: false,
 
-    // Delete Dialog
-    deleteDialog: false,
+    // Manage Dialog
+    manageDialog: false,
+    manageOption: null,
 
     // Filter Dialog
     filterDialog: false,
@@ -383,17 +409,27 @@ export default {
         })
         .finally(() => this.loading = false)
     },
-    deleteRestore() {
-      this.deleteDialog = true
+    manageRestore() {
+      this.manageOption = null
+      this.manageDialog = true
     },
-    deleteSubmit() {
+    manageSubmit() {
+      // Check if an option has been selected.
+      if (this.manageOption == null) {
+        this.notification('Please select an option', '#EF5354')
+        return
+      }
       // Delete Restores
       this.loading = true
-      const payload = this.selected.map(x => x.id)
-      axios.delete('/admin/utils/restore', { data: payload })
-        .then(() => {
+      const payload = { 
+        action: this.manageOption,
+        items: this.selected.map(x => x.id)
+      }
+      axios.post('/admin/utils/restore/action', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
           this.selected = []
-          this.deleteDialog = false
+          this.manageDialog = false
           this.getRestore()
         })
         .catch((error) => {

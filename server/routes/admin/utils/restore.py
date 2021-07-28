@@ -19,9 +19,30 @@ class Restore:
         # Init blueprint
         admin_utils_restore_blueprint = Blueprint('admin_utils_restore', __name__, template_folder='admin_utils_restore')
 
-        @admin_utils_restore_blueprint.route('/admin/utils/restore', methods=['GET','DELETE'])
+        @admin_utils_restore_blueprint.route('/admin/utils/restore', methods=['GET'])
         @jwt_required()
         def admin_utils_restore_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Check Settings - Security (Administration URL)
+            if not self._settings.check_url():
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['admin']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Restores
+            return self.get()
+
+        @admin_utils_restore_blueprint.route('/admin/utils/restore/action', methods=['POST'])
+        @jwt_required()
+        def admin_utils_restore_action_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -40,10 +61,8 @@ class Restore:
             if user['disabled'] or not user['admin']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            if request.method == 'GET':
-                return self.get()
-            elif request.method == 'DELETE':
-                return self.delete(data)
+            # Apply action
+            return self.action(data)
 
         return admin_utils_restore_blueprint
 
@@ -51,14 +70,24 @@ class Restore:
     # Internal Methods #
     ####################
     def get(self):
-        # Get Restores
         rfilter = json.loads(request.args['filter']) if 'filter' in request.args else None
         rsort = json.loads(request.args['sort']) if 'sort' in request.args else None
         restore = self._restore.get(rfilter, rsort)
         users_list = self._restore.get_users_list()
         return jsonify({'restore': restore, 'users_list': users_list}), 200
 
-    def delete(self, data):
-        for item in data:
-            self._restore.delete(item)
-        return jsonify({'message': 'Selected restores deleted successfully'}), 200
+    def action(self, data):
+        if data['action'] == 'recover':
+            for item in data['items']:
+                self._restore.put(item, 0)
+            return jsonify({'message': 'Selected restores successfully recovered.'}), 200
+
+        elif data['action'] == 'delete':
+            for item in data['items']:
+                self._restore.put(item, 1)
+            return jsonify({'message': 'Selected restores successfully deleted.'}), 200
+
+        elif data['action'] == 'permanently':
+            for item in data['items']:
+                self._restore.delete(item)
+            return jsonify({'message': 'Selected restores successfully permanently deleted.'}), 200
