@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 import json
+import boto3
 
 import models.admin.users
 import models.admin.inventory.inventory
@@ -72,7 +73,9 @@ class Cloud:
 
             # Get Request Json
             data = request.get_json()
-            return jsonify({'message': 'Connection Successful'}), 200
+
+            # Test Cloud Key
+            return self.test(data)
 
         return admin_cloud_blueprint
 
@@ -85,6 +88,9 @@ class Cloud:
         user_id = request.args['user_id'] if 'user_id' in request.args else None
         # Get cloud
         cloud = self._cloud.get(group_id=group_id, user_id=user_id)
+        # Protect Secret Keys
+        for c in cloud:
+            c['secret_key'] = {'secret_key': '<secret_key>'} if c['secret_key'] else None
         # Return data
         return jsonify({'cloud': cloud}), 200
 
@@ -120,3 +126,12 @@ class Cloud:
         for cloud in data:
             self._cloud.delete(cloud)
         return jsonify({'message': 'Selected cloud keys deleted successfully'}), 200
+
+    def test(self, data):
+        # Test Cloud Key
+        sts = boto3.client('sts', aws_access_key_id=data['access_key'], aws_secret_access_key=data['secret_key'])
+        try:
+            sts.get_caller_identity()
+            return jsonify({'message': 'Credentials are valid.'}), 200
+        except Exception:
+            return jsonify({'message': 'Credentials are not valid.'}), 400

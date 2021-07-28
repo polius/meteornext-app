@@ -70,7 +70,20 @@
                   </v-select>
                   <div v-if="!(readOnly && inventory_secured)" style="margin-bottom:20px">
                     <v-text-field v-model="item.access_key" :readonly="readOnly" :rules="[v => !!v || '']" label="Access Key" autocomplete="username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-model="item.secret_key" :readonly="readOnly" :rules="[v => !!v || '']" label="Secret Key" :append-icon="showSecret ? 'mdi-eye' : 'mdi-eye-off'" :type="showSecret ? 'text' : 'password'" @click:append="showSecret = !showSecret" autocomplete="new-password" style="padding-top:0px;" hide-details></v-text-field>
+                    <v-text-field v-if="item.secret_key == null || typeof item.secret_key !== 'object'" v-model="item.secret_key" :readonly="readOnly" :rules="[v => !!v || '']" label="Secret Key" :append-icon="showSecret ? 'mdi-eye' : 'mdi-eye-off'" :type="showSecret ? 'text' : 'password'" @click:append="showSecret = !showSecret" autocomplete="new-password" style="padding-top:0px;" hide-details></v-text-field>
+                    <v-card v-else style="height:52px">
+                      <v-row no-gutters>
+                        <v-col cols="auto" style="display:flex; margin:15px">
+                          <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
+                        </v-col>
+                        <v-col>
+                          <div class="text-body-1" style="color:#00b16a; margin-top:15px">Using a Secret Key</div>
+                        </v-col>
+                        <v-col cols="auto" class="text-right">
+                          <v-btn v-if="!readOnly" @click="item.secret_key = null" icon title="Remove Secret Key" style="margin:8px"><v-icon style="font-size:18px">fas fa-times</v-icon></v-btn>
+                        </v-col>
+                      </v-row>
+                    </v-card>
                   </div>
                 </v-form>
                 <div style="padding-top:10px; padding-bottom:10px" v-if="mode=='delete'" class="subtitle-1">Are you sure you want to delete the selected cloud keys?</div>
@@ -95,7 +108,6 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-
     <!-------------------->
     <!-- COLUMNS DIALOG -->
     <!-------------------->
@@ -145,6 +157,7 @@ import axios from 'axios';
 
 export default {
   data: () => ({
+    loading: true,
     filter: 'all',
     headers: [
       { text: 'Name', align: 'left', value: 'name' },
@@ -158,11 +171,11 @@ export default {
     search: '',
     item: { name: '', type: '', access_key: '', secret_key: '', shared: false },
     mode: '',
-    loading: true,
+    showSecret: false,
+    // Dialog
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
-    showSecret: false,
     // Filter Columns Dialog
     columnsDialog: false,
     columns: ['name','type','access_key','shared'],
@@ -205,16 +218,20 @@ export default {
     },
     cloneCloud() {
       this.mode = 'clone'
-      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
-      this.item.shared = (!this.owner) ? false : this.item.shared
-      this.dialog_title = 'CLONE CLOUD KEY'
-      this.dialog = true
+      this.$nextTick(() => {
+        this.item = JSON.parse(JSON.stringify(this.selected[0]))
+        this.item.shared = (!this.owner) ? false : this.item.shared
+        this.dialog_title = 'CLONE CLOUD KEY'
+        this.dialog = true
+      })
     },
     editCloud() {
       this.mode = 'edit'
-      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
-      this.dialog_title = 'EDIT CLOUD KEY'
-      this.dialog = true
+      this.$nextTick(() => {
+        this.item = JSON.parse(JSON.stringify(this.selected[0]))
+        this.dialog_title = 'EDIT CLOUD KEY'
+        this.dialog = true
+      })
     },
     deleteCloud() {
       this.mode = 'delete'
@@ -289,7 +306,22 @@ export default {
         .finally(() => this.loading = false)
     },
     testCloud() {
-
+      // Test Connection
+      this.loading = true
+      let payload = {}
+      if ('access_key' in this.selected[0]) {
+        payload = { access_key: this.selected[0]['access_key'], secret_key: this.selected[0]['secret_key'] }
+      }
+      else payload = { id: this.selected[0]['id'] }
+      axios.post('/inventory/cloud/test', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
     },
     filterBy(val) {
       this.filter = val

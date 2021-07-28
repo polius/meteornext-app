@@ -59,9 +59,9 @@
                         <v-card v-if="cloudKeysSelected.length == 1">
                           <v-card-text style="padding:0px">
                             <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
-                              <v-text-field v-model="cloudObjectsSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
+                              <v-text-field v-model="cloudObjectsSearch" append-icon="search" :label="cloudObjectsSearchLabel" color="white" single-line hide-details></v-text-field>
                             </v-toolbar>
-                            <v-treeview v-model="cloudObjectsSelected" :open="cloudObjectsOpened" :items="cloudObjectsItems" :search="cloudObjectsSearch" activatable item-key="name" open-on-click>
+                            <v-treeview :active.sync="cloudObjectsSelected" :open.sync="cloudObjectsOpened" :items="cloudObjectsItems" :search="cloudObjectsSearch" activatable transition item-key="name" open-on-click>
                               <template v-slot:prepend="{ item, open }">
                                 <v-icon v-if="'children' in item">
                                   {{ open ? 'mdi-folder-open' : 'mdi-folder' }}
@@ -96,7 +96,7 @@
                       </div>
                     </v-form>
                     <div style="margin-top:20px">
-                      <v-btn :disabled="inspect.items.length > 0 && inspectSelected.length == 0" :loading="loading" color="primary" @click="nextStep">CONTINUE</v-btn>
+                      <v-btn :disabled="(inspect.items.length > 0 && inspectSelected.length == 0) || (mode == 's3' && cloudObjectsSelected.length == 0)" :loading="loading" color="primary" @click="nextStep">CONTINUE</v-btn>
                       <router-link :disabled="loading" to="/utils/restore"><v-btn text style="margin-left:5px">CANCEL</v-btn></router-link>
                     </div>
                   </v-card-text>
@@ -277,6 +277,8 @@ export default {
       cloudKeysSelected: [],
       cloudKeysSearch: '',
       // Cloud Objects
+      cloudObjectsMode: 'buckets',
+      cloudObjectsBreadcrumb: [{text: 'Index', disabled: false, href: '#'},{text: 'Dashboard', disabled: false, href: '#'}],
       cloudObjectsSelected: [],
       cloudObjectsOpened: [],
       cloudObjectsItems: [
@@ -311,6 +313,7 @@ export default {
         },
       ],
       cloudObjectsSearch: '',
+      cloudObjectsSearchLabel: 'Find buckets by name',
       // Destination
       serverItems: [],
       server: '',
@@ -498,6 +501,20 @@ export default {
     cancelImport() {
       this.cancelToken.cancel()
       this.dialog = false
+    },
+    testCloud() {
+      // Test Connection
+      this.loading = true
+      const payload = { 'id': this.cloudKeysSelected[0]['id'] }
+      axios.post('/inventory/cloud/test', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
     },
     formatBytes(size) {
       if (size == null) return null
