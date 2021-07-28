@@ -128,8 +128,17 @@ class Cloud:
         return jsonify({'message': 'Selected cloud keys deleted successfully'}), 200
 
     def test(self, data):
+        # Get Cloud Key
+        if 'id' in data:
+            cloud = self._cloud.get(cloud_id=data['id'])
+            if len(cloud) == 0:
+                return jsonify({'message': "Can't test the cloud key. This key does not exist in your inventory."}), 400
+            cloud_key = { 'access_key': cloud[0]['access_key'], 'secret_key': cloud[0]['secret_key']}
+        else:
+            cloud_key = { 'access_key': data['access_key'], 'secret_key': data['secret_key']}
+
         # Test Cloud Key
-        sts = boto3.client('sts', aws_access_key_id=data['access_key'], aws_secret_access_key=data['secret_key'])
+        sts = boto3.client('sts', aws_access_key_id=cloud_key['access_key'], aws_secret_access_key=cloud_key['secret_key'])
         try:
             sts.get_caller_identity()
             return jsonify({'message': 'Credentials are valid.'}), 200
