@@ -132,9 +132,26 @@ class Restore:
             except Exception as e:
                 return jsonify({'message': str(e)}), 400
 
-        @restore_blueprint.route('/utils/restore/objects', methods=['GET'])
+        @restore_blueprint.route('/utils/restore/s3/buckets', methods=['GET'])
         @jwt_required()
-        def restore_objects_method():
+        def restore_s3_buckets_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['utils_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Buckets
+            return self.get_s3_buckets(user)
+
+        @restore_blueprint.route('/utils/restore/s3/objects', methods=['GET'])
+        @jwt_required()
+        def restore_s3_objects_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -147,7 +164,7 @@ class Restore:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
             # Get Objects
-            return self.objects(user)
+            return self.get_s3_objects(user)
 
         return restore_blueprint
 
@@ -293,9 +310,9 @@ class Restore:
             inspect['items'] = [{'file': i.split('|')[0][i.split('|')[0].find('/')+1:], 'size': int(i.split('|')[1])} for i in p.stdout.strip().split('\n')]
         return inspect
 
-    def objects(self, user):
+    def get_s3_buckets(self, user):
         # Get Cloud Key
-        cloud = self._cloud.get(user_id=user['id'], group_id=user['group_id'], cloud_id=request.args['id'])
+        cloud = self._cloud.get(user_id=user['id'], group_id=user['group_id'], cloud_id=request.args['key'])
         if len(cloud) == 0:
             return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
         cloud = cloud[0]
@@ -303,16 +320,47 @@ class Restore:
         # Init S3 Client
         client = boto3.client('s3', aws_access_key_id=cloud['access_key'], aws_secret_access_key=cloud['secret_key'])
 
-        if request.args['mode'] == 'buckets':
-            # Get all buckets
-            try:
-                response = client.list_buckets()
-                buckets = [{'name': i['Name'], 'date': i['CreationDate']} for i in response['Buckets']]
-                return jsonify({'objects': buckets}), 200
-            except Exception as e:
-                return jsonify({'message': str(e)}), 400
-        elif request.args['mode'] == 'objects':
-            pass
+        # List all buckets
+        try:
+            response = client.list_buckets()
+            buckets = [{'name': i['Name'], 'date': i['CreationDate']} for i in response['Buckets']]
+            # Get buckets region
+            for idx, bucket in enumerate(buckets):
+                buckets[idx]['region'] = client.head_bucket(Bucket=bucket['name'])['ResponseMetadata']['HTTPHeaders']['x-amz-bucket-region']
+            return jsonify({'buckets': buckets}), 200
+        except Exception as e:
+            return jsonify({'message': str(e)}), 400
+
+    def get_s3_objects(self, user):
+        # Get Cloud Key
+        cloud = self._cloud.get(user_id=user['id'], group_id=user['group_id'], cloud_id=request.args['key'])
+        if len(cloud) == 0:
+            return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
+        cloud = cloud[0]
+
+        # Init S3 Client
+        client = boto3.client('s3', aws_access_key_id=cloud['access_key'], aws_secret_access_key=cloud['secret_key'])
+
+        # List objects
+        try:
+            response = client.list_objects_v2(
+                Bucket=request.args['bucket'],
+                Delimiter='/',
+                Prefix=request.args['prefix'],
+                # ContinuationToken=request.args['token'],
+            )
+            items = []
+            # Build folders
+            if 'CommonPrefixes' in response:
+                items += [{'name': i['Prefix']} for i in response['CommonPrefixes']]
+            # Build objects
+            if 'Contents' in response:
+                items += [{'name': i['Key'], 'last_modified': i['LastModified'], 'size': i['Size'], 'storage_class': i['StorageClass']} for i in response['Contents']]
+            # Sort items
+            items = sorted(items, key=lambda k: k['name'])
+            return jsonify({'objects': items}), 200
+        except Exception as e:
+            return jsonify({'message': str(e)}), 400
 
     def __allowed_file(self, filename):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'sql','tar','gz'}
