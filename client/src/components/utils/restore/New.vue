@@ -68,7 +68,7 @@
                         </div>
                         <div v-else>
                           <!-- BREADCRUMB -->
-                          <div class="subtitle-1 white--text" style="margin-top:15px; margin-bottom:15px">{{ cloudPath.length == 1 ? 'BUCKETS' : 'OBJECTS' }}</div>
+                          <div class="subtitle-1 white--text" style="margin-top:15px; margin-bottom:15px">{{ cloudPath.length == 2 ? 'BUCKETS' : 'OBJECTS' }}</div>
                           <div class="text-body-1" style="margin-top:15px; margin-bottom:15px">
                             <span v-for="(item, index) in cloudPath" :key="index">
                               <v-icon size="14" v-if="index != 0" style="margin-bottom:1px; margin-right:10px">fas fa-chevron-right</v-icon>
@@ -76,14 +76,14 @@
                             </span>
                           </div>
                           <!-- BUCKETS -->
-                          <v-card v-if="cloudPath.length == 1">
+                          <v-card v-if="cloudPath.length == 2">
                             <v-card-text style="padding:0px">
                               <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
                                 <v-text-field v-model="awsBucketsSearch" append-icon="search" label="Find buckets by name" color="white" single-line hide-details></v-text-field>
                               </v-toolbar>
                               <v-data-table v-model="awsBucketsSelected" :headers="awsBucketsHeaders" :items="awsBucketsItems" :search="awsBucketsSearch" :loading="loading" loading-text="Loading... Please wait" item-key="name" single-select class="elevation-1">
                                 <template v-slot:item="{ item }">
-                                  <tr>
+                                  <tr :style="awsBucketsSelected.length > 0 && awsBucketsSelected[0].name == item.name ? 'background-color:#505050' : ''">
                                     <td v-for="header in awsBucketsHeaders" :key="header.value" @click="awsBucketsClick(item)" style="cursor:pointer">
                                       {{ item[header.value] }}
                                     </td>
@@ -96,11 +96,11 @@
                           <v-card v-else>
                             <v-card-text style="padding:0px">
                               <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
-                                <v-text-field v-model="awsObjectsSearch" append-icon="search" label="Find objects by prefix" color="white" single-line hide-details></v-text-field>
+                                <v-text-field @keyup.enter="getAWSObjects(true)" v-model="awsObjectsSearch" append-icon="search" label="Find objects by prefix" color="white" single-line hide-details></v-text-field>
                               </v-toolbar>
                               <v-data-table v-model="awsObjectsSelected" :headers="awsObjectsHeaders" :items="awsObjectsItems" :search="awsObjectsSearch" :loading="loading" loading-text="Loading... Please wait" item-key="name" single-select class="elevation-1">
                                 <template v-slot:item="{ item }">
-                                  <tr>
+                                  <tr :style="awsObjectsSelected.length > 0 && awsObjectsSelected[0].name == item.name ? 'background-color:#505050' : ''">
                                     <td v-for="header in awsObjectsHeaders" :key="header.value" @click="awsObjectsClick(item)" style="cursor:pointer">
                                       <span v-if="header.value == 'name'">
                                         <v-icon size="16" :color="item['name'].endsWith('/') ? '#e47911' : '#23cba7'" style="margin-right:10px; margin-bottom:2px">{{ item['name'].endsWith('/') ? 'fas fa-folder' : 'fas fa-file'}}</v-icon>
@@ -143,7 +143,7 @@
                       </div>
                     </v-form>
                     <div style="margin-top:20px">
-                      <v-btn :disabled="(inspect.items.length > 0 && inspectSelected.length == 0) || (mode == 's3' && awsObjectsSelected.length == 0)" :loading="loading" color="primary" @click="nextStep">CONTINUE</v-btn>
+                      <v-btn :disabled="(inspect.items.length > 0 && inspectSelected.length == 0) || (mode == 's3' && (awsObjectsSelected.length == 0 || awsObjectsSelected[0].name.endsWith('/')))" :loading="loading" color="primary" @click="nextStep">CONTINUE</v-btn>
                       <router-link :disabled="loading" to="/utils/restore"><v-btn text style="margin-left:5px">CANCEL</v-btn></router-link>
                     </div>
                   </v-card-text>
@@ -323,7 +323,7 @@ export default {
       cloudKeysItems: [],
       cloudKeysSelected: [],
       cloudKeysSearch: '',
-      cloudPath: [],
+      cloudPath: ['Cloud Keys'],
       // AWS Buckets
       awsBucketsSelected: [],
       awsBucketsHeaders: [
@@ -407,23 +407,43 @@ export default {
   methods: {
     cloudPathClick (item, index) {
       if (index == this.cloudPath.length - 1) return
-      console.log(item)
+      // Cloud Keys
+      if (index == 0) {
+        this.cloudPath = ['Cloud Keys']
+        this.cloudKeysSelected = []
+        this.awsBucketsSelected = []
+        this.awsBucketsItems = []
+        this.awsObjectsSelected = []
+        this.awsObjectsItems = []
+        this.getCloud()
+      }
+      // Amazon S3 Buckets
+      else if (index == 1) {
+        this.awsBucketsSelected = []
+        this.awsObjectsSelected = []
+        this.cloudPath = ['Cloud Keys', this.cloudPath[1]]
+        this.getAWSBuckets()
+      }
+      // Amazon S3 Folder
+      else {
+        this.cloudPath = this.cloudPath.slice(0, this.cloudPath.indexOf(item)+1)
+        this.awsObjectsSelected = []
+        this.getAWSObjects(false)
+      }
     },
     cloudKeysClick(item) {
-      console.log(item)
       this.cloudKeysSelected = [item]
-      this.cloudPath = [item.type == 'aws' ? 'Amazon S3' : '']
+      this.cloudPath = ['Cloud Keys', item.type == 'aws' ? 'Amazon S3' : '']
       this.getAWSBuckets()
     },
     awsBucketsClick(item) {
+      this.awsObjectsSelected = []
       this.awsBucketsSelected = [item]
-      this.getAWSObjects()
+      this.getAWSObjects(false)
     },
     awsObjectsClick(item) {
       this.awsObjectsSelected = [item]
-      if (item.name.endsWith('/')) {
-        this.getAWSObjects()
-      }
+      if (item.name.endsWith('/')) this.getAWSObjects(false)
     },
     getServers() {
       this.loading = true
@@ -466,31 +486,28 @@ export default {
     },
     parseAWSBuckets(buckets) {
       this.awsBucketsItems = buckets
-      this.cloudPath = [this.cloudPath[0]]
+      this.cloudPath = ['Cloud Keys', this.cloudPath[1]]
     },
-    getAWSObjects() {
+    getAWSObjects(search) {
       // Test Connection
       this.loading = true
       const payload = { 
         key: this.cloudKeysSelected[0]['id'],
-        bucket: this.cloudPath.length > 1 ? this.cloudPath[1] : this.awsBucketsSelected[0]['name'],
-        prefix: this.awsObjectsSearch.length == 0 ? '' : this.awsObjectsSearch,
+        bucket: this.cloudPath.length > 3 ? this.cloudPath[2] : this.awsBucketsSelected[0]['name'],
+        prefix: this.parseAWSPrefix(),
         // token: this.awsObjectsToken,
       }
-      console.log(payload)
       axios.get('/utils/restore/s3/objects', { params: payload })
         .then((response) => {
-          this.parseAWSObjects(response.data.objects)
+          this.parseAWSObjects(response.data.objects, search)
         })
         .catch((error) => {
-          console.log(error)
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
     },
-    parseAWSObjects(objects) {
-      console.log(objects)
+    parseAWSObjects(objects, search) {
       this.awsObjectsHeaders = [
         { text: 'Name', align: 'left', value: 'name' },
         { text: 'Type', align: 'left', value: 'type' },
@@ -499,8 +516,17 @@ export default {
         { text: 'Storage Class', align: 'left', value: 'storage_class' },
       ]
       this.awsObjectsItems = objects
-      if (this.cloudPath.length == 1) this.cloudPath.push(this.awsBucketsSelected[0]['name'])
-      else this.cloudPath.push(this.awsObjectsSelected[0]['name'])
+      if (!search) {
+        if (this.cloudPath.length == 2) this.cloudPath.push(this.awsBucketsSelected[0]['name'])
+        else if (this.awsObjectsSelected.length != 0) this.cloudPath.push(this.awsObjectsSelected[0]['name'])
+      }
+    },
+    parseAWSPrefix() {
+      let path = this.cloudPath.splice(3).join('/')
+      if (this.awsObjectsSelected.length > 0 && this.awsObjectsSelected[0].name.endsWith('/')) path += this.awsObjectsSelected[0].name
+      if (path.length > 0 && !path.endsWith('/') && this.awsObjectsSearch.length > 0) path += '/'
+      if (this.awsObjectsSearch.length > 0) path += this.awsObjectsSearch
+      return path
     },
     nextStep() {
       if (this.stepper == 1 && !this.$refs.sourceForm.validate()) return

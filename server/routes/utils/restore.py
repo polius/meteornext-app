@@ -355,7 +355,7 @@ class Restore:
                 items += [{'name': i['Prefix']} for i in response['CommonPrefixes']]
             # Build objects
             if 'Contents' in response:
-                items += [{'name': i['Key'], 'last_modified': i['LastModified'], 'size': i['Size'], 'storage_class': i['StorageClass']} for i in response['Contents']]
+                items += [{'name': i['Key'][len(request.args['prefix']):], 'last_modified': i['LastModified'], 'size': i['Size'], 'storage_class': i['StorageClass']} for i in response['Contents']]
             # Sort items
             items = sorted(items, key=lambda k: k['name'])
             return jsonify({'objects': items}), 200
