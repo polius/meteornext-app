@@ -7,6 +7,7 @@ import uuid
 import json
 import shutil
 import signal
+import psutil
 import boto3
 
 import models.admin.users
@@ -399,7 +400,10 @@ class Restore:
 
         # Stop the scan
         try:
-            os.kill(scan['pid'], signal.SIGKILL)
+            parent = psutil.Process(scan['pid'])
+            children = parent.children(recursive=True)
+            for process in children:
+                process.send_signal(signal.SIGKILL)
             self._scans.put_status(data['id'], 'STOPPED')
             return jsonify({'message': 'Scan successfully stopped.'}), 200
         except Exception as e:

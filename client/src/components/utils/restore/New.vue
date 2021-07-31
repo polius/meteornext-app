@@ -131,44 +131,41 @@
                         <div v-else-if="scanStatus == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>Scan successfully completed.</div>
                         <div v-else-if="scanStatus == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while scanning the file.</div>
                         <div v-else-if="scanStatus == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px">fas fa-ban</v-icon>Scan successfully stopped.</div>
-                        <v-progress-linear v-if="scanProgress == null || scanProgress.value == 0" indeterminate height="5" style="margin-top:10px"></v-progress-linear>
+                        <v-progress-linear :color="getProgressColor(scanStatus)" :indeterminate="scanProgress.value == 0 && scanStatus == 'IN PROGRESS'" :value="scanProgress == null ? 0 : scanProgress.value" height="5" style="margin-top:10px"></v-progress-linear>
+                        <div class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${scanProgress.value} %` }}</span></div>
+                        <div class="text-body-1" style="margin-top:10px">Data Transferred: <span class="white--text">{{ scanProgress.transferred }}</span></div>
+                        <div class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ scanProgress.rate }}</span></div>
+                        <div class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ scanProgress.elapsed }}</span></div>
+                        <div v-if="scanProgress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ scanProgress.eta }}</span></div>
+                        <v-divider style="margin-top:10px"></v-divider>
+                        <!-- SCAN SELECT -->
+                        <div v-if="scanError == null">
+                          <div v-if="scanItems.length > 0" class="text-body-1" style="margin-top:15px">Choose the files to restore:</div>
+                          <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
+                            <v-text-field v-model="scanSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
+                          </v-toolbar>
+                          <v-data-table v-model="scanSelected" :headers="scanHeaders" :items="scanItems" :search="scanSearch" :options="{ itemsPerPage: 5 }" :loading="loading" loading-text="Loading... Please wait" item-key="file" show-select class="elevation-1">
+                            <template v-ripple v-slot:[`header.data-table-select`]="{}">
+                              <v-simple-checkbox
+                                :value="scanItems.length == 0 ? false : scanSelected.length == scanItems.length"
+                                :indeterminate="scanSelected.length > 0 && scanSelected.length != scanItems.length"
+                                @click="scanSelected.length == scanItems.length ? scanSelected = [] : scanSelected = JSON.parse(JSON.stringify(scanItems))">
+                              </v-simple-checkbox>
+                            </template>
+                            <template v-slot:[`item.size`]="{ item }">
+                              {{ formatBytes(item.size) }}
+                            </template>
+                          </v-data-table>
+                          <div v-if="scanSelected.length > 0" class="text-body-1" style="margin-top:20px; color:#fa8131">Selected Size: <span style="font-weight:500">{{ formatBytes(scanSelected.reduce((a, b) => a + b.size, 0)) }}</span></div>
+                        </div>
+                        <!-- SCAN ERROR -->
                         <div v-else>
-                          <v-progress-linear :color="getProgressColor(scanStatus)" :value="scanProgress.value" height="5" style="margin-top:10px"></v-progress-linear>
-                          <div class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${scanProgress.value} %` }}</span></div>
-                          <div class="text-body-1" style="margin-top:10px">Data Transferred: <span class="white--text">{{ scanProgress.transferred }}</span></div>
-                          <div class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ scanProgress.rate }}</span></div>
-                          <div class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ scanProgress.elapsed }}</span></div>
-                          <div v-if="scanProgress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ scanProgress.eta }}</span></div>
-                          <v-divider style="margin-top:10px"></v-divider>
-                          <!-- SCAN SELECT -->
-                          <div v-if="scanError == null">
-                            <div v-if="scanItems.length > 0" class="text-body-1" style="margin-top:15px">Choose the files to restore:</div>
-                            <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
-                              <v-text-field v-model="scanSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
-                            </v-toolbar>
-                            <v-data-table v-model="scanSelected" :headers="scanHeaders" :items="scanItems" :search="scanSearch" :options="{ itemsPerPage: 5 }" :loading="loading" loading-text="Loading... Please wait" item-key="file" show-select class="elevation-1">
-                              <template v-ripple v-slot:[`header.data-table-select`]="{}">
-                                <v-simple-checkbox
-                                  :value="scanItems.length == 0 ? false : scanSelected.length == scanItems.length"
-                                  :indeterminate="scanSelected.length > 0 && scanSelected.length != scanItems.length"
-                                  @click="scanSelected.length == scanItems.length ? scanSelected = [] : scanSelected = JSON.parse(JSON.stringify(scanItems))">
-                                </v-simple-checkbox>
-                              </template>
-                              <template v-slot:[`item.size`]="{ item }">
-                                {{ formatBytes(item.size) }}
-                              </template>
-                            </v-data-table>
-                            <div v-if="scanSelected.length > 0" class="text-body-1" style="margin-top:20px; color:#fa8131">Selected Size: <span style="font-weight:500">{{ formatBytes(scanSelected.reduce((a, b) => a + b.size, 0)) }}</span></div>
-                          </div>
-                          <!-- SCAN ERROR -->
-                          <div v-else>
-                            <div class="subtitle-1 white--text" style="margin-top:15px; margin-left:1px">ERROR</div>
-                            <v-card style="margin-top:10px; margin-left:1px">
-                              <v-card-text style="padding:15px">
-                                <div class="text-body-1">{{ scanError }}</div>
-                              </v-card-text>
-                            </v-card>
-                          </div>
+                          <div class="subtitle-1 white--text" style="margin-top:15px; margin-left:1px">ERROR</div>
+                          <v-card style="margin-top:10px; margin-left:1px">
+                            <v-card-text style="padding:15px">
+                              <div class="text-body-1">{{ scanError }}</div>
+                            </v-card-text>
+                          </v-card>
                         </div>
                       </div>
                     </v-form>
