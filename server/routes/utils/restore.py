@@ -1,3 +1,4 @@
+from re import split
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import (jwt_required, get_jwt_identity)
 from werkzeug.utils import secure_filename
@@ -7,14 +8,15 @@ import json
 import shutil
 import signal
 import boto3
-import subprocess
 
 import models.admin.users
 import models.utils.restore
+import models.utils.scans
 import models.admin.settings
 import models.inventory.servers
 import models.inventory.cloud
 import apps.restore.restore
+import apps.restore.scan
 
 class Restore:
     def __init__(self, app, sql, license):
@@ -23,11 +25,13 @@ class Restore:
         # Init models
         self._users = models.admin.users.Users(sql)
         self._restore = models.utils.restore.Restore(sql)
+        self._scans = models.utils.scans.Scans(sql)
         self._settings = models.admin.settings.Settings(sql)
         self._servers = models.inventory.servers.Servers(sql)
         self._cloud = models.inventory.cloud.Cloud(sql)
         # Init core
-        self._core = apps.restore.restore.Restore(sql)
+        self._restore_app = apps.restore.restore.Restore(sql)
+        self._scan_app = apps.restore.scan.Scan(sql)
 
     def blueprint(self):
         # Init blueprint
@@ -111,9 +115,9 @@ class Restore:
             # Stop restore process
             return self.stop(user, data)
 
-        @restore_blueprint.route('/utils/restore/inspect', methods=['GET'])
+        @restore_blueprint.route('/utils/restore/scan', methods=['POST','GET'])
         @jwt_required()
-        def restore_inspect_method():
+        def restore_scan_method():
             # Check license
             if not self._license.validated:
                 return jsonify({"message": self._license.status['response']}), 401
@@ -125,12 +129,23 @@ class Restore:
             if user['disabled'] or not user['utils_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
 
-            # Return inspected file
-            try:
-                inspect = self.inspect(request.args['url'])
-                return jsonify({'inspect': inspect}), 200
-            except Exception as e:
-                return jsonify({'message': str(e)}), 400
+            # Get Request Json
+            data = request.get_json()
+
+            if request.method == 'GET':
+                # Return scanned file
+                try:
+                    scan = self.get_scan(user, request.args['id'])
+                    return jsonify(scan), 200
+                except Exception as e:
+                    return jsonify({'message': str(e)}), 400
+            elif request.method == 'POST':
+                # Register a new scan
+                try:
+                    scan = self.post_scan(user, data)
+                    return jsonify(scan), 200
+                except Exception as e:
+                    return jsonify({'message': str(e)}), 400
 
         @restore_blueprint.route('/utils/restore/s3/buckets', methods=['GET'])
         @jwt_required()
@@ -222,7 +237,7 @@ class Restore:
             source = file.filename
             size = os.path.getsize(os.path.join(base_path, uri, secure_filename(file.filename)))
             selected = None
-        
+
         elif data['mode'] == 'url':
             # Inspect URL
             try:
@@ -251,7 +266,7 @@ class Restore:
         item['id'] = self._restore.post(user, item)
 
         # Start import process
-        self._core.start(user, item, server, base_path)
+        self._restore_app.start(user, item, server, base_path)
 
         # Return tracking identifier
         return jsonify({'id': item['id']}), 200
@@ -290,25 +305,56 @@ class Restore:
         except Exception:
             return jsonify({'message': 'The execution has already finished.'}), 400
 
-    def inspect(self, url):
-        inspect = { "file": url, "size": None, "items": [] }
-        # File Size
-        p = subprocess.run(f"curl -sSLI '{url}' | grep -i Content-Length | awk '{{print $2}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if len(p.stdout) == 0:
-            raise Exception("This URL is not valid")
-        inspect['size'] = int(p.stdout.strip())
+    def get_scan(self, user, id):
+        scan = self._scans.get(user_id=user['id'], scan_id=id)
+        if len(scan) == 0:
+            return jsonify({'message': 'This scan does not exist.'}), 400
 
-        # If file is a .tar or .tar.gz, get the files
-        p = None
-        if url.endswith('.tar.gz'):
-            p = subprocess.run(f"curl -sSL '{url}' | gunzip -c | tar -tv | awk '{{print $6\"|\"$3}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        elif url.endswith('.tar'):
-            p = subprocess.run(f"curl -sSL '{url}' | tar -tv | awk '{{print $6\"|\"$3}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if p:
-            if len(p.stderr) > 0:
-                raise Exception(p.stderr.strip())
-            inspect['items'] = [{'file': i.split('|')[0][i.split('|')[0].find('/')+1:], 'size': int(i.split('|')[1])} for i in p.stdout.strip().split('\n')]
-        return inspect
+        # Parse progress
+        # 100% 21kiB 60.3kiB/s 0:00:00 ETA0:00:10
+        progress = scan[0]['progress']
+        if progress:
+            raw = progress.split(' ')
+            progress = {"value": raw[0], "transferred": raw[1], "rate": raw[2], "elapsed": raw[3]}
+            progress['eta'] = raw[4][3:] if len(raw) == 5 else None
+
+        # Parse data
+        # sample/sample.c|62sample/sample.exe|17920sample/sample.obj|628
+        data = scan[0]['data']
+        if data:
+            data = [{'file': i.split('|')[0][i.split('|')[0].find('/')+1:], 'size': int(i.split('|')[1])} for i in data.split('\n')]
+
+        # Parse error
+        error = scan[0]['error']
+
+        return { "id": scan[0]['id'], "status": scan[0]['status'], "progress": progress, "data": data, "error": error}
+
+    def post_scan(self, user, data):
+        # Validate source + Retrieve filesize
+        data['metadata'] = self._scan_app.metadata(data)
+        print(data['metadata']['type'])
+        
+        # Detect if the file is not compressed
+        if data['metadata']['type'] not in ['application/x-gzip','application/x-tar']:
+            return {'size': data['metadata']['size']}
+
+        # - START SCAN - #
+        # Generate uuid
+        data['uri'] = str(uuid.uuid4())
+
+        # Register the new scan
+        data['id'] = self._scans.post(user, data)
+
+        # Make scan folder
+        base_path = json.loads(self._settings.get(setting_name='FILES'))['local']['path'] + '/scan/'
+        if not os.path.exists(os.path.join(base_path, data['uri'])):
+            os.makedirs(os.path.join(base_path, data['uri']))
+
+        # Start new scan (threaded)
+        self._scan_app.start(data, base_path)
+
+        # Return tracking metadata
+        return {'id': data['id'], 'size': data['metadata']['size']}
 
     def get_s3_buckets(self, user):
         # Get Cloud Key
@@ -355,7 +401,7 @@ class Restore:
                 items += [{'name': i['Prefix']} for i in response['CommonPrefixes']]
             # Build objects
             if 'Contents' in response:
-                items += [{'name': i['Key'][len(request.args['prefix']):], 'last_modified': i['LastModified'], 'size': i['Size'], 'storage_class': i['StorageClass']} for i in response['Contents']]
+                items += [{'name': i['Key'][len(request.args['prefix']) - len(request.args['search']):], 'last_modified': i['LastModified'], 'size': i['Size'], 'storage_class': i['StorageClass']} for i in response['Contents']]
             # Sort items
             items = sorted(items, key=lambda k: k['name'])
             return jsonify({'objects': items}), 200

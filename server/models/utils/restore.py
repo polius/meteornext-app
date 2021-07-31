@@ -1,5 +1,3 @@
-from datetime import datetime
-
 class Restore:
     def __init__(self, sql):
         self._sql = sql
@@ -26,10 +24,10 @@ class Restore:
 
     def post(self, user, data):
         query = """
-            INSERT INTO restore (`mode`, `source`, `selected`, `size`, `server_id`, `database`, `created`, `uri`, `user_id`)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO restore (`mode`, `source`, `selected`, `size`, `server_id`, `database`, `uri`, `user_id`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (data['mode'], data['source'], data['selected'], data['size'], data['server_id'], data['database'], datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), data['uri'], user['id']))
+        return self._sql.execute(query, (data['mode'], data['source'], data['selected'], data['size'], data['server_id'], data['database'], data['uri'], user['id']))
 
     def delete(self, user, item):
         query = """

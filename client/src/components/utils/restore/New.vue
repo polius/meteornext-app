@@ -27,9 +27,9 @@
                             <div>URL</div>
                           </template>
                         </v-radio>
-                        <v-radio value="s3">
+                        <v-radio value="cloud">
                           <template v-slot:label>
-                            <div>Amazon S3</div>
+                            <div>Cloud Key</div>
                           </template>
                         </v-radio>
                       </v-radio-group>
@@ -37,9 +37,10 @@
                         <v-file-input v-model="fileObject" label="File" accept=".sql,.tar,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" hide-details></v-file-input>
                       </div>
                       <div v-else-if="mode == 'url'">
-                        <v-text-field @keyup.enter="inspectURL" v-model="source" label="URL" :rules="[v => this.validURL(v) || '' ]" hide-details></v-text-field>
+                        <v-text-field @keyup.enter="scanFile" v-model="source" label="URL" :rules="[v => this.validURL(v) || '' ]" hide-details></v-text-field>
                       </div>
-                      <div v-else-if="mode == 's3'">
+                      <div v-else-if="mode == 'cloud'">
+                        <!-- CLOUD KEYS -->
                         <div v-if="awsBucketsItems.length == 0">
                           <div class="subtitle-1 white--text" style="margin-bottom:15px">CLOUD KEYS</div>
                           <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
@@ -121,31 +122,52 @@
                           </v-card>
                         </div>
                       </div>
+                      <!-- FILE SIZE -->
                       <div v-if="size != null" class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
-                      <div v-if="inspect.items.length > 0" style="margin-top:15px">
-                        <div v-if="inspect.items.length > 0" class="text-body-1">Choose the files to restore:</div>
-                        <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
-                          <v-text-field v-model="inspectSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
-                        </v-toolbar>
-                        <v-data-table v-model="inspectSelected" :headers="inspectHeaders" :items="inspect.items" :search="inspectSearch" :hide-default-footer="inspect.items.length < 11" :loading="loading" loading-text="Loading... Please wait" item-key="file" show-select class="elevation-1">
-                          <template v-ripple v-slot:[`header.data-table-select`]="{}">
-                            <v-simple-checkbox
-                              :value="inspect.items.length == 0 ? false : inspectSelected.length == inspect.items.length"
-                              :indeterminate="inspectSelected.length > 0 && inspectSelected.length != inspect.items.length"
-                              @click="inspectSelected.length == inspect.items.length ? inspectSelected = [] : inspectSelected = JSON.parse(JSON.stringify(inspect.items))">
-                            </v-simple-checkbox>
-                          </template>
-                          <template v-slot:[`item.size`]="{ item }">
-                            {{ formatBytes(item.size) }}
-                          </template>
-                        </v-data-table>
-                        <div class="text-body-1" style="margin-top:20px; color:#fa8131">Selected Size: <span style="font-weight:500">{{ formatBytes(inspectSelected.reduce((a, b) => a + b.size, 0)) }}</span></div>
+                      <!-- SCAN -->
+                      <div v-if="scanID != null" style="margin-top:15px">
+                        <div class="subtitle-1 white--text" style="margin-bottom:10px; margin-bottom:15px">SCAN</div>
+                        <div v-if="scanStatus == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px">fas fa-spinner</v-icon>Scanning source file. Please wait...</div>
+                        <div v-else-if="scanStatus == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>Scan successfully completed.</div>
+                        <div v-else-if="scanStatus == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while scanning the file.</div>
+                        <v-progress-linear v-if="scanProgress == null" indeterminate height="5" style="margin-top:10px"></v-progress-linear>
+                        <div v-else>
+                          <v-progress-linear :color="getProgressColor(scanStatus)" :value="scanProgress.value" height="5" style="margin-top:10px"></v-progress-linear>
+                          <div class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${scanProgress.value} %` }}</span></div>
+                          <div class="text-body-1" style="margin-top:10px">Data Transferred: <span class="white--text">{{ scanProgress.transferred }}</span></div>
+                          <div class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ scanProgress.rate }}</span></div>
+                          <div class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ scanProgress.elapsed }}</span></div>
+                          <div v-if="scanProgress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ scanProgress.eta }}</span></div>
+                          <v-divider style="margin-top:10px"></v-divider>
+                          <div v-if="scanItems.length > 0" class="text-body-1" style="margin-top:15px">Choose the files to restore:</div>
+                          <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
+                            <v-text-field v-model="scanSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
+                          </v-toolbar>
+                          <v-data-table v-model="scanSelected" :headers="scanHeaders" :items="scanItems" :search="scanSearch" :options="{ itemsPerPage: 5 }" :loading="loading" loading-text="Loading... Please wait" item-key="file" show-select class="elevation-1">
+                            <template v-ripple v-slot:[`header.data-table-select`]="{}">
+                              <v-simple-checkbox
+                                :value="scanItems.length == 0 ? false : scanSelected.length == scanItems.length"
+                                :indeterminate="scanSelected.length > 0 && scanSelected.length != scanItems.length"
+                                @click="scanSelected.length == scanItems.length ? scanSelected = [] : scanSelected = JSON.parse(JSON.stringify(scanItems))">
+                              </v-simple-checkbox>
+                            </template>
+                            <template v-slot:[`item.size`]="{ item }">
+                              {{ formatBytes(item.size) }}
+                            </template>
+                          </v-data-table>
+                          <div v-if="scanSelected.length > 0" class="text-body-1" style="margin-top:20px; color:#fa8131">Selected Size: <span style="font-weight:500">{{ formatBytes(scanSelected.reduce((a, b) => a + b.size, 0)) }}</span></div>
+                        </div>
                       </div>
                     </v-form>
-                    <div style="margin-top:20px">
-                      <v-btn :disabled="(inspect.items.length > 0 && inspectSelected.length == 0) || (mode == 's3' && (awsObjectsSelected.length == 0 || awsObjectsSelected[0].name.endsWith('/')))" :loading="loading" color="primary" @click="nextStep">CONTINUE</v-btn>
-                      <router-link :disabled="loading" to="/utils/restore"><v-btn text style="margin-left:5px">CANCEL</v-btn></router-link>
-                    </div>
+                    <v-row no-gutters style="margin-top:20px;">
+                      <v-col cols="auto" class="mr-auto">
+                        <v-btn :disabled="(scanItems.length > 0 && scanSelected.length == 0) || (mode == 'cloud' && (awsObjectsSelected.length == 0 || awsObjectsSelected[0].name.endsWith('/')))" :loading="loading" color="primary" @click="nextStep">CONTINUE</v-btn>
+                        <router-link :disabled="loading" to="/utils/restore"><v-btn text style="margin-left:5px">CANCEL</v-btn></router-link>
+                      </v-col>
+                      <v-col cols="auto">
+                        <v-btn v-if="scanID != null && scanProgress != null && scanProgress.value != 100" color="primary" @click="nextStep">STOP SCAN</v-btn>
+                      </v-col>
+                    </v-row>
                   </v-card-text>
                 </v-card>
               </v-stepper-content>
@@ -198,7 +220,7 @@
                             <div>URL</div>
                           </template>
                         </v-radio>
-                        <v-radio value="s3">
+                        <v-radio value="cloud">
                           <template v-slot:label>
                             <div>Amazon S3</div>
                           </template>
@@ -206,16 +228,16 @@
                       </v-radio-group>
                       <v-text-field readonly v-model="source" :label="mode == 'file' ? 'File' : mode == 'url' ? 'URL' : 'Amazon S3'" style="padding-top:8px" hide-details></v-text-field>
                       <div class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
-                      <div v-if="inspect.items.length > 0" style="margin-top:15px">
+                      <div v-if="scanItems.length > 0" style="margin-top:15px">
                         <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
-                          <v-text-field v-model="inspectSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
+                          <v-text-field v-model="scanSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
                         </v-toolbar>
-                        <v-data-table readonly :headers="inspectHeaders" :items="inspectSelected" :search="inspectSearch" :hide-default-footer="inspect.items.length < 11" :loading="loading" loading-text="Loading... Please wait" item-key="file" class="elevation-1" style="margin-top:15px;">
+                        <v-data-table readonly :headers="scanHeaders" :items="scanSelected" :search="scanSearch" :hide-default-footer="scanItems.length < 11" :loading="loading" loading-text="Loading... Please wait" item-key="file" class="elevation-1" style="margin-top:15px;">
                           <template v-slot:[`item.size`]="{ item }">
                             {{ formatBytes(item.size) }}
                           </template>
                         </v-data-table>
-                        <div class="text-body-1" style="margin-top:20px; color:#fa8131">Selected Size: <span style="font-weight:500">{{ formatBytes(inspectSelected.reduce((a, b) => a + b.size, 0)) }}</span></div>
+                        <div class="text-body-1" style="margin-top:20px; color:#fa8131">Selected Size: <span style="font-weight:500">{{ formatBytes(scanSelected.reduce((a, b) => a + b.size, 0)) }}</span></div>
                       </div>
                     </v-card-text>
                   </v-card>
@@ -305,14 +327,19 @@ export default {
       source: '',
       size: null,
       fileObject: null,
-      // Inspect
-      inspect: { items: [] },
-      inspectHeaders: [
+      // Scan
+      scanID: null,
+      scanStatus: '',
+      scanProgress: null,
+      scanItems: [],
+      scanHeaders: [
         { text: 'File', value: 'file',  width: '10%' },
         { text: 'Size', value: 'size' },
       ],
-      inspectSearch: '',
-      inspectSelected: [],
+      scanSearch: '',
+      scanSelected: [],
+      scanError: '',
+      scanTimer: null,
       // Cloud Keys
       cloudKeysHeaders: [
         { text: 'Name', align: 'left', value: 'name' },
@@ -366,7 +393,7 @@ export default {
   },
   watch: {
     mode(val) {
-      if (val == 's3') this.getCloud()
+      if (val == 'cloud') this.getCloud()
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
       })
@@ -396,11 +423,15 @@ export default {
       this.size = val.size 
     },
     source() {
-      if (this.inspect.items.length > 0) {
-        this.inspectSearch = ''
-        this.inspectSelected = []
-        this.inspect = { items: [] }
+      if (this.scanID != null) {
+        this.scanID = null
+        this.scanSearch = ''
+        this.scanItems = []
+        this.scanSelected = []
+        this.scanProgress = null
+        this.scanError = null
         this.size = null
+        // STOP SCAN !!!
       }
     },
   },
@@ -494,7 +525,8 @@ export default {
       const payload = { 
         key: this.cloudKeysSelected[0]['id'],
         bucket: this.cloudPath.length > 3 ? this.cloudPath[2] : this.awsBucketsSelected[0]['name'],
-        prefix: this.parseAWSPrefix(),
+        prefix: this.parseAWSPrefix(search),
+        search: this.awsObjectsSearch,
         // token: this.awsObjectsToken,
       }
       axios.get('/utils/restore/s3/objects', { params: payload })
@@ -521,17 +553,16 @@ export default {
         else if (this.awsObjectsSelected.length != 0) this.cloudPath.push(this.awsObjectsSelected[0]['name'])
       }
     },
-    parseAWSPrefix() {
+    parseAWSPrefix(search) {
       let path = this.cloudPath.splice(3).join('/')
+      if (search) return path
       if (this.awsObjectsSelected.length > 0 && this.awsObjectsSelected[0].name.endsWith('/')) path += this.awsObjectsSelected[0].name
-      if (path.length > 0 && !path.endsWith('/') && this.awsObjectsSearch.length > 0) path += '/'
-      if (this.awsObjectsSearch.length > 0) path += this.awsObjectsSearch
       return path
     },
     nextStep() {
       if (this.stepper == 1 && !this.$refs.sourceForm.validate()) return
       else if (this.stepper == 2 && !this.$refs.destinationForm.validate()) return
-      if (this.stepper == 1 && this.mode == 'url') this.inspectURL()
+      if (this.stepper == 1 && this.mode == 'url') this.scanFile()
       else this.stepper = this.stepper + 1
     },
     submitRestore() {
@@ -591,29 +622,69 @@ export default {
         else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
       })
     },
-    inspectURL() {
-      if (this.inspect.items.length > 0 && this.inspectSelected.length > 0) this.stepper = this.stepper + 1
-      else {
-        this.loading = true
-        axios.get('/utils/restore/inspect', { params: { url: this.source }})
-        .then((response) => {
-          this.inspect = response.data.inspect
-          this.size = this.inspect.size
-          if (this.inspect.items.length == 0) this.nextStep()
-        })
-        .catch((error) => {
-          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
-          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
-        })
-        .finally(() => this.loading = false)
+    scanFile() {
+      this.loading = true
+      const payload = { 
+        mode: this.mode,
+        cloud_id: this.cloudKeysSelected.length != 0 ? this.cloudKeysSelected[0]['id'] : null,
+        source: this.source
       }
+      axios.post('/utils/restore/scan', payload)
+      .then((response) => {
+        this.size = response.data.size
+        if ('id' in response.data) {
+          this.scanID = response.data.id
+          this.loading = true
+          this.getScan()
+        }
+        else this.loading = false
+      })
+      .catch((error) => {
+        this.loading = false
+        if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+      })
+      .finally(() => this.loading = false)
+    },
+    getScan() {
+      axios.get('/utils/restore/scan', { params: { id: this.scanID }})
+      .then((response) => {
+        this.scanStatus = response.data.status
+        this.scanProgress = this.parseProgress(response.data.progress)
+        this.scanItems = response.data.data == null ? [] : response.data.data
+        this.scanError = response.data.error
+        // Parse Progress Value
+        if (this.scanProgress == null || this.scanProgress.value < 100) {
+          clearTimeout(this.scanTimer)
+          this.scanTimer = setTimeout(this.getScan, 1000)
+        }
+      })
+      .catch((error) => {
+        if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+      })
+    },
+    parseProgress(progress) {
+      if (progress == null) return progress
+      progress.value = parseInt(progress.value.slice(0, -1))
+      progress.transferred = this.parseMetric(progress.transferred)
+      progress.rate = this.parseMetric(progress.rate)
+      return progress
+    },
+    parseMetric(val) {
+      for (let i = val.length; i >= 0; --i) {
+        if (Number.isInteger(parseInt(val[i]))) {
+          return val.substring(0, i+1) + ' ' + val.substring(i+1, val.length)
+        }
+      }
+      return val
     },
     submitURLRestore() {
       this.loading = true
       const payload = {
         mode: this.mode,
         source: this.source,
-        selected: this.inspectSelected.map(x => x.file),
+        selected: this.scanSelected.map(x => x.file),
         server: this.server,
         database: this.database
       }
@@ -630,6 +701,11 @@ export default {
     cancelImport() {
       this.cancelToken.cancel()
       this.dialog = false
+    },
+    getProgressColor(status) {
+      if (status == 'IN PROGRESS') return '#ff9800'
+      if (status == 'SUCCESS') return '#4caf50'
+      if (['FAILED','STOPPED'].includes(status)) return '#EF5354'
     },
     formatBytes(size) {
       if (size == null) return null

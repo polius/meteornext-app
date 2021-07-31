@@ -138,6 +138,14 @@ class Servers:
         """
         self._sql.execute(query, (server_id))
 
+        # Delete from 'client_queries'
+        query = """
+            DELETE cq
+            FROM client_queries cq
+            JOIN servers s ON s.id = cq.server_id AND s.id = %s
+        """
+        self._sql.execute(query, (server_id))
+
         # Delete from 'servers'
         query = """
             DELETE FROM servers

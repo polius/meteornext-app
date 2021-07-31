@@ -482,7 +482,7 @@ CREATE TABLE `client_queries` (
 
 CREATE TABLE `restore` (
  `id` INT UNSIGNED AUTO_INCREMENT,
- `mode` ENUM('file','url','s3') NOT NULL,
+ `mode` ENUM('file','url','cloud') NOT NULL,
  `source` TEXT NOT NULL,
  `selected` TEXT NULL,
  `size` BIGINT UNSIGNED NOT NULL,
@@ -513,4 +513,24 @@ CREATE TABLE `restore` (
   KEY `deleted` (`deleted`),
   FOREIGN KEY (`server_id`) REFERENCES `servers` (`id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE `restore_scans` (
+ `id` INT UNSIGNED AUTO_INCREMENT,
+ `mode` ENUM('url','cloud') NOT NULL,
+ `cloud_id` INT UNSIGNED NULL,
+ `source` TEXT NOT NULL,
+ `size` BIGINT UNSIGNED NOT NULL,
+ `status` ENUM('IN PROGRESS','SUCCESS','FAILED','STOPPED') NOT NULL,
+ `updated` DATETIME NULL,
+ `pid` INT UNSIGNED NULL,
+ `uri` VARCHAR(191) NULL,
+ `progress` TEXT NULL,
+ `error` TEXT NULL,
+ `data` TEXT NULL,
+ `user_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `status` (`status`),
+  KEY `updated` (`updated`),
+  KEY `user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

@@ -77,7 +77,7 @@
               <v-progress-linear :color="getProgressColor(information_items[0].status)" height="5" :value="progress.value" style="margin-top:10px"></v-progress-linear>
               <div class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${progress.value} %` }}</span></div>
               <v-divider style="margin-top:10px"></v-divider>
-              <div class="text-body-1" style="margin-top:10px">Bytes Transferred: <span class="white--text">{{ progress.transferred }}</span></div>
+              <div class="text-body-1" style="margin-top:10px">Data Transferred: <span class="white--text">{{ progress.transferred }}</span></div>
               <div class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ progress.rate }}</span></div>
               <div class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ progress.elapsed }}</span></div>
               <div v-if="progress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ progress.eta }}</span></div>
