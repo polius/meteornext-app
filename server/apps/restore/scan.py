@@ -19,14 +19,15 @@ class Scan:
 
     def metadata(self, item):
         # Get File Metadata
-        p = subprocess.run(f"curl -sSLI '{item['source']}' | grep -E 'Content-Length|Content-Type' | sort -k1 | awk '{{print $2}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if len(p.stdout) == 0:
+        p = subprocess.run(f"curl -sSLI '{item['source']}' | grep -E 'Content-Length:' | sort -k1 | awk '{{print $2}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if len(p.stdout) == 0 or int(p.stdout.split('\n')[0]) == 0:
             raise Exception("This URL is not valid")
-        return { 'size': int(p.stdout.split('\n')[0]), 'type': p.stdout.split('\n')[1] }
-
+        return { 'size': int(p.stdout.split('\n')[0]) }
+        
     def __start(self, item, base_path):
         # Start Import
         t = threading.Thread(target=self.__scan, args=(item, base_path,))
+        t.daemon = True
         t.start()
 
         # Start Monitor
@@ -44,7 +45,7 @@ class Scan:
                     status = 'FAILED'
         query = """
             UPDATE `restore_scans`
-            SET `status` = %s,
+            SET `status` = IF(`status` = 'STOPPED', `status`, %s),
                 `updated` = %s
             WHERE `id` = %s
         """
@@ -63,7 +64,7 @@ class Scan:
         # Start scan
         if item['source'].endswith('.tar'):
             tar = f'tar tv 2> {error_path}'
-        elif item['source'].endswith(('.tar.gz','.tgz')):
+        elif item['source'].endswith('.tar.gz'):
             tar = f'tar ztv 2> {error_path}'
         elif item['source'].endswith('.tar.bz2'):
             tar = f'tar jtv 2> {error_path}'
@@ -99,7 +100,8 @@ class Scan:
         # Read progress log
         progress = None
         if os.path.exists(progress_path):
-            p = subprocess.run(f"tr '\r' '\n' < '{progress_path}' | xargs | tail -1", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # p = subprocess.run(f"tr '\r' '\n' < '{progress_path}' | xargs | tail -1", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.run(f"tr '\r' '\n' < '{progress_path}' | tail -1", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             progress = self.__parse_progress(p.stdout) if len(p.stdout) > 0 else None
 
         # Read error log
