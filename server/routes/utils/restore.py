@@ -147,6 +147,26 @@ class Restore:
                 except Exception as e:
                     return jsonify({'message': str(e)}), 400
 
+        @restore_blueprint.route('/utils/restore/scan/stop', methods=['POST'])
+        @jwt_required()
+        def restore_scan_stop_method():
+            # Check license
+            if not self._license.validated:
+                return jsonify({"message": self._license.status['response']}), 401
+
+            # Get user data
+            user = self._users.get(get_jwt_identity())[0]
+
+            # Check user privileges
+            if user['disabled'] or not user['utils_enabled']:
+                return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Get Request Json
+            data = request.get_json()
+
+            # Stop Scan
+            return self.stop_scan(user, data)
+
         @restore_blueprint.route('/utils/restore/s3/buckets', methods=['GET'])
         @jwt_required()
         def restore_s3_buckets_method():
@@ -310,8 +330,10 @@ class Restore:
         if len(scan) == 0:
             return jsonify({'message': 'This scan does not exist.'}), 400
 
+        # Update 'readed' value
+        self._scans.put_readed(scan[0]['id'])
+
         # Parse progress
-        # 100% 21kiB 60.3kiB/s 0:00:00 ETA0:00:10
         progress = scan[0]['progress']
         if progress:
             raw = progress.split(' ')
@@ -319,7 +341,6 @@ class Restore:
             progress['eta'] = raw[4][3:] if len(raw) == 5 else None
 
         # Parse data
-        # sample/sample.c|62sample/sample.exe|17920sample/sample.obj|628
         data = scan[0]['data']
         if data:
             data = [{'file': i.split('|')[0][i.split('|')[0].find('/')+1:], 'size': int(i.split('|')[1])} for i in data.split('\n')]
@@ -332,10 +353,9 @@ class Restore:
     def post_scan(self, user, data):
         # Validate source + Retrieve filesize
         data['metadata'] = self._scan_app.metadata(data)
-        print(data['metadata']['type'])
         
         # Detect if the file is not compressed
-        if data['metadata']['type'] not in ['application/x-gzip','application/x-tar']:
+        if not data['source'].endswith(('.tar','.tar.gz','tar.bz2')):
             return {'size': data['metadata']['size']}
 
         # - START SCAN - #
@@ -355,6 +375,35 @@ class Restore:
 
         # Return tracking metadata
         return {'id': data['id'], 'size': data['metadata']['size']}
+
+    def stop_scan(self, user, data):
+        # Check params
+        if 'id' not in data:
+            return jsonify({'message': 'id parameter is required'}), 400
+
+        # Get current scan
+        scan = self._scans.get(user_id=user['id'], scan_id=data['id'])
+
+        # Check if restore exists
+        if len(scan) == 0:
+            return jsonify({'message': 'This scan does not exist.'}), 400
+        scan = scan[0]
+
+        # Check user authority
+        if scan['user_id'] != user['id'] and not user['admin']:
+            return jsonify({'message': 'Insufficient Privileges'}), 400
+
+        # Check if the scan is in progress
+        if scan['status'] != 'IN PROGRESS':
+            return jsonify({'message': 'The scan has already finished.'}), 400
+
+        # Stop the scan
+        try:
+            os.kill(scan['pid'], signal.SIGKILL)
+            self._scans.put_status(data['id'], 'STOPPED')
+            return jsonify({'message': 'Scan successfully stopped.'}), 200
+        except Exception as e:
+            return jsonify({'message': 'The scan has already finished.'}), 400
 
     def get_s3_buckets(self, user):
         # Get Cloud Key

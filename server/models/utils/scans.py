@@ -16,9 +16,25 @@ class Scans:
     def post(self, user, data):
         query = """
             INSERT INTO `restore_scans` (`mode`, `cloud_id`, `source`, `size`, `status`, `updated`, `uri`, `user_id`)
-            VALUES (%s, %s, %s, %s, 'IN PROGRESS', %s, %s, %s)
+            VALUES (%s, %s, %s, %s, 'CREATED', %s, %s, %s)
         """
         return self._sql.execute(query, (data['mode'], data['cloud_id'], data['source'], data['metadata']['size'], self.__utcnow(), data['uri'], user['id']))
+
+    def put_readed(self, scan_id):
+        query = """
+            UPDATE `restore_scans`
+            SET `readed` = %s
+            WHERE id = %s
+        """
+        self._sql.execute(query, (self.__utcnow(), scan_id))
+
+    def put_status(self, scan_id, status):
+        query = """
+            UPDATE `restore_scans`
+            SET `status` = %s
+            WHERE id = %s
+        """
+        self._sql.execute(query, (status, scan_id))
 
     def __utcnow(self):
         return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
