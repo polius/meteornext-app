@@ -8,6 +8,7 @@ import traceback
 
 import routes.deployments.deployments
 import apps.monitoring.monitoring
+import apps.restore.scan
 
 class Cron:
     def __init__(self, app, license, blueprints, sql):
@@ -25,6 +26,7 @@ class Cron:
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
             schedule.every().hour.do(self.__run_threaded, self.__client_clean)
+            schedule.every(10).seconds.do(self.__run_threaded, self.__utils_scans)
 
             # Start Cron Listener
             t = threading.Thread(target=self.__run_schedule)
@@ -114,5 +116,26 @@ class Cron:
                 WHERE DATE_ADD(DATE(cq.date), INTERVAL g.client_tracking_retention DAY) <= CURRENT_DATE
             """
             self._sql.execute(query)
+        except Exception:
+            traceback.print_exc()
+
+    def __utils_scans(self):
+        # Stop all scans not being tracked by the user
+        scan = apps.restore.scan.Scan(self._sql)
+        try:
+            query = """
+                SELECT id, pid
+                FROM restore_scans
+                WHERE status = 'IN PROGRESS'
+                AND TIMESTAMPDIFF(SECOND, `readed`, `updated`) >= 10
+            """
+            result = self._sql.execute(query)
+            for i in result:
+                query = "UPDATE restore_scans SET status = 'STOPPED' WHERE id = %s"
+                self._sql.execute(query, (i['id']))
+                try:
+                    scan.stop(i['pid'])
+                except Exception:
+                    pass
         except Exception:
             traceback.print_exc()

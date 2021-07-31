@@ -2,6 +2,8 @@ import os
 import re
 import time
 import shutil
+import signal
+import psutil
 import subprocess
 import threading
 from datetime import datetime
@@ -12,10 +14,15 @@ class Scan:
 
     def start(self, item, base_path):
         # Start Process in another thread
-        t = threading.Thread(target=self.__start, args=(item, base_path,))
+        t = threading.Thread(target=self.__core, args=(item, base_path,))
         t.daemon = True
         t.start()
-        # t.join() # <-- TO REMOVE !!!
+
+    def stop(self, pid):
+        parent = psutil.Process(pid)
+        children = parent.children(recursive=True)
+        for process in children:
+            process.send_signal(signal.SIGKILL)
 
     def metadata(self, item):
         # Get File Metadata
@@ -24,7 +31,7 @@ class Scan:
             raise Exception("This URL is not valid")
         return { 'size': int(p.stdout.split('\n')[0]) }
         
-    def __start(self, item, base_path):
+    def __core(self, item, base_path):
         # Start Import
         t = threading.Thread(target=self.__scan, args=(item, base_path,))
         t.daemon = True
@@ -81,7 +88,6 @@ class Scan:
             UPDATE `restore_scans`
             SET
                 `pid` = %s,
-                `status` = 'IN PROGRESS',
                 `updated` = %s
             WHERE `id` = %s
         """
