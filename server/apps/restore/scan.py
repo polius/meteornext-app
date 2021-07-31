@@ -52,7 +52,7 @@ class Scan:
         self._sql.execute(query, args=(status, self.__utcnow(), item['id']))
 
         # Remove execution folder from disk
-        # shutil.rmtree(os.path.join(base_path, item['uri']))
+        shutil.rmtree(os.path.join(base_path, item['uri']))
 
     def __scan(self, item, base_path):
         # Build 'progress_path' & 'error_path'
@@ -74,7 +74,7 @@ class Scan:
         elif item['mode'] == 's3':
             pass
 
-        p = subprocess.Popen(command, shell=True)
+        p = subprocess.Popen(command, shell=True, stderr=subprocess.DEVNULL)
 
         # Add PID & started to the restore
         query = """
