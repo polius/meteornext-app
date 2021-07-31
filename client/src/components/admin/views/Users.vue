@@ -35,12 +35,6 @@
         <template v-slot:[`item.admin`]="{ item }">
           <v-icon small :title="item.admin ? 'Admin User' : 'Regular User'" :color="item.admin ? '#00b16a' : '#EF5354'" style="margin-left:8px; font-size:17px">fas fa-shield-alt</v-icon>
         </template>
-        <template v-slot:[`item.created_at`]="{ item }">
-          <span>{{ item.created_at }}</span>
-        </template>
-        <template v-slot:[`item.last_login`]="{ item }">
-          <span>{{ item.last_login }}</span>
-        </template>
         <template v-slot:[`item.last_ping`]="{ item }">
           <v-icon v-if="isOnline(item.last_ping)" :title="lastOnline(item)" small color="#00b16a" style="margin-left:8px;">fas fa-circle</v-icon>
           <v-icon v-else :title="lastOnline(item)" small color="#EF5354" style="margin-left:8px;">fas fa-circle</v-icon>
@@ -210,7 +204,7 @@ export default {
       this.loading = true
       axios.get('/admin/users')
         .then((response) => {
-          const data = response.data.data.users.map(x => ({...x, created_at: this.dateFormat(x.created_at), last_login: this.dateFormat(x.last_login), last_ping: this.dateFormat(x.last_ping)}))
+          const data = response.data.data.users.map(x => ({...x, created_at: this.dateFormat(x.created_at), updated_at: this.dateFormat(x.updated_at), last_login: this.dateFormat(x.last_login), last_ping: this.dateFormat(x.last_ping)}))
           this.users = JSON.parse(JSON.stringify(data))
           this.items = JSON.parse(JSON.stringify(data))
           this.groups = response.data.data.groups.map(x => x.name)

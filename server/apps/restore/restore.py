@@ -82,7 +82,7 @@ class Restore:
             if item['mode'] == 'file':
                 command = f"export MYSQL_PWD={server['password']}; pv -f --size {size} -F '%p|%b|%r|%t|%e' {os.path.join(base_path, item['uri'], item['source'])} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
             elif item['mode'] == 'url':
-                command = f"export MYSQL_PWD={server['password']}; curl -sSL '{item['source']}' 2> {error_path} {gunzip} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
+                command = f"export MYSQL_PWD={server['password']}; curl -sSL '{item['source']}' 2> {error_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
 
         p = subprocess.Popen(command, shell=True)
 
