@@ -448,10 +448,10 @@ class Restore:
             items = []
             # Build folders
             if 'CommonPrefixes' in response:
-                items += [{'name': i['Prefix']} for i in response['CommonPrefixes']]
+                items += [{'name': i['Prefix'][len(request.args['prefix']) - len(request.args['search']):]} for i in response['CommonPrefixes']]
             # Build objects
             if 'Contents' in response:
-                items += [{'name': i['Key'][len(request.args['prefix']) - len(request.args['search']):], 'last_modified': i['LastModified'], 'size': i['Size'], 'storage_class': i['StorageClass']} for i in response['Contents']]
+                items += [{'name': i['Key'][len(request.args['prefix']) - len(request.args['search']):], 'last_modified': i['LastModified'], 'size': i['Size'], 'storage_class': i['StorageClass']} for i in response['Contents'] if len(i['Key'][len(request.args['prefix']) - len(request.args['search']):]) > 0]
             # Sort items
             items = sorted(items, key=lambda k: k['name'])
             return jsonify({'objects': items}), 200
