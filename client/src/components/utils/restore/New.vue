@@ -104,7 +104,7 @@
                                   <tr :style="awsObjectsSelected.length > 0 && awsObjectsSelected[0].name == item.name ? 'background-color:#505050' : ''">
                                     <td v-for="header in awsObjectsHeaders" :key="header.value" @click="awsObjectsClick(item)" style="cursor:pointer">
                                       <span v-if="header.value == 'name'">
-                                        <v-icon size="16" :color="item['name'].endsWith('/') ? '#e47911' : '#23cba7'" style="margin-right:10px; margin-bottom:2px">{{ item['name'].endsWith('/') ? 'fas fa-folder' : 'fas fa-file'}}</v-icon>
+                                        <v-icon size="16" :color="item['name'].endsWith('/') ? '#e47911' : '#23cba7'" style="margin-right:10px; margin-bottom:2px">{{ item['name'].endsWith('/') ? 'fas fa-folder' : 'far fa-file'}}</v-icon>
                                         {{ item.name }}
                                       </span>
                                       <span v-else-if="header.value == 'type'">
@@ -476,7 +476,7 @@ export default {
       this.getAWSObjects(false)
     },
     awsObjectsClick(item) {
-      this.awsObjectsSelected = [item]
+      this.awsObjectsSelected = this.awsObjectsSelected.length != 0 && this.awsObjectsSelected[0]['name'] == item.name ? [] : [item]
       if (item.name.endsWith('/')) this.getAWSObjects(false)
     },
     getServers() {
@@ -557,7 +557,7 @@ export default {
       }
     },
     parseAWSPrefix(search) {
-      let path = this.cloudPath.splice(3).join('/')
+      let path = this.cloudPath.slice(3).join('/')
       if (search) return path
       if (this.awsObjectsSelected.length > 0 && this.awsObjectsSelected[0].name.endsWith('/')) path += this.awsObjectsSelected[0].name
       return path
