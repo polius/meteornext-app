@@ -4,7 +4,7 @@
       <v-toolbar dense flat color="primary">
         <v-toolbar-title class="subtitle-1"><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW RESTORE</v-toolbar-title>
         <v-spacer></v-spacer>
-        <router-link class="nav-link" to="/utils/restore"><v-btn icon><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn></router-link>
+        <v-btn icon @click="goBack"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
       </v-toolbar>
       <v-container fluid grid-list-lg style="padding:0px; margin-bottom:10px">
         <v-layout row wrap>
@@ -131,51 +131,53 @@
                         <div v-else-if="scanStatus == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>Scan successfully completed.</div>
                         <div v-else-if="scanStatus == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while scanning the file.</div>
                         <div v-else-if="scanStatus == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px">fas fa-ban</v-icon>Scan successfully stopped.</div>
-                        <v-progress-linear :color="getProgressColor(scanStatus)" :indeterminate="scanProgress.value == 0 && scanStatus == 'IN PROGRESS'" :value="scanProgress == null ? 0 : scanProgress.value" height="5" style="margin-top:10px"></v-progress-linear>
-                        <div class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${scanProgress.value} %` }}</span></div>
-                        <div class="text-body-1" style="margin-top:10px">Data Transferred: <span class="white--text">{{ scanProgress.transferred }}</span></div>
-                        <div class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ scanProgress.rate }}</span></div>
-                        <div class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ scanProgress.elapsed }}</span></div>
-                        <div v-if="scanProgress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ scanProgress.eta }}</span></div>
-                        <v-divider style="margin-top:10px"></v-divider>
-                        <!-- SCAN SELECT -->
-                        <div v-if="scanError == null">
-                          <div v-if="scanItems.length > 0" class="text-body-1" style="margin-top:15px">Choose the files to restore:</div>
-                          <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
-                            <v-text-field v-model="scanSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
-                          </v-toolbar>
-                          <v-data-table v-model="scanSelected" :headers="scanHeaders" :items="scanItems" :search="scanSearch" :options="{ itemsPerPage: 5 }" :loading="loading" loading-text="Loading... Please wait" item-key="file" show-select class="elevation-1">
-                            <template v-ripple v-slot:[`header.data-table-select`]="{}">
-                              <v-simple-checkbox
-                                :value="scanItems.length == 0 ? false : scanSelected.length == scanItems.length"
-                                :indeterminate="scanSelected.length > 0 && scanSelected.length != scanItems.length"
-                                @click="scanSelected.length == scanItems.length ? scanSelected = [] : scanSelected = JSON.parse(JSON.stringify(scanItems))">
-                              </v-simple-checkbox>
-                            </template>
-                            <template v-slot:[`item.size`]="{ item }">
-                              {{ formatBytes(item.size) }}
-                            </template>
-                          </v-data-table>
-                          <div v-if="scanSelected.length > 0" class="text-body-1" style="margin-top:20px; color:#fa8131">Selected Size: <span style="font-weight:500">{{ formatBytes(scanSelected.reduce((a, b) => a + b.size, 0)) }}</span></div>
-                        </div>
-                        <!-- SCAN ERROR -->
-                        <div v-else>
-                          <div class="subtitle-1 white--text" style="margin-top:15px; margin-left:1px">ERROR</div>
-                          <v-card style="margin-top:10px; margin-left:1px">
-                            <v-card-text style="padding:15px">
-                              <div class="text-body-1">{{ scanError }}</div>
-                            </v-card-text>
-                          </v-card>
+                        <v-progress-linear :color="getProgressColor(scanStatus)" :indeterminate="scanProgress == null || (scanProgress.value == 0 && scanStatus == 'IN PROGRESS')" :value="scanProgress == null ? 0 : scanProgress.value" height="5" style="margin-top:10px"></v-progress-linear>
+                        <div v-if="scanProgress != null">
+                          <div class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${scanProgress.value} %` }}</span></div>
+                          <div class="text-body-1" style="margin-top:10px">Data Transferred: <span class="white--text">{{ scanProgress.transferred }}</span></div>
+                          <div class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ scanProgress.rate }}</span></div>
+                          <div class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ scanProgress.elapsed }}</span></div>
+                          <div v-if="scanProgress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ scanProgress.eta }}</span></div>
+                          <v-divider style="margin-top:10px"></v-divider>
+                          <!-- SCAN SELECT -->
+                          <div v-if="scanError == null">
+                            <div v-if="scanItems.length > 0" class="text-body-1" style="margin-top:15px">Choose the files to restore:</div>
+                            <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
+                              <v-text-field v-model="scanSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
+                            </v-toolbar>
+                            <v-data-table v-model="scanSelected" :headers="scanHeaders" :items="scanItems" :search="scanSearch" :options="{ itemsPerPage: 5 }" :loading="loading" loading-text="Loading... Please wait" item-key="file" show-select class="elevation-1">
+                              <template v-ripple v-slot:[`header.data-table-select`]="{}">
+                                <v-simple-checkbox
+                                  :value="scanItems.length == 0 ? false : scanSelected.length == scanItems.length"
+                                  :indeterminate="scanSelected.length > 0 && scanSelected.length != scanItems.length"
+                                  @click="scanSelected.length == scanItems.length ? scanSelected = [] : scanSelected = JSON.parse(JSON.stringify(scanItems))">
+                                </v-simple-checkbox>
+                              </template>
+                              <template v-slot:[`item.size`]="{ item }">
+                                {{ formatBytes(item.size) }}
+                              </template>
+                            </v-data-table>
+                            <div v-if="scanSelected.length > 0" class="text-body-1" style="margin-top:20px; color:#fa8131">Selected Size: <span style="font-weight:500">{{ formatBytes(scanSelected.reduce((a, b) => a + b.size, 0)) }}</span></div>
+                          </div>
+                          <!-- SCAN ERROR -->
+                          <div v-else>
+                            <div class="subtitle-1 white--text" style="margin-top:15px; margin-left:1px">ERROR</div>
+                            <v-card style="margin-top:10px; margin-left:1px">
+                              <v-card-text style="padding:15px">
+                                <div class="text-body-1">{{ scanError }}</div>
+                              </v-card-text>
+                            </v-card>
+                          </div>
                         </div>
                       </div>
                     </v-form>
                     <v-row no-gutters style="margin-top:20px;">
                       <v-col cols="auto" class="mr-auto">
-                        <v-btn :disabled="(scanID != null && scanSelected.length == 0) || (mode == 'cloud' && (awsObjectsSelected.length == 0 || awsObjectsSelected[0].name.endsWith('/')))" :loading="loading" color="primary" @click="nextStep">CONTINUE</v-btn>
-                        <router-link :disabled="loading" to="/utils/restore"><v-btn text style="margin-left:5px">CANCEL</v-btn></router-link>
+                        <v-btn @click="nextStep" :disabled="(scanID != null && scanSelected.length == 0) || (mode == 'cloud' && (awsObjectsSelected.length == 0 || awsObjectsSelected[0].name.endsWith('/')))" :loading="loading" color="primary">CONTINUE</v-btn>
+                        <v-btn @click="goBack" :disabled="loading" text style="margin-left:5px">CANCEL</v-btn>
                       </v-col>
                       <v-col cols="auto">
-                        <v-btn v-if="scanID != null && scanProgress != null && scanStatus == 'IN PROGRESS'" color="primary" @click="stopScan">STOP SCAN</v-btn>
+                        <v-btn v-if="scanID != null && scanProgress != null && scanStatus == 'IN PROGRESS'" color="primary" @click="stopScan(true)">STOP SCAN</v-btn>
                       </v-col>
                     </v-row>
                   </v-card-text>
@@ -317,12 +319,6 @@
   </div>
 </template>
 
-<style scoped>
-::v-deep .v-toolbar__content {
-  padding-right:5px;
-}
-</style>
-
 <script>
 import axios from 'axios';
 import pretty from 'pretty-bytes';
@@ -440,7 +436,6 @@ export default {
       this.scanSelected = []
       this.scanProgress = null
       this.scanError = null
-      // STOP SCAN !!!
     },
   },
   methods: {
@@ -567,6 +562,10 @@ export default {
       if (this.awsObjectsSelected.length > 0 && this.awsObjectsSelected[0].name.endsWith('/')) path += this.awsObjectsSelected[0].name
       return path
     },
+    goBack() {
+      if (this.stepper == 1 && this.scanID != null) this.stopScan(false)
+      this.$router.push('/utils/restore')
+    },
     nextStep() {
       if (this.stepper == 1 && !this.$refs.sourceForm.validate()) return
       else if (this.stepper == 2 && !this.$refs.destinationForm.validate()) return
@@ -660,13 +659,10 @@ export default {
         this.scanStatus = response.data.status
         this.scanProgress = this.parseProgress(response.data.progress)
         this.scanItems = response.data.data == null ? [] : response.data.data
-        console.log(response.data.error)
         this.scanError = response.data.error
-        // Parse Progress Value
-        console.log(this.scanStatus)
         if (this.scanProgress == null || this.scanStatus == 'IN PROGRESS') {
           clearTimeout(this.scanTimer)
-          this.scanTimer = setTimeout(this.getScan, 1000)
+          if (this.$router.currentRoute.name == 'utils.restore.new') this.scanTimer = setTimeout(this.getScan, 1000)
         }
       })
       .catch((error) => {
@@ -674,11 +670,11 @@ export default {
         else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
       })
     },
-    stopScan() {
+    stopScan(notification) {
       const payload = { id: this.scanID }
       axios.post('/utils/restore/scan/stop', payload)
       .then((response) => {
-        this.notification(response.data.message, '#00b16a')
+        if (notification) this.notification(response.data.message, '#00b16a')
       })
       .catch((error) => {
         if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

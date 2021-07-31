@@ -7,7 +7,6 @@ import uuid
 import json
 import shutil
 import signal
-import psutil
 import boto3
 
 import models.admin.users
@@ -400,14 +399,12 @@ class Restore:
 
         # Stop the scan
         try:
-            parent = psutil.Process(scan['pid'])
-            children = parent.children(recursive=True)
-            for process in children:
-                process.send_signal(signal.SIGKILL)
+            self._scan_app.stop(scan['pid'])
+        except Exception:
+            return jsonify({'message': 'The scan has already finished.'}), 400
+        else:
             self._scans.put_status(data['id'], 'STOPPED')
             return jsonify({'message': 'Scan successfully stopped.'}), 200
-        except Exception as e:
-            return jsonify({'message': 'The scan has already finished.'}), 400
 
     def get_s3_buckets(self, user):
         # Get Cloud Key

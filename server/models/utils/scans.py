@@ -16,7 +16,7 @@ class Scans:
     def post(self, user, data):
         query = """
             INSERT INTO `restore_scans` (`mode`, `cloud_id`, `source`, `size`, `status`, `updated`, `uri`, `user_id`)
-            VALUES (%s, %s, %s, %s, 'CREATED', %s, %s, %s)
+            VALUES (%s, %s, %s, %s, 'IN PROGRESS', %s, %s, %s)
         """
         return self._sql.execute(query, (data['mode'], data['cloud_id'], data['source'], data['metadata']['size'], self.__utcnow(), data['uri'], user['id']))
 
