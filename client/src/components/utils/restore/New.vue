@@ -34,7 +34,7 @@
                         </v-radio>
                       </v-radio-group>
                       <div v-if="mode == 'file'">
-                        <v-file-input v-model="fileObject" label="File" show-size accept=".sql,.tar,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" hide-details></v-file-input>
+                        <v-file-input v-model="fileObject" label="File" accept=".sql,.tar,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" hide-details></v-file-input>
                       </div>
                       <div v-else-if="mode == 'url'">
                         <v-text-field @keyup.enter="scanFile" :readonly="scanStatus == 'IN PROGRESS'" v-model="source" label="URL" :rules="[v => this.validURL(v) || '' ]" hide-details></v-text-field>
@@ -122,9 +122,10 @@
                           </v-card>
                         </div>
                       </div>
+                      <!--  SIZE -->
+                      <div v-if="mode != 'cloud' && (size != null && scanID != null)" class="text-body-1" style="color:#fa8131; margin-top:15px">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       <!-- SCAN -->
                       <div v-if="scanID != null" style="margin-top:15px">
-                        <div v-if="mode == 'url'" class="text-body-1" style="color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
                         <div class="subtitle-1 white--text" style="margin-top:10px; margin-bottom:10px">SCAN</div>
                         <div v-if="scanStatus == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px">fas fa-spinner</v-icon>Scanning source file. Please wait...</div>
                         <div v-else-if="scanStatus == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>Scan successfully completed.</div>
@@ -238,7 +239,7 @@
                         </v-radio>
                       </v-radio-group>
                       <div v-if="['file','url'].includes(mode)">
-                        <v-text-field readonly v-model="source" :label="mode == 'file' ? 'File' : mode == 'url' ? 'URL' : 'Amazon S3'" style="padding-top:8px" hide-details></v-text-field>
+                        <v-text-field readonly v-model="source" :label="mode == 'file' ? 'File' : 'URL'" style="padding-top:8px" hide-details></v-text-field>
                         <div class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       </div>
                       <div v-else-if="mode == 'cloud'">
@@ -547,11 +548,13 @@ export default {
       })
     },
     fileObject(val) {
+      console.log(val)
+      console.log(val.size)
       this.source = val.name
       this.size = val.size 
     },
     source() {
-      this.clearScan()
+      if (this.mode == 'url') this.clearScan()
     },
   },
   methods: {
