@@ -56,8 +56,8 @@ class Scan:
         error_path = os.path.join(base_path, item['uri'], 'error.txt')
         status = 'SUCCESS'
         if os.path.exists(error_path):
-            with open(error_path, 'r') as f:
-                if len(f.read().strip()) > 0:
+            with open(error_path, 'rb') as f:
+                if len(f.read().decode('utf-8','ignore').strip()) > 0:
                     status = 'FAILED'
         query = """
             UPDATE `restore_scans`
@@ -133,8 +133,8 @@ class Scan:
         # Read error log
         error = None
         if os.path.exists(error_path):
-            with open(error_path, 'r') as f:
-                error = self.__parse_error(f.read())
+            with open(error_path, 'rb') as f:
+                error = self.__parse_error(f.read().decode('utf-8','ignore'))
 
         # Read data log
         data = None
