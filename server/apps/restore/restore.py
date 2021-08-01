@@ -54,7 +54,7 @@ class Restore:
 
         # Send notification
         notification = {
-            'name': f"A {item['mode']} restore has finished",
+            'name': f"A restore has finished",
             'status': 'ERROR' if status == 'FAILED' else 'SUCCESS',
             'category': 'utils-restore',
             'data': '{{"id":"{}"}}'.format(item['id']),
@@ -67,22 +67,20 @@ class Restore:
         # Build 'progress_path' & 'error_path'
         error_path = os.path.join(base_path, item['uri'], 'error.txt')
         progress_path = os.path.join(base_path, item['uri'], 'progress.txt')
-        selected = ' '.join([i['file'] for i in json.loads(item['selected'])]) if item['selected'] is not None else ''
-        size = sum(i['size'] for i in json.loads(item['selected'])) if item['selected'] is not None else item['size']
 
         # Start restore
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
             gunzip = ''
             if item['source'].endswith('.tar'):
-                gunzip = f'| tar xO {selected} 2> {error_path}'
+                gunzip = f"| tar xO {item['selected']} 2> {error_path}"
             elif item['source'].endswith('.tar.gz'):
-                gunzip = f'| tar zxO {selected} 2> {error_path}'
+                gunzip = f"| tar zxO {item['selected']} 2> {error_path}"
             elif item['source'].endswith('.gz'):
-                gunzip = f'| gunzip -c 2> {error_path}'
+                gunzip = f"| gunzip -c 2> {error_path}"
             if item['mode'] == 'file':
-                command = f"export MYSQL_PWD={server['password']}; pv -f --size {size} -F '%p|%b|%r|%t|%e' {os.path.join(base_path, item['uri'], item['source'])} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
+                command = f"export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {os.path.join(base_path, item['uri'], item['source'])} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
             elif item['mode'] == 'url':
-                command = f"export MYSQL_PWD={server['password']}; curl -sSL '{item['source']}' 2> {error_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
+                command = f"export MYSQL_PWD={server['password']}; curl -sSL '{item['source']}' 2> {error_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
 
         p = subprocess.Popen(command, shell=True)
 

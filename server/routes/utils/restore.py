@@ -217,8 +217,10 @@ class Restore:
         # Check if restore exists
         if len(restore) == 0:
             return jsonify({'message': 'This restore does not exist'}), 400
-        else:
-            restore = restore[0]
+        restore = restore[0]
+
+        # Parse selected
+        restore['selected'] = [{'file': i.split('|')[0], 'size': int(i.split('|')[1])} for i in restore['selected'].split('\n')]
 
         # Check restore authority
         if restore['user_id'] != user['id'] and not user['admin']:
@@ -259,19 +261,10 @@ class Restore:
             selected = None
 
         elif data['mode'] == 'url':
-            # Inspect URL
-            try:
-                inspect = self.inspect(data['source'])
-            except Exception as e:
-                return jsonify({'message': str(e)}), 400
-
-            # Build file metadata
+            # Validate source + Retrieve filesize
             source = data['source']
-            size = inspect['size']
-            selected = [i for i in inspect['items'] if i['file'] in data['selected']] if 'selected' in data and len(data['selected']) > 0 else None
-            if len(selected) != len(data['selected']):
-                return jsonify({'message': 'The selected file(s) do not match with the provided url.'}), 400
-            selected = json.dumps(selected)
+            size = self._scan_app.metadata(data)['size']
+            selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
 
         elif data['mode'] == 'cloud':
             pass
@@ -287,6 +280,9 @@ class Restore:
             'uri': uri
         }
         item['id'] = self._restore.post(user, item)
+
+        # Parse selected for import process
+        item['selected'] = ' '.join([i['file'] for i in data['selected']]) if selected else ''
 
         # Start import process
         self._restore_app.start(user, item, server, base_path)
@@ -364,7 +360,6 @@ class Restore:
 
         # Validate source + Retrieve filesize
         data['metadata'] = self._scan_app.metadata(data)
-        print(data['metadata'])
         
         # Detect if the file is not compressed
         compress_formats = ('.tar','.tar.gz','tar.bz2')
