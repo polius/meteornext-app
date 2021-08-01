@@ -205,7 +205,7 @@
                         <v-btn text @click="stepper = 1" style="margin-left:5px">CANCEL</v-btn>
                       </v-col>
                       <v-col cols="auto">
-                        <v-btn :disabled="server != null && server.length > 0" text>SERVER DETAILS</v-btn>
+                        <v-btn @click="getServer(server)" :disabled="server == null" text>SERVER DETAILS</v-btn>
                       </v-col>
                     </v-row>
                   </v-card-text>
@@ -284,11 +284,8 @@
                           </template>
                         </v-data-table>
                       </div>
-                      <div v-if="scanItems.length > 0" style="margin-top:15px">
-                        <div class="subtitle-1 white--text">SCAN</div>
-                        <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
-                          <v-text-field v-model="scanSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
-                        </v-toolbar>
+                      <div v-if="scanItems.length > 0">
+                        <div class="subtitle-1 white--text" style="margin-top:15px; margin-bottom:15px">FILES</div>
                         <v-data-table readonly :headers="scanHeaders" :items="scanSelected" :search="scanSearch" :hide-default-footer="scanItems.length < 11" item-key="file" class="elevation-1">
                           <template v-slot:[`item.size`]="{ item }">
                             {{ formatBytes(item.size) }}
@@ -327,6 +324,9 @@
         </v-layout>
       </v-container>
     </v-card>
+    <!----------------->
+    <!-- FILE DIALOG -->
+    <!----------------->
     <v-dialog v-model="dialog" persistent max-width="640px">
       <v-card>
         <v-toolbar dense flat color="primary">
@@ -349,6 +349,79 @@
                 <div style="margin-top:15px">
                   <v-btn :disabled="progress == 100" @click="cancelImport" color="#EF5354">CANCEL</v-btn>
                 </div>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!------------------->
+    <!-- SERVER DIALOG -->
+    <!------------------->
+    <v-dialog v-model="serverDialog" max-width="768px">
+      <v-card>
+        <v-toolbar dense flat color="primary">
+          <v-toolbar-title class="white--text subtitle-1">SERVER</v-toolbar-title>
+          <v-divider class="mx-3" inset vertical></v-divider>
+          <v-btn readonly title="Create the server only for a user" :color="!serverItem.shared ? 'primary' : '#779ecb'" style="margin-right:10px;"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-user</v-icon>Personal</v-btn>
+          <v-btn readonly title="Create the server for all users in a group" :color="serverItem.shared ? 'primary' : '#779ecb'"><v-icon small style="margin-bottom:2px; margin-right:10px">fas fa-users</v-icon>Shared</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn @click="serverDialog = false" icon><v-icon size="22">fas fa-times-circle</v-icon></v-btn>
+        </v-toolbar>
+        <v-progress-linear v-show="loading" indeterminate></v-progress-linear>
+        <v-card-text style="padding: 0px 15px 15px;">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="form" style="margin-top:20px;">
+                  <v-row no-gutters style="margin-bottom:15px">
+                    <v-col>
+                      <v-text-field readonly v-model="serverItem.group" label="Group" hide-details style="padding-top:0px"></v-text-field>
+                    </v-col>
+                    <v-col v-if="!serverItem.shared" style="margin-left:20px">
+                      <v-text-field readonly v-model="serverItem.owner" label="Owner" hide-details style="padding-top:0px"></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row no-gutters>
+                    <v-col cols="8" style="padding-right:10px">
+                      <v-text-field readonly v-model="serverItem.name" label="Name"></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:10px">
+                      <v-text-field readonly v-model="serverItem.region" label="Region">
+                        <template v-slot:prepend-inner>
+                          <v-icon small :color="serverItem.region_shared ? '#EB5F5D' : 'warning'" style="margin-top:4px; margin-right:5px">{{ serverItem.region_shared ? 'fas fa-users' : 'fas fa-user' }}</v-icon>
+                        </template>
+                      </v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row no-gutters>
+                    <v-col cols="8" style="padding-right:10px">
+                      <v-text-field readonly v-model="serverItem.engine" label="Engine" style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                    <v-col cols="4" style="padding-left:10px">
+                      <v-text-field readonly v-model="serverItem.version" label="Version" style="padding-top:0px;"></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <div style="margin-bottom:20px">
+                    <v-row no-gutters>
+                      <v-col cols="8" style="padding-right:10px">
+                        <v-text-field readonly v-model="serverItem.hostname" label="Hostname" style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                      <v-col cols="4" style="padding-left:10px">
+                        <v-text-field readonly v-model="serverItem.port" label="Port" style="padding-top:0px;"></v-text-field>
+                      </v-col>
+                    </v-row>
+                    <v-text-field readonly v-model="serverItem.username" label="Username" style="padding-top:0px;"></v-text-field>
+                    <v-text-field readonly v-model="serverItem.password" label="Password" :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'" :type="showPassword ? 'text' : 'password'" @click:append="showPassword = !showPassword" style="padding-top:0px;" hide-details></v-text-field>
+                    <v-text-field readonly outlined v-model="serverItem.usage" label="Usage" hide-details style="margin-top:20px"></v-text-field>
+                  </div>
+                </v-form>
+                <v-divider></v-divider>
+                <v-row no-gutters style="margin-top:20px;">
+                  <v-col>
+                    <v-btn :loading="loading" color="info" @click="testConnection()">Test Connection</v-btn>
+                  </v-col>
+                </v-row>
               </v-flex>
             </v-layout>
           </v-container>
@@ -424,14 +497,17 @@ export default {
       awsObjectsSearch: '',
       // Destination
       serverItems: [],
-      server: '',
+      server: null,
       database: '',
       // Dialog
       dialog: false,
       progress: 0,
       progressText: '',
-      // Axios Cancel Token
       cancelToken: null,
+      // Server Dialog
+      serverDialog: false,
+      serverItem: {},
+      showPassword: false,
       // Snackbar
       snackbar: false,
       snackbarTimeout: Number(3000),
@@ -780,6 +856,47 @@ export default {
     cancelImport() {
       this.cancelToken.cancel()
       this.dialog = false
+    },
+    getServer(server_id) {
+      // Get Server
+      this.loading = true
+      this.showPassword = false
+      this.serverDialog = true
+      const payload = { server_id: server_id }
+      axios.get('/inventory/servers', { params: payload })
+        .then((response) => {
+          // Build usage
+          let usage = []
+          if (response.data.data[0].usage.includes('D')) usage.push('Deployments')
+          if (response.data.data[0].usage.includes('M')) usage.push('Monitoring')
+          if (response.data.data[0].usage.includes('U')) usage.push('Utils')
+          if (response.data.data[0].usage.includes('C')) usage.push('Client')
+          // Add server
+          this.serverItem = {...response.data.data[0], usage: usage.join(', ')}
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
+    },
+    testConnection() {
+      // Test Connection
+      this.notification('Testing Server...', 'info')
+      this.loading = true
+      const payload = {
+        region: this.serverItem.region_id,
+        server: this.serverItem.id
+      }
+      axios.post('/inventory/servers/test', payload)
+        .then((response) => {
+          this.notification(response.data.message, '#00b16a')
+        })
+        .catch((error) => {
+          if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+          else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+        })
+        .finally(() => this.loading = false)
     },
     getProgressColor(status) {
       if (status == 'IN PROGRESS') return '#ff9800'

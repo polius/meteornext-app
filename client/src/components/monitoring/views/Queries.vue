@@ -615,16 +615,16 @@ export default {
       this.showPassword = false
       this.serverDialog = true
       const payload = { server_id: server_id }
-      axios.get('/admin/inventory/servers', { params: payload })
+      axios.get('/inventory/servers', { params: payload })
         .then((response) => {
           // Build usage
           let usage = []
-          if (response.data.servers[0].usage.includes('D')) usage.push('Deployments')
-          if (response.data.servers[0].usage.includes('M')) usage.push('Monitoring')
-          if (response.data.servers[0].usage.includes('U')) usage.push('Utils')
-          if (response.data.servers[0].usage.includes('C')) usage.push('Client')
+          if (response.data.data[0].usage.includes('D')) usage.push('Deployments')
+          if (response.data.data[0].usage.includes('M')) usage.push('Monitoring')
+          if (response.data.data[0].usage.includes('U')) usage.push('Utils')
+          if (response.data.data[0].usage.includes('C')) usage.push('Client')
           // Add server
-          this.server = {...response.data.servers[0], usage: usage.join(', ')}
+          this.server = {...response.data.data[0], usage: usage.join(', ')}
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
@@ -637,10 +637,10 @@ export default {
       this.notification('Testing Server...', 'info')
       this.serverLoading = true
       const payload = {
-        region_id: this.server.region_id,
-        server: { engine: this.server.engine, hostname: this.server.hostname, port: this.server.port, username: this.server.username, password: this.server.password }
+        region: this.server.region_id,
+        server: this.server.id
       }
-      axios.post('/admin/inventory/servers/test', payload)
+      axios.post('/inventory/servers/test', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
         })
