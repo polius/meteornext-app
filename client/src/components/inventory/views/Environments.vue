@@ -283,19 +283,23 @@ export default {
     },
     cloneEnvironment() {
       this.mode = 'clone'
-      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
-      this.item.shared = (!this.owner) ? false : this.item.shared
-      delete this.item['id']
-      this.dialog_title = 'CLONE ENVIRONMENT'
-      this.dialog = true
-      setTimeout(this.updateSelected, 1)
+      this.$nextTick(() => {
+        this.item = JSON.parse(JSON.stringify(this.selected[0]))
+        this.item.shared = (!this.owner) ? false : this.item.shared
+        delete this.item['id']
+        this.dialog_title = 'CLONE ENVIRONMENT'
+        this.dialog = true
+        setTimeout(this.updateSelected, 1)
+      })
     },
     editEnvironment() {
       this.mode = 'edit'
-      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
-      this.dialog_title = 'EDIT ENVIRONMENT'
-      this.dialog = true
-      setTimeout(this.updateSelected, 1)
+      this.$nextTick(() => {
+        this.item = JSON.parse(JSON.stringify(this.selected[0]))
+        this.dialog_title = 'EDIT ENVIRONMENT'
+        this.dialog = true
+        setTimeout(this.updateSelected, 1)
+      })
     },
     updateSelected() {
       var treeviewSelected = []

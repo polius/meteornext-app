@@ -300,18 +300,22 @@ export default {
     },
     cloneAuxiliary() {
       this.mode = 'clone'
-      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
-      this.item.shared = (!this.owner) ? false : this.item.shared
-      this.versions = this.engines[this.item.engine]
-      this.dialog_title = 'CLONE AUXILIARY'
-      this.dialog = true
+      this.$nextTick(() => {
+        this.item = JSON.parse(JSON.stringify(this.selected[0]))
+        this.item.shared = (!this.owner) ? false : this.item.shared
+        this.versions = this.engines[this.item.engine]
+        this.dialog_title = 'CLONE AUXILIARY'
+        this.dialog = true
+      })
     },
     editAuxiliary() {
       this.mode = 'edit'
-      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
-      this.versions = this.engines[this.item.engine]
-      this.dialog_title = 'EDIT AUXILIARY'
-      this.dialog = true
+      this.$nextTick(() => {
+        this.item = JSON.parse(JSON.stringify(this.selected[0]))
+        this.versions = this.engines[this.item.engine]
+        this.dialog_title = 'EDIT AUXILIARY'
+        this.dialog = true
+      })
     },
     deleteAuxiliary() {
       this.mode = 'delete'

@@ -225,16 +225,20 @@ export default {
     },
     cloneRegion() {
       this.mode = 'clone'
-      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
-      this.item.shared = (!this.owner) ? false : this.item.shared
-      this.dialog_title = 'CLONE REGION'
-      this.dialog = true
+      this.$nextTick(() => {
+        this.item = JSON.parse(JSON.stringify(this.selected[0]))
+        this.item.shared = (!this.owner) ? false : this.item.shared
+        this.dialog_title = 'CLONE REGION'
+        this.dialog = true
+      })
     },
     editRegion() {
       this.mode = 'edit'
-      this.$nextTick(() => this.item = JSON.parse(JSON.stringify(this.selected[0])))
-      this.dialog_title = 'EDIT REGION'
-      this.dialog = true
+      this.$nextTick(() => {
+        this.item = JSON.parse(JSON.stringify(this.selected[0]))
+        this.dialog_title = 'EDIT REGION'
+        this.dialog = true
+      })
     },
     deleteRegion() {
       this.mode = 'delete'

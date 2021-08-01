@@ -102,7 +102,7 @@ class Servers:
     # Internal Methods #
     ####################
     def get(self, user):
-        servers = self._servers.get(user['id'], user['group_id'])
+        servers = self._servers.get(user['id'], user['group_id'], request.args['server_id']) if 'server_id' in request.args else self._servers.get(user['id'], user['group_id'])
         # Protect SSL Keys
         for server in servers:
             server['ssl_client_key'] = '<ssl_client_key>' if server['ssl_client_key'] is not None else None
