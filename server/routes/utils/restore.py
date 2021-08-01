@@ -351,6 +351,14 @@ class Restore:
         return { "id": scan[0]['id'], "status": scan[0]['status'], "progress": progress, "data": data, "error": error}
 
     def post_scan(self, user, data):
+        # Retrieve cloud details
+        if 'cloud_id' in data:
+            cloud = self._cloud.get(user_id=user['id'], group_id=user['group_id'], cloud_id=data['cloud_id'])
+            if len(cloud) == 0:
+                return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
+            data['access_key'] = cloud[0]['access_key']
+            data['secret_key'] = cloud[0]['secret_key']
+
         # Validate source + Retrieve filesize
         data['metadata'] = self._scan_app.metadata(data)
         
@@ -399,12 +407,11 @@ class Restore:
 
         # Stop the scan
         try:
+            self._scans.put_status(data['id'], 'STOPPED')
             self._scan_app.stop(scan['pid'])
         except Exception:
-            return jsonify({'message': 'The scan has already finished.'}), 400
-        else:
-            self._scans.put_status(data['id'], 'STOPPED')
-            return jsonify({'message': 'Scan successfully stopped.'}), 200
+            pass
+        return jsonify({'message': 'Scan successfully stopped.'}), 200
 
     def get_s3_buckets(self, user):
         # Get Cloud Key
@@ -448,10 +455,10 @@ class Restore:
             items = []
             # Build folders
             if 'CommonPrefixes' in response:
-                items += [{'name': i['Prefix'][len(request.args['prefix']) - len(request.args['search']):]} for i in response['CommonPrefixes']]
+                items += [{'key': i['Prefix'], 'name': i['Prefix'][len(request.args['prefix']) - len(request.args['search']):]} for i in response['CommonPrefixes']]
             # Build objects
             if 'Contents' in response:
-                items += [{'name': i['Key'][len(request.args['prefix']) - len(request.args['search']):], 'last_modified': i['LastModified'], 'size': i['Size'], 'storage_class': i['StorageClass']} for i in response['Contents'] if len(i['Key'][len(request.args['prefix']) - len(request.args['search']):]) > 0]
+                items += [{'key': i['Key'], 'name': i['Key'][len(request.args['prefix']) - len(request.args['search']):], 'last_modified': i['LastModified'], 'size': i['Size'], 'storage_class': i['StorageClass']} for i in response['Contents'] if len(i['Key'][len(request.args['prefix']) - len(request.args['search']):]) > 0]
             # Sort items
             items = sorted(items, key=lambda k: k['name'])
             return jsonify({'objects': items}), 200

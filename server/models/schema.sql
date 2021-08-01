@@ -519,6 +519,7 @@ CREATE TABLE `restore_scans` (
  `id` INT UNSIGNED AUTO_INCREMENT,
  `mode` ENUM('url','cloud') NOT NULL,
  `cloud_id` INT UNSIGNED NULL,
+ `bucket` TEXT NULL,
  `source` TEXT NOT NULL,
  `size` BIGINT UNSIGNED NOT NULL,
  `status` ENUM('IN PROGRESS','SUCCESS','FAILED','STOPPED') NOT NULL,
