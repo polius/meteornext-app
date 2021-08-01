@@ -34,7 +34,7 @@
                         </v-radio>
                       </v-radio-group>
                       <div v-if="mode == 'file'">
-                        <v-file-input v-model="fileObject" label="File" accept=".sql,.tar,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" hide-details></v-file-input>
+                        <v-file-input v-model="fileObject" label="File" show-size accept=".sql,.tar,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" hide-details></v-file-input>
                       </div>
                       <div v-else-if="mode == 'url'">
                         <v-text-field @keyup.enter="scanFile" :readonly="scanStatus == 'IN PROGRESS'" v-model="source" label="URL" :rules="[v => this.validURL(v) || '' ]" hide-details></v-text-field>
@@ -102,7 +102,7 @@
                               <v-data-table v-model="awsObjectsSelected" :headers="awsObjectsHeaders" :items="awsObjectsItems" :search="awsObjectsSearch" :loading="loading" loading-text="Loading... Please wait" item-key="name" single-select class="elevation-1">
                                 <template v-slot:item="{ item }">
                                   <tr :style="awsObjectsSelected.length > 0 && awsObjectsSelected[0].name == item.name ? 'background-color:#505050' : ''">
-                                    <td v-for="header in awsObjectsHeaders" :key="header.value" @click="awsObjectsClick(item)" style="cursor:pointer">
+                                    <td v-for="header in awsObjectsHeaders" :key="header.value" @click="awsObjectsClick(item)" :style="loading || (scanID != null && !(['SUCCESS','FAILED','STOPPED'].includes(scanStatus))) ? 'cursor:not-allowed' : 'cursor:pointer'">
                                       <span v-if="header.value == 'name'">
                                         <v-icon size="16" :color="item['name'].endsWith('/') ? '#e47911' : '#23cba7'" style="margin-right:10px; margin-bottom:2px">{{ item['name'].endsWith('/') ? 'fas fa-folder' : 'far fa-file'}}</v-icon>
                                         {{ item.name }}
@@ -122,11 +122,10 @@
                           </v-card>
                         </div>
                       </div>
-                      <!-- FILE SIZE -->
-                      <div v-if="size != null && mode != 'cloud'" class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       <!-- SCAN -->
                       <div v-if="scanID != null" style="margin-top:15px">
-                        <div class="subtitle-1 white--text" style="margin-bottom:10px; margin-bottom:15px">SCAN</div>
+                        <div v-if="mode == 'url'" class="text-body-1" style="color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
+                        <div class="subtitle-1 white--text" style="margin-top:10px; margin-bottom:10px">SCAN</div>
                         <div v-if="scanStatus == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px">fas fa-spinner</v-icon>Scanning source file. Please wait...</div>
                         <div v-else-if="scanStatus == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>Scan successfully completed.</div>
                         <div v-else-if="scanStatus == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while scanning the file.</div>
@@ -339,7 +338,7 @@ export default {
       scanProgress: null,
       scanItems: [],
       scanHeaders: [
-        { text: 'File', value: 'file',  width: '10%' },
+        { text: 'File', value: 'file',  width: '50%' },
         { text: 'Size', value: 'size' },
       ],
       scanSearch: '',
@@ -399,6 +398,7 @@ export default {
   },
   watch: {
     mode(val) {
+      this.clearScan()
       if (val == 'cloud') this.getCloud()
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
@@ -480,8 +480,9 @@ export default {
       this.getAWSObjects(false)
     },
     awsObjectsClick(item) {
+      if (this.loading || (this.scanID != null && !(['SUCCESS','FAILED','STOPPED'].includes(this.scanStatus)))) return
       this.clearScan()
-      this.awsObjectsSelected = this.awsObjectsSelected.length != 0 && this.awsObjectsSelected[0]['name'] == item.name ? [] : [item]
+      this.awsObjectsSelected = [item]
       if (item.name.endsWith('/')) this.getAWSObjects(false)
     },
     getServers() {
@@ -574,7 +575,7 @@ export default {
     nextStep() {
       if (this.stepper == 1 && !this.$refs.sourceForm.validate()) return
       else if (this.stepper == 2 && !this.$refs.destinationForm.validate()) return
-      if (this.stepper == 1 && ['url','cloud'].includes(this.mode) && this.size == null) this.scanFile()
+      if (this.stepper == 1 && ['url','cloud'].includes(this.mode)) this.scanFile()
       else this.stepper = this.stepper + 1
     },
     submitRestore() {
@@ -655,8 +656,10 @@ export default {
           this.loading = true
           this.getScan()
         }
-        else this.loading = false
-        if (this.mode == 'cloud' && this.scanID == null) this.stepper = this.stepper + 1
+        else {
+          this.loading = false
+          this.stepper = this.stepper + 1
+        }
       })
       .catch((error) => {
         this.loading = false
