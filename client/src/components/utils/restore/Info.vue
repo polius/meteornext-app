@@ -24,11 +24,11 @@
                 File
               </div>
               <div v-else-if="item.mode == 'url'">
-                <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#19b5fe" style="margin-right:5px; margin-bottom:2px">fas fa-cloud</v-icon>
+                <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#e47911" style="margin-right:5px; margin-bottom:2px">fas fa-link</v-icon>
                 URL
               </div>
               <div v-else-if="item.mode == 'cloud'">
-                <v-icon :title="`${item.source} (${formatBytes(item.size)})`" color="#e47911" style="font-size:22; margin-right:5px; margin-bottom:2px">fab fa-aws</v-icon>
+                <v-icon :title="`${item.source} (${formatBytes(item.size)})`" color="#19b5fe" style="font-size:22; margin-right:5px; margin-bottom:2px">fas fa-cloud</v-icon>
                 Cloud Key
               </div>
             </template>
@@ -54,16 +54,16 @@
           <v-card style="margin-top:10px; margin-left:1px">
             <v-card-text style="padding:15px">
               <div class="text-body-1 font-weight-regular">{{ `${information_items[0].source} (${formatBytes(information_items[0].size)})` }}</div>
-              <div v-if="information_items[0].selected != null" style="margin-top:15px">
+              <div v-if="selectedItems != null" style="margin-top:15px">
                 <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
                   <v-text-field v-model="selectedSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                 </v-toolbar>
-                <v-data-table readonly :headers="selectedHeaders" :items="information_items[0].selected" :search="selectedSearch" :hide-default-footer="information_items[0].selected.length < 11" loading-text="Loading... Please wait" item-key="file" class="elevation-1">
+                <v-data-table readonly :headers="selectedHeaders" :items="selectedItems" :search="selectedSearch" :hide-default-footer="selectedItems.length < 11" loading-text="Loading... Please wait" item-key="file" class="elevation-1">
                   <template v-slot:[`item.size`]="{ item }">
                     {{ formatBytes(item.size) }}
                   </template>
                 </v-data-table>
-                <div class="text-body-1" style="margin-top:20px">Total Size: <span class="white--text" style="font-weight:500">{{ formatBytes(information_items[0].selected.reduce((a, b) => a + b.size, 0)) }}</span></div>
+                <div class="text-body-1" style="margin-top:20px">Total Size: <span class="white--text" style="font-weight:500">{{ formatBytes(selectedItems.reduce((a, b) => a + b.size, 0)) }}</span></div>
               </div>
             </v-card-text>
           </v-card>
@@ -228,9 +228,10 @@ export default {
       
       // Selected
       selectedHeaders: [
-        { text: 'File', value: 'file',  width: '10%' },
+        { text: 'File', value: 'file',  width: '50%' },
         { text: 'Size', value: 'size' },
       ],
+      selectedItems: [],
       selectedSearch: '',
 
       // Progress
@@ -259,7 +260,8 @@ export default {
     getRestore() {
       axios.get('/utils/restore', { params: { id: this.$route.params.id } })
         .then((response) => {
-          this.information_items = [response.data.restore].map(x => ({...x, selected: x.selected != null ? JSON.parse(x.selected) : null, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
+          this.information_items = [response.data.restore].map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
+          this.selectedItems = this.information_items[0]['selected']
           this.parseProgress(this.information_items[0]['progress'])
           if (this.information_items[0]['status'] == 'IN PROGRESS') {
             clearTimeout(this.timer)
@@ -267,6 +269,7 @@ export default {
           }
         })
         .catch((error) => {
+          console.log(error)
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })

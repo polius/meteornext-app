@@ -28,7 +28,7 @@ class Scan:
     def metadata(self, item):
         if item['mode'] == 'url':
             p = subprocess.run(f"curl -sSLI '{item['source']}' | grep -E 'Content-Length:|Content-Disposition:' | sort -r -k1 | awk '{{print $2}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if len(p.stdout) == 0: #or int(p.stdout.split('\n')[0]) == 0:
+            if len(p.stdout) == 0:
                 raise Exception("This URL is not valid")
             raw = [i for i in p.stdout.split('\n') if len(i) > 0]
             if len(raw) == 2:

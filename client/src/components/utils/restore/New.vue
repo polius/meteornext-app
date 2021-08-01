@@ -227,17 +227,20 @@
                       <v-radio-group v-model="mode" readonly style="margin-top:10px; margin-bottom:15px" hide-details>
                         <v-radio value="file">
                           <template v-slot:label>
-                            <div>File</div>
+                            <v-icon small color="#23cba7" style="margin-left:7px; margin-right:15px">fas fa-file</v-icon>
+                            File
                           </template>
                         </v-radio>
                         <v-radio value="url">
                           <template v-slot:label>
-                            <div>URL</div>
+                            <v-icon small color="#e47911" style="margin-left:6px; margin-right:12px">fas fa-link</v-icon>
+                            URL
                           </template>
                         </v-radio>
                         <v-radio value="cloud">
                           <template v-slot:label>
-                            <div>Cloud Key</div>
+                            <v-icon color="#19b5fe" style="font-size:18px; margin-left:3px; margin-right:8px">fas fa-cloud</v-icon>
+                            Cloud Key
                           </template>
                         </v-radio>
                       </v-radio-group>
@@ -845,7 +848,7 @@ export default {
       const payload = {
         mode: this.mode,
         source: this.source,
-        selected: this.scanSelected.map(x => x.file),
+        selected: this.scanSelected,
         server: this.server,
         database: this.database
       }
