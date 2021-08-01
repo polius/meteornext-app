@@ -36,8 +36,8 @@ class Restore:
         error_path = os.path.join(base_path, item['uri'], 'error.txt')
         status = 'SUCCESS'
         if os.path.exists(error_path):
-            with open(error_path, 'r') as f:
-                if len(f.read().strip()) > 0:
+            with open(error_path, 'rb') as f:
+                if len(f.read().decode('utf-8','ignore').strip()) > 0:
                     status = 'FAILED'
         query = """
             UPDATE `restore`
@@ -68,25 +68,28 @@ class Restore:
         error_path = os.path.join(base_path, item['uri'], 'error.txt')
         progress_path = os.path.join(base_path, item['uri'], 'progress.txt')
 
-        # Generate presigned-url for cloud mde
+        # Check compressed file
+        gunzip = ''
+        if item['source'].endswith('.tar'):
+            gunzip = f"| tar xO {item['selected']} 2> {error_path}"
+        elif item['source'].endswith('.tar.gz'):
+            gunzip = f"| tar zxO {item['selected']} 2> {error_path}"
+        elif item['source'].endswith('.gz'):
+            gunzip = f"| gunzip -c 2> {error_path}"
+
+        # Generate presigned-url for cloud mode
         if item['mode'] == 'cloud':
             client = boto3.client('s3', aws_access_key_id=item['access_key'], aws_secret_access_key=item['secret_key'])
             item['source'] = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': item['bucket'], 'Key': item['source']}, ExpiresIn=60)
 
-        # Start restore
+        # MySQL & Aurora MySQL engines
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
-            gunzip = ''
-            if item['source'].endswith('.tar'):
-                gunzip = f"| tar xO {item['selected']} 2> {error_path}"
-            elif item['source'].endswith('.tar.gz'):
-                gunzip = f"| tar zxO {item['selected']} 2> {error_path}"
-            elif item['source'].endswith('.gz'):
-                gunzip = f"| gunzip -c 2> {error_path}"
             if item['mode'] == 'file':
                 command = f"export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {os.path.join(base_path, item['uri'], item['source'])} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
             elif item['mode'] in ['url','cloud']:
                 command = f"export MYSQL_PWD={server['password']}; curl -sSL '{item['source']}' 2> {error_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
 
+        # Start Import process
         p = subprocess.Popen(command, shell=True)
 
         # Add PID & started to the restore
@@ -118,8 +121,8 @@ class Restore:
 
         error = None
         if os.path.exists(error_path):
-            with open(error_path, 'r') as f:
-                error = self.__parse_error(f.read())
+            with open(error_path, 'rb') as f:
+                error = self.__parse_error(f.read().decode('utf-8','ignore'))
 
         # Update restore with progress file
         query = """

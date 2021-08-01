@@ -1,3 +1,5 @@
+from datetime import datetime
+
 class Restore:
     def __init__(self, sql):
         self._sql = sql
@@ -50,8 +52,12 @@ class Restore:
     def update_status(self, user, restore_id, status):
         query = """
             UPDATE restore
-            SET status = %s
-            WHERE user_id = %s
-            AND id = %s
+            SET `status` = %s,
+                `ended` = %s
+            WHERE `user_id` = %s
+            AND `id` = %s
         """
-        return self._sql.execute(query, (status, user['id'], restore_id))
+        return self._sql.execute(query, (status, self.__utcnow(), user['id'], restore_id))
+
+    def __utcnow(self):
+        return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")

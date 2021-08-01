@@ -220,7 +220,8 @@ class Restore:
         restore = restore[0]
 
         # Parse selected
-        restore['selected'] = [{'file': i.split('|')[0], 'size': int(i.split('|')[1])} for i in restore['selected'].split('\n')]
+        if restore['selected']:
+            restore['selected'] = [{'file': i.split('|')[0], 'size': int(i.split('|')[1])} for i in restore['selected'].split('\n')]
 
         # Check restore authority
         if restore['user_id'] != user['id'] and not user['admin']:
@@ -283,7 +284,7 @@ class Restore:
             'cloud_id': data['cloud_id'] if 'cloud_id' in data else None,
             'bucket': data['bucket'] if 'bucket' in data else None,
             'source': source,
-            'selected': selected,
+            'selected': None if len(selected) == 0 else selected,
             'size': size,
             'server_id': data['server'],
             'database': data['database'],
@@ -333,11 +334,11 @@ class Restore:
 
         # Stop the execution
         try:
-            os.kill(restore['pid'], signal.SIGINT)
             self._restore.update_status(user, data['id'], 'STOPPED')
-            return jsonify({'message': 'The execution has successfully stopped.'}), 200
+            os.kill(restore['pid'], signal.SIGINT)
         except Exception:
-            return jsonify({'message': 'The execution has already finished.'}), 400
+            pass
+        return jsonify({'message': 'Execution successfully stopped.'}), 200
 
     def get_scan(self, user, id):
         scan = self._scans.get(user_id=user['id'], scan_id=id)
