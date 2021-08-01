@@ -16,7 +16,7 @@
                   <v-card-text>
                     <v-form ref="sourceForm" @submit.prevent>
                       <div class="text-body-1">Choose a restoring method:</div>
-                      <v-radio-group v-model="mode" style="margin-top:10px; margin-bottom:15px" hide-details>
+                      <v-radio-group :readonly="loading || (scanID != null && !(['SUCCESS','FAILED','STOPPED'].includes(scanStatus)))" v-model="mode" style="margin-top:10px; margin-bottom:15px" hide-details>
                         <v-radio value="file">
                           <template v-slot:label>
                             <div>File</div>
@@ -205,7 +205,7 @@
                         <v-btn text @click="stepper = 1" style="margin-left:5px">CANCEL</v-btn>
                       </v-col>
                       <v-col cols="auto">
-                        <v-btn :disabled="server.length == 0" text>SERVER DETAILS</v-btn>
+                        <v-btn :disabled="server != null && server.length > 0" text>SERVER DETAILS</v-btn>
                       </v-col>
                     </v-row>
                   </v-card-text>
@@ -220,7 +220,7 @@
                     </v-toolbar>
                     <v-card-text>
                       <div class="subtitle-1 white--text">METHOD</div>
-                      <v-radio-group v-model="mode" readonly style="margin-top:10px; margin-bottom:20px" hide-details>
+                      <v-radio-group v-model="mode" readonly style="margin-top:10px; margin-bottom:15px" hide-details>
                         <v-radio value="file">
                           <template v-slot:label>
                             <div>File</div>
@@ -233,17 +233,63 @@
                         </v-radio>
                         <v-radio value="cloud">
                           <template v-slot:label>
-                            <div>Amazon S3</div>
+                            <div>Cloud Key</div>
                           </template>
                         </v-radio>
                       </v-radio-group>
-                      <v-text-field readonly v-model="source" :label="mode == 'file' ? 'File' : mode == 'url' ? 'URL' : 'Amazon S3'" style="padding-top:8px" hide-details></v-text-field>
-                      <div class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
+                      <div v-if="['file','url'].includes(mode)">
+                        <v-text-field readonly v-model="source" :label="mode == 'file' ? 'File' : mode == 'url' ? 'URL' : 'Amazon S3'" style="padding-top:8px" hide-details></v-text-field>
+                        <div class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
+                      </div>
+                      <div v-else-if="mode == 'cloud'">
+                        <div class="subtitle-1 white--text" style="margin-bottom:15px">CLOUD KEY</div>
+                        <v-data-table :headers="cloudKeysHeaders" :items="cloudKeysSelected" item-key="id" hide-default-footer class="elevation-1">
+                          <template v-slot:item="{ item }">
+                            <tr>
+                              <td v-for="header in cloudKeysHeaders" :key="header.value">
+                                <div v-if="header.value == 'type'">
+                                  <v-icon v-if="item.type == 'aws'" size="22" color="#e47911" title="Amazon Web Services">fab fa-aws</v-icon>
+                                  <v-icon v-else-if="item.type == 'google'" size="20" color="#4285F4" title="Google Cloud" style="margin-left:4px">fab fa-google</v-icon>
+                                </div>
+                                <div v-else-if="header.value == 'shared'">
+                                  <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px">fas fa-user</v-icon>
+                                  <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px">fas fa-users</v-icon>
+                                  {{ !item.shared ? 'Personal' : 'Shared' }}
+                                </div>
+                                <div v-else>
+                                  {{ item[header.value] }}
+                                </div>
+                              </td>
+                            </tr>
+                          </template>
+                        </v-data-table>
+                        <div class="subtitle-1 white--text" style="margin-top:15px; margin-bottom:15px">OBJECT</div>
+                        <v-data-table :headers="awsObjectsHeaders" :items="awsObjectsSelected" item-key="name" hide-default-footer class="elevation-1">
+                          <template v-slot:item="{ item }">
+                            <tr>
+                              <td v-for="header in awsObjectsHeaders" :key="header.value">
+                                <span v-if="header.value == 'name'">
+                                  <v-icon size="16" :color="item['name'].endsWith('/') ? '#e47911' : '#23cba7'" style="margin-right:10px; margin-bottom:2px">{{ item['name'].endsWith('/') ? 'fas fa-folder' : 'far fa-file'}}</v-icon>
+                                  {{ item.name }}
+                                </span>
+                                <span v-else-if="header.value == 'type'">
+                                  {{ item['name'].endsWith('/') ? 'Folder' : item['name'].indexOf('.') == '-1' ? '-' : item['name'].substring(item['name'].lastIndexOf(".") + 1) }}
+                                </span>
+                                <span v-else-if="header.value == 'size'">
+                                  {{ formatBytes(item.size) }}
+                                </span>
+                                <span v-else>{{ item[header.value] }}</span>
+                              </td>
+                            </tr>
+                          </template>
+                        </v-data-table>
+                      </div>
                       <div v-if="scanItems.length > 0" style="margin-top:15px">
+                        <div class="subtitle-1 white--text">SCAN</div>
                         <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
                           <v-text-field v-model="scanSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
                         </v-toolbar>
-                        <v-data-table readonly :headers="scanHeaders" :items="scanSelected" :search="scanSearch" :hide-default-footer="scanItems.length < 11" :loading="loading" loading-text="Loading... Please wait" item-key="file" class="elevation-1" style="margin-top:15px;">
+                        <v-data-table readonly :headers="scanHeaders" :items="scanSelected" :search="scanSearch" :hide-default-footer="scanItems.length < 11" item-key="file" class="elevation-1">
                           <template v-slot:[`item.size`]="{ item }">
                             {{ formatBytes(item.size) }}
                           </template>
@@ -575,7 +621,7 @@ export default {
     nextStep() {
       if (this.stepper == 1 && !this.$refs.sourceForm.validate()) return
       else if (this.stepper == 2 && !this.$refs.destinationForm.validate()) return
-      if (this.stepper == 1 && ['url','cloud'].includes(this.mode)) this.scanFile()
+      if (this.stepper == 1 && ['url','cloud'].includes(this.mode) && this.scanID == null) this.scanFile()
       else this.stepper = this.stepper + 1
     },
     submitRestore() {
