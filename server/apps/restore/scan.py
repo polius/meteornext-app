@@ -9,8 +9,6 @@ import subprocess
 import threading
 from datetime import datetime
 
-import apps.aws.api_sign
-
 class Scan:
     def __init__(self, sql):
         self._sql = sql
@@ -29,10 +27,13 @@ class Scan:
 
     def metadata(self, item):
         if item['mode'] == 'url':
-            p = subprocess.run(f"curl -sSLI '{item['source']}' | grep -E 'Content-Length:' | sort -k1 | awk '{{print $2}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            if len(p.stdout) == 0 or int(p.stdout.split('\n')[0]) == 0:
+            p = subprocess.run(f"curl -sSLI '{item['source']}' | grep -E 'Content-Length:|Content-Disposition:' | sort -r -k1 | awk '{{print $2}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if len(p.stdout) == 0: #or int(p.stdout.split('\n')[0]) == 0:
                 raise Exception("This URL is not valid")
-            return { 'size': int(p.stdout.split('\n')[0]) }
+            raw = [i for i in p.stdout.split('\n') if len(i) > 0]
+            if len(raw) == 2:
+                return { 'size': int(raw[0]), 'disposition': raw[1].replace('"','') }
+            return { 'size': int(raw[0]) }
 
         elif item['mode'] == 'cloud':
             client = boto3.client('s3', aws_access_key_id=item['access_key'], aws_secret_access_key=item['secret_key'])
@@ -67,7 +68,7 @@ class Scan:
         self._sql.execute(query, args=(status, self.__utcnow(), item['id']))
 
         # Remove execution folder from disk
-        # shutil.rmtree(os.path.join(base_path, item['uri']))
+        shutil.rmtree(os.path.join(base_path, item['uri']))
 
     def __scan(self, item, base_path):
         # Build 'progress_path' & 'error_path'
@@ -76,18 +77,27 @@ class Scan:
         data_path = os.path.join(base_path, item['uri'], 'data.txt')
         size = item['metadata']['size']
 
-        # Start scan
-        if item['source'].endswith('.tar'):
-            tar = f'tar tv 2> {error_path}'
-        elif item['source'].endswith('.tar.gz'):
-            tar = f'tar ztv 2> {error_path}'
-        elif item['source'].endswith('.tar.bz2'):
-            tar = f'tar jtv 2> {error_path}'
+        # Build sources
+        sources = [item['source']]
+        if 'disposition' in item['metadata']:
+            sources.append(item['metadata']['disposition'])
+
+        # Check sources file type
+        for i in sources:
+            if i.endswith('.tar'):
+                tar = f'tar tv 2> {error_path}'
+                break
+            elif i.endswith('.tar.gz'):
+                tar = f'tar ztv 2> {error_path}'
+                break
+            elif i.endswith('.tar.bz2'):
+                tar = f'tar jtv 2> {error_path}'
+                break
 
         # Generate presigned-url for cloud mde
         if item['mode'] == 'cloud':
-            apisign = apps.aws.api_sign.ApiSign(item['access_key'], item['secret_key'], item['region'], 1800)
-            url = apisign.get_s3_object(item['bucket'], item['source'])
+            client = boto3.client('s3', aws_access_key_id=item['access_key'], aws_secret_access_key=item['secret_key'])
+            url = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': item['bucket'], 'Key': item['source']}, ExpiresIn=60)
 
         # Execute Scan
         command = f"curl -sSL '{item['source'] if item['mode'] == 'url' else url}' 2> {error_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | {tar} | awk '{{ print $6\"|\"$3; fflush() }}' > {data_path}"

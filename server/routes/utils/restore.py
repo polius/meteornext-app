@@ -343,7 +343,7 @@ class Restore:
         # Parse data
         data = scan[0]['data']
         if data:
-            data = [{'file': i.split('|')[0][i.split('|')[0].find('/')+1:], 'size': int(i.split('|')[1])} for i in data.split('\n')]
+            data = [{'file': i.split('|')[0][i.split('|')[0].find('/')+1:], 'size': int(i.split('|')[1])} for i in data.split('\n') if len(i.split('|')[0][i.split('|')[0].find('/')+1:]) > 0]
 
         # Parse error
         error = scan[0]['error']
@@ -361,9 +361,13 @@ class Restore:
 
         # Validate source + Retrieve filesize
         data['metadata'] = self._scan_app.metadata(data)
+        print(data['metadata'])
         
         # Detect if the file is not compressed
-        if not data['source'].endswith(('.tar','.tar.gz','tar.bz2')):
+        compress_formats = ('.tar','.tar.gz','tar.bz2')
+        if not data['source'].endswith(compress_formats) and \
+            ('disposition' not in data['metadata'] or \
+           ('disposition' in data['metadata'] and not data['metadata']['disposition'].endswith(compress_formats))):
             return {'size': data['metadata']['size']}
 
         # - START SCAN - #
