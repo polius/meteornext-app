@@ -123,7 +123,7 @@
                         </div>
                       </div>
                       <!-- FILE SIZE -->
-                      <div v-if="size != null" class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
+                      <div v-if="size != null && mode != 'cloud'" class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       <!-- SCAN -->
                       <div v-if="scanID != null" style="margin-top:15px">
                         <div class="subtitle-1 white--text" style="margin-bottom:10px; margin-bottom:15px">SCAN</div>
@@ -441,6 +441,7 @@ export default {
   methods: {
     cloudPathClick (item, index) {
       if (index == this.cloudPath.length - 1) return
+      this.size = null
       // Cloud Keys
       if (index == 0) {
         this.cloudPath = ['Cloud Keys']
@@ -524,6 +525,7 @@ export default {
     },
     getAWSObjects(search) {
       // Test Connection
+      this.size = null
       this.loading = true
       const payload = { 
         key: this.cloudKeysSelected[0]['id'],
@@ -569,7 +571,7 @@ export default {
     nextStep() {
       if (this.stepper == 1 && !this.$refs.sourceForm.validate()) return
       else if (this.stepper == 2 && !this.$refs.destinationForm.validate()) return
-      if (this.stepper == 1 && this.mode == 'url' && this.size == null) this.scanFile()
+      if (this.stepper == 1 && ['url','cloud'].includes(this.mode) && this.size == null) this.scanFile()
       else this.stepper = this.stepper + 1
     },
     submitRestore() {
@@ -631,10 +633,16 @@ export default {
     },
     scanFile() {
       this.loading = true
-      const payload = { 
-        mode: this.mode,
-        cloud_id: this.cloudKeysSelected.length != 0 ? this.cloudKeysSelected[0]['id'] : null,
-        source: this.source
+      let payload = { mode: this.mode }
+      if (this.mode == 'url') payload['source'] = this.source
+      else if (this.mode == 'cloud') {
+        payload = {
+          ...payload,
+          source: this.awsObjectsSelected[0]['key'],
+          cloud_id: this.cloudKeysSelected[0]['id'],
+          bucket: this.cloudPath[2],
+          region: this.awsBucketsSelected[0]['region']
+        }
       }
       axios.post('/utils/restore/scan', payload)
       .then((response) => {
@@ -645,6 +653,7 @@ export default {
           this.getScan()
         }
         else this.loading = false
+        if (this.mode == 'cloud' && this.scanID == null) this.stepper = this.stepper + 1
       })
       .catch((error) => {
         this.loading = false
@@ -666,6 +675,7 @@ export default {
         }
       })
       .catch((error) => {
+        console.log(error)
         if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
         else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
       })

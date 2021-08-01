@@ -4,9 +4,12 @@ import time
 import shutil
 import signal
 import psutil
+import boto3
 import subprocess
 import threading
 from datetime import datetime
+
+import apps.aws.api_sign
 
 class Scan:
     def __init__(self, sql):
@@ -25,12 +28,17 @@ class Scan:
             process.send_signal(signal.SIGKILL)
 
     def metadata(self, item):
-        # Get File Metadata
-        p = subprocess.run(f"curl -sSLI '{item['source']}' | grep -E 'Content-Length:' | sort -k1 | awk '{{print $2}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if len(p.stdout) == 0 or int(p.stdout.split('\n')[0]) == 0:
-            raise Exception("This URL is not valid")
-        return { 'size': int(p.stdout.split('\n')[0]) }
-        
+        if item['mode'] == 'url':
+            p = subprocess.run(f"curl -sSLI '{item['source']}' | grep -E 'Content-Length:' | sort -k1 | awk '{{print $2}}'", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if len(p.stdout) == 0 or int(p.stdout.split('\n')[0]) == 0:
+                raise Exception("This URL is not valid")
+            return { 'size': int(p.stdout.split('\n')[0]) }
+
+        elif item['mode'] == 'cloud':
+            client = boto3.client('s3', aws_access_key_id=item['access_key'], aws_secret_access_key=item['secret_key'])
+            response = client.head_object(Bucket=item['bucket'], Key=item['source'])
+            return { 'size': int(response['ContentLength']) }
+
     def __core(self, item, base_path):
         # Start Import
         t = threading.Thread(target=self.__scan, args=(item, base_path,))
@@ -59,7 +67,7 @@ class Scan:
         self._sql.execute(query, args=(status, self.__utcnow(), item['id']))
 
         # Remove execution folder from disk
-        shutil.rmtree(os.path.join(base_path, item['uri']))
+        # shutil.rmtree(os.path.join(base_path, item['uri']))
 
     def __scan(self, item, base_path):
         # Build 'progress_path' & 'error_path'
@@ -76,11 +84,13 @@ class Scan:
         elif item['source'].endswith('.tar.bz2'):
             tar = f'tar jtv 2> {error_path}'
 
-        if item['mode'] == 'url':
-            command = f"curl -sSL '{item['source']}' 2> {error_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | {tar} | awk '{{ print $6\"|\"$3; fflush() }}' > {data_path}"
-        elif item['mode'] == 's3':
-            pass
+        # Generate presigned-url for cloud mde
+        if item['mode'] == 'cloud':
+            apisign = apps.aws.api_sign.ApiSign(item['access_key'], item['secret_key'], item['region'], 1800)
+            url = apisign.get_s3_object(item['bucket'], item['source'])
 
+        # Execute Scan
+        command = f"curl -sSL '{item['source'] if item['mode'] == 'url' else url}' 2> {error_path} | pv -f --size {size} -F '%p|%b|%r|%t|%e' 2> {progress_path} | {tar} | awk '{{ print $6\"|\"$3; fflush() }}' > {data_path}"
         p = subprocess.Popen(command, shell=True, stderr=subprocess.DEVNULL)
 
         # Add PID & started to the restore
@@ -95,7 +105,8 @@ class Scan:
         self._sql.execute(query, args=(p.pid, now, item['id']))
 
         # Wait import to finish
-        p.wait()
+        if item['mode'] == 'url':
+            p.wait()
 
     def __monitor(self, item, base_path):
         # Init path vars
@@ -106,8 +117,7 @@ class Scan:
         # Read progress log
         progress = None
         if os.path.exists(progress_path):
-            # p = subprocess.run(f"tr '\r' '\n' < '{progress_path}' | xargs | tail -1", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            p = subprocess.run(f"tr '\r' '\n' < '{progress_path}' | tail -1", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            p = subprocess.run(f"tr '\r' '\n' < '{progress_path}' | sed '/^$/d' | tail -1", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             progress = self.__parse_progress(p.stdout) if len(p.stdout) > 0 else None
 
         # Read error log
