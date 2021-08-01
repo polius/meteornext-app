@@ -37,7 +37,7 @@
                         <v-file-input v-model="fileObject" label="File" accept=".sql,.tar,.gz" :rules="[v => !!v || '']" prepend-icon truncate-length="1000" hide-details></v-file-input>
                       </div>
                       <div v-else-if="mode == 'url'">
-                        <v-text-field @keyup.enter="scanFile" v-model="source" label="URL" :rules="[v => this.validURL(v) || '' ]" hide-details></v-text-field>
+                        <v-text-field @keyup.enter="scanFile" :readonly="scanStatus == 'IN PROGRESS'" v-model="source" label="URL" :rules="[v => this.validURL(v) || '' ]" hide-details></v-text-field>
                       </div>
                       <div v-else-if="mode == 'cloud'">
                         <!-- CLOUD KEYS -->
@@ -429,6 +429,11 @@ export default {
       this.size = val.size 
     },
     source() {
+      this.clearScan()
+    },
+  },
+  methods: {
+    clearScan() {
       this.size = null
       this.scanID = null
       this.scanSearch = ''
@@ -437,11 +442,9 @@ export default {
       this.scanProgress = null
       this.scanError = null
     },
-  },
-  methods: {
     cloudPathClick (item, index) {
       if (index == this.cloudPath.length - 1) return
-      this.size = null
+      this.clearScan()
       // Cloud Keys
       if (index == 0) {
         this.cloudPath = ['Cloud Keys']
@@ -477,6 +480,7 @@ export default {
       this.getAWSObjects(false)
     },
     awsObjectsClick(item) {
+      this.clearScan()
       this.awsObjectsSelected = this.awsObjectsSelected.length != 0 && this.awsObjectsSelected[0]['name'] == item.name ? [] : [item]
       if (item.name.endsWith('/')) this.getAWSObjects(false)
     },
@@ -525,7 +529,6 @@ export default {
     },
     getAWSObjects(search) {
       // Test Connection
-      this.size = null
       this.loading = true
       const payload = { 
         key: this.cloudKeysSelected[0]['id'],
