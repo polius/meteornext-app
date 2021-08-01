@@ -261,17 +261,27 @@ class Restore:
             selected = None
 
         elif data['mode'] == 'url':
-            # Validate source + Retrieve filesize
             source = data['source']
             size = self._scan_app.metadata(data)['size']
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
 
         elif data['mode'] == 'cloud':
-            pass
+            # Retrieve cloud details
+            cloud = self._cloud.get(user_id=user['id'], group_id=user['group_id'], cloud_id=data['cloud_id'])
+            if len(cloud) == 0:
+                return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
+            data['access_key'] = cloud[0]['access_key']
+            data['secret_key'] = cloud[0]['secret_key']
+            # Init values
+            source = data['source']
+            size = self._scan_app.metadata(data)['size']
+            selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
 
         # Insert new restore to DB
         item = {
             'mode': data['mode'],
+            'cloud_id': data['cloud_id'] if 'cloud_id' in data else None,
+            'bucket': data['bucket'] if 'bucket' in data else None,
             'source': source,
             'selected': selected,
             'size': size,
@@ -283,6 +293,11 @@ class Restore:
 
         # Parse selected for import process
         item['selected'] = ' '.join([i['file'] for i in data['selected']]) if selected else ''
+
+        # Add Cloud credentials to item
+        if item['mode'] == 'cloud':
+            item['access_key'] = cloud[0]['access_key']
+            item['secret_key'] = cloud[0]['secret_key']
 
         # Start import process
         self._restore_app.start(user, item, server, base_path)
