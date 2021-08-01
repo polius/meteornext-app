@@ -273,6 +273,9 @@ class Restore:
                 return jsonify({'message': 'The selected file(s) do not match with the provided url.'}), 400
             selected = json.dumps(selected)
 
+        elif data['mode'] == 'cloud':
+            pass
+
         # Insert new restore to DB
         item = {
             'mode': data['mode'],
