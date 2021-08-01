@@ -27,9 +27,9 @@
                 <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#19b5fe" style="margin-right:5px; margin-bottom:2px">fas fa-cloud</v-icon>
                 URL
               </div>
-              <div v-else-if="item.mode == 's3'">
+              <div v-else-if="item.mode == 'cloud'">
                 <v-icon :title="`${item.source} (${formatBytes(item.size)})`" color="#e47911" style="font-size:22; margin-right:5px; margin-bottom:2px">fab fa-aws</v-icon>
-                Amazon S3
+                Cloud Key
               </div>
             </template>
             <template v-slot:[`item.server`]="{ item }">
