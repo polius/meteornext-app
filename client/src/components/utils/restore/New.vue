@@ -712,6 +712,7 @@ export default {
     submitRestore() {
       if (this.mode == 'file') this.checkFileRestore()
       else if (this.mode == 'url') this.submitURLRestore()
+      else if (this.mode == 'cloud') this.submitCloudRestore()
     },
     checkFileRestore() {
       this.progress = 0
@@ -848,6 +849,28 @@ export default {
       const payload = {
         mode: this.mode,
         source: this.source,
+        selected: this.scanSelected,
+        server: this.server,
+        database: this.database
+      }
+      axios.post('/utils/restore', payload)
+      .then((response) => {
+        this.$router.push('/utils/restore/' + response.data.id)
+      })
+      .catch((error) => {
+        if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
+        else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
+      })
+      .finally(() => this.loading = false)
+    },
+    submitCloudRestore() {
+      this.loading = true
+      const payload = {
+        mode: this.mode,
+        source: this.awsObjectsSelected[0]['key'],
+        cloud_id: this.cloudKeysSelected[0]['id'],
+        bucket: this.cloudPath[2],
+        region: this.awsBucketsSelected[0]['region'],
         selected: this.scanSelected,
         server: this.server,
         database: this.database
