@@ -219,13 +219,13 @@ class Restore:
             return jsonify({'message': 'This restore does not exist'}), 400
         restore = restore[0]
 
-        # Parse selected
-        if restore['selected']:
-            restore['selected'] = [{'file': i.split('|')[0], 'size': int(i.split('|')[1])} for i in restore['selected'].split('\n')]
-
         # Check restore authority
         if restore['user_id'] != user['id'] and not user['admin']:
             return jsonify({'message': 'Insufficient Privileges'}), 400
+
+        # Parse selected
+        if restore['selected']:
+            restore['selected'] = [{'file': i.split('|')[0], 'size': int(i.split('|')[1])} for i in restore['selected'].split('\n')]
 
         # Return data
         return jsonify({'restore': restore}), 200
@@ -268,7 +268,7 @@ class Restore:
 
         elif data['mode'] == 'cloud':
             # Retrieve cloud details
-            cloud = self._cloud.get(user_id=user['id'], group_id=user['group_id'], cloud_id=data['cloud_id'])
+            cloud = self._cloud.get(user_id=user['id'], group_id=user['group_id'], cloud_id=data['cloud']['id'])
             if len(cloud) == 0:
                 return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
             data['access_key'] = cloud[0]['access_key']
@@ -277,13 +277,12 @@ class Restore:
             source = data['source']
             size = self._scan_app.metadata(data)['size']
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
-            details = ''
+            details = {"cloud":  data['cloud'], "bucket": data['bucket'],  "object": data['object']}
 
         # Insert new restore to DB
         item = {
             'mode': data['mode'],
-            'cloud_id': data['cloud_id'] if 'cloud_id' in data else None,
-            'bucket': data['bucket'] if 'bucket' in data else None,
+            'details': json.dumps(details) if 'cloud' in data else None,
             'source': source,
             'selected': None if len(selected) == 0 else selected,
             'size': size,
@@ -300,6 +299,7 @@ class Restore:
         if item['mode'] == 'cloud':
             item['access_key'] = cloud[0]['access_key']
             item['secret_key'] = cloud[0]['secret_key']
+            item['bucket'] = data['bucket']
 
         # Start import process
         self._restore_app.start(user, item, server, base_path)

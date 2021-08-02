@@ -53,8 +53,53 @@
           <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">SOURCE</div>
           <v-card style="margin-top:10px; margin-left:1px">
             <v-card-text style="padding:15px">
-              <div class="text-body-1 font-weight-regular">{{ `${information_items[0].source} (${formatBytes(information_items[0].size)})` }}</div>
-              <div v-if="selectedItems != null" style="margin-top:15px">
+              <div v-if="['file','url'].includes(information_items[0]['mode'])" class="text-body-1 font-weight-regular">{{ `${information_items[0].source} (${formatBytes(information_items[0].size)})` }}</div>
+              <div v-else>
+                <div class="subtitle-1 white--text" style="margin-bottom:15px">CLOUD KEY</div>
+                <v-data-table :headers="cloudKeysHeaders" :items="cloudKeysItems" item-key="id" hide-default-footer class="elevation-1">
+                  <template v-slot:item="{ item }">
+                    <tr>
+                      <td v-for="header in cloudKeysHeaders" :key="header.value">
+                        <div v-if="header.value == 'type'">
+                          <v-icon v-if="item.type == 'aws'" size="22" color="#e47911" title="Amazon Web Services">fab fa-aws</v-icon>
+                          <v-icon v-else-if="item.type == 'google'" size="20" color="#4285F4" title="Google Cloud" style="margin-left:4px">fab fa-google</v-icon>
+                        </div>
+                        <div v-else-if="header.value == 'shared'">
+                          <v-icon v-if="!item.shared" small title="Personal" color="warning" style="margin-right:6px; margin-bottom:2px">fas fa-user</v-icon>
+                          <v-icon v-else small title="Shared" color="#EB5F5D" style="margin-right:6px; margin-bottom:2px">fas fa-users</v-icon>
+                          {{ !item.shared ? 'Personal' : 'Shared' }}
+                        </div>
+                        <div v-else>
+                          {{ item[header.value] }}
+                        </div>
+                      </td>
+                    </tr>
+                  </template>
+                </v-data-table>
+                <div class="subtitle-1 white--text" style="margin-top:15px; margin-bottom:15px">OBJECT</div>
+                <div class="text-body-1" style="margin-bottom:15px">{{ bucket + '/' + awsObjectsItems[0]['key'] }}</div>
+                <v-data-table :headers="awsObjectsHeaders" :items="awsObjectsItems" item-key="name" hide-default-footer class="elevation-1">
+                  <template v-slot:item="{ item }">
+                    <tr>
+                      <td v-for="header in awsObjectsHeaders" :key="header.value">
+                        <span v-if="header.value == 'name'">
+                          <v-icon size="16" :color="item['name'].endsWith('/') ? '#e47911' : '#23cba7'" style="margin-right:10px; margin-bottom:2px">{{ item['name'].endsWith('/') ? 'fas fa-folder' : 'far fa-file'}}</v-icon>
+                          {{ item.name }}
+                        </span>
+                        <span v-else-if="header.value == 'type'">
+                          {{ item['name'].endsWith('/') ? 'Folder' : item['name'].indexOf('.') == '-1' ? '-' : item['name'].substring(item['name'].lastIndexOf(".") + 1) }}
+                        </span>
+                        <span v-else-if="header.value == 'size'">
+                          {{ formatBytes(item.size) }}
+                        </span>
+                        <span v-else>{{ item[header.value] }}</span>
+                      </td>
+                    </tr>
+                  </template>
+                </v-data-table>
+              </div>
+              <div v-if="selectedItems != null">
+                <div class="subtitle-1 white--text" style="margin-top:15px; margin-bottom:15px">FILES</div>
                 <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
                   <v-text-field v-model="selectedSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                 </v-toolbar>
@@ -225,7 +270,24 @@ export default {
         { text: 'Overall', value: 'overall', sortable: false },
       ],
       information_items: [],
-      
+      // Cloud
+      cloudKeysHeaders: [
+        { text: 'Name', align: 'left', value: 'name' },
+        { text: 'Type', align: 'left', value: 'type' },
+        { text: 'Access Key', align: 'left', value: 'access_key'},
+        { text: 'Scope', align: 'left', value: 'shared' },
+      ],
+      cloudKeysItems: [],
+      // AWS Objects
+      bucket: null,
+      awsObjectsHeaders: [
+        { text: 'Name', align: 'left', value: 'name' },
+        { text: 'Type', align: 'left', value: 'type' },
+        { text: 'Last Modified', align: 'left', value: 'last_modified' },
+        { text: 'Size', align: 'left', value: 'size' },
+        { text: 'Storage Class', align: 'left', value: 'storage_class' },
+      ],
+      awsObjectsItems: [],
       // Selected
       selectedHeaders: [
         { text: 'File', value: 'file',  width: '50%' },
@@ -233,19 +295,15 @@ export default {
       ],
       selectedItems: [],
       selectedSearch: '',
-
       // Progress
       progress: {},
       stop: false,
-
       // Server Dialog
       serverDialog: false,
       server: {},
       showPassword: false,
-
       // Stop Dialog
       stopDialog: false,
-
       // Snackbar
       snackbar: false,
       snackbarTimeout: Number(3000),
@@ -261,6 +319,12 @@ export default {
       axios.get('/utils/restore', { params: { id: this.$route.params.id } })
         .then((response) => {
           this.information_items = [response.data.restore].map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
+          if (this.information_items[0]['mode'] == 'cloud') {
+            const details = JSON.parse(this.information_items[0]['details'])
+            this.cloudKeysItems = [details['cloud']]
+            this.bucket = details['bucket']
+            this.awsObjectsItems = [details['object']]
+          }
           this.selectedItems = this.information_items[0]['selected']
           this.parseProgress(this.information_items[0]['progress'])
           if (this.information_items[0]['status'] == 'IN PROGRESS') {
