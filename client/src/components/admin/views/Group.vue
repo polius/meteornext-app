@@ -149,6 +149,9 @@
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
                 <v-switch v-model="group.utils_enabled" label="Access Utils" color="info" style="margin-top:0px;"></v-switch>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RESTORE</div>
+                <v-switch @change="changeUtilsRestoreLimit" v-model="group.utils_restore_limit_flag" label="Apply Limits" color="#fa8231" style="margin-top:0px;"></v-switch>
+                <v-text-field v-if="group.utils_restore_limit_flag" v-model="group.utils_restore_limit" label="Maximum file upload size (MB)" :rules="[v => v == parseInt(v) && v > 0 || '']" required style="padding-top:5px;"></v-text-field>
               </v-card-text>
             </v-card>
 
@@ -249,7 +252,6 @@
 </template>
 
 <script>
-/* eslint-disable */
 import axios from 'axios';
 
 export default {
@@ -273,6 +275,8 @@ export default {
       deployments_slack_url: '',
       monitoring_enabled: false,
       utils_enabled: false,
+      utils_restore_limit_flag: false,
+      utils_restore_limit: null,
       client_enabled: false,
       client_tracking: false,
       client_tracking_retention: 1,
@@ -330,7 +334,7 @@ export default {
         .then((response) => {
           if (response.data.group.length == 0) this.$router.push('/admin/groups')
           else {
-            this.group = response.data.group[0]
+            this.group = {...response.data.group[0], utils_restore_limit_flag: response.data.group[0]['utils_restore_limit'] != null}
             this.inventoryOwners = response.data.owners
             if (this.mode == 'edit') this.ownersItems = response.data.owners.filter(x => x.owner)
           }
@@ -433,7 +437,7 @@ export default {
     },
     onOwnersSearch(value) {
       if (value.length == 0) this.ownersDialogItems = this.ownersDialogRawItems.slice(0)
-      else this.ownersDialogItems = this.ownersDialogRawItems.filter(x => x.username.includes(value) || x.email.includes(value) )
+      else this.ownersDialogItems = this.ownersDialogRawItems.filter(x => x.username.includes(value) || x.email.includes(value))
     },
     onOwnersClick(item) {
       const index = this.ownersDialogSelected.findIndex(x => x == item.username)
@@ -473,6 +477,9 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
+    },
+    changeUtilsRestoreLimit(val) {
+      if (!val) this.group.utils_restore_limit = null
     },
     goBack() {
       this.$router.push('/admin/groups')

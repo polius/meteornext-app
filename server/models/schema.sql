@@ -32,6 +32,7 @@ CREATE TABLE `groups` (
   `deployments_slack_url` VARCHAR(191) NULL,
   `monitoring_enabled` tinyint(1) NOT NULL DEFAULT '0',
   `utils_enabled` tinyint(1) NOT NULL DEFAULT '0',
+  `utils_restore_limit` BIGINT UNSIGNED NULL,
   `client_enabled` tinyint(1) NOT NULL DEFAULT '0',
   `client_tracking` tinyint(1) NOT NULL DEFAULT '0',
   `client_tracking_retention` INT UNSIGNED NOT NULL DEFAULT '1',

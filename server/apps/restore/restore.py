@@ -16,19 +16,22 @@ class Restore:
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
 
+    def start(self, user, item, server, base_path):
+        # Start Process in another thread
+        t = threading.Thread(target=self.__core, args=(user, item, server, base_path,))
+        t.daemon = True
+        t.start()
+
     def stop(self, pid):
         parent = psutil.Process(pid)
         children = parent.children(recursive=True)
         for process in children:
-            process.send_signal(signal.SIGKILL)
+            try:
+                process.send_signal(signal.SIGKILL)
+            except Exception:
+                pass
 
-    def start(self, user, item, server, base_path):
-        # Start Process in another thread
-        t = threading.Thread(target=self.__start, args=(user, item, server, base_path,))
-        t.daemon = True
-        t.start()
-
-    def __start(self, user, item, server, base_path):
+    def __core(self, user, item, server, base_path):
         # Start Import
         stopped = [False]
         t = threading.Thread(target=self.__import, args=(item, server, base_path, stopped,))
@@ -61,15 +64,16 @@ class Restore:
         shutil.rmtree(os.path.join(base_path, item['uri']))
 
         # Send notification
-        notification = {
-            'name': f"A restore has finished",
-            'status': 'ERROR' if status == 'FAILED' or stopped[0] else 'SUCCESS',
-            'category': 'utils-restore',
-            'data': '{{"id":"{}"}}'.format(item['id']),
-            'date': self.__utcnow(),
-            'show': 1
-        }
-        self._notifications.post(user_id=user['id'], notification=notification)
+        if not stopped[0]:
+            notification = {
+                'name': f"A restore has finished",
+                'status': 'ERROR' if status == 'FAILED' else 'SUCCESS',
+                'category': 'utils-restore',
+                'data': '{{"id":"{}"}}'.format(item['id']),
+                'date': self.__utcnow(),
+                'show': 1
+            }
+            self._notifications.post(user_id=user['id'], notification=notification)
 
     def __import(self, item, server, base_path, stopped):
         # Build 'progress_path' & 'error_path'

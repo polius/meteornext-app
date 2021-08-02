@@ -25,6 +25,7 @@ class Cron:
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__coins)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__logs)
             schedule.every().day.at("00:00").do(self.__run_threaded, self.__monitoring_clean)
+            schedule.every().day.at("00:00").do(self.__run_threaded, self.__restore_clean)
             schedule.every().hour.do(self.__run_threaded, self.__client_clean)
             schedule.every(10).seconds.do(self.__run_threaded, self.__utils_scans)
 
@@ -111,6 +112,19 @@ class Cron:
         except Exception:
             traceback.print_exc()
 
+    def __restore_clean(self):
+        if not self._license.validated:
+            return
+        try:
+            query = """
+                DELETE FROM restore_scans
+                WHERE `status` != 'IN PROGRESS'
+                AND DATE_ADD(`updated`, INTERVAL 1 DAY) <= CURRENT_DATE
+            """
+            self._sql.execute(query)
+        except Exception:
+            traceback.print_exc()
+
     def __client_clean(self):
         if not self._license.validated:
             return
@@ -142,9 +156,6 @@ class Cron:
             for i in result:
                 query = "UPDATE restore_scans SET status = 'STOPPED' WHERE id = %s"
                 self._sql.execute(query, (i['id']))
-                try:
-                    scan.stop(i['pid'])
-                except Exception:
-                    pass
+                scan.stop(i['pid'])
         except Exception:
             traceback.print_exc()
