@@ -277,6 +277,7 @@ class Restore:
             source = data['source']
             size = self._scan_app.metadata(data)['size']
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
+            details = ''
 
         # Insert new restore to DB
         item = {

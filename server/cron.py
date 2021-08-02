@@ -46,6 +46,8 @@ class Cron:
             time.sleep(1)
 
     def __executions(self):
+        if not self._license.validated:
+            return
         try:
             deployments = routes.deployments.deployments.Deployments(self._app, self._sql, self._license)
             deployments.check_finished()
@@ -55,9 +57,9 @@ class Cron:
             traceback.print_exc()
 
     def __coins(self):
+        if not self._license.validated:
+            return
         try:
-            if not self._license.validated:
-                return
             query = """
                 UPDATE users u
                 JOIN groups g ON g.id = u.group_id
@@ -68,9 +70,9 @@ class Cron:
             traceback.print_exc()
 
     def __logs(self):
+        if not self._license.validated:
+            return
         try:
-            if not self._license.validated:
-                return
             # Get expiration value
             setting = self._sql.execute("SELECT value FROM settings WHERE name = 'LOGS'")
 
@@ -89,17 +91,20 @@ class Cron:
                     # Expire deployments
                     for i in expired:
                         # DISK
-                        execution_path = '{}/{}'.format(setting['local']['path'], i['uri'])
-                        if os.path.isfile(execution_path + '.tar.gz'):
-                            os.remove(execution_path + '.tar.gz')
-                        if os.path.isfile(execution_path + '.js'):
-                            os.remove(execution_path + '.js')
+                        deployments_path = os.path.join(setting['local']['path'], 'deployments', i['uri'])
+                        if os.path.isfile(deployments_path + '.tar.gz'):
+                            os.remove(deployments_path + '.tar.gz')
+                        results_path = os.path.join(setting['local']['path'], 'results', i['uri'])
+                        if os.path.isfile(results_path + '.js'):
+                            os.remove(results_path + '.js')
                         # SQL
                         self._sql.execute(query="UPDATE executions SET expired = 1 WHERE id = %s", args=(i['id']))
         except Exception:
             traceback.print_exc()
 
     def __monitoring_clean(self):
+        if not self._license.validated:
+            return
         try:
             monitoring = apps.monitoring.monitoring.Monitoring(self._sql)
             monitoring.clean()
@@ -107,6 +112,8 @@ class Cron:
             traceback.print_exc()
 
     def __client_clean(self):
+        if not self._license.validated:
+            return
         try:
             query = """
                 DELETE cq
@@ -120,8 +127,9 @@ class Cron:
             traceback.print_exc()
 
     def __utils_scans(self):
+        if not self._license.validated:
+            return
         # Stop all scans not being tracked by the user
-        scan = apps.restore.scan.Scan(self._sql)
         try:
             query = """
                 SELECT id, pid
@@ -130,6 +138,7 @@ class Cron:
                 AND TIMESTAMPDIFF(SECOND, `readed`, `updated`) >= 10
             """
             result = self._sql.execute(query)
+            scan = apps.restore.scan.Scan(self._sql)
             for i in result:
                 query = "UPDATE restore_scans SET status = 'STOPPED' WHERE id = %s"
                 self._sql.execute(query, (i['id']))
