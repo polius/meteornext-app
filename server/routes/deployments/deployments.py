@@ -2,9 +2,8 @@ import os
 import sys
 import json
 import boto3
-import shutil
 import signal
-import tarfile
+import subprocess
 import botocore
 import datetime
 import unicodedata
@@ -154,17 +153,17 @@ class Deployments:
             
             # Get Execution Results File
             if results['logs'] == 'local':
-                execution_results = '{}/{}'.format(files['local']['path'], uri)
+                deployments_path = os.path.join(files['local']['path'], 'deployments', uri)
+                results_folder = os.path.join(files['local']['path'], 'results')
+                results_path = os.path.join(files['local']['path'], 'results', uri)
                 # Check if exists
-                if not os.path.exists(execution_results + '.js') and not os.path.exists(execution_results + '.tar.gz'):
+                if not os.path.exists(deployments_path + '.tar.gz'):
                     return jsonify({'title': 'Deployment Expired', 'description': 'This deployment no longer exists' }), 400
-                elif not os.path.exists(execution_results + '.js'):
-                    tf = tarfile.open("{}.tar.gz".format(execution_results), mode="r")
-                    tf.extract("./meteor.js", path=execution_results)
-                    os.rename('{}/meteor.js'.format(execution_results), '{}.js'.format(execution_results))
-                    shutil.rmtree(execution_results, ignore_errors=True)
-
-                return send_from_directory(files['local']['path'], uri + '.js')
+                elif not os.path.exists(results_path + '.js'):
+                    if not os.path.exists(results_folder):
+                        os.makedirs(results_folder)
+                    subprocess.run(f"tar Oxzf '{deployments_path}'.tar.gz './meteor.js' > {results_path}.js", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                return send_from_directory(results_folder, uri + '.js')
 
             elif results['logs'] == 'amazon_s3':
                 # Check Amazon S3 credentials are setup
