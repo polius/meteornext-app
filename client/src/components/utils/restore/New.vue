@@ -160,7 +160,7 @@
                                 {{ formatBytes(item.size) }}
                               </template>
                             </v-data-table>
-                            <div v-if="scanSelected.length > 0" class="text-body-1" style="margin-top:20px; color:#fa8131">Selected Size: <span style="font-weight:500">{{ formatBytes(scanSelected.reduce((a, b) => a + b.size, 0)) }}</span></div>
+                            <div class="text-body-1" style="margin-top:15px">Selected Size: <span class="white--text" style="font-weight:500">{{ formatBytes(scanSelected.reduce((a, b) => a + b.size, 0)) }}</span></div>
                           </div>
                           <!-- SCAN ERROR -->
                           <div v-else>
@@ -298,7 +298,7 @@
                             {{ formatBytes(item.size) }}
                           </template>
                         </v-data-table>
-                        <div class="text-body-1" style="margin-top:20px; color:#fa8131">Selected Size: <span style="font-weight:500">{{ formatBytes(scanSelected.reduce((a, b) => a + b.size, 0)) }}</span></div>
+                        <div class="text-body-1" style="margin-top:20px">Selected Size: <span class="white--text" style="font-weight:500">{{ formatBytes(scanSelected.reduce((a, b) => a + b.size, 0)) }}</span></div>
                       </div>
                     </v-card-text>
                   </v-card>
@@ -868,9 +868,10 @@ export default {
       const payload = {
         mode: this.mode,
         source: this.awsObjectsSelected[0]['key'],
-        cloud_id: this.cloudKeysSelected[0]['id'],
+        cloud: this.cloudKeysSelected[0],
         bucket: this.cloudPath[2],
         region: this.awsBucketsSelected[0]['region'],
+        object: this.awsObjectsSelected[0],
         selected: this.scanSelected,
         server: this.server,
         database: this.database

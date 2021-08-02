@@ -483,8 +483,7 @@ CREATE TABLE `client_queries` (
 CREATE TABLE `restore` (
  `id` INT UNSIGNED AUTO_INCREMENT,
  `mode` ENUM('file','url','cloud') NOT NULL,
- `cloud_id` INT UNSIGNED NULL,
- `cloud_details` TEXT NULL,
+ `details` TEXT NULL,
  `source` TEXT NOT NULL,
  `selected` TEXT NULL,
  `size` BIGINT UNSIGNED NOT NULL,

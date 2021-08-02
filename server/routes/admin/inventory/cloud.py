@@ -90,7 +90,7 @@ class Cloud:
         cloud = self._cloud.get(group_id=group_id, user_id=user_id)
         # Protect Secret Keys
         for c in cloud:
-            c['secret_key'] = {'secret_key': '<secret_key>'} if c['secret_key'] else None
+            c['secret_key'] = {} if c['secret_key'] else None
         # Return data
         return jsonify({'cloud': cloud}), 200
 

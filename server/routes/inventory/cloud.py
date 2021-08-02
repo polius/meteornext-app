@@ -73,7 +73,7 @@ class Cloud:
         cloud = self._cloud.get(user['id'], user['group_id'])
         # Protect Secret Keys
         for c in cloud:
-            c['secret_key'] = {'secret_key': '<secret_key>'} if c['secret_key'] else None
+            c['secret_key'] = {} if c['secret_key'] else None
         # Check Inventory Secured
         if user['inventory_secured'] and not user['owner']:
             cloud_secured = []

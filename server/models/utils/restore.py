@@ -26,10 +26,10 @@ class Restore:
 
     def post(self, user, data):
         query = """
-            INSERT INTO restore (`mode`, `cloud_id`, `bucket`, `source`, `selected`, `size`, `server_id`, `database`, `uri`, `user_id`)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO restore (`mode`, `details`, `source`, `selected`, `size`, `server_id`, `database`, `uri`, `user_id`)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
-        return self._sql.execute(query, (data['mode'], data['cloud_id'], data['bucket'], data['source'], data['selected'], data['size'], data['server_id'], data['database'], data['uri'], user['id']))
+        return self._sql.execute(query, (data['mode'], data['details'], data['source'], data['selected'], data['size'], data['server_id'], data['database'], data['uri'], user['id']))
 
     def delete(self, user, item):
         query = """
