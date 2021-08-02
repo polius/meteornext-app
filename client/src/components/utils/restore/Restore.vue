@@ -170,7 +170,7 @@ export default {
       // Get Restores
       axios.get('/utils/restore')
         .then((response) => {
-          this.items = response.data.restore.map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended), overall: this.parseOverall(x)}))
+          this.items = response.data.restore.map(x => ({...x, source: x.mode == 'cloud' ? JSON.parse(x.details)['bucket'] + '/' + x.source : x.source, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended), overall: this.parseOverall(x)}))
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

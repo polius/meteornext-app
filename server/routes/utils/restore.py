@@ -259,7 +259,7 @@ class Restore:
             # Build file metadata
             source = file.filename
             size = os.path.getsize(os.path.join(base_path, uri, secure_filename(file.filename)))
-            selected = None
+            selected = ''
 
         elif data['mode'] == 'url':
             source = data['source']
