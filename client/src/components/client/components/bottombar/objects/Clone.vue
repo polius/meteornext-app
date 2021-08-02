@@ -280,6 +280,11 @@ export default {
         EventBus.$emit('send-notification', 'Please make sure all required fields are filled out correctly', '#EF5354')
         return
       }
+      // Check if target database == source database
+      if (this.database == this.targetDatabase) {
+        EventBus.$emit('send-notification', "The target database cannot be the same as the source database", '#EF5354')
+        return
+      }
       // Get selected objects
       let objects = {'tables': [], 'views': [], 'triggers': [], 'functions': [], 'procedures': [], 'events': []}
       objects['tables'] = this.gridApi['tables'].getSelectedRows().map(x => x.name)

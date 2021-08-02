@@ -6,7 +6,6 @@ import os
 import uuid
 import json
 import shutil
-import signal
 import boto3
 
 import models.admin.users
@@ -227,6 +226,11 @@ class Restore:
         if restore['selected']:
             restore['selected'] = [{'file': i.split('|')[0], 'size': int(i.split('|')[1])} for i in restore['selected'].split('\n')]
 
+        if restore['progress']:
+            raw = restore['progress'].split(' ')
+            restore['progress'] = {"value": raw[0], "transferred": raw[1], "rate": raw[2], "elapsed": raw[3]}
+            restore['progress']['eta'] = raw[4][3:] if len(raw) == 5 else None
+
         # Return data
         return jsonify({'restore': restore}), 200
 
@@ -336,7 +340,7 @@ class Restore:
         # Stop the execution
         try:
             self._restore.update_status(user, data['id'], 'STOPPED')
-            os.kill(restore['pid'], signal.SIGINT)
+            self._restore_app.stop(restore['pid'])
         except Exception:
             pass
         return jsonify({'message': 'Execution successfully stopped.'}), 200

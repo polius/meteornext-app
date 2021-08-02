@@ -119,13 +119,16 @@
               <div v-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px">fas fa-spinner</v-icon>Restoring the file. Please wait...</div>
               <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>File successfully restored.</div>
               <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while restoring the file.</div>
-              <v-progress-linear :color="getProgressColor(information_items[0].status)" height="5" :value="progress.value" style="margin-top:10px"></v-progress-linear>
-              <div class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${progress.value} %` }}</span></div>
-              <v-divider style="margin-top:10px"></v-divider>
-              <div class="text-body-1" style="margin-top:10px">Data Transferred: <span class="white--text">{{ progress.transferred }}</span></div>
-              <div class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ progress.rate }}</span></div>
-              <div class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ progress.elapsed }}</span></div>
-              <div v-if="progress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ progress.eta }}</span></div>
+              <div v-else-if="information_items[0].status == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px">fas fa-ban</v-icon>Restore successfully stopped.</div>
+              <v-progress-linear :color="getProgressColor(information_items[0].status)" height="5" :indeterminate="progress == null || (progress.value == 0 && information_items[0]['status'] == 'IN PROGRESS')" :value="progress == null ? 0 : progress.value" style="margin-top:10px"></v-progress-linear>
+              <div v-if="progress != null">
+                <div class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${progress.value} %` }}</span></div>
+                <v-divider style="margin-top:10px"></v-divider>
+                <div class="text-body-1" style="margin-top:10px">Data Transferred: <span class="white--text">{{ progress.transferred }}</span></div>
+                <div class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ progress.rate }}</span></div>
+                <div class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ progress.elapsed }}</span></div>
+                <div v-if="progress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ progress.eta }}</span></div>
+              </div>
             </v-card-text>
           </v-card>
           <!-- ERROR -->
@@ -296,7 +299,7 @@ export default {
       selectedItems: [],
       selectedSearch: '',
       // Progress
-      progress: {},
+      progress: null,
       stop: false,
       // Server Dialog
       serverDialog: false,
@@ -339,13 +342,13 @@ export default {
         })
     },
     parseProgress(progress) {
-      let data = progress.split(' ')
+      if (progress == null) return
       this.progress = {
-        value: data[0].slice(0, -1),
-        transferred: this.parseMetric(data[1]),
-        rate: this.parseMetric(data[2]),
-        elapsed: data[3],
-        eta: data.length == 5 ? data[4] : null
+        value: parseInt(progress.value.slice(0, -1)),
+        transferred: this.parseMetric(progress.transferred),
+        rate: this.parseMetric(progress.rate),
+        elapsed: progress.elapsed,
+        eta: progress.eta
       }
       // Calculate Overall
       let diff = (this.information_items[0]['ended'] == null) ? moment.utc().diff(moment(this.information_items[0]['started'])) : moment(this.information_items[0]['ended']).diff(moment(this.information_items[0]['started']))
@@ -424,7 +427,7 @@ export default {
     getProgressColor(status) {
       if (status == 'IN PROGRESS') return '#ff9800'
       if (status == 'SUCCESS') return '#4caf50'
-      if (status == 'FAILED') return '#EF5354'
+      if (['FAILED','STOPPED'].includes('FAILED')) return '#EF5354'
     },
     dateFormat(date) {
       if (date) return moment.utc(date).local().format("YYYY-MM-DD HH:mm:ss")

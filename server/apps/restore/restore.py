@@ -3,6 +3,8 @@ import re
 import time
 import boto3
 import shutil
+import psutil
+import signal
 import subprocess
 import threading
 from datetime import datetime
@@ -14,12 +16,17 @@ class Restore:
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
 
+    def stop(self, pid):
+        parent = psutil.Process(pid)
+        children = parent.children(recursive=True)
+        for process in children:
+            process.send_signal(signal.SIGKILL)
+
     def start(self, user, item, server, base_path):
         # Start Process in another thread
         t = threading.Thread(target=self.__start, args=(user, item, server, base_path,))
         t.daemon = True
         t.start()
-        t.join()
 
     def __start(self, user, item, server, base_path):
         # Start Import
@@ -42,7 +49,7 @@ class Restore:
         query = """
             UPDATE `restore`
             SET
-                `status` = %s,
+                `status` = IF(`status` = 'STOPPED', 'STOPPED', %s),
                 `ended` = %s
             WHERE `id` = %s
         """
@@ -90,7 +97,7 @@ class Restore:
                 command = f"export MYSQL_PWD={server['password']}; curl -sSL '{item['source']}' 2> {error_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
 
         # Start Import process
-        p = subprocess.Popen(command, shell=True)
+        p = subprocess.Popen(command, shell=True, stderr=subprocess.DEVNULL)
 
         # Add PID & started to the restore
         query = """
@@ -116,8 +123,8 @@ class Restore:
         # Read files
         progress = None
         if os.path.exists(progress_path):
-            with open(progress_path, 'r') as f:
-                progress = self.__parse_progress(f.read())
+            p = subprocess.run(f"tr '\r' '\n' < '{progress_path}' | sed '/^$/d' | tail -1", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            progress = self.__parse_progress(p.stdout) if len(p.stdout) > 0 else None
 
         error = None
         if os.path.exists(error_path):
