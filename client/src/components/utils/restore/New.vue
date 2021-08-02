@@ -522,6 +522,10 @@ export default {
       snackbarColor: '',
     }
   },
+  beforeRouteLeave(to, from, next) {
+    this.stopScan(false)
+    next()
+  },
   created() {
     this.getServers()
   },
@@ -707,7 +711,11 @@ export default {
       if (this.stepper == 1 && !this.$refs.sourceForm.validate()) return
       else if (this.stepper == 2 && !this.$refs.destinationForm.validate()) return
       if (this.stepper == 1 && ['url','cloud'].includes(this.mode) && this.scanID == null) this.scanFile()
-      else this.stepper = this.stepper + 1
+      else {
+        // Stop Scan (if there's an existing one)
+        if (this.stepper == 1) this.stopScan()
+        this.stepper = this.stepper + 1
+      }
     },
     submitRestore() {
       if (this.mode == 'file') this.checkFileRestore()
@@ -768,7 +776,7 @@ export default {
       })
     },
     scanFile() {
-      this.loading = true
+      this.clearScan()
       let payload = { mode: this.mode }
       if (this.mode == 'url') payload['source'] = this.source
       else if (this.mode == 'cloud') {
@@ -819,6 +827,7 @@ export default {
       })
     },
     stopScan(notification) {
+      if (this.scanStatus != 'IN PROGRESS') return
       const payload = { id: this.scanID }
       axios.post('/utils/restore/scan/stop', payload)
       .then((response) => {
