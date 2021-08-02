@@ -9,6 +9,7 @@ import shutil
 import boto3
 
 import models.admin.users
+import models.admin.groups
 import models.utils.restore
 import models.utils.scans
 import models.admin.settings
@@ -23,6 +24,7 @@ class Restore:
         self._license = license
         # Init models
         self._users = models.admin.users.Users(sql)
+        self._groups = models.admin.groups.Groups(sql)
         self._restore = models.utils.restore.Restore(sql)
         self._scans = models.utils.scans.Scans(sql)
         self._settings = models.admin.settings.Settings(sql)
@@ -73,6 +75,11 @@ class Restore:
             # Check user privileges
             if user['disabled'] or not user['utils_enabled']:
                 return jsonify({'message': 'Insufficient Privileges'}), 401
+
+            # Check file size limit
+            group = self._groups.get(group_id=user['group_id'])[0]
+            if group['utils_restore_limit'] is not None and int(request.args['size']) >= group['utils_restore_limit'] * 1024**2:
+                return jsonify({'message': f"The file size exceeds the maximum allowed ({group['utils_restore_limit']} MB)"}), 400
 
             # Return if there's free space left to upload a file
             return jsonify({'check': shutil.disk_usage("/").free >= int(request.args['size'])}), 200
@@ -245,12 +252,18 @@ class Restore:
         uri = str(uuid.uuid4())
 
         # Make restore folder
-        base_path = json.loads(self._settings.get(setting_name='FILES'))['local']['path'] + '/restore/'
+        base_path = json.loads(self._settings.get(setting_name='FILES'))['local']['path'] + '/restores/'
         if not os.path.exists(os.path.join(base_path, uri)):
             os.makedirs(os.path.join(base_path, uri))
 
         # Method: file
         if data['mode'] == 'file':
+            # Check file size limit
+            group = self._groups.get(group_id=user['group_id'])[0]
+            if group['utils_restore_limit'] is not None and int(request.args['size']) >= group['utils_restore_limit'] * 1024**2:
+                return jsonify({'message': f"The file size exceeds the maximum allowed ({group['utils_restore_limit']} MB)"}), 400
+
+            # Check file constraints
             if 'source' not in request.files or request.files['source'].filename == '':
                 return jsonify({"message": 'No file was uploaded'}), 400
             file = request.files['source']
@@ -338,11 +351,8 @@ class Restore:
             return jsonify({'message': 'The execution has already finished.'}), 400
 
         # Stop the execution
-        try:
-            self._restore.update_status(user, data['id'], 'STOPPED')
-            self._restore_app.stop(restore['pid'])
-        except Exception:
-            pass
+        self._restore.update_status(user, data['id'], 'STOPPED')
+        self._restore_app.stop(restore['pid'])
         return jsonify({'message': 'Execution successfully stopped.'}), 200
 
     def get_scan(self, user, id):
@@ -397,7 +407,7 @@ class Restore:
         data['id'] = self._scans.post(user, data)
 
         # Make scan folder
-        base_path = json.loads(self._settings.get(setting_name='FILES'))['local']['path'] + '/scan/'
+        base_path = json.loads(self._settings.get(setting_name='FILES'))['local']['path'] + '/scans/'
         if not os.path.exists(os.path.join(base_path, data['uri'])):
             os.makedirs(os.path.join(base_path, data['uri']))
 
@@ -429,11 +439,8 @@ class Restore:
             return jsonify({'message': 'The scan has already finished.'}), 400
 
         # Stop the scan
-        try:
-            self._scans.put_status(data['id'], 'STOPPED')
-            self._scan_app.stop(scan['pid'])
-        except Exception:
-            pass
+        self._scans.put_status(data['id'], 'STOPPED')
+        self._scan_app.stop(scan['pid'])
         return jsonify({'message': 'Scan successfully stopped.'}), 200
 
     def get_s3_buckets(self, user):

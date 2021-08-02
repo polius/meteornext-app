@@ -723,23 +723,22 @@ export default {
       else if (this.mode == 'cloud') this.submitCloudRestore()
     },
     checkFileRestore() {
-      this.progress = 0
-      this.progressText = ''
-      this.dialog = true
+      this.loading = true
       axios.get('/utils/restore/check', { params: { size: this.size }})
         .then((response) => {
-          if (!response.data.check) {
-            this.notification('There is not enough space left to proceed with the restore.', '#EF5354')
-            this.dialog = false
-          }
-          else this.submitFileRestore()
+          if (response.data.check) this.submitFileRestore()
+          else this.notification('There is not enough space left to proceed with the restore.', '#EF5354')
         })
         .catch((error) => {
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
+        .finally(() => this.loading = false)
     },
     submitFileRestore() {
+      this.progress = 0
+      this.progressText = ''
+      this.dialog = true
       // Build import
       const data = new FormData();
       data.append('mode', this.mode)

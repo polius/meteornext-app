@@ -7,7 +7,9 @@ from flask_jwt_extended import (jwt_required, get_jwt_identity)
 import models.admin.groups
 import models.admin.users
 import models.admin.settings
+import models.utils.restore
 import routes.admin.settings
+import apps.restore.restore
 
 class Users:
     def __init__(self, app, sql, license):
@@ -16,8 +18,11 @@ class Users:
         self._groups = models.admin.groups.Groups(sql)
         self._users = models.admin.users.Users(sql)
         self._settings = models.admin.settings.Settings(sql)
+        self._restore = models.utils.restore.Restore(sql)
         # Init routes
         self._settings_route = routes.admin.settings.Settings(app, sql, license)
+        # Init apps
+        self._restore_app = apps.restore.restore.Restore(sql)
 
     def blueprint(self):
         # Init blueprint
@@ -108,7 +113,18 @@ class Users:
         return jsonify({'message': 'User edited successfully'}), 200
 
     def delete(self):
+        # Get users list
         users = json.loads(request.args['users'])
+
+        # Stop current restores
+        for username in users:
+            user = self._users.get(username)
+            restores = self._restore.get(user_id=user[0]['id'])
+            for restore in restores:
+                if restore['status'] == 'IN PROGRESS':
+                    self._restore_app.stop(restore['pid'])
+
+        # Remove user
         self._users.delete(users)
         return jsonify({'message': 'Selected users deleted successfully'}), 200
 

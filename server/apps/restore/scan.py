@@ -23,7 +23,10 @@ class Scan:
         parent = psutil.Process(pid)
         children = parent.children(recursive=True)
         for process in children:
-            process.send_signal(signal.SIGKILL)
+            try:
+                process.send_signal(signal.SIGKILL)
+            except Exception:
+                pass
 
     def metadata(self, item):
         if item['mode'] == 'url':
