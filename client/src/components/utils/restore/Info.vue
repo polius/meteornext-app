@@ -318,7 +318,7 @@ export default {
     getRestore() {
       axios.get('/utils/restore', { params: { id: this.$route.params.id } })
         .then((response) => {
-          this.information_items = [response.data.restore].map(x => ({...x, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
+          this.information_items = [response.data.restore].map(x => ({...x, source: x.mode == 'cloud' ? JSON.parse(x.details)['bucket'] + '/' + x.source : x.source, created: this.dateFormat(x.created), started: this.dateFormat(x.started), ended: this.dateFormat(x.ended)}))
           if (this.information_items[0]['mode'] == 'cloud') {
             const details = JSON.parse(this.information_items[0]['details'])
             this.cloudKeysItems = [details['cloud']]

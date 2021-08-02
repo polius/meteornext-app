@@ -126,7 +126,7 @@
                         </div>
                       </div>
                       <!--  SIZE -->
-                      <div v-if="mode != 'cloud' && (size != null && scanID != null)" class="text-body-1" style="color:#fa8131; margin-top:15px">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
+                      <div v-if="mode != 'cloud' && (size != null && scanID != null)" class="text-body-1" style="margin-top:15px">File Size: <span class="white--text" style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       <!-- SCAN -->
                       <div v-if="scanID != null" style="margin-top:15px">
                         <div class="subtitle-1 white--text" style="margin-top:10px; margin-bottom:10px">SCAN</div>
@@ -246,7 +246,7 @@
                       </v-radio-group>
                       <div v-if="['file','url'].includes(mode)">
                         <v-text-field readonly v-model="source" :label="mode == 'file' ? 'File' : 'URL'" style="padding-top:8px" hide-details></v-text-field>
-                        <div class="text-body-1" style="margin-top:20px; color:#fa8131">File Size: <span style="font-weight:500">{{ formatBytes(size) }}</span></div>
+                        <div class="text-body-1" style="margin-top:20px">File Size: <span class="white--text" style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       </div>
                       <div v-else-if="mode == 'cloud'">
                         <div class="subtitle-1 white--text" style="margin-bottom:15px">CLOUD KEY</div>
