@@ -30,7 +30,8 @@ class Restore:
 
     def __start(self, user, item, server, base_path):
         # Start Import
-        t = threading.Thread(target=self.__import, args=(item, server, base_path,))
+        stopped = [False]
+        t = threading.Thread(target=self.__import, args=(item, server, base_path, stopped,))
         t.start()
 
         # Start Monitor
@@ -62,7 +63,7 @@ class Restore:
         # Send notification
         notification = {
             'name': f"A restore has finished",
-            'status': 'ERROR' if status == 'FAILED' else 'SUCCESS',
+            'status': 'ERROR' if status == 'FAILED' or stopped[0] else 'SUCCESS',
             'category': 'utils-restore',
             'data': '{{"id":"{}"}}'.format(item['id']),
             'date': self.__utcnow(),
@@ -70,7 +71,7 @@ class Restore:
         }
         self._notifications.post(user_id=user['id'], notification=notification)
 
-    def __import(self, item, server, base_path):
+    def __import(self, item, server, base_path, stopped):
         # Build 'progress_path' & 'error_path'
         error_path = os.path.join(base_path, item['uri'], 'error.txt')
         progress_path = os.path.join(base_path, item['uri'], 'progress.txt')
@@ -97,7 +98,7 @@ class Restore:
                 command = f"export MYSQL_PWD={server['password']}; curl -sSL '{item['source']}' 2> {error_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
 
         # Start Import process
-        p = subprocess.Popen(command, shell=True, stderr=subprocess.DEVNULL)
+        p = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE)
 
         # Add PID & started to the restore
         query = """
@@ -114,6 +115,9 @@ class Restore:
 
         # Wait import to finish
         p.wait()
+
+        # Check if subprocess command has been killed (= stopped by user).
+        stopped[0] = len(p.stderr.readlines()) > 0
 
     def __monitor(self, item, base_path):
         # Init path vars
