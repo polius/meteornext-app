@@ -87,7 +87,7 @@ class Restore:
         elif item['source'].endswith('.tar.gz'):
             gunzip = f"| tar zxO {item['selected']} 2> {error_path}"
         elif item['source'].endswith('.gz'):
-            gunzip = f"| gunzip -c 2> {error_path}"
+            gunzip = f"| zcat 2> {error_path}"
 
         # Generate presigned-url for cloud mode
         if item['mode'] == 'cloud':
