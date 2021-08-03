@@ -469,8 +469,12 @@ export default {
       if (this.contentSortState.length > 0) {
         headers = headers.map(x => (x.colId == this.contentSortState[0].colId ? {...x, sort: this.contentSortState[0].sort} : x))
       }
-      this.gridApi.content.setColumnDefs([])
-      this.contentHeaders = headers
+
+      // Reassign headers if some value has changed
+      if (this.contentHeaders.length == 0 || this.contentHeaders.length != headers.length || !(this.contentHeaders.every(x => headers.some(y => y.colId == x.colId)))) {
+        this.gridApi.content.setColumnDefs([])
+        this.contentHeaders = headers
+      }
 
       // Build Items
       this.contentItems = items
@@ -831,9 +835,9 @@ export default {
           this.parseContentExecution(data)
         })
         .catch((error) => {
-          this.gridApi.content.hideOverlay()
           if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
           else {
+            this.gridApi.content.hideOverlay()
             // Show error
             let data = JSON.parse(error.response.data.data)
             EventBus.$emit('send-notification', data[0]['error'], '#EF5354')
