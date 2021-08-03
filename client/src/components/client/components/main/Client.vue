@@ -1058,7 +1058,7 @@ export default {
     },
     async parseExecution(payload, data, current, gridApi) {
       // Determine if result can be edited and store current table
-      const beautified = sqlFormatter.format(payload.queries.slice(-1)[0], { reservedWordCase: 'upper', linesBetweenQueries: 2 })
+      const beautified = sqlFormatter.format(payload.queries.slice(-1)[0], { linesBetweenQueries: 2 })
       let editable = true
       let found = false
       for (let line of beautified.split('\n')) {

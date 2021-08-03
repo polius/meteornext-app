@@ -16,6 +16,7 @@ COPY build/start.sh /root/
 # Run additional commands
 RUN apt update -qq && \
     apt install jq -y && \
+    apt install pv -y && \
     apt clean -qq && \
     tar -zxf /usr/share/nginx/html/client.tar.gz -C /usr/share/nginx/html/ && \
     mv /usr/share/nginx/html/client/* /usr/share/nginx/html/ && \

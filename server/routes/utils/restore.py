@@ -476,7 +476,6 @@ class Restore:
         if len(cloud) == 0:
             return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
         cloud = cloud[0]
-        print(cloud)
 
         # Init S3 Client
         client = boto3.client('s3', aws_access_key_id=cloud['access_key'], aws_secret_access_key=cloud['secret_key'])
