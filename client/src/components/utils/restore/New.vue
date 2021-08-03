@@ -44,7 +44,7 @@
                       </div>
                       <div v-else-if="mode == 'cloud'">
                         <!-- CLOUD KEYS -->
-                        <div v-if="awsBucketsItems.length == 0">
+                        <div v-if="cloudPath.length == 1">
                           <div class="subtitle-1 white--text" style="margin-bottom:15px">CLOUD KEYS</div>
                           <v-toolbar dense flat color="#2e3131" style="border-top-left-radius:5px; border-top-right-radius:5px;">
                             <v-text-field v-model="cloudKeysSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
@@ -775,6 +775,7 @@ export default {
       })
     },
     scanFile() {
+      this.loading = true
       this.clearScan()
       let payload = { mode: this.mode }
       if (this.mode == 'url') payload['source'] = this.source
@@ -792,7 +793,6 @@ export default {
         this.size = response.data.size
         if ('id' in response.data) {
           this.scanID = response.data.id
-          this.loading = true
           this.getScan()
         }
         else {
