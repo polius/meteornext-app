@@ -455,11 +455,17 @@ class Restore:
 
         # List all buckets
         try:
+            buckets = []
             response = client.list_buckets()
-            buckets = [{'name': i['Name'], 'date': i['CreationDate']} for i in response['Buckets']]
-            # Get buckets region
-            for idx, bucket in enumerate(buckets):
-                buckets[idx]['region'] = client.head_bucket(Bucket=bucket['name'])['ResponseMetadata']['HTTPHeaders']['x-amz-bucket-region']
+            exception = None
+            for idx, item in enumerate(response['Buckets']):
+                try:
+                    location = client.get_bucket_location(Bucket=item['Name'])
+                    buckets.append({'name': item['Name'], 'region': location['LocationConstraint'], 'date': item['CreationDate']})
+                except Exception as e:
+                    exception = e
+            if len(buckets) == 0 and exception:
+                raise exception
             return jsonify({'buckets': buckets}), 200
         except Exception as e:
             return jsonify({'message': str(e)}), 400
@@ -470,6 +476,7 @@ class Restore:
         if len(cloud) == 0:
             return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
         cloud = cloud[0]
+        print(cloud)
 
         # Init S3 Client
         client = boto3.client('s3', aws_access_key_id=cloud['access_key'], aws_secret_access_key=cloud['secret_key'])
