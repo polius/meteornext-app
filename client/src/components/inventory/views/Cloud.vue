@@ -38,7 +38,9 @@
         </template>
       </v-data-table>
     </v-card>
-
+    <!------------>
+    <!-- DIALOG -->
+    <!------------>
     <v-dialog v-model="dialog" persistent max-width="768px">
       <v-card>
         <v-toolbar dense flat color="primary">
@@ -56,7 +58,7 @@
                 <v-alert v-if="!this.owner && this.item.shared" color="warning" dense style="margin-top:15px; margin-bottom:15px"><v-icon style="font-size:16px; margin-bottom:3px; margin-right:10px">fas fa-exclamation-triangle</v-icon>This shared resource cannot be edited. You are not a group owner.</v-alert>
                 <v-form ref="form" v-model="dialog_valid" v-if="mode!='delete'" style="margin-top:15px;">
                   <v-text-field ref="field" v-model="item.name" :readonly="readOnly" :rules="[v => !!v || '']" label="Name" required></v-text-field>
-                  <v-select v-model="item.type" :items="[{id: 'aws', name: 'Amazon Web Services'}]" item-value="id" :readonly="readOnly" :rules="[v => !!v || '']" label="Type" required style="padding-top:0px;">
+                  <v-select v-model="item.type" :items="[{id: 'aws', name: 'Amazon Web Services'}]" item-value="id" :readonly="readOnly" :rules="[v => !!v || '']" label="Type" required style="padding-top:0px">
                     <template v-slot:[`selection`]="{ item }">
                       <v-icon v-if="item.id == 'aws'" size="22" color="#e47911" style="margin-right:8px">fab fa-aws</v-icon>
                       <v-icon v-else-if="item.id == 'google'" size="20" color="#4285F4" style="margin-right:8px">fab fa-google</v-icon>
@@ -68,10 +70,10 @@
                       {{ item.id == 'aws' ? 'Amazon Web Services' : 'Google Cloud' }}
                     </template>
                   </v-select>
-                  <div v-if="!(readOnly && inventory_secured)" style="margin-bottom:20px">
-                    <v-text-field v-model="item.access_key" :readonly="readOnly" :rules="[v => !!v || '']" label="Access Key" autocomplete="username" style="padding-top:0px;"></v-text-field>
-                    <v-text-field v-if="item.secret_key == null || typeof item.secret_key !== 'object'" v-model="item.secret_key" :readonly="readOnly" :rules="[v => !!v || '']" label="Secret Key" :append-icon="showSecret ? 'mdi-eye' : 'mdi-eye-off'" :type="showSecret ? 'text' : 'password'" @click:append="showSecret = !showSecret" autocomplete="new-password" style="padding-top:0px;" hide-details></v-text-field>
-                    <v-card v-else style="height:52px">
+                  <div v-if="!(readOnly && inventory_secured)">
+                    <v-text-field v-model="item.access_key" :readonly="readOnly" :rules="[v => !!v || '']" label="Access Key" autocomplete="username" style="padding-top:0px" hide-details></v-text-field>
+                    <v-text-field v-if="item.secret_key == null || (typeof item.secret_key !== 'object')" v-model="item.secret_key" :readonly="readOnly" :rules="[v => !!v || '']" label="Secret Key" :append-icon="showSecret ? 'mdi-eye' : 'mdi-eye-off'" :type="showSecret ? 'text' : 'password'" @click:append="showSecret = !showSecret" autocomplete="new-password" style="margin-top:15px; margin-bottom:20px" hide-details></v-text-field>
+                    <v-card v-else style="height:52px; margin-top:15px">
                       <v-row no-gutters>
                         <v-col cols="auto" style="display:flex; margin:15px">
                           <v-icon color="#00b16a" style="font-size:20px">fas fa-key</v-icon>
@@ -83,6 +85,27 @@
                           <v-btn v-if="!readOnly" @click="item.secret_key = null" icon title="Remove Secret Key" style="margin:8px"><v-icon style="font-size:18px">fas fa-times</v-icon></v-btn>
                         </v-col>
                       </v-row>
+                    </v-card>
+                    <v-card style="margin-top:15px; margin-bottom:20px;">
+                      <v-toolbar flat dense color="#2e3131">
+                        <v-toolbar-title class="white--text subtitle-1">BUCKETS</v-toolbar-title>
+                        <v-divider class="mx-3" inset vertical></v-divider>
+                        <v-toolbar-items class="hidden-sm-and-down" style="padding-left:0px;">
+                          <v-btn text @click='newBucket()'><v-icon small style="margin-right:10px">fas fa-plus</v-icon>NEW</v-btn>
+                          <v-btn :disabled="bucketsSelected.length != 1" text @click="editBucket()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
+                          <v-btn :disabled="bucketsSelected.length == 0" text @click='deleteBucket()'><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
+                        </v-toolbar-items>
+                      </v-toolbar>
+                      <v-divider></v-divider>
+                      <v-data-table v-model="bucketsSelected" :headers="bucketsHeaders" :items="bucketsItems" :search="bucketsSearch" :hide-default-header="bucketsItems.length == 0" :hide-default-footer="bucketsItems.length < 11" item-key="name" show-select class="elevation-1" style="padding-top:5px;">
+                        <template v-ripple v-slot:[`header.data-table-select`]="{}">
+                          <v-simple-checkbox
+                            :value="bucketsItems.length == 0 ? false : bucketsSelected.length == bucketsItems.length"
+                            :indeterminate="bucketsSelected.length > 0 && bucketsSelected.length != bucketsItems.length"
+                            @click="bucketsSelected.length == bucketsItems.length ? bucketsSelected = [] : bucketsSelected = JSON.parse(JSON.stringify(bucketsItems))">
+                          </v-simple-checkbox>
+                        </template>
+                      </v-data-table>
                     </v-card>
                   </div>
                 </v-form>
@@ -102,6 +125,33 @@
                     <v-btn v-if="mode != 'delete'" :loading="loading" color="info" @click="testCloud()">Test Cloud Key</v-btn>
                   </v-col>
                 </v-row>
+              </v-flex>
+            </v-layout>
+          </v-container>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <!-------------------->
+    <!-- BUCKETS DIALOG -->
+    <!-------------------->
+    <v-dialog v-model="bucketsDialog" max-width="600px">
+      <v-toolbar flat dense color="primary">
+        <v-toolbar-title class="white--text subtitle-1"><v-icon small style="margin-right:10px; margin-bottom:1px">{{bucketsDialogMode == 'new' ? 'fas fa-plus' : bucketsDialogMode == 'edit' ? 'fas fa-feather-alt' : 'fas fa-minus'}}</v-icon>{{ `${bucketsDialogMode.toUpperCase()} BUCKET` }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn icon @click="bucketsDialog = false" style="width:40px; height:40px"><v-icon style="font-size:22px">fas fa-times-circle</v-icon></v-btn>
+      </v-toolbar>
+      <v-card>
+        <v-card-text style="padding:15px">
+          <v-container style="padding:0px">
+            <v-layout wrap>
+              <v-flex xs12>
+                <v-form ref="bucketsForm" @submit.prevent>
+                  <div v-if="bucketsDialogMode == 'delete'" class="subtitle-1" style="margin-top:3px">Are you sure you want to remove the selected buckets from the list?</div>
+                  <v-text-field v-else ref="bucketsName" v-model="bucketsDialogName" v-on:keyup.enter="bucketsDialogConfirm()" :rules="[v => !!v || '']" label="Name" hide-details style="padding-top:8px"></v-text-field>
+                </v-form>
+                <v-divider style="margin-top:15px; margin-bottom:15px"></v-divider>
+                <v-btn color="#00b16a" @click="bucketsDialogConfirm()">Confirm</v-btn>
+                <v-btn color="#EF5354" @click="bucketsDialog = false" style="margin-left:5px">Cancel</v-btn>
               </v-flex>
             </v-layout>
           </v-container>
@@ -176,6 +226,16 @@ export default {
     dialog: false,
     dialog_title: '',
     dialog_valid: false,
+    bucketsHeaders: [
+      { text: 'Name', align: 'left', value: 'name' },
+    ],
+    bucketsItems: [],
+    bucketsSelected: [],
+    bucketsSearch: '',
+    // Buckets Dialog
+    bucketsDialog: false,
+    bucketsDialogMode: '',
+    bucketsDialogName: '',
     // Filter Columns Dialog
     columnsDialog: false,
     columns: ['name','type','access_key','shared'],
@@ -329,6 +389,39 @@ export default {
       else if (val == 'personal') this.items = this.cloud.filter(x => !x.shared)
       else if (val == 'shared') this.items = this.cloud.filter(x => x.shared)
     },
+    newBucket() {
+      this.bucketsDialogMode = 'new'
+      this.bucketsDialogName = ''
+      this.bucketsDialog = true
+    },
+    editBucket() {
+      console.log(this.bucketsSelected)
+      this.bucketsDialogMode = 'edit'
+      this.bucketsDialogName = this.bucketsSelected[0]['name']
+      this.bucketsDialog = true
+    },
+    deleteBucket() {
+      this.bucketsDialogMode = 'delete'
+      this.bucketsDialog = true
+    },
+    bucketsDialogConfirm() {
+      // Check constraints
+      if (['new','edit'].includes(this.bucketsDialogMode)) {
+        if (!this.$refs.bucketsForm.validate()) {
+          this.notification('Please make sure all required fields are filled out correctly', '#EF5354')
+          return
+        }
+        if (this.bucketsItems.some(x => x.name == this.bucketsDialogName.trim()) && (this.bucketsDialogMode == 'new' || this.bucketsSelected[0]['name'] != this.bucketsDialogName.trim())) {
+          this.notification('This bucket name already exists','#EF5354')
+          return
+        }
+      }
+      if (this.bucketsDialogMode == 'new') this.bucketsItems.push({name: this.bucketsDialogName})
+      else if (this.bucketsDialogMode == 'edit') this.bucketsSelected[0] = {name: this.bucketsDialogName}
+      else if (this.bucketsDialogMode == 'delete') this.bucketsItems = this.bucketsItems.filter(x => !this.bucketsSelected.some(y => y.name == x.name))
+      this.bucketsDialog = false
+      this.bucketsSelected = []
+    },
     openColumnsDialog() {
       this.columnsRaw = [...this.columns]
       this.columnsDialog = true
@@ -366,6 +459,13 @@ export default {
       requestAnimationFrame(() => {
         if (typeof this.$refs.form !== 'undefined') this.$refs.form.resetValidation()
         if (typeof this.$refs.field !== 'undefined') this.$refs.field.focus()
+      })
+    },
+    bucketsDialog (val) {
+      if (!val) return
+      requestAnimationFrame(() => {
+        if (typeof this.$refs.bucketsForm !== 'undefined') this.$refs.bucketsForm.resetValidation()
+        if (typeof this.$refs.bucketsName !== 'undefined') this.$refs.bucketsName.focus()
       })
     }
   }
