@@ -37,8 +37,6 @@ const connection = () => {
     clientHeaders: [],
     clientItems: [],
     clientQueries: '',
-    clientCursor: null,
-    clientRange: null,
     clientQuery: { query: '', range: null },
     clientQueryStopped: false,
     clientExecuting: null, // query, explain, stop
@@ -164,8 +162,6 @@ const mutations = {
   newConnection(state) {
     // Store Client ACE Editor (current connection)
     state.connections[state.currentConn].clientQueries = state.components.editor.getValue()
-    state.connections[state.currentConn].clientCursor = state.components.editor.getCursorPosition()
-    state.connections[state.currentConn].clientRange = state.components.editor.selection.getRange()
     state.connections[state.currentConn].clientSession = state.components.editor.session
     // Add new connection
     state.connectionIndex += 1
@@ -185,8 +181,6 @@ const mutations = {
   changeConnection(state, data) {
     // Store Client ACE Editor (current connection)
     state.connections[state.currentConn].clientQueries = state.components.editor.getValue()
-    state.connections[state.currentConn].clientCursor = state.components.editor.getCursorPosition()
-    state.connections[state.currentConn].clientRange = state.components.editor.selection.getRange()
     state.connections[state.currentConn].clientSession = state.components.editor.session
     // Change current connection
     state.currentConn = data
@@ -222,8 +216,6 @@ const mutations = {
         state.currentConn = data
       }
     }
-    // Load Client ACE Editor
-    state.components.editor.setValue(state.connections[state.currentConn].clientQueries, 1)
   },
   addHistory(state, data) {
     const server = 'server' in data ? data['server'] : state.connections[state.currentConn].server
