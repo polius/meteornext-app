@@ -70,7 +70,11 @@ class Cloud:
     # Internal Methods #
     ####################
     def get(self, user):
+        # Get Cloud
         cloud = self._cloud.get(user['id'], user['group_id'])
+        # Parse Buckets
+        for c in cloud:
+            c['buckets'] = c['buckets'].split(',') if c['buckets'] else []
         # Protect Secret Keys
         for c in cloud:
             c['secret_key'] = {} if c['secret_key'] else None
@@ -92,6 +96,8 @@ class Cloud:
         # Check cloud keys exists
         if self._cloud.exist(user['id'], user['group_id'], cloud):
             return jsonify({'message': 'This cloud key name currently exists'}), 400
+        # Parse buckets
+        cloud['buckets'] = ','.join([i.strip() for i in cloud['buckets']]) if len(cloud['buckets']) > 0 else None
         # Add cloud key
         self._cloud.post(user['id'], user['group_id'], cloud)
         return jsonify({'message': 'Cloud key added successfully'}), 200
@@ -103,6 +109,10 @@ class Cloud:
         # Check cloud key exists
         if self._cloud.exist(user['id'], user['group_id'], cloud):
             return jsonify({'message': 'This cloud key name currently exists'}), 400
+        # Parse buckets
+        cloud['buckets'] = ','.join([i.strip() for i in cloud['buckets']]) if len(cloud['buckets']) > 0 else None
+        # Parse secret key
+        cloud['secret_key'] = '<secret_key>' if type(cloud['secret_key']) is dict else cloud['secret_key']
         # Edit cloud key
         self._cloud.put(user['id'], user['group_id'], cloud)
         return jsonify({'message': 'Cloud key edited successfully'}), 200
