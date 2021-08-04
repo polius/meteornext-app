@@ -7,7 +7,7 @@ class Cloud:
     def get(self, user_id, group_id, cloud_id=None):
         if cloud_id is None:
             query = """
-                SELECT id, name, group_id, type, access_key, secret_key, shared, owner_id, created_by, created_at
+                SELECT id, name, group_id, type, access_key, secret_key, buckets, shared, owner_id, created_by, created_at
                 FROM cloud
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)
@@ -16,7 +16,7 @@ class Cloud:
             return self._sql.execute(query, (group_id, user_id))
         else:
             query = """
-                SELECT id, name, group_id, type, access_key, secret_key, shared, owner_id, created_by, created_at
+                SELECT id, name, group_id, type, access_key, secret_key, buckets, shared, owner_id, created_by, created_at
                 FROM cloud
                 WHERE group_id = %s
                 AND (shared = 1 OR owner_id = %s)
@@ -26,10 +26,10 @@ class Cloud:
 
     def post(self, user_id, group_id, cloud):
         query = """
-            INSERT INTO cloud (name, group_id, type, access_key, secret_key, shared, owner_id, created_by, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s)
+            INSERT INTO cloud (name, group_id, type, access_key, secret_key, buckets, shared, owner_id, created_by, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, IF(%s = 1, NULL, %s), %s, %s)
         """
-        self._sql.execute(query, (cloud['name'], group_id, cloud['type'], cloud['access_key'], cloud['secret_key'], cloud['shared'], cloud['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
+        self._sql.execute(query, (cloud['name'], group_id, cloud['type'], cloud['access_key'], cloud['secret_key'], cloud['buckets'], cloud['shared'], cloud['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")))
 
     def put(self, user_id, group_id, cloud):
         query = """
@@ -38,6 +38,7 @@ class Cloud:
                 type = %s,
                 access_key = %s,
                 secret_key = IF(%s = '<secret_key>', `secret_key`, %s),
+                buckets = %s,
                 shared = %s,
                 owner_id = IF(%s = 1, NULL, %s),
                 updated_by = %s,
@@ -45,7 +46,7 @@ class Cloud:
             WHERE id = %s
             AND group_id = %s
         """
-        self._sql.execute(query, (cloud['name'], cloud['type'], cloud['access_key'], cloud['secret_key'], cloud['secret_key'], cloud['shared'], cloud['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), cloud['id'], group_id))
+        self._sql.execute(query, (cloud['name'], cloud['type'], cloud['access_key'], cloud['secret_key'], cloud['secret_key'], cloud['buckets'], cloud['shared'], cloud['shared'], user_id, user_id, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), cloud['id'], group_id))
 
     def delete(self, user_id, group_id, cloud_id):
         query = """

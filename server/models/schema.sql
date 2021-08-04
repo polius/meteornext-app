@@ -223,7 +223,7 @@ CREATE TABLE `cloud` (
   `type` ENUM('aws','google') NOT NULL,
   `access_key` VARCHAR(191) NOT NULL,
   `secret_key` VARCHAR(191) NOT NULL,
-  `buckets` TEXT NOT NULL,
+  `buckets` TEXT NULL,
   `shared` TINYINT(1) NOT NULL,
   `owner_id` INT UNSIGNED NULL,
   `created_by` INT UNSIGNED NOT NULL,

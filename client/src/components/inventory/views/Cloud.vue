@@ -97,7 +97,7 @@
                         </v-toolbar-items>
                       </v-toolbar>
                       <v-divider></v-divider>
-                      <v-data-table v-model="bucketsSelected" :headers="bucketsHeaders" :items="bucketsItems" :search="bucketsSearch" :hide-default-header="bucketsItems.length == 0" :hide-default-footer="bucketsItems.length < 11" item-key="name" show-select class="elevation-1" style="padding-top:5px;">
+                      <v-data-table v-model="bucketsSelected" :headers="bucketsHeaders" :items="bucketsItems" :search="bucketsSearch" :hide-default-header="bucketsItems.length == 0" :hide-default-footer="bucketsItems.length < 6" :options="{itemsPerPage: 5}" item-key="name" show-select class="elevation-1" style="padding-top:5px;">
                         <template v-ripple v-slot:[`header.data-table-select`]="{}">
                           <v-simple-checkbox
                             :value="bucketsItems.length == 0 ? false : bucketsSelected.length == bucketsItems.length"
@@ -219,7 +219,7 @@ export default {
     items: [],
     selected: [],
     search: '',
-    item: { name: '', type: '', access_key: '', secret_key: '', shared: false },
+    item: { name: '', type: '', access_key: '', secret_key: '', buckets: [], shared: false },
     mode: '',
     showSecret: false,
     // Dialog
@@ -272,7 +272,9 @@ export default {
     },
     newCloud() {
       this.mode = 'new'
-      this.item = { name: '', type: '', access_key: '', secret_key: '', shared: false }
+      this.item = { name: '', type: '', access_key: '', secret_key: '', buckets: [], shared: false }
+      this.bucketsItems = []
+      this.bucketsSelected = []
       this.dialog_title = 'NEW CLOUD KEY'
       this.dialog = true
     },
@@ -281,6 +283,8 @@ export default {
       this.$nextTick(() => {
         this.item = JSON.parse(JSON.stringify(this.selected[0]))
         this.item.shared = (!this.owner) ? false : this.item.shared
+        this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
+        this.bucketsSelected = []
         this.dialog_title = 'CLONE CLOUD KEY'
         this.dialog = true
       })
@@ -289,6 +293,8 @@ export default {
       this.mode = 'edit'
       this.$nextTick(() => {
         this.item = JSON.parse(JSON.stringify(this.selected[0]))
+        if ('buckets' in this.selected[0]) this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
+        this.bucketsSelected = []
         this.dialog_title = 'EDIT CLOUD KEY'
         this.dialog = true
       })
@@ -311,7 +317,7 @@ export default {
       }
       // Add item in the DB
       this.loading = true
-      const payload = this.item
+      const payload = {...this.item, buckets: this.bucketsItems.map(x => x.name)}
       axios.post('/inventory/cloud', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -333,7 +339,7 @@ export default {
       }
       // Edit item in the DB
       this.loading = true
-      const payload = this.item
+      const payload = {...this.item, buckets: this.bucketsItems.map(x => x.name)}
       axios.put('/inventory/cloud', payload)
         .then((response) => {
           this.notification(response.data.message, '#00b16a')
@@ -417,10 +423,14 @@ export default {
         }
       }
       if (this.bucketsDialogMode == 'new') this.bucketsItems.push({name: this.bucketsDialogName})
-      else if (this.bucketsDialogMode == 'edit') this.bucketsSelected[0] = {name: this.bucketsDialogName}
+      else if (this.bucketsDialogMode == 'edit') {
+        this.bucketsItems = this.bucketsItems.filter(x => x.name != this.bucketsSelected[0]['name'])
+        this.bucketsItems.push({name: this.bucketsDialogName})
+      }
       else if (this.bucketsDialogMode == 'delete') this.bucketsItems = this.bucketsItems.filter(x => !this.bucketsSelected.some(y => y.name == x.name))
-      this.bucketsDialog = false
+      this.bucketsItems.sort((a, b) => a.name.localeCompare(b.name))
       this.bucketsSelected = []
+      this.bucketsDialog = false
     },
     openColumnsDialog() {
       this.columnsRaw = [...this.columns]
