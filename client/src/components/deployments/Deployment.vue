@@ -294,7 +294,7 @@
                       </v-toolbar-items>
                     </v-toolbar>
                     <v-divider></v-divider>
-                    <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="id" show-select :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1">
+                    <v-data-table v-model="information_dialog_query_selected" :headers="information_dialog_data.query_headers" :items="information_dialog_data.queries" item-key="id" show-select :hide-default-header="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length == 0" :hide-default-footer="typeof information_dialog_data.queries === 'undefined' || information_dialog_data.queries.length < 11" class="elevation-1">
                       <template v-ripple v-slot:[`header.data-table-select`]="{}">
                         <v-simple-checkbox
                           :value="information_dialog_data.queries.length == 0 ? false : information_dialog_query_selected.length == information_dialog_data.queries.length"
