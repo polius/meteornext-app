@@ -219,8 +219,6 @@ export default {
       'clientHeaders',
       'clientItems',
       'clientQueries',
-      'clientCursor',
-      'clientRange',
       'clientQuery',
       'clientQueryStopped',
       'bottomBar',
@@ -248,7 +246,10 @@ export default {
   },
   watch: {
     sidebarMode(val) {
-      if (val == 'objects') this.editor.setValue(this.clientQueries, 1)
+      if (val == 'objects') this.editor.renderer.updateFull()
+    },
+    headerTabSelected(val) {
+      if (val == 'client') this.editor.renderer.updateFull()
     },
     currentConn() {
       // Reload Table Headers
@@ -258,38 +259,13 @@ export default {
       // Discard any previous table modifications
       this.cellEditingDiscard()
       // Load Current Connnection Editor
-      if (this.clientSession == null) {
-        this.clientSession = ace.createEditSession('', 'ace/mode/mysql')
-        this.editor.setSession(this.clientSession)
-      }
-      else this.editor.setSession(this.clientSession)
-      this.editor.setValue(this.clientQueries, 1)
-      if (this.clientCursor != null && this.clientRange != null) {
-        this.editor.moveCursorTo(this.clientCursor.row, this.clientCursor.column)
-        let reverse = (this.clientCursor.row == this.clientRange.start.row && this.clientCursor.column == this.clientRange.start.column)
-        this.editor.selection.setSelectionRange(this.clientRange, reverse)
-      }
+      if (this.clientSession == null) this.clientSession = ace.createEditSession('', 'ace/mode/mysql')
+      this.editor.setSession(this.clientSession)
       if (this.headerTabSelected == 'client' && this.sidebarMode == 'objects') this.editor.focus()
     },
     dialog: function(val) {
       this.dialogOpened = val
       if (!val) this.editor.focus()
-    },
-    headerTabSelected(newValue, oldValue) {
-      if (newValue == 'client') {
-        this.editor.setValue(this.clientQueries, 1)
-        if (this.clientCursor != null && this.clientRange != null) {
-          this.editor.moveCursorTo(this.clientCursor.row, this.clientCursor.column)
-          let reverse = (this.clientCursor.row == this.clientRange.start.row && this.clientCursor.column == this.clientRange.start.column)
-          this.editor.selection.setSelectionRange(this.clientRange, reverse)
-        }
-        if (this.database != null && this.database.length > 0) this.editor.focus()
-      }
-      else if (oldValue == 'client') {
-        this.clientQueries = this.editor.getValue()
-        this.clientCursor = this.editor.getCursorPosition()
-        this.clientRange = this.editor.selection.getRange()
-      }
     },
   },
   methods: {
