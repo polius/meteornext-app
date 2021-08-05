@@ -456,16 +456,16 @@ class Restore:
         # List all buckets
         try:
             buckets = []
-            response = client.list_buckets()
             exception = None
-            for idx, item in enumerate(response['Buckets']):
-                try:
-                    location = client.get_bucket_location(Bucket=item['Name'])
-                    buckets.append({'name': item['Name'], 'region': location['LocationConstraint'], 'date': item['CreationDate']})
-                except Exception as e:
-                    exception = e
-            if len(buckets) == 0 and exception:
-                raise exception
+            if cloud['buckets']:
+                for bucket in cloud['buckets'].split(','):
+                    try:
+                        location = client.get_bucket_location(Bucket=bucket)
+                        buckets.append({'name': bucket, 'region': location['LocationConstraint']})
+                    except Exception as e:
+                        exception = e
+                if len(buckets) == 0 and exception:
+                    raise exception
             return jsonify({'buckets': buckets}), 200
         except Exception as e:
             return jsonify({'message': str(e)}), 400
