@@ -249,8 +249,8 @@ export default {
       this.last_updated = last_updated
     },
     openServers() {
-      this.treeviewSelectedRaw = JSON.parse(JSON.stringify(this.treeviewSelected))
-      this.treeviewOpenedRaw = JSON.parse(JSON.stringify(this.treeviewOpened))
+      this.treeviewSelectedRaw = [...this.treeviewSelected]
+      this.treeviewOpenedRaw = [...this.treeviewOpened]
       this.servers_dialog = true
     },
     submitServers() {
@@ -258,8 +258,8 @@ export default {
       const payload = this.treeviewSelectedRaw
       axios.put('/monitoring/processlist', payload)
         .then((response) => {
-          this.treeviewSelected = JSON.parse(JSON.stringify(this.treeviewSelectedRaw))
-          this.treeviewOpened = JSON.parse(JSON.stringify(this.treeviewOpenedRaw))
+          this.treeviewSelected = [...this.treeviewSelectedRaw]
+          this.treeviewOpened = [...this.treeviewOpenedRaw]
           this.pending_servers = true
           this.processlist_origin = {}
           this.processlist_items = {}
@@ -284,7 +284,7 @@ export default {
     },
     applyFilter() {
       this.processlist_items = {}
-      var threads = JSON.parse(JSON.stringify(this.processlist_origin))
+      var threads = {...this.processlist_origin}
       for (let i in threads) {
         this.processlist_items[i] = []
         for (let j = 0; j < threads[i].length; ++j) {

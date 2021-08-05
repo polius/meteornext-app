@@ -24,7 +24,7 @@
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
             :indeterminate="selected.length > 0 && selected.length != items.length"
-            @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
+            @click="selected.length == items.length ? selected = [] : selected = [...items]">
           </v-simple-checkbox>
         </template>
         <template v-slot:[`item.shared`]="{ item }">
@@ -300,22 +300,18 @@ export default {
     },
     cloneAuxiliary() {
       this.mode = 'clone'
-      this.$nextTick(() => {
-        this.item = JSON.parse(JSON.stringify(this.selected[0]))
-        this.item.shared = (!this.owner) ? false : this.item.shared
-        this.versions = this.engines[this.item.engine]
-        this.dialog_title = 'CLONE AUXILIARY'
-        this.dialog = true
-      })
+      this.item = {...this.selected[0]}
+      this.item.shared = (!this.owner) ? false : this.item.shared
+      this.versions = this.engines[this.item.engine]
+      this.dialog_title = 'CLONE AUXILIARY'
+      this.dialog = true
     },
     editAuxiliary() {
       this.mode = 'edit'
-      this.$nextTick(() => {
-        this.item = JSON.parse(JSON.stringify(this.selected[0]))
-        this.versions = this.engines[this.item.engine]
-        this.dialog_title = 'EDIT AUXILIARY'
-        this.dialog = true
-      })
+      this.item = {...this.selected[0]}
+      this.versions = this.engines[this.item.engine]
+      this.dialog_title = 'EDIT AUXILIARY'
+      this.dialog = true
     },
     deleteAuxiliary() {
       this.mode = 'delete'

@@ -153,7 +153,7 @@
                                 <v-simple-checkbox
                                   :value="scanItems.length == 0 ? false : scanSelected.length == scanItems.length"
                                   :indeterminate="scanSelected.length > 0 && scanSelected.length != scanItems.length"
-                                  @click="scanSelected.length == scanItems.length ? scanSelected = [] : scanSelected = JSON.parse(JSON.stringify(scanItems))">
+                                  @click="scanSelected.length == scanItems.length ? scanSelected = [] : scanSelected = [...scanItems]">
                                 </v-simple-checkbox>
                               </template>
                               <template v-slot:[`item.size`]="{ item }">

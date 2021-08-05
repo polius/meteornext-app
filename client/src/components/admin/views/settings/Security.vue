@@ -69,14 +69,14 @@ export default {
   props: ['info','init'],
   created() {
     if (Object.keys(this.info).length > 0) {
-      this.security = JSON.parse(JSON.stringify(this.info))
+      this.security = {...this.info}
       this.currentUrl = this.security['current']
       delete this.security.current
     }
   },
   watch: {
     info: function(val) {
-      this.security = JSON.parse(JSON.stringify(val))
+      this.security = {...val}
       this.currentUrl = this.security['current']
       delete this.security.current
     },

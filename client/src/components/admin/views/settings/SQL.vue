@@ -29,11 +29,11 @@ export default {
   }),
   props: ['info','init'],
   created() {
-    if (Object.keys(this.info).length > 0) this.sql = JSON.parse(JSON.stringify(this.info))
+    if (Object.keys(this.info).length > 0) this.sql = {...this.info}
   },
   watch: {
     info: function(val) {
-      this.sql = JSON.parse(JSON.stringify(val))
+      this.sql = {...val}
     },
     init: function(val) {
       this.loading = val

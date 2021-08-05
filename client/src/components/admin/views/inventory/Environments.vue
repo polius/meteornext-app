@@ -5,7 +5,7 @@
         <v-simple-checkbox
           :value="items.length == 0 ? false : selected.length == items.length"
           :indeterminate="selected.length > 0 && selected.length != items.length"
-          @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
+          @click="selected.length == items.length ? selected = [] : selected = [...items]">
         </v-simple-checkbox>
       </template>
       <template v-slot:[`item.servers`]="{ item }">
@@ -179,7 +179,7 @@ export default {
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
     treeviewFiltered: function() {
-      var items = JSON.parse(JSON.stringify(this.treeviewItems))
+      var items = [...this.treeviewItems]
       if (this.item.shared) {
         for (let i = 0; i < items.length; ++i) {
           for (let j = items[i]['children'].length - 1; j >= 0; --j) {
@@ -331,24 +331,20 @@ export default {
     cloneEnvironment() {
       this.mode = 'clone'
       this.users = []
-      this.$nextTick(() => {
-        this.item = JSON.parse(JSON.stringify(this.selected[0]))
-        delete this.item['id']
-        this.getUsers()
-        this.getServers()
-        this.dialog_title = 'CLONE ENVIRONMENT'
-        this.dialog = true
-      })
+      this.item = {...this.selected[0]}
+      delete this.item['id']
+      this.getUsers()
+      this.getServers()
+      this.dialog_title = 'CLONE ENVIRONMENT'
+      this.dialog = true
     },  
     editEnvironment() {
       this.mode = 'edit'
-      this.$nextTick(() => {
-        this.item = JSON.parse(JSON.stringify(this.selected[0]))
-        this.getUsers()
-        this.getServers()
-        this.dialog_title = 'EDIT ENVIRONMENT'
-        this.dialog = true
-      })
+      this.item = {...this.selected[0]}
+      this.getUsers()
+      this.getServers()
+      this.dialog_title = 'EDIT ENVIRONMENT'
+      this.dialog = true
     },
     updateSelected() {
       var treeviewSelected = []

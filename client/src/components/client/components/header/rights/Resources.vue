@@ -58,7 +58,7 @@ export default {
     reloadRights(mode) {
       this.mode = mode
       this.rightsForm['resources'] = this.$refs.form
-      this.resources = JSON.parse(JSON.stringify(this.rights['resources']))
+      this.resources = {...this.rights['resources']}
       if (mode == 'clone') this.rights['resources'] = { max_queries: '0', max_updates: '0', max_connections: '0', max_simultaneous: '0' }
       requestAnimationFrame(() => { this.$refs.form.resetValidation() })
     },

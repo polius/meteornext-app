@@ -64,7 +64,7 @@ export default {
     reloadRights(mode) {
       this.mode = mode
       this.rightsForm['login'] = this.$refs.form
-      this.login = JSON.parse(JSON.stringify(this.rights['login']))
+      this.login = {...this.rights['login']}
       if (mode == 'new') this.login['passwordType'] = 'String'
       if (['new','clone'].includes(mode)) this.$nextTick(() => { this.$refs.username.focus() })
       if (mode == 'clone') this.rights['login'] = {}
