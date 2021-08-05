@@ -487,7 +487,6 @@ export default {
       awsBucketsHeaders: [
         { text: 'Name', align: 'left', value: 'name' },
         { text: 'Region', align: 'left', value: 'region' },
-        { text: 'Creation Date', align: 'left', value: 'date' },
       ],
       awsBucketsItems: [],
       awsBucketsSearch: '',
@@ -558,8 +557,6 @@ export default {
       })
     },
     fileObject(val) {
-      console.log(val)
-      console.log(val.size)
       this.source = val.name
       this.size = val.size 
     },
@@ -606,7 +603,6 @@ export default {
     },
     cloudKeysClick(item) {
       this.cloudKeysSelected = [item]
-      this.cloudPath = ['Cloud Keys', item.type == 'aws' ? 'Amazon S3' : '']
       this.getAWSBuckets()
     },
     awsBucketsClick(item) {
@@ -661,7 +657,7 @@ export default {
     },
     parseAWSBuckets(buckets) {
       this.awsBucketsItems = buckets
-      this.cloudPath = ['Cloud Keys', this.cloudPath[1]]
+      this.cloudPath = ['Cloud Keys', this.cloudKeysSelected[0].type == 'aws' ? 'Amazon S3' : 'Google Cloud']
     },
     getAWSObjects(search) {
       // Test Connection
@@ -820,7 +816,6 @@ export default {
         }
       })
       .catch((error) => {
-        console.log(error)
         if ([401,422,503].includes(error.response.status)) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))
         else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
       })
