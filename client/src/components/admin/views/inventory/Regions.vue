@@ -5,7 +5,7 @@
         <v-simple-checkbox
           :value="items.length == 0 ? false : selected.length == items.length"
           :indeterminate="selected.length > 0 && selected.length != items.length"
-          @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
+          @click="selected.length == items.length ? selected = [] : selected = [...items]">
         </v-simple-checkbox>
       </template>
       <template v-slot:[`item.ssh_tunnel`]="{ item }">
@@ -240,21 +240,17 @@ export default {
     cloneRegion() {
       this.mode = 'clone'
       this.users = []
-      this.$nextTick(() => {
-        this.item = JSON.parse(JSON.stringify(this.selected[0]))
-        this.getUsers()
-        this.dialog_title = 'CLONE REGION'
-        this.dialog = true
-      })
+      this.item = {...this.selected[0]}
+      this.getUsers()
+      this.dialog_title = 'CLONE REGION'
+      this.dialog = true
     },
     editRegion() {
       this.mode = 'edit'
-      this.$nextTick(() => {
-        this.item = JSON.parse(JSON.stringify(this.selected[0]))
-        this.getUsers()
-        this.dialog_title = 'EDIT REGION'
-        this.dialog = true
-      })
+      this.item = {...this.selected[0]}
+      this.getUsers()
+      this.dialog_title = 'EDIT REGION'
+      this.dialog = true
     },
     deleteRegion() {
       this.mode = 'delete'

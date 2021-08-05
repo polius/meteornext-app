@@ -22,7 +22,7 @@
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
             :indeterminate="selected.length > 0 && selected.length != items.length"
-            @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
+            @click="selected.length == items.length ? selected = [] : selected = [...items]">
           </v-simple-checkbox>
         </template>
         <template v-slot:[`item.servers`]="{ item }">
@@ -148,7 +148,7 @@ export default {
     readOnly: function() { return this.mode == 'edit' && !this.owner && this.item.shared == 1 },
     treeviewFiltered: function() {
       if (this.item.shared && this.treeviewItems.length > 0) {
-        var items = JSON.parse(JSON.stringify(this.treeviewItems))
+        var items = [...this.treeviewItems]
         for (let i = 0; i < items.length; ++i) {
           for (let j = items[i]['children'].length - 1; j >= 0; --j) {
             if (items[i]['children'][j]['shared'] == 0) {
@@ -283,23 +283,19 @@ export default {
     },
     cloneEnvironment() {
       this.mode = 'clone'
-      this.$nextTick(() => {
-        this.item = JSON.parse(JSON.stringify(this.selected[0]))
-        this.item.shared = (!this.owner) ? false : this.item.shared
-        delete this.item['id']
-        this.dialog_title = 'CLONE ENVIRONMENT'
-        this.dialog = true
-        setTimeout(this.updateSelected, 1)
-      })
+      this.item = {...this.selected[0]}
+      this.item.shared = (!this.owner) ? false : this.item.shared
+      delete this.item['id']
+      this.dialog_title = 'CLONE ENVIRONMENT'
+      this.dialog = true
+      setTimeout(this.updateSelected, 1)
     },
     editEnvironment() {
       this.mode = 'edit'
-      this.$nextTick(() => {
-        this.item = JSON.parse(JSON.stringify(this.selected[0]))
-        this.dialog_title = 'EDIT ENVIRONMENT'
-        this.dialog = true
-        setTimeout(this.updateSelected, 1)
-      })
+      this.item = {...this.selected[0]}
+      this.dialog_title = 'EDIT ENVIRONMENT'
+      this.dialog = true
+      setTimeout(this.updateSelected, 1)
     },
     updateSelected() {
       var treeviewSelected = []

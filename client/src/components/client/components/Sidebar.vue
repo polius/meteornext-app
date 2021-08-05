@@ -406,8 +406,8 @@ export default {
           servers[index]['children'].push(server)
         }
       }
-      this.servers = JSON.parse(JSON.stringify(servers))
-      this.sidebarItems = JSON.parse(JSON.stringify(servers))
+      this.servers = [...servers]
+      this.sidebarItems = [...servers]
       // Parse Servers List
       this.serversList = data.servers.map(x => ({ id: x.id, name: x.name, shared: x.shared, folder: x.folder_name }))
     },
@@ -574,8 +574,8 @@ export default {
         objects[5]['children'].push({ id: 'event|' + event['name'], ...event, type: 'Event', parentId: 'events' })
         completer.push({ value: event['name'], meta: 'Event' })
       }
-      current.sidebarItems = JSON.parse(JSON.stringify(objects))
-      current.sidebarOrigin = JSON.parse(JSON.stringify(objects))
+      current.sidebarItems = [...objects]
+      current.sidebarOrigin = [...objects]
 
       // Add objects to the editor autocompleter
       this.editorAddCompleter('objects', completer)
@@ -614,7 +614,7 @@ export default {
     },
     sidebarSearchChanged(search) {
       // Get items filtered
-      let items = JSON.parse(JSON.stringify(this.sidebarOrigin))
+      let items = [...this.sidebarOrigin]
       if (search.length > 0) {
         for (let i = items.length - 1; i >= 0; --i) {
           items[i].children = items[i].children.filter(x => x.name.includes(search))

@@ -44,7 +44,7 @@
                   <v-simple-checkbox
                     :value="query_items.length == 0 ? false : query_selected.length == query_items.length"
                     :indeterminate="query_selected.length > 0 && query_selected.length != query_items.length"
-                    @click="query_selected.length == query_items.length ? query_selected = [] : query_selected = JSON.parse(JSON.stringify(query_items))">
+                    @click="query_selected.length == query_items.length ? query_selected = [] : query_selected = [...query_items]">
                   </v-simple-checkbox>
                 </template>
               </v-data-table>

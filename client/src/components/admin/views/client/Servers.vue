@@ -5,7 +5,7 @@
         <v-simple-checkbox
           :value="items.length == 0 ? false : selected.length == items.length"
           :indeterminate="selected.length > 0 && selected.length != items.length"
-          @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
+          @click="selected.length == items.length ? selected = [] : selected = [...items]">
         </v-simple-checkbox>
       </template>
       <template v-slot:[`item.server`]="{ item }">
@@ -172,7 +172,7 @@ export default {
       this.loading = true
       var payload = {}
       // Build Filter
-      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
+      let filter = this.filterApplied ? {...this.filter} : null
       if (filter != null) payload['filter'] = filter
       // Build Sort
       const { sortBy, sortDesc } = this.options

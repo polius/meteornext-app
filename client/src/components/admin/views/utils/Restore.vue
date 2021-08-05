@@ -21,7 +21,7 @@
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
             :indeterminate="selected.length > 0 && selected.length != items.length"
-            @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
+            @click="selected.length == items.length ? selected = [] : selected = [...items]">
           </v-simple-checkbox>
         </template>
         <template v-slot:[`item.mode`]="{ item }">
@@ -384,9 +384,9 @@ export default {
       this.loading = true
       var payload = {}
       // Build Filter
-      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
+      let filter = this.filterApplied ? {...this.filter} : null
       if (this.filterApplied) {
-        this.filterOrigin = JSON.parse(JSON.stringify(this.filter))
+        this.filterOrigin = {...this.filter}
         for (let i of ['startedFrom','startedTo','endedFrom','endedTo']) {
           if (i in filter) filter[i] = moment(this.filter[i]).utc().format("YYYY-MM-DD HH:mm:ss")
         }
@@ -486,7 +486,7 @@ export default {
       }
     },
     openFilter() {
-      this.filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filterOrigin)) : {}
+      this.filter = this.filterApplied ? {...this.filterOrigin} : {}
       this.filterDialog = true
     },
     submitFilter() {

@@ -74,7 +74,7 @@
                     <v-simple-checkbox
                       :value="ownersItems.length == 0 ? false : ownersSelected.length == ownersItems.length"
                       :indeterminate="ownersSelected.length > 0 && ownersSelected.length != ownersItems.length"
-                      @click="ownersSelected.length == ownersItems.length ? ownersSelected = [] : ownersSelected = JSON.parse(JSON.stringify(ownersItems))">
+                      @click="ownersSelected.length == ownersItems.length ? ownersSelected = [] : ownersSelected = [...ownersItems]">
                     </v-simple-checkbox>
                   </template>
                 </v-data-table>
@@ -447,7 +447,7 @@ export default {
     ownersDialogSubmit() {
       if (this.ownersDialogOptions.mode == 'new') {
         for (let owner of this.ownersDialogSelected) {
-          let obj = JSON.parse(JSON.stringify(this.ownersDialogRawItems.find(x => x.username == owner)))
+          let obj = {...this.ownersDialogRawItems.find(x => x.username == owner)}
           delete obj['owner']
           this.ownersItems.push(obj)
         }

@@ -25,7 +25,7 @@
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
             :indeterminate="selected.length > 0 && selected.length != items.length"
-            @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
+            @click="selected.length == items.length ? selected = [] : selected = [...items]">
           </v-simple-checkbox>
         </template>
         <template v-slot:[`item.mfa`]="{ item }">
@@ -205,8 +205,8 @@ export default {
       axios.get('/admin/users')
         .then((response) => {
           const data = response.data.data.users.map(x => ({...x, created_at: this.dateFormat(x.created_at), updated_at: this.dateFormat(x.updated_at), last_login: this.dateFormat(x.last_login), last_ping: this.dateFormat(x.last_ping)}))
-          this.users = JSON.parse(JSON.stringify(data))
-          this.items = JSON.parse(JSON.stringify(data))
+          this.users = [...data]
+          this.items = [...data]
           this.groups = response.data.data.groups.map(x => x.name)
         })
         .catch((error) => {
@@ -224,7 +224,7 @@ export default {
     },
     editUser() {
       this.mode = 'edit'
-      let item = JSON.parse(JSON.stringify(this.selected[0]))
+      let item = {...this.selected[0]}
       this.item = item
       this.mfaUsername = item.username
       this.dialog_title = 'EDIT USER'

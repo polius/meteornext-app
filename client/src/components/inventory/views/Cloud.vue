@@ -24,7 +24,7 @@
           <v-simple-checkbox
             :value="items.length == 0 ? false : selected.length == items.length"
             :indeterminate="selected.length > 0 && selected.length != items.length"
-            @click="selected.length == items.length ? selected = [] : selected = JSON.parse(JSON.stringify(items))">
+            @click="selected.length == items.length ? selected = [] : selected = [...items]">
           </v-simple-checkbox>
         </template>
         <template v-slot:[`item.type`]="{ item }">
@@ -104,7 +104,7 @@
                           <v-simple-checkbox
                             :value="bucketsItems.length == 0 ? false : bucketsSelected.length == bucketsItems.length"
                             :indeterminate="bucketsSelected.length > 0 && bucketsSelected.length != bucketsItems.length"
-                            @click="bucketsSelected.length == bucketsItems.length ? bucketsSelected = [] : bucketsSelected = JSON.parse(JSON.stringify(bucketsItems))">
+                            @click="bucketsSelected.length == bucketsItems.length ? bucketsSelected = [] : bucketsSelected = [...bucketsItems]">
                           </v-simple-checkbox>
                         </template>
                       </v-data-table>
@@ -282,24 +282,20 @@ export default {
     },
     cloneCloud() {
       this.mode = 'clone'
-      this.$nextTick(() => {
-        this.item = JSON.parse(JSON.stringify(this.selected[0]))
-        this.item.shared = (!this.owner) ? false : this.item.shared
-        this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
-        this.bucketsSelected = []
-        this.dialog_title = 'CLONE CLOUD KEY'
-        this.dialog = true
-      })
+      this.item = {...this.selected[0]}
+      this.item.shared = (!this.owner) ? false : this.item.shared
+      this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
+      this.bucketsSelected = []
+      this.dialog_title = 'CLONE CLOUD KEY'
+      this.dialog = true
     },
     editCloud() {
       this.mode = 'edit'
-      this.$nextTick(() => {
-        this.item = JSON.parse(JSON.stringify(this.selected[0]))
-        if ('buckets' in this.selected[0]) this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
-        this.bucketsSelected = []
-        this.dialog_title = 'EDIT CLOUD KEY'
-        this.dialog = true
-      })
+      this.item = {...this.selected[0]}
+      if ('buckets' in this.selected[0]) this.bucketsItems = this.selected[0]['buckets'].map(x => ({name: x}))
+      this.bucketsSelected = []
+      this.dialog_title = 'EDIT CLOUD KEY'
+      this.dialog = true
     },
     deleteCloud() {
       this.mode = 'delete'
