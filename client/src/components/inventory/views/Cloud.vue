@@ -95,6 +95,8 @@
                           <v-btn :disabled="bucketsSelected.length != 1" text @click="editBucket()"><v-icon small style="margin-right:10px">fas fa-feather-alt</v-icon>EDIT</v-btn>
                           <v-btn :disabled="bucketsSelected.length == 0" text @click='deleteBucket()'><v-icon small style="margin-right:10px">fas fa-minus</v-icon>DELETE</v-btn>
                         </v-toolbar-items>
+                        <v-divider class="mx-3" inset vertical></v-divider>
+                        <v-text-field v-model="bucketsSearch" append-icon="search" label="Search" color="white" single-line hide-details></v-text-field>
                       </v-toolbar>
                       <v-divider></v-divider>
                       <v-data-table v-model="bucketsSelected" :headers="bucketsHeaders" :items="bucketsItems" :search="bucketsSearch" :hide-default-header="bucketsItems.length == 0" :hide-default-footer="bucketsItems.length < 6" :options="{itemsPerPage: 5}" item-key="name" show-select class="elevation-1" style="padding-top:5px;">
@@ -401,7 +403,6 @@ export default {
       this.bucketsDialog = true
     },
     editBucket() {
-      console.log(this.bucketsSelected)
       this.bucketsDialogMode = 'edit'
       this.bucketsDialogName = this.bucketsSelected[0]['name']
       this.bucketsDialog = true
