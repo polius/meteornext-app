@@ -14,6 +14,7 @@ import models.utils.restore
 import models.utils.scans
 import models.admin.settings
 import models.inventory.servers
+import models.inventory.regions
 import models.inventory.cloud
 import apps.restore.restore
 import apps.restore.scan
@@ -29,6 +30,7 @@ class Restore:
         self._scans = models.utils.scans.Scans(sql)
         self._settings = models.admin.settings.Settings(sql)
         self._servers = models.inventory.servers.Servers(sql)
+        self._regions = models.inventory.regions.Regions(sql)
         self._cloud = models.inventory.cloud.Cloud(sql)
         # Init core
         self._restore_app = apps.restore.restore.Restore(sql)
@@ -233,6 +235,10 @@ class Restore:
         if restore['selected']:
             restore['selected'] = [{'file': i.split('|')[0], 'size': int(i.split('|')[1])} for i in restore['selected'].split('\n')]
 
+        # Parse upload
+        restore['upload'] = json.loads(restore['upload']) if restore['upload'] else None
+
+        # Parse progress
         if restore['progress']:
             raw = restore['progress'].split(' ')
             restore['progress'] = {"value": raw[0], "transferred": raw[1], "rate": raw[2], "elapsed": raw[3]}
@@ -248,19 +254,30 @@ class Restore:
             return jsonify({"message": 'This server does not exist.'}), 400
         server = server[0]
 
+        # Get region details
+        region = self._regions.get(user_id=user['id'], group_id=user['group_id'], region_id=server['region_id'])
+        if len(region) == 0:
+            return jsonify({"message": 'This server does not have a region.'}), 400
+        region = region[0]
+
         # Generate uuid
         uri = str(uuid.uuid4())
 
+        # Init path
+        path = {
+            "local": os.path.join(json.loads(self._settings.get(setting_name='FILES'))['local']['path'], 'restores'),
+            "remote": '.meteor/restores'
+        }
+
         # Make restore folder
-        base_path = json.loads(self._settings.get(setting_name='FILES'))['local']['path'] + '/restores/'
-        if not os.path.exists(os.path.join(base_path, uri)):
-            os.makedirs(os.path.join(base_path, uri))
+        if not os.path.exists(os.path.join(path['local'], uri)):
+            os.makedirs(os.path.join(path['local'], uri))
 
         # Method: file
         if data['mode'] == 'file':
             # Check file size limit
             group = self._groups.get(group_id=user['group_id'])[0]
-            if group['utils_restore_limit'] is not None and int(request.args['size']) >= group['utils_restore_limit'] * 1024**2:
+            if group['utils_restore_limit'] is not None and int(request.form['size']) >= group['utils_restore_limit'] * 1024**2:
                 return jsonify({'message': f"The file size exceeds the maximum allowed ({group['utils_restore_limit']} MB)"}), 400
 
             # Check file constraints
@@ -271,11 +288,11 @@ class Restore:
                 return jsonify({"message": 'The file extension is not valid.'}), 400
 
             # Store file
-            file.save(os.path.join(base_path, uri, secure_filename(file.filename)))
+            file.save(os.path.join(path['local'], uri, secure_filename(file.filename)))
 
             # Build file metadata
             source = file.filename
-            size = os.path.getsize(os.path.join(base_path, uri, secure_filename(file.filename)))
+            size = os.path.getsize(os.path.join(path['local'], uri, secure_filename(file.filename)))
             selected = ''
 
         elif data['mode'] == 'url':
@@ -305,7 +322,8 @@ class Restore:
             'size': size,
             'server_id': data['server'],
             'database': data['database'],
-            'uri': uri
+            'uri': uri,
+            'upload': json.dumps("{'value': 0, 'transferred': 0") if region['ssh_tunnel'] else None
         }
         item['id'] = self._restore.post(user, item)
 
@@ -319,7 +337,7 @@ class Restore:
             item['bucket'] = data['bucket']
 
         # Start import process
-        self._restore_app.start(user, item, server, base_path)
+        self._restore_app.start(user, item, server, region, path)
 
         # Return tracking identifier
         return jsonify({'id': item['id']}), 200
@@ -407,12 +425,12 @@ class Restore:
         data['id'] = self._scans.post(user, data)
 
         # Make scan folder
-        base_path = json.loads(self._settings.get(setting_name='FILES'))['local']['path'] + '/scans/'
-        if not os.path.exists(os.path.join(base_path, data['uri'])):
-            os.makedirs(os.path.join(base_path, data['uri']))
+        local_path = os.path.join(json.loads(self._settings.get(setting_name='FILES'))['local']['path'], '/scans/')
+        if not os.path.exists(os.path.join(local_path, data['uri'])):
+            os.makedirs(os.path.join(local_path, data['uri']))
 
         # Start new scan (threaded)
-        self._scan_app.start(data, base_path)
+        self._scan_app.start(data, local_path)
 
         # Return tracking metadata
         return {'id': data['id'], 'size': data['metadata']['size']}

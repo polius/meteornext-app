@@ -126,7 +126,7 @@
                         </div>
                       </div>
                       <!--  SIZE -->
-                      <div v-if="mode != 'cloud' && (size != null && scanID != null)" class="text-body-1" style="margin-top:15px">File Size: <span class="white--text" style="font-weight:500">{{ formatBytes(size) }}</span></div>
+                      <div v-if="(mode == 'file' && size != null) || (mode == 'url' && scanID != null)" class="text-body-1" style="margin-top:20px">File Size: <span class="white--text" style="font-weight:500">{{ formatBytes(size) }}</span></div>
                       <!-- SCAN -->
                       <div v-if="scanID != null" style="margin-top:15px">
                         <div class="subtitle-1 white--text" style="margin-top:10px; margin-bottom:10px">SCAN</div>
@@ -739,6 +739,7 @@ export default {
       const data = new FormData();
       data.append('mode', this.mode)
       data.append('source', this.fileObject)
+      data.append('size', this.fileObject.size)
       data.append('server', this.server)
       data.append('database', this.database)
       // Build request options
@@ -762,6 +763,7 @@ export default {
         }
       })
       .catch((error) => {
+        console.log(error)
         if (axios.isCancel(error)) {
           this.notification("The upload process has been stopped.", "info")
           this.dialog = false

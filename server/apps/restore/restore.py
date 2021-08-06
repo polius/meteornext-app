@@ -5,22 +5,23 @@ import boto3
 import shutil
 import psutil
 import signal
-import subprocess
 import threading
 from datetime import datetime
 
 import models.notifications
+import apps.restore.core
 
 class Restore:
     def __init__(self, sql):
         self._sql = sql
         self._notifications = models.notifications.Notifications(sql)
 
-    def start(self, user, item, server, base_path):
+    def start(self, user, item, server, region, path):
         # Start Process in another thread
-        t = threading.Thread(target=self.__core, args=(user, item, server, base_path,))
+        t = threading.Thread(target=self.__core, args=(user, item, server, region, path,))
         t.daemon = True
         t.start()
+        # t.join()
 
     def stop(self, pid):
         parent = psutil.Process(pid)
@@ -31,25 +32,34 @@ class Restore:
             except Exception:
                 pass
 
-    def __core(self, user, item, server, base_path):
+    def __core(self, user, item, server, region, paths):
+        # Init Core class
+        core = apps.restore.core.Core(self._sql, item['id'], region)
+
+        # Upload file (if server is cross-region)
+        if item['mode'] == 'file' and region['ssh_tunnel']:
+            # Make dirs if not exist
+            core.execute(f"mkdir -p {os.path.join(paths['remote'], item['uri'])}")
+            # Upload file
+            core.put(os.path.join(paths['local'], item['uri'], item['source']), os.path.join(paths['remote'], item['uri'], item['source']))
+
+        # Define new path
+        path = paths['remote'] if region['ssh_tunnel'] else paths['local']
+
         # Start Import
-        stopped = [False]
-        t = threading.Thread(target=self.__import, args=(item, server, base_path, stopped,))
+        import_status = [None]
+        t = threading.Thread(target=self.__import, args=(core, item, server, path, import_status,))
         t.start()
 
         # Start Monitor
+        monitor_status = [None]
         while t.is_alive():
-            self.__monitor(item, base_path)
+            self.__monitor(core, item, path, monitor_status)
             time.sleep(1)
-        self.__monitor(item, base_path)
+        self.__monitor(core, item, path, monitor_status)
 
         # Update restore status
-        error_path = os.path.join(base_path, item['uri'], 'error.txt')
-        status = 'SUCCESS'
-        if os.path.exists(error_path):
-            with open(error_path, 'rb') as f:
-                if len(f.read().decode('utf-8','ignore').strip()) > 0:
-                    status = 'FAILED'
+        status = 'SUCCESS' if not import_status[0] and not monitor_status[0] else 'FAILED'
         query = """
             UPDATE `restore`
             SET
@@ -60,11 +70,13 @@ class Restore:
         now = self.__utcnow()
         self._sql.execute(query, args=(status, now, item['id']))
 
-        # Remove execution folder from disk
-        shutil.rmtree(os.path.join(base_path, item['uri']))
+        # Remove execution folder from disk (both remote & local)
+        if region['ssh_tunnel']:
+            core.execute(f"rm -rf {os.path.join(paths['remote'], item['uri'])}")
+        shutil.rmtree(os.path.join(paths['local'], item['uri']), ignore_errors=True)
 
         # Send notification
-        if not stopped[0]:
+        if  not import_status[0]:
             notification = {
                 'name': f"A restore has finished",
                 'status': 'ERROR' if status == 'FAILED' else 'SUCCESS',
@@ -75,10 +87,11 @@ class Restore:
             }
             self._notifications.post(user_id=user['id'], notification=notification)
 
-    def __import(self, item, server, base_path, stopped):
-        # Build 'progress_path' & 'error_path'
-        error_path = os.path.join(base_path, item['uri'], 'error.txt')
-        progress_path = os.path.join(base_path, item['uri'], 'progress.txt')
+    def __import(self, core, item, server, path, status):
+        # Build paths
+        error_path = os.path.join(path, item['uri'], 'error.txt')
+        progress_path = os.path.join(path, item['uri'], 'progress.txt')
+        file_path = os.path.join(path, item['uri'], item['source'])
 
         # Check compressed file
         gunzip = ''
@@ -90,56 +103,62 @@ class Restore:
             gunzip = f"| zcat 2> {error_path}"
 
         # Generate presigned-url for cloud mode
-        if item['mode'] == 'cloud':
+        elif item['mode'] == 'cloud':
             client = boto3.client('s3', aws_access_key_id=item['access_key'], aws_secret_access_key=item['secret_key'])
             item['source'] = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': item['bucket'], 'Key': item['source']}, ExpiresIn=60)
 
         # MySQL & Aurora MySQL engines
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
             if item['mode'] == 'file':
-                command = f"export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {os.path.join(base_path, item['uri'], item['source'])} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
+                command = f"export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {file_path} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
             elif item['mode'] in ['url','cloud']:
                 command = f"export MYSQL_PWD={server['password']}; curl -sSL '{item['source']}' 2> {error_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
 
-        # Start Import process
-        p = subprocess.Popen(command, shell=True, stderr=subprocess.PIPE)
-
-        # Add PID & started to the restore
+        # Update restore status
         query = """
             UPDATE `restore`
             SET
-                `pid` = %s,
                 `status` = 'IN PROGRESS',
                 `started` = %s,
                 `updated` = %s
             WHERE `id` = %s
         """
         now = self.__utcnow()
-        self._sql.execute(query, args=(p.pid, now, now, item['id']))
+        self._sql.execute(query, args=(now, now, item['id']))
 
-        # Wait import to finish
-        p.wait()
+        # Start Import process
+        p = core.execute(command)
+        print(f"import_stdout: {p['stdout']}")
+        print(f"import_stderr: {p['stderr']}")
 
         # Check if subprocess command has been killed (= stopped by user).
-        stopped[0] = len(p.stderr.readlines()) > 0
+        print(f"EXECUTION: {p['stderr']}")
+        status[0] = len(p['stderr']) > 0
 
-    def __monitor(self, item, base_path):
+    def __monitor(self, core, item, path, status):
         # Init path vars
-        progress_path = os.path.join(base_path, item['uri'], 'progress.txt')
-        error_path = os.path.join(base_path, item['uri'], 'error.txt')
+        progress_path = os.path.join(path, item['uri'], 'progress.txt')
+        error_path = os.path.join(path, item['uri'], 'error.txt')
 
         # Read files
-        progress = None
-        if os.path.exists(progress_path):
-            p = subprocess.run(f"tr '\r' '\n' < '{progress_path}' | sed '/^$/d' | tail -1", shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            progress = self.__parse_progress(p.stdout) if len(p.stdout) > 0 else None
-
         error = None
-        if os.path.exists(error_path):
-            with open(error_path, 'rb') as f:
-                error = self.__parse_error(f.read().decode('utf-8','ignore'))
+        p = core.execute(f"[ -f {progress_path} ] && tr '\r' '\n' < '{progress_path}' | sed '/^$/d' | tail -1")
+        print(f"monitor1_stdout: {p['stdout']}")
+        print(f"monitor1_stderr: {p['stderr']}")
+        progress = self.__parse_progress(p['stdout']) if len(p['stdout']) > 0 else None
 
-        # Update restore with progress file
+        p = core.execute(f"[ -f {error_path} ] && cat < {error_path}")
+        print(f"monitor2_stdout: {p['stdout']}")
+        print(f"monitor2_stderr: {p['stderr']}")
+        error = self.__parse_error(p['stdout']) if len(p['stdout']) > 0 else None
+        status[0] = error
+
+
+        # if os.path.exists(error_path):
+        #     with open(error_path, 'rb') as f:
+        #         error = self.__parse_error(f.read().decode('utf-8','ignore'))
+
+        # # Update restore with progress file
         query = """
             UPDATE `restore`
             SET 
