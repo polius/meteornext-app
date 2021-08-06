@@ -7,11 +7,11 @@
         <v-toolbar-items class="hidden-sm-and-down">
           <v-menu offset-y>
             <template v-slot:activator="{ attrs, on }">
-              <v-btn color="primary" v-bind="attrs" v-on="on" class="elevation-0"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>{{ tab == 0 ? 'SERVERS' : tab == 1 ? 'REGIONS' : tab == 2 ? 'ENVIRONMENTS' : tab == 3 ? 'AUXILIARY' : tab == 4 ? 'CLOUD' : '' }}</v-btn>
+              <v-btn color="primary" v-bind="attrs" v-on="on" class="elevation-0"><v-icon small style="margin-right:10px">fas fa-mouse-pointer</v-icon>{{ tab == 0 ? 'SERVERS' : tab == 1 ? 'REGIONS' : tab == 2 ? 'ENVIRONMENTS' : tab == 3 ? 'AUXILIARY' : tab == 4 ? 'CLOUD KEYS' : '' }}</v-btn>
             </template>
             <v-list-item-group v-model="tab">
-              <v-list>
-                <v-list-item v-for="item in ['servers','regions','environments','auxiliary','cloud']" :key="item" link>
+              <v-list style="padding:0px">
+                <v-list-item v-for="item in ['servers','regions','environments','auxiliary','cloud keys']" :key="item" link>
                   <v-list-item-title v-text="item.toUpperCase()" class="text-subtitle-2"></v-list-item-title>
                 </v-list-item>
               </v-list>
