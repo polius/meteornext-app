@@ -108,6 +108,10 @@ class Cloud:
             return jsonify({'message': 'This cloud key name currently exists'}), 400
         # Parse buckets
         cloud['buckets'] = ','.join([i.strip() for i in cloud['buckets']]) if len(cloud['buckets']) > 0 else None
+        # Parse secret key
+        if type(cloud['secret_key']) is dict:
+            origin = self._cloud.get(cloud_id=cloud['id'])[0]
+            cloud['secret_key'] = origin['secret_key']
         # Add cloud key
         self._cloud.post(user, cloud)
         return jsonify({'message': 'Cloud key added successfully'}), 200

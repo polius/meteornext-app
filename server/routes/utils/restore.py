@@ -362,7 +362,7 @@ class Restore:
 
         # Check if restore exists
         if len(restore) == 0:
-            return jsonify({'message': 'This restore does not exist.'}), 400
+            return jsonify({'message': 'This restore does not exist'}), 400
         restore = restore[0]
 
         # Check user authority
@@ -371,7 +371,7 @@ class Restore:
 
         # Check if the execution is in progress
         if restore['status'] != 'IN PROGRESS':
-            return jsonify({'message': 'The execution has already finished.'}), 400
+            return jsonify({'message': 'The execution has already finished'}), 400
 
         # Stop the execution
         self._restore.stop(user, data['id'])
@@ -380,7 +380,7 @@ class Restore:
     def get_scan(self, user, id):
         scan = self._scans.get(user_id=user['id'], scan_id=id)
         if len(scan) == 0:
-            return jsonify({'message': 'This scan does not exist.'}), 400
+            return jsonify({'message': 'This scan does not exist'}), 400
 
         # Update 'readed' value
         self._scans.put_readed(scan[0]['id'])
@@ -407,7 +407,7 @@ class Restore:
         if 'cloud_id' in data:
             cloud = self._cloud.get(user_id=user['id'], group_id=user['group_id'], cloud_id=data['cloud_id'])
             if len(cloud) == 0:
-                return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
+                return jsonify({'message': 'The provided cloud does not exist in your inventory'}), 400
             data['access_key'] = cloud[0]['access_key']
             data['secret_key'] = cloud[0]['secret_key']
 
@@ -449,7 +449,7 @@ class Restore:
 
         # Check if restore exists
         if len(scan) == 0:
-            return jsonify({'message': 'This scan does not exist.'}), 400
+            return jsonify({'message': 'This scan does not exist'}), 400
         scan = scan[0]
 
         # Check user authority
@@ -458,18 +458,18 @@ class Restore:
 
         # Check if the scan is in progress
         if scan['status'] != 'IN PROGRESS':
-            return jsonify({'message': 'The scan has already finished.'}), 400
+            return jsonify({'message': 'The scan has already finished'}), 400
 
         # Stop the scan
         self._scans.put_status(data['id'], 'STOPPED')
         self._scan_app.stop(scan['pid'])
-        return jsonify({'message': 'Scan successfully stopped.'}), 200
+        return jsonify({'message': 'Scan successfully stopped'}), 200
 
     def get_s3_buckets(self, user):
         # Get Cloud Key
         cloud = self._cloud.get(user_id=user['id'], group_id=user['group_id'], cloud_id=request.args['key'])
         if len(cloud) == 0:
-            return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
+            return jsonify({'message': 'The provided cloud does not exist in your inventory'}), 400
         cloud = cloud[0]
 
         # Init S3 Client
@@ -496,7 +496,7 @@ class Restore:
         # Get Cloud Key
         cloud = self._cloud.get(user_id=user['id'], group_id=user['group_id'], cloud_id=request.args['key'])
         if len(cloud) == 0:
-            return jsonify({'message': 'The provided cloud does not exist in your inventory.'}), 400
+            return jsonify({'message': 'The provided cloud does not exist in your inventory'}), 400
         cloud = cloud[0]
 
         # Init S3 Client

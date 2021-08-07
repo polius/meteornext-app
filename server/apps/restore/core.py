@@ -58,8 +58,8 @@ class Core:
 
     def __remote(self, command):
         # Supress Errors Output
-        sys_stderr = sys.stderr
-        sys.stderr = open('/dev/null', 'w')
+        # sys_stderr = sys.stderr
+        # sys.stderr = open('/dev/null', 'w')
 
         # Init Paramiko SSH Connection
         client = paramiko.SSHClient()
@@ -72,7 +72,7 @@ class Core:
         transport.set_keepalive(30)
 
         # Show Errors Output Again
-        sys.stderr = sys_stderr
+        # sys.stderr = sys_stderr
 
         # Paramiko Execute Command
         stdin, stdout, stderr = client.exec_command(command, get_pty=False)
