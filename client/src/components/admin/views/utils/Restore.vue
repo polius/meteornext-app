@@ -30,12 +30,12 @@
             File
           </div>
           <div v-else-if="item.mode == 'url'">
-            <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#19b5fe" style="margin-right:5px; margin-bottom:2px">fas fa-cloud</v-icon>
+            <v-icon :title="`${item.source} (${formatBytes(item.size)})`" small color="#e47911" style="margin-right:5px; margin-bottom:2px">fas fa-link</v-icon>
             URL
           </div>
-          <div v-else-if="item.mode == 's3'">
-            <v-icon :title="`${item.source} (${formatBytes(item.size)})`" color="#e47911" style="font-size:22; margin-right:5px; margin-bottom:2px">fab fa-aws</v-icon>
-            Amazon S3
+          <div v-else-if="item.mode == 'cloud'">
+            <v-icon :title="`${item.source} (${formatBytes(item.size)})`" color="#19b5fe" style="font-size:18px; margin-right:5px; margin-bottom:3px">fas fa-cloud</v-icon>
+            Cloud Key
           </div>
         </template>
         <template v-slot:[`item.size`]="{ item }">
@@ -154,8 +154,8 @@
                       <v-autocomplete v-model="filter.mode" :items="restoreMode" multiple label="Mode" style="padding-top:0px;" hide-details>
                         <template v-slot:item="{ item }">
                           <div v-if="item == 'file'"><v-icon small color="#23cba7" style="margin-left:6px; margin-right:18px">fas fa-file</v-icon>File</div>
-                          <div v-else-if="item == 'url'"><v-icon small color="#19b5fe" style="margin-left:3px; margin-right:14px">fas fa-cloud</v-icon>URL</div>
-                          <div v-else-if="item == 's3'"><v-icon size="22" color="#e47911" style="margin-right:10px">fab fa-aws</v-icon>Amazon S3</div>
+                          <div v-else-if="item == 'url'"><v-icon small color="#e47911" style="margin-left:3px; margin-right:14px">fas fa-link</v-icon>URL</div>
+                          <div v-else-if="item == 'cloud'"><v-icon size="18" color="#19b5fe" style="margin-right:10px">fas fa-cloud</v-icon>Cloud Key</div>
                         </template>
                         <template v-slot:selection="{ item }">
                           <v-chip v-if="item == 'file'" label>
@@ -163,12 +163,12 @@
                             File
                           </v-chip>
                           <v-chip v-else-if="item == 'url'" label>
-                            <v-icon small color="#19b5fe" style="margin-right:10px">fas fa-cloud</v-icon>
+                            <v-icon small color="#e47911" style="margin-right:10px">fas fa-link</v-icon>
                             URL
                           </v-chip>
-                          <v-chip v-else-if="item == 's3'" label>
-                            <v-icon size="22" color="#e47911" style="margin-top:2px; margin-left:2px; margin-right:12px">fab fa-aws</v-icon>
-                            Amazon S3
+                          <v-chip v-else-if="item == 'cloud'" label>
+                            <v-icon size="18" color="#19b5fe" style="margin-top:2px; margin-left:2px; margin-right:12px">fas fa-cloud</v-icon>
+                            Cloud Key
                           </v-chip>
                         </template>
                       </v-autocomplete>
@@ -329,7 +329,7 @@ export default {
 
     // Manage Dialog
     manageDialog: false,
-    manageOption: null,
+    manageOption: 'recover',
 
     // Filter Dialog
     filterDialog: false,
@@ -345,7 +345,7 @@ export default {
     filter: {},
     filterApplied: false,
     filterUsers: [],
-    restoreMode: ['file','url','s3'],
+    restoreMode: ['file','url','cloud'],
     restoreStatus: ['IN PROGRESS','SUCCESS','FAILED','STOPPED'],
 
     // Date / Time Picker
@@ -361,7 +361,7 @@ export default {
 
     // Snackbar
     snackbar: false,
-    snackbarTimeout: Number(3000),
+    snackbarTimeout: Number(2000),
     snackbarText: '',
     snackbarColor: ''
   }),
@@ -410,15 +410,10 @@ export default {
         .finally(() => this.loading = false)
     },
     manageRestore() {
-      this.manageOption = null
+      this.manageOption = 'recover'
       this.manageDialog = true
     },
     manageSubmit() {
-      // Check if an option has been selected.
-      if (this.manageOption == null) {
-        this.notification('Please select an option', '#EF5354')
-        return
-      }
       // Delete Restores
       this.loading = true
       const payload = { 
