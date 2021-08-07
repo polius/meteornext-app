@@ -44,6 +44,24 @@ class Scan:
             return { 'size': int(response['ContentLength']) }
 
     def __core(self, item, base_path):
+        try:
+            self.__check()
+            self.__core2(item, base_path)
+        except Exception as e:
+            query = """
+                UPDATE `restore_scans`
+                SET
+                    `error` = %s,
+                    `status` = 'FAILED',
+                    `updated` = %s
+                WHERE `id` = %s
+            """
+            self._sql.execute(query, args=(str(e), self.__utcnow(), item['id']))
+        finally:
+            # Remove execution folder from disk
+            shutil.rmtree(os.path.join(base_path, item['uri']))
+
+    def __core2(self, item, base_path):
         # Start Import
         t = threading.Thread(target=self.__scan, args=(item, base_path,))
         t.daemon = True
@@ -69,9 +87,6 @@ class Scan:
             WHERE `id` = %s
         """
         self._sql.execute(query, args=(status, self.__utcnow(), item['id']))
-
-        # Remove execution folder from disk
-        shutil.rmtree(os.path.join(base_path, item['uri']))
 
     def __scan(self, item, base_path):
         # Build 'progress_path' & 'error_path'
@@ -157,6 +172,13 @@ class Scan:
         """
         now = self.__utcnow()
         self._sql.execute(query, args=(progress, error, data, now, item['id']))
+
+    def __check(self):
+        for command in ['curl --version', 'pv --version']:
+            p = subprocess.run(command, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stderr = p.stderr.strip()
+            if len(stderr) > 0:
+                raise Exception(stderr)
 
     def __parse_progress(self, string):
         if len(string) == 0:
