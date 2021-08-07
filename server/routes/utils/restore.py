@@ -241,8 +241,13 @@ class Restore:
         # Parse progress
         if restore['progress']:
             raw = restore['progress'].split(' ')
-            restore['progress'] = {"value": raw[0], "transferred": raw[1], "rate": raw[2], "elapsed": raw[3]}
-            restore['progress']['eta'] = raw[4][3:] if len(raw) == 5 else None
+            restore['progress'] = {"value": '0%', "transferred": '0B', "rate": '0B/s', "elapsed": '0:00:00', "eta": None}
+            if len(raw) == 3:
+                restore['progress'] = {"value": '0%', "transferred": raw[0], "rate": raw[1], "elapsed": raw[2], "eta": None}
+            elif len(raw) == 4:
+                restore['progress'] = {"value": raw[0], "transferred": raw[1], "rate": raw[2], "elapsed": raw[3], "eta": None}
+            elif len(raw) == 5:
+                restore['progress'] = {"value": raw[0], "transferred": raw[1], "rate": raw[2], "elapsed": raw[3], "eta": raw[4][3:]}
 
         # Return data
         return jsonify({'restore': restore}), 200
@@ -323,7 +328,7 @@ class Restore:
             'server_id': data['server'],
             'database': data['database'],
             'uri': uri,
-            'upload': json.dumps("{'value': 0, 'transferred': 0") if region['ssh_tunnel'] else None
+            'upload': json.dumps("{'value': 0, 'transferred': 0}") if region['ssh_tunnel'] and data['mode'] == 'file' else None
         }
         item['id'] = self._restore.post(user, item)
 
@@ -369,9 +374,8 @@ class Restore:
             return jsonify({'message': 'The execution has already finished.'}), 400
 
         # Stop the execution
-        self._restore.update_status(user, data['id'], 'STOPPED')
-        self._restore_app.stop(restore['pid'])
-        return jsonify({'message': 'Execution successfully stopped.'}), 200
+        self._restore.stop(user, data['id'])
+        return jsonify({'message': 'Stopping execution...'}), 200
 
     def get_scan(self, user, id):
         scan = self._scans.get(user_id=user['id'], scan_id=id)
@@ -425,7 +429,7 @@ class Restore:
         data['id'] = self._scans.post(user, data)
 
         # Make scan folder
-        local_path = os.path.join(json.loads(self._settings.get(setting_name='FILES'))['local']['path'], '/scans/')
+        local_path = os.path.join(json.loads(self._settings.get(setting_name='FILES'))['local']['path'], 'scans')
         if not os.path.exists(os.path.join(local_path, data['uri'])):
             os.makedirs(os.path.join(local_path, data['uri']))
 

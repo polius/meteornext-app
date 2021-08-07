@@ -49,6 +49,32 @@
           </v-data-table>
         </v-card>
         <div v-if="information_items.length > 0">
+          <!-- PROGRESS -->
+          <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">PROGRESS</div>
+          <v-card style="margin-top:10px; margin-left:1px">
+            <v-card-text style="padding:15px">
+              <div v-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px">fas fa-spinner</v-icon>{{ (information_items[0]['progress'] == null && information_items[0]['upload'] != null) ? "Transferring file to server's region. Please wait..." : 'Restoring the file. Please wait...' }}</div>
+              <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>File successfully restored.</div>
+              <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while restoring the file.</div>
+              <div v-else-if="information_items[0].status == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px">fas fa-ban</v-icon>Restore successfully stopped.</div>
+              <v-progress-linear :color="getProgressColor(information_items[0].status)" height="5" :indeterminate="information_items[0]['status'] == 'IN PROGRESS' && (progress == null || progress.value == 0)" :value="progress == null ? 0 : progress.value" style="margin-top:10px"></v-progress-linear>
+              <div v-if="progress != null" class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${progress.value} %` }}</span></div>
+              <v-divider v-if="progress != null" style="margin-top:10px"></v-divider>
+              <div v-if="progress != null" class="text-body-1" style="margin-top:10px">Data Transferred: <span class="white--text">{{ progress.transferred }}</span></div>
+              <div v-if="progress != null && progress.rated != null" class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ progress.rate }}</span></div>
+              <div v-if="progress != null && progress.elapsed != null" class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ progress.elapsed }}</span></div>
+              <div v-if="progress != null && progress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ progress.eta }}</span></div>
+            </v-card-text>
+          </v-card>
+          <!-- ERROR -->
+          <div v-if="information_items[0].status == 'FAILED'">
+            <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">ERROR</div>
+            <v-card style="margin-top:10px; margin-left:1px">
+              <v-card-text style="padding:15px">
+                <div v-if="information_items[0].error != null" class="text-body-1">{{ information_items[0].error }}</div>
+              </v-card-text>
+            </v-card>
+          </div>
           <!-- SOURCE -->
           <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">SOURCE</div>
           <v-card style="margin-top:10px; margin-left:1px">
@@ -112,32 +138,6 @@
               </div>
             </v-card-text>
           </v-card>
-          <!-- PROGRESS -->
-          <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">PROGRESS</div>
-          <v-card style="margin-top:10px; margin-left:1px">
-            <v-card-text style="padding:15px">
-              <div v-if="information_items[0].status == 'IN PROGRESS'" class="text-body-1"><v-icon title="In Progress" small style="color: #ff9800; margin-right:10px">fas fa-spinner</v-icon>{{ (information_items[0]['progress'] == null && information_items[0]['upload'] != null) ? "Transferring file to server's region. Please wait..." : 'Restoring the file. Please wait...' }}</div>
-              <div v-else-if="information_items[0].status == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>File successfully restored.</div>
-              <div v-else-if="information_items[0].status == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while restoring the file.</div>
-              <div v-else-if="information_items[0].status == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px">fas fa-ban</v-icon>Restore successfully stopped.</div>
-              <v-progress-linear :color="getProgressColor(information_items[0].status)" height="5" :indeterminate="information_items[0]['status'] == 'IN PROGRESS' && (progress == null || progress.value == 0)" :value="progress == null ? 0 : progress.value" style="margin-top:10px"></v-progress-linear>
-              <div v-if="progress != null" class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${progress.value} %` }}</span></div>
-              <v-divider v-if="progress != null" style="margin-top:10px"></v-divider>
-              <div v-if="progress != null" class="text-body-1" style="margin-top:10px">Data Transferred: <span class="white--text">{{ progress.transferred }}</span></div>
-              <div v-if="progress != null && progress.rated != null" class="text-body-1" style="margin-top:10px">Data Transfer Rate: <span class="white--text">{{ progress.rate }}</span></div>
-              <div v-if="progress != null && progress.elapsed != null" class="text-body-1" style="margin-top:10px">Elapsed Time: <span class="white--text">{{ progress.elapsed }}</span></div>
-              <div v-if="progress != null && progress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ progress.eta }}</span></div>
-            </v-card-text>
-          </v-card>
-          <!-- ERROR -->
-          <div v-if="information_items[0].status == 'FAILED'">
-            <div class="title font-weight-regular" style="margin-top:15px; margin-left:1px">ERROR</div>
-            <v-card style="margin-top:10px; margin-left:1px">
-              <v-card-text style="padding:15px">
-                <div v-if="information_items[0].error != null" class="text-body-1">{{ information_items[0].error }}</div>
-              </v-card-text>
-            </v-card>
-          </div>
         </div>
       </v-card-text>
     </v-card>
@@ -343,7 +343,7 @@ export default {
     parseUpload(upload) {
       this.progress = {
         value: upload.value,
-        transferred: this.parseMetric(upload.transferred)
+        transferred: this.formatBytes(upload.transferred)
       }
     },
     parseProgress(progress) {
