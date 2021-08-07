@@ -14,7 +14,7 @@ class Region:
         self._region = region
         self._bin = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
         self._local_path = os.path.dirname(os.path.realpath(__file__)) if not self._bin else sys._MEIPASS
-        self._remote_path = "$HOME/.meteor" if region['ssh']['enabled'] else None
+        self._remote_path = ".meteor" if region['ssh']['enabled'] else None
         # Get UUID from path
         self._uuid = self._args.path[self._args.path.rfind('/')+1:]
 
@@ -32,13 +32,10 @@ class Region:
         return local_version == ssh_version
 
     def upload_binary(self):
-        # Get Remote Home Path
-        home = self.__ssh("echo $HOME")
-
         # Upload Binary
         if self._bin:
             self.__ssh("rm -rf {0}/bin && mkdir -p {0}/bin".format(self._remote_path))
-            self.__put("{}.tar.gz".format(self._local_path), "{}/.meteor/bin/meteor.tar.gz".format(home))
+            self.__put("{}.tar.gz".format(self._local_path), ".meteor/bin/meteor.tar.gz")
             self.__ssh("tar -xvzf {0}/bin/meteor.tar.gz -C {0}/bin && rm -rf {0}/bin/meteor.tar.gz".format(self._remote_path))
         else:
             # Compress Meteor files
@@ -46,18 +43,15 @@ class Region:
             shutil.move(f"{self._local_path}.tar.gz", f"{self._local_path}/../server/apps/meteor.tar.gz")
             # Upload Meteor
             self.__ssh(f"rm -rf {self._remote_path}/bin && mkdir -p {self._remote_path}/bin")
-            self.__put(f"{self._local_path}/../server/apps/meteor.tar.gz", f"{home}/.meteor/bin/meteor.tar.gz")
+            self.__put(f"{self._local_path}/../server/apps/meteor.tar.gz", ".meteor/bin/meteor.tar.gz")
             self.__ssh("tar -xvzf {0}/bin/meteor.tar.gz -C {0}/bin && rm -rf {0}/bin/meteor.tar.gz".format(self._remote_path))
 
     def get_logs(self):
-        # Get Remote Home Path
-        home = self.__ssh("echo $HOME")
-
         # 1. Compress Logs
         binary_path = "{}/bin/init".format(self._remote_path) if self._bin else "python3 {}/bin/meteor.py".format(self._remote_path)
-        self.__ssh('{} --path "{}/logs/{}" --region "{}" --compress'.format(binary_path, self._remote_path, self._uuid, self._region['name']))
+        self.__ssh('{} --path "{}/deployments/{}" --region "{}" --compress'.format(binary_path, self._remote_path, self._uuid, self._region['name']))
         # 2. Download Compressed Logs
-        remote_path = "{}/.meteor/logs/{}/execution/{}.tar.gz".format(home, self._uuid, self._region['name'])
+        remote_path = ".meteor/deployments/{}/execution/{}.tar.gz".format(self._uuid, self._region['name'])
         local_path = "{}/execution/{}.tar.gz".format(self._args.path, self._region['name'])
         status = self.__get(remote_path, local_path)
 
@@ -73,7 +67,7 @@ class Region:
         current_thread = threading.current_thread()
 
         if self._region['ssh']['enabled']:
-            progress = self.__ssh("cat {}/logs/{}/execution/{}/progress.json 2>/dev/null".format(self._remote_path, self._uuid, self._region['name']))
+            progress = self.__ssh("cat {}/deployments/{}/execution/{}/progress.json 2>/dev/null".format(self._remote_path, self._uuid, self._region['name']))
         else:
             progress = self.__local("cat {}/execution/{}/progress.json 2>/dev/null".format(self._args.path, self._region['name']))
         current_thread.progress = json.loads(progress) if len(progress) > 0 else {}
@@ -81,7 +75,7 @@ class Region:
     def clean(self):
         current_thread = threading.current_thread()
         try:
-            self.__ssh("rm -rf {}/logs/{}".format(self._remote_path, self._uuid), retry=False)
+            self.__ssh("rm -rf {}/deployments/{}".format(self._remote_path, self._uuid), retry=False)
             current_thread.progress = {'region': self._region['name'], 'success': True}
         except Exception as e:
             current_thread.progress = {'region': self._region['name'], 'success': False, 'error': str(e)}
@@ -95,7 +89,7 @@ class Region:
     def sigint(self):
         command = "ps -U $USER -u $USER u | grep '{}' | grep '\--region' | grep -v grep | awk '{{print $2}}' | xargs kill -2 2> /dev/null".format(self._uuid)
         if self._region['ssh']['enabled']:
-            self.__ssh(command, self._args.path + '/logs/' + self._region['name'])
+            self.__ssh(command, self._args.path + '/deployments/' + self._region['name'])
         else:
             self.__local(command)
 
@@ -114,15 +108,14 @@ class Region:
         mode = 'validate' if self._args.validate else 'test' if self._args.test else 'deploy'
         
         if self._region['ssh']['enabled']:
-            home = self.__ssh("echo $HOME")
             binary_path = "{}/bin/init".format(self._remote_path) if self._bin else "python3 {}/bin/meteor.py".format(self._remote_path)
 
             # Upload execution
-            self.__ssh('mkdir -p {}/logs/{}'.format(self._remote_path, self._uuid))
-            self.__put("{}/config.json".format(self._args.path), "{}/.meteor/logs/{}/config.json".format(home, self._uuid))
-            self.__put("{}/blueprint.py".format(self._args.path), "{}/.meteor/logs/{}/blueprint.py".format(home, self._uuid))
+            self.__ssh('mkdir -p {}/deployments/{}'.format(self._remote_path, self._uuid))
+            self.__put("{}/config.json".format(self._args.path), ".meteor/deployments/{}/config.json".format(self._uuid))
+            self.__put("{}/blueprint.py".format(self._args.path), ".meteor/deployments/{}/blueprint.py".format(self._uuid))
             # Start execution
-            self.__ssh('{} --path "{}/logs/{}" --{} --region "{}"'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']), self._args.path + '/logs/' + self._region['name'])
+            self.__ssh('{} --path "{}/deployments/{}" --{} --region "{}"'.format(binary_path, self._remote_path, self._uuid, mode, self._region['name']), self._args.path + '/deployments/' + self._region['name'])
         else:
             binary_path = "{}/init".format(self._local_path) if self._bin else "python3 {}/meteor.py".format(self._local_path)
             # Start execution
