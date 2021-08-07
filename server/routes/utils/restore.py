@@ -7,6 +7,7 @@ import uuid
 import json
 import shutil
 import boto3
+from datetime import datetime
 
 import models.admin.users
 import models.admin.groups
@@ -248,7 +249,6 @@ class Restore:
                 restore['progress'] = {"value": raw[0], "transferred": raw[1], "rate": raw[2], "elapsed": raw[3], "eta": None}
             elif len(raw) == 5:
                 restore['progress'] = {"value": raw[0], "transferred": raw[1], "rate": raw[2], "elapsed": raw[3], "eta": raw[4][3:]}
-
         # Return data
         return jsonify({'restore': restore}), 200
 
@@ -327,6 +327,8 @@ class Restore:
             'size': size,
             'server_id': data['server'],
             'database': data['database'],
+            'status': 'IN PROGRESS',
+            'started': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             'uri': uri,
             'upload': json.dumps("{'value': 0, 'transferred': 0}") if region['ssh_tunnel'] and data['mode'] == 'file' else None
         }

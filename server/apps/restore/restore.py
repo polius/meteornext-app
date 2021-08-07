@@ -3,8 +3,6 @@ import re
 import time
 import boto3
 import shutil
-import psutil
-import signal
 import time
 import threading
 from datetime import datetime
@@ -26,6 +24,7 @@ class Restore:
     def __core(self, user, item, server, region, paths):
         try:
             core = apps.restore.core.Core(self._sql, item['id'], region)
+            self.__check(core)
             self.__core2(core, user, item, server, region, paths)
         except Exception as e:
             query = """
@@ -210,6 +209,12 @@ class Restore:
         if region['ssh_tunnel']:
             core.execute(f"rm -rf {os.path.join(paths['remote'], item['uri'])}")
         shutil.rmtree(os.path.join(paths['local'], item['uri']), ignore_errors=True)
+
+    def __check(self, core):
+        for command in ['curl --version', 'pv --version', 'mysql --version']:
+            p = core.execute(command)
+            if len(p['stderr']) > 0:
+                raise Exception(p['stderr'])
 
     def __parse_progress(self, string):
         if len(string) == 0:
