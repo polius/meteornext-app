@@ -27,10 +27,10 @@ class amazon_s3:
                 self._progress.track_tasks(value={'status': 'progress', 'message': "Uploading Logs to Amazon S3..."})
                 execution_name = self._args.path[self._args.path.rfind('/')+1:]
 
-                # 1. Upload Compressed Logs Folder to '/logs'
+                # 1. Upload Compressed Logs Folder to '/deployments'
                 file_path = "{}.tar.gz".format(self._args.path)
                 bucket_name = self._config['amazon_s3']['bucket_name']
-                s3_path = "logs/{}.tar.gz".format(execution_name)
+                s3_path = "deployments/{}.tar.gz".format(execution_name)
                 self._amazon_s3.meta.client.upload_file(file_path, bucket_name, s3_path)
 
                 # 2. Upload Results File to '/results'
