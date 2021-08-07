@@ -2,8 +2,6 @@ import os
 import re
 import time
 import shutil
-import signal
-import psutil
 import boto3
 import subprocess
 import threading
@@ -20,13 +18,7 @@ class Scan:
         t.start()
 
     def stop(self, pid):
-        parent = psutil.Process(pid)
-        children = parent.children(recursive=True)
-        for process in children:
-            try:
-                process.send_signal(signal.SIGKILL)
-            except Exception:
-                pass
+        subprocess.run(f'pkill -9 -P {pid}', shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def metadata(self, item):
         if item['mode'] == 'url':
