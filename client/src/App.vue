@@ -206,7 +206,7 @@ export default {
 
     // Snackbar
     snackbar: false,
-    snackbarTimeout: Number(2000),
+    snackbarTimeout: Number(1000),
     snackbarText: '',
     snackbarColor: ''
   }),

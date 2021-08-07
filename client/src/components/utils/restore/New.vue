@@ -376,15 +376,7 @@
           <v-container style="padding:0px">
             <v-layout wrap>
               <v-flex xs12>
-                <v-form ref="form" style="margin-top:20px;">
-                  <v-row no-gutters style="margin-bottom:15px">
-                    <v-col>
-                      <v-text-field readonly v-model="serverItem.group" label="Group" hide-details style="padding-top:0px"></v-text-field>
-                    </v-col>
-                    <v-col v-if="!serverItem.shared" style="margin-left:20px">
-                      <v-text-field readonly v-model="serverItem.owner" label="Owner" hide-details style="padding-top:0px"></v-text-field>
-                    </v-col>
-                  </v-row>
+                <v-form ref="form" style="margin-top:15px">
                   <v-row no-gutters>
                     <v-col cols="8" style="padding-right:10px">
                       <v-text-field readonly v-model="serverItem.name" label="Name"></v-text-field>
@@ -405,7 +397,7 @@
                       <v-text-field readonly v-model="serverItem.version" label="Version" style="padding-top:0px;"></v-text-field>
                     </v-col>
                   </v-row>
-                  <div style="margin-bottom:20px">
+                  <div v-if="!loading && !(readOnly && inventory_secured)" style="margin-bottom:20px">
                     <v-row no-gutters>
                       <v-col cols="8" style="padding-right:10px">
                         <v-text-field readonly v-model="serverItem.hostname" label="Hostname" style="padding-top:0px;"></v-text-field>
@@ -516,6 +508,11 @@ export default {
       snackbarText: '',
       snackbarColor: '',
     }
+  },
+  computed: {
+    owner: function() { return this.$store.getters['app/owner'] },
+    inventory_secured: function() { return this.$store.getters['app/inventory_secured'] },
+    readOnly: function() { return !this.owner && this.serverItem.shared == 1 },
   },
   beforeRouteLeave(to, from, next) {
     this.stopScan(false)

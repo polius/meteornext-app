@@ -115,7 +115,7 @@
                       </v-row>
                     </v-card>
                     <v-checkbox v-if="item.ssl" v-model="item.ssl_verify_ca" label="Verify server certificate against CA" hide-details></v-checkbox>
-                    <v-select :disabled="item.group_id == null" outlined v-model="item.usage" :items="usage" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details item-color="rgb(66,66,66)" style="margin-top:20px"></v-select>
+                    <v-select :disabled="item.group_id == null" outlined v-model="item.usage" :items="usage" :menu-props="{ top: true, offsetY: true }" label="Usage" multiple hide-details style="margin-top:20px"></v-select>
                   </div>
                 </v-form>
                 <div v-if="mode=='delete'" class="subtitle-1" style="padding-top:10px; padding-bottom:10px">Are you sure you want to delete the selected servers?</div>
