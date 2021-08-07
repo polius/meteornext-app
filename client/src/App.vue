@@ -206,7 +206,7 @@ export default {
 
     // Snackbar
     snackbar: false,
-    snackbarTimeout: Number(3000),
+    snackbarTimeout: Number(2000),
     snackbarText: '',
     snackbarColor: ''
   }),
@@ -286,6 +286,7 @@ export default {
         .then((response) => {
           this.notifications = []
           this.notification(response.data.message, '#00b16a')
+          this.rightDrawer = false
         })
         .catch((error) => {
           if (error.response === undefined || error.response.status != 400) this.$store.dispatch('app/logout').then(() => this.$router.push('/login'))

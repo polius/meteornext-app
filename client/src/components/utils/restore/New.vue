@@ -763,7 +763,6 @@ export default {
         }
       })
       .catch((error) => {
-        console.log(error)
         if (axios.isCancel(error)) {
           this.notification("The upload process has been stopped.", "info")
           this.dialog = false

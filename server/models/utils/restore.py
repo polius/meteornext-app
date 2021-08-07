@@ -49,15 +49,14 @@ class Restore:
         """
         return self._sql.execute(query, (user['id']))
 
-    def update_status(self, user, restore_id, status):
+    def stop(self, user, restore_id):
         query = """
             UPDATE restore
-            SET `status` = %s,
-                `ended` = %s
+            SET `stop` = 1
             WHERE `user_id` = %s
             AND `id` = %s
         """
-        return self._sql.execute(query, (status, self.__utcnow(), user['id'], restore_id))
+        return self._sql.execute(query, (user['id'], restore_id))
 
     def __utcnow(self):
         return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
