@@ -134,7 +134,12 @@
                         <div v-else-if="scanStatus == 'SUCCESS'" class="text-body-1"><v-icon title="Success" small style="color: #4caf50; margin-right:10px">fas fa-check</v-icon>Scan successfully completed.</div>
                         <div v-else-if="scanStatus == 'FAILED'" class="text-body-1"><v-icon title="Failed" small style="color: #EF5354; margin-right:10px">fas fa-times</v-icon>An error occurred while scanning the file.</div>
                         <div v-else-if="scanStatus == 'STOPPED'" class="text-body-1"><v-icon title="Stopped" small style="color: #EF5354; margin-right:10px">fas fa-ban</v-icon>Scan successfully stopped.</div>
-                        <v-progress-linear :color="getProgressColor(scanStatus)" :indeterminate="scanProgress == null || (scanProgress.value == 0 && scanStatus == 'IN PROGRESS')" :value="scanProgress == null ? 0 : scanProgress.value" height="5" style="margin-top:10px"></v-progress-linear>
+                        <v-progress-linear :color="getProgressColor(scanStatus)" :indeterminate="scanStatus != 'FAILED' && (scanProgress == null || (scanProgress.value == 0 && scanStatus == 'IN PROGRESS'))" :value="scanProgress == null ? 0 : scanProgress.value" height="5" style="margin-top:10px"></v-progress-linear>
+                        <v-card v-if="scanStatus == 'FAILED'" style="margin-top:15px">
+                          <v-card-text>
+                            <div class="text-body-1">{{ scanError }}</div>
+                          </v-card-text>
+                        </v-card>
                         <div v-if="scanProgress != null">
                           <div class="text-body-1" style="margin-top:10px">Progress: <span class="white--text" style="font-weight:500">{{ `${scanProgress.value} %` }}</span></div>
                           <div class="text-body-1" style="margin-top:10px">Data Transferred: <span class="white--text">{{ scanProgress.transferred }}</span></div>
@@ -161,15 +166,6 @@
                               </template>
                             </v-data-table>
                             <div class="text-body-1" style="margin-top:15px">Selected Size: <span class="white--text" style="font-weight:500">{{ formatBytes(scanSelected.reduce((a, b) => a + b.size, 0)) }}</span></div>
-                          </div>
-                          <!-- SCAN ERROR -->
-                          <div v-else>
-                            <div class="subtitle-1 white--text" style="margin-top:15px; margin-left:1px">ERROR</div>
-                            <v-card style="margin-top:10px; margin-left:1px">
-                              <v-card-text style="padding:15px">
-                                <div class="text-body-1">{{ scanError }}</div>
-                              </v-card-text>
-                            </v-card>
                           </div>
                         </div>
                       </div>
@@ -811,7 +807,7 @@ export default {
         this.scanProgress = this.parseProgress(response.data.progress)
         this.scanItems = response.data.data == null ? [] : response.data.data
         this.scanError = response.data.error
-        if (this.scanProgress == null || this.scanStatus == 'IN PROGRESS') {
+        if ((this.scanProgress == null && this.scanStatus != 'FAILED') || this.scanStatus == 'IN PROGRESS') {
           clearTimeout(this.scanTimer)
           if (this.$router.currentRoute.name == 'utils.restore.new') this.scanTimer = setTimeout(this.getScan, 1000)
         }
