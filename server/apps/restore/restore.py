@@ -1,11 +1,13 @@
 import os
 import re
+import json
 import time
 import boto3
 import shutil
-import time
+import calendar
+import requests
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import models.notifications
 import apps.restore.core
@@ -23,9 +25,10 @@ class Restore:
 
     def __core(self, user, item, server, region, paths):
         try:
+            start_time = time.time()
             core = apps.restore.core.Core(self._sql, item['id'], region)
             self.__check(core)
-            self.__core2(core, user, item, server, region, paths)
+            self.__core2(start_time, core, user, item, server, region, paths)
         except Exception as e:
             query = """
                 UPDATE `restore`
@@ -37,8 +40,9 @@ class Restore:
             """
             self._sql.execute(query, args=(str(e), self.__utcnow(), item['id']))
             self.__clean(core, region, item, paths)
+            self.__slack(item, start_time, 2, str(e))
 
-    def __core2(self, core, user, item, server, region, paths):
+    def __core2(self, start_time, core, user, item, server, region, paths):
         # Update restore status
         query = """
             UPDATE `restore`
@@ -61,6 +65,7 @@ class Restore:
                     if not self.__alive(item):
                         core.stop()
                         self.__clean(core, region, item, paths)
+                        self.__slack(item, start_time, 1)
                         return
                     time.sleep(1)
 
@@ -93,11 +98,22 @@ class Restore:
         now = self.__utcnow()
         self._sql.execute(query, args=(status, now, item['id']))
 
+        # Clean files
+        self.__clean(core, region, item, paths)
+
+        # Get restore details
+        query = """
+            SELECT `status`, `error`
+            FROM `restore`
+            WHERE `id` = %s
+        """
+        restore = self._sql.execute(query, args=(item['id']))[0]
+
         # Send notification
-        if  not import_status[0]:
+        if restore['status'] in ['SUCCESS','FAILED']:
             notification = {
                 'name': f"A restore has finished",
-                'status': 'ERROR' if status == 'FAILED' else 'SUCCESS',
+                'status': 'ERROR' if restore['status'] == 'FAILED' else 'SUCCESS',
                 'category': 'utils-restore',
                 'data': '{{"id":"{}"}}'.format(item['id']),
                 'date': self.__utcnow(),
@@ -105,8 +121,13 @@ class Restore:
             }
             self._notifications.post(user_id=user['id'], notification=notification)
 
-        # Clean files
-        self.__clean(core, region, item, paths)
+        # Send Slack message
+        if restore['status'] == 'SUCCESS':
+            self.__slack(item, start_time, 0)
+        elif restore['status'] == 'STOPPED':
+            self.__slack(item, start_time, 1)
+        elif restore['status'] == 'FAILED':
+            self.__slack(item, start_time, 2, restore['error'])
 
     def __import(self, core, item, server, path, status):
         # Build paths
@@ -123,17 +144,16 @@ class Restore:
         elif item['source'].endswith('.gz'):
             gunzip = f"| zcat 2> {error_path}"
 
-        # Generate presigned-url for cloud mode
         if item['mode'] == 'cloud':
             client = boto3.client('s3', aws_access_key_id=item['access_key'], aws_secret_access_key=item['secret_key'])
-            item['source'] = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': item['bucket'], 'Key': item['source']}, ExpiresIn=30)
 
         # MySQL & Aurora MySQL engines
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
             if item['mode'] == 'file':
                 command = f"echo 'RESTORE.{item['uri']}'; export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {file_path} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
             elif item['mode'] in ['url','cloud']:
-                command = f"echo 'RESTORE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{item['source']}' 2> {error_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
+                source = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': item['bucket'], 'Key': item['source']}, ExpiresIn=30) if item['mode'] == 'cloud' else item['source']
+                command = f"echo 'RESTORE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{source}' 2> {error_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
 
         # Start Import process
         p = core.execute(command)
@@ -216,6 +236,62 @@ class Restore:
             if len(p['stderr']) > 0:
                 raise Exception(p['stderr'])
 
+    def __slack(self, item, start_time, status, error=None):
+        if not item['slack_enabled']:
+            return
+        source = f"{item['bucket']}/{item['source']}" if item['mode'] == 'cloud' else item['source']
+        webhook_data = {
+            "attachments": [
+                {
+                    "text": "",
+                    "fields": [
+                        {
+                            "title": "User",
+                            "value": f"```{item['user']}```",
+                            "short": False
+                        },
+                        {
+                            "title": "Mode",
+                            "value": f"```{item['mode'].upper()}```",
+                            "short": False
+                        },
+                        {
+                            "title": "Source",
+                            "value": f"```{source} ({self.__convert_bytes(item['size'])})```",
+                            "short": False
+                        },
+                        {
+                            "title": "Server",
+                            "value": f"```{item['server_name']} ({item['region_name']})```",
+                            "short": False
+                        },
+                        {
+                            "title": "Database",
+                            "value": f"```{item['database']}```",
+                            "short": False
+                        },
+                        {
+                            "title": "Execution Time",
+                            "value": str(timedelta(seconds=time.time() - start_time)),
+                            "short": True
+                        }
+                    ],
+                    "color": 'good' if status == 0 else 'warning' if status == 1 else 'danger',
+                    "ts": calendar.timegm(time.gmtime())
+                }
+            ]
+        }
+        if error:
+            error_data = {
+                "title": "Error",
+                "value": f"```{error}```",
+                "short": False
+            }
+            webhook_data["attachments"][0]["fields"].insert(0, error_data)
+
+        # Send the Slack message
+        requests.post(item['slack_url'], data=json.dumps(webhook_data), headers={'Content-Type': 'application/json'})
+
     def __parse_progress(self, string):
         if len(string) == 0:
             return None
@@ -229,6 +305,13 @@ class Restore:
         if len(string) == 0:
             return None
         return string.strip()
+
+    def __convert_bytes(self, size):
+        for x in ['B', 'KB', 'MB', 'GB', 'TB', 'PB']:
+            if size < 1024:
+                return "%3.2f %s" % (size, x)
+            size /= 1024
+        return size
 
     def __utcnow(self):
         return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")

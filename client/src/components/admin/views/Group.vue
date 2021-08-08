@@ -119,13 +119,13 @@
                     <span>
                       Send a <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime a deployment finishes.
                     </span>
-                  </v-tooltip>  
+                  </v-tooltip>
                 </div>
                 <v-switch v-model="group.deployments_slack_enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
                 <div v-if="group.deployments_slack_enabled">
                   <v-text-field v-model="group.deployments_slack_name" label="Channel Name" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
                   <v-text-field v-model="group.deployments_slack_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" style="padding-top:0px;"></v-text-field>
-                  <v-btn :loading="loading" @click="testSlack" color="info" style="margin-bottom:15px">Test Slack</v-btn>
+                  <v-btn :loading="loading" @click="testSlack('deployments')" color="info" style="margin-bottom:15px">Test Slack</v-btn>
                 </div>
               </v-card-text>
             </v-card>
@@ -148,10 +148,26 @@
               </v-toolbar>
               <v-card-text style="padding-bottom:0px;">
                 <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RIGHTS</div>
-                <v-switch v-model="group.utils_enabled" label="Access Utils" color="info" style="margin-top:0px;"></v-switch>
-                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">RESTORE</div>
-                <v-switch @change="changeUtilsRestoreLimit" v-model="group.utils_restore_limit_flag" label="Apply Limits" color="#fa8231" style="margin-top:0px;"></v-switch>
-                <v-text-field v-if="group.utils_restore_limit_flag" v-model="group.utils_restore_limit" label="Maximum file upload size (MB)" :rules="[v => v == parseInt(v) && v > 0 || '']" required style="padding-top:5px;"></v-text-field>
+                <v-switch v-model="group.utils_enabled" label="Access Utils" color="info" style="margin-top:0px; margin-bottom:15px" hide-details></v-switch>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-bottom:10px;">LIMITS</div>
+                <v-text-field v-model="group.utils_restore_limit" label="Maximum file upload size (MB)" :rules="[v => v ? v == parseInt(v) && v > 0 : true || '']" hide-details></v-text-field>
+                <div class="subtitle-1 font-weight-regular white--text" style="margin-top:15px; margin-bottom:10px">
+                  SLACK
+                  <v-tooltip right>
+                    <template v-slot:activator="{ on }">
+                      <v-icon small style="margin-left:5px; margin-bottom:2px;" v-on="on">fas fa-question-circle</v-icon>
+                    </template>
+                    <span>
+                      Send a <span class="font-weight-medium" style="color:rgb(250, 130, 49);">Slack</span> message everytime a restore finishes.
+                    </span>
+                  </v-tooltip>
+                </div>
+                <v-switch v-model="group.utils_slack_enabled" label="Enable Notifications" color="info" style="margin-top:0px;"></v-switch>
+                <div v-if="group.utils_slack_enabled">
+                  <v-text-field v-model="group.utils_slack_name" label="Channel Name" :rules="[v => !!v || '']" style="padding-top:0px;"></v-text-field>
+                  <v-text-field v-model="group.utils_slack_url" label="Webhook URL" :rules="[v => !!v && (v.startsWith('http://') || v.startsWith('https://')) || '']" style="padding-top:0px;"></v-text-field>
+                  <v-btn :loading="loading" @click="testSlack('utils')" color="info" style="margin-bottom:15px">Test Slack</v-btn>
+                </div>
               </v-card-text>
             </v-card>
 
@@ -275,8 +291,10 @@ export default {
       deployments_slack_url: '',
       monitoring_enabled: false,
       utils_enabled: false,
-      utils_restore_limit_flag: false,
       utils_restore_limit: null,
+      utils_slack_enabled: false,
+      utils_slack_name: '',
+      utils_slack_url: '',
       client_enabled: false,
       client_tracking: false,
       client_tracking_retention: 1,
@@ -334,7 +352,7 @@ export default {
         .then((response) => {
           if (response.data.group.length == 0) this.$router.push('/admin/groups')
           else {
-            this.group = {...response.data.group[0], utils_restore_limit_flag: response.data.group[0]['utils_restore_limit'] != null}
+            this.group = {...response.data.group[0]}
             this.inventoryOwners = response.data.owners
             if (this.mode == 'edit') this.ownersItems = response.data.owners.filter(x => x.owner)
           }
@@ -360,6 +378,7 @@ export default {
       // Parse nullable values
       if (!this.group.deployments_execution_timeout) this.group.deployments_execution_timeout = null
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
+      if (!this.group.utils_restore_limit) this.group.utils_restore_limit = null
       // Add group to the DB
       const payload = {
         mode: this.mode,
@@ -389,6 +408,7 @@ export default {
       // Parse nullable values
       if (!this.group.deployments_execution_timeout) this.group.deployments_execution_timeout = null
       if (!this.group.deployments_execution_concurrent) this.group.deployments_execution_concurrent = null
+      if (!this.group.utils_restore_limit) this.group.utils_restore_limit = null
       // Edit group to the DB
       const payload = {
         group: JSON.stringify(this.group),
@@ -458,7 +478,7 @@ export default {
       }
       this.ownersDialog = false
     },
-    testSlack() {
+    testSlack(section) {
       this.loading = true
       // Check if all fields are filled
       if (!this.$refs.form.validate()) {
@@ -467,7 +487,9 @@ export default {
         return
       }
       // Test Slack Webhook URL
-      const payload = { webhook_url: this.group.deployments_slack_url }
+      const payload = {
+        webhook_url: (section == 'deployments') ? this.group.deployments_slack_url : this.group.utils_slack_url
+      }
       axios.get('/admin/groups/slack', { params: payload })
         .then((response) => {
           this.notification(response.data.message, '#00b16a')

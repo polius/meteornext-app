@@ -253,6 +253,9 @@ class Restore:
         return jsonify({'restore': restore}), 200
 
     def post(self, user, data):
+        # Get group details
+        group = self._groups.get(group_id=user['group_id'])[0]
+
         # Get server details
         server = self._servers.get(user_id=user['id'], group_id=user['group_id'], server_id=data['server'])
         if len(server) == 0:
@@ -281,7 +284,6 @@ class Restore:
         # Method: file
         if data['mode'] == 'file':
             # Check file size limit
-            group = self._groups.get(group_id=user['group_id'])[0]
             if group['utils_restore_limit'] is not None and int(request.form['size']) >= group['utils_restore_limit'] * 1024**2:
                 return jsonify({'message': f"The file size exceeds the maximum allowed ({group['utils_restore_limit']} MB)"}), 400
 
@@ -318,19 +320,24 @@ class Restore:
             selected = '\n'.join([f"{i['file']}|{i['size']}" for i in data['selected']])
             details = {"cloud":  data['cloud'], "bucket": data['bucket'],  "object": data['object']}
 
-        # Insert new restore to DB
+        # Build Item
         item = {
+            'user': user['username'],
             'mode': data['mode'],
             'details': json.dumps(details) if 'cloud' in data else None,
             'source': source,
             'selected': None if len(selected) == 0 else selected,
             'size': size,
             'server_id': data['server'],
+            'server_name': server['name'],
+            'region_name': region['name'],
             'database': data['database'],
             'status': 'IN PROGRESS',
             'started': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
             'uri': uri,
-            'upload': json.dumps("{'value': 0, 'transferred': 0}") if region['ssh_tunnel'] and data['mode'] == 'file' else None
+            'upload': json.dumps("{'value': 0, 'transferred': 0}") if region['ssh_tunnel'] and data['mode'] == 'file' else None,
+            'slack_enabled': group['utils_slack_enabled'],
+            'slack_url': group['utils_slack_url']
         }
         item['id'] = self._restore.post(user, item)
 
