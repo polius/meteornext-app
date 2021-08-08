@@ -659,8 +659,7 @@ export default {
         key: this.cloudKeysSelected[0]['id'],
         bucket: this.cloudPath.length > 3 ? this.cloudPath[2] : this.awsBucketsSelected[0]['name'],
         prefix: this.parseAWSPrefix(search),
-        search: this.awsObjectsSearch,
-        // token: this.awsObjectsToken,
+        path: this.parseAWSPath(),
       }
       axios.get('/utils/restore/s3/objects', { params: payload })
         .then((response) => {
@@ -671,6 +670,19 @@ export default {
           else this.notification(error.response.data.message !== undefined ? error.response.data.message : 'Internal Server Error', '#EF5354')
         })
         .finally(() => this.loading = false)
+    },
+    parseAWSPath() {
+      let path = this.cloudPath.slice(3).join('')
+      if (this.awsObjectsSelected.length > 0 && this.awsObjectsSelected[0].name.endsWith('/')) {
+        path += this.awsObjectsSelected[0].name
+      }
+      return path
+    },
+    parseAWSPrefix(search) {
+      let path = this.cloudPath.slice(3).join('')
+      if (search) return path += this.awsObjectsSearch
+      if (this.awsObjectsSelected.length > 0 && this.awsObjectsSelected[0].name.endsWith('/')) path += this.awsObjectsSelected[0].name
+      return path
     },
     parseAWSObjects(objects, search) {
       this.awsObjectsHeaders = [
@@ -685,12 +697,7 @@ export default {
         if (this.cloudPath.length == 2) this.cloudPath.push(this.awsBucketsSelected[0]['name'])
         else if (this.awsObjectsSelected.length != 0) this.cloudPath.push(this.awsObjectsSelected[0]['name'])
       }
-    },
-    parseAWSPrefix(search) {
-      let path = this.cloudPath.slice(3).join('/')
-      if (search) return path
-      if (this.awsObjectsSelected.length > 0 && this.awsObjectsSelected[0].name.endsWith('/')) path += this.awsObjectsSelected[0].name
-      return path
+      this.awsObjectsSelected = []
     },
     goBack() {
       if (this.stepper == 1 && this.scanID != null) this.stopScan(false)
