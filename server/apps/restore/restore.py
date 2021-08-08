@@ -126,7 +126,7 @@ class Restore:
         # Generate presigned-url for cloud mode
         if item['mode'] == 'cloud':
             client = boto3.client('s3', aws_access_key_id=item['access_key'], aws_secret_access_key=item['secret_key'])
-            item['source'] = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': item['bucket'], 'Key': item['source']}, ExpiresIn=60)
+            item['source'] = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': item['bucket'], 'Key': item['source']}, ExpiresIn=30)
 
         # MySQL & Aurora MySQL engines
         if server['engine'] in ('MySQL', 'Aurora MySQL'):
