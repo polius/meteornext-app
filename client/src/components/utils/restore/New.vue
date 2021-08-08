@@ -148,7 +148,7 @@
                           <div v-if="scanProgress.eta != null" class="text-body-1" style="margin-top:10px">ETA: <span class="white--text">{{ scanProgress.eta }}</span></div>
                           <v-divider style="margin-top:10px"></v-divider>
                           <!-- SCAN SELECT -->
-                          <div v-if="scanError == null">
+                          <div v-if="scanStatus == 'STOPPED' || scanError == null">
                             <div v-if="scanItems.length > 0" class="text-body-1" style="margin-top:15px">Choose the files to restore:</div>
                             <v-toolbar dense flat color="#2e3131" style="margin-top:15px; border-top-left-radius:5px; border-top-right-radius:5px;">
                               <v-text-field v-model="scanSearch" append-icon="search" label="Search" color="white" single-line hide-details style="padding-right:10px"></v-text-field>
