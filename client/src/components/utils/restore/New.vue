@@ -708,8 +708,21 @@ export default {
       else if (this.stepper == 2 && !this.$refs.destinationForm.validate()) return
       if (this.stepper == 1 && ['url','cloud'].includes(this.mode) && this.scanID == null) this.scanFile()
       else {
-        // Stop Scan (if there's an existing one)
-        if (this.stepper == 1) this.stopScan()
+        // Stop Scan (if there's an existing one) & Check Selected Files
+        if (this.stepper == 1) {
+          this.stopScan()
+          if (this.scanSelected.length > 0) {
+            let extensions = this.scanSelected.map(x => x.file.lastIndexOf('.') === -1 ? '' : x.file.substring(x.file.lastIndexOf('.') + 1, x.file.length))
+            if (!(extensions.every(x => x === extensions[0]))) {
+              this.notification('Selected file extensions must be the same', '#EF5354')
+              return
+            }
+            if (extensions.some(x => !(['sql','gz'].includes(x)))) {
+              this.notification('Selected file extensions must be .sql or .gz', '#EF5354')
+              return
+            }
+          }
+        }
         this.stepper = this.stepper + 1
       }
     },

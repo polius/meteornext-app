@@ -138,11 +138,14 @@ class Restore:
         # Check compressed file
         gunzip = ''
         if item['source'].endswith('.tar'):
-            gunzip = f"| tar xO {item['selected']} 2> {error_path}"
+            gunzip = f"| tar xO {' '.join(item['selected'])} 2> {error_path}"
         elif item['source'].endswith('.tar.gz'):
-            gunzip = f"| tar zxO {item['selected']} 2> {error_path}"
+            gunzip = f"| tar zxO {' '.join(item['selected'])} 2> {error_path}"
         elif item['source'].endswith('.gz'):
             gunzip = f"| zcat 2> {error_path}"
+
+        if item['selected'] and item['selected'][0].endswith('.gz'):
+            gunzip += f" | zcat 2> {error_path}"
 
         if item['mode'] == 'cloud':
             client = boto3.client('s3', aws_access_key_id=item['access_key'], aws_secret_access_key=item['secret_key'])
@@ -152,7 +155,7 @@ class Restore:
             if item['mode'] == 'file':
                 command = f"echo 'RESTORE.{item['uri']}'; export MYSQL_PWD={server['password']}; pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' {file_path} 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
             elif item['mode'] in ['url','cloud']:
-                source = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': item['bucket'], 'Key': item['source']}, ExpiresIn=30) if item['mode'] == 'cloud' else item['source']
+                source = client.generate_presigned_url(ClientMethod='get_object', Params={'Bucket': item['bucket'], 'Key': item['source']}, ExpiresIn=1800) if item['mode'] == 'cloud' else item['source']
                 command = f"echo 'RESTORE.{item['uri']}' && export MYSQL_PWD={server['password']} && curl -sSL '{source}' 2> {error_path} | pv -f --size {item['size']} -F '%p|%b|%r|%t|%e' 2> {progress_path} {gunzip} | mysql -h{server['hostname']} -u{server['username']} {item['database']} 2> {error_path}"
 
         # Start Import process

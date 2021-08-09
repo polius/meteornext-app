@@ -100,9 +100,6 @@ class Scan:
             elif i.endswith('.tar.gz'):
                 tar = f'tar ztv 2> {error_path}'
                 break
-            elif i.endswith('.tar.bz2'):
-                tar = f'tar jtv 2> {error_path}'
-                break
 
         # Generate presigned-url for cloud mde
         if item['mode'] == 'cloud':
