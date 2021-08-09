@@ -342,7 +342,7 @@ class Restore:
         item['id'] = self._restore.post(user, item)
 
         # Parse selected for import process
-        item['selected'] = ' '.join([i['file'] for i in data['selected']]) if selected else ''
+        item['selected'] = [i['file'] for i in data['selected']] if selected else []
 
         # Add Cloud credentials to item
         if item['mode'] == 'cloud':
@@ -404,7 +404,7 @@ class Restore:
         # Parse data
         data = scan[0]['data']
         if data:
-            data = [{'file': i.split('|')[0][i.split('|')[0].find('/')+1:], 'size': int(i.split('|')[1])} for i in data.split('\n') if len(i.split('|')[0][i.split('|')[0].find('/')+1:]) > 0]
+            data = [{'file': i.split('|')[0], 'size': int(i.split('|')[1])} for i in data.split('\n') if int(i.split('|')[1]) > 0]
 
         # Parse error
         error = scan[0]['error']
