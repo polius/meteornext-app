@@ -107,7 +107,7 @@ export default {
   methods: {
     reloadRights(mode) {
       this.mode = mode
-      const servers = {...this.rights['server']}
+      const servers = JSON.parse(JSON.stringify(this.rights['server']))
       this.server = Object.keys(servers).filter(x => servers[x])
       if (mode == 'clone') this.rights['server'] = {}
     },

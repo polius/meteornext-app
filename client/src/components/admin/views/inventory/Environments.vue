@@ -179,7 +179,7 @@ export default {
   computed: {
     computedHeaders() { return this.headers.filter(x => this.columns.includes(x.value)) },
     treeviewFiltered: function() {
-      var items = [...this.treeviewItems]
+      var items = JSON.parse(JSON.stringify(this.treeviewItems))
       if (this.item.shared) {
         for (let i = 0; i < items.length; ++i) {
           for (let j = items[i]['children'].length - 1; j >= 0; --j) {

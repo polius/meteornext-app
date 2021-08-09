@@ -124,7 +124,7 @@ const getDefaultState = () => {
         objects: { tables: null, views: null, triggers: null, functions: null, procedures: null, events: null },
       },
     },
-    connections: [{...connection()}],
+    connections: [JSON.parse(JSON.stringify(connection()))],
     currentConn: 0,
     connectionIndex: 1,
     history: [],
@@ -165,7 +165,7 @@ const mutations = {
     state.connections[state.currentConn].clientSession = state.components.editor.session
     // Add new connection
     state.connectionIndex += 1
-    let conn = {...connection()}
+    let conn = JSON.parse(JSON.stringify(connection()))
     conn.index = state.connectionIndex
     conn.id = uuidv4()
     state.connections.push(conn)
@@ -189,7 +189,7 @@ const mutations = {
     // Array contains only 1 element
     if (state.connections.length == 1) {
       // Re-Initialize current connection
-      state.connections = [{...connection()}]
+      state.connections = [JSON.parse(JSON.stringify(connection()))]
       state.connections[0].id = uuidv4()
       // Init servers list
       state.connections[state.currentConn].sidebarItems = state.servers.slice(0)

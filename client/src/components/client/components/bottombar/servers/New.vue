@@ -236,7 +236,7 @@ export default {
       else this.selected.push(item.id)
       // Select the server to display
       if (this.selected.length == 0) this.item = {}
-      else if (this.selected[this.selected.length - 1].id == item.id) this.item = {...item}
+      else if (this.selected[this.selected.length - 1].id == item.id) this.item = JSON.parse(JSON.stringify(item))
       else this.item = this.origin.find(x => x.id == this.selected[this.selected.length - 1])
       // Calculate server component height
       this.$nextTick(() => {
@@ -274,7 +274,7 @@ export default {
     },
     selectAll() {
       this.selected = this.items.map(x => x.id)
-      if (Object.keys(this.item).length == 0) this.item = {...this.items[this.items.length - 1]}
+      if (Object.keys(this.item).length == 0) this.item = JSON.parse(JSON.stringify(this.items[this.items.length - 1]))
     },
     deselectAll() {
       this.selected = []

@@ -467,7 +467,7 @@ export default {
     ownersDialogSubmit() {
       if (this.ownersDialogOptions.mode == 'new') {
         for (let owner of this.ownersDialogSelected) {
-          let obj = {...this.ownersDialogRawItems.find(x => x.username == owner)}
+          let obj = JSON.parse(JSON.stringify(this.ownersDialogRawItems.find(x => x.username == owner)))
           delete obj['owner']
           this.ownersItems.push(obj)
         }

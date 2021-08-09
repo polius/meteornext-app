@@ -384,9 +384,9 @@ export default {
       this.loading = true
       var payload = {}
       // Build Filter
-      let filter = this.filterApplied ? {...this.filter} : null
+      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
       if (this.filterApplied) {
-        this.filterOrigin = {...this.filter}
+        this.filterOrigin = JSON.parse(JSON.stringify(this.filter))
         for (let i of ['startedFrom','startedTo','endedFrom','endedTo']) {
           if (i in filter) filter[i] = moment(this.filter[i]).utc().format("YYYY-MM-DD HH:mm:ss")
         }
@@ -481,7 +481,7 @@ export default {
       }
     },
     openFilter() {
-      this.filter = this.filterApplied ? {...this.filterOrigin} : {}
+      this.filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filterOrigin)) : {}
       this.filterDialog = true
     },
     submitFilter() {

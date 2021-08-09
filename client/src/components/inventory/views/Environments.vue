@@ -148,7 +148,7 @@ export default {
     readOnly: function() { return this.mode == 'edit' && !this.owner && this.item.shared == 1 },
     treeviewFiltered: function() {
       if (this.item.shared && this.treeviewItems.length > 0) {
-        var items = [...this.treeviewItems]
+        var items = JSON.parse(JSON.stringify(this.treeviewItems))
         for (let i = 0; i < items.length; ++i) {
           for (let j = items[i]['children'].length - 1; j >= 0; --j) {
             if (items[i]['children'][j]['shared'] == 0) {

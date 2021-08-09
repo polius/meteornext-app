@@ -17,11 +17,11 @@ export default {
   }),
   props: ['info','init'],
   created() {
-    if (Object.keys(this.info).length > 0) this.license = {...this.info}
+    if (Object.keys(this.info).length > 0) this.license = JSON.parse(JSON.stringify(this.info))
   },
   watch: {
     info: function(val) {
-      this.license = {...val}
+      this.license = JSON.parse(JSON.stringify(val))
     },
     init: function(val) {
       this.loading = val

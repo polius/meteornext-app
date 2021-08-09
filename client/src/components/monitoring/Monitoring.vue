@@ -447,8 +447,8 @@
         this.last_updated = last_updated
       },
       openServers() {
-        this.treeviewSelectedRaw = [...this.treeviewSelected]
-        this.treeviewOpenedRaw = [...this.treeviewOpened]
+        this.treeviewSelectedRaw = JSON.parse(JSON.stringify(this.treeviewSelected))
+        this.treeviewOpenedRaw = JSON.parse(JSON.stringify(this.treeviewOpened))
         this.servers_dialog = true
       },
       submitServers() {
@@ -456,8 +456,8 @@
         const payload = this.treeviewSelectedRaw
         axios.put('/monitoring', payload)
           .then((response) => {
-            this.treeviewSelected = [...this.treeviewSelectedRaw]
-            this.treeviewOpened = [...this.treeviewOpenedRaw]
+            this.treeviewSelected = JSON.parse(JSON.stringify(this.treeviewSelectedRaw))
+            this.treeviewOpened = JSON.parse(JSON.stringify(this.treeviewOpenedRaw))
             this.pending_servers = true
             this.search = ''
             this.notification(response.data.message, '#00b16a')
@@ -520,7 +520,7 @@
         // Apply Sort
         servers.sort((a, b) => a.name.localeCompare(b.name))
         if (this.sort_active) servers.sort((a, b) => parseInt(b.connections == '?' ? '0' : b.connections) - parseInt(a.connections == '?' ? '0' : a.connections));
-        this.servers = [...servers]
+        this.servers = JSON.parse(JSON.stringify(servers))
       },
       sortClick() {
         this.sort_active = !this.sort_active

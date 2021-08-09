@@ -989,12 +989,12 @@
               succeeded &= (Object.values(this.validation_data[0])[i] == 'SUCCEEDED')
             }
             if (succeeded) {
-              this.execution_headers = [...this.validation_headers]
+              this.execution_headers = JSON.parse(JSON.stringify(this.validation_headers))
               for (let i = 0; i < this.execution_headers.length; ++i) {
                 execution_overall[0][[i]] = "Initiating..."
               }
             }
-            this.execution_overall = [...execution_overall]
+            this.execution_overall = JSON.parse(JSON.stringify(execution_overall))
           }
           return
         }
@@ -1030,9 +1030,9 @@
         // execution_progress.sort((a, b) => (a[0].server > b[0].server) ? 1 : -1)
 
         // Assign variables
-        this.execution_headers =[...execution_headers]
-        this.execution_overall = [...execution_overall]
-        this.execution_progress = [...execution_progress]
+        this.execution_headers = JSON.parse(JSON.stringify(execution_headers))
+        this.execution_overall = JSON.parse(JSON.stringify(execution_overall))
+        this.execution_progress = JSON.parse(JSON.stringify(execution_progress))
       },
       parseLogs() {
         if (!('logs' in this.deployment['progress'])) return
@@ -1089,7 +1089,7 @@
         this.information_dialog_execution_mode = this.deployment['mode']
         this.information_dialog_query_selected = []
         this.cmOptions.readOnly = true
-        this.information_dialog_data = {...this.deployment}
+        this.information_dialog_data = JSON.parse(JSON.stringify(this.deployment))
         this.schedule_enabled = this.deployment['scheduled'] !== null
         this.information_dialog = true
       },
@@ -1098,7 +1098,7 @@
         this.information_dialog_execution_mode = this.deployment['mode']
         this.information_dialog_query_selected = []
         this.cmOptions.readOnly = false
-        this.information_dialog_data = {...this.deployment}
+        this.information_dialog_data = JSON.parse(JSON.stringify(this.deployment))
         this.schedule_enabled = this.deployment['scheduled'] !== null
         this.information_dialog = true
       },

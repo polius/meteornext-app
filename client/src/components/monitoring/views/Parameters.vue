@@ -249,8 +249,8 @@ export default {
       }
     },
     openServers() {
-      this.treeviewSelectedRaw = [...this.treeviewSelected]
-      this.treeviewOpenedRaw = [...this.treeviewOpened]
+      this.treeviewSelectedRaw = JSON.parse(JSON.stringify(this.treeviewSelected))
+      this.treeviewOpenedRaw = JSON.parse(JSON.stringify(this.treeviewOpened))
       this.servers_dialog = true
     },
     submitServers() {
@@ -258,8 +258,8 @@ export default {
       const payload = this.treeviewSelectedRaw
       axios.put('/monitoring/parameters', payload)
         .then((response) => {
-          this.treeviewSelected = [...this.treeviewSelectedRaw]
-          this.treeviewOpened = [...this.treeviewOpenedRaw]
+          this.treeviewSelected = JSON.parse(JSON.stringify(this.treeviewSelectedRaw))
+          this.treeviewOpened = JSON.parse(JSON.stringify(this.treeviewOpenedRaw))
           this.pending_servers = true
           this.parameters_search = ''
           this.notification(response.data.message, '#00b16a')
