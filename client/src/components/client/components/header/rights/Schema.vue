@@ -177,7 +177,7 @@ export default {
   methods: {
     reloadRights(mode) {
       this.mode = mode
-      this.schema = [...this.rights['schema']]
+      this.schema = JSON.parse(JSON.stringify(this.rights['schema']))
       if (mode == 'clone') {
         this.rights['schema'] = []
         this.computeDiff()
@@ -309,7 +309,7 @@ export default {
       // Update element
       else if (this.dialogOptions.mode == 'edit') {
         const index = this.schema.findIndex((x) => x['type'] == this.currentItem.type && x['schema'] == this.currentItem.schema)
-        this.schema[index] = {...item}
+        this.schema[index] = JSON.parse(JSON.stringify(item))
         this.currentItem.type = item.type
         this.currentItem.schema = item.schema
         this.currentItem.rights = item.rights

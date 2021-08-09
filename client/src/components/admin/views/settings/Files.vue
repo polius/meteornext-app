@@ -44,11 +44,11 @@ export default {
   }),
   props: ['info','init'],
   mounted() {
-    if (Object.keys(this.info).length > 0) this.files = {...this.info}
+    if (Object.keys(this.info).length > 0) this.files = JSON.parse(JSON.stringify(this.info))
   },
   watch: {
     info: function(val) {
-      this.files = {...val}
+      this.files = JSON.parse(JSON.stringify(val))
     },
     init: function(val) {
       this.loading = val

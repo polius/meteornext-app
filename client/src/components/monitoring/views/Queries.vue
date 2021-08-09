@@ -485,7 +485,7 @@ export default {
       const { sortBy, sortDesc, page, itemsPerPage } = this.queries_options
       var payload = {}
       // Build Filter
-      let filter = this.filter_applied ? {...this.filter} : null
+      let filter = this.filter_applied ? JSON.parse(JSON.stringify(this.filter)) : null
       if (this.filter_applied && 'firstSeenFrom' in filter && this.dateValid(this.filter.firstSeenFrom)) filter.firstSeenFrom = this.dateUTC(this.filter.firstSeenFrom)
       if (this.filter_applied && 'firstSeenTo' in filter && this.dateValid(this.filter.firstSeenTo)) filter.firstSeenTo = this.dateUTC(this.filter.firstSeenTo)
       if (this.filter_applied && 'lastSeenFrom' in filter && this.dateValid(this.filter.lastSeenFrom)) filter.lastSeenFrom = this.dateUTC(this.filter.lastSeenFrom)
@@ -588,8 +588,8 @@ export default {
       this.filter_dialog = false
     },
     openServers() {
-      this.treeviewSelectedRaw = [...this.treeviewSelected]
-      this.treeviewOpenedRaw = [...this.treeviewOpened]
+      this.treeviewSelectedRaw = JSON.parse(JSON.stringify(this.treeviewSelected))
+      this.treeviewOpenedRaw = JSON.parse(JSON.stringify(this.treeviewOpened))
       this.servers_dialog = true
     },
     submitServers() {
@@ -597,8 +597,8 @@ export default {
       const payload = this.treeviewSelectedRaw
       axios.put('/monitoring/queries', payload)
         .then((response) => {
-          this.treeviewSelected = [...this.treeviewSelectedRaw]
-          this.treeviewOpened = [...this.treeviewOpenedRaw]
+          this.treeviewSelected = JSON.parse(JSON.stringify(this.treeviewSelectedRaw))
+          this.treeviewOpened = JSON.parse(JSON.stringify(this.treeviewOpenedRaw))
           this.notification(response.data.message, '#00b16a')
           this.servers_dialog = false
           this.submit_servers = true

@@ -172,7 +172,7 @@ export default {
       this.loading = true
       var payload = {}
       // Build Filter
-      let filter = this.filterApplied ? {...this.filter} : null
+      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
       if (filter != null) payload['filter'] = filter
       // Build Sort
       const { sortBy, sortDesc } = this.options

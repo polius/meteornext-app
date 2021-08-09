@@ -271,7 +271,7 @@ export default {
       this.loading = true
       var payload = {}
       // Build Filter
-      let filter = this.filterApplied ? {...this.filter} : null
+      let filter = this.filterApplied ? JSON.parse(JSON.stringify(this.filter)) : null
       if (this.filterApplied && 'dateFrom' in filter) filter.dateFrom = moment(this.filter.dateFrom).utc().format("YYYY-MM-DD HH:mm:ss")
       if (this.filterApplied && 'dateTo' in filter) filter.dateTo = moment(this.filter.dateTo).utc().format("YYYY-MM-DD HH:mm:ss")
       if (filter != null) payload['filter'] = filter
